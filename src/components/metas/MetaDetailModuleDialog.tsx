@@ -38,40 +38,37 @@ interface MetaDetailModuleDialogProps {
 export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, onAddEvidencia }: MetaDetailModuleDialogProps) {
   const { tenantId } = useAuth();
   const [checkinValue, setCheckinValue] = useState("");
-  const [checkinProgress, setCheckinProgress] = useState("");
   const [checkinObs, setCheckinObs] = useState("");
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [riskAnalysis, setRiskAnalysis] = useState<any>(null);
 
-  // Cálculo automático de progresso baseado no valor atual
+  // Resetar campos ao trocar de meta
   useEffect(() => {
-    if (meta?.valor_alvo !== undefined && checkinValue !== "") {
-      const val = parseFloat(checkinValue);
-      const target = meta.valor_alvo;
-      const baseline = meta.valor_baseline ?? 0;
-      
-      if (!isNaN(val) && target !== baseline) {
-        let prog = 0;
-        const direcao = meta.indicador_direcao || 'maior_melhor';
-        
-        if (direcao === 'maior_melhor') {
-          prog = ((val - baseline) / (target - baseline)) * 100;
-        } else if (direcao === 'menor_melhor') {
-          prog = ((baseline - val) / (baseline - target)) * 100;
-        } else if (direcao === 'igual_melhor') {
-          // Para 'igual_melhor', o progresso é inversamente proporcional à distância do alvo
-          const diff = Math.abs(target - val);
-          const range = Math.max(Math.abs(target - baseline), 1);
-          prog = Math.max(0, (1 - diff / range) * 100);
-        } else {
-          prog = (val / target) * 100;
-        }
-        
-        // Arredondar para o inteiro mais próximo
-        setCheckinProgress(Math.round(prog).toString());
-      }
+    setCheckinValue("");
+    setCheckinObs("");
+  }, [meta?.id]);
+
+  // Cálculo automático de progresso (sempre entre 0 e 100, nunca negativo)
+  const calcularProgresso = (valor: number): number => {
+    if (!meta?.valor_alvo || meta.valor_alvo === 0) return 0;
+    const target = meta.valor_alvo;
+    const direcao = meta.indicador_direcao || 'maior_melhor';
+    let prog = 0;
+    if (direcao === 'menor_melhor') {
+      // Quanto menor, melhor. Ex: alvo=5 acidentes, atual=3 → mais próximo de zero é melhor
+      prog = target > 0 ? Math.max(0, (1 - valor / target) * 100) : 0;
+    } else {
+      // maior_melhor (padrão): valor / alvo
+      prog = (valor / target) * 100;
     }
-  }, [checkinValue, meta?.valor_alvo, meta?.valor_baseline, meta?.indicador_direcao]);
+    return Math.max(0, Math.min(100, Math.round(prog)));
+  };
+
+  const valorNumerico = checkinValue !== "" ? parseFloat(checkinValue) : NaN;
+  const progressoCalculado = !isNaN(valorNumerico) ? calcularProgresso(valorNumerico) : meta?.progresso ?? 0;
+  const valorRestante = meta?.valor_alvo && !isNaN(valorNumerico)
+    ? Math.max(0, meta.valor_alvo - valorNumerico)
+    : meta?.valor_alvo ?? 0;
 
   const { data: checkins = [] } = useQuery({
     queryKey: ["meta-checkins-detail", meta?.id],
@@ -134,16 +131,17 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
   const handleCheckin = async () => {
     if (!meta || !onCheckin) return;
-    const prog = parseInt(checkinProgress);
-    if (isNaN(prog)) { toast.error("Informe o progresso"); return; }
+    if (checkinValue === "" || isNaN(valorNumerico)) {
+      toast.error("Informe o valor atual alcançado");
+      return;
+    }
     await onCheckin({
       meta_id: meta.id,
-      valor_novo: checkinValue ? parseFloat(checkinValue) : undefined,
-      progresso_novo: prog,
+      valor_novo: valorNumerico,
+      progresso_novo: progressoCalculado,
       observacao: checkinObs || undefined,
     });
     setCheckinValue("");
-    setCheckinProgress("");
     setCheckinObs("");
     toast.success("Check-in registrado!");
   };
@@ -244,86 +242,119 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                 )}
                 {meta.indicador_nome && (
                   <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                    <strong>Indicador:</strong> {meta.indicador_nome} — Atual: {meta.valor_atual ?? 0} / Alvo: {meta.valor_alvo ?? "—"} {meta.indicador_unidade || ""}
+                    <strong>Indicador:</strong> {meta.indicador_nome} — Atual: <strong>{meta.valor_atual ?? 0}</strong> / Alvo: <strong>{meta.valor_alvo ?? "—"}</strong> {meta.indicador_unidade || ""}
                   </div>
                 )}
 
-                <Card>
-                  <CardContent className="p-4 space-y-3">
-                    <h4 className="text-sm font-semibold">Registrar Check-in</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Valor Atual</Label>
-                        {meta.indicador_tipo === "qualitativo" ? (
-                          <Select value={checkinValue} onValueChange={setCheckinValue}>
-                            <SelectTrigger className="h-10">
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {meta.indicador_unidade === "status" && (
-                                <>
-                                  <SelectItem value="0">Não Iniciado</SelectItem>
-                                  <SelectItem value="50">Em Andamento</SelectItem>
-                                  <SelectItem value="100">Concluído</SelectItem>
-                                </>
-                              )}
-                              {meta.indicador_unidade === "nivel" && (
-                                <>
-                                  <SelectItem value="1">Nível 1</SelectItem>
-                                  <SelectItem value="2">Nível 2</SelectItem>
-                                  <SelectItem value="3">Nível 3</SelectItem>
-                                  <SelectItem value="4">Nível 4</SelectItem>
-                                  <SelectItem value="5">Nível 5</SelectItem>
-                                </>
-                              )}
-                              {meta.indicador_unidade === "conceito" && (
-                                <>
-                                  <SelectItem value="0">E (Insuficiente)</SelectItem>
-                                  <SelectItem value="25">D (Regular)</SelectItem>
-                                  <SelectItem value="50">C (Bom)</SelectItem>
-                                  <SelectItem value="75">B (Muito Bom)</SelectItem>
-                                  <SelectItem value="100">A (Excelente)</SelectItem>
-                                </>
-                              )}
-                              {!["status", "nivel", "conceito"].includes(meta.indicador_unidade || "") && (
-                                <>
-                                  <SelectItem value="0">0%</SelectItem>
-                                  <SelectItem value="25">25%</SelectItem>
-                                  <SelectItem value="50">50%</SelectItem>
-                                  <SelectItem value="75">75%</SelectItem>
-                                  <SelectItem value="100">100%</SelectItem>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input type="number" value={checkinValue} onChange={e => setCheckinValue(e.target.value)} placeholder={String(meta.valor_atual || 0)} />
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs flex items-center justify-between">
-                          Progresso (%)
-                          {meta.valor_alvo !== undefined && (
-                            <span className="text-[10px] text-primary flex items-center gap-0.5">
-                              <Sparkles className="h-2 w-2" /> Automático
-                            </span>
-                          )}
-                        </Label>
-                        <Input 
-                          type="number" 
-                          value={checkinProgress} 
-                          readOnly={meta.valor_alvo !== undefined}
-                          onChange={e => setCheckinProgress(e.target.value)} 
-                          placeholder={String(meta.progresso)}
-                          className={meta.valor_alvo !== undefined ? "bg-muted cursor-not-allowed" : ""}
-                        />
-                      </div>
+                <Card className="border-primary/20">
+                  <CardContent className="p-4 space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-primary" /> Registrar Check-in
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Informe o quanto você já alcançou desta meta. O progresso é calculado automaticamente.
+                      </p>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Observação</Label>
-                      <Textarea value={checkinObs} onChange={e => setCheckinObs(e.target.value)} rows={2} />
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Quanto você já alcançou? {meta.indicador_unidade && <span className="text-muted-foreground font-normal">(em {meta.indicador_unidade})</span>}
+                      </Label>
+                      {meta.indicador_tipo === "qualitativo" ? (
+                        <Select value={checkinValue} onValueChange={setCheckinValue}>
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder="Selecione o estado atual..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {meta.indicador_unidade === "status" && (
+                              <>
+                                <SelectItem value="0">Não Iniciado</SelectItem>
+                                <SelectItem value="50">Em Andamento</SelectItem>
+                                <SelectItem value="100">Concluído</SelectItem>
+                              </>
+                            )}
+                            {meta.indicador_unidade === "nivel" && (
+                              <>
+                                <SelectItem value="1">Nível 1</SelectItem>
+                                <SelectItem value="2">Nível 2</SelectItem>
+                                <SelectItem value="3">Nível 3</SelectItem>
+                                <SelectItem value="4">Nível 4</SelectItem>
+                                <SelectItem value="5">Nível 5</SelectItem>
+                              </>
+                            )}
+                            {meta.indicador_unidade === "conceito" && (
+                              <>
+                                <SelectItem value="0">E (Insuficiente)</SelectItem>
+                                <SelectItem value="25">D (Regular)</SelectItem>
+                                <SelectItem value="50">C (Bom)</SelectItem>
+                                <SelectItem value="75">B (Muito Bom)</SelectItem>
+                                <SelectItem value="100">A (Excelente)</SelectItem>
+                              </>
+                            )}
+                            {!["status", "nivel", "conceito"].includes(meta.indicador_unidade || "") && (
+                              <>
+                                <SelectItem value="0">0%</SelectItem>
+                                <SelectItem value="25">25%</SelectItem>
+                                <SelectItem value="50">50%</SelectItem>
+                                <SelectItem value="75">75%</SelectItem>
+                                <SelectItem value="100">100%</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={checkinValue}
+                            onChange={e => setCheckinValue(e.target.value)}
+                            placeholder={`Ex: ${Math.round((meta.valor_alvo ?? 10) / 2)}`}
+                            className="h-11 text-base"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            💡 Digite o número total já alcançado até hoje (não a diferença).
+                            {meta.valor_alvo ? ` Sua meta é alcançar ${meta.valor_alvo} ${meta.indicador_unidade || ""}.` : ""}
+                          </p>
+                        </>
+                      )}
                     </div>
-                    <Button size="sm" onClick={handleCheckin} className="gap-1">
+
+                    {/* Preview do progresso calculado */}
+                    {checkinValue !== "" && !isNaN(valorNumerico) && meta.valor_alvo !== undefined && (
+                      <div className="p-3 rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Sparkles className="h-3.5 w-3.5 text-primary" /> Progresso calculado
+                          </span>
+                          <span className="font-bold text-lg text-primary">{progressoCalculado}%</span>
+                        </div>
+                        <Progress value={progressoCalculado} className="h-2" />
+                        <p className="text-xs text-muted-foreground">
+                          {progressoCalculado >= 100
+                            ? "🎉 Meta alcançada! Parabéns."
+                            : `Faltam ${valorRestante} ${meta.indicador_unidade || ""} para atingir o alvo de ${meta.valor_alvo}.`}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Observação <span className="text-muted-foreground font-normal">(opcional)</span>
+                      </Label>
+                      <Textarea
+                        value={checkinObs}
+                        onChange={e => setCheckinObs(e.target.value)}
+                        rows={3}
+                        placeholder="Ex: Concluímos o treinamento da equipe A. Próxima semana iniciamos a equipe B."
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Conte o que foi feito desde o último check-in, dificuldades encontradas ou próximos passos.
+                      </p>
+                    </div>
+
+                    <Button onClick={handleCheckin} className="gap-2 w-full sm:w-auto" disabled={checkinValue === ""}>
                       <CheckCircle2 className="h-4 w-4" /> Salvar Check-in
                     </Button>
                   </CardContent>
