@@ -364,8 +364,9 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                       </p>
                     </div>
 
-                    <Button onClick={handleCheckin} className="gap-2 w-full sm:w-auto" disabled={checkinValue === ""}>
-                      <CheckCircle2 className="h-4 w-4" /> Salvar Check-in
+                    <Button onClick={handleCheckin} className="gap-2 w-full sm:w-auto" disabled={checkinValue === "" || isSavingCheckin}>
+                      <CheckCircle2 className="h-4 w-4" />
+                      {isSavingCheckin ? "Salvando..." : "Salvar Check-in"}
                     </Button>
                   </CardContent>
                 </Card>
