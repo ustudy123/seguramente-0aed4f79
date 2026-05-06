@@ -18,8 +18,8 @@ export default function Estrategia() {
   const [showGuia, setShowGuia] = useState(false);
 
   useEffect(() => {
-    const currentTab = searchParams.get("tab");
-    if (currentTab && currentTab !== tab) {
+    const currentTab = searchParams.get("tab") || "swot";
+    if (currentTab !== tab) {
       setTab(currentTab);
     }
   }, [searchParams]);
