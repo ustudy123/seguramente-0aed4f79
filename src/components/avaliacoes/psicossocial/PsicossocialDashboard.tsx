@@ -68,8 +68,10 @@ export function PsicossocialDashboard() {
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
   const [bannerResultados, setBannerResultados] = useState<CampanhaPsicossocial | null>(null);
   const [activeTab, setActiveTab] = useState("campanhas");
+  const [apenasAtivas, setApenasAtivas] = useState(false);
 
-  const { campanhas, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
+  const { campanhas: campanhasAll, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
+  const campanhas = apenasAtivas ? campanhasAll.filter(c => c.status === 'ativa') : campanhasAll;
 
   const handleNovaCampanha = () => {
     setCampanhaParaEditar(undefined);
