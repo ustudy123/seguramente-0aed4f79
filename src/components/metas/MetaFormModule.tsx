@@ -338,7 +338,21 @@ export function MetaFormModule({
         <CardContent className="space-y-4 pt-4">
           <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Nome do Indicador</Label>
+              <div className="flex items-center justify-between min-h-[24px]">
+                <Label>Nome do Indicador</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSugerirIndicadorIA}
+                  disabled={isSugerindoIndicador || !form.titulo?.trim()}
+                  className="h-6 px-2 text-xs gap-1 text-primary hover:bg-primary/10"
+                  title={!form.titulo?.trim() ? "Preencha o título da meta primeiro" : "Sugerir indicador com IA"}
+                >
+                  {isSugerindoIndicador ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  Sugerir com IA
+                </Button>
+              </div>
               <Input value={form.indicador_nome || ""} onChange={e => set("indicador_nome", e.target.value)}
                 placeholder="Ex: Taxa de acidentes" />
             </div>
