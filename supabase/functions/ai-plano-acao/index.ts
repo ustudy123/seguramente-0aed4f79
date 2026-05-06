@@ -134,22 +134,27 @@ Retorne APENAS o texto sugerido para o campo, em português, pronto para colar. 
       }
     ];
 
+    const isCampo = tipo === "sugerir_campo";
+    const body: Record<string, unknown> = {
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      max_tokens: isCampo ? 300 : 2000,
+    };
+    if (!isCampo) {
+      body.tools = tools;
+      body.tool_choice = { type: "function", function: { name: "registrar_resultado_plano" } };
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        tools,
-        tool_choice: { type: "function", function: { name: "registrar_resultado_plano" } },
-        max_tokens: 2000,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -167,6 +172,14 @@ Retorne APENAS o texto sugerido para o campo, em português, pronto para colar. 
     }
 
     const data = await response.json();
+
+    if (isCampo) {
+      const texto = (data.choices?.[0]?.message?.content || "").trim().replace(/^["']|["']$/g, "");
+      return new Response(JSON.stringify({ sugestao: texto, resumo: texto }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     
     if (!toolCall?.function?.arguments) {
