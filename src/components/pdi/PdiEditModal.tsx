@@ -35,6 +35,40 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
     observacoes: "",
   });
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | "observacoes" | null>(null);
+
+  const sugerir = async (campo: "titulo" | "descricao" | "observacoes") => {
+    setAiLoading(campo);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-pdi-sugestao", {
+        body: {
+          campo,
+          colaborador_nome: pdi.colaborador_nome,
+          colaborador_cargo: pdi.colaborador_cargo,
+          colaborador_departamento: pdi.colaborador_departamento,
+          periodo: form.periodo,
+          gatilho: form.gatilho,
+          titulo: form.titulo,
+          descricao: form.descricao,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setForm(f => ({ ...f, [campo]: data?.sugestao || "" }));
+      toast.success("Sugestão aplicada");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao gerar sugestão");
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const aiBtn = (campo: "titulo" | "descricao" | "observacoes") => (
+    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir(campo)} disabled={aiLoading !== null}>
+      {aiLoading === campo ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+      Sugerir com I.A.
+    </Button>
+  );
 
   useEffect(() => {
     if (open && pdi) {
