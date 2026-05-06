@@ -194,6 +194,54 @@ export function MetaFormModule({
     }
   };
 
+  const [isSugerindoTitulo, setIsSugerindoTitulo] = useState(false);
+  const handleSugerirTituloIA = async () => {
+    setIsSugerindoTitulo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: {
+          acao: "sugerir_titulo",
+          meta: { titulo: form.titulo, descricao: form.descricao, nivel: form.nivel },
+        },
+      });
+      if (error) throw error;
+      if (data?.titulo) {
+        setForm(prev => ({ ...prev, titulo: data.titulo }));
+        toast.success(data.justificativa ? `Título sugerido! ${data.justificativa}` : "Título sugerido!");
+      }
+    } catch (e: any) {
+      toast.error(`Erro IA: ${e.message}`);
+    } finally {
+      setIsSugerindoTitulo(false);
+    }
+  };
+
+  const [isSugerindoDescricao, setIsSugerindoDescricao] = useState(false);
+  const handleSugerirDescricaoIA = async () => {
+    if (!form.titulo?.trim()) {
+      toast.error("Preencha o título da meta primeiro");
+      return;
+    }
+    setIsSugerindoDescricao(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: {
+          acao: "sugerir_descricao",
+          meta: { titulo: form.titulo, descricao: form.descricao, nivel: form.nivel },
+        },
+      });
+      if (error) throw error;
+      if (data?.descricao) {
+        setForm(prev => ({ ...prev, descricao: data.descricao }));
+        toast.success("Descrição sugerida!");
+      }
+    } catch (e: any) {
+      toast.error(`Erro IA: ${e.message}`);
+    } finally {
+      setIsSugerindoDescricao(false);
+    }
+  };
+
   const aplicarSugestao = (s: any) => {
     setForm(prev => ({
       ...prev,
@@ -301,12 +349,40 @@ export function MetaFormModule({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Título *</Label>
+            <div className="flex items-center justify-between min-h-[24px]">
+              <Label>Título *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSugerirTituloIA}
+                disabled={isSugerindoTitulo}
+                className="h-6 px-2 text-xs gap-1 text-primary hover:bg-primary/10"
+                title="Sugerir título com IA (usa título/descrição atuais como contexto)"
+              >
+                {isSugerindoTitulo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Sugerir com IA
+              </Button>
+            </div>
             <Input value={form.titulo || ""} onChange={e => set("titulo", e.target.value)} placeholder="Ex: Reduzir taxa de acidentes em 30%" />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Descrição</Label>
+            <div className="flex items-center justify-between min-h-[24px]">
+              <Label>Descrição</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSugerirDescricaoIA}
+                disabled={isSugerindoDescricao || !form.titulo?.trim()}
+                className="h-6 px-2 text-xs gap-1 text-primary hover:bg-primary/10"
+                title={!form.titulo?.trim() ? "Preencha o título primeiro" : "Sugerir descrição com IA"}
+              >
+                {isSugerindoDescricao ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Sugerir com IA
+              </Button>
+            </div>
             <Textarea value={form.descricao || ""} onChange={e => set("descricao", e.target.value)} rows={3}
               placeholder="Descreva o que se espera alcançar..." />
           </div>

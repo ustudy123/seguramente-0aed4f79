@@ -120,6 +120,35 @@ Responda em JSON:
 }`;
         break;
 
+      case "sugerir_titulo":
+        userPrompt = `Sugira um TÍTULO claro, objetivo e no formato SMART para uma meta corporativa.
+Contexto/rascunho fornecido pelo usuário:
+Título atual: ${meta?.titulo || "(vazio)"}
+Descrição atual: ${meta?.descricao || "(vazio)"}
+Nível: ${meta?.nivel || "N/A"}
+
+Responda em JSON:
+{
+  "titulo": "título sugerido (máx 120 caracteres, ação + métrica + prazo quando possível)",
+  "justificativa": "1 frase explicando o porquê"
+}`;
+        break;
+
+      case "sugerir_descricao":
+        userPrompt = `Com base no título da meta, sugira uma DESCRIÇÃO clara, objetiva e contextualizada (2 a 4 frases).
+Título: ${meta?.titulo || "(vazio)"}
+Descrição atual (se houver, melhorar): ${meta?.descricao || "(vazio)"}
+Nível: ${meta?.nivel || "N/A"}
+
+A descrição deve explicar: o que será feito, por que é importante e como será medido (em linhas gerais).
+
+Responda em JSON:
+{
+  "descricao": "descrição sugerida",
+  "justificativa": "1 frase curta"
+}`;
+        break;
+
       case "sugerir_indicador":
         userPrompt = `Com base no título e descrição da meta abaixo, sugira o melhor indicador de medição (KPI):
 
