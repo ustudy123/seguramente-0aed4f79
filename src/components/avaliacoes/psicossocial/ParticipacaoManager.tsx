@@ -182,11 +182,14 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
   };
 
   // Estatísticas — combina elegíveis individuais + respostas anônimas (Link Geral)
-  const elegiveis = participacoes.length;
+  // Quando a campanha é anônima (sem elegíveis nominais), usamos o total de respostas
+  // como fonte de verdade — espelhando a lógica do modal de Resultados.
+  const elegiveisNominais = participacoes.length;
   const respondidosIndividuais = participacoes.filter(p => p.respondido).length;
   const responderam = Math.max(respondidosIndividuais, totalRespostasReais);
+  const elegiveis = elegiveisNominais > 0 ? elegiveisNominais : responderam;
   const total = Math.max(elegiveis, responderam);
-  const pendentes = Math.max(0, elegiveis - respondidosIndividuais);
+  const pendentes = Math.max(0, elegiveisNominais - respondidosIndividuais);
   const taxa = total > 0 ? Math.round((responderam / total) * 100) : 0;
   const MINIMO = 5;
 
