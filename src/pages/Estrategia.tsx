@@ -106,7 +106,11 @@ export default function Estrategia() {
         </Tabs>
       )}
 
-      <GuiaRapidoEstrategia open={showGuia} onOpenChange={setShowGuia} />
+      <GuiaRapidoEstrategia
+        open={showGuia}
+        onOpenChange={setShowGuia}
+        contexto={tab === "cultura" ? "cultura" : tab === "organograma" ? "organograma" : "geral"}
+      />
     </motion.div>
   );
 }

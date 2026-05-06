@@ -11,12 +11,15 @@ import {
 import { cn } from "@/lib/utils";
 import { ManualEstrategia } from "./ManualEstrategia";
 
+type GuiaContexto = "geral" | "cultura" | "organograma";
+
 interface GuiaRapidoEstrategiaProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  contexto?: GuiaContexto;
 }
 
-const PASSOS = [
+const PASSOS_GERAL = [
   {
     id: "overview",
     icon: Compass,
@@ -144,7 +147,181 @@ const PASSOS = [
   },
 ];
 
-export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategiaProps) {
+const PASSOS_CULTURA = [
+  {
+    id: "overview",
+    icon: Heart,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    titulo: "O que é a Identidade Estratégica?",
+    subtitulo: "Cultura, valores e comportamentos",
+    descricao:
+      "A Identidade Estratégica reúne os elementos que definem quem a empresa é: Missão, Visão, Valores, Princípios e Comportamentos esperados. É a base cultural que orienta decisões, contratações, avaliações e comunicação interna.",
+    destaques: [
+      { icon: Compass, label: "Missão, Visão e Valores" },
+      { icon: Lightbulb, label: "Princípios do negócio" },
+      { icon: Heart, label: "Comportamentos esperados" },
+      { icon: FileText, label: "Painel de Gestão consolidado" },
+    ],
+    dica: "Identidade clara reduz turnover e fortalece a marca empregadora. Use-a como filtro em recrutamento e avaliações.",
+  },
+  {
+    id: "cadastro",
+    icon: FileText,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    titulo: "Passo 1 — Cadastrar a Identidade",
+    subtitulo: "Missão, Visão e Valores",
+    descricao:
+      "Preencha o formulário com a Missão (propósito), Visão (futuro desejado) e Valores (princípios inegociáveis) da empresa. Cada bloco aceita texto livre e pode ser editado a qualquer momento.",
+    acoes: [
+      "Acesse **Identidade Estratégica** no menu",
+      "Preencha **Missão, Visão e Valores**",
+      "Adicione **Princípios** que regem o negócio",
+      "Cadastre **Comportamentos Esperados** para cada valor",
+      "Clique em **Salvar** — o histórico é mantido",
+    ],
+    dica: "Evite frases genéricas. Valores como 'ética' ou 'qualidade' só ganham força quando traduzidos em comportamentos observáveis.",
+  },
+  {
+    id: "painel",
+    icon: Compass,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    titulo: "Passo 2 — Painel de Gestão",
+    subtitulo: "Visualizar e editar",
+    descricao:
+      "O Painel de Gestão consolida toda a identidade salva em um único lugar, permitindo consulta rápida, edição e impressão. Use-o em reuniões, integração de novos colaboradores e revisões anuais.",
+    acoes: [
+      "Acesse o **Painel de Gestão** dentro de Identidade Estratégica",
+      "Visualize **Missão, Visão, Valores e Comportamentos** consolidados",
+      "Clique em **Editar** para atualizar qualquer bloco",
+      "Use a **impressão** para entregar em onboarding",
+      "Revise a identidade **anualmente** ou em mudanças estratégicas",
+    ],
+    dica: "Inclua o painel na trilha de integração (onboarding). Colaborador que conhece a cultura desde o dia 1 engaja mais rápido.",
+  },
+  {
+    id: "escopo",
+    icon: Settings2,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    titulo: "Passo 3 — Escopo Empresa ou Grupo",
+    subtitulo: "Identidade individual ou consolidada",
+    descricao:
+      "Use o seletor de escopo para definir se a identidade aplica-se a uma empresa específica ou ao grupo econômico inteiro. Útil para holdings com culturas compartilhadas ou diferenciadas por filial.",
+    acoes: [
+      "Localize o **seletor de escopo** no topo",
+      "Selecione **Empresa** para identidade local",
+      "Selecione **Grupo** para identidade consolidada",
+      "Identidades de grupo são herdadas pelas empresas",
+      "Cada empresa pode sobrescrever pontos específicos",
+    ],
+    dica: "Em grupos econômicos, defina valores comuns no nível Grupo e comportamentos específicos no nível Empresa.",
+  },
+  {
+    id: "recursos",
+    icon: FileText,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    titulo: "Documentos e Recursos",
+    subtitulo: "Material de referência",
+    descricao:
+      "Toda a identidade fica registrada com histórico e rastreabilidade. Baixe o Manual em PDF para distribuir em onboarding, treinamentos e auditorias culturais.",
+    acoes: [
+      "**Identidade salva** com versionamento automático",
+      "**Painel de Gestão** sempre disponível para consulta",
+      "**Manual em PDF** para distribuição offline",
+      "Integração com **Trilhas de Aprendizado**",
+      "Referência em **Avaliações de Desempenho**",
+    ],
+    dica: "Cultura documentada é cultura defensável. Em conflitos trabalhistas, ter valores formalizados demonstra coerência organizacional.",
+  },
+];
+
+const PASSOS_ORGANOGRAMA = [
+  {
+    id: "overview",
+    icon: Users,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    titulo: "O que é o Organograma?",
+    subtitulo: "Estrutura hierárquica e funcional",
+    descricao:
+      "O Organograma representa visualmente a estrutura de comando da empresa. É gerado automaticamente a partir do campo 'Gestor Imediato' de cada colaborador e alimenta avaliações, fluxos de aprovação e identificação de líderes em todo o sistema.",
+    destaques: [
+      { icon: Users, label: "Hierarquia automática" },
+      { icon: Compass, label: "Baseado em Gestor Imediato" },
+      { icon: Settings2, label: "Limpar e regerar vínculos" },
+      { icon: FileText, label: "Exportável e auditável" },
+    ],
+    dica: "O organograma é fonte de verdade para muitos módulos. Mantenha o campo 'Gestor Imediato' sempre atualizado nos colaboradores.",
+  },
+  {
+    id: "gerar",
+    icon: Compass,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    titulo: "Passo 1 — Gerar Automaticamente",
+    subtitulo: "A partir dos colaboradores",
+    descricao:
+      "O sistema constrói o organograma usando o campo 'Gestor Imediato' de cada colaborador. Basta clicar em 'Gerar Automaticamente' para criar toda a hierarquia.",
+    acoes: [
+      "Garanta que os colaboradores tenham **Gestor Imediato** preenchido",
+      "Clique em **Gerar Automaticamente**",
+      "Visualize a hierarquia em formato de árvore",
+      "Identifique colaboradores **sem gestor** (órfãos)",
+      "Corrija os vínculos diretamente em **Colaboradores**",
+    ],
+    dica: "Antes de gerar, faça um pente-fino em Colaboradores: gestor errado = organograma errado.",
+  },
+  {
+    id: "limpar",
+    icon: Settings2,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    titulo: "Passo 2 — Limpar e Gerar",
+    subtitulo: "Quando há vínculos órfãos",
+    descricao:
+      "Use 'Limpar e Gerar' quando houver inconsistências, gestores desligados ou após grandes movimentações. A função apaga os vínculos atuais e reconstrói tudo do zero.",
+    acoes: [
+      "Identifique **vínculos órfãos ou inconsistentes**",
+      "Clique em **Limpar e Gerar**",
+      "Confirme a operação (ela é destrutiva)",
+      "O sistema recria a hierarquia do zero",
+      "Valide o resultado e ajuste se necessário",
+    ],
+    dica: "Use após desligamentos em massa, fusões ou reestruturações. Em operação normal, 'Gerar Automaticamente' é suficiente.",
+  },
+  {
+    id: "uso",
+    icon: Lightbulb,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    titulo: "Passo 3 — Como o organograma é usado",
+    subtitulo: "Integrações com outros módulos",
+    descricao:
+      "O organograma alimenta avaliações de desempenho (líder avalia liderado), fluxos de aprovação (férias, ponto, despesas), Plano de Ação (responsável e aprovador) e identificação de gestores em alertas.",
+    acoes: [
+      "**Avaliações** — define quem avalia quem",
+      "**Férias e Ponto** — define o aprovador",
+      "**Plano de Ação** — sugere responsáveis",
+      "**Alertas SST** — escala para o gestor correto",
+      "**Trilhas** — direciona certificados ao líder",
+    ],
+    dica: "Quanto mais preciso o organograma, mais inteligentes os fluxos automáticos do sistema.",
+  },
+];
+
+export function GuiaRapidoEstrategia({ open, onOpenChange, contexto = "geral" }: GuiaRapidoEstrategiaProps) {
+  const PASSOS =
+    contexto === "cultura" ? PASSOS_CULTURA : contexto === "organograma" ? PASSOS_ORGANOGRAMA : PASSOS_GERAL;
+  const tituloModulo =
+    contexto === "cultura"
+      ? "Guia da Identidade Estratégica"
+      : contexto === "organograma"
+      ? "Guia do Organograma"
+      : "Guia do Módulo Planejamento Estratégico";
   const [passo, setPasso] = useState(0);
 
   const atual = PASSOS[passo];
@@ -170,7 +347,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
               <BookOpen className="h-5 w-5 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-foreground">Guia do Módulo Planejamento e Cultura</h2>
+              <h2 className="font-bold text-base text-foreground">{tituloModulo}</h2>
               <p className="text-xs text-muted-foreground">
                 {passo + 1} de {PASSOS.length} — {atual.titulo}
               </p>
