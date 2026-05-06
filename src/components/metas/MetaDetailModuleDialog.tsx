@@ -129,7 +129,7 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
     enabled: !!meta?.id && !!tenantId,
   });
 
-  const [isSavingCheckin, setIsSavingCheckin] = React.useState(false);
+  const [isSavingCheckin, setIsSavingCheckin] = useState(false);
 
   const handleCheckin = async () => {
     if (!meta || !onCheckin) return;
