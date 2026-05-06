@@ -267,13 +267,11 @@ export function Matriz9Box() {
                     const colab = colaboradores.find(x => x.id === item.colaborador_id);
                     return (
                       <div key={item.id} className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                          {colab?.foto_url ? (
-                            <img src={colab.foto_url} alt={item.colaborador_nome} className="w-full h-full object-cover" />
-                          ) : (
-                            <Users className="h-5 w-5 text-primary" />
-                          )}
-                        </div>
+                        <ColaboradorAvatar
+                          nome={item.colaborador_nome}
+                          fotoUrl={colab?.foto_url}
+                          className="w-10 h-10 shrink-0 bg-primary/10"
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{item.colaborador_nome}</p>
                           {item.justificativa && (
