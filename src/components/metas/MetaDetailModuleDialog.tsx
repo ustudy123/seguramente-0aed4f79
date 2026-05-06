@@ -548,6 +548,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
               {/* Histórico */}
               <TabsContent value="historico" className="mt-0 space-y-2">
+                <div className="rounded-lg border border-slate-200 bg-slate-50/60 dark:bg-slate-900/40 dark:border-slate-800 p-3 text-xs text-slate-700 dark:text-slate-300 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><History className="h-3.5 w-3.5" /> Linha do tempo automática</p>
+                  <p>Registra <strong>tudo o que aconteceu com a meta</strong>: criação, envios para aprovação, mudanças de status e quem fez cada ação. <strong>Apenas leitura</strong> — preenchido pelo sistema.</p>
+                </div>
                 {workflowLogs.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Sem histórico de workflow.</p>
                 ) : (
