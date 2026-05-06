@@ -507,7 +507,11 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
             <Button
               onClick={() => adicionarParticipante.mutate(form)}
-              disabled={!form.colaborador_nome || adicionarParticipante.isPending}
+              disabled={
+                !form.colaborador_nome ||
+                adicionarParticipante.isPending ||
+                (!!form.colaborador_cpf && !validateCpf(form.colaborador_cpf))
+              }
             >
               {adicionarParticipante.isPending ? "Adicionando..." : "Adicionar e Gerar Link"}
             </Button>
