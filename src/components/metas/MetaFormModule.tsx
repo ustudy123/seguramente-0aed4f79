@@ -599,10 +599,10 @@ export function MetaFormModule({
                   <CommandList>
                     <CommandEmpty>Nenhum setor encontrado.</CommandEmpty>
                     <CommandGroup>
-                      {setoresFiltrados.map(d => (
+                      {setoresFiltrados.filter(d => d.id && d.nome).map(d => (
                         <CommandItem
                           key={d.id}
-                          value={d.nome}
+                          value={d.nome || d.id}
                           onSelect={() => {
                             set("setor_id", d.id);
                             set("setor_nome", d.nome);
