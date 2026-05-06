@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Target, Calendar, User, TrendingUp, MessageSquare, FileCheck, Pencil, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Target, Calendar, User, TrendingUp, MessageSquare, Pencil, FileText, Lightbulb, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
