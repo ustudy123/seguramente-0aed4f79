@@ -206,10 +206,16 @@ export function MetaFormModule({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Sugestões IA */}
       <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={handleSugerirIA} disabled={isSugerindo} className="gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSugerirIA}
+          disabled={isSugerindo}
+          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+        >
           {isSugerindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           Sugerir com IA
         </Button>
@@ -239,70 +245,102 @@ export function MetaFormModule({
         </div>
       )}
 
-      {/* Formulário */}
-      <div className="space-y-1.5">
-        <Label>Nível *</Label>
-        <Select value={form.nivel} onValueChange={v => set("nivel", v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {Object.entries(NIVEL_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Seção: Informações Gerais */}
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="pb-3 border-b bg-muted/30">
+          <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+              <FileText className="h-4 w-4 text-primary" />
+            </div>
+            Informações Gerais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <div className="space-y-1.5">
+            <Label>Nível *</Label>
+            <Select value={form.nivel} onValueChange={v => set("nivel", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(NIVEL_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="space-y-1.5">
-        <Label>Título *</Label>
-        <Input value={form.titulo || ""} onChange={e => set("titulo", e.target.value)} placeholder="Ex: Reduzir taxa de acidentes em 30%" />
-      </div>
+          <div className="space-y-1.5">
+            <Label>Título *</Label>
+            <Input value={form.titulo || ""} onChange={e => set("titulo", e.target.value)} placeholder="Ex: Reduzir taxa de acidentes em 30%" />
+          </div>
 
-      <div className="space-y-1.5">
-        <Label>Descrição</Label>
-        <Textarea value={form.descricao || ""} onChange={e => set("descricao", e.target.value)} rows={3}
-          placeholder="Descreva o que se espera alcançar..." />
-      </div>
+          <div className="space-y-1.5">
+            <Label>Descrição</Label>
+            <Textarea value={form.descricao || ""} onChange={e => set("descricao", e.target.value)} rows={3}
+              placeholder="Descreva o que se espera alcançar..." />
+          </div>
 
-      <div className="space-y-1.5">
-        <Label>Objetivo Estratégico Vinculado</Label>
-        <Input value={form.objetivo_estrategico || ""} onChange={e => set("objetivo_estrategico", e.target.value)}
-          placeholder="Ex: Excelência em SST" />
-      </div>
+          <div className="space-y-1.5">
+            <Label>Objetivo Estratégico Vinculado</Label>
+            <Input value={form.objetivo_estrategico || ""} onChange={e => set("objetivo_estrategico", e.target.value)}
+              placeholder="Ex: Excelência em SST" />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Ano *</Label>
-          <Input type="number" value={form.ano || new Date().getFullYear()} onChange={e => set("ano", parseInt(e.target.value))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Trimestre da Entrega</Label>
-          <Select disabled value={form.trimestre?.toString() || ""} onValueChange={v => set("trimestre", v ? parseInt(v) : undefined)}>
-            <SelectTrigger className="bg-muted cursor-not-allowed"><SelectValue placeholder="Automático" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1º Trimestre</SelectItem>
-              <SelectItem value="2">2º Trimestre</SelectItem>
-              <SelectItem value="3">3º Trimestre</SelectItem>
-              <SelectItem value="4">4º Trimestre</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {/* Seção: Período */}
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="pb-3 border-b bg-muted/30">
+          <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+              <Calendar className="h-4 w-4 text-primary" />
+            </div>
+            Período
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Ano *</Label>
+              <Input type="number" value={form.ano || new Date().getFullYear()} onChange={e => set("ano", parseInt(e.target.value))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Trimestre da Entrega</Label>
+              <Select disabled value={form.trimestre?.toString() || ""} onValueChange={v => set("trimestre", v ? parseInt(v) : undefined)}>
+                <SelectTrigger className="bg-muted cursor-not-allowed"><SelectValue placeholder="Automático" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1º Trimestre</SelectItem>
+                  <SelectItem value="2">2º Trimestre</SelectItem>
+                  <SelectItem value="3">3º Trimestre</SelectItem>
+                  <SelectItem value="4">4º Trimestre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Data Início</Label>
-          <Input type="date" value={form.data_inicio || ""} onChange={e => set("data_inicio", e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Data Fim</Label>
-          <Input type="date" value={form.data_fim || ""} onChange={e => set("data_fim", e.target.value)} />
-        </div>
-      </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Data Início</Label>
+              <Input type="date" value={form.data_inicio || ""} onChange={e => set("data_inicio", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Data Fim</Label>
+              <Input type="date" value={form.data_fim || ""} onChange={e => set("data_fim", e.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Indicador */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">📊 Indicador</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
+      {/* Seção: Indicador */}
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="pb-3 border-b bg-muted/30">
+          <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+              <BarChart3 className="h-4 w-4 text-primary" />
+            </div>
+            Indicador de Medição
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
           <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Nome do Indicador</Label>
@@ -315,17 +353,17 @@ export function MetaFormModule({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(INDICADOR_TIPO_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                    <SelectItem key={k} value={k}>{v as string}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Unidade de Medida</Label>
-              <Select 
-                value={form.indicador_unidade || ""} 
+              <Select
+                value={form.indicador_unidade || ""}
                 onValueChange={v => set("indicador_unidade", v)}
               >
                 <SelectTrigger>
@@ -359,38 +397,12 @@ export function MetaFormModule({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Valor Alvo</Label>
-              <Input type="number" value={form.valor_alvo || ""} onChange={e => set("valor_alvo", parseFloat(e.target.value) || undefined)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="flex flex-col gap-1">
-                Baseline
-                <span className="text-[10px] font-normal text-muted-foreground leading-tight">Valor de referência inicial para medir o ponto de partida</span>
+              <Label className="flex items-center gap-1.5">
+                <Target className="h-3.5 w-3.5 text-primary" />
+                Valor Alvo
               </Label>
-              <Input type="number" value={form.valor_baseline || ""} onChange={e => set("valor_baseline", parseFloat(e.target.value) || undefined)} />
+              <Input type="number" value={form.valor_alvo ?? ""} onChange={e => set("valor_alvo", parseFloat(e.target.value) || undefined)} placeholder="Meta a alcançar" />
             </div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Direção</Label>
-              <Select value={form.indicador_direcao || "maior_melhor"} onValueChange={v => set("indicador_direcao", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(INDICADOR_DIRECAO_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Peso</Label>
-              <Input type="number" step="0.1" value={form.peso || 1} onChange={e => set("peso", parseFloat(e.target.value) || 1)} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Fórmula de Medição</Label>
-            <Input value={form.formula_medicao || ""} onChange={e => set("formula_medicao", e.target.value)}
-              placeholder="Ex: (acidentes mês / total colaboradores) * 100" />
           </div>
         </CardContent>
       </Card>
