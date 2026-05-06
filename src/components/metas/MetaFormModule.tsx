@@ -240,29 +240,16 @@ export function MetaFormModule({
       )}
 
       {/* Formulário */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Nível *</Label>
-          <Select value={form.nivel} onValueChange={v => set("nivel", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(NIVEL_LABELS).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Período *</Label>
-          <Select value={form.periodo} onValueChange={v => set("periodo", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(PERIODO_LABELS).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-1.5">
+        <Label>Nível *</Label>
+        <Select value={form.nivel} onValueChange={v => set("nivel", v)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {Object.entries(NIVEL_LABELS).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-1.5">
