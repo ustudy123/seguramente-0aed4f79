@@ -407,8 +407,18 @@ export function MetaFormModule({
         </CardContent>
       </Card>
 
-      {/* Campos dinâmicos por nível */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Seção: Responsabilidades */}
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="pb-3 border-b bg-muted/30">
+          <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+              <User className="h-4 w-4 text-primary" />
+            </div>
+            Responsabilidades
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid md:grid-cols-2 gap-4">
         {/* Unidade - aparece para nível unidade, setor e individual */}
         {(form.nivel === "unidade" || form.nivel === "setor" || form.nivel === "individual") && (
           <div className="space-y-1.5">
