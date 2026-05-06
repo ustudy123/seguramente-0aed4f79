@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import type { PdiInsert, PdiPeriodo } from "@/types/pdi";
 import { PDI_PERIODO_LABELS } from "@/types/pdi";
@@ -32,6 +35,39 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
   });
 
   const selectedColab = colaboradores.find(c => c.id === form.colaborador_id);
+  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | null>(null);
+
+  const sugerir = async (campo: "titulo" | "descricao") => {
+    if (!selectedColab) {
+      toast.error("Selecione um colaborador antes de pedir sugestão");
+      return;
+    }
+    setAiLoading(campo);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-pdi-sugestao", {
+        body: {
+          campo,
+          colaborador_nome: selectedColab.nome_completo,
+          colaborador_cargo: selectedColab.cargo,
+          colaborador_departamento: selectedColab.departamento,
+          periodo: form.periodo,
+          gatilho: form.gatilho,
+          titulo: form.titulo,
+          descricao: form.descricao,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const sugestao = data?.sugestao?.trim();
+      if (!sugestao) throw new Error("Sem sugestão");
+      setForm(f => ({ ...f, [campo]: sugestao }));
+      toast.success("Sugestão aplicada");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao gerar sugestão");
+    } finally {
+      setAiLoading(null);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.colaborador_id || !form.titulo || !form.data_inicio || !form.data_fim) return;
@@ -79,12 +115,24 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
           </div>
 
           <div>
-            <Label>Título *</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Título *</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir("titulo")} disabled={aiLoading !== null}>
+                {aiLoading === "titulo" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Sugerir com I.A.
+              </Button>
+            </div>
             <Input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} placeholder="Ex: PDI Q1 2026 — João Silva" />
           </div>
 
           <div>
-            <Label>Descrição</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Descrição</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir("descricao")} disabled={aiLoading !== null}>
+                {aiLoading === "descricao" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Sugerir com I.A.
+              </Button>
+            </div>
             <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} rows={2} />
           </div>
 

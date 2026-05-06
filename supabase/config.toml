@@ -37,6 +37,8 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = false
   [functions.ai-pdi-smart]
     verify_jwt = false
+  [functions.ai-pdi-sugestao]
+    verify_jwt = false
   [functions.ai-pgr-riscos]
     verify_jwt = false
   [functions.ai-plano-acao]
