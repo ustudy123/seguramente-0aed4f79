@@ -42,6 +42,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
+import { formatCpf, cleanCpf, validateCpf } from "@/lib/cpf";
 
 interface Participacao {
   id: string;
@@ -441,8 +442,23 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
                 <Input
                   placeholder="000.000.000-00"
                   value={form.colaborador_cpf}
-                  onChange={e => setForm(f => ({ ...f, colaborador_cpf: e.target.value }))}
+                  inputMode="numeric"
+                  maxLength={14}
+                  onChange={e =>
+                    setForm(f => ({ ...f, colaborador_cpf: formatCpf(e.target.value) }))
+                  }
+                  className={cn(
+                    form.colaborador_cpf &&
+                      cleanCpf(form.colaborador_cpf).length === 11 &&
+                      !validateCpf(form.colaborador_cpf) &&
+                      "border-destructive focus-visible:ring-destructive"
+                  )}
                 />
+                {form.colaborador_cpf &&
+                  cleanCpf(form.colaborador_cpf).length === 11 &&
+                  !validateCpf(form.colaborador_cpf) && (
+                    <p className="text-[11px] text-destructive">CPF inválido</p>
+                  )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -491,7 +507,11 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
             <Button
               onClick={() => adicionarParticipante.mutate(form)}
-              disabled={!form.colaborador_nome || adicionarParticipante.isPending}
+              disabled={
+                !form.colaborador_nome ||
+                adicionarParticipante.isPending ||
+                (!!form.colaborador_cpf && !validateCpf(form.colaborador_cpf))
+              }
             >
               {adicionarParticipante.isPending ? "Adicionando..." : "Adicionar e Gerar Link"}
             </Button>
