@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, Search, Building2, Users, User } from "lucide-react";
+import { Sparkles, Loader2, Search, Building2, Users, User, Target, BarChart3, Calendar, FileText } from "lucide-react";
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
