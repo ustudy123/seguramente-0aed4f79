@@ -214,11 +214,15 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <span className="text-xs text-muted-foreground">Elegíveis</span>
             </div>
             <p className="text-2xl font-bold mt-1">{elegiveis}</p>
-            {totalRespostasReais > elegiveis && (
+            {elegiveisNominais === 0 && totalRespostasReais > 0 ? (
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                +{totalRespostasReais} via Link Geral (anônimo)
+                Campanha anônima — respostas via Link Geral
               </p>
-            )}
+            ) : totalRespostasReais > elegiveisNominais ? (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                +{totalRespostasReais - respondidosIndividuais} via Link Geral (anônimo)
+              </p>
+            ) : null}
           </CardContent>
         </Card>
         <Card>
