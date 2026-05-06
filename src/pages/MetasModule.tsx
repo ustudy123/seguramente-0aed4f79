@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import {
   Target, BarChart3, Layers, Building2, Users, User,
   Plus, Settings, Sparkles, MessageSquare, Calculator, BookOpen,
-  BarChart3 as IndicatorIcon,
+  ListChecks, LayoutGrid,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
