@@ -36,9 +36,9 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
   });
 
   const selectedColab = colaboradores.find(c => c.id === form.colaborador_id);
-  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | null>(null);
+  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | "observacoes" | null>(null);
 
-  const sugerir = async (campo: "titulo" | "descricao") => {
+  const sugerir = async (campo: "titulo" | "descricao" | "observacoes") => {
     if (!selectedColab) {
       toast.error("Selecione um colaborador antes de pedir sugestão");
       return;
