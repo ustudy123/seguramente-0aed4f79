@@ -601,30 +601,37 @@ export function MetaFormModule({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
-                <Command shouldFilter={false}>
-                  <CommandInput placeholder="Buscar setor..." value={searchSetor} onValueChange={setSearchSetor} />
-                  <CommandList>
-                    <CommandEmpty>Nenhum setor encontrado.</CommandEmpty>
-                    <CommandGroup>
-                      {setoresFiltrados.filter(d => d.id && d.nome).map(d => (
-                        <CommandItem
-                          key={d.id}
-                          value={d.nome || d.id}
-                          onSelect={() => {
-                            set("setor_id", d.id);
-                            set("setor_nome", d.nome);
-                            set("departamento_id", d.id);
-                            set("departamento_nome", d.nome);
-                            setOpenSetor(false);
-                            setSearchSetor("");
-                          }}
-                        >
-                          {d.nome}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Buscar setor..."
+                    value={searchSetor}
+                    onChange={(e) => setSearchSetor(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+                <div className="max-h-[240px] overflow-y-auto p-1">
+                  {setoresFiltrados.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum setor encontrado.</p>
+                  ) : (
+                    setoresFiltrados.filter(d => d.id && d.nome).map(d => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => {
+                          set("setor_id", d.id);
+                          set("setor_nome", d.nome);
+                          set("departamento_id", d.id);
+                          set("departamento_nome", d.nome);
+                          setOpenSetor(false);
+                          setSearchSetor("");
+                        }}
+                        className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent"
+                      >
+                        {d.nome}
+                      </button>
+                    ))
+                  )}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
