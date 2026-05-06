@@ -19,6 +19,7 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { QUADRANTES_9BOX, type Avaliacao9Box } from "@/types/avaliacao";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ColaboradorAvatar } from "./ColaboradorAvatar";
 
 type Nivel = 1 | 2 | 3;
 
