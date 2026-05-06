@@ -129,21 +129,31 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
     enabled: !!meta?.id && !!tenantId,
   });
 
+  const [isSavingCheckin, setIsSavingCheckin] = useState(false);
+
   const handleCheckin = async () => {
     if (!meta || !onCheckin) return;
     if (checkinValue === "" || isNaN(valorNumerico)) {
       toast.error("Informe o valor atual alcançado");
       return;
     }
-    await onCheckin({
-      meta_id: meta.id,
-      valor_novo: valorNumerico,
-      progresso_novo: progressoCalculado,
-      observacao: checkinObs || undefined,
-    });
-    setCheckinValue("");
-    setCheckinObs("");
-    toast.success("Check-in registrado!");
+    try {
+      setIsSavingCheckin(true);
+      await onCheckin({
+        meta_id: meta.id,
+        valor_novo: valorNumerico,
+        progresso_novo: progressoCalculado,
+        observacao: checkinObs || undefined,
+      });
+      setCheckinValue("");
+      setCheckinObs("");
+      toast.success("Check-in registrado com sucesso!");
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error("Erro ao salvar check-in: " + (e?.message || ""));
+    } finally {
+      setIsSavingCheckin(false);
+    }
   };
 
   const handleAddEvidencia = async (data: any) => {
@@ -354,8 +364,9 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                       </p>
                     </div>
 
-                    <Button onClick={handleCheckin} className="gap-2 w-full sm:w-auto" disabled={checkinValue === ""}>
-                      <CheckCircle2 className="h-4 w-4" /> Salvar Check-in
+                    <Button onClick={handleCheckin} className="gap-2 w-full sm:w-auto" disabled={checkinValue === "" || isSavingCheckin}>
+                      <CheckCircle2 className="h-4 w-4" />
+                      {isSavingCheckin ? "Salvando..." : "Salvar Check-in"}
                     </Button>
                   </CardContent>
                 </Card>
