@@ -120,6 +120,22 @@ Responda em JSON:
 }`;
         break;
 
+      case "sugerir_indicador":
+        userPrompt = `Com base no título e descrição da meta abaixo, sugira o melhor indicador de medição (KPI):
+
+Título: ${meta?.titulo || "N/A"}
+Descrição: ${meta?.descricao || "N/A"}
+
+Responda em JSON:
+{
+  "indicador_nome": "nome curto e claro do KPI",
+  "indicador_tipo": "quantitativo|qualitativo|financeiro",
+  "indicador_unidade": "uma de: %, un, qtd, horas, dias, R$, US$, €, nivel, status, conceito",
+  "valor_alvo": number,
+  "justificativa": "por que esse indicador mede bem essa meta (1 frase)"
+}`;
+        break;
+
       case "chat":
         userPrompt = pergunta || "Olá, como posso ajudá-lo com metas?";
         break;

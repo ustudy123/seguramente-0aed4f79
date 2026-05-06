@@ -162,6 +162,38 @@ export function MetaFormModule({
     }
   };
 
+  const [isSugerindoIndicador, setIsSugerindoIndicador] = useState(false);
+  const handleSugerirIndicadorIA = async () => {
+    if (!form.titulo?.trim()) {
+      toast.error("Preencha o título da meta primeiro");
+      return;
+    }
+    setIsSugerindoIndicador(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: {
+          acao: "sugerir_indicador",
+          meta: { titulo: form.titulo, descricao: form.descricao },
+        },
+      });
+      if (error) throw error;
+      if (data) {
+        setForm(prev => ({
+          ...prev,
+          indicador_nome: data.indicador_nome ?? prev.indicador_nome,
+          indicador_tipo: data.indicador_tipo ?? prev.indicador_tipo,
+          indicador_unidade: data.indicador_unidade ?? prev.indicador_unidade,
+          valor_alvo: data.valor_alvo ?? prev.valor_alvo,
+        }));
+        toast.success(data.justificativa ? `Indicador sugerido! ${data.justificativa}` : "Indicador sugerido!");
+      }
+    } catch (e: any) {
+      toast.error(`Erro IA: ${e.message}`);
+    } finally {
+      setIsSugerindoIndicador(false);
+    }
+  };
+
   const aplicarSugestao = (s: any) => {
     setForm(prev => ({
       ...prev,
@@ -338,7 +370,21 @@ export function MetaFormModule({
         <CardContent className="space-y-4 pt-4">
           <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Nome do Indicador</Label>
+              <div className="flex items-center justify-between min-h-[24px]">
+                <Label>Nome do Indicador</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSugerirIndicadorIA}
+                  disabled={isSugerindoIndicador || !form.titulo?.trim()}
+                  className="h-6 px-2 text-xs gap-1 text-primary hover:bg-primary/10"
+                  title={!form.titulo?.trim() ? "Preencha o título da meta primeiro" : "Sugerir indicador com IA"}
+                >
+                  {isSugerindoIndicador ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  Sugerir com IA
+                </Button>
+              </div>
               <Input value={form.indicador_nome || ""} onChange={e => set("indicador_nome", e.target.value)}
                 placeholder="Ex: Taxa de acidentes" />
             </div>
