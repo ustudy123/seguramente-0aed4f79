@@ -44,13 +44,13 @@ const NIVEL_ICONS = {
 
 const NIVEL_CARD_STYLES: Record<MetaNivel, string> = {
   estrategica:
-    "bg-gradient-to-br from-violet-200 via-violet-100 to-fuchsia-200/80 border-l-4 border-l-violet-600 dark:from-violet-900/60 dark:via-violet-950/50 dark:to-fuchsia-900/40 dark:border-l-violet-400",
+    "bg-gradient-to-br from-violet-100 via-violet-50 to-fuchsia-100/70 border-l-4 border-l-violet-500 dark:from-violet-900/40 dark:via-violet-950/30 dark:to-fuchsia-900/25 dark:border-l-violet-400",
   unidade:
-    "bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200/80 border-l-4 border-l-sky-600 dark:from-sky-900/60 dark:via-sky-950/50 dark:to-blue-900/40 dark:border-l-sky-400",
+    "bg-gradient-to-br from-sky-100 via-sky-50 to-blue-100/70 border-l-4 border-l-sky-500 dark:from-sky-900/40 dark:via-sky-950/30 dark:to-blue-900/25 dark:border-l-sky-400",
   setor:
-    "bg-gradient-to-br from-emerald-200 via-emerald-100 to-teal-200/80 border-l-4 border-l-emerald-600 dark:from-emerald-900/60 dark:via-emerald-950/50 dark:to-teal-900/40 dark:border-l-emerald-400",
+    "bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100/70 border-l-4 border-l-emerald-500 dark:from-emerald-900/40 dark:via-emerald-950/30 dark:to-teal-900/25 dark:border-l-emerald-400",
   individual:
-    "bg-gradient-to-br from-amber-200 via-amber-100 to-orange-200/80 border-l-4 border-l-amber-600 dark:from-amber-900/60 dark:via-amber-950/50 dark:to-orange-900/40 dark:border-l-amber-400",
+    "bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100/70 border-l-4 border-l-amber-500 dark:from-amber-900/40 dark:via-amber-950/30 dark:to-orange-900/25 dark:border-l-amber-400",
 };
 
 export function MetasListView({
