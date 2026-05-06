@@ -132,12 +132,18 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
           </div>
 
           <div>
-            <Label>Título *</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Título *</Label>
+              {aiBtn("titulo")}
+            </div>
             <Input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} />
           </div>
 
           <div>
-            <Label>Descrição</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Descrição</Label>
+              {aiBtn("descricao")}
+            </div>
             <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} rows={2} />
           </div>
 
