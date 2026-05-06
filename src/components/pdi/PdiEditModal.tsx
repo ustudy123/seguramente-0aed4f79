@@ -111,11 +111,18 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
+        <VisuallyHidden>
           <DialogTitle>Editar PDI</DialogTitle>
           <DialogDescription>Atualize as informações do plano de desenvolvimento</DialogDescription>
-        </DialogHeader>
+        </VisuallyHidden>
+        <GradientDialogHeader
+          icon={Pencil}
+          title="Editar PDI"
+          description="Atualize as informações do plano de desenvolvimento"
+          gradient="from-sky-500 via-blue-500 to-indigo-600"
+          glow="shadow-sky-500/40"
+        />
 
         <div className="space-y-4">
           {/* Colaborador (read-only) */}
