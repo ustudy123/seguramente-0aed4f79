@@ -38,40 +38,37 @@ interface MetaDetailModuleDialogProps {
 export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, onAddEvidencia }: MetaDetailModuleDialogProps) {
   const { tenantId } = useAuth();
   const [checkinValue, setCheckinValue] = useState("");
-  const [checkinProgress, setCheckinProgress] = useState("");
   const [checkinObs, setCheckinObs] = useState("");
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [riskAnalysis, setRiskAnalysis] = useState<any>(null);
 
-  // Cálculo automático de progresso baseado no valor atual
+  // Resetar campos ao trocar de meta
   useEffect(() => {
-    if (meta?.valor_alvo !== undefined && checkinValue !== "") {
-      const val = parseFloat(checkinValue);
-      const target = meta.valor_alvo;
-      const baseline = meta.valor_baseline ?? 0;
-      
-      if (!isNaN(val) && target !== baseline) {
-        let prog = 0;
-        const direcao = meta.indicador_direcao || 'maior_melhor';
-        
-        if (direcao === 'maior_melhor') {
-          prog = ((val - baseline) / (target - baseline)) * 100;
-        } else if (direcao === 'menor_melhor') {
-          prog = ((baseline - val) / (baseline - target)) * 100;
-        } else if (direcao === 'igual_melhor') {
-          // Para 'igual_melhor', o progresso é inversamente proporcional à distância do alvo
-          const diff = Math.abs(target - val);
-          const range = Math.max(Math.abs(target - baseline), 1);
-          prog = Math.max(0, (1 - diff / range) * 100);
-        } else {
-          prog = (val / target) * 100;
-        }
-        
-        // Arredondar para o inteiro mais próximo
-        setCheckinProgress(Math.round(prog).toString());
-      }
+    setCheckinValue("");
+    setCheckinObs("");
+  }, [meta?.id]);
+
+  // Cálculo automático de progresso (sempre entre 0 e 100, nunca negativo)
+  const calcularProgresso = (valor: number): number => {
+    if (!meta?.valor_alvo || meta.valor_alvo === 0) return 0;
+    const target = meta.valor_alvo;
+    const direcao = meta.indicador_direcao || 'maior_melhor';
+    let prog = 0;
+    if (direcao === 'menor_melhor') {
+      // Quanto menor, melhor. Ex: alvo=5 acidentes, atual=3 → mais próximo de zero é melhor
+      prog = target > 0 ? Math.max(0, (1 - valor / target) * 100) : 0;
+    } else {
+      // maior_melhor (padrão): valor / alvo
+      prog = (valor / target) * 100;
     }
-  }, [checkinValue, meta?.valor_alvo, meta?.valor_baseline, meta?.indicador_direcao]);
+    return Math.max(0, Math.min(100, Math.round(prog)));
+  };
+
+  const valorNumerico = checkinValue !== "" ? parseFloat(checkinValue) : NaN;
+  const progressoCalculado = !isNaN(valorNumerico) ? calcularProgresso(valorNumerico) : meta?.progresso ?? 0;
+  const valorRestante = meta?.valor_alvo && !isNaN(valorNumerico)
+    ? Math.max(0, meta.valor_alvo - valorNumerico)
+    : meta?.valor_alvo ?? 0;
 
   const { data: checkins = [] } = useQuery({
     queryKey: ["meta-checkins-detail", meta?.id],
