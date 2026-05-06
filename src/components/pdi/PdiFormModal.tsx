@@ -115,12 +115,24 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
           </div>
 
           <div>
-            <Label>Título *</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Título *</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir("titulo")} disabled={aiLoading !== null}>
+                {aiLoading === "titulo" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Sugerir com I.A.
+              </Button>
+            </div>
             <Input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} placeholder="Ex: PDI Q1 2026 — João Silva" />
           </div>
 
           <div>
-            <Label>Descrição</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Descrição</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir("descricao")} disabled={aiLoading !== null}>
+                {aiLoading === "descricao" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Sugerir com I.A.
+              </Button>
+            </div>
             <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} rows={2} />
           </div>
 
