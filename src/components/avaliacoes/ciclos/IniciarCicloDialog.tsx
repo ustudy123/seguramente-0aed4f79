@@ -186,7 +186,7 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
             gradient="from-emerald-500 via-teal-500 to-cyan-600"
             glow="shadow-emerald-500/40"
             step={{
-              current: step === "review" ? 0 : step === "processing" ? 1 : 2,
+              current: step === "review" ? 0 : step === "generating" ? 1 : 2,
               total: 3,
               labels: ["Revisar", "Gerando", "Concluído"],
             }}
