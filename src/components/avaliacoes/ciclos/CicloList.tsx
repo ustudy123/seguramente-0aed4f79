@@ -35,6 +35,8 @@ import { ptBR } from "date-fns/locale";
 import { STATUS_CICLO_LABELS, type AvaliacaoCicloStatus, type AvaliacaoCiclo } from "@/types/avaliacao";
 import { CicloForm } from "./CicloForm";
 import { IniciarCicloDialog } from "./IniciarCicloDialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 
 const statusConfig: Record<AvaliacaoCicloStatus, { color: string; icon: typeof Play }> = {
   rascunho: { color: "bg-slate-100 text-slate-700", icon: Edit },
