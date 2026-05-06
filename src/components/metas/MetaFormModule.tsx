@@ -162,6 +162,38 @@ export function MetaFormModule({
     }
   };
 
+  const [isSugerindoIndicador, setIsSugerindoIndicador] = useState(false);
+  const handleSugerirIndicadorIA = async () => {
+    if (!form.titulo?.trim()) {
+      toast.error("Preencha o título da meta primeiro");
+      return;
+    }
+    setIsSugerindoIndicador(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: {
+          acao: "sugerir_indicador",
+          meta: { titulo: form.titulo, descricao: form.descricao },
+        },
+      });
+      if (error) throw error;
+      if (data) {
+        setForm(prev => ({
+          ...prev,
+          indicador_nome: data.indicador_nome ?? prev.indicador_nome,
+          indicador_tipo: data.indicador_tipo ?? prev.indicador_tipo,
+          indicador_unidade: data.indicador_unidade ?? prev.indicador_unidade,
+          valor_alvo: data.valor_alvo ?? prev.valor_alvo,
+        }));
+        toast.success(data.justificativa ? `Indicador sugerido! ${data.justificativa}` : "Indicador sugerido!");
+      }
+    } catch (e: any) {
+      toast.error(`Erro IA: ${e.message}`);
+    } finally {
+      setIsSugerindoIndicador(false);
+    }
+  };
+
   const aplicarSugestao = (s: any) => {
     setForm(prev => ({
       ...prev,
