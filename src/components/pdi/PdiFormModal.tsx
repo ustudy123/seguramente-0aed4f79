@@ -92,11 +92,14 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Novo PDI</DialogTitle>
-          <DialogDescription>Crie um plano de desenvolvimento para um colaborador</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
+        <GradientDialogHeader
+          icon={Target}
+          title="Novo PDI"
+          description="Crie um plano de desenvolvimento estruturado para um colaborador"
+          gradient="from-primary via-info to-purple-600"
+          glow="shadow-primary/40"
+        />
 
         <div className="space-y-4">
           <div>
