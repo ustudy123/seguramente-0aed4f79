@@ -550,31 +550,38 @@ export function MetaFormModule({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
-                <Command shouldFilter={false}>
-                  <CommandInput placeholder="Buscar unidade..." value={searchUnidade} onValueChange={setSearchUnidade} />
-                  <CommandList>
-                    <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
-                    <CommandGroup>
-                      {unidadesFiltradas.map(u => (
-                        <CommandItem
-                          key={u.id}
-                          value={u.razao_social}
-                          onSelect={() => {
-                            set("unidade_id", u.id);
-                            set("unidade_nome", u.nome_fantasia || u.razao_social);
-                            setOpenUnidade(false);
-                            setSearchUnidade("");
-                          }}
-                        >
-                          <span className="truncate">{u.nome_fantasia || u.razao_social}</span>
-                          {u.nome_fantasia && (
-                            <span className="ml-2 text-xs text-muted-foreground truncate">{u.razao_social}</span>
-                          )}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Buscar unidade..."
+                    value={searchUnidade}
+                    onChange={(e) => setSearchUnidade(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+                <div className="max-h-[240px] overflow-y-auto p-1">
+                  {unidadesFiltradas.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhuma unidade encontrada.</p>
+                  ) : (
+                    unidadesFiltradas.map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => {
+                          set("unidade_id", u.id);
+                          set("unidade_nome", u.nome_fantasia || u.razao_social);
+                          setOpenUnidade(false);
+                          setSearchUnidade("");
+                        }}
+                        className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent flex items-center gap-2"
+                      >
+                        <span className="truncate">{u.nome_fantasia || u.razao_social}</span>
+                        {u.nome_fantasia && (
+                          <span className="ml-auto text-xs text-muted-foreground truncate">{u.razao_social}</span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
