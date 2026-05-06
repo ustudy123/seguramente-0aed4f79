@@ -161,18 +161,19 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <VisuallyHidden>
           <DialogTitle>Nova Meta SMART — {steps[step].title}</DialogTitle>
           <DialogDescription>Passo {step + 1} de {steps.length}</DialogDescription>
-        </DialogHeader>
-
-        {/* Steps progress */}
-        <div className="flex gap-1 mb-2">
-          {steps.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`} />
-          ))}
-        </div>
+        </VisuallyHidden>
+        <GradientDialogHeader
+          icon={Target}
+          title={`Nova Meta SMART · ${steps[step].title}`}
+          description="Específica · Mensurável · Atingível · Relevante · Temporal"
+          gradient="from-pink-500 via-rose-500 to-fuchsia-600"
+          glow="shadow-pink-500/40"
+          step={{ current: step, total: steps.length, labels: steps.map(s => s.title) }}
+        />
 
         <div className="space-y-4 min-h-[180px]">
           {/* STEP 0 — Definição */}
