@@ -144,7 +144,7 @@ export function MetasListView({
           const workflowActions = getWorkflowActions(meta.workflow_status);
 
           return (
-            <Card key={meta.id} className="hover:shadow-md transition-shadow">
+            <Card key={meta.id} className={`hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ${NIVEL_CARD_STYLES[meta.nivel] || ""}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-2 min-w-0">
