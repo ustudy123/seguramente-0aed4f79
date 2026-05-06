@@ -450,6 +450,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
               </TabsContent>
 
               <TabsContent value="participantes" className="mt-0 space-y-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900 p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Para que serve?</p>
+                  <p>Lista quem mais participa da execução além do responsável principal (corresponsáveis, apoio). <strong>Defina uma vez ao planejar a meta</strong> — não precisa atualizar a cada check-in.</p>
+                </div>
                 <Card>
                   <CardContent className="space-y-3 p-4">
                     <div className="flex items-center justify-between gap-3">
