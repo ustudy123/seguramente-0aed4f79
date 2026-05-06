@@ -21,7 +21,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type { MetaCompleta, MetaNivel, MetaParticipante } from "@/types/metas-module";
 import {
-  NIVEL_LABELS, INDICADOR_TIPO_LABELS, INDICADOR_DIRECAO_LABELS,
+  NIVEL_LABELS, INDICADOR_TIPO_LABELS,
 } from "@/types/metas-module";
 import { MetaParticipantesEditor } from "./MetaParticipantesEditor";
 import { useQuery } from "@tanstack/react-query";
