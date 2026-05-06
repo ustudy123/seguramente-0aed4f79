@@ -42,6 +42,17 @@ const NIVEL_ICONS = {
   individual: User,
 };
 
+const NIVEL_CARD_STYLES: Record<MetaNivel, string> = {
+  estrategica:
+    "bg-gradient-to-br from-violet-50 via-white to-violet-100/60 border-l-4 border-l-violet-500 dark:from-violet-950/40 dark:via-background dark:to-violet-900/20 dark:border-l-violet-400",
+  unidade:
+    "bg-gradient-to-br from-sky-50 via-white to-sky-100/60 border-l-4 border-l-sky-500 dark:from-sky-950/40 dark:via-background dark:to-sky-900/20 dark:border-l-sky-400",
+  setor:
+    "bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60 border-l-4 border-l-emerald-500 dark:from-emerald-950/40 dark:via-background dark:to-emerald-900/20 dark:border-l-emerald-400",
+  individual:
+    "bg-gradient-to-br from-amber-50 via-white to-amber-100/60 border-l-4 border-l-amber-500 dark:from-amber-950/40 dark:via-background dark:to-amber-900/20 dark:border-l-amber-400",
+};
+
 export function MetasListView({
   metas, nivel, onEdit, onDelete, onWorkflow, onDesdobrar, onDetail, onCheckin,
 }: MetasListViewProps) {
@@ -133,7 +144,7 @@ export function MetasListView({
           const workflowActions = getWorkflowActions(meta.workflow_status);
 
           return (
-            <Card key={meta.id} className="hover:shadow-md transition-shadow">
+            <Card key={meta.id} className={`hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ${NIVEL_CARD_STYLES[meta.nivel] || ""}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-2 min-w-0">
