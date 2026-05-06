@@ -32,6 +32,8 @@ import { IERM_CONFIG, CATEGORIA_META_LABELS, type IermNivel, type CategoriaMetaM
 import { MetaForm } from "./MetaForm";
 import { IermBadge } from "./IermBadge";
 import { MetaDetailDialog } from "./MetaDetailDialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 
 const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = {
   nao_iniciada: { color: "bg-slate-100 text-slate-700", icon: Clock },
