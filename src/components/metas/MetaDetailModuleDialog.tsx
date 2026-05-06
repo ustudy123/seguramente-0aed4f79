@@ -499,6 +499,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
               {/* Análise IA */}
               <TabsContent value="risco" className="mt-0 space-y-4">
+                <div className="rounded-lg border border-purple-200 bg-purple-50/60 dark:bg-purple-950/20 dark:border-purple-900 p-3 text-xs text-purple-900 dark:text-purple-200 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Quando usar?</p>
+                  <p>Diagnóstico opcional da IA cruzando <strong>progresso atual × tempo restante × histórico de check-ins</strong>. Útil antes de reuniões de acompanhamento ou quando a meta parece atrasada. Não roda automaticamente — clique no botão abaixo.</p>
+                </div>
                 <Button variant="outline" onClick={handleAnaliseRisco} disabled={isAnalysing} className="gap-1.5">
                   {isAnalysing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   Analisar Risco com IA
