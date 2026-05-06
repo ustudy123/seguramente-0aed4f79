@@ -194,6 +194,54 @@ export function MetaFormModule({
     }
   };
 
+  const [isSugerindoTitulo, setIsSugerindoTitulo] = useState(false);
+  const handleSugerirTituloIA = async () => {
+    setIsSugerindoTitulo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: {
+          acao: "sugerir_titulo",
+          meta: { titulo: form.titulo, descricao: form.descricao, nivel: form.nivel },
+        },
+      });
+      if (error) throw error;
+      if (data?.titulo) {
+        setForm(prev => ({ ...prev, titulo: data.titulo }));
+        toast.success(data.justificativa ? `Título sugerido! ${data.justificativa}` : "Título sugerido!");
+      }
+    } catch (e: any) {
+      toast.error(`Erro IA: ${e.message}`);
+    } finally {
+      setIsSugerindoTitulo(false);
+    }
+  };
+
+  const [isSugerindoDescricao, setIsSugerindoDescricao] = useState(false);
+  const handleSugerirDescricaoIA = async () => {
+    if (!form.titulo?.trim()) {
+      toast.error("Preencha o título da meta primeiro");
+      return;
+    }
+    setIsSugerindoDescricao(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: {
+          acao: "sugerir_descricao",
+          meta: { titulo: form.titulo, descricao: form.descricao, nivel: form.nivel },
+        },
+      });
+      if (error) throw error;
+      if (data?.descricao) {
+        setForm(prev => ({ ...prev, descricao: data.descricao }));
+        toast.success("Descrição sugerida!");
+      }
+    } catch (e: any) {
+      toast.error(`Erro IA: ${e.message}`);
+    } finally {
+      setIsSugerindoDescricao(false);
+    }
+  };
+
   const aplicarSugestao = (s: any) => {
     setForm(prev => ({
       ...prev,
