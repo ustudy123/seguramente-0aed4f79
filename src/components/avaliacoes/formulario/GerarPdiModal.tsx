@@ -207,16 +207,20 @@ export function GerarPdiModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Gerar PDI com Inteligência Artificial
-          </DialogTitle>
-          <DialogDescription>
-            Com base na avaliação de <strong>{resposta.avaliado_nome}</strong>, a IA sugere metas SMART para o PDI.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>Gerar PDI com IA</DialogTitle>
+          <DialogDescription>Com base na avaliação, a IA sugere metas SMART para o PDI.</DialogDescription>
+        </VisuallyHidden>
+        <div className="px-6 pt-6">
+          <GradientDialogHeader
+            icon={Sparkles}
+            title="Gerar PDI com Inteligência Artificial"
+            description={`Com base na avaliação de ${resposta.avaliado_nome}, a IA sugere metas SMART. Você pode editar antes de salvar.`}
+            gradient="from-violet-500 via-purple-500 to-fuchsia-600"
+            glow="shadow-violet-500/40"
+          />
+        </div>
 
         <ScrollArea className="flex-1 px-6 py-4">
           {/* LOADING */}
