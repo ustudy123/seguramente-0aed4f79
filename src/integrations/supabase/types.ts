@@ -5436,7 +5436,7 @@ export type Database = {
           {
             foreignKeyName: "estrategia_cultura_tenant_id_fkey"
             columns: ["tenant_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
