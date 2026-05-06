@@ -26,6 +26,39 @@ const statusVariant: Record<PdiStatus, "default" | "secondary" | "destructive" |
   cancelado: "destructive",
 };
 
+const statusStyle: Record<PdiStatus, { card: string; accent: string; badge: string; progress: string }> = {
+  rascunho: {
+    card: "bg-gradient-to-br from-slate-50 to-slate-100/60 dark:from-slate-900/40 dark:to-slate-800/20 border-slate-300 dark:border-slate-700",
+    accent: "border-l-slate-400",
+    badge: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100 border-slate-300",
+    progress: "[&>div]:bg-slate-500",
+  },
+  ativo: {
+    card: "bg-gradient-to-br from-primary/10 via-background to-info/10 border-primary/30",
+    accent: "border-l-primary",
+    badge: "bg-primary text-primary-foreground border-transparent",
+    progress: "[&>div]:bg-primary",
+  },
+  pausado: {
+    card: "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border-amber-300 dark:border-amber-800",
+    accent: "border-l-amber-500",
+    badge: "bg-amber-500 text-white border-transparent",
+    progress: "[&>div]:bg-amber-500",
+  },
+  concluido: {
+    card: "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border-emerald-300 dark:border-emerald-800",
+    accent: "border-l-emerald-500",
+    badge: "bg-emerald-600 text-white border-transparent",
+    progress: "[&>div]:bg-emerald-600",
+  },
+  cancelado: {
+    card: "bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/20 border-rose-300 dark:border-rose-800",
+    accent: "border-l-rose-500",
+    badge: "bg-rose-600 text-white border-transparent",
+    progress: "[&>div]:bg-rose-500",
+  },
+};
+
 export const PdiList = ({ pdis, isLoading, onSelect, onDelete }: PdiListProps) => {
   const { getAfastamento } = useAfastamentosAtivos();
   if (isLoading) {
