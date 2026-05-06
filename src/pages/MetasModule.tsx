@@ -72,10 +72,10 @@ export default function Metas() {
   const metasFiltradas = nivelFiltro === "todas" ? metas : metas.filter(m => m.nivel === nivelFiltro);
 
   const niveis = [
-    { value: "estrategica" as MetaNivel, label: "Metas Estratégicas", labelCurto: "Estratégicas", icon: Layers, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30", border: "border-purple-300 dark:border-purple-800" },
-    { value: "unidade" as MetaNivel, label: "Metas por Unidade", labelCurto: "Unidade", icon: Building2, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-300 dark:border-blue-800" },
-    { value: "setor" as MetaNivel, label: "Metas por Setor", labelCurto: "Setor", icon: Users, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-300 dark:border-amber-800" },
-    { value: "individual" as MetaNivel, label: "Metas Individuais", labelCurto: "Individual", icon: User, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-300 dark:border-emerald-800" },
+    { value: "estrategica" as MetaNivel, label: "Metas Estratégicas", labelCurto: "Estratégicas", icon: Layers, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30", border: "border-purple-300 dark:border-purple-800", gradient: "from-purple-500 via-purple-600 to-fuchsia-700", glow: "shadow-purple-500/30", ring: "ring-purple-400/40" },
+    { value: "unidade" as MetaNivel, label: "Metas por Unidade", labelCurto: "Unidade", icon: Building2, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-300 dark:border-blue-800", gradient: "from-sky-500 via-blue-600 to-indigo-700", glow: "shadow-blue-500/30", ring: "ring-blue-400/40" },
+    { value: "setor" as MetaNivel, label: "Metas por Setor", labelCurto: "Setor", icon: Users, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-300 dark:border-amber-800", gradient: "from-amber-500 via-orange-500 to-rose-600", glow: "shadow-amber-500/30", ring: "ring-amber-400/40" },
+    { value: "individual" as MetaNivel, label: "Metas Individuais", labelCurto: "Individual", icon: User, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-300 dark:border-emerald-800", gradient: "from-emerald-500 via-teal-600 to-cyan-700", glow: "shadow-emerald-500/30", ring: "ring-emerald-400/40" },
   ];
 
   const novaMetaNivel: MetaNivel = nivelFiltro !== "todas" ? nivelFiltro : "estrategica";
