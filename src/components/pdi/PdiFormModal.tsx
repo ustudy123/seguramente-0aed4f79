@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ResponsavelSelect } from "@/components/planoAcao/ResponsavelSelect";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
