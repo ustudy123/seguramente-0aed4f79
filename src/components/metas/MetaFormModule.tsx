@@ -349,12 +349,40 @@ export function MetaFormModule({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Título *</Label>
+            <div className="flex items-center justify-between min-h-[24px]">
+              <Label>Título *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSugerirTituloIA}
+                disabled={isSugerindoTitulo}
+                className="h-6 px-2 text-xs gap-1 text-primary hover:bg-primary/10"
+                title="Sugerir título com IA (usa título/descrição atuais como contexto)"
+              >
+                {isSugerindoTitulo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Sugerir com IA
+              </Button>
+            </div>
             <Input value={form.titulo || ""} onChange={e => set("titulo", e.target.value)} placeholder="Ex: Reduzir taxa de acidentes em 30%" />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Descrição</Label>
+            <div className="flex items-center justify-between min-h-[24px]">
+              <Label>Descrição</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSugerirDescricaoIA}
+                disabled={isSugerindoDescricao || !form.titulo?.trim()}
+                className="h-6 px-2 text-xs gap-1 text-primary hover:bg-primary/10"
+                title={!form.titulo?.trim() ? "Preencha o título primeiro" : "Sugerir descrição com IA"}
+              >
+                {isSugerindoDescricao ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Sugerir com IA
+              </Button>
+            </div>
             <Textarea value={form.descricao || ""} onChange={e => set("descricao", e.target.value)} rows={3}
               placeholder="Descreva o que se espera alcançar..." />
           </div>
