@@ -279,11 +279,6 @@ export function MetaFormModule({
               placeholder="Descreva o que se espera alcançar..." />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Objetivo Estratégico Vinculado</Label>
-            <Input value={form.objetivo_estrategico || ""} onChange={e => set("objetivo_estrategico", e.target.value)}
-              placeholder="Ex: Excelência em SST" />
-          </div>
         </CardContent>
       </Card>
 
