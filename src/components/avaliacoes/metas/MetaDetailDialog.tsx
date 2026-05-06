@@ -3,11 +3,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Shield, ListChecks, History, Target } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 import { AemForm } from "./AemForm";
 import { MetaAcoesPanel } from "./MetaAcoesPanel";
 import { MetaTimeline } from "./MetaTimeline";
