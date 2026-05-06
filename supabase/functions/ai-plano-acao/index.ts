@@ -60,6 +60,25 @@ Descrição: ${dados?.descricao || ""}
 ${dados?.risco ? `Risco relacionado: ${dados.risco}` : ""}
 
 Justifique cada pontuação e calcule o GUT total.`;
+    } else if (tipo === "sugerir_campo") {
+      const campoLabels: Record<string, string> = {
+        titulo: "Título objetivo da ação (máx 80 caracteres)",
+        descricao: "Descrição detalhada (escopo, resultados esperados) em até 2 frases",
+        porque: "Justificativa: qual problema resolve ou oportunidade aproveita - 1 a 2 frases",
+        onde: "Local/setor/departamento onde será aplicada - resposta curta",
+        como: "Estratégia de execução em passos curtos (1-3 frases)",
+        custo_estimado: "Apenas um número decimal estimado em reais (sem R$, sem texto). Ex: 1500.00",
+      };
+      userPrompt = `Você está ajudando a preencher o campo "${dados?.campo}" de uma Ação do Plano de Ação 5W2H.
+Diretriz do campo: ${campoLabels[dados?.campo || ""] || "Texto curto"}
+
+Contexto da ação:
+- Título: ${dados?.titulo || "(não informado)"}
+- Descrição: ${dados?.descricao || "(não informado)"}
+- Origem: ${dados?.origem || "manual"}
+${dados?.valorAtual ? `- Valor atual do campo: ${dados.valorAtual}` : ""}
+
+Retorne APENAS o texto sugerido para o campo, em português, pronto para colar. Sem aspas, sem rótulos, sem explicações.`;
     }
 
     const tools = [
