@@ -68,8 +68,10 @@ export function PsicossocialDashboard() {
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
   const [bannerResultados, setBannerResultados] = useState<CampanhaPsicossocial | null>(null);
   const [activeTab, setActiveTab] = useState("campanhas");
+  const [apenasAtivas, setApenasAtivas] = useState(false);
 
-  const { campanhas, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
+  const { campanhas: campanhasAll, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
+  const campanhas = apenasAtivas ? campanhasAll.filter(c => c.status === 'ativa') : campanhasAll;
 
   const handleNovaCampanha = () => {
     setCampanhaParaEditar(undefined);
@@ -181,6 +183,25 @@ export function PsicossocialDashboard() {
             setBannerResultados(c);
           }}
         />
+
+        {/* Toggle de escopo dos indicadores */}
+        <div className="flex items-center justify-between gap-3 px-1">
+          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <p>
+              Os indicadores abaixo são <strong>históricos</strong> — incluem campanhas encerradas para preservar a prova documental do monitoramento (NR-01 / ISO 45003).
+            </p>
+          </div>
+          <Button
+            variant={apenasAtivas ? "default" : "outline"}
+            size="sm"
+            onClick={() => setApenasAtivas(v => !v)}
+            className="gap-2 shrink-0"
+          >
+            <Activity className="h-3.5 w-3.5" />
+            {apenasAtivas ? "Mostrando: apenas ativas" : "Apenas campanhas ativas"}
+          </Button>
+        </div>
 
         {/* Stats + IPS */}
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
