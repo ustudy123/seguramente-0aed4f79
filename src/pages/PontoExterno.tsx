@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield } from "lucide-react";
+import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
+import { SolicitarAjusteModal } from "@/components/ponto/SolicitarAjusteModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -37,9 +38,11 @@ const traduzirErroPonto = (mensagem?: string | null) => {
 
   if (!texto) return "Não foi possível registrar o ponto agora. Tente novamente em instantes.";
   if (texto.includes('column "origem"')) return "Não foi possível concluir o registro de ponto agora. Tente novamente em instantes.";
-  if (texto.includes("já registrada hoje") || texto.includes("já registrado hoje")) return texto;
+  if (/já registrad[ao] hoje/i.test(texto)) {
+    return `${texto} Se foi um esquecimento ou erro, use "Solicitar Ajuste de Ponto" abaixo.`;
+  }
   if (texto.includes("Saída sem uma Entrada prévia") || texto.includes("Saída sem Entrada prévia")) {
-    return "Não é possível registrar Saída sem uma Entrada prévia no mesmo dia.";
+    return 'Não é possível registrar Saída sem uma Entrada prévia no mesmo dia. Use "Solicitar Ajuste de Ponto" se necessário.';
   }
   if (texto.includes("Link inválido") || texto.includes("expirado")) return "Link inválido ou expirado.";
   if (texto.includes("Tipo de marcação inválido")) return "Este link permite apenas registro de Entrada ou Saída.";
@@ -60,6 +63,7 @@ const PontoExterno = () => {
   // Selfie
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [ajusteOpen, setAjusteOpen] = useState(false);
 
   // Clock
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -242,6 +246,15 @@ const PontoExterno = () => {
                 </Button>
               ))}
             </div>
+
+            {/* Solicitar Ajuste */}
+            <Button
+              variant="outline"
+              className="w-full mt-2 h-10 text-xs"
+              onClick={() => setAjusteOpen(true)}
+            >
+              <FileEdit className="w-4 h-4 mr-2" /> Solicitar Ajuste de Ponto
+            </Button>
           </CardContent>
         </Card>
       </motion.div>
@@ -249,6 +262,15 @@ const PontoExterno = () => {
       <p className="text-slate-500 text-[10px] text-center max-w-xs">
         Registro via link externo • Geolocalização e horário capturados automaticamente • Dados protegidos
       </p>
+
+      {colaborador && (
+        <SolicitarAjusteModal
+          open={ajusteOpen}
+          onOpenChange={setAjusteOpen}
+          token={token!}
+          colaboradorNome={colaborador.colaborador_nome}
+        />
+      )}
     </div>
   );
 };
