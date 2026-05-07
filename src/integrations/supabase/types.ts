@@ -20443,6 +20443,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      solicitar_ajuste_ponto_externo: {
+        Args: {
+          p_anexos?: Json
+          p_data_referencia: string
+          p_hora_solicitada: string
+          p_motivo: string
+          p_tipo_marcacao: string
+          p_token: string
+        }
+        Returns: Json
+      }
       superadmin_global_stats: { Args: never; Returns: Json }
       superadmin_growth_series: { Args: { _dias?: number }; Returns: Json }
       superadmin_psicossocial_overview: { Args: never; Returns: Json }
