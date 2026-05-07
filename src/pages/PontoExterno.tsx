@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield } from "lucide-react";
+import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
+import { SolicitarAjusteModal } from "@/components/ponto/SolicitarAjusteModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
