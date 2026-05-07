@@ -16,17 +16,43 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
   const totalColab = data.total_colaboradores || 0;
   const pctPCD = data.pcd_percentual_exigido || 0;
 
-  // Auto-cálculo Cota PCD: total_colaboradores * % / 100 (arredondado para cima)
+  // Auto-cálculo Cota PCD: Percentual e Quantidade conforme Lei 8.213/91
   useEffect(() => {
-    if (!data.pcd_obrigatoria) return;
-    if (totalColab > 0 && pctPCD > 0) {
-      const calculado = Math.ceil((totalColab * pctPCD) / 100);
-      if (calculado !== (data.pcd_quantidade_exigida || 0)) {
-        onChange({ pcd_quantidade_exigida: calculado });
+    const updates: Partial<EmpresaCadastro> = {};
+    
+    // Se tem 100 ou mais colaboradores, a cota é obrigatória por lei
+    if (totalColab >= 100 && !data.pcd_obrigatoria) {
+      updates.pcd_obrigatoria = true;
+    }
+
+    if (data.pcd_obrigatoria || updates.pcd_obrigatoria) {
+      // Determina percentual automático baseado na faixa de colaboradores
+      let autoPct = data.pcd_percentual_exigido || 0;
+      
+      if (totalColab >= 100 && totalColab <= 200) autoPct = 2;
+      else if (totalColab >= 201 && totalColab <= 500) autoPct = 3;
+      else if (totalColab >= 501 && totalColab <= 1000) autoPct = 4;
+      else if (totalColab > 1000) autoPct = 5;
+      else if (totalColab < 100 && !data.pcd_percentual_exigido) autoPct = 2; // Default mínimo se marcado como obrigatório mas < 100
+
+      if (autoPct !== data.pcd_percentual_exigido) {
+        updates.pcd_percentual_exigido = autoPct;
+      }
+
+      const finalPct = updates.pcd_percentual_exigido !== undefined ? updates.pcd_percentual_exigido : (data.pcd_percentual_exigido || 0);
+      
+      if (totalColab > 0 && finalPct > 0) {
+        const calculado = Math.ceil((totalColab * finalPct) / 100);
+        if (calculado !== (data.pcd_quantidade_exigida || 0)) {
+          updates.pcd_quantidade_exigida = calculado;
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalColab, pctPCD, data.pcd_obrigatoria]);
+
+    if (Object.keys(updates).length > 0) {
+      onChange(updates);
+    }
+  }, [totalColab, data.pcd_obrigatoria, data.pcd_percentual_exigido, data.pcd_quantidade_exigida, onChange]);
 
   // Removido auto-cálculo Jovem Aprendiz conforme solicitado pelo usuário.
   // A regra de Jovem Aprendiz é complexa e deve ser informada manualmente.
@@ -93,21 +119,28 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                   step="0.01"
                   placeholder="2.00"
                   value={data.pcd_percentual_exigido || ''}
+                  readOnly={totalColab >= 100}
+                  className={totalColab >= 100 ? 'bg-muted cursor-not-allowed' : ''}
                   onChange={(e) => onChange({ pcd_percentual_exigido: parseFloat(e.target.value) || null })}
                 />
+                {totalColab >= 100 && (
+                  <p className="text-[10px] text-primary font-medium">
+                    % Automático (Lei 8.213/91)
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Qtd. Exigida</Label>
                 <Input
                   type="number"
                   value={data.pcd_quantidade_exigida || ''}
-                  readOnly={totalColab > 0 && pctPCD > 0}
-                  className={totalColab > 0 && pctPCD > 0 ? 'bg-muted cursor-not-allowed' : ''}
+                  readOnly={totalColab > 0}
+                  className={totalColab > 0 ? 'bg-muted cursor-not-allowed' : ''}
                   onChange={(e) => onChange({ pcd_quantidade_exigida: parseInt(e.target.value) || 0 })}
                 />
-                {totalColab > 0 && pctPCD > 0 && (
+                {totalColab > 0 && (
                   <p className="text-[10px] text-muted-foreground">
-                    Calculado: {totalColab} × {pctPCD}% = {data.pcd_quantidade_exigida || 0}
+                    Calculado: {totalColab} × {data.pcd_percentual_exigido || 0}% = {data.pcd_quantidade_exigida || 0}
                   </p>
                 )}
               </div>
