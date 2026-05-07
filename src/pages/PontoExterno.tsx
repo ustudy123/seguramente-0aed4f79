@@ -63,6 +63,7 @@ const PontoExterno = () => {
   // Selfie
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [ajusteOpen, setAjusteOpen] = useState(false);
 
   // Clock
   const [currentTime, setCurrentTime] = useState(new Date());
