@@ -16,17 +16,43 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
   const totalColab = data.total_colaboradores || 0;
   const pctPCD = data.pcd_percentual_exigido || 0;
 
-  // Auto-cálculo Cota PCD: total_colaboradores * % / 100 (arredondado para cima)
+  // Auto-cálculo Cota PCD: Percentual e Quantidade conforme Lei 8.213/91
   useEffect(() => {
-    if (!data.pcd_obrigatoria) return;
-    if (totalColab > 0 && pctPCD > 0) {
-      const calculado = Math.ceil((totalColab * pctPCD) / 100);
-      if (calculado !== (data.pcd_quantidade_exigida || 0)) {
-        onChange({ pcd_quantidade_exigida: calculado });
+    const updates: Partial<EmpresaCadastro> = {};
+    
+    // Se tem 100 ou mais colaboradores, a cota é obrigatória por lei
+    if (totalColab >= 100 && !data.pcd_obrigatoria) {
+      updates.pcd_obrigatoria = true;
+    }
+
+    if (data.pcd_obrigatoria || updates.pcd_obrigatoria) {
+      // Determina percentual automático baseado na faixa de colaboradores
+      let autoPct = data.pcd_percentual_exigido || 0;
+      
+      if (totalColab >= 100 && totalColab <= 200) autoPct = 2;
+      else if (totalColab >= 201 && totalColab <= 500) autoPct = 3;
+      else if (totalColab >= 501 && totalColab <= 1000) autoPct = 4;
+      else if (totalColab > 1000) autoPct = 5;
+      else if (totalColab < 100 && !data.pcd_percentual_exigido) autoPct = 2; // Default mínimo se marcado como obrigatório mas < 100
+
+      if (autoPct !== data.pcd_percentual_exigido) {
+        updates.pcd_percentual_exigido = autoPct;
+      }
+
+      const finalPct = updates.pcd_percentual_exigido !== undefined ? updates.pcd_percentual_exigido : (data.pcd_percentual_exigido || 0);
+      
+      if (totalColab > 0 && finalPct > 0) {
+        const calculado = Math.ceil((totalColab * finalPct) / 100);
+        if (calculado !== (data.pcd_quantidade_exigida || 0)) {
+          updates.pcd_quantidade_exigida = calculado;
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalColab, pctPCD, data.pcd_obrigatoria]);
+
+    if (Object.keys(updates).length > 0) {
+      onChange(updates);
+    }
+  }, [totalColab, data.pcd_obrigatoria, data.pcd_percentual_exigido, data.pcd_quantidade_exigida, onChange]);
 
   // Removido auto-cálculo Jovem Aprendiz conforme solicitado pelo usuário.
   // A regra de Jovem Aprendiz é complexa e deve ser informada manualmente.
