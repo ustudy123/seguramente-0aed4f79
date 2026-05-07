@@ -246,6 +246,15 @@ const PontoExterno = () => {
                 </Button>
               ))}
             </div>
+
+            {/* Solicitar Ajuste */}
+            <Button
+              variant="outline"
+              className="w-full mt-2 h-10 text-xs"
+              onClick={() => setAjusteOpen(true)}
+            >
+              <FileEdit className="w-4 h-4 mr-2" /> Solicitar Ajuste de Ponto
+            </Button>
           </CardContent>
         </Card>
       </motion.div>
@@ -253,6 +262,15 @@ const PontoExterno = () => {
       <p className="text-slate-500 text-[10px] text-center max-w-xs">
         Registro via link externo • Geolocalização e horário capturados automaticamente • Dados protegidos
       </p>
+
+      {colaborador && (
+        <SolicitarAjusteModal
+          open={ajusteOpen}
+          onOpenChange={setAjusteOpen}
+          token={token!}
+          colaboradorNome={colaborador.colaborador_nome}
+        />
+      )}
     </div>
   );
 };
