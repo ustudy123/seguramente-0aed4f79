@@ -119,21 +119,28 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                   step="0.01"
                   placeholder="2.00"
                   value={data.pcd_percentual_exigido || ''}
+                  readOnly={totalColab >= 100}
+                  className={totalColab >= 100 ? 'bg-muted cursor-not-allowed' : ''}
                   onChange={(e) => onChange({ pcd_percentual_exigido: parseFloat(e.target.value) || null })}
                 />
+                {totalColab >= 100 && (
+                  <p className="text-[10px] text-primary font-medium">
+                    % Automático (Lei 8.213/91)
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Qtd. Exigida</Label>
                 <Input
                   type="number"
                   value={data.pcd_quantidade_exigida || ''}
-                  readOnly={totalColab > 0 && pctPCD > 0}
-                  className={totalColab > 0 && pctPCD > 0 ? 'bg-muted cursor-not-allowed' : ''}
+                  readOnly={totalColab > 0}
+                  className={totalColab > 0 ? 'bg-muted cursor-not-allowed' : ''}
                   onChange={(e) => onChange({ pcd_quantidade_exigida: parseInt(e.target.value) || 0 })}
                 />
-                {totalColab > 0 && pctPCD > 0 && (
+                {totalColab > 0 && (
                   <p className="text-[10px] text-muted-foreground">
-                    Calculado: {totalColab} × {pctPCD}% = {data.pcd_quantidade_exigida || 0}
+                    Calculado: {totalColab} × {data.pcd_percentual_exigido || 0}% = {data.pcd_quantidade_exigida || 0}
                   </p>
                 )}
               </div>
