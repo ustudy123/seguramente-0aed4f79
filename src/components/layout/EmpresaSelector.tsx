@@ -119,10 +119,15 @@ export const EmpresaSelector = () => {
           <CommandList>
             <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
             <CommandGroup heading="Empresas">
-              {empresas.map((empresa) =>
+              {empresas.map((empresa) => {
+                // Detecta empresas duplicadas (mesma razão + CNPJ) para exibir sufixo do ID
+                const dup = empresas.filter(
+                  (x) => x.razao_social === empresa.razao_social && x.cnpj === empresa.cnpj
+                ).length > 1;
+                return (
               <CommandItem
                 key={empresa.id}
-                value={`${empresa.razao_social} ${empresa.nome_fantasia} ${empresa.cnpj}`}
+                value={`${empresa.id} ${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''}`}
                 onSelect={() => {
                   setEmpresaAtiva(empresa);
                   setOpen(false);
