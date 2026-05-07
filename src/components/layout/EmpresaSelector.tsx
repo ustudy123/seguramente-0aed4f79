@@ -144,6 +144,11 @@ export const EmpresaSelector = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium truncate">
                         {empresa.razao_social || empresa.nome_fantasia || "Sem nome"}
+                        {dup && (
+                          <span className="ml-1 text-[10px] text-muted-foreground font-normal">
+                            #{empresa.id.slice(0, 6)}
+                          </span>
+                        )}
                       </span>
                       <Badge
                       variant="outline"
@@ -159,7 +164,8 @@ export const EmpresaSelector = () => {
                   }
                   </div>
                 </CommandItem>
-              )}
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
