@@ -282,18 +282,44 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
             </SelectContent>
           </Select>
           {grupos.length > 0 && (
-            <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Grupo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos Grupos</SelectItem>
-                <SelectItem value="_sem_grupo">Sem grupo</SelectItem>
-                {grupos.filter(g => g.ativo).map(g => (
-                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="w-[180px]">
+              <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Grupo" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <div className="p-2 border-b sticky top-0 bg-popover z-10">
+                    <Input
+                      placeholder="Pesquisar grupo..."
+                      className="h-8 text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        // Hack para filtrar as opções manualmente se o shadcn/ui select não suportar busca nativa
+                        const search = e.target.value.toLowerCase();
+                        const items = document.querySelectorAll('[role="option"]');
+                        items.forEach((item) => {
+                          const text = item.textContent?.toLowerCase() || '';
+                          const isSpecial = text.includes('todos grupos') || text.includes('sem grupo');
+                          if (isSpecial || text.includes(search)) {
+                            (item as HTMLElement).style.display = 'flex';
+                          } else {
+                            (item as HTMLElement).style.display = 'none';
+                          }
+                        });
+                      }}
+                    />
+                  </div>
+                  <SelectItem value="todos">Todos Grupos</SelectItem>
+                  <SelectItem value="_sem_grupo">Sem grupo</SelectItem>
+                  {grupos
+                    .filter(g => g.ativo)
+                    .sort((a, b) => a.nome.localeCompare(b.nome))
+                    .map(g => (
+                      <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
         <div className="flex gap-2">
