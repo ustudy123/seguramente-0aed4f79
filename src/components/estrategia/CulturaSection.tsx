@@ -56,6 +56,8 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   });
 
   useEffect(() => {
+    // Reset form whenever the active scope (empresa/grupo) changes,
+    // so switching empresas doesn't carry over stale Missão/Visão/Valores.
     if (cultura) {
       setForm({
         missao: cultura.missao || "",
@@ -65,8 +67,17 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         comportamentos_esperados: Array.isArray(cultura.comportamentos_esperados) ? cultura.comportamentos_esperados : [],
         comportamentos_nao_tolerados: Array.isArray(cultura.comportamentos_nao_tolerados) ? cultura.comportamentos_nao_tolerados : [],
       });
+    } else {
+      setForm({
+        missao: "",
+        visao: "",
+        valores: [],
+        principios: [],
+        comportamentos_esperados: [],
+        comportamentos_nao_tolerados: [],
+      });
     }
-  }, [cultura]);
+  }, [cultura, empresaAtivaId, escopo?.tipo, escopo?.grupoId]);
 
   const addItem = (field: ListField) => {
     const val = newValue[field].trim();
