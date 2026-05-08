@@ -20385,6 +20385,10 @@ export type Database = {
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
+      proximo_tipo_marcacao_externo: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       recalcular_status_terceiro: {
         Args: { p_terceiro_id: string }
         Returns: undefined
@@ -20407,7 +20411,7 @@ export type Database = {
           p_latitude?: number
           p_longitude?: number
           p_selfie_base64?: string
-          p_tipo_marcacao: string
+          p_tipo_marcacao?: string
           p_token: string
         }
         Returns: Json
