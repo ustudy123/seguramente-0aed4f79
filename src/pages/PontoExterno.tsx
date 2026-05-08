@@ -97,6 +97,10 @@ const PontoExterno = () => {
 
   const handleRegistrar = useCallback(async (tipo: "entrada" | "saida") => {
     if (!token || !colaborador) return;
+    if (!selfieFile) {
+      setError("Capture a selfie de verificação antes de registrar o ponto.");
+      return;
+    }
     setError(null);
     setRegistrando(true);
     try {
