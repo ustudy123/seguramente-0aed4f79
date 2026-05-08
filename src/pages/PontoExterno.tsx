@@ -38,14 +38,8 @@ const traduzirErroPonto = (mensagem?: string | null) => {
 
   if (!texto) return "Não foi possível registrar o ponto agora. Tente novamente em instantes.";
   if (texto.includes('column "origem"')) return "Não foi possível concluir o registro de ponto agora. Tente novamente em instantes.";
-  if (/já registrad[ao] hoje/i.test(texto)) {
-    return `${texto} Se foi um esquecimento ou erro, use "Solicitar Ajuste de Ponto" abaixo.`;
-  }
-  if (texto.includes("Saída sem uma Entrada prévia") || texto.includes("Saída sem Entrada prévia")) {
-    return 'Não é possível registrar Saída sem uma Entrada prévia no mesmo dia. Use "Solicitar Ajuste de Ponto" se necessário.';
-  }
   if (texto.includes("Link inválido") || texto.includes("expirado")) return "Link inválido ou expirado.";
-  if (texto.includes("Tipo de marcação inválido")) return "Este link permite apenas registro de Entrada ou Saída.";
+  if (/tipo inválido/i.test(texto)) return "Use apenas Entrada ou Saída.";
 
   return texto;
 };

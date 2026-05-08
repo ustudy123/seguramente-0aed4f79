@@ -112,19 +112,15 @@ export function PontoRepCTab() {
       // Inserir marcações no ponto_marcacoes
       let importados = 0;
       for (const m of marcacoes) {
-        // Determinar tipo de marcação baseado na ordem do dia
+        // Alterna entre entrada/saida com base na quantidade de marcações já existentes no dia
         const { data: existentes } = await fromTable("ponto_marcacoes")
           .select("tipo_marcacao")
           .eq("tenant_id", tenantId)
           .eq("colaborador_cpf", m.colaborador_cpf)
           .eq("data_marcacao", m.data_marcacao) as { data: any[] | null };
 
-        const tipos = (existentes || []).map((e: any) => e.tipo_marcacao);
-        let tipoMarcacao = "entrada";
-        if (tipos.includes("entrada") && !tipos.includes("saida_almoco")) tipoMarcacao = "saida_almoco";
-        else if (tipos.includes("saida_almoco") && !tipos.includes("retorno_almoco")) tipoMarcacao = "retorno_almoco";
-        else if (tipos.includes("retorno_almoco") && !tipos.includes("saida")) tipoMarcacao = "saida";
-        else if (tipos.includes("saida")) continue; // Já tem todas as marcações
+        const totalDia = (existentes || []).length;
+        const tipoMarcacao = totalDia % 2 === 0 ? "entrada" : "saida";
 
         const { error: errMarcacao } = await fromTable("ponto_marcacoes")
           .insert({
