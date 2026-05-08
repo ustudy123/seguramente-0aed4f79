@@ -89,13 +89,28 @@ const PontoExterno = () => {
     })();
   }, [token]);
 
-  // Auto-capture geolocation
+  // Próximo tipo a registrar (decidido pelo backend)
+  const [proximoTipo, setProximoTipo] = useState<"entrada" | "saida">("entrada");
+
+  const carregarProximoTipo = useCallback(async () => {
+    if (!token) return;
+    const { data } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
+    const r = data as any;
+    if (r?.proximo_tipo === "saida" || r?.proximo_tipo === "entrada") {
+      setProximoTipo(r.proximo_tipo);
+    }
+  }, [token]);
+
+  // Auto-capture geolocation + carrega próximo tipo
   useEffect(() => {
-    if (colaborador) geo.capturarLocalizacao();
+    if (colaborador) {
+      geo.capturarLocalizacao();
+      carregarProximoTipo();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colaborador]);
 
-  const handleRegistrar = useCallback(async (tipo: "entrada" | "saida") => {
+  const handleRegistrar = useCallback(async () => {
     if (!token || !colaborador) return;
     if (!selfieFile) {
       setError("Capture a selfie de verificação antes de registrar o ponto.");
@@ -106,7 +121,7 @@ const PontoExterno = () => {
     try {
       const { data, error } = await supabasePublic.rpc("registrar_ponto_externo", {
         p_token: token,
-        p_tipo_marcacao: tipo,
+        p_tipo_marcacao: proximoTipo,
         p_latitude: geo.latitude,
         p_longitude: geo.longitude,
         p_endereco: geo.endereco,
@@ -128,7 +143,7 @@ const PontoExterno = () => {
       setError(traduzirErroPonto(e.message));
     }
     setRegistrando(false);
-  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco, selfieFile]);
+  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco, selfieFile, proximoTipo]);
 
   if (loading) {
     return (
