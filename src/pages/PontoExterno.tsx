@@ -236,7 +236,8 @@ const PontoExterno = () => {
                 <Button
                   key={tipo}
                   className={`${config.color} text-white h-14 flex flex-col gap-0.5`}
-                  disabled={registrando}
+                  disabled={registrando || !selfieFile}
+                  title={!selfieFile ? "Capture a selfie antes de registrar" : undefined}
                   onClick={() => handleRegistrar(tipo)}
                 >
                   {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : config.icon}
