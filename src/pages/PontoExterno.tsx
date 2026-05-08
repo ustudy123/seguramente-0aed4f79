@@ -245,21 +245,21 @@ const PontoExterno = () => {
               </div>
             )}
 
-            {/* Buttons */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              {(Object.entries(TIPO_LABELS) as Array<["entrada" | "saida", (typeof TIPO_LABELS)["entrada"]]>).map(([tipo, config]) => (
+            {/* Botão único: tipo decidido automaticamente */}
+            {(() => {
+              const cfg = TIPO_LABELS[proximoTipo];
+              return (
                 <Button
-                  key={tipo}
-                  className={`${config.color} text-white h-14 flex flex-col gap-0.5`}
+                  className={`${cfg.color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
                   disabled={registrando || !selfieFile}
                   title={!selfieFile ? "Capture a selfie antes de registrar" : undefined}
-                  onClick={() => handleRegistrar(tipo)}
+                  onClick={handleRegistrar}
                 >
-                  {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : config.icon}
-                  <span className="text-xs font-medium">{config.label}</span>
+                  {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : cfg.icon}
+                  Registrar {cfg.label}
                 </Button>
-              ))}
-            </div>
+              );
+            })()}
 
             {/* Solicitar Ajuste */}
             <Button
