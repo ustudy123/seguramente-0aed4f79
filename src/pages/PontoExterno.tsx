@@ -187,7 +187,7 @@ const PontoExterno = () => {
                   <Shield className="w-3 h-3 mr-1" /> Registro auditável • Link externo
                 </Badge>
               </div>
-              <Button variant="outline" onClick={() => { setResultado(null); setError(null); }} className="w-full mt-4">
+              <Button variant="outline" onClick={() => { setResultado(null); setError(null); setSelfieFile(null); setSelfiePreview(null); carregarProximoTipo(); }} className="w-full mt-4">
                 Registrar outra marcação
               </Button>
             </CardContent>
