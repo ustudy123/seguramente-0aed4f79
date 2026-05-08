@@ -139,6 +139,7 @@ const PontoExterno = () => {
         return;
       }
       setResultado(result);
+      carregarProximoTipo();
     } catch (e: any) {
       setError(traduzirErroPonto(e.message));
     }
