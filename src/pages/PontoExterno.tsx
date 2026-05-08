@@ -128,7 +128,7 @@ const PontoExterno = () => {
       setError(traduzirErroPonto(e.message));
     }
     setRegistrando(false);
-  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco]);
+  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco, selfieFile]);
 
   if (loading) {
     return (
