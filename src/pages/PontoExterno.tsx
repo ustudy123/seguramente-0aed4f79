@@ -97,6 +97,10 @@ const PontoExterno = () => {
 
   const handleRegistrar = useCallback(async (tipo: "entrada" | "saida") => {
     if (!token || !colaborador) return;
+    if (!selfieFile) {
+      setError("Capture a selfie de verificação antes de registrar o ponto.");
+      return;
+    }
     setError(null);
     setRegistrando(true);
     try {
@@ -124,7 +128,7 @@ const PontoExterno = () => {
       setError(traduzirErroPonto(e.message));
     }
     setRegistrando(false);
-  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco]);
+  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco, selfieFile]);
 
   if (loading) {
     return (
@@ -232,7 +236,8 @@ const PontoExterno = () => {
                 <Button
                   key={tipo}
                   className={`${config.color} text-white h-14 flex flex-col gap-0.5`}
-                  disabled={registrando}
+                  disabled={registrando || !selfieFile}
+                  title={!selfieFile ? "Capture a selfie antes de registrar" : undefined}
                   onClick={() => handleRegistrar(tipo)}
                 >
                   {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : config.icon}
