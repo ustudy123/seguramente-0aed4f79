@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Info,
   LayoutDashboard,
+  AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -362,6 +363,10 @@ export function PsicossocialDashboard() {
         {/* Tabs principais — Campanhas primeiro */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full sm:w-auto flex-wrap h-auto">
+            <TabsTrigger id="tab-psicossocial-riscos" value="riscos" className="gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Riscos Psicossociais
+            </TabsTrigger>
             <TabsTrigger id="tab-psicossocial-campanhas" value="campanhas" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Campanhas
@@ -393,7 +398,16 @@ export function PsicossocialDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Campanhas (agora primeiro) */}
+          {/* Tab: Riscos Psicossociais (placeholder) */}
+          <TabsContent value="riscos" className="mt-4">
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground text-sm">
+                Em breve — inventário de riscos psicossociais.
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Campanhas */}
           <TabsContent value="campanhas" className="mt-4">
             <CampanhaList 
               campanhas={campanhas} 
