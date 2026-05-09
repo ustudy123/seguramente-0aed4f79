@@ -75,29 +75,11 @@ const PASSOS = [
     dica: "Use o SIPRO para campanhas regulares. Outros instrumentos (PHQ-9, GAD-7, MBI) são para situações específicas como investigar depressão ou burnout.",
   },
   {
-    id: "vinculo",
-    icon: Users,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    titulo: "Passo 2 — Selecione os Colaboradores",
-    subtitulo: "Setor, Função e GHE são puxados automaticamente",
-    descricao:
-      "Você não precisa mais cadastrar manualmente os pares Setor + Função. Ao selecionar os colaboradores que vão participar da campanha, o sistema identifica pelo CPF e puxa automaticamente o Setor, Cargo e GHE de cada um — esse snapshot é gravado anonimamente na resposta.",
-    acoes: [
-      "Selecione os colaboradores no escopo da campanha (por unidade, setor ou individualmente)",
-      "O sistema **lê o CPF** de cada um e identifica **Setor, Cargo e GHE** automaticamente",
-      "Esses dados viram **snapshot anônimo** gravado em cada resposta — sem nome, sem CPF",
-      "É esse snapshot que habilita os **cruzamentos da aba Segmentos** depois",
-      "Não é mais preciso digitar pares 'Produção + Operador' manualmente — a NR-17 fica atendida pelo próprio cadastro do colaborador",
-    ],
-    dica: "Mantenha os cadastros de Setor, Cargo e GHE em dia no módulo de Colaboradores. Quanto mais limpos esses dados, melhor a segmentação dos resultados.",
-  },
-  {
     id: "distribuicao",
     icon: Link2,
     color: "text-emerald-600",
     bgColor: "bg-emerald-50",
-    titulo: "Passo 3 — Envie para os Colaboradores",
+    titulo: "Passo 2 — Envie para os Colaboradores",
     subtitulo: "Convite individual ou link público",
     descricao:
       "Após ativar a campanha, você tem duas formas de distribuir: convite individual (recomendado) ou link público. O colaborador não precisa de login em nenhuma delas — e a identidade nunca é gravada junto às respostas.",
@@ -115,7 +97,7 @@ const PASSOS = [
     icon: Lock,
     color: "text-rose-600",
     bgColor: "bg-rose-50",
-    titulo: "Passo 4 — Regra do Anonimato",
+    titulo: "Passo 3 — Regra do Anonimato",
     subtitulo: "Como o sistema protege os colaboradores",
     descricao:
       "O sistema garante que nenhum colaborador seja identificado pelas suas respostas. A regra de confidencialidade ≥5 vale tanto para o resultado geral quanto para o cruzamento por segmento (GHE, Setor, Cargo).",
@@ -133,7 +115,7 @@ const PASSOS = [
     icon: BarChart3,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
-    titulo: "Passo 5 — Veja os Resultados",
+    titulo: "Passo 4 — Veja os Resultados",
     subtitulo: "Visão Geral, Dimensões, IA e Segmentos",
     descricao:
       "Ao encerrar a campanha, o sistema calcula automaticamente o IRP-S (Índice de Risco Psicossocial) e classifica cada dimensão. Os resultados ficam organizados em abas: Visão Geral, Por Dimensão, IA, Contraprova, Ergonomia, Participação e Segmentos.",
@@ -151,7 +133,7 @@ const PASSOS = [
     icon: ClipboardList,
     color: "text-orange-600",
     bgColor: "bg-orange-50",
-    titulo: "Passo 6 — Riscos Vão para o GRO Automaticamente",
+    titulo: "Passo 5 — Riscos Vão para o GRO Automaticamente",
     subtitulo: "Integração com o inventário de riscos",
     descricao:
       "Ao encerrar a campanha, os fatores de risco identificados são automaticamente exportados para o GRO (Inventário de Riscos Ocupacionais) — o documento obrigatório do PGR.",
@@ -169,7 +151,7 @@ const PASSOS = [
     icon: AlertTriangle,
     color: "text-amber-600",
     bgColor: "bg-amber-50",
-    titulo: "Passo 7 — Quando o Sistema Recomenda a AET",
+    titulo: "Passo 6 — Quando o Sistema Recomenda a AET",
     subtitulo: "Análise Ergonômica do Trabalho (NR-17)",
     descricao:
       "Quando o sistema identifica situações críticas — como IPS muito baixo, riscos recorrentes ou múltiplos fatores simultâneos — ele recomenda a realização de uma AET (Análise Ergonômica do Trabalho), conforme exige a NR-17.",
@@ -187,7 +169,7 @@ const PASSOS = [
     icon: RefreshCw,
     color: "text-teal-600",
     bgColor: "bg-teal-50",
-    titulo: "Passo 8 — Monitore e Reaprecie",
+    titulo: "Passo 7 — Monitore e Reaprecie",
     subtitulo: "O ciclo não termina na primeira campanha",
     descricao:
       "Após executar as ações do plano, o sistema exige que os riscos sejam reavaliados. O histórico de campanhas mostra a evolução do IPS ao longo do tempo, permitindo medir o impacto das intervenções.",
