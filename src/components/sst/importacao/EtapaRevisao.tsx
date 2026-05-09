@@ -310,7 +310,7 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         tipo: state.tipoDetectado,
         data_emissao: parseDateString(dados.dados_gerais?.data_emissao?.valor) || undefined,
         data_vigencia: dataVigenciaManual || undefined,
-        profissional_responsavel: dados.responsaveis_tecnicos?.[0]?.nome || undefined,
+        profissional_responsavel: dados.responsaveis_tecnicos?.[0]?.nome || respManualNome.trim() || undefined,
         empresa_emissora: dados.dados_gerais?.empresa?.valor || undefined,
         observacoes: modoRascunho ? "[RASCUNHO] Importação inteligente SST" : "Importação inteligente SST",
         // Persistir todos os dados extraídos pela IA
