@@ -880,24 +880,16 @@ export default function LandingPage() {
         <p className="mt-1 text-xs" style={{ color: 'hsl(215 15% 40%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 
-      {/* Floating Diagnóstico CTA (primary) + WhatsApp (secondary) */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+      {/* Floating Diagnóstico CTA */}
+      <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={scrollToDiag}
           aria-label="Fazer diagnóstico grátis"
-          className="hidden sm:flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-2xl transition-transform hover:scale-105 text-white font-bold text-sm"
+          className="flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-2xl transition-transform hover:scale-105 text-white font-bold text-sm"
           style={{ background: 'linear-gradient(135deg, hsl(25 65% 42%), hsl(25 75% 32%))', boxShadow: '0 8px 32px hsl(25 65% 42% / 0.5)' }}
         >
           <Brain className="w-4 h-4" />
           Diagnóstico grátis
-        </button>
-        <button
-          onClick={openWhatsApp}
-          aria-label="Falar no WhatsApp"
-          className="rounded-full p-4 shadow-2xl transition-transform hover:scale-110"
-          style={{ background: 'hsl(25 66% 39%)', boxShadow: '0 8px 32px hsl(25 70% 38% / 0.5)' }}
-        >
-          <MessageSquare className="w-6 h-6 text-white" />
         </button>
       </div>
     </div>
