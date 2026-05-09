@@ -469,7 +469,11 @@ const Ponto = () => {
                         <span className="font-medium">{ajuste.colaborador_nome}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{(() => { const [y,m,d] = (ajuste.data_referencia || "").split("-"); return d && m && y ? `${d}/${m}/${y}` : ajuste.data_referencia; })()}</TableCell>
+                    <TableCell>{(() => {
+                      const raw = (ajuste.data_referencia || "").toString().slice(0, 10);
+                      const [y, m, d] = raw.split("-");
+                      return d && m && y ? `${d}/${m}/${y}` : (ajuste.data_referencia || "-");
+                    })()}</TableCell>
                     <TableCell><Badge variant="outline">{ajuste.tipo_ajuste}</Badge></TableCell>
                     <TableCell>{ajuste.tipo_marcacao ? TIPO_MARCACAO_LABELS[ajuste.tipo_marcacao] : "-"}</TableCell>
                     <TableCell className="font-mono">{ajuste.hora_solicitada || "-"}</TableCell>
@@ -708,7 +712,22 @@ const Ponto = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Data de Referência *</Label>
-                <Input type="date" value={ajusteData} onChange={(e) => setAjusteData(e.target.value)} />
+                <Input
+                  type="date"
+                  value={ajusteData}
+                  max={format(new Date(), "yyyy-MM-dd")}
+                  onChange={(e) => setAjusteData(e.target.value)}
+                />
+                {ajusteData && (() => {
+                  const [y, m, d] = ajusteData.split("-");
+                  if (!y || !m || !d) return null;
+                  const dt = new Date(Number(y), Number(m) - 1, Number(d));
+                  return (
+                    <p className="text-[11px] text-muted-foreground">
+                      📅 {format(dt, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </p>
+                  );
+                })()}
               </div>
               <div className="space-y-2">
                 <Label>Tipo de Ajuste *</Label>
