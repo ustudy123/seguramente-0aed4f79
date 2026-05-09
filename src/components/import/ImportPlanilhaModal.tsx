@@ -282,7 +282,7 @@ export function ImportPlanilhaModal({
       ["Estado", "NÃO", "UF", "Sigla com 2 letras", "SP"],
       ["SITUAÇÃO", "NÃO", "Status do colaborador no sistema", "0 = Inativo (desligado), 1 = Ativo", "1"],
       ["Filial", "NÃO", "Estabelecimento/Unidade do colaborador", "Nome do estabelecimento cadastrado", "Sede"],
-      ["Cargo *", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
+      ["Cargo *", "SIM", "Cargo do colaborador", "Nome do cargo", "Analista de RH"],
       ["Departamento *", "SIM", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
       ["CBO", "NÃO", "Código CBO (Classificação Brasileira de Ocupações). Aceita formato com ou sem traço.", "6 dígitos: 000000 ou 0000-00", "2524-05 ou 252405"],
