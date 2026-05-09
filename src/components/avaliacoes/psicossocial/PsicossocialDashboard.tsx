@@ -366,14 +366,6 @@ export function PsicossocialDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full sm:w-auto flex-wrap h-auto bg-muted/50 p-1.5 gap-1">
             <TabsTrigger
-              id="tab-psicossocial-riscos"
-              value="riscos"
-              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-amber-50 hover:text-amber-700"
-            >
-              <AlertTriangle className="h-4 w-4" />
-              Fatores de Riscos Psicossociais
-            </TabsTrigger>
-            <TabsTrigger
               id="tab-psicossocial-ghe"
               value="ghe"
               className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-cyan-50 hover:text-cyan-700"
@@ -393,6 +385,14 @@ export function PsicossocialDashboard() {
                   {campanhasAtivas}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger
+              id="tab-psicossocial-riscos"
+              value="riscos"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-amber-50 hover:text-amber-700"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Fatores de Riscos Psicossociais
             </TabsTrigger>
             <TabsTrigger
               id="tab-psicossocial-burnout"
