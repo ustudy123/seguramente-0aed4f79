@@ -61,6 +61,9 @@ export function GHEPanel() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [search, setSearch] = useState("");
+  const [step, setStep] = useState<"categoria" | "template" | "form">("categoria");
+  const [categoria, setCategoria] = useState<GHECategoria | null>(null);
+  const [refPadrao, setRefPadrao] = useState<string | null>(null);
 
   const { data: ghes = [], isLoading } = useQuery({
     queryKey: ["psicossocial_ghe", tenantId, empresaAtivaId],
