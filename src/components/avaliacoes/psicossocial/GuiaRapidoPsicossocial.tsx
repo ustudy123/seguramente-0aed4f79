@@ -175,8 +175,8 @@ const PASSOS = [
       "Quando o sistema identifica situações críticas — como IPS muito baixo, riscos recorrentes ou múltiplos fatores simultâneos — ele recomenda a realização de uma AET (Análise Ergonômica do Trabalho), conforme exige a NR-17.",
     acoes: [
       "O **banner de AET** aparece automaticamente nos resultados quando necessário",
-      "**IPS abaixo de 65** → recomendação de AET",
-      "**IPS abaixo de 50 ou múltiplos fatores críticos** → AET obrigatória pela NR-17",
+      "**IRP-S acima de 35 (Atenção)** → recomendação de AET",
+      "**IRP-S acima de 50 ou múltiplos fatores críticos** → AET prioritária pela NR-17",
       "Os dados psicossociais alimentam a **Avaliação Ergonômica Preliminar (AEP)**",
       "Acesse o módulo de **Ergonomia** para iniciar a AET recomendada",
     ],
