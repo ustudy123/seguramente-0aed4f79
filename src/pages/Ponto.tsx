@@ -423,14 +423,17 @@ const Ponto = () => {
                   <TableHead>Marcação</TableHead>
                   <TableHead>Hora</TableHead>
                   <TableHead>Motivo</TableHead>
+                  <TableHead className="text-center">Anexos</TableHead>
                   <TableHead>Solicitante</TableHead>
                   <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {ajustesPendentes.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum ajuste pendente.</TableCell></TableRow>
-                ) : ajustesPendentes.map((ajuste) => (
+                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum ajuste pendente.</TableCell></TableRow>
+                ) : ajustesPendentes.map((ajuste) => {
+                  const qtdAnexos = ajuste.anexos?.length ?? 0;
+                  return (
                   <TableRow key={ajuste.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -451,6 +454,22 @@ const Ponto = () => {
                         {ajuste.motivo}
                       </p>
                     </TableCell>
+                    <TableCell className="text-center">
+                      {qtdAnexos > 0 ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setAnexosModalAjuste(ajuste)}
+                          className="gap-1"
+                        >
+                          <Paperclip className="w-3.5 h-3.5" />
+                          <span className="text-xs">{qtdAnexos}</span>
+                          <Eye className="w-3.5 h-3.5 ml-0.5" />
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>{ajuste.created_by_nome}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
@@ -465,7 +484,8 @@ const Ponto = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </motion.div>
