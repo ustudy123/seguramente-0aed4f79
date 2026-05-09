@@ -265,16 +265,21 @@ export function QuestionarioResponder({
                                 key={op.valor}
                                 onClick={() => onRespostaChange(pergunta.id, op.valor)}
                                 className={cn(
-                                  "group relative flex flex-col items-center justify-center gap-1.5 px-1 py-2.5 sm:py-3 rounded-md border transition-colors text-center h-full",
+                                  "group relative flex flex-col items-center justify-center gap-2 px-1 py-3 sm:py-3.5 rounded-lg border transition-all text-center h-full",
                                   ativo
-                                    ? `${estilo.selBg} ${estilo.selBorder} ${estilo.selText} border-2`
-                                    : "bg-background border-border hover:border-foreground/30 hover:bg-muted/40 text-muted-foreground"
+                                    ? `${estilo.selBg} ${estilo.selBorder} ${estilo.selText} border-2 ring-4 ${estilo.ring}`
+                                    : "bg-background border-border hover:border-foreground/30 hover:bg-muted/40"
                                 )}
                               >
-                                <span className={cn(
-                                  "h-2 w-2 rounded-full transition-colors",
-                                  ativo ? estilo.dot : "bg-border group-hover:bg-foreground/30"
-                                )} />
+                                <span
+                                  className={cn(
+                                    "text-3xl sm:text-4xl leading-none transition-transform duration-200 select-none",
+                                    ativo ? "scale-110" : "grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105"
+                                  )}
+                                  style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}
+                                >
+                                  {op.emoji}
+                                </span>
                                 <span className={cn(
                                   "text-[10px] sm:text-[11px] font-medium leading-tight tracking-tight",
                                   ativo ? "" : "text-muted-foreground"
