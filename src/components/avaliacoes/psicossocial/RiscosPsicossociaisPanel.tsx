@@ -1,13 +1,16 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers } from "lucide-react";
+import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers, BarChart3, Inbox } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
+import { usePsicossocial } from "@/hooks/usePsicossocial";
 
 interface RiscoPsicossocial {
   id: string;
@@ -38,9 +41,35 @@ const INSTRUMENTOS: { key: string; label: string; color: string }[] = [
 const instrLabel = (k: string) => INSTRUMENTOS.find((i) => i.key === k)?.label || k;
 const instrColor = (k: string) => INSTRUMENTOS.find((i) => i.key === k)?.color || "bg-muted text-muted-foreground";
 
+// Normaliza string para matching (remove acentos, símbolos, lowercase)
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// Score 0-100: < 30 baixo (verde), 30-50 moderado (amarelo), 50-70 alto (laranja), > 70 crítico (vermelho)
+const scoreColor = (v: number): string => {
+  if (v < 30) return "text-emerald-600";
+  if (v < 50) return "text-amber-600";
+  if (v < 70) return "text-orange-600";
+  return "text-rose-600";
+};
+const scoreBar = (v: number): string => {
+  if (v < 30) return "[&>div]:bg-emerald-500";
+  if (v < 50) return "[&>div]:bg-amber-500";
+  if (v < 70) return "[&>div]:bg-orange-500";
+  return "[&>div]:bg-rose-500";
+};
+
 export function RiscosPsicossociaisPanel() {
   const { tenantId } = useTenant();
   const qc = useQueryClient();
+  const { campanhas, isLoadingCampanhas } = usePsicossocial();
+  const [campanhaId, setCampanhaId] = useState<string | undefined>();
 
   const { data: riscos = [], isLoading } = useQuery({
     queryKey: ["psicossocial_riscos", tenantId],
@@ -91,6 +120,41 @@ export function RiscosPsicossociaisPanel() {
     return map;
   }, [mapeamentos]);
 
+  // Campanhas com resultados (radar_data preenchido)
+  const campanhasComResultado = useMemo(
+    () => campanhas.filter((c) => Array.isArray(c.radar_data) && c.radar_data.length > 0),
+    [campanhas],
+  );
+
+  const campanhaSel = useMemo(
+    () => campanhasComResultado.find((c) => c.id === campanhaId),
+    [campanhasComResultado, campanhaId],
+  );
+
+  // Para cada risco, casa as dimensões mapeadas com os subjects do radar (substring/normalize)
+  const resultadosPorRisco = useMemo(() => {
+    if (!campanhaSel) return {} as Record<string, { subject: string; value: number; instrumento: string }[]>;
+    const radar = (campanhaSel.radar_data || []) as { subject: string; value: number }[];
+    const out: Record<string, { subject: string; value: number; instrumento: string }[]> = {};
+    riscos.forEach((r) => {
+      const maps = mapsPorRisco[r.nome] || [];
+      const matches: { subject: string; value: number; instrumento: string }[] = [];
+      radar.forEach((rd) => {
+        const subj = norm(rd.subject);
+        const m = maps.find((mp) => {
+          const dim = norm(mp.dimensao);
+          // tokens de pelo menos 4 chars devem aparecer
+          const tokens = dim.split(" ").filter((t) => t.length >= 4);
+          if (tokens.length === 0) return subj.includes(dim) || dim.includes(subj);
+          return tokens.some((t) => subj.includes(t));
+        });
+        if (m) matches.push({ subject: rd.subject, value: rd.value, instrumento: m.instrumento });
+      });
+      if (matches.length > 0) out[r.nome] = matches;
+    });
+    return out;
+  }, [campanhaSel, riscos, mapsPorRisco]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -111,6 +175,9 @@ export function RiscosPsicossociaisPanel() {
           </TabsTrigger>
           <TabsTrigger value="instrumentos" className="gap-1.5">
             <BookOpen className="h-4 w-4" /> Instrumentos
+          </TabsTrigger>
+          <TabsTrigger value="resultados" className="gap-1.5">
+            <BarChart3 className="h-4 w-4" /> Resultados
           </TabsTrigger>
         </TabsList>
 
@@ -218,6 +285,143 @@ export function RiscosPsicossociaisPanel() {
               );
             })}
           </div>
+        </TabsContent>
+
+        <TabsContent value="resultados" className="space-y-3">
+          <Card>
+            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium">Selecione uma campanha</p>
+                <p className="text-xs text-muted-foreground">
+                  Cruzamento dos resultados da campanha com cada Fator de Risco Psicossocial.
+                </p>
+              </div>
+              <Select value={campanhaId} onValueChange={setCampanhaId}>
+                <SelectTrigger className="w-full sm:w-[340px]">
+                  <SelectValue placeholder="Escolha uma campanha com resultados…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {campanhasComResultado.length === 0 ? (
+                    <div className="p-3 text-xs text-muted-foreground">
+                      Nenhuma campanha com resultados disponíveis.
+                    </div>
+                  ) : (
+                    campanhasComResultado.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome}
+                        {c.ips_score != null && (
+                          <span className="ml-2 text-xs text-muted-foreground">· IPS {Math.round(c.ips_score)}</span>
+                        )}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {isLoadingCampanhas ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando campanhas…
+            </div>
+          ) : !campanhaSel ? (
+            <Card>
+              <CardContent className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+                <Inbox className="h-8 w-8 opacity-40" />
+                Selecione uma campanha acima para visualizar o cruzamento.
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card className="bg-gradient-to-br from-primary/5 to-purple-500/5 border-primary/20">
+                <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <p className="text-xs text-muted-foreground">Campanha</p>
+                    <p className="font-semibold text-sm">{campanhaSel.nome}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Respostas</p>
+                    <p className="font-semibold text-sm">{campanhaSel.total_respostas ?? 0}</p>
+                  </div>
+                  {campanhaSel.ips_score != null && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">IPS</p>
+                      <p className={`font-bold text-lg ${scoreColor(campanhaSel.ips_score)}`}>
+                        {Math.round(campanhaSel.ips_score)}
+                      </p>
+                    </div>
+                  )}
+                  {campanhaSel.ips_classificacao && (
+                    <Badge variant="outline" className="capitalize">
+                      {campanhaSel.ips_classificacao}
+                    </Badge>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {riscos.map((r) => {
+                  const matches = resultadosPorRisco[r.nome] || [];
+                  const avg =
+                    matches.length > 0
+                      ? matches.reduce((acc, m) => acc + m.value, 0) / matches.length
+                      : null;
+                  return (
+                    <motion.div
+                      key={r.id}
+                      whileHover={{ y: -2 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      <Card className={`h-full ${matches.length === 0 ? "opacity-60" : ""}`}>
+                        <CardContent className="p-4 flex flex-col gap-3 h-full">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-medium text-sm leading-snug flex-1">{r.nome}</p>
+                            {avg != null ? (
+                              <Badge variant="outline" className={`shrink-0 ${scoreColor(avg)}`}>
+                                {Math.round(avg)}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] shrink-0 text-muted-foreground">
+                                sem dado
+                              </Badge>
+                            )}
+                          </div>
+
+                          {matches.length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic">
+                              Esta campanha não cobre dimensões mapeadas para este fator.
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {matches.map((m, i) => (
+                                <div key={i} className="space-y-1">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <Badge
+                                        variant="outline"
+                                        className={`text-[9px] shrink-0 ${instrColor(m.instrumento)}`}
+                                      >
+                                        {instrLabel(m.instrumento)}
+                                      </Badge>
+                                      <p className="text-xs truncate">{m.subject}</p>
+                                    </div>
+                                    <span className={`text-xs font-bold ${scoreColor(m.value)}`}>
+                                      {Math.round(m.value)}
+                                    </span>
+                                  </div>
+                                  <Progress value={m.value} className={`h-1.5 ${scoreBar(m.value)}`} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>
