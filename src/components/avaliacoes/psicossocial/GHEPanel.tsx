@@ -332,17 +332,23 @@ export function GHEPanel() {
           {ghes.map((g) => {
             const assoc = associacoes.filter((a) => a.ghe_id === g.id);
             const deptIds = Array.from(new Set(assoc.map((a) => a.departamento_id).filter(Boolean) as string[]));
+            const emUso = assoc.length > 0;
             return (
               <motion.div key={g.id} whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <Card className="h-full">
+                <Card className={`h-full ${g.ativo === false ? "opacity-60 border-dashed" : ""}`}>
                   <CardContent className="p-4 flex flex-col gap-3 h-full">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="default" className="bg-primary/10 text-primary border-primary/20">
                             {g.codigo}
                           </Badge>
                           <p className="font-medium text-sm">{g.nome}</p>
+                          {g.ativo === false && (
+                            <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700">
+                              Arquivado
+                            </Badge>
+                          )}
                         </div>
                         {g.descricao && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{g.descricao}</p>
@@ -355,15 +361,29 @@ export function GHEPanel() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-destructive"
-                          onClick={async () => {
-                            const ok = await confirm({
-                              title: "Excluir GHE?",
-                              description: `O grupo ${g.codigo} — ${g.nome} será removido junto com suas associações.`,
-                              confirmLabel: "Excluir",
-                              variant: "destructive",
-                            });
-                            if (ok) del.mutate(g.id);
+                          className="h-7 w-7"
+                          title={g.ativo === false ? "Reativar GHE" : "Arquivar GHE"}
+                          onClick={() => toggleArquivar.mutate({ id: g.id, ativo: g.ativo === false })}
+                        >
+                          {g.ativo === false ? (
+                            <ArchiveRestore className="h-3.5 w-3.5" />
+                          ) : (
+                            <Archive className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive disabled:opacity-40"
+                          disabled={emUso}
+                          title={emUso ? "GHE em uso — apenas arquivar" : "Excluir GHE"}
+                          onClick={() => {
+                            if (emUso) {
+                              toast.warning("Este GHE está em uso. Apenas arquivamento é permitido.");
+                              return;
+                            }
+                            setDeleteText("");
+                            setDeleteTarget(g);
                           }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
