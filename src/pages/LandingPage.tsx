@@ -799,9 +799,9 @@ export default function LandingPage() {
             <div className="rounded-2xl p-5 mb-8" style={{ background: 'hsl(38 20% 10%)', border: '1px solid hsl(38 50% 40% / 0.2)' }}>
               <p className="font-bold text-sm mb-2" style={{ color: 'hsl(38 90% 55%)' }}>⚠️ O que acontece depois das 10 vagas?</p>
               <div className="text-xs text-gray-500 space-y-1">
-                <p>• <strong className="text-gray-400">Plano Essencial:</strong> Apenas módulos básicos (Ponto, Admissão, EPIs)</p>
-                <p>• <strong className="text-gray-400">Plano Profissional:</strong> Módulos intermediários (+ Avaliações, PDI, Psicossocial básico)</p>
-                <p>• <strong className="text-gray-400">Plano Enterprise:</strong> Acesso total (o que você recebe GRÁTIS agora)</p>
+                <p>• Novas solicitações entram em <strong className="text-gray-400">lista de espera</strong> até abrirmos a próxima janela.</p>
+                <p>• O atendimento volta ao formato padrão, sem a sessão 1:1 dedicada com especialista.</p>
+                <p>• A apresentação da plataforma continua disponível, porém sem o diagnóstico aprofundado incluso.</p>
               </div>
             </div>
 
