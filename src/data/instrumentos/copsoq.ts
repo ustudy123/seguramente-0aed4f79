@@ -430,6 +430,64 @@ export const COPSOQ_DIMENSOES: DimensaoInstrumento[] = [
       },
     ],
   },
+  {
+    id: 'copsoq_assedio',
+    nome: 'Assédio e Comportamentos Ofensivos',
+    descricao: 'Exposição a bullying, assédio moral e assédio sexual no trabalho (módulo Offensive Behaviours – COPSOQ III)',
+    tipo: 'risco',
+    normas: ['NR-01', 'ISO 45003'],
+    perguntas: [
+      {
+        id: 'cq_as1',
+        texto: 'Nos últimos 12 meses, com que frequência você foi exposto(a) a bullying ou assédio moral no trabalho?',
+        dimensao: 'copsoq_assedio',
+        normas: ['NR-01', 'ISO 45003'],
+        peso: 2,
+      },
+      {
+        id: 'cq_as2',
+        texto: 'Nos últimos 12 meses, com que frequência você foi exposto(a) a assédio sexual?',
+        dimensao: 'copsoq_assedio',
+        normas: ['NR-01', 'ISO 45003'],
+        peso: 2,
+      },
+      {
+        id: 'cq_as3',
+        texto: 'Nos últimos 12 meses, com que frequência você foi exposto(a) a discriminação ou comportamentos ofensivos?',
+        dimensao: 'copsoq_assedio',
+        normas: ['NR-01', 'ISO 45003'],
+      },
+    ],
+  },
+  {
+    id: 'copsoq_violencia',
+    nome: 'Ameaças e Violência',
+    descricao: 'Exposição a ameaças, violência física ou eventos traumáticos no trabalho (módulo Offensive Behaviours – COPSOQ III)',
+    tipo: 'risco',
+    normas: ['NR-01', 'ISO 45003'],
+    perguntas: [
+      {
+        id: 'cq_vi1',
+        texto: 'Nos últimos 12 meses, com que frequência você foi exposto(a) a ameaças de violência no trabalho?',
+        dimensao: 'copsoq_violencia',
+        normas: ['NR-01', 'ISO 45003'],
+        peso: 2,
+      },
+      {
+        id: 'cq_vi2',
+        texto: 'Nos últimos 12 meses, com que frequência você foi exposto(a) a violência física no trabalho?',
+        dimensao: 'copsoq_violencia',
+        normas: ['NR-01', 'ISO 45003'],
+        peso: 2,
+      },
+      {
+        id: 'cq_vi3',
+        texto: 'Nos últimos 12 meses, você presenciou ou vivenciou um evento traumático relacionado ao trabalho?',
+        dimensao: 'copsoq_violencia',
+        normas: ['NR-01', 'ISO 45003'],
+      },
+    ],
+  },
 ];
 
 export const COPSOQ_TOTAL_PERGUNTAS = COPSOQ_DIMENSOES.reduce(
