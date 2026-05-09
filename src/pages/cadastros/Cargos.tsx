@@ -253,9 +253,9 @@ export default function Cargos() {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Funções</h1>
+          <h1 className="text-2xl font-bold text-foreground">Cargos</h1>
           <p className="text-muted-foreground">
-            Gerencie as funções da sua empresa
+            Gerencie as cargos da sua empresa
           </p>
         </div>
         <div className="flex gap-2">
@@ -265,7 +265,7 @@ export default function Cargos() {
           </Button>
           <Button onClick={handleOpenCreate} className="gap-2">
             <Plus className="w-4 h-4" />
-            Nova Função
+            Nova Cargo
           </Button>
         </div>
       </motion.div>
@@ -279,7 +279,7 @@ export default function Cargos() {
       >
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar funções..."
+          placeholder="Buscar cargos..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 max-w-sm"
@@ -316,7 +316,7 @@ export default function Cargos() {
                   <div className="flex flex-col items-center gap-2">
                     <Briefcase className="w-8 h-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      {searchTerm ? "Nenhuma função encontrada" : "Nenhuma função cadastrada"}
+                      {searchTerm ? "Nenhuma cargo encontrada" : "Nenhuma cargo cadastrada"}
                     </p>
                   </div>
                 </TableCell>
@@ -427,9 +427,9 @@ export default function Cargos() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedCargo ? "Editar Função" : "Nova Função"}</DialogTitle>
+            <DialogTitle>{selectedCargo ? "Editar Cargo" : "Nova Cargo"}</DialogTitle>
             <DialogDescription>
-              {selectedCargo ? "Edite as informações da função" : "Preencha os dados da nova função"}
+              {selectedCargo ? "Edite as informações da cargo" : "Preencha os dados da nova cargo"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
@@ -574,7 +574,7 @@ export default function Cargos() {
                   <Textarea
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Descreva as responsabilidades da função..."
+                    placeholder="Descreva as responsabilidades da cargo..."
                     rows={3}
                   />
                 </div>
@@ -592,7 +592,7 @@ export default function Cargos() {
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
                   <p className="text-sm text-muted-foreground">
                     <strong className="text-foreground">Base Técnica SST:</strong> As condições abaixo devem ser fundamentadas em PGR, LTCAT ou laudos técnicos (NR-15/NR-16). 
-                    Os adicionais serão herdados automaticamente pelos colaboradores vinculados a esta função.
+                    Os adicionais serão herdados automaticamente pelos colaboradores vinculados a esta cargo.
                   </p>
                 </div>
 
@@ -758,9 +758,9 @@ export default function Cargos() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Função</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Cargo</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a função "{selectedCargo?.nome}"? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir a cargo "{selectedCargo?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -780,8 +780,8 @@ export default function Cargos() {
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
         onSuccess={handleImportSuccess}
-        titulo="Importar Funções e Colaboradores"
-        descricao="Importe uma planilha para criar funções, departamentos e colaboradores automaticamente"
+        titulo="Importar Cargos e Colaboradores"
+        descricao="Importe uma planilha para criar cargos, departamentos e colaboradores automaticamente"
       />
     </div>
   );

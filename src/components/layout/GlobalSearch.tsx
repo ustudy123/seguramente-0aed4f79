@@ -39,7 +39,7 @@ const searchItems: SearchItem[] = [
   { title: "Análise de Jornada", path: "/analise-jornada", section: "Pessoas", keywords: ["jornada", "análise", "horas extras", "banco"] },
   { title: "Empresa", path: "/empresa", section: "Estrutura", keywords: ["empresa", "cnpj", "dados"] },
   { title: "Departamentos", path: "/cadastros/departamentos", section: "Cadastros", keywords: ["departamento", "setor", "área"] },
-  { title: "Funções", path: "/cadastros/cargos", section: "Cadastros", keywords: ["função", "cargo", "cbo"] },
+  { title: "Cargos", path: "/cadastros/cargos", section: "Cadastros", keywords: ["cargo", "cargo", "cbo"] },
   { title: "Estabelecimento ou Obra", path: "/cadastros/filiais", section: "Cadastros", keywords: ["filial", "obra", "estabelecimento", "unidade"] },
   { title: "Rede de Parceiros", path: "/marketplace", section: "Estrutura", keywords: ["marketplace", "parceiro", "profissional", "rede"] },
   { title: "Terceiros & SST", path: "/terceiros", section: "Estrutura", keywords: ["terceiro", "terceirizado", "prestador"] },
