@@ -653,6 +653,51 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Distribuição automática por Departamento e Cargo (via CPF do respondente) */}
+              {(stats?.por_departamento?.length || stats?.por_cargo?.length) ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(['por_departamento','por_cargo'] as const).map((key) => {
+                    const lista = stats?.[key] ?? [];
+                    if (lista.length === 0) return null;
+                    const titulo = key === 'por_departamento' ? 'Por Departamento' : 'Por Cargo';
+                    return (
+                      <Card key={key}>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">{titulo}</CardTitle>
+                          <p className="text-[11px] text-muted-foreground">
+                            Segmentação automática a partir do cadastro do respondente (CPF). Grupos com menos de {MINIMO_ANONIMATO} respostas têm IPS oculto (ISO 45003).
+                          </p>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {lista.map((g) => (
+                            <div key={g.nome} className="flex items-center justify-between rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{g.nome}</span>
+                                <span className="text-[10px] text-muted-foreground">{g.total} resposta(s)</span>
+                              </div>
+                              {g.anonimato_garantido && g.ips !== undefined ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold">IPS {g.ips}</span>
+                                  {g.ips_classificacao && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                                      {g.ips_classificacao}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="flex items-center gap-1 text-[10px] text-amber-600">
+                                  <Lock className="h-3 w-3" /> Anonimato
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : null}
             </TabsContent>
           </Tabs>
         )}

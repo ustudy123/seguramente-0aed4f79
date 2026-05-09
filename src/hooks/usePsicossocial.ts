@@ -560,6 +560,38 @@ export function usePsicossocial() {
       }
     }
 
+    // ── Agregação por Departamento e Cargo (via convite vinculado ao CPF) ──
+    // ISO 45003: só expõe grupos com ≥5 respostas (anonimato).
+    const conviteIndex = new Map(convites.map(c => [c.id, c]));
+    const grupos = (campo: 'colaborador_departamento' | 'colaborador_cargo') => {
+      const acc = new Map<string, number[]>();
+      for (const r of respostas) {
+        const conv = r.convite_id ? conviteIndex.get(r.convite_id) : null;
+        const nome = (conv?.[campo] as string | null | undefined)?.trim() || 'Não informado';
+        const ipsR = r.indicadores?.IPS;
+        if (typeof ipsR !== 'number') continue;
+        const arr = acc.get(nome) ?? [];
+        arr.push(ipsR);
+        acc.set(nome, arr);
+      }
+      return Array.from(acc.entries())
+        .map(([nome, ipsArr]) => {
+          const anon = ipsArr.length >= MINIMO_ANONIMATO;
+          const ipsMed = anon ? Math.round(ipsArr.reduce((a, b) => a + b, 0) / ipsArr.length) : undefined;
+          return {
+            nome,
+            total: ipsArr.length,
+            ips: ipsMed,
+            ips_classificacao: ipsMed !== undefined ? calcularIPSClassificacao(ipsMed) : undefined,
+            anonimato_garantido: anon,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+    };
+
+    const por_departamento = grupos('colaborador_departamento');
+    const por_cargo = grupos('colaborador_cargo');
+
     return {
       total_convites: total,
       pendentes,
@@ -571,6 +603,8 @@ export function usePsicossocial() {
       ips,
       ips_classificacao: ips !== undefined ? calcularIPSClassificacao(ips) : undefined,
       radar,
+      por_departamento,
+      por_cargo,
     };
   };
 
