@@ -364,41 +364,73 @@ export function PsicossocialDashboard() {
 
         {/* Tabs principais — Campanhas primeiro */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full sm:w-auto flex-wrap h-auto">
-            <TabsTrigger id="tab-psicossocial-riscos" value="riscos" className="gap-2">
+          <TabsList className="w-full sm:w-auto flex-wrap h-auto bg-muted/50 p-1.5 gap-1">
+            <TabsTrigger
+              id="tab-psicossocial-riscos"
+              value="riscos"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-amber-50 hover:text-amber-700"
+            >
               <AlertTriangle className="h-4 w-4" />
               Riscos Psicossociais
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-ghe" value="ghe" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-ghe"
+              value="ghe"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-cyan-50 hover:text-cyan-700"
+            >
               <Users className="h-4 w-4" />
               GHE
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-campanhas" value="campanhas" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-campanhas"
+              value="campanhas"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-fuchsia-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-purple-50 hover:text-purple-700"
+            >
               <BarChart3 className="h-4 w-4" />
               Campanhas
               {campanhasAtivas > 0 && (
-                <Badge className="bg-purple-600 text-white text-[10px] h-4 px-1.5 ml-1">
+                <Badge className="bg-white/25 text-white border-0 text-[10px] h-4 px-1.5 ml-1 data-[state=inactive]:bg-purple-600">
                   {campanhasAtivas}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-burnout" value="burnout-boreout" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-burnout"
+              value="burnout-boreout"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-rose-50 hover:text-rose-700"
+            >
               <Flame className="h-4 w-4" />
               Burnout & Boreout
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-historico" value="historico" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-historico"
+              value="historico"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-emerald-50 hover:text-emerald-700"
+            >
               <TrendingUp className="h-4 w-4" />
               Histórico IPS
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-pgr" value="pgr" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-pgr"
+              value="pgr"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-blue-50 hover:text-blue-700"
+            >
               <ClipboardList className="h-4 w-4" />
               Inventário PGR
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-instrumentos" value="instrumentos" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-instrumentos"
+              value="instrumentos"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-slate-700 data-[state=active]:to-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-100 hover:text-slate-800"
+            >
               <FileText className="h-4 w-4" />
               Instrumentos
             </TabsTrigger>
-            <TabsTrigger id="tab-psicossocial-indicadores" value="indicadores" className="gap-2">
+            <TabsTrigger
+              id="tab-psicossocial-indicadores"
+              value="indicadores"
+              className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-violet-50 hover:text-violet-700"
+            >
               <Activity className="h-4 w-4" />
               Índices
             </TabsTrigger>
