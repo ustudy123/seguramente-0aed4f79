@@ -259,9 +259,9 @@ const Ponto = () => {
             </TabsTrigger>
             <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileText className="h-3.5 w-3.5" /> Ajustes
-              {ajustesPendentes.length > 0 && (
+              {ajustesPendentes.filter(a => a.status === "pendente").length > 0 && (
                 <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                  {ajustesPendentes.length}
+                  {ajustesPendentes.filter(a => a.status === "pendente").length}
                 </Badge>
               )}
             </TabsTrigger>
