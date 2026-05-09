@@ -41,15 +41,23 @@ interface GHECargo {
   departamento_id: string | null;
 }
 
+// Par cargo+departamento — chave única
+type PairKey = string; // `${cargoId}|${deptId || "_"}`
+const makeKey = (cargoId: string, deptId: string | null) => `${cargoId}|${deptId || "_"}`;
+const parseKey = (k: PairKey): { cargoId: string; deptId: string | null } => {
+  const [cargoId, dep] = k.split("|");
+  return { cargoId, deptId: dep === "_" ? null : dep };
+};
+
 interface FormState {
   id?: string;
   codigo: string;
   nome: string;
   descricao: string;
-  cargoIds: string[];
+  pairs: PairKey[];
 }
 
-const emptyForm: FormState = { codigo: "", nome: "", descricao: "", cargoIds: [] };
+const emptyForm: FormState = { codigo: "", nome: "", descricao: "", pairs: [] };
 
 export function GHEPanel() {
   const { tenantId } = useTenant();
@@ -90,12 +98,40 @@ export function GHEPanel() {
     enabled: !!tenantId && ghes.length > 0,
   });
 
+  // Vínculos cargo→departamentos (suporte multi-departamento por cargo)
+  const { data: cargoDeptLinks = [] } = useQuery({
+    queryKey: ["cargo_departamentos", tenantId],
+    queryFn: async () => {
+      const { data, error } = await fromTable("cargo_departamentos")
+        .select("cargo_id, departamento_id")
+        .eq("tenant_id", tenantId!);
+      if (error) throw error;
+      return (data || []) as Array<{ cargo_id: string; departamento_id: string }>;
+    },
+    enabled: !!tenantId,
+  });
+
   const cargosById = useMemo(() => Object.fromEntries(cargos.map((c) => [c.id, c])), [cargos]);
   const deptById = useMemo(() => Object.fromEntries(departamentos.map((d) => [d.id, d])), [departamentos]);
+  const gheById = useMemo(() => Object.fromEntries(ghes.map((g) => [g.id, g])), [ghes]);
+
+  // Pares (cargo, departamento) ocupados por OUTROS GHEs
+  const occupiedByOtherGhe = useMemo(() => {
+    const map = new Map<PairKey, string>();
+    associacoes.forEach((a) => {
+      if (form.id && a.ghe_id === form.id) return;
+      map.set(makeKey(a.cargo_id, a.departamento_id), a.ghe_id);
+    });
+    return map;
+  }, [associacoes, form.id]);
 
   const upsert = useMutation({
     mutationFn: async (f: FormState) => {
       if (!f.codigo.trim() || !f.nome.trim()) throw new Error("Código e Nome são obrigatórios");
+      const conflitos = f.pairs.filter((k) => occupiedByOtherGhe.has(k));
+      if (conflitos.length > 0) {
+        throw new Error(`${conflitos.length} função/departamento já pertence(m) a outro GHE.`);
+      }
       let gheId = f.id;
       if (gheId) {
         const { error } = await fromTable("psicossocial_ghe")
@@ -117,13 +153,16 @@ export function GHEPanel() {
         if (error) throw error;
         gheId = (data as any).id;
       }
-      if (f.cargoIds.length > 0) {
-        const rows = f.cargoIds.map((cid) => ({
-          ghe_id: gheId,
-          cargo_id: cid,
-          departamento_id: cargosById[cid]?.departamento_id || null,
-          tenant_id: tenantId!,
-        }));
+      if (f.pairs.length > 0) {
+        const rows = f.pairs.map((k) => {
+          const { cargoId, deptId } = parseKey(k);
+          return {
+            ghe_id: gheId,
+            cargo_id: cargoId,
+            departamento_id: deptId,
+            tenant_id: tenantId!,
+          };
+        });
         const { error } = await fromTable("psicossocial_ghe_cargos").insert(rows);
         if (error) throw error;
       }
@@ -146,7 +185,6 @@ export function GHEPanel() {
     onSuccess: () => {
       toast.success("GHE removido");
       qc.invalidateQueries({ queryKey: ["psicossocial_ghe"] });
-      
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -169,8 +207,10 @@ export function GHEPanel() {
   };
 
   const handleEditar = (g: GHE) => {
-    const cargoIds = associacoes.filter((a) => a.ghe_id === g.id).map((a) => a.cargo_id);
-    setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", cargoIds });
+    const pairs = associacoes
+      .filter((a) => a.ghe_id === g.id)
+      .map((a) => makeKey(a.cargo_id, a.departamento_id));
+    setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", pairs });
     setCategoria(null);
     setRefPadrao(null);
     setStep("form");
@@ -179,7 +219,6 @@ export function GHEPanel() {
 
   const escolherCategoria = (cat: GHECategoria) => {
     setCategoria(cat);
-    // Se a categoria tiver só 1 template, aplica direto e pula
     if (cat.templates.length === 1) {
       aplicarTemplate(cat.templates[0]);
     } else {
@@ -197,36 +236,51 @@ export function GHEPanel() {
     setStep("form");
   };
 
-  const toggleCargo = (id: string) => {
+  const togglePair = (key: PairKey) => {
+    if (occupiedByOtherGhe.has(key)) {
+      const otherGhe = gheById[occupiedByOtherGhe.get(key)!];
+      toast.warning(`Já vinculado ao ${otherGhe?.codigo || "outro GHE"} — ${otherGhe?.nome || ""}`);
+      return;
+    }
     setForm((f) => ({
       ...f,
-      cargoIds: f.cargoIds.includes(id) ? f.cargoIds.filter((c) => c !== id) : [...f.cargoIds, id],
+      pairs: f.pairs.includes(key) ? f.pairs.filter((p) => p !== key) : [...f.pairs, key],
     }));
   };
 
-  // Agrupa cargos por departamento para o seletor (com filtro de busca)
-  const cargosPorDept = useMemo(() => {
+  // Expande cargos pelos departamentos vinculados e agrupa por departamento.
+  type PairRow = { cargoId: string; deptId: string | null; cargoNome: string; key: PairKey };
+  const pairsPorDept = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const map: Record<string, typeof cargos> = {};
+    const rows: PairRow[] = [];
     cargos.forEach((c) => {
+      const linked = cargoDeptLinks.filter((l) => l.cargo_id === c.id).map((l) => l.departamento_id);
+      const depts: (string | null)[] = linked.length ? linked : [c.departamento_id || null];
+      depts.forEach((dId) => {
+        rows.push({ cargoId: c.id, deptId: dId, cargoNome: c.nome, key: makeKey(c.id, dId) });
+      });
+    });
+    const map: Record<string, PairRow[]> = {};
+    rows.forEach((r) => {
       if (term) {
-        const deptName = (deptById[c.departamento_id || ""]?.nome || "").toLowerCase();
-        const matches = c.nome.toLowerCase().includes(term) || deptName.includes(term);
+        const deptName = (deptById[r.deptId || ""]?.nome || "").toLowerCase();
+        const matches = r.cargoNome.toLowerCase().includes(term) || deptName.includes(term);
         if (!matches) return;
       }
-      const key = c.departamento_id || "_sem_dept";
-      (map[key] ||= []).push(c);
+      const key = r.deptId || "_sem_dept";
+      (map[key] ||= []).push(r);
     });
     return map;
-  }, [cargos, search, deptById]);
+  }, [cargos, cargoDeptLinks, search, deptById]);
 
-  const toggleDept = (deptId: string, allIds: string[]) => {
+  const toggleDept = (deptId: string, allKeys: PairKey[]) => {
+    const selectable = allKeys.filter((k) => !occupiedByOtherGhe.has(k));
     setForm((f) => {
-      const allSelected = allIds.every((id) => f.cargoIds.includes(id));
-      const cargoIds = allSelected
-        ? f.cargoIds.filter((id) => !allIds.includes(id))
-        : Array.from(new Set([...f.cargoIds, ...allIds]));
-      return { ...f, cargoIds };
+      const allSelected = selectable.every((k) => f.pairs.includes(k));
+      const pairs = allSelected
+        ? f.pairs.filter((k) => !selectable.includes(k))
+        : Array.from(new Set([...f.pairs, ...selectable]));
+      return { ...f, pairs };
     });
   };
 
@@ -474,15 +528,15 @@ export function GHEPanel() {
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
                   Funções do GHE
                   <Badge variant="secondary" className="font-mono">
-                    {form.cargoIds.length}
+                    {form.pairs.length}
                   </Badge>
                 </Label>
-                {form.cargoIds.length > 0 && (
+                {form.pairs.length > 0 && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setForm((f) => ({ ...f, cargoIds: [] }))}
+                    onClick={() => setForm((f) => ({ ...f, pairs: [] }))}
                     className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
                   >
                     <X className="h-3 w-3" /> Limpar seleção
@@ -490,22 +544,28 @@ export function GHEPanel() {
                 )}
               </div>
 
-              {/* Chips das funções selecionadas */}
-              {form.cargoIds.length > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Cada par <strong>cargo + departamento</strong> só pode pertencer a um único GHE. O mesmo cargo em outro departamento permanece disponível.
+              </p>
+
+              {/* Chips dos pares selecionados */}
+              {form.pairs.length > 0 && (
                 <div className="flex flex-wrap gap-1 p-2 bg-primary/5 border border-primary/20 rounded-lg max-h-24 overflow-y-auto">
-                  {form.cargoIds.map((id) => {
-                    const c = cargosById[id];
+                  {form.pairs.map((k) => {
+                    const { cargoId, deptId } = parseKey(k);
+                    const c = cargosById[cargoId];
                     if (!c) return null;
+                    const dep = deptId ? deptById[deptId]?.nome : "Sem departamento";
                     return (
                       <Badge
-                        key={id}
+                        key={k}
                         variant="default"
                         className="gap-1 pl-2 pr-1 py-0.5 bg-primary text-primary-foreground"
                       >
-                        {c.nome}
+                        {c.nome} <span className="opacity-70">· {dep || "—"}</span>
                         <button
                           type="button"
-                          onClick={() => toggleCargo(id)}
+                          onClick={() => togglePair(k)}
                           className="hover:bg-white/20 rounded-full p-0.5 ml-0.5"
                         >
                           <X className="h-3 w-3" />
@@ -530,16 +590,17 @@ export function GHEPanel() {
               {/* Lista agrupada por departamento */}
               <ScrollArea className="h-72 rounded-lg border bg-muted/20">
                 <div className="p-2 space-y-1">
-                  {Object.entries(cargosPorDept).map(([deptId, list]) => {
-                    const ids = list.map((c) => c.id);
-                    const selectedCount = ids.filter((id) => form.cargoIds.includes(id)).length;
-                    const allSelected = selectedCount === ids.length && ids.length > 0;
+                  {Object.entries(pairsPorDept).map(([deptId, list]) => {
+                    const keys = list.map((r) => r.key);
+                    const selectableKeys = keys.filter((k) => !occupiedByOtherGhe.has(k));
+                    const selectedCount = selectableKeys.filter((k) => form.pairs.includes(k)).length;
+                    const allSelected = selectedCount === selectableKeys.length && selectableKeys.length > 0;
                     const someSelected = selectedCount > 0 && !allSelected;
                     return (
                       <div key={deptId} className="rounded-md bg-background border">
                         <button
                           type="button"
-                          onClick={() => toggleDept(deptId, ids)}
+                          onClick={() => toggleDept(deptId, keys)}
                           className="w-full flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/50 rounded-t-md transition"
                         >
                           <div className="flex items-center gap-2">
@@ -553,19 +614,30 @@ export function GHEPanel() {
                             </span>
                           </div>
                           <Badge variant={selectedCount > 0 ? "default" : "outline"} className="text-[10px] h-5">
-                            {selectedCount}/{ids.length}
+                            {selectedCount}/{selectableKeys.length}
                           </Badge>
                         </button>
                         <div className="px-3 pb-2 pt-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
-                          {list.map((c) => {
-                            const checked = form.cargoIds.includes(c.id);
+                          {list.map((r) => {
+                            const checked = form.pairs.includes(r.key);
+                            const occupiedGheId = occupiedByOtherGhe.get(r.key);
+                            const occupied = !!occupiedGheId;
+                            const otherGhe = occupiedGheId ? gheById[occupiedGheId] : null;
                             return (
                               <button
                                 type="button"
-                                key={c.id}
-                                onClick={() => toggleCargo(c.id)}
+                                key={r.key}
+                                onClick={() => togglePair(r.key)}
+                                disabled={occupied}
+                                title={
+                                  occupied
+                                    ? `Já vinculado: ${otherGhe?.codigo || ""} — ${otherGhe?.nome || ""}`
+                                    : undefined
+                                }
                                 className={`flex items-center gap-2 text-left text-xs px-2 py-1.5 rounded transition ${
-                                  checked
+                                  occupied
+                                    ? "opacity-50 cursor-not-allowed bg-muted/40 text-muted-foreground"
+                                    : checked
                                     ? "bg-primary/10 text-primary font-medium"
                                     : "hover:bg-muted text-foreground/80"
                                 }`}
@@ -577,7 +649,12 @@ export function GHEPanel() {
                                 >
                                   {checked && <Check className="h-3 w-3 text-primary-foreground" />}
                                 </span>
-                                <span className="truncate">{c.nome}</span>
+                                <span className="truncate flex-1">{r.cargoNome}</span>
+                                {occupied && (
+                                  <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0">
+                                    {otherGhe?.codigo || "ocupado"}
+                                  </Badge>
+                                )}
                               </button>
                             );
                           })}
@@ -585,7 +662,7 @@ export function GHEPanel() {
                       </div>
                     );
                   })}
-                  {Object.keys(cargosPorDept).length === 0 && (
+                  {Object.keys(pairsPorDept).length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-8">
                       {cargos.length === 0
                         ? "Nenhum cargo cadastrado. Cadastre cargos antes de montar um GHE."
