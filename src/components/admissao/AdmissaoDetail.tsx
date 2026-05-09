@@ -187,7 +187,7 @@ export function AdmissaoDetail({
               Dados Profissionais
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <InfoCard icon={Briefcase} label="Função" value={dadosProfissionais.cargo} />
+              <InfoCard icon={Briefcase} label="Cargo" value={dadosProfissionais.cargo} />
               <InfoCard icon={Building} label="Departamento" value={dadosProfissionais.departamento} />
               <InfoCard icon={Building} label="Filial" value={dadosProfissionais.filial} />
               <InfoCard icon={Calendar} label="Data de Admissão" value={format(new Date(dadosProfissionais.dataAdmissao), 'dd/MM/yyyy')} />

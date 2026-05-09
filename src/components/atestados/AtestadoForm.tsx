@@ -567,7 +567,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     name="colaborador_cargo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Função</FormLabel>
+                        <FormLabel>Cargo</FormLabel>
                         <FormControl>
                           <Input {...field} readOnly className="bg-muted" />
                         </FormControl>

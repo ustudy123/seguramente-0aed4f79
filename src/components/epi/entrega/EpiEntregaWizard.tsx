@@ -779,7 +779,7 @@ export function EpiEntregaWizard({
                         <p className="text-sm font-medium">{formData.colaboradorCpf}</p>
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Função</Label>
+                        <Label className="text-xs text-muted-foreground">Cargo</Label>
                         <p className="text-sm font-medium">{formData.colaboradorCargo || "—"}</p>
                       </div>
                       <div>

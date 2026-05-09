@@ -534,7 +534,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 name="cargo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Função *</FormLabel>
+                    <FormLabel>Cargo *</FormLabel>
                     <FormControl>
                       <CargoComboboxField
                         value={field.value}

@@ -249,7 +249,7 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
                 </div>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Função</p>
+                <p className="text-xs text-muted-foreground">Cargo</p>
                 <p>{evento.colaborador_funcao || "-"}</p>
               </div>
               <div>

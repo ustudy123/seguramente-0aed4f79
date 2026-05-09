@@ -258,7 +258,7 @@ export function AEPConfigInicial({
 
             {/* Função */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Função *</Label>
+              <Label className="text-xs">Cargo *</Label>
               <Popover open={funcaoOpen} onOpenChange={setFuncaoOpen}>
                 <PopoverTrigger asChild>
                   <Button

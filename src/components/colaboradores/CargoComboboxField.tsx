@@ -132,7 +132,7 @@ export function CargoComboboxField({ value, onChange, disabled }: CargoComboboxF
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label htmlFor="novo-cargo-nome">Nome da Função *</Label>
+              <Label htmlFor="novo-cargo-nome">Nome do Cargo *</Label>
               <Input
                 id="novo-cargo-nome"
                 autoFocus

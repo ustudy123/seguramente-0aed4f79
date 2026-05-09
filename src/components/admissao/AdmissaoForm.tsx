@@ -876,7 +876,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
 
             {/* Função — linha inteira */}
             <div>
-              <Label htmlFor="cargo">Função *</Label>
+              <Label htmlFor="cargo">Cargo *</Label>
               <Input 
                 id="cargo"
                 {...formProfissionais.register('cargo')}

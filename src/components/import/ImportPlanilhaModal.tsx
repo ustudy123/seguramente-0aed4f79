@@ -597,7 +597,7 @@ export function ImportPlanilhaModal({
                         <TableHead>CNPJ/CPF</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>CPF</TableHead>
-                        <TableHead>Função</TableHead>
+                        <TableHead>Cargo</TableHead>
                         <TableHead>Setor</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>

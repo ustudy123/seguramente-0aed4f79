@@ -85,7 +85,7 @@ export const PiramideSeguranca = ({ eventos }: Props) => {
                   <SelectItem value="global">Global</SelectItem>
                   <SelectItem value="unidade">Unidade</SelectItem>
                   <SelectItem value="setor">Setor</SelectItem>
-                  <SelectItem value="funcao">Função</SelectItem>
+                  <SelectItem value="funcao">Cargo</SelectItem>
                   <SelectItem value="turno">Turno</SelectItem>
                 </SelectContent>
               </Select>

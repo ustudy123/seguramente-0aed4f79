@@ -75,7 +75,7 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
             <TableHead>Tipo</TableHead>
             <TableHead>Gravidade</TableHead>
             <TableHead>Unidade / Setor</TableHead>
-            <TableHead>Função</TableHead>
+            <TableHead>Cargo</TableHead>
             <TableHead>Turno</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-center">Indicadores</TableHead>

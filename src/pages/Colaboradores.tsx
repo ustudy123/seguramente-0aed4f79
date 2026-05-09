@@ -452,7 +452,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[300px]">Colaborador</TableHead>
-                <TableHead>Função</TableHead>
+                <TableHead>Cargo</TableHead>
                 <TableHead className="hidden md:table-cell">Departamento</TableHead>
                 <TableHead className="hidden lg:table-cell">Contato</TableHead>
                 <TableHead className="hidden xl:table-cell">Admissão</TableHead>
@@ -1044,7 +1044,7 @@ function DesligadosTab() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[300px]">Colaborador</TableHead>
-            <TableHead>Função</TableHead>
+            <TableHead>Cargo</TableHead>
             <TableHead className="hidden md:table-cell">Departamento</TableHead>
             <TableHead className="hidden lg:table-cell">Contato</TableHead>
             <TableHead>Status</TableHead>

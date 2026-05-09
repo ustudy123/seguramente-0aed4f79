@@ -207,7 +207,7 @@ export function MatrizProtecaoTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Colaborador</TableHead>
-              <TableHead>Função</TableHead>
+              <TableHead>Cargo</TableHead>
               <TableHead>CETs</TableHead>
               <TableHead className="text-center">Proteção</TableHead>
               <TableHead>Status</TableHead>

@@ -302,7 +302,7 @@ export function ResultadosCiclo() {
           <Select value={filtroFuncao} onValueChange={setFiltroFuncao}>
             <SelectTrigger className="w-44">
               <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue placeholder="Função" />
+              <SelectValue placeholder="Cargo" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">Todas as funções</SelectItem>

@@ -371,7 +371,7 @@ export function EpiEntregaForm({
                 name="colaborador_cargo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Função</FormLabel>
+                    <FormLabel>Cargo</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Função do colaborador" 

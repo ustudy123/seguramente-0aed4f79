@@ -66,7 +66,7 @@ export function TrabalhadorForm({ open, onOpenChange, onSubmit, terceiroId, isPe
               <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
             </div>
             <div>
-              <Label>Função</Label>
+              <Label>Cargo</Label>
               <Input value={funcao} onChange={(e) => setFuncao(e.target.value)} />
             </div>
             <div>
