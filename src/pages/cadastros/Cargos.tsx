@@ -456,19 +456,80 @@ export default function Cargos() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Departamento</Label>
-                    <Select
-                      value={formData.departamento_id || "none"}
-                      onValueChange={(value) => setFormData({ ...formData, departamento_id: value === "none" ? null : value })}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhum</SelectItem>
-                        {departamentos.map((dep) => (
-                          <SelectItem key={dep.id} value={dep.id}>{dep.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Departamentos</Label>
+                    <Popover open={depPopoverOpen} onOpenChange={setDepPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between font-normal h-auto min-h-10 py-2",
+                            departamentoIds.length === 0 && "text-muted-foreground"
+                          )}
+                        >
+                          <div className="flex flex-wrap gap-1 items-center">
+                            {departamentoIds.length === 0 ? (
+                              <span>Selecione um ou mais...</span>
+                            ) : (
+                              departamentoIds.map((id) => {
+                                const dep = departamentos.find((d) => d.id === id);
+                                if (!dep) return null;
+                                return (
+                                  <Badge key={id} variant="secondary" className="gap-1 text-xs font-normal">
+                                    {dep.nome}
+                                    <span
+                                      role="button"
+                                      tabIndex={0}
+                                      className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5 cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDepartamentoIds((prev) => prev.filter((x) => x !== id));
+                                      }}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </span>
+                                  </Badge>
+                                );
+                              })
+                            )}
+                          </div>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <div className="max-h-[260px] overflow-y-auto p-1">
+                          {departamentos.length === 0 ? (
+                            <p className="text-sm text-muted-foreground p-3 text-center">
+                              Nenhum departamento cadastrado
+                            </p>
+                          ) : (
+                            departamentos.map((dep) => {
+                              const checked = departamentoIds.includes(dep.id);
+                              return (
+                                <label
+                                  key={dep.id}
+                                  className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent cursor-pointer"
+                                >
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={(v) => {
+                                      setDepartamentoIds((prev) =>
+                                        v ? [...prev, dep.id] : prev.filter((x) => x !== dep.id)
+                                      );
+                                    }}
+                                  />
+                                  <span>{dep.nome}</span>
+                                </label>
+                              );
+                            })
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                      O primeiro selecionado será considerado o departamento principal.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label>Nível</Label>
