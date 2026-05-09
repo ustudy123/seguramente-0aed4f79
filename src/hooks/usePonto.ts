@@ -367,7 +367,7 @@ export function usePonto() {
       return data as PontoAjuste;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
       toast.success("Solicitação de ajuste enviada com sucesso!");
     },
     onError: (error: Error) => {
