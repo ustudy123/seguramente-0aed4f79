@@ -49,7 +49,7 @@ function DiagCTA({ children = "Fazer diagnóstico grátis em 60s", subtitle, var
         className={`group text-white font-black tracking-wide rounded-xl shadow-2xl whitespace-normal h-auto transition-transform hover:scale-[1.03] active:scale-95 ${size === "lg" ? "text-base sm:text-lg px-6 sm:px-10 py-6 sm:py-7" : "text-sm sm:text-base px-5 py-5"}`}
         style={
           variant === "primary"
-            ? { background: 'hsl(33 100% 50%)', boxShadow: '0 10px 40px hsl(25 65% 42% / 0.4)' }
+            ? { background: 'linear-gradient(135deg, hsl(25 65% 42%), hsl(25 75% 32%))', boxShadow: '0 10px 40px hsl(25 65% 42% / 0.4)' }
             : { background: 'transparent', border: '2px solid hsl(25 60% 50%)', color: 'hsl(25 60% 60%)' }
         }
       >
@@ -148,7 +148,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#050d1a] text-white overflow-x-hidden">
       {/* Floating urgency bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 py-2 text-[11px] sm:text-sm font-bold shadow-lg overflow-hidden" style={{ background: 'hsl(207 90% 32%)' }}>
+      <div className="fixed top-0 left-0 right-0 z-50 py-2 text-[11px] sm:text-sm font-bold shadow-lg overflow-hidden" style={{ background: 'linear-gradient(90deg, hsl(207 90% 25%), hsl(207 90% 38%), hsl(207 90% 25%))' }}>
         {/* Desktop: estático e centralizado */}
         <div className="hidden sm:flex items-center justify-center gap-3 px-3 leading-tight">
           <span className="flex items-center gap-1">
@@ -235,7 +235,7 @@ export default function LandingPage() {
               <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b-2 border-r-2 border-hsl(33 100% 50% / 0.3) rounded-br-2xl hidden md:block" />
               
               <div className="relative rounded-2xl overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border border-white/5 bg-white/5 backdrop-blur-sm p-1">
-                <div className="absolute inset-0 bg-orange-500/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-orange-500/10 pointer-events-none" />
                 <img
                   src={mockupDashboard}
                   alt="Dashboard YourEyes - Painel de controle inteligente"
@@ -411,7 +411,7 @@ export default function LandingPage() {
               <Sparkles className="w-4 h-4 mr-1" /> INTELIGÊNCIA ARTIFICIAL
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              IA que <span style={{ backgroundImage: color: 'hsl(33 100% 50%)' }}>trabalha por você</span> 24 horas por dia
+              IA que <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(25 66% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trabalha por você</span> 24 horas por dia
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Enquanto seus concorrentes usam planilhas, o YourEyes usa <strong className="text-white">GPT-4o e visão computacional</strong> para automatizar 
@@ -430,7 +430,7 @@ export default function LandingPage() {
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
                 <div className="rounded-2xl p-8 h-full transition-all duration-300 hover:bg-white/[0.05] group border border-white/5 bg-white/[0.02] backdrop-blur-md">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-orange-500/15 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 group-hover:scale-110 transition-transform">
                     <item.icon className="w-6 h-6" style={{ color: 'hsl(25 66% 55%)' }} />
                   </div>
                   <h3 className="text-lg font-bold mb-3 tracking-tight group-hover:text-emerald-400 transition-colors">{item.title}</h3>
@@ -519,7 +519,7 @@ export default function LandingPage() {
               <Shield className="w-4 h-4 mr-1" /> PLATAFORMA COMPLETA
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              <span style={{ backgroundImage: color: 'hsl(33 100% 50%)' }}>+30 módulos</span> integrados em uma única plataforma
+              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(25 66% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>+30 módulos</span> integrados em uma única plataforma
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Tudo que sua empresa precisa para SST, RH e compliance — sem precisar de 10 softwares diferentes.
@@ -602,7 +602,7 @@ export default function LandingPage() {
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-8 items-start group">
                 <div className="shrink-0 w-20 h-20 rounded-3xl flex items-center justify-center relative" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <div className="absolute inset-0 bg-blue-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="text-3xl font-black relative z-10" style={{ backgroundImage: color: 'hsl(33 100% 50%)' }}>{s.step}</span>
+                  <span className="text-3xl font-black relative z-10" style={{ backgroundImage: 'linear-gradient(135deg, hsl(207 90% 65%), hsl(25 66% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{s.step}</span>
                 </div>
                 <div className="pt-2">
                   <h3 className="text-2xl font-black mb-2 tracking-tight group-hover:text-white transition-colors">{s.title}</h3>
@@ -628,7 +628,7 @@ export default function LandingPage() {
               { num: "74%", label: "redução de riscos com gestão psicossocial" },
             ].map((stat, i) => (
               <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <p className="text-3xl md:text-4xl font-black" style={{ backgroundImage: color: 'hsl(33 100% 50%)' }}>{stat.num}</p>
+                <p className="text-3xl md:text-4xl font-black" style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stat.num}</p>
                 <p className="text-sm text-gray-500 mt-2">{stat.label}</p>
               </motion.div>
             ))}
@@ -759,7 +759,7 @@ export default function LandingPage() {
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
                 Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para acesso{" "}
-                <span style={{ backgroundImage: color: 'hsl(33 100% 50%)' }}>COMPLETO</span>
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>COMPLETO</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
                 Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> com acesso total a TODOS os módulos — 
@@ -769,7 +769,7 @@ export default function LandingPage() {
 
             {/* Vagas visual */}
             <div className="rounded-[2rem] p-8 mb-10 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}>
-              <div className="absolute inset-0 bg-orange-500/5 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 pointer-events-none" />
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-sm font-bold uppercase tracking-widest text-gray-500">Status das Vagas</span>
                 <span className="text-xl font-black px-3 py-1 rounded-lg" style={{ background: 'hsl(33 100% 50% / 0.1)', color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
@@ -777,7 +777,7 @@ export default function LandingPage() {
               <div className="w-full rounded-full h-5 overflow-hidden p-1 relative z-10" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <motion.div
                   className="h-full rounded-full shadow-[0_0_20px_rgba(249,115,22,0.4)]"
-                  style={{ background: 'hsl(33 100% 50%)' }}
+                  style={{ background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${((10 - vagasRestantes) / 10) * 100}%` }}
                   viewport={{ once: true }}
@@ -835,7 +835,7 @@ export default function LandingPage() {
                 onClick={scrollToDiag}
                 disabled={vagasRestantes <= 0}
                 className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto transform transition-all active:scale-95"
-                style={{ background: 'hsl(33 100% 50%)', boxShadow: '0 8px 32px hsl(33 100% 50% / 0.4)' }}
+                style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(33 100% 50% / 0.35)' }}
               >
                 {vagasRestantes > 0 ? (
                   <>
@@ -886,7 +886,7 @@ export default function LandingPage() {
           onClick={scrollToDiag}
           aria-label="Fazer diagnóstico grátis"
           className="hidden sm:flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-2xl transition-transform hover:scale-105 text-white font-bold text-sm"
-          style={{ background: 'hsl(33 100% 50%)', boxShadow: '0 8px 32px hsl(25 65% 42% / 0.5)' }}
+          style={{ background: 'linear-gradient(135deg, hsl(25 65% 42%), hsl(25 75% 32%))', boxShadow: '0 8px 32px hsl(25 65% 42% / 0.5)' }}
         >
           <Brain className="w-4 h-4" />
           Diagnóstico grátis
