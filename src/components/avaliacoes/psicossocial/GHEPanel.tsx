@@ -138,7 +138,7 @@ export function GHEPanel() {
     onSuccess: () => {
       toast.success("GHE removido");
       qc.invalidateQueries({ queryKey: ["psicossocial_ghe"] });
-      setConfirmDel(null);
+      
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -228,7 +228,15 @@ export function GHEPanel() {
                           size="icon"
                           variant="ghost"
                           className="h-7 w-7 text-destructive"
-                          onClick={() => setConfirmDel(g)}
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: "Excluir GHE?",
+                              description: `O grupo ${g.codigo} — ${g.nome} será removido junto com suas associações.`,
+                              confirmText: "Excluir",
+                              variant: "destructive",
+                            });
+                            if (ok) del.mutate(g.id);
+                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
