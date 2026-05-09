@@ -232,34 +232,43 @@ export function QuestionarioResponder({
                 {perguntasDimAtual.map((pergunta, pi) => {
                   const respostaAtual = respostas[pergunta.id];
                   return (
-                    <div key={pergunta.id} className="space-y-3">
-                      <p className="text-sm font-medium leading-relaxed">
-                        <span className="text-muted-foreground mr-1.5">{pi + 1}.</span>
+                    <div key={pergunta.id} className="space-y-3 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-background to-muted/30 border border-border/60 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm sm:text-[15px] font-medium leading-relaxed text-foreground">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 text-violet-700 text-xs font-bold mr-2">{pi + 1}</span>
                         {pergunta.texto}
                         {pergunta.invertida && (
                           <span title="Pergunta protetora">
-                            <Shield className="inline h-3 w-3 text-emerald-500 ml-1.5" />
+                            <Shield className="inline h-3.5 w-3.5 text-emerald-500 ml-1.5" />
                           </span>
                         )}
                       </p>
-                      <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
-                        {(pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => (
-                          <button
-                            key={op.valor}
-                            onClick={() => onRespostaChange(pergunta.id, op.valor)}
-                            className={cn(
-                              "flex flex-col items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 rounded-lg border-2 transition-all text-center h-full justify-between",
-                              respostaAtual === op.valor
-                                ? `${op.cor} border-current ring-2 ring-current ring-offset-1 scale-[1.02] sm:scale-105`
-                                : "border-border hover:border-current " + op.cor
-                            )}
-                          >
-                            <span className="text-base sm:text-lg leading-none">{op.emoji}</span>
-                            <span className="text-[8px] sm:text-[10px] font-medium leading-tight break-words w-full px-0.5">
-                              {op.label}
-                            </span>
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                        {(pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => {
+                          const ativo = respostaAtual === op.valor;
+                          return (
+                            <button
+                              key={op.valor}
+                              onClick={() => onRespostaChange(pergunta.id, op.valor)}
+                              className={cn(
+                                "group relative flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border-2 transition-all duration-200 text-center h-full justify-between bg-gradient-to-br",
+                                ativo
+                                  ? `${op.selecionado} shadow-lg scale-[1.04] -translate-y-0.5`
+                                  : `${op.cor} hover:shadow-md hover:-translate-y-0.5`
+                              )}
+                            >
+                              <span className={cn(
+                                "text-xl sm:text-2xl leading-none transition-transform duration-200",
+                                ativo ? "scale-110" : "group-hover:scale-110"
+                              )}>{op.emoji}</span>
+                              <span className={cn(
+                                "text-[9px] sm:text-[11px] font-semibold leading-tight break-words w-full px-0.5 tracking-tight",
+                                ativo ? "text-white" : ""
+                              )}>
+                                {op.label}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   );
