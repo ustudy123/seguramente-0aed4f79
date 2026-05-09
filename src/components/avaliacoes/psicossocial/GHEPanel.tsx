@@ -284,7 +284,7 @@ export function GHEPanel() {
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
                         <Briefcase className="h-3.5 w-3.5" />
                         <span>
-                          {assoc.length} função{assoc.length !== 1 ? "ões" : ""}
+                          {assoc.length === 1 ? "1 função" : `${assoc.length} funções`}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
