@@ -348,13 +348,91 @@ export function GHEPanel() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{form.id ? "Editar GHE" : "Novo GHE"}</DialogTitle>
+            <DialogTitle>
+              {form.id
+                ? "Editar GHE"
+                : step === "categoria"
+                ? "Novo GHE — escolha a categoria"
+                : step === "template"
+                ? `${categoria?.emoji} ${categoria?.label}`
+                : "Novo GHE — configurar"}
+            </DialogTitle>
             <DialogDescription>
-              Defina o código, nome e selecione os cargos (com seus departamentos) que compõem este grupo.
+              {step === "categoria" && "Selecione a macro-categoria que melhor descreve o grupo de exposição."}
+              {step === "template" && "Escolha um modelo padrão (você poderá ajustar nome e descrição em seguida)."}
+              {step === "form" && "Defina o código, nome e selecione as funções (com seus departamentos) que compõem este grupo."}
             </DialogDescription>
           </DialogHeader>
 
+          {step === "categoria" && !form.id && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+              {GHE_CATEGORIAS.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => escolherCategoria(cat)}
+                  className={`bg-gradient-to-br ${cat.cor} border rounded-lg p-3 text-left hover:shadow-md hover:-translate-y-0.5 transition-all`}
+                >
+                  <div className="text-2xl mb-1">{cat.emoji}</div>
+                  <div className="text-xs font-semibold leading-tight">{cat.label}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {cat.templates.length} modelo{cat.templates.length !== 1 ? "s" : ""}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === "template" && categoria && (
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+              <button
+                type="button"
+                onClick={() => setStep("categoria")}
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                ← Trocar categoria
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {categoria.templates.map((tpl) => (
+                  <button
+                    key={tpl.ref}
+                    type="button"
+                    onClick={() => aplicarTemplate(tpl)}
+                    className="border rounded-lg p-3 text-left hover:bg-primary/5 hover:border-primary/40 transition"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className="text-[10px] font-mono">{tpl.ref}</Badge>
+                      <span className="text-sm font-semibold">{tpl.nome}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{tpl.descricao}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === "form" && (
           <div className="space-y-4">
+            {!form.id && categoria && (
+              <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/40 border">
+                <div className="text-xs flex items-center gap-2">
+                  <span>{categoria.emoji}</span>
+                  <span className="font-medium">{categoria.label}</span>
+                  {refPadrao && (
+                    <Badge variant="outline" className="text-[10px] font-mono">{refPadrao}</Badge>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setStep("categoria")}
+                >
+                  Trocar modelo
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="codigo">Código</Label>
