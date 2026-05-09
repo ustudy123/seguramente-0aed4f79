@@ -183,10 +183,14 @@ export default function Empresa() {
         toast.error('O CPF é obrigatório para Pessoa Física.');
         return;
       }
-      await upsertCadastro.mutateAsync(formData);
+      const saved: any = await upsertCadastro.mutateAsync(formData);
       clearDraft();
       setHasChanges(false);
       setRascunhoRestaurado(false);
+      if (viewMode === 'new' && saved?.id) {
+        setSelectedEmpresaId(saved.id);
+        setViewMode('edit');
+      }
       toast.success('Alterações salvas com sucesso!');
       // Mantém na tela de edição conforme solicitado
     } catch (error: any) {
