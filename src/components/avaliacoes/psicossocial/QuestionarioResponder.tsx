@@ -22,31 +22,31 @@ import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
 import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
 
-// Escala Likert profissional — fatores de RISCO (0 = ideal, 4 = pior)
+// Escala Likert — fatores de RISCO (0 = ideal, 4 = pior)
 const ESCALA_RISCO = [
-  { valor: 0, label: 'Nunca',          intensidade: 0 },
-  { valor: 1, label: 'Raramente',      intensidade: 1 },
-  { valor: 2, label: 'Às vezes',       intensidade: 2 },
-  { valor: 3, label: 'Frequentemente', intensidade: 3 },
-  { valor: 4, label: 'Sempre',         intensidade: 4 },
+  { valor: 0, label: 'Nunca',          emoji: '😄', intensidade: 0 },
+  { valor: 1, label: 'Raramente',      emoji: '🙂', intensidade: 1 },
+  { valor: 2, label: 'Às vezes',       emoji: '😐', intensidade: 2 },
+  { valor: 3, label: 'Frequentemente', emoji: '😟', intensidade: 3 },
+  { valor: 4, label: 'Sempre',         emoji: '😣', intensidade: 4 },
 ];
 
-// Escala Likert profissional — fatores PROTETORES (invertida: 0 = pior, 4 = ideal)
+// Escala Likert — fatores PROTETORES (invertida: 0 = pior, 4 = ideal)
 const ESCALA_PROTETOR = [
-  { valor: 0, label: 'Nunca',          intensidade: 4 },
-  { valor: 1, label: 'Raramente',      intensidade: 3 },
-  { valor: 2, label: 'Às vezes',       intensidade: 2 },
-  { valor: 3, label: 'Frequentemente', intensidade: 1 },
-  { valor: 4, label: 'Sempre',         intensidade: 0 },
+  { valor: 0, label: 'Nunca',          emoji: '😣', intensidade: 4 },
+  { valor: 1, label: 'Raramente',      emoji: '😟', intensidade: 3 },
+  { valor: 2, label: 'Às vezes',       emoji: '😐', intensidade: 2 },
+  { valor: 3, label: 'Frequentemente', emoji: '🙂', intensidade: 1 },
+  { valor: 4, label: 'Sempre',         emoji: '😄', intensidade: 0 },
 ];
 
 // Mapeia intensidade (0 ideal → 4 pior) em estilos discretos quando selecionado
-const ESTILO_INTENSIDADE: Record<number, { selBg: string; selBorder: string; selText: string; dot: string }> = {
-  0: { selBg: 'bg-emerald-50',  selBorder: 'border-emerald-500', selText: 'text-emerald-900', dot: 'bg-emerald-500' },
-  1: { selBg: 'bg-emerald-50/70', selBorder: 'border-emerald-400', selText: 'text-emerald-800', dot: 'bg-emerald-400' },
-  2: { selBg: 'bg-amber-50',    selBorder: 'border-amber-500',   selText: 'text-amber-900',   dot: 'bg-amber-500' },
-  3: { selBg: 'bg-orange-50',   selBorder: 'border-orange-500',  selText: 'text-orange-900',  dot: 'bg-orange-500' },
-  4: { selBg: 'bg-rose-50',     selBorder: 'border-rose-500',    selText: 'text-rose-900',    dot: 'bg-rose-500' },
+const ESTILO_INTENSIDADE: Record<number, { selBg: string; selBorder: string; selText: string; ring: string }> = {
+  0: { selBg: 'bg-emerald-50',    selBorder: 'border-emerald-500', selText: 'text-emerald-900', ring: 'ring-emerald-200' },
+  1: { selBg: 'bg-emerald-50/70', selBorder: 'border-emerald-400', selText: 'text-emerald-800', ring: 'ring-emerald-100' },
+  2: { selBg: 'bg-amber-50',      selBorder: 'border-amber-500',   selText: 'text-amber-900',   ring: 'ring-amber-200' },
+  3: { selBg: 'bg-orange-50',     selBorder: 'border-orange-500',  selText: 'text-orange-900',  ring: 'ring-orange-200' },
+  4: { selBg: 'bg-rose-50',       selBorder: 'border-rose-500',    selText: 'text-rose-900',    ring: 'ring-rose-200' },
 };
 
 interface QuestionarioResponderProps {
