@@ -20471,6 +20471,10 @@ export type Database = {
         Args: { _empresa_id: string }
         Returns: boolean
       }
+      validar_cpf_colaborador_campanha: {
+        Args: { p_campanha_id: string; p_cpf: string; p_hash: string }
+        Returns: Json
+      }
       validar_token_participacao: { Args: { p_token: string }; Returns: Json }
       verificar_hash_ja_respondeu: {
         Args: { p_campanha_id: string; p_hash: string }
