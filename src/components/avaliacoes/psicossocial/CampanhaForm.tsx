@@ -891,9 +891,18 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                     <div key={idx} className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
                       <div className="flex items-center gap-2 text-sm">
                         <UserCog className="h-3.5 w-3.5 text-purple-500" />
-                        <span className="font-medium">{sit.funcaoNome}</span>
-                        <span className="text-muted-foreground">em</span>
-                        <span>{sit.setorNome}</span>
+                        {sit.funcaoNome ? (
+                          <>
+                            <span className="font-medium">{sit.funcaoNome}</span>
+                            <span className="text-muted-foreground">em</span>
+                            <span>{sit.setorNome}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium">{sit.setorNome}</span>
+                            <span className="text-xs text-muted-foreground italic">(todas as funções)</span>
+                          </>
+                        )}
                       </div>
                       <Button
                         type="button"
