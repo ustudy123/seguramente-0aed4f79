@@ -18032,6 +18032,45 @@ export type Database = {
           },
         ]
       }
+      psicossocial_riscos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          empresa_id: string | null
+          id: string
+          nome: string
+          padrao: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          padrao?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          padrao?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       psicossocial_telefone_usado: {
         Row: {
           campanha_id: string
@@ -20445,6 +20484,10 @@ export type Database = {
           p_token: string
           p_user_agent: string
         }
+        Returns: undefined
+      }
+      seed_psicossocial_riscos_padrao: {
+        Args: { _tenant_id: string }
         Returns: undefined
       }
       solicitar_ajuste_ponto_externo: {
