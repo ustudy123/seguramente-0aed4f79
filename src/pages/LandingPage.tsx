@@ -315,6 +315,15 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div {...fadeUp} className="mt-14 text-center">
+            <p className="text-gray-300 text-lg mb-5">
+              Não espere a fiscalização chegar para descobrir onde sua empresa está vulnerável.
+            </p>
+            <DiagCTA subtitle="Receba o resultado por WhatsApp em segundos">
+              Descobrir meus riscos agora
+            </DiagCTA>
+          </motion.div>
         </div>
       </section>
 
