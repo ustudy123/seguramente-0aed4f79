@@ -57,11 +57,11 @@ export function RiscosPsicossociaisPanel() {
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
-          Riscos Psicossociais
+          Fatores de Riscos Psicossociais
         </h2>
         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5" />
-          Catálogo padrão do sistema — {total} riscos (somente leitura)
+          Catálogo padrão do sistema — {total} fatores (somente leitura)
         </p>
       </div>
 
