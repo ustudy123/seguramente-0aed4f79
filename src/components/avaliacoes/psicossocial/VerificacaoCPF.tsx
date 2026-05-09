@@ -115,11 +115,20 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
               </label>
               <CpfInput
                 value={cpf}
-                onChange={setCpf}
+                onChange={(v) => { setCpf(v); if (jaRespondeu) setJaRespondeu(false); }}
                 onValidChange={setCpfValido}
                 placeholder="000.000.000-00"
                 autoFocus
               />
+              {jaRespondeu && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <p className="text-xs leading-relaxed">
+                    <strong>Este CPF já respondeu esta campanha.</strong> Para preservar a integridade
+                    dos resultados, cada pessoa pode responder apenas uma vez.
+                  </p>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Validamos apenas a estrutura matemática do CPF (dígitos verificadores).
                 Não consultamos a Receita Federal nem armazenamos o número.
