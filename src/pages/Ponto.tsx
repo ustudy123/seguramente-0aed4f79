@@ -469,7 +469,11 @@ const Ponto = () => {
                         <span className="font-medium">{ajuste.colaborador_nome}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{(() => { const [y,m,d] = (ajuste.data_referencia || "").split("-"); return d && m && y ? `${d}/${m}/${y}` : ajuste.data_referencia; })()}</TableCell>
+                    <TableCell>{(() => {
+                      const raw = (ajuste.data_referencia || "").toString().slice(0, 10);
+                      const [y, m, d] = raw.split("-");
+                      return d && m && y ? `${d}/${m}/${y}` : (ajuste.data_referencia || "-");
+                    })()}</TableCell>
                     <TableCell><Badge variant="outline">{ajuste.tipo_ajuste}</Badge></TableCell>
                     <TableCell>{ajuste.tipo_marcacao ? TIPO_MARCACAO_LABELS[ajuste.tipo_marcacao] : "-"}</TableCell>
                     <TableCell className="font-mono">{ajuste.hora_solicitada || "-"}</TableCell>
