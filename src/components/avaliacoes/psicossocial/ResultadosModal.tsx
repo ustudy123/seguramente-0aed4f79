@@ -587,13 +587,31 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
             {/* ── Tab: Participação ── */}
             <TabsContent value="participacao" className="mt-4 space-y-4">
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-5">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Total de Convites</CardTitle>
+                    <CardTitle className="text-sm">Total de pessoas que responderam</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats?.total_convites || 0}</div>
+                    <div className="text-2xl font-bold">{stats?.concluidos || 0}</div>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Respostas efetivamente registradas
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Total no Setor</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-primary">{stats?.total_convites || 0}</div>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {stats?.concluidos || 0} de {stats?.total_convites || 0} colaboradores do setor responderam
+                    </p>
+                    <Progress
+                      value={stats?.total_convites ? ((stats.concluidos || 0) / stats.total_convites) * 100 : 0}
+                      className="h-1.5 mt-2"
+                    />
                   </CardContent>
                 </Card>
                 <Card>
