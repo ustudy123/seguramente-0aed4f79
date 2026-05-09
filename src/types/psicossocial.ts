@@ -329,6 +329,16 @@ export interface EstatisticasCampanha {
   media_IREC_S?: number;
   media_ICOP_S?: number;
   media_INOT_S?: number;
+  por_departamento?: GrupoEstatistica[];
+  por_cargo?: GrupoEstatistica[];
+}
+
+export interface GrupoEstatistica {
+  nome: string;
+  total: number;
+  ips?: number;
+  ips_classificacao?: IPSClassificacao;
+  anonimato_garantido: boolean;
 }
 
 // Dados para criar campanha
