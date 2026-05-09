@@ -14,7 +14,6 @@ type Step = 0 | 1 | 2 | 3 | 4 | 5; // 0..4 quiz, 5 = contato
 
 interface Props {
   origem: string; // qual landing page
-  whatsappNumber: string; // p/ CTA final
 }
 
 const FUNCIONARIOS = [
