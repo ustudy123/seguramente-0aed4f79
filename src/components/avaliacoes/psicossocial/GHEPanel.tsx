@@ -148,7 +148,12 @@ export function GHEPanel() {
   });
 
   const handleNovo = () => {
-    const next = `GHE ${String(ghes.length + 1).padStart(2, "0")}`;
+    const maxN = ghes.reduce((max, g) => {
+      const m = /(\d+)/.exec(g.codigo || "");
+      const n = m ? parseInt(m[1], 10) : 0;
+      return n > max ? n : max;
+    }, 0);
+    const next = `GHE ${String(maxN + 1).padStart(2, "0")}`;
     setForm({ ...emptyForm, codigo: next });
     setOpen(true);
   };
@@ -323,9 +328,12 @@ export function GHEPanel() {
                 <Input
                   id="codigo"
                   value={form.codigo}
-                  onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))}
+                  readOnly
+                  disabled
+                  className="bg-muted/60 font-semibold cursor-not-allowed"
                   placeholder="GHE 01"
                 />
+                <p className="text-[11px] text-muted-foreground">Gerado automaticamente</p>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="nome">Nome</Label>
