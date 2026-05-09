@@ -363,6 +363,10 @@ export function PsicossocialDashboard() {
         {/* Tabs principais — Campanhas primeiro */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full sm:w-auto flex-wrap h-auto">
+            <TabsTrigger id="tab-psicossocial-riscos" value="riscos" className="gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Riscos Psicossociais
+            </TabsTrigger>
             <TabsTrigger id="tab-psicossocial-campanhas" value="campanhas" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Campanhas
