@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
