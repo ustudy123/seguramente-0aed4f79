@@ -72,6 +72,8 @@ export function GHEPanel() {
   const [step, setStep] = useState<"categoria" | "template" | "form">("categoria");
   const [categoria, setCategoria] = useState<GHECategoria | null>(null);
   const [refPadrao, setRefPadrao] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<GHE | null>(null);
+  const [deleteText, setDeleteText] = useState("");
 
   const { data: ghes = [], isLoading } = useQuery({
     queryKey: ["psicossocial_ghe", tenantId, empresaAtivaId],
