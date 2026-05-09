@@ -18506,6 +18506,7 @@ export type Database = {
           colaborador_id: string | null
           concluido_em: string | null
           convite_id: string | null
+          cpf_hash: string | null
           created_at: string
           id: string
           identificacao_voluntaria: boolean
@@ -18521,6 +18522,7 @@ export type Database = {
           colaborador_id?: string | null
           concluido_em?: string | null
           convite_id?: string | null
+          cpf_hash?: string | null
           created_at?: string
           id?: string
           identificacao_voluntaria?: boolean
@@ -18536,6 +18538,7 @@ export type Database = {
           colaborador_id?: string | null
           concluido_em?: string | null
           convite_id?: string | null
+          cpf_hash?: string | null
           created_at?: string
           id?: string
           identificacao_voluntaria?: boolean
