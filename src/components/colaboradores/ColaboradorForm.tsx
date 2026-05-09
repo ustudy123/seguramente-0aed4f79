@@ -68,6 +68,7 @@ const formSchema = z.object({
   gestor_imediato: z.string().optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
   matricula_esocial: z.string().optional(),
+  cbo: z.string().optional(),
   foto_url: z.string().optional(),
 });
 
