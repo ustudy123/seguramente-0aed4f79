@@ -36,7 +36,7 @@ export function RiscosPsicossociaisPanel() {
   const qc = useQueryClient();
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState<RiscoPsicossocial | null>(null);
-  const [confirmDel, setConfirmDel] = useState<RiscoPsicossocial | null>(null);
+  
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
 
