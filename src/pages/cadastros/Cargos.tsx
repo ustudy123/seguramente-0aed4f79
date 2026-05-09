@@ -297,7 +297,7 @@ export default function Cargos() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Departamento</TableHead>
+              <TableHead>Departamentos</TableHead>
               <TableHead>Nível</TableHead>
               <TableHead>Faixa Salarial</TableHead>
               <TableHead>Condições Especiais</TableHead>
