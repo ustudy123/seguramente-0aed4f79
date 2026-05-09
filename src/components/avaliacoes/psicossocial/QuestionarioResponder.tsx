@@ -274,7 +274,7 @@ export function QuestionarioResponder({
                                 key={op.valor}
                                 onClick={() => onRespostaChange(pergunta.id, op.valor)}
                                 className={cn(
-                                  "group relative flex flex-col items-center justify-center gap-2 px-1 py-3 sm:py-3.5 rounded-lg border transition-all text-center h-full",
+                                  "group relative flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-0.5 sm:px-1 py-2.5 sm:py-3.5 rounded-lg border transition-all text-center h-full min-w-0 overflow-hidden",
                                   ativo
                                     ? `${estilo.selBg} ${estilo.selBorder} ${estilo.selText} border-2 ring-4 ${estilo.ring}`
                                     : "bg-background border-border hover:border-foreground/30 hover:bg-muted/40"
