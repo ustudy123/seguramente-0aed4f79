@@ -436,7 +436,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
             <FolderPlus className="w-4 h-4 mr-2" />
             Nova Pasta
           </Button>
-          <Button className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground shadow-glow hover:from-primary/90 hover:to-primary/60" onClick={() => handleOpenUpload()}>
+          <Button onClick={() => handleOpenUpload()}>
             <Upload className="w-4 h-4 mr-2" />
             Upload
           </Button>
