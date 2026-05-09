@@ -824,137 +824,33 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              {!showFormulario && !leadEnviado && (
-                  <motion.div 
-                    key="cta" 
-                    exit={{ opacity: 0 }}
-                    variants={pulseGlow}
-                    initial="initial"
-                    animate="animate"
-                    className="rounded-xl"
-                  >
-                    <Button
-                      size="lg"
-                      onClick={() => setShowFormulario(true)}
-                      className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto transform transition-all active:scale-95"
-                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
-                      disabled={vagasRestantes <= 0}
-                    >
-                      {vagasRestantes > 0 ? (
-                        <>
-                          <Zap className="w-5 h-5 mr-2 shrink-0 animate-pulse" />
-                          <span className="break-words font-black tracking-wide">QUERO GARANTIR MINHA VAGA AGORA</span>
-                        </>
-                      ) : (
-                        <span className="break-words font-bold">Vagas esgotadas — Lista de espera em breve</span>
-                      )}
-                    </Button>
-                  </motion.div>
-              )}
-
-              {showFormulario && !leadEnviado && (
-                <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div 
-                    className="rounded-[2.5rem] p-10 relative overflow-hidden" 
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)', 
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      backdropFilter: 'blur(30px)',
-                      boxShadow: '0 40px 100px -20px rgba(0,0,0,0.5)'
-                    }}
-                  >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[60px] rounded-full" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/10 blur-[60px] rounded-full" />
-                    
-                    <h3 className="text-3xl font-black mb-2 text-center tracking-tight">Comece sua Proteção</h3>
-                    <p className="text-gray-400 text-base text-center mb-10">Preencha os dados e garanta seu acesso <span className="text-white font-bold">Vitalício</span> à fase Alpha.</p>
-                    
-                    <div className="space-y-5 relative z-10">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nome Completo</label>
-                        <Input
-                          placeholder="Ex: João Silva"
-                          value={nome}
-                          onChange={e => setNome(e.target.value)}
-                          maxLength={100}
-                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">E-mail Corporativo</label>
-                        <Input
-                          type="email"
-                          placeholder="joao@empresa.com.br"
-                          value={email}
-                          onChange={e => setEmail(e.target.value)}
-                          maxLength={255}
-                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">WhatsApp</label>
-                        <Input
-                          type="tel"
-                          inputMode="tel"
-                          placeholder="(00) 00000-0000"
-                          value={whatsapp}
-                          onChange={e => setWhatsapp(formatWhatsapp(e.target.value))}
-                          maxLength={16}
-                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
-                        />
-                      </div>
-                      
-                      <Button
-                        size="lg"
-                        onClick={handleSubmitLead}
-                        disabled={loading}
-                        className="w-full text-white text-xl font-black py-8 rounded-xl shadow-2xl mt-4 group overflow-hidden relative"
-                        style={{ 
-                          background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(25 66% 45%))',
-                          boxShadow: '0 20px 40px -10px rgba(16, 185, 129, 0.3)'
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                        <span className="relative z-10">{loading ? "PROCESSANDO..." : "GARANTIR MINHA VAGA AGORA →"}</span>
-                      </Button>
-                    </div>
-                    <p className="text-[10px] text-gray-500 text-center mt-6 font-medium uppercase tracking-widest">
-                      🔒 Ambiente criptografado e 100% seguro pela LGPD
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {leadEnviado && (
-                <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-                  <div className="rounded-2xl p-8" style={{ background: 'linear-gradient(180deg, hsl(25 20% 12%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(25 50% 42% / 0.3)' }}>
-                    <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: 'hsl(25 50% 50%)' }} />
-                    <h3 className="text-2xl font-black mb-2">Parabéns! Sua vaga está quase garantida 🎉</h3>
-                    <p className="text-gray-400 mb-2">
-                      Restam apenas <strong style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes} vagas</strong> para acesso completo.
-                    </p>
-                    <div className="rounded-xl p-4 my-6" style={{ background: 'hsl(215 65% 8%)', border: '1px solid hsl(33 100% 50% / 0.3)' }}>
-                      <p className="font-bold text-sm mb-1" style={{ color: 'hsl(33 100% 50%)' }}>⚡ ATENÇÃO: Apenas 10 vagas com acesso TOTAL</p>
-                      <p className="text-gray-500 text-xs">
-                        Após as 10 vagas, novos usuários terão acesso apenas a módulos limitados conforme o plano contratado. 
-                        Crie sua conta agora para garantir o acesso completo.
-                      </p>
-                    </div>
-                    <Button
-                      size="lg"
-                      onClick={() => navigate("/register")}
-                      className="w-full sm:w-auto text-white text-sm sm:text-lg px-4 sm:px-10 py-6 rounded-xl shadow-2xl whitespace-normal h-auto"
-                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(25 66% 45%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
-                    >
-                      <span className="break-words">CRIAR MINHA CONTA AGORA — É GRÁTIS</span>
-                      <ArrowRight className="w-5 h-5 ml-2 shrink-0" />
-                    </Button>
-                    <p className="text-xs text-gray-600 mt-4">Cadastro rápido em menos de 2 minutos</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <motion.div
+              variants={pulseGlow}
+              initial="initial"
+              animate="animate"
+              className="rounded-xl"
+            >
+              <Button
+                size="lg"
+                onClick={scrollToDiag}
+                disabled={vagasRestantes <= 0}
+                className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto transform transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(33 100% 50% / 0.35)' }}
+              >
+                {vagasRestantes > 0 ? (
+                  <>
+                    <Brain className="w-5 h-5 mr-2 shrink-0 animate-pulse" />
+                    <span className="break-words font-black tracking-wide">FAZER DIAGNÓSTICO GRÁTIS EM 60 SEGUNDOS</span>
+                    <ArrowRight className="w-5 h-5 ml-2 shrink-0" />
+                  </>
+                ) : (
+                  <span className="break-words font-bold">Vagas esgotadas — Lista de espera em breve</span>
+                )}
+              </Button>
+              <p className="text-xs text-gray-500 text-center mt-3">
+                Sem cadastro de cartão • Resultado e plano de ação enviados pelo WhatsApp
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </section>
