@@ -11090,40 +11090,58 @@ export type Database = {
       }
       landing_leads: {
         Row: {
+          cargo: string | null
           convertido: boolean | null
           created_at: string | null
           diagnostico_resultado: Json | null
           email: string
           empresa: string | null
           id: string
+          landing_page_origem: string | null
           nome: string
+          num_funcionarios: string | null
+          perfil_diagnostico: string | null
           pontuacao_diagnostico: number | null
+          setor: string | null
           telefone: string | null
           updated_at: string | null
+          urgencia: string | null
         }
         Insert: {
+          cargo?: string | null
           convertido?: boolean | null
           created_at?: string | null
           diagnostico_resultado?: Json | null
           email: string
           empresa?: string | null
           id?: string
+          landing_page_origem?: string | null
           nome: string
+          num_funcionarios?: string | null
+          perfil_diagnostico?: string | null
           pontuacao_diagnostico?: number | null
+          setor?: string | null
           telefone?: string | null
           updated_at?: string | null
+          urgencia?: string | null
         }
         Update: {
+          cargo?: string | null
           convertido?: boolean | null
           created_at?: string | null
           diagnostico_resultado?: Json | null
           email?: string
           empresa?: string | null
           id?: string
+          landing_page_origem?: string | null
           nome?: string
+          num_funcionarios?: string | null
+          perfil_diagnostico?: string | null
           pontuacao_diagnostico?: number | null
+          setor?: string | null
           telefone?: string | null
           updated_at?: string | null
+          urgencia?: string | null
         }
         Relationships: []
       }
