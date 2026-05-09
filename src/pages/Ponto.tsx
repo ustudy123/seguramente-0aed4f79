@@ -685,7 +685,7 @@ const Ponto = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAjusteModal(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => handleCloseAjusteModal(false)}>Cancelar</Button>
             <Button
               onClick={handleSolicitarAjuste}
               disabled={
