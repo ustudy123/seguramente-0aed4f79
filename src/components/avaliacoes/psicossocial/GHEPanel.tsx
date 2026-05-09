@@ -232,7 +232,7 @@ export function GHEPanel() {
                             const ok = await confirm({
                               title: "Excluir GHE?",
                               description: `O grupo ${g.codigo} — ${g.nome} será removido junto com suas associações.`,
-                              confirmText: "Excluir",
+                              confirmLabel: "Excluir",
                               variant: "destructive",
                             });
                             if (ok) del.mutate(g.id);
