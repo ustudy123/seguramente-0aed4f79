@@ -372,15 +372,6 @@ export function GHEPanel() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={!!confirmDel}
-        onOpenChange={(o) => !o && setConfirmDel(null)}
-        title="Excluir GHE?"
-        description={`O grupo ${confirmDel?.codigo} — ${confirmDel?.nome} será removido junto com suas associações.`}
-        confirmText="Excluir"
-        variant="destructive"
-        onConfirm={() => confirmDel && del.mutate(confirmDel.id)}
-      />
     </div>
   );
 }
