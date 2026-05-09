@@ -74,10 +74,10 @@ function calcularPerfil(num: string, dorPeso: number, statusPeso: number, urgPes
 }
 
 const PERFIL_LABEL: Record<string, { l: string; cor: string; msg: string }> = {
-  critico:    { l: "Crítico",    cor: "hsl(0 70% 55%)",    msg: "Cenário de alto risco. Precisa de plano de ação imediato — vamos priorizar seu atendimento." },
-  quente:     { l: "Prioritário", cor: "hsl(33 100% 55%)", msg: "Você tem ganhos rápidos a obter. Faz sentido conversar agora para mapear o melhor caminho." },
-  qualificado: { l: "Qualificado", cor: "hsl(207 90% 55%)", msg: "Bom momento para estruturar. Vamos te mostrar como o YourEyes acelera essa governança." },
-  explorador: { l: "Explorador", cor: "hsl(152 60% 50%)",  msg: "Ótimo! Vamos te enviar materiais e tirar suas dúvidas pelo WhatsApp." },
+  critico:    { l: "Crítico",    cor: "hsl(0 70% 55%)",    msg: "Cenário de alto risco. Nosso time vai priorizar seu atendimento e entrar em contato para agendar uma apresentação." },
+  quente:     { l: "Prioritário", cor: "hsl(33 100% 55%)", msg: "Você tem ganhos rápidos a obter. Um especialista da YourEyes vai entrar em contato para agendar uma apresentação." },
+  qualificado: { l: "Qualificado", cor: "hsl(207 90% 55%)", msg: "Bom momento para estruturar. Vamos entrar em contato para apresentar como o YourEyes acelera essa governança." },
+  explorador: { l: "Explorador", cor: "hsl(152 60% 50%)",  msg: "Recebemos seus dados. Em breve um consultor entra em contato para tirar dúvidas e marcar uma apresentação." },
 };
 
 export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
