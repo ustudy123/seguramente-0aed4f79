@@ -86,6 +86,9 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
   const [acaoExpandida, setAcaoExpandida] = useState<number | null>(null);
   // Data de vencimento manual (preenchida pelo usuário, sobrepõe o que a IA extraiu)
   const [dataVigenciaManual, setDataVigenciaManual] = useState<string>("");
+  // Responsável técnico manual (usado apenas quando a IA não identificou)
+  const [respManualNome, setRespManualNome] = useState<string>("");
+  const [respManualRegistro, setRespManualRegistro] = useState<string>("");
   // LTCAT: rastreio de ações de folha por índice do risco
   const [acoesEnquadramentoSalvas, setAcoesEnquadramentoSalvas] = useState<Record<number, string>>({}); // index -> acaoId
   const [criandoAcaoEnquadramento, setCriandoAcaoEnquadramento] = useState<number | null>(null);
@@ -302,18 +305,35 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
     }
     setSalvando(true);
     try {
+      // Se a IA não identificou responsável técnico, usa o preenchido manualmente
+      let dadosParaSalvar = dados;
+      if ((!dados.responsaveis_tecnicos || dados.responsaveis_tecnicos.length === 0) && respManualNome.trim()) {
+        dadosParaSalvar = {
+          ...dados,
+          responsaveis_tecnicos: [{
+            nome: respManualNome.trim(),
+            registro: respManualRegistro.trim() || undefined,
+            formacao: undefined,
+            conselho: undefined,
+            funcao_no_doc: undefined,
+            confianca: "alta",
+          } as any],
+        };
+        setDados(dadosParaSalvar);
+      }
+
       await uploadDocumento.mutateAsync({
         file: state.arquivo,
         tipo: state.tipoDetectado,
         data_emissao: parseDateString(dados.dados_gerais?.data_emissao?.valor) || undefined,
         data_vigencia: dataVigenciaManual || undefined,
-        profissional_responsavel: dados.responsaveis_tecnicos?.[0]?.nome || undefined,
+        profissional_responsavel: dadosParaSalvar.responsaveis_tecnicos?.[0]?.nome || undefined,
         empresa_emissora: dados.dados_gerais?.empresa?.valor || undefined,
         observacoes: modoRascunho ? "[RASCUNHO] Importação inteligente SST" : "Importação inteligente SST",
         // Persistir todos os dados extraídos pela IA
-        analise_ia: dados,
+        analise_ia: dadosParaSalvar,
       });
-      updateState({ dadosExtraidos: dados, etapa: 5 });
+      updateState({ dadosExtraidos: dadosParaSalvar, etapa: 5 });
       toast.success("Documento importado com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
@@ -821,7 +841,37 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
                     );
                   })
                 ) : (
-                  <p className="text-sm text-muted-foreground italic text-center py-8">Nenhum responsável técnico identificado</p>
+                  <div className="p-4 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Responsável técnico não identificado pela IA</p>
+                        <p className="text-xs text-muted-foreground">
+                          Informe manualmente o nome e o registro profissional. Esses dados ficam salvos junto ao documento.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Nome do responsável técnico</label>
+                        <Input
+                          value={respManualNome}
+                          onChange={e => setRespManualNome(e.target.value)}
+                          placeholder="Ex.: João da Silva"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Registro / Conselho (opcional)</label>
+                        <Input
+                          value={respManualRegistro}
+                          onChange={e => setRespManualRegistro(e.target.value)}
+                          placeholder="Ex.: MT/PR 0031133"
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </TabsContent>
