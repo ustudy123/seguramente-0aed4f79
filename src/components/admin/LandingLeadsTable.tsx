@@ -51,60 +51,74 @@ export function LandingLeadsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Origem</TableHead>
-                <TableHead>Diagnóstico</TableHead>
-                <TableHead>Pontuação</TableHead>
+                <TableHead>Lead</TableHead>
+                <TableHead>Empresa / Setor</TableHead>
+                <TableHead>Funcionários</TableHead>
+                <TableHead>Origem LP</TableHead>
+                <TableHead>Perfil</TableHead>
+                <TableHead>Score</TableHead>
+                <TableHead>Urgência</TableHead>
+                <TableHead>Contato</TableHead>
                 <TableHead>Data</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {leads?.map((lead: any) => {
-                const nivel = lead.diagnostico_resultado?.nivel;
+                const perfil = lead.perfil_diagnostico || lead.diagnostico_resultado?.perfil;
+                const origem = lead.landing_page_origem || lead.diagnostico_resultado?.origem_landing || "—";
+                const dor = lead.diagnostico_resultado?.respostas?.dor_principal;
+                const perfilCfg: Record<string, { l: string; cls: string }> = {
+                  critico:     { l: "Crítico",     cls: "bg-destructive/10 text-destructive border-destructive/20" },
+                  quente:      { l: "Prioritário", cls: "bg-warning/10 text-warning border-warning/20" },
+                  qualificado: { l: "Qualificado", cls: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+                  explorador:  { l: "Explorador",  cls: "bg-success/10 text-success border-success/20" },
+                };
                 return (
                   <TableRow key={lead.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        {lead.nome}
+                        <div>
+                          <div>{lead.nome}</div>
+                          {lead.cargo && <div className="text-xs text-muted-foreground">{lead.cargo}</div>}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        {lead.email}
-                      </div>
+                      <div>{lead.empresa || "—"}</div>
+                      {lead.setor && <div className="text-xs text-muted-foreground">{lead.setor}</div>}
                     </TableCell>
+                    <TableCell className="text-sm">{lead.num_funcionarios || "—"}</TableCell>
                     <TableCell>
                       <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                        <Globe className="w-3 h-3 mr-1" />
-                        Landing Page
+                        <Globe className="w-3 h-3 mr-1" />{origem}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {nivel ? (
-                        <Badge className={
-                          nivel === "critico" ? "bg-destructive/10 text-destructive border-destructive/20" :
-                          nivel === "atencao" ? "bg-warning/10 text-warning border-warning/20" :
-                          "bg-success/10 text-success border-success/20"
-                        }>
-                          {nivel === "critico" && <AlertTriangle className="w-3 h-3 mr-1" />}
-                          {nivel === "atencao" && <Clock className="w-3 h-3 mr-1" />}
-                          {nivel === "adequado" && <CheckCircle className="w-3 h-3 mr-1" />}
-                          {nivel === "critico" ? "Crítico" : nivel === "atencao" ? "Atenção" : "Adequado"}
+                      {perfil && perfilCfg[perfil] ? (
+                        <Badge className={perfilCfg[perfil].cls}>
+                          {perfil === "critico" && <AlertTriangle className="w-3 h-3 mr-1" />}
+                          {perfil === "quente" && <Clock className="w-3 h-3 mr-1" />}
+                          {perfil === "explorador" && <CheckCircle className="w-3 h-3 mr-1" />}
+                          {perfilCfg[perfil].l}
                         </Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Não fez</span>
-                      )}
+                      ) : <span className="text-xs text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
                       {lead.pontuacao_diagnostico != null ? (
-                        <span className="text-sm font-mono">{lead.pontuacao_diagnostico} pts</span>
+                        <span className="text-sm font-mono font-bold">{lead.pontuacao_diagnostico}</span>
                       ) : "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {format(new Date(lead.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    <TableCell className="text-xs">{lead.urgencia || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5 text-xs">
+                        <div className="flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</div>
+                        {lead.telefone && <div className="text-muted-foreground">{lead.telefone}</div>}
+                        {dor && <div className="text-muted-foreground italic">Dor: {dor}</div>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {format(new Date(lead.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
                     </TableCell>
                   </TableRow>
                 );

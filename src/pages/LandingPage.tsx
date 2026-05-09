@@ -21,6 +21,7 @@ import mockupPsicossocial from "@/assets/landing/mockup-psicossocial.png";
 import mockupGovernanca from "@/assets/landing/mockup-governanca.png";
 import mockupConfiguracoes from "@/assets/landing/mockup-configuracoes.png";
 import logoYoureyes from "@/assets/logo-youreyes.svg";
+import { DiagnosticoQuiz } from "@/components/landing/DiagnosticoQuiz";
 
 const WHATSAPP_NUMBER = "5546993375044";
 const WHATSAPP_MESSAGE = encodeURIComponent(
@@ -630,34 +631,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ DEMO CTA SECTION ═══════════ */}
-      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 65% 8%)' }}>
+      {/* ═══════════ DIAGNÓSTICO RÁPIDO + LEAD ═══════════ */}
+      <section id="diagnostico" className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 65% 8%)' }}>
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[250px]" style={{ background: 'hsl(152 60% 40%)' }} />
         </div>
-        <div className="relative max-w-3xl mx-auto text-center">
-          <motion.div {...fadeUp}>
-            <MessageSquare className="w-16 h-16 mx-auto mb-6" style={{ color: 'hsl(152 60% 50%)' }} />
-            <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Veja o YourEyes funcionando na <span style={{ color: 'hsl(152 60% 50%)' }}>sua empresa</span>
+        <div className="relative max-w-3xl mx-auto">
+          <motion.div {...fadeUp} className="text-center mb-8">
+            <Brain className="w-14 h-14 mx-auto mb-4" style={{ color: 'hsl(152 60% 50%)' }} />
+            <h2 className="text-3xl md:text-5xl font-black mb-3">
+              Descubra em 60s o seu <span style={{ color: 'hsl(152 60% 50%)' }}>nível de risco SST</span>
             </h2>
-            <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-              Agende uma demonstração personalizada por <strong className="text-white">WhatsApp</strong>. 
-              Mostramos como o Psicossocial NR-01, EPI com reconhecimento facial e a governança integrada 
-              se aplicam ao seu cenário — sem compromisso.
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Responda 5 perguntas e receba um diagnóstico personalizado.
+              Em seguida, abrimos o <strong className="text-white">WhatsApp</strong> com o resultado pronto para conversarmos.
             </p>
-            <Button
-              size="lg"
-              onClick={openWhatsApp}
-              className="w-full sm:w-auto max-w-full text-white text-sm sm:text-lg px-4 sm:px-10 py-6 sm:py-7 rounded-xl shadow-2xl group whitespace-normal h-auto"
-              style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))', boxShadow: '0 8px 32px hsl(152 60% 38% / 0.35)' }}
-            >
-              <MessageSquare className="w-5 h-5 mr-2 shrink-0" />
-              <span className="break-words"><span className="sm:hidden">WHATSAPP — (46) 9 9337-5044</span><span className="hidden sm:inline">FALAR NO WHATSAPP — (46) 9 9337-5044</span></span>
-              <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <p className="text-xs text-gray-600 mt-4">Atendimento humano • Resposta em minutos durante o horário comercial</p>
           </motion.div>
+          <motion.div {...fadeUp}>
+            <DiagnosticoQuiz origem="lp" whatsappNumber={WHATSAPP_NUMBER} />
+          </motion.div>
+          <p className="text-xs text-gray-600 mt-4 text-center">Sem compromisso • Resposta em minutos durante o horário comercial</p>
         </div>
       </section>
 
