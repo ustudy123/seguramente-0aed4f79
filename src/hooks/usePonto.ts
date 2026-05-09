@@ -367,7 +367,7 @@ export function usePonto() {
       return data as PontoAjuste;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
       toast.success("Solicitação de ajuste enviada com sucesso!");
     },
     onError: (error: Error) => {
@@ -423,7 +423,7 @@ export function usePonto() {
       return ajuste;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
       toast.success(`Ajuste ${variables.aprovado ? "aprovado" : "rejeitado"} com sucesso!`);
