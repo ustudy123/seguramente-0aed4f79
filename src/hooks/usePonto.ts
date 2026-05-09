@@ -172,19 +172,22 @@ export function usePonto() {
     });
   };
 
-  // Buscar ajustes pendentes
+  // Buscar ajustes (todos status, últimos 90 dias) — mantém histórico para conferência
   const useAjustesPendentes = () => {
     return useQuery({
       queryKey: ["ponto-ajustes-pendentes", tenantId],
       queryFn: async (): Promise<PontoAjuste[]> => {
         if (!tenantId) return [];
-        
+
+        const desde = new Date();
+        desde.setDate(desde.getDate() - 90);
+
         const { data, error } = await fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
-          .eq("status", "pendente")
+          .gte("created_at", desde.toISOString())
           .order("created_at", { ascending: false }) as { data: PontoAjuste[] | null; error: Error | null };
-        
+
         if (error) throw error;
         return data || [];
       },
