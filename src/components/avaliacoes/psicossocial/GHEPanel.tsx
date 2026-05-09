@@ -21,6 +21,7 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
+import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
 
 interface GHE {
   id: string;
@@ -60,6 +61,9 @@ export function GHEPanel() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [search, setSearch] = useState("");
+  const [step, setStep] = useState<"categoria" | "template" | "form">("categoria");
+  const [categoria, setCategoria] = useState<GHECategoria | null>(null);
+  const [refPadrao, setRefPadrao] = useState<string | null>(null);
 
   const { data: ghes = [], isLoading } = useQuery({
     queryKey: ["psicossocial_ghe", tenantId, empresaAtivaId],
@@ -147,21 +151,50 @@ export function GHEPanel() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleNovo = () => {
+  const nextCodigo = () => {
     const maxN = ghes.reduce((max, g) => {
       const m = /(\d+)/.exec(g.codigo || "");
       const n = m ? parseInt(m[1], 10) : 0;
       return n > max ? n : max;
     }, 0);
-    const next = `GHE ${String(maxN + 1).padStart(2, "0")}`;
-    setForm({ ...emptyForm, codigo: next });
+    return `GHE ${String(maxN + 1).padStart(2, "0")}`;
+  };
+
+  const handleNovo = () => {
+    setForm({ ...emptyForm, codigo: nextCodigo() });
+    setCategoria(null);
+    setRefPadrao(null);
+    setStep("categoria");
     setOpen(true);
   };
 
   const handleEditar = (g: GHE) => {
     const cargoIds = associacoes.filter((a) => a.ghe_id === g.id).map((a) => a.cargo_id);
     setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", cargoIds });
+    setCategoria(null);
+    setRefPadrao(null);
+    setStep("form");
     setOpen(true);
+  };
+
+  const escolherCategoria = (cat: GHECategoria) => {
+    setCategoria(cat);
+    // Se a categoria tiver só 1 template, aplica direto e pula
+    if (cat.templates.length === 1) {
+      aplicarTemplate(cat.templates[0]);
+    } else {
+      setStep("template");
+    }
+  };
+
+  const aplicarTemplate = (tpl: GHETemplate) => {
+    setRefPadrao(tpl.ref);
+    setForm((f) => ({
+      ...f,
+      nome: tpl.nome,
+      descricao: tpl.descricao,
+    }));
+    setStep("form");
   };
 
   const toggleCargo = (id: string) => {
@@ -315,13 +348,91 @@ export function GHEPanel() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{form.id ? "Editar GHE" : "Novo GHE"}</DialogTitle>
+            <DialogTitle>
+              {form.id
+                ? "Editar GHE"
+                : step === "categoria"
+                ? "Novo GHE — escolha a categoria"
+                : step === "template"
+                ? `${categoria?.emoji} ${categoria?.label}`
+                : "Novo GHE — configurar"}
+            </DialogTitle>
             <DialogDescription>
-              Defina o código, nome e selecione os cargos (com seus departamentos) que compõem este grupo.
+              {step === "categoria" && "Selecione a macro-categoria que melhor descreve o grupo de exposição."}
+              {step === "template" && "Escolha um modelo padrão (você poderá ajustar nome e descrição em seguida)."}
+              {step === "form" && "Defina o código, nome e selecione as funções (com seus departamentos) que compõem este grupo."}
             </DialogDescription>
           </DialogHeader>
 
+          {step === "categoria" && !form.id && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+              {GHE_CATEGORIAS.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => escolherCategoria(cat)}
+                  className={`bg-gradient-to-br ${cat.cor} border rounded-lg p-3 text-left hover:shadow-md hover:-translate-y-0.5 transition-all`}
+                >
+                  <div className="text-2xl mb-1">{cat.emoji}</div>
+                  <div className="text-xs font-semibold leading-tight">{cat.label}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {cat.templates.length} modelo{cat.templates.length !== 1 ? "s" : ""}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === "template" && categoria && (
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+              <button
+                type="button"
+                onClick={() => setStep("categoria")}
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                ← Trocar categoria
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {categoria.templates.map((tpl) => (
+                  <button
+                    key={tpl.ref}
+                    type="button"
+                    onClick={() => aplicarTemplate(tpl)}
+                    className="border rounded-lg p-3 text-left hover:bg-primary/5 hover:border-primary/40 transition"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className="text-[10px] font-mono">{tpl.ref}</Badge>
+                      <span className="text-sm font-semibold">{tpl.nome}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{tpl.descricao}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === "form" && (
           <div className="space-y-4">
+            {!form.id && categoria && (
+              <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/40 border">
+                <div className="text-xs flex items-center gap-2">
+                  <span>{categoria.emoji}</span>
+                  <span className="font-medium">{categoria.label}</span>
+                  {refPadrao && (
+                    <Badge variant="outline" className="text-[10px] font-mono">{refPadrao}</Badge>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setStep("categoria")}
+                >
+                  Trocar modelo
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="codigo">Código</Label>
@@ -485,15 +596,18 @@ export function GHEPanel() {
               </ScrollArea>
             </div>
           </div>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => upsert.mutate(form)} disabled={upsert.isPending}>
-              {upsert.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Salvar
-            </Button>
+            {step === "form" && (
+              <Button onClick={() => upsert.mutate(form)} disabled={upsert.isPending}>
+                {upsert.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Salvar
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
