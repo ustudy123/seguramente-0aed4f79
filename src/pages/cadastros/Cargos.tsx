@@ -25,8 +25,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCargos, useDepartamentos, Cargo } from "@/hooks/useCadastros";
 import { useSyncCadastros } from "@/hooks/useSyncCadastros";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronsUpDown, X } from "lucide-react";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useTenant } from "@/hooks/useTenant";
+import { cn } from "@/lib/utils";
 
 const NIVEIS = [
   { value: "estagiario", label: "Estagiário" },
