@@ -438,7 +438,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                         sessionHash.current
                       );
                     }
-                    setEtapa('verificacao_telefone');
+                    setEtapa('verificacao_cpf');
                   }}
                   disabled={!aceiteLGPD}
                   className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md disabled:opacity-50"
