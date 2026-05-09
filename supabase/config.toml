@@ -85,5 +85,7 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = false
   [functions.psicossocial-whatsapp-otp]
     verify_jwt = false
+  [functions.psicossocial-enviar-resumo]
+    verify_jwt = false
   [functions.esocial-transmissao]
     verify_jwt = false
