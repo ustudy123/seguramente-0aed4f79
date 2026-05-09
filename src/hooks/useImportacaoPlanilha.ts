@@ -628,6 +628,7 @@ export function useImportacaoPlanilha() {
             conta: encontrarColuna(headers, "conta"),
             tipoConta: encontrarColuna(headers, "tipoConta"),
             chavePix: encontrarColuna(headers, "chavePix"),
+            cbo: encontrarColuna(headers, "cbo"),
           };
           
           // A coluna do documento da empresa só é obrigatória se houver mais de uma empresa cadastrada
