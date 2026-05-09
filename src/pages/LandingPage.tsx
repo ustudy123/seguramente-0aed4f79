@@ -735,13 +735,13 @@ export default function LandingPage() {
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Responda 5 perguntas e receba um diagnóstico personalizado.
-              Em seguida, abrimos o <strong className="text-white">WhatsApp</strong> com o resultado pronto para conversarmos.
+              Em seguida, um <strong className="text-white">especialista da YourEyes</strong> entra em contato para agendar uma apresentação.
             </p>
           </motion.div>
           <motion.div {...fadeUp}>
-            <DiagnosticoQuiz origem="lp" whatsappNumber={WHATSAPP_NUMBER} />
+            <DiagnosticoQuiz origem="lp" />
           </motion.div>
-          <p className="text-xs text-gray-600 mt-4 text-center">Sem compromisso • Resposta em minutos durante o horário comercial</p>
+          <p className="text-xs text-gray-600 mt-4 text-center">Sem compromisso • Retorno em até 1 dia útil</p>
         </div>
       </section>
 
