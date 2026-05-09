@@ -841,7 +841,37 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
                     );
                   })
                 ) : (
-                  <p className="text-sm text-muted-foreground italic text-center py-8">Nenhum responsável técnico identificado</p>
+                  <div className="p-4 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Responsável técnico não identificado pela IA</p>
+                        <p className="text-xs text-muted-foreground">
+                          Informe manualmente o nome e o registro profissional. Esses dados ficam salvos junto ao documento.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Nome do responsável técnico</label>
+                        <Input
+                          value={respManualNome}
+                          onChange={e => setRespManualNome(e.target.value)}
+                          placeholder="Ex.: João da Silva"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Registro / Conselho (opcional)</label>
+                        <Input
+                          value={respManualRegistro}
+                          onChange={e => setRespManualRegistro(e.target.value)}
+                          placeholder="Ex.: MT/PR 0031133"
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </TabsContent>
