@@ -610,7 +610,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
           instrumento={instrumento}
           respostas={respostas}
           onRespostaChange={handleRespostaChange}
-          onConcluir={handleSubmit}
+          onConcluir={() => setEtapa('resumo')}
           nomeCampanha={campanha?.nome}
           blocosDinamicos={blocosDinamicosAtivos}
         />
