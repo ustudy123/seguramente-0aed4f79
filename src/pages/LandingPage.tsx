@@ -21,6 +21,7 @@ import mockupPsicossocial from "@/assets/landing/mockup-psicossocial.png";
 import mockupGovernanca from "@/assets/landing/mockup-governanca.png";
 import mockupConfiguracoes from "@/assets/landing/mockup-configuracoes.png";
 import logoYoureyes from "@/assets/logo-youreyes.svg";
+import { DiagnosticoQuiz } from "@/components/landing/DiagnosticoQuiz";
 
 const WHATSAPP_NUMBER = "5546993375044";
 const WHATSAPP_MESSAGE = encodeURIComponent(
