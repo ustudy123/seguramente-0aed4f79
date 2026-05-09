@@ -30,6 +30,38 @@ const WHATSAPP_MESSAGE = encodeURIComponent(
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 const openWhatsApp = () => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
 
+const scrollToDiag = () => {
+  document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+// CTA persuasivo reutilizável que rola até o diagnóstico
+function DiagCTA({ children = "Fazer diagnóstico grátis em 60s", subtitle, variant = "primary", size = "lg" }: {
+  children?: React.ReactNode;
+  subtitle?: string;
+  variant?: "primary" | "outline";
+  size?: "lg" | "md";
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <Button
+        size="lg"
+        onClick={scrollToDiag}
+        className={`group text-white font-black tracking-wide rounded-xl shadow-2xl whitespace-normal h-auto transition-transform hover:scale-[1.03] active:scale-95 ${size === "lg" ? "text-base sm:text-lg px-6 sm:px-10 py-6 sm:py-7" : "text-sm sm:text-base px-5 py-5"}`}
+        style={
+          variant === "primary"
+            ? { background: 'linear-gradient(135deg, hsl(152 65% 42%), hsl(152 75% 32%))', boxShadow: '0 10px 40px hsl(152 65% 42% / 0.4)' }
+            : { background: 'transparent', border: '2px solid hsl(152 60% 50%)', color: 'hsl(152 60% 60%)' }
+        }
+      >
+        <Brain className="w-5 h-5 mr-2 shrink-0" />
+        {children}
+        <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
+      </Button>
+      {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+    </div>
+  );
+}
+
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
@@ -216,19 +248,25 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
-              A NR-01 foi atualizada. Agora <strong className="text-white">fatores de riscos psicossociais são obrigatórios</strong> no GRO/PGR.
-              Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(33 100% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
+            <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-4">
+              A NR-01 mudou. Agora <strong className="text-white">riscos psicossociais são obrigatórios</strong> no GRO/PGR —
+              e o MTE já está autuando. Multas de até <strong style={{ color: 'hsl(33 100% 60%)' }}>R$ 50 mil por infração</strong>,
+              interdição e processos por burnout.
             </p>
 
             <p className="text-base text-gray-500 max-w-2xl mx-auto mb-10">
-              97% das empresas brasileiras NÃO estão preparadas. A sua está entre as 3% que vão se proteger — ou entre as 97% que vão pagar caro?
+              <strong className="text-white">97% das empresas brasileiras NÃO estão preparadas.</strong>
+              Descubra em 60 segundos onde a sua está exposta — e receba um plano de ação pelo WhatsApp.
             </p>
 
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <DiagCTA subtitle="Sem cadastro de cartão • Resultado em tempo real" />
+            </div>
+
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Sem cartão de crédito</span>
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Resultado imediato</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> 60 segundos</span>
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> 100% confidencial</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Diagnóstico personalizado</span>
             </div>
           </motion.div>
 
@@ -277,6 +315,15 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div {...fadeUp} className="mt-14 text-center">
+            <p className="text-gray-300 text-lg mb-5">
+              Não espere a fiscalização chegar para descobrir onde sua empresa está vulnerável.
+            </p>
+            <DiagCTA subtitle="Receba o resultado por WhatsApp em segundos">
+              Descobrir meus riscos agora
+            </DiagCTA>
+          </motion.div>
         </div>
       </section>
 
@@ -498,8 +545,14 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <motion.div {...fadeUp} className="text-center mt-10">
-            <p className="text-gray-500 text-sm">
+          <motion.div {...fadeUp} className="text-center mt-12 space-y-5">
+            <p className="text-gray-300 text-lg">
+              Quer saber <strong className="text-white">quais módulos</strong> sua empresa precisa primeiro?
+            </p>
+            <DiagCTA subtitle="Indicamos os módulos certos com base no seu perfil">
+              Receber recomendação personalizada
+            </DiagCTA>
+            <p className="text-gray-500 text-xs">
               E muito mais sendo adicionado toda semana. Quem entrar agora, leva <strong className="text-white">TUDO desbloqueado</strong>.
             </p>
           </motion.div>
@@ -592,6 +645,12 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div {...fadeUp} className="mt-14 text-center">
+            <DiagCTA subtitle="Levamos sua empresa nesse mesmo cenário em até 7 dias">
+              Quero esse nível de controle
+            </DiagCTA>
+          </motion.div>
         </div>
       </section>
 
@@ -613,13 +672,13 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {[
               { src: mockupGovernanca, title: "Governança do Trabalho Humano", desc: "Visão integrada dos 4 pilares estratégicos com escore de maturidade em tempo real." },
-              { src: mockupPsicossocial, title: "Gestão Psicossocial NR-01", desc: "IPS, Confiabilidade e campanhas anônimas com privacidade garantida (mín. 5 respondentes)." },
+              { src: mockupPsicossocial, title: "Gestão Psicossocial NR-01", desc: "IRP-S, Confiabilidade e campanhas anônimas com privacidade garantida (mín. 5 respondentes)." },
               { src: mockupConfiguracoes, title: "Configurações e Perfis de Acesso", desc: "Controle granular de papéis, vínculos e permissões por empresa e estabelecimento." },
               { src: mockupDashboard, title: "Dashboard Operacional", desc: "KPIs de Colaboradores, Admissões, EPIs, Documentos, Avaliações e Metas em um só lugar." },
             ].map((m, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-                  <img src={m.src} alt={m.title} loading="lazy" className="w-full h-auto" />
+                <div className="rounded-2xl overflow-hidden group hover:scale-[1.01] transition-transform" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
+                  <img src={m.src} alt={m.title} loading="lazy" width={1536} height={1024} className="w-full h-auto" />
                   <div className="p-5">
                     <h3 className="font-bold text-lg mb-1">{m.title}</h3>
                     <p className="text-sm text-gray-400">{m.desc}</p>
@@ -628,6 +687,12 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div {...fadeUp} className="mt-12 text-center">
+            <DiagCTA subtitle="Em 60 segundos você descobre por onde começar">
+              Mapear minha empresa agora
+            </DiagCTA>
+          </motion.div>
         </div>
       </section>
 
@@ -874,24 +939,16 @@ export default function LandingPage() {
           <h2 className="text-2xl md:text-3xl font-black mb-4">
             A pergunta não é <em>"Quanto custa adequar?"</em>
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
-            A pergunta é: <strong style={{ color: 'hsl(33 100% 50%)' }}>"Quanto vai custar NÃO adequar?"</strong>
+          <p className="text-xl text-gray-300 mb-6">
+            A pergunta é: <strong style={{ color: 'hsl(33 100% 55%)' }}>"Quanto vai custar NÃO adequar?"</strong>
           </p>
-          <p className="text-gray-500 text-sm mb-8">
-            Uma única multa do MTE paga 5 anos de YourEyes. Um único processo por burnout paga 10 anos. 
-            A escolha é sua: investir centavos em prevenção ou milhares em correção.
+          <p className="text-gray-500 text-sm mb-8 max-w-2xl mx-auto">
+            Uma única multa do MTE paga 5 anos de YourEyes. Um único processo por burnout paga 10 anos.
+            Comece pelo diagnóstico — leva 60 segundos e mostra exatamente onde sua empresa está exposta.
           </p>
-          <Button
-            size="lg"
-            onClick={() => scrollToSection("vagas")}
-            className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto transform transition-all hover:scale-105 active:scale-95"
-            style={{ 
-              background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))',
-              boxShadow: '0 8px 32px hsl(207 90% 45% / 0.4)' 
-            }}
-          >
-            <span className="break-words font-black">PROTEGER MINHA EMPRESA AGORA →</span>
-          </Button>
+          <DiagCTA subtitle="100% gratuito • Plano de ação enviado pelo WhatsApp">
+            Iniciar meu diagnóstico agora
+          </DiagCTA>
         </div>
       </section>
 
@@ -901,15 +958,26 @@ export default function LandingPage() {
         <p className="mt-1 text-xs" style={{ color: 'hsl(215 15% 40%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 
-      {/* Floating WhatsApp button */}
-      <button
-        onClick={openWhatsApp}
-        aria-label="Falar no WhatsApp"
-        className="fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-2xl transition-transform hover:scale-110"
-        style={{ background: 'hsl(152 66% 39%)', boxShadow: '0 8px 32px hsl(152 70% 38% / 0.5)' }}
-      >
-        <MessageSquare className="w-6 h-6 text-white" />
-      </button>
+      {/* Floating Diagnóstico CTA (primary) + WhatsApp (secondary) */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+        <button
+          onClick={scrollToDiag}
+          aria-label="Fazer diagnóstico grátis"
+          className="hidden sm:flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-2xl transition-transform hover:scale-105 text-white font-bold text-sm"
+          style={{ background: 'linear-gradient(135deg, hsl(152 65% 42%), hsl(152 75% 32%))', boxShadow: '0 8px 32px hsl(152 65% 42% / 0.5)' }}
+        >
+          <Brain className="w-4 h-4" />
+          Diagnóstico grátis
+        </button>
+        <button
+          onClick={openWhatsApp}
+          aria-label="Falar no WhatsApp"
+          className="rounded-full p-4 shadow-2xl transition-transform hover:scale-110"
+          style={{ background: 'hsl(152 66% 39%)', boxShadow: '0 8px 32px hsl(152 70% 38% / 0.5)' }}
+        >
+          <MessageSquare className="w-6 h-6 text-white" />
+        </button>
+      </div>
     </div>
   );
 }
