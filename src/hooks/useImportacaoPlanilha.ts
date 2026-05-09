@@ -991,6 +991,7 @@ export function useImportacaoPlanilha() {
           conta: dado.conta || null,
           tipo_conta: dado.tipoConta || null,
           chave_pix: dado.chavePix || null,
+          cbo: dado.cbo || null,
         };
 
         try {
