@@ -349,42 +349,132 @@ export function GHEPanel() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Funções do GHE ({form.cargoIds.length} selecionadas)</Label>
-              <div className="border rounded-lg max-h-72 overflow-y-auto p-2 space-y-3">
-                {Object.entries(cargosPorDept).map(([deptId, list]) => (
-                  <div key={deptId}>
-                    <p className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                      <Building2 className="h-3 w-3" />
-                      {deptId === "_sem_dept" ? "Sem departamento" : deptById[deptId]?.nome || "—"}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {list.map((c) => {
-                        const checked = form.cargoIds.includes(c.id);
-                        return (
-                          <button
-                            type="button"
-                            key={c.id}
-                            onClick={() => toggleCargo(c.id)}
-                            className={`text-xs px-2 py-1 rounded-md border transition ${
-                              checked
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-background hover:bg-muted border-border"
-                            }`}
-                          >
-                            {c.nome}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                {cargos.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    Nenhum cargo cadastrado. Cadastre cargos antes de montar um GHE.
-                  </p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  Funções do GHE
+                  <Badge variant="secondary" className="font-mono">
+                    {form.cargoIds.length}
+                  </Badge>
+                </Label>
+                {form.cargoIds.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setForm((f) => ({ ...f, cargoIds: [] }))}
+                    className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
+                  >
+                    <X className="h-3 w-3" /> Limpar seleção
+                  </Button>
                 )}
               </div>
+
+              {/* Chips das funções selecionadas */}
+              {form.cargoIds.length > 0 && (
+                <div className="flex flex-wrap gap-1 p-2 bg-primary/5 border border-primary/20 rounded-lg max-h-24 overflow-y-auto">
+                  {form.cargoIds.map((id) => {
+                    const c = cargosById[id];
+                    if (!c) return null;
+                    return (
+                      <Badge
+                        key={id}
+                        variant="default"
+                        className="gap-1 pl-2 pr-1 py-0.5 bg-primary text-primary-foreground"
+                      >
+                        {c.nome}
+                        <button
+                          type="button"
+                          onClick={() => toggleCargo(id)}
+                          className="hover:bg-white/20 rounded-full p-0.5 ml-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Busca */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar função ou departamento…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-9"
+                />
+              </div>
+
+              {/* Lista agrupada por departamento */}
+              <ScrollArea className="h-72 rounded-lg border bg-muted/20">
+                <div className="p-2 space-y-1">
+                  {Object.entries(cargosPorDept).map(([deptId, list]) => {
+                    const ids = list.map((c) => c.id);
+                    const selectedCount = ids.filter((id) => form.cargoIds.includes(id)).length;
+                    const allSelected = selectedCount === ids.length && ids.length > 0;
+                    const someSelected = selectedCount > 0 && !allSelected;
+                    return (
+                      <div key={deptId} className="rounded-md bg-background border">
+                        <button
+                          type="button"
+                          onClick={() => toggleDept(deptId, ids)}
+                          className="w-full flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/50 rounded-t-md transition"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                              className="pointer-events-none"
+                            />
+                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm font-medium">
+                              {deptId === "_sem_dept" ? "Sem departamento" : deptById[deptId]?.nome || "—"}
+                            </span>
+                          </div>
+                          <Badge variant={selectedCount > 0 ? "default" : "outline"} className="text-[10px] h-5">
+                            {selectedCount}/{ids.length}
+                          </Badge>
+                        </button>
+                        <div className="px-3 pb-2 pt-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                          {list.map((c) => {
+                            const checked = form.cargoIds.includes(c.id);
+                            return (
+                              <button
+                                type="button"
+                                key={c.id}
+                                onClick={() => toggleCargo(c.id)}
+                                className={`flex items-center gap-2 text-left text-xs px-2 py-1.5 rounded transition ${
+                                  checked
+                                    ? "bg-primary/10 text-primary font-medium"
+                                    : "hover:bg-muted text-foreground/80"
+                                }`}
+                              >
+                                <span
+                                  className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 transition ${
+                                    checked ? "bg-primary border-primary" : "border-input bg-background"
+                                  }`}
+                                >
+                                  {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+                                </span>
+                                <span className="truncate">{c.nome}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {Object.keys(cargosPorDept).length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-8">
+                      {cargos.length === 0
+                        ? "Nenhum cargo cadastrado. Cadastre cargos antes de montar um GHE."
+                        : "Nenhum resultado para a busca."}
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
             </div>
           </div>
 
