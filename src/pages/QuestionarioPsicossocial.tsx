@@ -522,7 +522,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                   onClick={() => window.close()}
                   className="w-full"
                 >
-                  Concluir
+                  Fechar página
                 </Button>
               </div>
 
