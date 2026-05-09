@@ -109,10 +109,19 @@ export function RiscosPsicossociaisPanel() {
     onSuccess: () => {
       toast.success("Risco removido.");
       qc.invalidateQueries({ queryKey: ["psicossocial_riscos", tenantId] });
-      setConfirmDel(null);
     },
     onError: (e: any) => toast.error("Erro: " + (e?.message || "falha ao remover")),
   });
+
+  const handleDelete = async (r: RiscoPsicossocial) => {
+    const ok = await confirm({
+      title: "Remover risco?",
+      description: `Tem certeza que deseja remover "${r.nome}"? Esta ação não pode ser desfeita.`,
+      confirmText: "Remover",
+      variant: "destructive",
+    });
+    if (ok) del.mutate(r.id);
+  };
 
   const handleNew = () => {
     setEditing(null);
