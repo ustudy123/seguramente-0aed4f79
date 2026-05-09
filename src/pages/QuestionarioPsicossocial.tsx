@@ -28,7 +28,7 @@ import logoYourEyes from "@/assets/logo-youreyes.svg";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
-type EtapaQuestionario = 'consentimento' | 'verificacao_telefone' | 'questionario' | 'concluido';
+type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'questionario' | 'concluido';
 
 const VERSAO_TERMO_ATUAL = 'v1.0';
 
