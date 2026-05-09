@@ -282,7 +282,7 @@ export function QuestionarioResponder({
                               >
                                 <span
                                   className={cn(
-                                    "text-3xl sm:text-4xl leading-none transition-transform duration-200 select-none",
+                                    "text-2xl sm:text-4xl leading-none transition-transform duration-200 select-none",
                                     ativo ? "scale-110" : "grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105"
                                   )}
                                   style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}
@@ -290,7 +290,7 @@ export function QuestionarioResponder({
                                   {op.emoji}
                                 </span>
                                 <span className={cn(
-                                  "text-[10px] sm:text-[11px] font-medium leading-tight tracking-tight",
+                                  "text-[9px] sm:text-[11px] font-medium leading-tight tracking-tight w-full break-words hyphens-auto",
                                   ativo ? "" : "text-muted-foreground"
                                 )}>
                                   {op.label}
