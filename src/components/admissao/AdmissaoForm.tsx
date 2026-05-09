@@ -164,6 +164,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     salario: '',
     gestorImediato: '',
     centroCusto: '',
+    cbo: '',
   };
   const formProfissionais = useForm<DadosProfissionais>({
     resolver: zodResolver(dadosProfissionaisSchema),
