@@ -346,7 +346,7 @@ export default function LandingPage() {
             <p className="text-gray-300 text-lg mb-5">
               Não espere a fiscalização chegar para descobrir onde sua empresa está vulnerável.
             </p>
-            <DiagCTA subtitle="Receba o resultado por WhatsApp em segundos">
+            <DiagCTA subtitle="Resultado na hora • Especialista entra em contato">
               Descobrir meus riscos agora
             </DiagCTA>
           </motion.div>
