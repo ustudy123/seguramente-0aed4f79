@@ -41,6 +41,7 @@ import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxField";
 import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxField";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
+import { CBOAutocomplete, normalizeCBO } from "@/components/cbo/CBOAutocomplete";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
