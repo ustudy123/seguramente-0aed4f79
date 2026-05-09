@@ -247,16 +247,14 @@ export function DiagnosticoQuiz({ origem }: Props) {
           </div>
         </div>
 
-        <p className="text-sm text-gray-400 text-center mb-3">
-          Abrimos o WhatsApp com seu diagnóstico para falar com nosso time.
-        </p>
-        <Button
-          onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank")}
-          className="w-full text-white font-bold py-6"
-          style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))' }}
-        >
-          <MessageSquare className="w-4 h-4 mr-2" /> Abrir WhatsApp novamente <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+        <div className="rounded-xl p-4 text-center" style={{ background: 'hsl(152 40% 15% / 0.4)', border: '1px solid hsl(152 50% 30%)' }}>
+          <p className="text-sm text-gray-200 mb-1 font-bold" style={{ color: 'hsl(152 70% 70%)' }}>
+            ✓ Lead registrado com sucesso
+          </p>
+          <p className="text-sm text-gray-300">
+            Um especialista da YourEyes vai entrar em contato em breve no telefone e e-mail informados para agendar uma <strong className="text-white">apresentação personalizada</strong>.
+          </p>
+        </div>
       </motion.div>
     );
   }
