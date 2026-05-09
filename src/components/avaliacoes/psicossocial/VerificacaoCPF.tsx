@@ -44,19 +44,35 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
     setProcessando(true);
     setJaRespondeu(false);
     try {
-      // Hash do CPF + campanha — não trafega nem armazena CPF em texto puro
+      // Hash do CPF + campanha — não trafega nem armazena CPF em texto puro nas respostas
       const hash = await sha256Hex(`${cleaned}::${campanhaId}`);
 
-      // Checagem prévia: este CPF já respondeu esta campanha?
-      const { data: jaUsado, error: rpcErr } = await supabasePublic
-        .rpc("verificar_hash_ja_respondeu", {
+      // Validação combinada: (a) é colaborador cadastrado? (b) já respondeu?
+      // O CPF trafega via TLS apenas para a função SECURITY DEFINER, que retorna
+      // somente flags booleanas — sem expor nome, e-mail ou qualquer dado pessoal.
+      const { data, error: rpcErr } = await supabasePublic
+        .rpc("validar_cpf_colaborador_campanha", {
           p_campanha_id: campanhaId,
+          p_cpf: cleaned,
           p_hash: hash,
         });
 
       if (rpcErr) throw rpcErr;
 
-      if (jaUsado === true) {
+      const result = (data ?? {}) as {
+        valido_colaborador?: boolean;
+        ja_respondeu?: boolean;
+        erro?: string;
+      };
+
+      if (!result.valido_colaborador) {
+        toast.error(
+          "CPF não localizado na base de colaboradores desta empresa. Confira o número ou fale com o RH."
+        );
+        return;
+      }
+
+      if (result.ja_respondeu) {
         setJaRespondeu(true);
         toast.error("Este CPF já respondeu esta campanha.");
         return;
