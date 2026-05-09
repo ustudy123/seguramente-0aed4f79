@@ -156,6 +156,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: colaborador.gestor_imediato || "",
         data_admissao: colaborador.data_admissao || "",
         matricula_esocial: colaborador.matricula_esocial || "",
+        cbo: colaborador.cbo || "",
         foto_url: colaborador.foto_url || "",
       });
     } else if (open && !colaborador) {
