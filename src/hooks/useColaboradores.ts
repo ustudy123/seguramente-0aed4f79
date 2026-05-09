@@ -43,7 +43,7 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
         query = query.eq("empresa_id", empresaAtivaId);
       }
 
-      const { data, error } = await query.order("nome_completo");
+      const { data, error } = await query.order("data_admissao", { ascending: false });
 
       if (error) throw error;
 
@@ -56,8 +56,28 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
           return !naoCLT.has(tc);
         });
       }
+
+      // Deduplica por CPF (normalizado em apenas dígitos), mantendo a admissão mais recente.
+      // Fallback para nome+empresa quando o CPF estiver vazio.
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+      for (const r of rows) {
+        const cpfDigits = (r.cpf || "").toString().replace(/\D/g, "");
+        const key = cpfDigits
+          ? `cpf:${cpfDigits}`
+          : `nome:${(r.nome_completo || "").trim().toLowerCase()}|emp:${r.empresa_id || ""}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(r);
+      }
+
+      // Ordena alfabeticamente pelo nome após a deduplicação.
+      deduped.sort((a, b) =>
+        (a.nome_completo || "").localeCompare(b.nome_completo || "", "pt-BR", { sensitivity: "base" })
+      );
+
       // Remove campo auxiliar para manter o tipo público estável.
-      return rows.map(({ tipo_contrato, ...rest }: any) => rest);
+      return deduped.map(({ tipo_contrato, ...rest }: any) => rest);
     },
     enabled: !!tenantId,
   });
