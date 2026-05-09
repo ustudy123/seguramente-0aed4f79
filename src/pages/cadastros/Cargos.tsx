@@ -107,6 +107,7 @@ export default function Cargos() {
   const { cargos, isLoading, createCargo, updateCargo, deleteCargo } = useCargos();
   const { departamentos } = useDepartamentos();
   const { sincronizar } = useSyncCadastros();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -114,6 +115,29 @@ export default function Cargos() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<Cargo | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...defaultFormData });
+  const [departamentoIds, setDepartamentoIds] = useState<string[]>([]);
+  const [depPopoverOpen, setDepPopoverOpen] = useState(false);
+
+  // Carrega vínculos cargo→departamentos para badges na tabela e edição
+  const { data: cargoDepLinks = [] } = useQuery({
+    queryKey: ["cargo_departamentos", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data, error } = await fromTable("cargo_departamentos")
+        .select("cargo_id, departamento_id")
+        .eq("tenant_id", tenantId);
+      if (error) throw error;
+      return (data || []) as Array<{ cargo_id: string; departamento_id: string }>;
+    },
+    enabled: !!tenantId,
+  });
+
+  const depsByCargo = new Map<string, string[]>();
+  cargoDepLinks.forEach((l) => {
+    const arr = depsByCargo.get(l.cargo_id) || [];
+    arr.push(l.departamento_id);
+    depsByCargo.set(l.cargo_id, arr);
+  });
 
   useEffect(() => {
     sincronizar();
