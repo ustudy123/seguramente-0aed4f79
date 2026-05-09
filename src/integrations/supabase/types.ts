@@ -2111,6 +2111,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cargo_departamentos: {
+        Row: {
+          cargo_id: string
+          created_at: string
+          departamento_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string
+          departamento_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string
+          departamento_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cargo_departamentos_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cargo_departamentos_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargos: {
         Row: {
           aposentadoria_especial: boolean
