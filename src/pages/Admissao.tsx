@@ -340,6 +340,7 @@ export default function Admissao() {
       salario: a.salario ? `R$ ${a.salario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
       gestorImediato: a.gestor_imediato || '',
       centroCusto: a.centro_custo || '',
+      cbo: (a as any).cbo || '',
     },
     dadosBancarios: {
       banco: a.banco || '',
