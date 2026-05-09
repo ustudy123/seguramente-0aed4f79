@@ -259,9 +259,9 @@ const Ponto = () => {
             </TabsTrigger>
             <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileText className="h-3.5 w-3.5" /> Ajustes
-              {ajustesPendentes.length > 0 && (
+              {ajustesPendentes.filter(a => a.status === "pendente").length > 0 && (
                 <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                  {ajustesPendentes.length}
+                  {ajustesPendentes.filter(a => a.status === "pendente").length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -415,6 +415,25 @@ const Ponto = () => {
         {/* Ajustes */}
         <TabsContent value="ajustes" className="space-y-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border overflow-hidden">
+            <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 className="text-sm font-semibold">Solicitações de Ajuste</h3>
+                <p className="text-xs text-muted-foreground">
+                  Histórico dos últimos 90 dias — pendentes, aprovadas e rejeitadas para conferência.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                  Pendentes: {ajustesPendentes.filter(a => a.status === "pendente").length}
+                </Badge>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  Aprovadas: {ajustesPendentes.filter(a => a.status === "aprovado").length}
+                </Badge>
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                  Rejeitadas: {ajustesPendentes.filter(a => a.status === "rejeitado").length}
+                </Badge>
+              </div>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
@@ -426,16 +445,20 @@ const Ponto = () => {
                   <TableHead>Motivo</TableHead>
                   <TableHead className="text-center">Anexos</TableHead>
                   <TableHead>Solicitante</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {ajustesPendentes.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum ajuste pendente.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhuma solicitação de ajuste registrada.</TableCell></TableRow>
                 ) : ajustesPendentes.map((ajuste) => {
                   const qtdAnexos = ajuste.anexos?.length ?? 0;
+                  const isPendente = ajuste.status === "pendente";
+                  const isAprovado = ajuste.status === "aprovado";
+                  const isRejeitado = ajuste.status === "rejeitado";
                   return (
-                  <TableRow key={ajuste.id}>
+                  <TableRow key={ajuste.id} className={!isPendente ? "opacity-80" : ""}>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
@@ -454,6 +477,11 @@ const Ponto = () => {
                       <p className="text-sm whitespace-pre-wrap break-words leading-snug">
                         {ajuste.motivo}
                       </p>
+                      {ajuste.observacao_aprovador && (
+                        <p className="mt-1 text-[11px] text-muted-foreground italic border-l-2 border-muted-foreground/30 pl-2">
+                          Resposta: {ajuste.observacao_aprovador}
+                        </p>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {qtdAnexos > 0 ? (
@@ -472,17 +500,36 @@ const Ponto = () => {
                       )}
                     </TableCell>
                     <TableCell>{ajuste.created_by_nome}</TableCell>
+                    <TableCell className="text-center">
+                      {isPendente && <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Pendente</Badge>}
+                      {isAprovado && <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aprovado</Badge>}
+                      {isRejeitado && <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rejeitado</Badge>}
+                      {!isPendente && ajuste.aprovado_por_nome && (
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          por {ajuste.aprovado_por_nome}
+                        </p>
+                      )}
+                      {!isPendente && ajuste.data_aprovacao && (
+                        <p className="text-[10px] text-muted-foreground">
+                          {format(new Date(ajuste.data_aprovacao), "dd/MM/yyyy HH:mm")}
+                        </p>
+                      )}
+                    </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button id={`btn-aprovar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-green-600 hover:text-green-600 hover:bg-green-50"
-                          onClick={() => handleProcessarAjuste(ajuste.id, true)} disabled={processandoAjuste}>
-                          <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
-                        </Button>
-                        <Button id={`btn-rejeitar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleProcessarAjuste(ajuste.id, false)} disabled={processandoAjuste}>
-                          <XCircle className="w-4 h-4 mr-1" /> Rejeitar
-                        </Button>
-                      </div>
+                      {isPendente ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <Button id={`btn-aprovar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-green-600 hover:text-green-600 hover:bg-green-50"
+                            onClick={() => handleProcessarAjuste(ajuste.id, true)} disabled={processandoAjuste}>
+                            <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
+                          </Button>
+                          <Button id={`btn-rejeitar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleProcessarAjuste(ajuste.id, false)} disabled={processandoAjuste}>
+                            <XCircle className="w-4 h-4 mr-1" /> Rejeitar
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground flex items-center justify-center">—</span>
+                      )}
                     </TableCell>
                   </TableRow>
                   );
