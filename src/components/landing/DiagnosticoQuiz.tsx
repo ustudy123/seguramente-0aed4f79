@@ -259,13 +259,15 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
             <h3 className="text-2xl font-black text-white mb-1">Quase lá! Como falamos com você?</h3>
             <p className="text-sm text-gray-400 mb-5">Vamos abrir o WhatsApp já com seu diagnóstico em mãos.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Field label="Nome*">     <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" /></Field>
-              <Field label="Empresa*">  <Input value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Nome da empresa" /></Field>
-              <Field label="Cargo">     <Input value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Ex: Gestor SST" /></Field>
-              <Field label="E-mail*">   <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@empresa.com" /></Field>
+              {(() => { const ic = "bg-[hsl(215_40%_18%)] border-[hsl(215_40%_28%)] text-white placeholder:text-gray-500"; return (<>
+              <Field label="Nome*">     <Input className={ic} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" /></Field>
+              <Field label="Empresa*">  <Input className={ic} value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Nome da empresa" /></Field>
+              <Field label="Cargo">     <Input className={ic} value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Ex: Gestor SST" /></Field>
+              <Field label="E-mail*">   <Input className={ic} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@empresa.com" /></Field>
               <div className="md:col-span-2">
-                <Field label="WhatsApp*"><Input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" /></Field>
+                <Field label="WhatsApp*"><Input className={ic} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" /></Field>
               </div>
+              </>); })()}
             </div>
             <div className="flex gap-2 mt-6">
               <Button variant="outline" onClick={prev} className="flex-1 sm:flex-none">
