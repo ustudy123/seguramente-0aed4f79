@@ -167,9 +167,18 @@ export default function Empresa() {
               (e: any) => (e.cnpj || '').replace(/\D/g, '') === cnpjLimpo,
             );
             if (existente) {
+              // Promove para edição da empresa existente e re-salva os
+              // dados que o usuário acabou de preencher (ex.: razão social
+              // vinda da Receita Federal) na linha já existente.
               setSelectedEmpresaId(existente.id);
               setViewMode('edit');
-              toast.info(`Empresa com este CNPJ já existe — abrindo para edição.`);
+              try {
+                await upsertCadastro.mutateAsync({ ...formData, id: existente.id } as any);
+                toast.info('Empresa com este CNPJ já existe — dados atualizados na empresa existente.');
+              } catch (e2) {
+                console.error('Falha ao atualizar empresa existente:', e2);
+                toast.info('Empresa com este CNPJ já existe — abrindo para edição.');
+              }
             }
           }
         }
