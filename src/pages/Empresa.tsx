@@ -18,6 +18,7 @@ import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import { useAuth } from '@/hooks/useAuth';
 import type { EmpresaCadastro } from '@/types/empresa';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'list' | 'edit' | 'new';
 
