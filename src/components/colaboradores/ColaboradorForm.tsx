@@ -44,12 +44,11 @@ import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import { CBOAutocomplete, normalizeCBO } from "@/components/cbo/CBOAutocomplete";
 
 const TIPOS_VINCULO = [
-  { value: "clt", label: "CLT" },
-  { value: "clt_experiencia", label: "CLT – Experiência" },
-  { value: "prolabore", label: "Pró-labore (Sócio)" },
-  { value: "estagiario", label: "Estagiário" },
+  { value: "clt", label: "Empregado CLT" },
   { value: "temporario", label: "Temporário" },
-  { value: "autonomo", label: "Autônomo" },
+  { value: "aprendiz", label: "Aprendiz" },
+  { value: "estagiario", label: "Estagiário" },
+  { value: "intermitente", label: "Intermitente" },
 ];
 
 const formSchema = z.object({
