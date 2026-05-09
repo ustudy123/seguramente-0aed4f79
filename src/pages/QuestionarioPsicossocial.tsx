@@ -465,7 +465,17 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
       <VerificacaoCPF
         campanhaId={campanha!.id}
         campanhaNome={campanha!.nome}
-        onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('questionario'); }}
+        onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('instrucoes'); }}
+      />
+    );
+  }
+
+  // ─── Instruções de bem-estar antes do questionário ────────
+  if (etapa === 'instrucoes') {
+    return (
+      <InstrucoesQuestionario
+        campanhaNome={campanha!.nome}
+        onContinuar={() => setEtapa('questionario')}
       />
     );
   }
