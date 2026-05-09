@@ -286,7 +286,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
     const setorNome = novoSetor.trim();
     const funcaoNome = novaFuncao.trim();
 
-    if (!setorNome || !funcaoNome) return;
+    if (!setorNome) return;
 
     const situacaoDuplicada = situacoes.some(
       (situacao) =>
@@ -295,14 +295,18 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
     );
 
     if (situacaoDuplicada) {
-      setSituacaoError("Este par Setor + Função já foi adicionado.");
+      setSituacaoError(
+        funcaoNome
+          ? "Este par Setor + Função já foi adicionado."
+          : "Este Setor (todas as funções) já foi adicionado."
+      );
       return;
     }
 
     const nova: SituacaoTrabalhoCampanha = {
       setorId: setorNome.toLowerCase().replace(/\s+/g, '_'),
       setorNome,
-      funcaoId: funcaoNome.toLowerCase().replace(/\s+/g, '_'),
+      funcaoId: funcaoNome ? funcaoNome.toLowerCase().replace(/\s+/g, '_') : '',
       funcaoNome,
     };
     setSituacaoError(null);
