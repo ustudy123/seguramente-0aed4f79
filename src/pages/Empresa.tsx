@@ -148,15 +148,31 @@ export default function Empresa() {
       try {
         const saved: any = await upsertCadastro.mutateAsync(formData);
         setHasChanges(false);
-        // Se acabamos de criar a empresa (modo 'new'), promovemos para 'edit'
-        // usando o id retornado, evitando que o próximo autosave tente inserir
-        // novamente e dispare o erro de "CNPJ já cadastrado".
         if (viewMode === 'new' && saved?.id) {
           setSelectedEmpresaId(saved.id);
           setViewMode('edit');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro no salvamento automático:', error);
+        // Para o loop de retry — o usuário pode acionar "Salvar" manualmente
+        // para ver o erro detalhado.
+        setHasChanges(false);
+
+        // Se em modo 'new' o CNPJ já pertence a outra empresa do tenant,
+        // promovemos para edição daquela empresa em vez de seguir tentando.
+        if (viewMode === 'new') {
+          const cnpjLimpo = (formData.cnpj || '').replace(/\D/g, '');
+          if (cnpjLimpo.length === 14) {
+            const existente = empresas.find(
+              (e: any) => (e.cnpj || '').replace(/\D/g, '') === cnpjLimpo,
+            );
+            if (existente) {
+              setSelectedEmpresaId(existente.id);
+              setViewMode('edit');
+              toast.info(`Empresa com este CNPJ já existe — abrindo para edição.`);
+            }
+          }
+        }
       }
     }, 1500); // Debounce de 1.5s para não sobrecarregar o banco
     return () => clearTimeout(t);

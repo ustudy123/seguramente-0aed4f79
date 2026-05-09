@@ -160,9 +160,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
       // de não ter popups a cada campo, vamos remover o toast de sucesso aqui,
       // já que a UI na página Empresa.tsx já mostra o status de salvamento.
     },
-    onError: (error: Error) => {
-      toast.error('Erro ao salvar cadastro: ' + error.message);
-    },
+    // Erros são tratados pelos chamadores (autosave silencia, save manual exibe).
   });
 
   const toggleAtivoEmpresa = useMutation({
