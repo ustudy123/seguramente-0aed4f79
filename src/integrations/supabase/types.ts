@@ -20620,7 +20620,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      seed_cbo_batch: { Args: { payload: Json }; Returns: number }
       seed_psicossocial_riscos_padrao: {
         Args: { _tenant_id: string }
         Returns: undefined
