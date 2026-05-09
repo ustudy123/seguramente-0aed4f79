@@ -171,28 +171,106 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
   // ============== RESULTADO ==============
   if (resultado) {
     const cfg = PERFIL_LABEL[resultado.perfil];
+    const dorObj = DORES.find((d) => d.v === dor);
+    const stObj  = STATUS_HOJE.find((s) => s.v === statusHoje);
+    const urgObj = URGENCIA.find((u) => u.v === urgencia);
+    const tamLabel = FUNCIONARIOS.find(f => f.v === funcionarios)?.l || "—";
+
+    // Dimensões 0-100
+    const dimMaturidade = Math.round(((5 - (stObj?.peso ?? 3)) / 4) * 100);
+    const dimExposicao  = Math.round(((dorObj?.peso ?? 3) / 4) * 100);
+    const dimUrgencia   = Math.round(((urgObj?.peso ?? 2) / 4) * 100);
+
+    const RISCOS_POR_DOR: Record<string, string[]> = {
+      psicossocial:  ["Não conformidade NR-1 (item 1.5.3.2 — riscos psicossociais)", "Risco de autuação MTE/MPT", "Indenizações por adoecimento mental"],
+      epi:           ["Descumprimento NR-6 — entrega sem rastreabilidade", "Inversão do ônus da prova em ação trabalhista", "Acidente sem prova de fornecimento"],
+      esocial:       ["Multas por eventos S-2210/S-2220/S-2240 atrasados", "Bloqueio de CND e perda de licitações", "Inconsistência cadastral acumulada"],
+      ponto_jornada: ["Horas extras não pagas reconhecidas em juízo", "Banco de horas inválido por falta de acordo", "Súmula 338 TST — presunção contra o empregador"],
+      documentacao:  ["PGR/PCMSO desatualizados — autuação NR-1/NR-7", "Perda de defesa em fiscalização", "Retrabalho recorrente"],
+      auditoria:     ["Achados de auditoria sem plano de ação rastreável", "Reincidência → multas dobradas", "Gestão reativa, sem evidência documental"],
+      outro:         ["Risco genérico mapeado na conversa"],
+    };
+    const ACOES_POR_DOR: Record<string, string[]> = {
+      psicossocial:  ["Aplicar SIPRO (questionário psicossocial anônimo)", "Mapear GHE e gerar PGR com NR-17", "Plano de ação 5W2H por unidade"],
+      epi:           ["Matriz EPI × Função × CET", "Entrega digital com selfie + geolocalização", "Estoque com validade e CA monitorado"],
+      esocial:       ["Auditoria de eventos pendentes", "Calendário S-22XX automatizado", "Integração com folha e SST"],
+      ponto_jornada: ["REP-C/REP-P com OTP WhatsApp", "Fechamento mensal com banco de horas válido", "Análise de jornada × CLT"],
+      documentacao:  ["Dossiê digital por colaborador", "Auto-arquivamento por categoria", "Alertas de validade ASO/PGR/PCMSO"],
+      auditoria:     ["Plano de ação 5W2H rastreável", "Evidência fotográfica e assinaturas digitais", "Dashboard de conformidade por unidade"],
+      outro:         ["Conversa exploratória para mapear o cenário"],
+    };
+
+    const Bar = ({ label, val, color }: { label: string; val: number; color: string }) => (
+      <div className="text-left">
+        <div className="flex justify-between text-xs mb-1"><span className="text-gray-400">{label}</span><span className="font-bold" style={{ color }}>{val}/100</span></div>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'hsl(215 40% 18%)' }}>
+          <motion.div initial={{ width: 0 }} animate={{ width: `${val}%` }} transition={{ duration: 0.8 }} className="h-full" style={{ background: color }} />
+        </div>
+      </div>
+    );
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="rounded-2xl p-8 text-center"
+        className="rounded-2xl p-6 md:p-8"
         style={{ background: 'hsl(215 55% 12%)', border: `1px solid ${cfg.cor}` }}
       >
-        <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: cfg.cor }} />
-        <h3 className="text-2xl font-black mb-2 text-white">Diagnóstico concluído!</h3>
-        <div className="text-5xl font-black my-6" style={{ color: cfg.cor }}>
-          {resultado.score}<span className="text-xl text-gray-400">/100</span>
+        <div className="text-center mb-6">
+          <CheckCircle className="w-12 h-12 mx-auto mb-3" style={{ color: cfg.cor }} />
+          <h3 className="text-2xl font-black text-white mb-1">Seu Diagnóstico</h3>
+          <p className="text-sm text-gray-400">{empresa} · {tamLabel} colaboradores · {setor}</p>
         </div>
-        <div className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-             style={{ background: `${cfg.cor}20`, color: cfg.cor, border: `1px solid ${cfg.cor}40` }}>
-          Perfil: {cfg.l}
+
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="rounded-xl p-5 text-center" style={{ background: 'hsl(215 40% 16%)' }}>
+            <div className="text-xs uppercase tracking-widest text-gray-500 mb-2">Índice de Risco SST</div>
+            <div className="text-6xl font-black mb-2" style={{ color: cfg.cor }}>{resultado.score}<span className="text-xl text-gray-500">/100</span></div>
+            <div className="inline-block px-3 py-1 rounded-full text-xs font-bold" style={{ background: `${cfg.cor}20`, color: cfg.cor, border: `1px solid ${cfg.cor}40` }}>
+              Perfil: {cfg.l}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Bar label="Exposição (gravidade da dor)" val={dimExposicao} color="hsl(0 70% 55%)" />
+            <Bar label="Maturidade da gestão atual"   val={dimMaturidade} color="hsl(207 90% 55%)" />
+            <Bar label="Urgência declarada"           val={dimUrgencia}   color="hsl(33 100% 55%)" />
+          </div>
         </div>
-        <p className="text-gray-300 max-w-md mx-auto mb-6">{cfg.msg}</p>
-        <p className="text-sm text-gray-500">
-          Abrimos o WhatsApp para você. Caso não tenha aberto,&nbsp;
-          <button onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank")} className="text-emerald-400 underline">
-            clique aqui
-          </button>.
+
+        <p className="text-gray-300 text-sm mb-5 text-center">{cfg.msg}</p>
+
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div className="rounded-xl p-4" style={{ background: 'hsl(0 50% 15% / 0.4)', border: '1px solid hsl(0 60% 35%)' }}>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'hsl(0 80% 70%)' }}>
+              <AlertTriangle className="w-4 h-4" /> Riscos Identificados
+            </div>
+            <ul className="space-y-2 text-sm text-gray-200">
+              {(RISCOS_POR_DOR[dor] || []).map((r, i) => (
+                <li key={i} className="flex gap-2"><span style={{ color: 'hsl(0 80% 65%)' }}>•</span><span>{r}</span></li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-xl p-4" style={{ background: 'hsl(152 40% 15% / 0.4)', border: '1px solid hsl(152 50% 30%)' }}>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'hsl(152 70% 65%)' }}>
+              <Sparkles className="w-4 h-4" /> Plano sugerido
+            </div>
+            <ul className="space-y-2 text-sm text-gray-200">
+              {(ACOES_POR_DOR[dor] || []).map((a, i) => (
+                <li key={i} className="flex gap-2"><span style={{ color: 'hsl(152 70% 60%)' }}>✓</span><span>{a}</span></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-400 text-center mb-3">
+          Abrimos o WhatsApp com seu diagnóstico para falar com nosso time.
         </p>
+        <Button
+          onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank")}
+          className="w-full text-white font-bold py-6"
+          style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))' }}
+        >
+          <MessageSquare className="w-4 h-4 mr-2" /> Abrir WhatsApp novamente <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
       </motion.div>
     );
   }
