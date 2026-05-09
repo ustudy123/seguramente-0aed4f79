@@ -877,8 +877,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
               </Button>
               <Button
                 type="submit"
-                disabled={criarCampanha.isPending || editarCampanha.isPending || situacoes.length === 0}
-                title={situacoes.length === 0 ? "Adicione pelo menos um par Setor+Função (obrigatório — NR-17)" : undefined}
+                disabled={criarCampanha.isPending || editarCampanha.isPending}
               >
                 {criarCampanha.isPending || editarCampanha.isPending 
                   ? (isEdicao ? "Atualizando..." : "Criando...") 
