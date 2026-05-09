@@ -108,7 +108,11 @@ export function QuestionarioResponder({
   // Scroll para o topo ao mudar de dimensão (UX mobile)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      // Instantâneo + dupla chamada (alguns navegadores mobile ignoram smooth quando o conteúdo ainda está re-renderizando)
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      requestAnimationFrame(() => window.scrollTo(0, 0));
     }
   }, [dimAtual]);
 
