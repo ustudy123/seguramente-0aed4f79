@@ -148,6 +148,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     camp: CampanhaPsicossocial,
     resps: Record<string, number>,
     tempoSeg: number,
+    cpfHash?: string,
   ): Promise<void> => {
     const inst = (camp.instrumento || 'sipro') as InstrumentoPsicossocial;
     const blocos = (camp.blocos_dinamicos as string[] | undefined) ?? [];
@@ -159,6 +160,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
         p_indicadores: JSON.parse(JSON.stringify(indicadores)),
         p_tempo_segundos: tempoSeg,
         p_user_agent: navigator.userAgent,
+        p_cpf_hash: cpfHash ?? null,
       });
     if (rpcErr) throw rpcErr;
   };
