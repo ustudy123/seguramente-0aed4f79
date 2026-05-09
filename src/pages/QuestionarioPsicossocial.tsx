@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { calcularIndicadores } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
-import { VerificacaoTelefone } from "@/components/avaliacoes/psicossocial/VerificacaoTelefone";
+import { VerificacaoCPF } from "@/components/avaliacoes/psicossocial/VerificacaoCPF";
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
@@ -28,7 +28,7 @@ import logoYourEyes from "@/assets/logo-youreyes.svg";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
-type EtapaQuestionario = 'consentimento' | 'verificacao_telefone' | 'questionario' | 'concluido';
+type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'questionario' | 'concluido';
 
 const VERSAO_TERMO_ATUAL = 'v1.0';
 
@@ -438,7 +438,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                         sessionHash.current
                       );
                     }
-                    setEtapa('verificacao_telefone');
+                    setEtapa('verificacao_cpf');
                   }}
                   disabled={!aceiteLGPD}
                   className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md disabled:opacity-50"
@@ -458,10 +458,10 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     );
   }
 
-  // ─── Verificação por Telefone (WhatsApp OTP) ──────────────
-  if (etapa === 'verificacao_telefone') {
+  // ─── Verificação por CPF (anti-duplicidade, anônimo) ──────
+  if (etapa === 'verificacao_cpf') {
     return (
-      <VerificacaoTelefone
+      <VerificacaoCPF
         campanhaId={campanha!.id}
         campanhaNome={campanha!.nome}
         onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('questionario'); }}
