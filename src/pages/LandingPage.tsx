@@ -545,8 +545,14 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <motion.div {...fadeUp} className="text-center mt-10">
-            <p className="text-gray-500 text-sm">
+          <motion.div {...fadeUp} className="text-center mt-12 space-y-5">
+            <p className="text-gray-300 text-lg">
+              Quer saber <strong className="text-white">quais módulos</strong> sua empresa precisa primeiro?
+            </p>
+            <DiagCTA subtitle="Indicamos os módulos certos com base no seu perfil">
+              Receber recomendação personalizada
+            </DiagCTA>
+            <p className="text-gray-500 text-xs">
               E muito mais sendo adicionado toda semana. Quem entrar agora, leva <strong className="text-white">TUDO desbloqueado</strong>.
             </p>
           </motion.div>
