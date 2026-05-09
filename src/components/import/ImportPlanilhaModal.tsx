@@ -201,6 +201,7 @@ export function ImportPlanilhaModal({
     "E-mail", "Telefone", "Celular",
     "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado",
     "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo" + REQUIRED_MARKER, "Departamento" + REQUIRED_MARKER, "Nível",
+    "CBO",
     "Tipo Contrato", "Data Admissão" + REQUIRED_MARKER, "Salário", "Centro de Custo", "Gestor Imediato",
     "Matrícula eSocial",
     "Banco", "Agência", "Conta", "Tipo Conta", "Chave PIX",
