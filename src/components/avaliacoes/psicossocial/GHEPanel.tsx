@@ -166,15 +166,31 @@ export function GHEPanel() {
     }));
   };
 
-  // Agrupa cargos por departamento para o seletor
+  // Agrupa cargos por departamento para o seletor (com filtro de busca)
   const cargosPorDept = useMemo(() => {
+    const term = search.trim().toLowerCase();
     const map: Record<string, typeof cargos> = {};
     cargos.forEach((c) => {
+      if (term) {
+        const deptName = (deptById[c.departamento_id || ""]?.nome || "").toLowerCase();
+        const matches = c.nome.toLowerCase().includes(term) || deptName.includes(term);
+        if (!matches) return;
+      }
       const key = c.departamento_id || "_sem_dept";
       (map[key] ||= []).push(c);
     });
     return map;
-  }, [cargos]);
+  }, [cargos, search, deptById]);
+
+  const toggleDept = (deptId: string, allIds: string[]) => {
+    setForm((f) => {
+      const allSelected = allIds.every((id) => f.cargoIds.includes(id));
+      const cargoIds = allSelected
+        ? f.cargoIds.filter((id) => !allIds.includes(id))
+        : Array.from(new Set([...f.cargoIds, ...allIds]));
+      return { ...f, cargoIds };
+    });
+  };
 
   return (
     <div className="space-y-4">
