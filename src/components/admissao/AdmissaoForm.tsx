@@ -887,6 +887,18 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
               )}
             </div>
 
+            {/* CBO — Classificação Brasileira de Ocupações */}
+            <div>
+              <Label>CBO — Ocupação (opcional)</Label>
+              <CBOAutocomplete
+                value={formProfissionais.watch('cbo') || ''}
+                onChange={(codigo) => formProfissionais.setValue('cbo', codigo || '', { shouldValidate: false })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Vincule a função à Classificação Brasileira de Ocupações (CBO). Aceita código com ou sem traço.
+              </p>
+            </div>
+
             {/* Gestor Imediato — linha inteira, combobox com busca */}
             <div>
               <Label>Gestor Imediato *</Label>
