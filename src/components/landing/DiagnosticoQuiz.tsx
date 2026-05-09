@@ -102,12 +102,12 @@ export function DiagnosticoQuiz({ origem }: Props) {
 
   const submit = async () => {
     if (!nome.trim() || !email.trim() || !telefone.trim() || !empresa.trim()) {
-      toast.error("Preencha nome, empresa, e-mail e WhatsApp");
+      toast.error("Preencha nome, empresa, e-mail e telefone");
       return;
     }
     const tel = telefone.replace(/\D/g, "");
     if (tel.length < 10) {
-      toast.error("WhatsApp inválido. Use DDD + número");
+      toast.error("Telefone inválido. Use DDD + número");
       return;
     }
 
@@ -146,20 +146,7 @@ export function DiagnosticoQuiz({ origem }: Props) {
       if (error) throw error;
 
       setResultado({ score, perfil });
-
-      // Abre WhatsApp com mensagem contextualizada
-      const msg = encodeURIComponent(
-        `Olá! Sou ${nome} da ${empresa}.\n` +
-        `Acabei de fazer o diagnóstico no site (${origem}).\n` +
-        `Perfil: ${PERFIL_LABEL[perfil].l} (${score}/100)\n` +
-        `Funcionários: ${FUNCIONARIOS.find(f=>f.v===funcionarios)?.l}\n` +
-        `Setor: ${setor}\n` +
-        `Principal dor: ${dorObj.l}\n` +
-        `Quero conversar sobre o YourEyes.`
-      );
-      setTimeout(() => {
-        window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank", "noopener,noreferrer");
-      }, 600);
+      toast.success("Diagnóstico enviado! Nosso time entrará em contato.");
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar diagnóstico");
     } finally {
