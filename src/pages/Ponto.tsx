@@ -23,6 +23,7 @@ import { AnexoUpload } from "@/components/ouvidoria/AnexoUpload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { usePonto, TIPO_MARCACAO_LABELS, STATUS_PONTO_CONFIG, type PontoDiario, type PontoAjuste } from "@/hooks/usePonto";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
@@ -443,7 +444,16 @@ const Ponto = () => {
                     <TableCell><Badge variant="outline">{ajuste.tipo_ajuste}</Badge></TableCell>
                     <TableCell>{ajuste.tipo_marcacao ? TIPO_MARCACAO_LABELS[ajuste.tipo_marcacao] : "-"}</TableCell>
                     <TableCell className="font-mono">{ajuste.hora_solicitada || "-"}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{ajuste.motivo}</TableCell>
+                    <TableCell className="max-w-[200px]">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="block truncate cursor-help">{ajuste.motivo}</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap break-words">
+                          {ajuste.motivo}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableCell>
                     <TableCell>{ajuste.created_by_nome}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
