@@ -209,12 +209,12 @@ export default function LandingPage() {
             <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-8 break-words tracking-tighter">
               Sua empresa está pronta para a{" "}
               <span className="relative inline-block">
-                <span className="relative z-10" style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 65%), hsl(152 66% 60%), hsl(33 100% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <span className="relative z-10" style={{ color: 'hsl(152 70% 55%)' }}>
                   maior fiscalização trabalhista
                 </span>
                 <motion.span 
-                  className="absolute bottom-1 sm:bottom-2 left-0 w-full h-[30%] -z-0 opacity-20 rounded-sm"
-                  style={{ background: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))' }}
+                  className="absolute bottom-1 sm:bottom-2 left-0 w-full h-[30%] -z-0 opacity-25 rounded-sm"
+                  style={{ background: 'hsl(152 66% 45%)' }}
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   transition={{ delay: 0.8, duration: 1 }}
