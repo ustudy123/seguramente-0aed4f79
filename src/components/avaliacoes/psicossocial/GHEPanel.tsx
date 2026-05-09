@@ -41,15 +41,23 @@ interface GHECargo {
   departamento_id: string | null;
 }
 
+// Par cargo+departamento — chave única
+type PairKey = string; // `${cargoId}|${deptId || "_"}`
+const makeKey = (cargoId: string, deptId: string | null) => `${cargoId}|${deptId || "_"}`;
+const parseKey = (k: PairKey): { cargoId: string; deptId: string | null } => {
+  const [cargoId, dep] = k.split("|");
+  return { cargoId, deptId: dep === "_" ? null : dep };
+};
+
 interface FormState {
   id?: string;
   codigo: string;
   nome: string;
   descricao: string;
-  cargoIds: string[];
+  pairs: PairKey[];
 }
 
-const emptyForm: FormState = { codigo: "", nome: "", descricao: "", cargoIds: [] };
+const emptyForm: FormState = { codigo: "", nome: "", descricao: "", pairs: [] };
 
 export function GHEPanel() {
   const { tenantId } = useTenant();
