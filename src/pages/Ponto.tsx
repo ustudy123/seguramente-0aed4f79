@@ -167,6 +167,21 @@ const Ponto = () => {
     } catch {}
   };
 
+  const resetAjusteForm = () => {
+    setAjusteColaborador("");
+    setAjusteData(format(new Date(), "yyyy-MM-dd"));
+    setAjusteTipo("inclusao");
+    setAjusteMarcacao("entrada");
+    setAjusteHora("");
+    setAjusteMotivo("");
+    setAjusteAnexos([]);
+  };
+
+  const handleCloseAjusteModal = (open: boolean) => {
+    setShowAjusteModal(open);
+    if (!open) resetAjusteForm();
+  };
+
   const handleSolicitarAjuste = async () => {
     const colab = colaboradores.find(c => c.id === ajusteColaborador);
     if (!colab) return;
@@ -183,9 +198,7 @@ const Ponto = () => {
         anexos: ajusteAnexos,
       });
       setShowAjusteModal(false);
-      setAjusteMotivo("");
-      setAjusteHora("");
-      setAjusteAnexos([]);
+      resetAjusteForm();
     } catch {}
   };
 
