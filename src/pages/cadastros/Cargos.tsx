@@ -155,6 +155,7 @@ export default function Cargos() {
   const handleOpenCreate = () => {
     setSelectedCargo(null);
     setFormData({ ...defaultFormData });
+    setDepartamentoIds([]);
     setIsFormOpen(true);
   };
 
@@ -178,6 +179,10 @@ export default function Cargos() {
       aposentadoria_especial_anos: cargo.aposentadoria_especial_anos,
       ativo: cargo.ativo,
     });
+    // Carrega vínculos da junção; se vazio, faz fallback para o departamento principal
+    const links = depsByCargo.get(cargo.id) || [];
+    const initial = links.length ? links : (cargo.departamento_id ? [cargo.departamento_id] : []);
+    setDepartamentoIds(initial);
     setIsFormOpen(true);
   };
 
@@ -186,13 +191,36 @@ export default function Cargos() {
     setIsDeleteOpen(true);
   };
 
+  const syncCargoDepartamentos = async (cargoId: string) => {
+    if (!tenantId) return;
+    // Apaga vínculos antigos e insere os atuais
+    await fromTable("cargo_departamentos").delete().eq("cargo_id", cargoId);
+    if (departamentoIds.length > 0) {
+      const rows = departamentoIds.map((dep_id) => ({
+        tenant_id: tenantId,
+        cargo_id: cargoId,
+        departamento_id: dep_id,
+      }));
+      const { error } = await fromTable("cargo_departamentos").insert(rows);
+      if (error) throw error;
+    }
+    queryClient.invalidateQueries({ queryKey: ["cargo_departamentos", tenantId] });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Departamento principal = primeiro selecionado (mantém compatibilidade)
+    const principal = departamentoIds[0] || null;
+    const payload = { ...formData, departamento_id: principal };
+    let cargoId: string;
     if (selectedCargo) {
-      await updateCargo.mutateAsync({ id: selectedCargo.id, ...formData });
+      await updateCargo.mutateAsync({ id: selectedCargo.id, ...payload });
+      cargoId = selectedCargo.id;
     } else {
-      await createCargo.mutateAsync(formData);
+      const created = await createCargo.mutateAsync(payload);
+      cargoId = (created as any)?.id;
     }
+    if (cargoId) await syncCargoDepartamentos(cargoId);
     setIsFormOpen(false);
   };
 
