@@ -216,6 +216,7 @@ export function ImportPlanilhaModal({
       "joao@empresa.com", "(11) 3000-0000", "(11) 99000-0000",
       "01310-100", "Av. Paulista", "1000", "Sala 10", "Bela Vista", "São Paulo", "SP",
       "1", "Sede", "Analista de RH", "Recursos Humanos", "Pleno",
+      "2524-05",
       "CLT", "01/03/2024", "5000,00", "RH-01", "Carlos Souza",
       "00123456789",
       "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
