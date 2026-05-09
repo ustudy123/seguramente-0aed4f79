@@ -135,6 +135,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       gestor_imediato: "",
       data_admissao: new Date().toISOString().split("T")[0],
       matricula_esocial: "",
+      cbo: "",
       foto_url: "",
     },
   });
