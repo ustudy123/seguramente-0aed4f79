@@ -766,7 +766,7 @@ export default function LandingPage() {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-4 text-center font-medium italic relative z-10">
-                Atenção: Após o preenchimento total, a plataforma passará a cobrar por cada módulo individualmente.
+                Atenção: Após o preenchimento total, novas solicitações entram em lista de espera.
               </p>
             </div>
 
