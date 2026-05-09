@@ -59,7 +59,7 @@ export function GHEPanel() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
-  
+  const [search, setSearch] = useState("");
 
   const { data: ghes = [], isLoading } = useQuery({
     queryKey: ["psicossocial_ghe", tenantId, empresaAtivaId],
