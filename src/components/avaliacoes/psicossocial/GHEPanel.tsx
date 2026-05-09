@@ -243,7 +243,7 @@ export function GHEPanel() {
           </p>
         </div>
         <Button onClick={handleNovo} className="gap-2">
-          <Plus className="h-4 w-4" /> Novo GHE
+          <Plus className="h-4 w-4" /> Selecionar GHE
         </Button>
       </div>
 
