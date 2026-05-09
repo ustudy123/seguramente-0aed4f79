@@ -28,8 +28,13 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
   const [cpfValido, setCpfValido] = useState(false);
   const [processando, setProcessando] = useState(false);
   const [jaRespondeu, setJaRespondeu] = useState(false);
+  const [aceiteLgpd, setAceiteLgpd] = useState(false);
 
   const handleConfirmar = async () => {
+    if (!aceiteLgpd) {
+      toast.error("Você precisa concordar com o uso do CPF conforme a LGPD para continuar.");
+      return;
+    }
     const cleaned = cleanCpf(cpf);
     if (!validateCpf(cleaned)) {
       toast.error("CPF inválido. Verifique os dígitos e tente novamente.");
