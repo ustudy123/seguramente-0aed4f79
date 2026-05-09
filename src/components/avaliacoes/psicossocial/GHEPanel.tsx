@@ -596,15 +596,18 @@ export function GHEPanel() {
               </ScrollArea>
             </div>
           </div>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => upsert.mutate(form)} disabled={upsert.isPending}>
-              {upsert.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Salvar
-            </Button>
+            {step === "form" && (
+              <Button onClick={() => upsert.mutate(form)} disabled={upsert.isPending}>
+                {upsert.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Salvar
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
