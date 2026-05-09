@@ -730,6 +730,7 @@ const Ponto = () => {
       </Dialog>
 
       <GuiaRapidoPonto open={showGuia} onOpenChange={setShowGuia} />
+      <AnexosAjusteModal ajuste={anexosModalAjuste} onOpenChange={(o) => !o && setAnexosModalAjuste(null)} />
     </div>
   );
 };
