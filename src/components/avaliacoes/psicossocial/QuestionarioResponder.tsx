@@ -22,23 +22,32 @@ import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
 import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
 
-// Escala para fatores de RISCO: Nunca = bom (😊), Sempre = ruim (😰)
+// Escala Likert profissional — fatores de RISCO (0 = ideal, 4 = pior)
 const ESCALA_RISCO = [
-  { valor: 0, label: 'Nunca',          emoji: '😊', cor: 'from-emerald-50 to-emerald-100/60 border-emerald-300 text-emerald-800 hover:from-emerald-100 hover:to-emerald-200/70', selecionado: 'from-emerald-400 to-emerald-500 border-emerald-600 text-white shadow-emerald-300/60' },
-  { valor: 1, label: 'Raramente',      emoji: '🙂', cor: 'from-green-50 to-green-100/60 border-green-300 text-green-800 hover:from-green-100 hover:to-green-200/70',           selecionado: 'from-green-400 to-green-500 border-green-600 text-white shadow-green-300/60' },
-  { valor: 2, label: 'Às vezes',       emoji: '😐', cor: 'from-amber-50 to-amber-100/60 border-amber-300 text-amber-800 hover:from-amber-100 hover:to-amber-200/70',           selecionado: 'from-amber-400 to-amber-500 border-amber-600 text-white shadow-amber-300/60' },
-  { valor: 3, label: 'Frequentemente', emoji: '😟', cor: 'from-orange-50 to-orange-100/60 border-orange-300 text-orange-800 hover:from-orange-100 hover:to-orange-200/70',     selecionado: 'from-orange-400 to-orange-500 border-orange-600 text-white shadow-orange-300/60' },
-  { valor: 4, label: 'Sempre',         emoji: '😰', cor: 'from-red-50 to-red-100/60 border-red-300 text-red-800 hover:from-red-100 hover:to-red-200/70',                       selecionado: 'from-red-400 to-red-500 border-red-600 text-white shadow-red-300/60' },
+  { valor: 0, label: 'Nunca',          intensidade: 0 },
+  { valor: 1, label: 'Raramente',      intensidade: 1 },
+  { valor: 2, label: 'Às vezes',       intensidade: 2 },
+  { valor: 3, label: 'Frequentemente', intensidade: 3 },
+  { valor: 4, label: 'Sempre',         intensidade: 4 },
 ];
 
-// Escala para fatores PROTETORES (invertida)
+// Escala Likert profissional — fatores PROTETORES (invertida: 0 = pior, 4 = ideal)
 const ESCALA_PROTETOR = [
-  { valor: 0, label: 'Nunca',          emoji: '😰', cor: 'from-red-50 to-red-100/60 border-red-300 text-red-800 hover:from-red-100 hover:to-red-200/70',                       selecionado: 'from-red-400 to-red-500 border-red-600 text-white shadow-red-300/60' },
-  { valor: 1, label: 'Raramente',      emoji: '😟', cor: 'from-orange-50 to-orange-100/60 border-orange-300 text-orange-800 hover:from-orange-100 hover:to-orange-200/70',     selecionado: 'from-orange-400 to-orange-500 border-orange-600 text-white shadow-orange-300/60' },
-  { valor: 2, label: 'Às vezes',       emoji: '😐', cor: 'from-amber-50 to-amber-100/60 border-amber-300 text-amber-800 hover:from-amber-100 hover:to-amber-200/70',           selecionado: 'from-amber-400 to-amber-500 border-amber-600 text-white shadow-amber-300/60' },
-  { valor: 3, label: 'Frequentemente', emoji: '🙂', cor: 'from-green-50 to-green-100/60 border-green-300 text-green-800 hover:from-green-100 hover:to-green-200/70',           selecionado: 'from-green-400 to-green-500 border-green-600 text-white shadow-green-300/60' },
-  { valor: 4, label: 'Sempre',         emoji: '😊', cor: 'from-emerald-50 to-emerald-100/60 border-emerald-300 text-emerald-800 hover:from-emerald-100 hover:to-emerald-200/70', selecionado: 'from-emerald-400 to-emerald-500 border-emerald-600 text-white shadow-emerald-300/60' },
+  { valor: 0, label: 'Nunca',          intensidade: 4 },
+  { valor: 1, label: 'Raramente',      intensidade: 3 },
+  { valor: 2, label: 'Às vezes',       intensidade: 2 },
+  { valor: 3, label: 'Frequentemente', intensidade: 1 },
+  { valor: 4, label: 'Sempre',         intensidade: 0 },
 ];
+
+// Mapeia intensidade (0 ideal → 4 pior) em estilos discretos quando selecionado
+const ESTILO_INTENSIDADE: Record<number, { selBg: string; selBorder: string; selText: string; dot: string }> = {
+  0: { selBg: 'bg-emerald-50',  selBorder: 'border-emerald-500', selText: 'text-emerald-900', dot: 'bg-emerald-500' },
+  1: { selBg: 'bg-emerald-50/70', selBorder: 'border-emerald-400', selText: 'text-emerald-800', dot: 'bg-emerald-400' },
+  2: { selBg: 'bg-amber-50',    selBorder: 'border-amber-500',   selText: 'text-amber-900',   dot: 'bg-amber-500' },
+  3: { selBg: 'bg-orange-50',   selBorder: 'border-orange-500',  selText: 'text-orange-900',  dot: 'bg-orange-500' },
+  4: { selBg: 'bg-rose-50',     selBorder: 'border-rose-500',    selText: 'text-rose-900',    dot: 'bg-rose-500' },
+};
 
 interface QuestionarioResponderProps {
   instrumento: InstrumentoPsicossocial;
