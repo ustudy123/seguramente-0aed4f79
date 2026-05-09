@@ -635,6 +635,25 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 />
               </div>
 
+              {/* CBO — Classificação Brasileira de Ocupações */}
+              <FormField
+                control={form.control}
+                name="cbo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CBO — Ocupação</FormLabel>
+                    <FormControl>
+                      <CBOAutocomplete
+                        value={field.value || null}
+                        onChange={(codigo) => field.onChange(codigo || "")}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
             </div>
 
             {/* Footer fixo */}
