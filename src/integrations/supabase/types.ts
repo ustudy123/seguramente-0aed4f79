@@ -17979,6 +17979,33 @@ export type Database = {
           },
         ]
       }
+      psicossocial_instrumento_dimensao: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          dimensao: string
+          id: string
+          instrumento: string
+          risco_nome: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          dimensao: string
+          id?: string
+          instrumento: string
+          risco_nome: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          dimensao?: string
+          id?: string
+          instrumento?: string
+          risco_nome?: string
+        }
+        Relationships: []
+      }
       psicossocial_inventario_riscos: {
         Row: {
           acao_recomendada: string | null
