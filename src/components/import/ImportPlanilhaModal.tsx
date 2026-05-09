@@ -285,6 +285,7 @@ export function ImportPlanilhaModal({
       ["Cargo *", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
       ["Departamento *", "SIM", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
+      ["CBO", "NÃO", "Código CBO (Classificação Brasileira de Ocupações). Aceita formato com ou sem traço.", "6 dígitos: 000000 ou 0000-00", "2524-05 ou 252405"],
       ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, CLT – Experiência, Pró-labore (Sócio), Estagiário, Temporário, Autônomo, Intermitente, Aprendiz. ⚠️ PJ deve ser cadastrado em Terceiros.", "CLT"],
       ["Data Admissão *", "SIM", "Data de admissão", "DD/MM/AAAA ou AAAA-MM-DD", "01/03/2024"],
       ["Salário", "NÃO", "Salário base bruto", "Número (use . ou , como decimal)", "5000,00"],
