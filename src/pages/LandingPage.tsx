@@ -774,18 +774,18 @@ export default function LandingPage() {
             <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <Award className="w-5 h-5" style={{ color: 'hsl(33 100% 50%)' }} />
-                O que você recebe nas 10 primeiras vagas:
+                O que está incluso na consultoria com especialista:
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  "Todos os +30 módulos desbloqueados",
-                  "IA Psicossocial NR-01 completa",
-                  "Gestão de SST integrada",
-                  "RH completo (admissão ao desligamento)",
-                  "Marketplace de profissionais SST",
-                  "OCR de notas fiscais com IA",
-                  "Sem limite de colaboradores",
-                  "Atualizações vitalícias nesta fase",
+                  "Diagnóstico SST aprofundado da sua operação",
+                  "Sessão 1:1 com especialista YourEyes",
+                  "Mapa de não conformidades e prioridades",
+                  "Plano de ação 5W2H sob medida",
+                  "Recomendação de módulos por dor real",
+                  "Roteiro de implantação dos primeiros 90 dias",
+                  "Benchmark com empresas do mesmo setor",
+                  "Materiais de apoio (PGR, NR-1, eSocial)",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
                     <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'hsl(25 50% 50%)' }} />
