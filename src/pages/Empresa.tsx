@@ -174,7 +174,15 @@ export default function Empresa() {
               setSelectedEmpresaId(existente.id);
               setViewMode('edit');
               try {
-                await upsertCadastro.mutateAsync({ ...formData, id: existente.id } as any);
+                // Update direto pelo id da empresa existente (o hook só
+                // atualiza pelo empresaId/cadastro do escopo do hook,
+                // que aqui ainda não foi reconfigurado).
+                const { id: _ignored, created_at: _c, updated_at: _u, ...rest } = formData as any;
+                const { error: updErr } = await supabase
+                  .from('empresa_cadastro')
+                  .update(rest)
+                  .eq('id', existente.id);
+                if (updErr) throw updErr;
                 toast.info('Empresa com este CNPJ já existe — dados atualizados na empresa existente.');
               } catch (e2) {
                 console.error('Falha ao atualizar empresa existente:', e2);
