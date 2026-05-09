@@ -215,8 +215,8 @@ export function calcularIRPS(
 
     for (const p of dim.perguntas) {
       const raw = respostas[p.id];
-      // Apenas processa itens efetivamente respondidos (não undefined/null)
-      if (raw != null && raw >= 1 && raw <= 5) {
+      // Escala armazenada: 0..4 (0=Nunca … 4=Sempre). recodificarItem faz +1 e inverte se protetor.
+      if (raw != null && raw >= 0 && raw <= 4) {
         valoresRecodificados.push(recodificarItem(raw, !!p.invertida));
       }
     }
