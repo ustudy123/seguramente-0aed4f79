@@ -361,6 +361,10 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
               </div>
             </TabsContent>
 
+            <TabsContent value="segmentos" className="space-y-6">
+              <AnaliseSegmentadaSection campanhas={campanhasFiltradas} />
+            </TabsContent>
+
             <TabsContent value="burnout" className="space-y-6">
               <RadaresPsicossocialSection campanhas={campanhasFiltradas} />
             </TabsContent>
