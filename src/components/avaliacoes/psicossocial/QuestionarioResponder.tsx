@@ -105,6 +105,13 @@ export function QuestionarioResponder({
     return () => clearInterval(interval);
   }, [tempoInicio]);
 
+  // Scroll para o topo ao mudar de dimensão (UX mobile)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }
+  }, [dimAtual]);
+
   const totalPerguntas = dimensoes.reduce((acc, d) => acc + d.perguntas.length, 0);
   const respostasDadas = Object.keys(respostas).length;
   const progresso = Math.round((respostasDadas / totalPerguntas) * 100);
