@@ -84,6 +84,8 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
   const [acoesSalvas, setAcoesSalvas] = useState<Set<number>>(new Set());
   const [importandoTodas, setImportandoTodas] = useState(false);
   const [acaoExpandida, setAcaoExpandida] = useState<number | null>(null);
+  // Data de vencimento manual (preenchida pelo usuário, sobrepõe o que a IA extraiu)
+  const [dataVigenciaManual, setDataVigenciaManual] = useState<string>("");
   // LTCAT: rastreio de ações de folha por índice do risco
   const [acoesEnquadramentoSalvas, setAcoesEnquadramentoSalvas] = useState<Record<number, string>>({}); // index -> acaoId
   const [criandoAcaoEnquadramento, setCriandoAcaoEnquadramento] = useState<number | null>(null);
