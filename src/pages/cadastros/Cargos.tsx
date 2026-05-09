@@ -326,7 +326,24 @@ export default function Cargos() {
                 <TableRow key={cargo.id}>
                   <TableCell className="font-medium">{cargo.nome}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {(cargo as any).departamento?.nome || "-"}
+                    {(() => {
+                      const ids = depsByCargo.get(cargo.id) || (cargo.departamento_id ? [cargo.departamento_id] : []);
+                      if (ids.length === 0) return "-";
+                      const nomes = ids
+                        .map((id) => departamentos.find((d) => d.id === id)?.nome)
+                        .filter(Boolean) as string[];
+                      if (nomes.length === 0) return "-";
+                      return (
+                        <div className="flex flex-wrap gap-1">
+                          {nomes.slice(0, 3).map((n) => (
+                            <Badge key={n} variant="secondary" className="text-xs font-normal">{n}</Badge>
+                          ))}
+                          {nomes.length > 3 && (
+                            <Badge variant="outline" className="text-xs font-normal">+{nomes.length - 3}</Badge>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>{getNivelLabel(cargo.nivel)}</TableCell>
                   <TableCell className="text-muted-foreground">
