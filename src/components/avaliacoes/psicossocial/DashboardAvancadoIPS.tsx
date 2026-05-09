@@ -16,7 +16,8 @@ import {
   FileText,
   Activity,
   Flame,
-  Battery
+  Battery,
+  Building2
 } from "lucide-react";
 import {
   Dialog,
