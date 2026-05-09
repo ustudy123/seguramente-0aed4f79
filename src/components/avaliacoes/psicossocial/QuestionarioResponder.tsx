@@ -108,7 +108,11 @@ export function QuestionarioResponder({
   // Scroll para o topo ao mudar de dimensão (UX mobile)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      // Instantâneo + dupla chamada (alguns navegadores mobile ignoram smooth quando o conteúdo ainda está re-renderizando)
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      requestAnimationFrame(() => window.scrollTo(0, 0));
     }
   }, [dimAtual]);
 
@@ -274,7 +278,7 @@ export function QuestionarioResponder({
                                 key={op.valor}
                                 onClick={() => onRespostaChange(pergunta.id, op.valor)}
                                 className={cn(
-                                  "group relative flex flex-col items-center justify-center gap-2 px-1 py-3 sm:py-3.5 rounded-lg border transition-all text-center h-full",
+                                  "group relative flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-0.5 sm:px-1 py-2.5 sm:py-3.5 rounded-lg border transition-all text-center h-full min-w-0 overflow-hidden",
                                   ativo
                                     ? `${estilo.selBg} ${estilo.selBorder} ${estilo.selText} border-2 ring-4 ${estilo.ring}`
                                     : "bg-background border-border hover:border-foreground/30 hover:bg-muted/40"
@@ -282,7 +286,7 @@ export function QuestionarioResponder({
                               >
                                 <span
                                   className={cn(
-                                    "text-3xl sm:text-4xl leading-none transition-transform duration-200 select-none",
+                                    "text-2xl sm:text-4xl leading-none transition-transform duration-200 select-none",
                                     ativo ? "scale-110" : "grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105"
                                   )}
                                   style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}
@@ -290,7 +294,7 @@ export function QuestionarioResponder({
                                   {op.emoji}
                                 </span>
                                 <span className={cn(
-                                  "text-[10px] sm:text-[11px] font-medium leading-tight tracking-tight",
+                                  "text-[9px] sm:text-[11px] font-medium leading-tight tracking-tight w-full break-words hyphens-auto",
                                   ativo ? "" : "text-muted-foreground"
                                 )}>
                                   {op.label}
