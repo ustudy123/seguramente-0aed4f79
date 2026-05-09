@@ -20472,6 +20472,10 @@ export type Database = {
         Returns: boolean
       }
       validar_token_participacao: { Args: { p_token: string }; Returns: Json }
+      verificar_hash_ja_respondeu: {
+        Args: { p_campanha_id: string; p_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
       acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"
