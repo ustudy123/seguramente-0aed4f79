@@ -725,6 +725,43 @@ export function GHEPanel() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) { setDeleteTarget(null); setDeleteText(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Excluir GHE definitivamente
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é irreversível. O grupo <strong>{deleteTarget?.codigo} — {deleteTarget?.nome}</strong> será removido permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs">
+              Para confirmar, digite <strong>EXCLUIR</strong> abaixo:
+            </Label>
+            <Input
+              value={deleteText}
+              onChange={(e) => setDeleteText(e.target.value)}
+              placeholder="EXCLUIR"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteText(""); }}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteText.trim() !== "EXCLUIR" || del.isPending}
+              onClick={() => deleteTarget && del.mutate(deleteTarget.id)}
+            >
+              {del.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Excluir definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
