@@ -24,20 +24,20 @@ import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
 
 // Escala para fatores de RISCO: Nunca = bom (😊), Sempre = ruim (😰)
 const ESCALA_RISCO = [
-  { valor: 0, label: 'Nunca', emoji: '😊', cor: 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-  { valor: 1, label: 'Raramente', emoji: '🙂', cor: 'border-green-400 bg-green-50 text-green-700 hover:bg-green-100' },
-  { valor: 2, label: 'Às vezes', emoji: '😐', cor: 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100' },
-  { valor: 3, label: 'Frequentemente', emoji: '😟', cor: 'border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100' },
-  { valor: 4, label: 'Sempre', emoji: '😰', cor: 'border-red-400 bg-red-50 text-red-700 hover:bg-red-100' },
+  { valor: 0, label: 'Nunca',          emoji: '😊', cor: 'from-emerald-50 to-emerald-100/60 border-emerald-300 text-emerald-800 hover:from-emerald-100 hover:to-emerald-200/70', selecionado: 'from-emerald-400 to-emerald-500 border-emerald-600 text-white shadow-emerald-300/60' },
+  { valor: 1, label: 'Raramente',      emoji: '🙂', cor: 'from-green-50 to-green-100/60 border-green-300 text-green-800 hover:from-green-100 hover:to-green-200/70',           selecionado: 'from-green-400 to-green-500 border-green-600 text-white shadow-green-300/60' },
+  { valor: 2, label: 'Às vezes',       emoji: '😐', cor: 'from-amber-50 to-amber-100/60 border-amber-300 text-amber-800 hover:from-amber-100 hover:to-amber-200/70',           selecionado: 'from-amber-400 to-amber-500 border-amber-600 text-white shadow-amber-300/60' },
+  { valor: 3, label: 'Frequentemente', emoji: '😟', cor: 'from-orange-50 to-orange-100/60 border-orange-300 text-orange-800 hover:from-orange-100 hover:to-orange-200/70',     selecionado: 'from-orange-400 to-orange-500 border-orange-600 text-white shadow-orange-300/60' },
+  { valor: 4, label: 'Sempre',         emoji: '😰', cor: 'from-red-50 to-red-100/60 border-red-300 text-red-800 hover:from-red-100 hover:to-red-200/70',                       selecionado: 'from-red-400 to-red-500 border-red-600 text-white shadow-red-300/60' },
 ];
 
-// Escala para fatores PROTETORES (invertida): Nunca = ruim (😰), Sempre = bom (😊)
+// Escala para fatores PROTETORES (invertida)
 const ESCALA_PROTETOR = [
-  { valor: 0, label: 'Nunca', emoji: '😰', cor: 'border-red-400 bg-red-50 text-red-700 hover:bg-red-100' },
-  { valor: 1, label: 'Raramente', emoji: '😟', cor: 'border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100' },
-  { valor: 2, label: 'Às vezes', emoji: '😐', cor: 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100' },
-  { valor: 3, label: 'Frequentemente', emoji: '🙂', cor: 'border-green-400 bg-green-50 text-green-700 hover:bg-green-100' },
-  { valor: 4, label: 'Sempre', emoji: '😊', cor: 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+  { valor: 0, label: 'Nunca',          emoji: '😰', cor: 'from-red-50 to-red-100/60 border-red-300 text-red-800 hover:from-red-100 hover:to-red-200/70',                       selecionado: 'from-red-400 to-red-500 border-red-600 text-white shadow-red-300/60' },
+  { valor: 1, label: 'Raramente',      emoji: '😟', cor: 'from-orange-50 to-orange-100/60 border-orange-300 text-orange-800 hover:from-orange-100 hover:to-orange-200/70',     selecionado: 'from-orange-400 to-orange-500 border-orange-600 text-white shadow-orange-300/60' },
+  { valor: 2, label: 'Às vezes',       emoji: '😐', cor: 'from-amber-50 to-amber-100/60 border-amber-300 text-amber-800 hover:from-amber-100 hover:to-amber-200/70',           selecionado: 'from-amber-400 to-amber-500 border-amber-600 text-white shadow-amber-300/60' },
+  { valor: 3, label: 'Frequentemente', emoji: '🙂', cor: 'from-green-50 to-green-100/60 border-green-300 text-green-800 hover:from-green-100 hover:to-green-200/70',           selecionado: 'from-green-400 to-green-500 border-green-600 text-white shadow-green-300/60' },
+  { valor: 4, label: 'Sempre',         emoji: '😊', cor: 'from-emerald-50 to-emerald-100/60 border-emerald-300 text-emerald-800 hover:from-emerald-100 hover:to-emerald-200/70', selecionado: 'from-emerald-400 to-emerald-500 border-emerald-600 text-white shadow-emerald-300/60' },
 ];
 
 interface QuestionarioResponderProps {
