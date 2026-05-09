@@ -284,7 +284,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
         if (!result?.sucesso) throw new Error(result?.erro || 'Erro ao salvar resposta');
       } else {
         // Usa o token público geral
-        await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos);
+        await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos, telefoneHash || undefined);
       }
 
 
