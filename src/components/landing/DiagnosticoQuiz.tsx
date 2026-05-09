@@ -14,7 +14,6 @@ type Step = 0 | 1 | 2 | 3 | 4 | 5; // 0..4 quiz, 5 = contato
 
 interface Props {
   origem: string; // qual landing page
-  whatsappNumber: string; // p/ CTA final
 }
 
 const FUNCIONARIOS = [
@@ -75,13 +74,13 @@ function calcularPerfil(num: string, dorPeso: number, statusPeso: number, urgPes
 }
 
 const PERFIL_LABEL: Record<string, { l: string; cor: string; msg: string }> = {
-  critico:    { l: "Crítico",    cor: "hsl(0 70% 55%)",    msg: "Cenário de alto risco. Precisa de plano de ação imediato — vamos priorizar seu atendimento." },
-  quente:     { l: "Prioritário", cor: "hsl(33 100% 55%)", msg: "Você tem ganhos rápidos a obter. Faz sentido conversar agora para mapear o melhor caminho." },
-  qualificado: { l: "Qualificado", cor: "hsl(207 90% 55%)", msg: "Bom momento para estruturar. Vamos te mostrar como o YourEyes acelera essa governança." },
-  explorador: { l: "Explorador", cor: "hsl(152 60% 50%)",  msg: "Ótimo! Vamos te enviar materiais e tirar suas dúvidas pelo WhatsApp." },
+  critico:    { l: "Crítico",    cor: "hsl(0 70% 55%)",    msg: "Cenário de alto risco. Nosso time vai priorizar seu atendimento e entrar em contato para agendar uma apresentação." },
+  quente:     { l: "Prioritário", cor: "hsl(33 100% 55%)", msg: "Você tem ganhos rápidos a obter. Um especialista da YourEyes vai entrar em contato para agendar uma apresentação." },
+  qualificado: { l: "Qualificado", cor: "hsl(207 90% 55%)", msg: "Bom momento para estruturar. Vamos entrar em contato para apresentar como o YourEyes acelera essa governança." },
+  explorador: { l: "Explorador", cor: "hsl(152 60% 50%)",  msg: "Recebemos seus dados. Em breve um consultor entra em contato para tirar dúvidas e marcar uma apresentação." },
 };
 
-export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
+export function DiagnosticoQuiz({ origem }: Props) {
   const [step, setStep] = useState<Step>(0);
   const [submitting, setSubmitting] = useState(false);
   const [resultado, setResultado] = useState<{ score: number; perfil: string } | null>(null);
@@ -103,12 +102,12 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
 
   const submit = async () => {
     if (!nome.trim() || !email.trim() || !telefone.trim() || !empresa.trim()) {
-      toast.error("Preencha nome, empresa, e-mail e WhatsApp");
+      toast.error("Preencha nome, empresa, e-mail e telefone");
       return;
     }
     const tel = telefone.replace(/\D/g, "");
     if (tel.length < 10) {
-      toast.error("WhatsApp inválido. Use DDD + número");
+      toast.error("Telefone inválido. Use DDD + número");
       return;
     }
 
@@ -147,20 +146,7 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
       if (error) throw error;
 
       setResultado({ score, perfil });
-
-      // Abre WhatsApp com mensagem contextualizada
-      const msg = encodeURIComponent(
-        `Olá! Sou ${nome} da ${empresa}.\n` +
-        `Acabei de fazer o diagnóstico no site (${origem}).\n` +
-        `Perfil: ${PERFIL_LABEL[perfil].l} (${score}/100)\n` +
-        `Funcionários: ${FUNCIONARIOS.find(f=>f.v===funcionarios)?.l}\n` +
-        `Setor: ${setor}\n` +
-        `Principal dor: ${dorObj.l}\n` +
-        `Quero conversar sobre o YourEyes.`
-      );
-      setTimeout(() => {
-        window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank", "noopener,noreferrer");
-      }, 600);
+      toast.success("Diagnóstico enviado! Nosso time entrará em contato.");
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar diagnóstico");
     } finally {
@@ -261,16 +247,14 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
           </div>
         </div>
 
-        <p className="text-sm text-gray-400 text-center mb-3">
-          Abrimos o WhatsApp com seu diagnóstico para falar com nosso time.
-        </p>
-        <Button
-          onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank")}
-          className="w-full text-white font-bold py-6"
-          style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))' }}
-        >
-          <MessageSquare className="w-4 h-4 mr-2" /> Abrir WhatsApp novamente <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+        <div className="rounded-xl p-4 text-center" style={{ background: 'hsl(152 40% 15% / 0.4)', border: '1px solid hsl(152 50% 30%)' }}>
+          <p className="text-sm text-gray-200 mb-1 font-bold" style={{ color: 'hsl(152 70% 70%)' }}>
+            ✓ Lead registrado com sucesso
+          </p>
+          <p className="text-sm text-gray-300">
+            Um especialista da YourEyes vai entrar em contato em breve no telefone e e-mail informados para agendar uma <strong className="text-white">apresentação personalizada</strong>.
+          </p>
+        </div>
       </motion.div>
     );
   }
@@ -335,7 +319,7 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
         {step === 5 && (
           <motion.div key="5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <h3 className="text-2xl font-black text-white mb-1">Quase lá! Como falamos com você?</h3>
-            <p className="text-sm text-gray-400 mb-5">Vamos abrir o WhatsApp já com seu diagnóstico em mãos.</p>
+            <p className="text-sm text-gray-400 mb-5">Em seguida um especialista entra em contato para agendar a apresentação.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {(() => { const ic = "bg-[hsl(215_40%_18%)] border-[hsl(215_40%_28%)] text-white placeholder:text-gray-500"; return (<>
               <Field label="Nome*">     <Input className={ic} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" /></Field>
@@ -343,7 +327,7 @@ export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
               <Field label="Cargo">     <Input className={ic} value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Ex: Gestor SST" /></Field>
               <Field label="E-mail*">   <Input className={ic} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@empresa.com" /></Field>
               <div className="md:col-span-2">
-                <Field label="WhatsApp*"><Input className={ic} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" /></Field>
+                <Field label="Telefone*"><Input className={ic} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" /></Field>
               </div>
               </>); })()}
             </div>

@@ -256,7 +256,7 @@ export default function LandingPage() {
 
             <p className="text-base text-gray-500 max-w-2xl mx-auto mb-10">
               <strong className="text-white">97% das empresas brasileiras NÃO estão preparadas.</strong>
-              Descubra em 60 segundos onde a sua está exposta — e receba um plano de ação pelo WhatsApp.
+              Descubra em 60 segundos onde a sua está exposta — receba um diagnóstico personalizado e fale com um especialista.
             </p>
 
             <div className="flex flex-col items-center gap-3 mb-8">
@@ -346,7 +346,7 @@ export default function LandingPage() {
             <p className="text-gray-300 text-lg mb-5">
               Não espere a fiscalização chegar para descobrir onde sua empresa está vulnerável.
             </p>
-            <DiagCTA subtitle="Receba o resultado por WhatsApp em segundos">
+            <DiagCTA subtitle="Resultado na hora • Especialista entra em contato">
               Descobrir meus riscos agora
             </DiagCTA>
           </motion.div>
@@ -735,13 +735,13 @@ export default function LandingPage() {
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Responda 5 perguntas e receba um diagnóstico personalizado.
-              Em seguida, abrimos o <strong className="text-white">WhatsApp</strong> com o resultado pronto para conversarmos.
+              Em seguida, um <strong className="text-white">especialista da YourEyes</strong> entra em contato para agendar uma apresentação.
             </p>
           </motion.div>
           <motion.div {...fadeUp}>
-            <DiagnosticoQuiz origem="lp" whatsappNumber={WHATSAPP_NUMBER} />
+            <DiagnosticoQuiz origem="lp" />
           </motion.div>
-          <p className="text-xs text-gray-600 mt-4 text-center">Sem compromisso • Resposta em minutos durante o horário comercial</p>
+          <p className="text-xs text-gray-600 mt-4 text-center">Sem compromisso • Retorno em até 1 dia útil</p>
         </div>
       </section>
 
@@ -848,7 +848,7 @@ export default function LandingPage() {
                 )}
               </Button>
               <p className="text-xs text-gray-500 text-center mt-3">
-                Sem cadastro de cartão • Resultado e plano de ação enviados pelo WhatsApp
+                Sem cadastro de cartão • Um especialista entra em contato para agendar a apresentação
               </p>
             </motion.div>
           </motion.div>
@@ -868,7 +868,7 @@ export default function LandingPage() {
             Uma única multa do MTE paga 5 anos de YourEyes. Um único processo por burnout paga 10 anos.
             Comece pelo diagnóstico — leva 60 segundos e mostra exatamente onde sua empresa está exposta.
           </p>
-          <DiagCTA subtitle="100% gratuito • Plano de ação enviado pelo WhatsApp">
+          <DiagCTA subtitle="100% gratuito • Especialista entra em contato para apresentar a solução">
             Iniciar meu diagnóstico agora
           </DiagCTA>
         </div>
@@ -880,24 +880,16 @@ export default function LandingPage() {
         <p className="mt-1 text-xs" style={{ color: 'hsl(215 15% 40%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 
-      {/* Floating Diagnóstico CTA (primary) + WhatsApp (secondary) */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+      {/* Floating Diagnóstico CTA */}
+      <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={scrollToDiag}
           aria-label="Fazer diagnóstico grátis"
-          className="hidden sm:flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-2xl transition-transform hover:scale-105 text-white font-bold text-sm"
+          className="flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-2xl transition-transform hover:scale-105 text-white font-bold text-sm"
           style={{ background: 'linear-gradient(135deg, hsl(25 65% 42%), hsl(25 75% 32%))', boxShadow: '0 8px 32px hsl(25 65% 42% / 0.5)' }}
         >
           <Brain className="w-4 h-4" />
           Diagnóstico grátis
-        </button>
-        <button
-          onClick={openWhatsApp}
-          aria-label="Falar no WhatsApp"
-          className="rounded-full p-4 shadow-2xl transition-transform hover:scale-110"
-          style={{ background: 'hsl(25 66% 39%)', boxShadow: '0 8px 32px hsl(25 70% 38% / 0.5)' }}
-        >
-          <MessageSquare className="w-6 h-6 text-white" />
         </button>
       </div>
     </div>
