@@ -75,24 +75,6 @@ const PASSOS = [
     dica: "Use o SIPRO para campanhas regulares. Outros instrumentos (PHQ-9, GAD-7, MBI) são para situações específicas como investigar depressão ou burnout.",
   },
   {
-    id: "vinculo",
-    icon: Users,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    titulo: "Passo 2 — Selecione os Colaboradores",
-    subtitulo: "Setor, Função e GHE são puxados automaticamente",
-    descricao:
-      "Você não precisa mais cadastrar manualmente os pares Setor + Função. Ao selecionar os colaboradores que vão participar da campanha, o sistema identifica pelo CPF e puxa automaticamente o Setor, Cargo e GHE de cada um — esse snapshot é gravado anonimamente na resposta.",
-    acoes: [
-      "Selecione os colaboradores no escopo da campanha (por unidade, setor ou individualmente)",
-      "O sistema **lê o CPF** de cada um e identifica **Setor, Cargo e GHE** automaticamente",
-      "Esses dados viram **snapshot anônimo** gravado em cada resposta — sem nome, sem CPF",
-      "É esse snapshot que habilita os **cruzamentos da aba Segmentos** depois",
-      "Não é mais preciso digitar pares 'Produção + Operador' manualmente — a NR-17 fica atendida pelo próprio cadastro do colaborador",
-    ],
-    dica: "Mantenha os cadastros de Setor, Cargo e GHE em dia no módulo de Colaboradores. Quanto mais limpos esses dados, melhor a segmentação dos resultados.",
-  },
-  {
     id: "distribuicao",
     icon: Link2,
     color: "text-emerald-600",
