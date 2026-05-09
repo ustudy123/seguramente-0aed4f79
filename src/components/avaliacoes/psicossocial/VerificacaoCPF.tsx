@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Loader2, ArrowRight, Lock, EyeOff, AlertCircle } from "lucide-react";
+import { ShieldCheck, Loader2, ArrowRight, Lock, EyeOff, AlertCircle, FileCheck2, UserCheck, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { cleanCpf, validateCpf } from "@/lib/cpf";
 import { supabasePublic } from "@/lib/supabasePublic";
@@ -27,8 +28,13 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
   const [cpfValido, setCpfValido] = useState(false);
   const [processando, setProcessando] = useState(false);
   const [jaRespondeu, setJaRespondeu] = useState(false);
+  const [aceiteLgpd, setAceiteLgpd] = useState(false);
 
   const handleConfirmar = async () => {
+    if (!aceiteLgpd) {
+      toast.error("Você precisa concordar com o uso do CPF conforme a LGPD para continuar.");
+      return;
+    }
     const cleaned = cleanCpf(cpf);
     if (!validateCpf(cleaned)) {
       toast.error("CPF inválido. Verifique os dígitos e tente novamente.");
@@ -108,6 +114,32 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
               </div>
             </div>
 
+            {/* Por que pedimos o CPF */}
+            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-violet-600" />
+                Por que pedimos o seu CPF?
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Só precisamos do CPF para <strong className="text-foreground">confirmar que você é colaborador(a) da empresa</strong> e
+                garantir que cada pessoa responda apenas uma vez. Não usamos para nada além disso.
+              </p>
+              <ul className="space-y-2 text-xs text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <KeyRound className="h-3.5 w-3.5 mt-0.5 text-emerald-600 shrink-0" />
+                  <span>Seu CPF é transformado em um <strong>código irreversível (hash)</strong> ainda no seu navegador.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <EyeOff className="h-3.5 w-3.5 mt-0.5 text-emerald-600 shrink-0" />
+                  <span>Suas respostas são <strong>desvinculadas do CPF</strong> — não há como rastrear quem respondeu o quê.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <FileCheck2 className="h-3.5 w-3.5 mt-0.5 text-emerald-600 shrink-0" />
+                  <span>Tratamento conforme a <strong>LGPD (Lei nº 13.709/2018)</strong>, com finalidade específica e mínima.</span>
+                </li>
+              </ul>
+            </div>
+
             {/* Input CPF */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
@@ -135,9 +167,28 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
               </p>
             </div>
 
+            {/* Aceite LGPD */}
+            <label
+              htmlFor="aceite-lgpd"
+              className="flex items-start gap-3 rounded-xl border border-border bg-background p-3 cursor-pointer hover:bg-muted/40 transition-colors"
+            >
+              <Checkbox
+                id="aceite-lgpd"
+                checked={aceiteLgpd}
+                onCheckedChange={(v) => setAceiteLgpd(v === true)}
+                className="mt-0.5"
+              />
+              <span className="text-xs text-foreground leading-relaxed">
+                Estou de acordo com o uso do meu CPF <strong>exclusivamente para confirmar meu vínculo
+                como colaborador(a) e evitar respostas duplicadas</strong>, conforme a
+                <strong> LGPD (Lei nº 13.709/2018)</strong>. Entendo que minhas respostas são anônimas
+                e não serão associadas à minha identidade.
+              </span>
+            </label>
+
             <Button
               onClick={handleConfirmar}
-              disabled={!cpfValido || processando}
+              disabled={!cpfValido || processando || !aceiteLgpd}
               className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md disabled:opacity-50"
               size="lg"
             >
