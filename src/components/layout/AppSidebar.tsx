@@ -90,7 +90,7 @@ const menuSections: MenuSection[] = [
       { title: "Empresa", icon: Building2, path: "/empresa" },
       { title: "Estabelecimento ou Obra", icon: Building2, path: "/cadastros/filiais" },
       { title: "Departamentos", icon: Building2, path: "/cadastros/departamentos" },
-      { title: "Funções", icon: Users, path: "/cadastros/cargos" },
+      { title: "Cargos", icon: Users, path: "/cadastros/cargos" },
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Prestadores de Serviços", icon: HardHat, path: "/terceiros" },
     ],
