@@ -94,11 +94,14 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       }
       if (search) {
         const q = search.toLowerCase();
+        const qDigits = search.replace(/\D/g, '');
         const doc = e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj;
+        const docDigits = (doc || '').replace(/\D/g, '');
         return (
           e.razao_social?.toLowerCase().includes(q) ||
           e.nome_fantasia?.toLowerCase().includes(q) ||
           doc?.toLowerCase().includes(q) ||
+          (qDigits.length > 0 && docDigits.includes(qDigits)) ||
           e.cidade?.toLowerCase().includes(q)
         );
       }
