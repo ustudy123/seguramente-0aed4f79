@@ -1061,11 +1061,11 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                   variant="outline"
                   size="sm"
                   className="gap-1.5 h-7 text-xs"
-                  disabled={!novoSetor.trim() || !novaFuncao.trim()}
+                  disabled={!novoSetor.trim()}
                   onClick={addSituacao}
                 >
                   <Plus className="h-3 w-3" />
-                  Adicionar par Setor+Função
+                  {novaFuncao.trim() ? 'Adicionar par Setor+Função' : 'Adicionar Setor (todas as funções)'}
                 </Button>
 
                 {situacaoError && (
