@@ -40,6 +40,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { RadarPsicossocial } from "./RadarPsicossocial";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
+import { AnaliseSegmentadaSection } from "./AnaliseSegmentadaSection";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel, getIPSColor } from "@/types/psicossocial";
 import { 
