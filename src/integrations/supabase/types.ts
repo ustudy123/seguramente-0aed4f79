@@ -17767,6 +17767,80 @@ export type Database = {
           },
         ]
       }
+      psicossocial_ghe: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          empresa_id: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      psicossocial_ghe_cargos: {
+        Row: {
+          cargo_id: string
+          created_at: string
+          departamento_id: string | null
+          ghe_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string
+          departamento_id?: string | null
+          ghe_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string
+          departamento_id?: string | null
+          ghe_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_ghe_cargos_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "psicossocial_ghe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psicossocial_indice_confiabilidade: {
         Row: {
           calculado_em: string

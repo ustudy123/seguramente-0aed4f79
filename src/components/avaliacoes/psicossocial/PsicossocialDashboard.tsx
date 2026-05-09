@@ -36,6 +36,7 @@ import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { RiscosPsicossociaisPanel } from "./RiscosPsicossociaisPanel";
+import { GHEPanel } from "./GHEPanel";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
@@ -368,6 +369,10 @@ export function PsicossocialDashboard() {
               <AlertTriangle className="h-4 w-4" />
               Riscos Psicossociais
             </TabsTrigger>
+            <TabsTrigger id="tab-psicossocial-ghe" value="ghe" className="gap-2">
+              <Users className="h-4 w-4" />
+              GHE
+            </TabsTrigger>
             <TabsTrigger id="tab-psicossocial-campanhas" value="campanhas" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Campanhas
@@ -402,6 +407,11 @@ export function PsicossocialDashboard() {
           {/* Tab: Riscos Psicossociais */}
           <TabsContent value="riscos" className="mt-4">
             <RiscosPsicossociaisPanel />
+          </TabsContent>
+
+          {/* Tab: GHE */}
+          <TabsContent value="ghe" className="mt-4">
+            <GHEPanel />
           </TabsContent>
 
           {/* Tab: Campanhas */}
