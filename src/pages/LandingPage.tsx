@@ -868,7 +868,7 @@ export default function LandingPage() {
             Uma única multa do MTE paga 5 anos de YourEyes. Um único processo por burnout paga 10 anos.
             Comece pelo diagnóstico — leva 60 segundos e mostra exatamente onde sua empresa está exposta.
           </p>
-          <DiagCTA subtitle="100% gratuito • Plano de ação enviado pelo WhatsApp">
+          <DiagCTA subtitle="100% gratuito • Especialista entra em contato para apresentar a solução">
             Iniciar meu diagnóstico agora
           </DiagCTA>
         </div>
