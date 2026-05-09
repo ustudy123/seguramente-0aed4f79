@@ -205,30 +205,34 @@ export function QuestionarioResponder({
           exit={{ opacity: 0, x: animDir === 'forward' ? -40 : 40 }}
           transition={{ duration: 0.22 }}
         >
-          <Card className={cn(
-            "border-2",
-            dimensaoAtual?.tipo === 'risco' ? 'border-orange-200' : 'border-emerald-200'
-          )}>
-            <CardContent className="p-4 sm:pt-5 space-y-4 sm:space-y-5">
+          <Card className="border border-border shadow-sm">
+            <CardContent className="p-5 sm:p-6 space-y-5">
               {/* Cabeçalho da dimensão */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 pb-4 border-b border-border">
                 <div className={cn(
-                  "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                  dimensaoAtual?.tipo === 'risco' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
+                  "shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-sm font-semibold border",
+                  dimensaoAtual?.tipo === 'risco'
+                    ? 'bg-orange-50 text-orange-700 border-orange-200'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 )}>
-                  {dimAtual + 1}
+                  {String(dimAtual + 1).padStart(2, '0')}
                 </div>
-                <div>
-                  <p className="font-semibold">{dimensaoAtual?.nome}</p>
-                  <p className="text-sm text-muted-foreground">{dimensaoAtual?.descricao}</p>
-                  <div className="flex gap-2 mt-1">
-                    <Badge variant="outline" className={cn("text-xs",
-                      dimensaoAtual?.tipo === 'risco' ? 'border-orange-300 text-orange-700' : 'border-emerald-300 text-emerald-700'
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-[15px] leading-tight">{dimensaoAtual?.nome}</p>
+                  {dimensaoAtual?.descricao && (
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{dimensaoAtual?.descricao}</p>
+                  )}
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] font-medium uppercase tracking-wide px-1.5 py-0",
+                      dimensaoAtual?.tipo === 'risco'
+                        ? 'border-orange-200 text-orange-700 bg-orange-50/50'
+                        : 'border-emerald-200 text-emerald-700 bg-emerald-50/50'
                     )}>
                       {dimensaoAtual?.tipo === 'risco' ? 'Fator de Risco' : 'Fator Protetor'}
                     </Badge>
                     {dimProgresso[dimAtual]?.respondidas > 0 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-[10px] font-medium px-1.5 py-0">
                         {dimProgresso[dimAtual]?.respondidas}/{dimProgresso[dimAtual]?.total}
                       </Badge>
                     )}
