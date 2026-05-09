@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.seed_cbo_batch(jsonb);

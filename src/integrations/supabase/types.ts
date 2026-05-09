@@ -641,6 +641,7 @@ export type Database = {
           bairro: string | null
           banco: string | null
           cargo: string
+          cbo: string | null
           celular: string | null
           centro_custo: string | null
           cep: string | null
@@ -716,6 +717,7 @@ export type Database = {
           bairro?: string | null
           banco?: string | null
           cargo: string
+          cbo?: string | null
           celular?: string | null
           centro_custo?: string | null
           cep?: string | null
@@ -791,6 +793,7 @@ export type Database = {
           bairro?: string | null
           banco?: string | null
           cargo?: string
+          cbo?: string | null
           celular?: string | null
           centro_custo?: string | null
           cep?: string | null
@@ -2273,6 +2276,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cbo_ocupacoes: {
+        Row: {
+          codigo: string
+          created_at: string
+          titulo: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          titulo: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          titulo?: string
+        }
+        Relationships: []
       }
       colaborador_condicoes_especiais: {
         Row: {
@@ -20603,6 +20624,8 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       solicitar_ajuste_ponto_externo: {
         Args: {
           p_anexos?: Json

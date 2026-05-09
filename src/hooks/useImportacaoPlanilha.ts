@@ -46,6 +46,7 @@ export interface DadosPlanilha {
   conta: string;
   tipoConta: string;
   chavePix: string;
+  cbo: string;
   linha: number;
   erros: string[];
   empresaId?: string;
@@ -91,6 +92,7 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   conta: ["conta", "numero conta", "número conta", "conta corrente", "conta_corrente"],
   tipoConta: ["tipo conta", "tipo_conta", "tipoconta"],
   chavePix: ["chave pix", "chave_pix", "pix", "chavepix"],
+  cbo: ["cbo", "código cbo", "codigo cbo", "cbo ocupação", "cbo ocupacao", "ocupação cbo", "ocupacao cbo"],
 };
 
 // Tipos de contrato/vínculo válidos (mapeados para valores aceitos pelo sistema)
@@ -549,6 +551,13 @@ export function useImportacaoPlanilha() {
               conta: g("conta"),
               tipoConta: g("tipoConta"),
               chavePix: g("chavePix"),
+              cbo: (() => {
+                const raw = g("cbo");
+                if (!raw) return "";
+                const digits = raw.replace(/\D/g, "");
+                if (digits.length !== 6) { erros.push(`CBO "${raw}" inválido — deve ter 6 dígitos (com ou sem traço).`); return raw; }
+                return digits;
+              })(),
               linha: i + 1,
               erros,
             });
@@ -619,6 +628,7 @@ export function useImportacaoPlanilha() {
             conta: encontrarColuna(headers, "conta"),
             tipoConta: encontrarColuna(headers, "tipoConta"),
             chavePix: encontrarColuna(headers, "chavePix"),
+            cbo: encontrarColuna(headers, "cbo"),
           };
           
           // A coluna do documento da empresa só é obrigatória se houver mais de uma empresa cadastrada
@@ -717,6 +727,13 @@ export function useImportacaoPlanilha() {
               conta: g(idx.conta),
               tipoConta: g(idx.tipoConta),
               chavePix: g(idx.chavePix),
+              cbo: (() => {
+                const raw = g(idx.cbo);
+                if (!raw) return "";
+                const digits = raw.replace(/\D/g, "");
+                if (digits.length !== 6) { erros.push(`CBO "${raw}" inválido — deve ter 6 dígitos (com ou sem traço).`); return raw; }
+                return digits;
+              })(),
               linha: i + 1,
               erros,
             });
@@ -974,6 +991,7 @@ export function useImportacaoPlanilha() {
           conta: dado.conta || null,
           tipo_conta: dado.tipoConta || null,
           chave_pix: dado.chavePix || null,
+          cbo: dado.cbo || null,
         };
 
         try {

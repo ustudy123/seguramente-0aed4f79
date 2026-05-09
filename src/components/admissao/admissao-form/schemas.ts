@@ -53,6 +53,7 @@ export const dadosProfissionaisSchema = z.object({
   salario: z.string().min(1, 'Salário obrigatório'),
   gestorImediato: z.string().optional(),
   centroCusto: z.string().optional(),
+  cbo: z.string().optional(),
 });
 
 export const dadosBancariosSchema = z.object({

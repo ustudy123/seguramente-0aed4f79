@@ -78,7 +78,8 @@ export interface AdmissaoFormData {
   salario?: number;
   gestor_imediato?: string;
   centro_custo?: string;
-  
+  cbo?: string;
+
   // Dados Bancários
   banco?: string;
   agencia?: string;

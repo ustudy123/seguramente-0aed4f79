@@ -145,6 +145,7 @@ export default function Admissao() {
         salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
         gestor_imediato: dados.dadosProfissionais.gestorImediato,
         centro_custo: dados.dadosProfissionais.centroCusto,
+        cbo: dados.dadosProfissionais.cbo || undefined,
         banco: dados.dadosBancarios.banco,
         agencia: dados.dadosBancarios.agencia,
         conta: dados.dadosBancarios.conta,
@@ -339,6 +340,7 @@ export default function Admissao() {
       salario: a.salario ? `R$ ${a.salario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
       gestorImediato: a.gestor_imediato || '',
       centroCusto: a.centro_custo || '',
+      cbo: (a as any).cbo || '',
     },
     dadosBancarios: {
       banco: a.banco || '',

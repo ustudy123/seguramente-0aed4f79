@@ -57,6 +57,7 @@ export interface DadosProfissionais {
   salario: string;
   gestorImediato: string;
   centroCusto: string;
+  cbo?: string;
 }
 
 export interface DadosBancarios {

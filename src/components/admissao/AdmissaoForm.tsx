@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useDepartamentos, useFiliais } from '@/hooks/useCadastros';
 import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
 import { GestorComboboxField } from '@/components/colaboradores/GestorComboboxField';
+import { CBOAutocomplete } from '@/components/cbo/CBOAutocomplete';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -164,6 +165,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     salario: '',
     gestorImediato: '',
     centroCusto: '',
+    cbo: '',
   };
   const formProfissionais = useForm<DadosProfissionais>({
     resolver: zodResolver(dadosProfissionaisSchema),
@@ -883,6 +885,18 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
               {formProfissionais.formState.errors.cargo && (
                 <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.cargo.message}</p>
               )}
+            </div>
+
+            {/* CBO — Classificação Brasileira de Ocupações */}
+            <div>
+              <Label>CBO — Ocupação (opcional)</Label>
+              <CBOAutocomplete
+                value={formProfissionais.watch('cbo') || ''}
+                onChange={(codigo) => formProfissionais.setValue('cbo', codigo || '', { shouldValidate: false })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Vincule a função à Classificação Brasileira de Ocupações (CBO). Aceita código com ou sem traço.
+              </p>
             </div>
 
             {/* Gestor Imediato — linha inteira, combobox com busca */}

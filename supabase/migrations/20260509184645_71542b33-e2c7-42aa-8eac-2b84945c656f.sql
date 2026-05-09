@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.seed_cbo_batch(jsonb) TO anon;
