@@ -22,7 +22,7 @@ export const SYSTEM_FIELDS: SystemField[] = [
   { key: "nome", label: "Nome Completo", required: true },
   { key: "cpf", label: "CPF", required: true },
   { key: "dataNascimento", label: "Data de Nascimento", required: true },
-  { key: "cargo", label: "Cargo / Função", required: true },
+  { key: "cargo", label: "Cargo", required: true },
   { key: "departamento", label: "Departamento / Setor", required: true },
   { key: "dataAdmissao", label: "Data de Admissão", required: true },
   { key: "sexo", label: "Sexo", required: false },

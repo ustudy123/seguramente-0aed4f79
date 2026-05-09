@@ -96,7 +96,7 @@ export const AEPDocumentoPreviewMulti = forwardRef<HTMLDivElement, AEPDocumentoP
             <thead>
               <tr className="bg-gray-50">
                 <th className="border p-2 text-left">Setor</th>
-                <th className="border p-2 text-left">Função</th>
+                <th className="border p-2 text-left">Cargo</th>
                 <th className="border p-2 text-center">Evidências</th>
                 <th className="border p-2 text-center">Classificação</th>
                 <th className="border p-2 text-center">Ações</th>

@@ -496,7 +496,7 @@ export function useImportacaoPlanilha() {
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
-            if (!cargo) erros.push("Função é obrigatória");
+            if (!cargo) erros.push("Cargo é obrigatório");
             if (!departamento) erros.push("Setor é obrigatório");
             if (!dataNascimentoRaw) erros.push("Data Nascimento é obrigatória");
             if (!dataAdmissaoRaw) erros.push("Data Admissão é obrigatória");
@@ -635,7 +635,7 @@ export function useImportacaoPlanilha() {
           if (idx.cnpjEmpresa === -1 && !unicaEmpresaId) { reject(new Error("Coluna 'CNPJ/CPF Empresa' não encontrada na planilha")); return; }
           if (idx.nome === -1) { reject(new Error("Coluna 'Nome' não encontrada na planilha")); return; }
           if (idx.cpf === -1) { reject(new Error("Coluna 'CPF' não encontrada na planilha")); return; }
-          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo/Função' não encontrada na planilha")); return; }
+          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo' não encontrada na planilha")); return; }
           if (idx.departamento === -1) { reject(new Error("Coluna 'Departamento/Setor' não encontrada na planilha")); return; }
           if (idx.dataAdmissao === -1) { reject(new Error("Coluna 'Data Admissão' não encontrada na planilha")); return; }
           if (idx.dataNascimento === -1) { reject(new Error("Coluna 'Data Nascimento' não encontrada na planilha")); return; }
@@ -672,7 +672,7 @@ export function useImportacaoPlanilha() {
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
-            if (!cargo) erros.push("Função é obrigatória");
+            if (!cargo) erros.push("Cargo é obrigatório");
             if (!departamento) erros.push("Setor é obrigatório");
             if (!dataNascimentoRaw) erros.push("Data Nascimento é obrigatória");
             if (!dataAdmissaoRaw) erros.push("Data Admissão é obrigatória");
