@@ -286,7 +286,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
     const setorNome = novoSetor.trim();
     const funcaoNome = novaFuncao.trim();
 
-    if (!setorNome || !funcaoNome) return;
+    if (!setorNome) return;
 
     const situacaoDuplicada = situacoes.some(
       (situacao) =>
@@ -295,14 +295,18 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
     );
 
     if (situacaoDuplicada) {
-      setSituacaoError("Este par Setor + Função já foi adicionado.");
+      setSituacaoError(
+        funcaoNome
+          ? "Este par Setor + Função já foi adicionado."
+          : "Este Setor (todas as funções) já foi adicionado."
+      );
       return;
     }
 
     const nova: SituacaoTrabalhoCampanha = {
       setorId: setorNome.toLowerCase().replace(/\s+/g, '_'),
       setorNome,
-      funcaoId: funcaoNome.toLowerCase().replace(/\s+/g, '_'),
+      funcaoId: funcaoNome ? funcaoNome.toLowerCase().replace(/\s+/g, '_') : '',
       funcaoNome,
     };
     setSituacaoError(null);
@@ -887,9 +891,18 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                     <div key={idx} className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
                       <div className="flex items-center gap-2 text-sm">
                         <UserCog className="h-3.5 w-3.5 text-purple-500" />
-                        <span className="font-medium">{sit.funcaoNome}</span>
-                        <span className="text-muted-foreground">em</span>
-                        <span>{sit.setorNome}</span>
+                        {sit.funcaoNome ? (
+                          <>
+                            <span className="font-medium">{sit.funcaoNome}</span>
+                            <span className="text-muted-foreground">em</span>
+                            <span>{sit.setorNome}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium">{sit.setorNome}</span>
+                            <span className="text-xs text-muted-foreground italic">(todas as funções)</span>
+                          </>
+                        )}
                       </div>
                       <Button
                         type="button"
@@ -981,7 +994,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                         role="combobox"
                         className={cn("h-8 text-sm justify-between font-normal", !novaFuncao && "text-muted-foreground")}
                       >
-                        {novaFuncao || "Função (ex: Operador)"}
+                        {novaFuncao || "Função (opcional)"}
                         <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -1048,11 +1061,11 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                   variant="outline"
                   size="sm"
                   className="gap-1.5 h-7 text-xs"
-                  disabled={!novoSetor.trim() || !novaFuncao.trim()}
+                  disabled={!novoSetor.trim()}
                   onClick={addSituacao}
                 >
                   <Plus className="h-3 w-3" />
-                  Adicionar par Setor+Função
+                  {novaFuncao.trim() ? 'Adicionar par Setor+Função' : 'Adicionar Setor (todas as funções)'}
                 </Button>
 
                 {situacaoError && (
