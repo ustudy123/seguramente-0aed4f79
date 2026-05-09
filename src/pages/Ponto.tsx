@@ -612,7 +612,7 @@ const Ponto = () => {
       </Dialog>
 
       {/* Modal: Solicitar Ajuste */}
-      <Dialog open={showAjusteModal} onOpenChange={setShowAjusteModal}>
+      <Dialog open={showAjusteModal} onOpenChange={handleCloseAjusteModal}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Solicitar Ajuste de Ponto</DialogTitle>
