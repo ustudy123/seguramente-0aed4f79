@@ -192,7 +192,7 @@ const PASSOS = [
     descricao:
       "Após executar as ações do plano, o sistema exige que os riscos sejam reavaliados. O histórico de campanhas mostra a evolução do IPS ao longo do tempo, permitindo medir o impacto das intervenções.",
     acoes: [
-      "Acompanhe o **Histórico IPS** na aba correspondente",
+      "Acompanhe o **Histórico IRP-S** na aba correspondente (evolução ao longo do tempo)",
       "Após executar ações, **reavalue os riscos** no GRO",
       "**Campanhas trimestrais** são o intervalo recomendado",
       "Compare resultados **antes e depois** de intervenções",
