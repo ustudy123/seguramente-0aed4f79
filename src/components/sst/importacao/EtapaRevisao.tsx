@@ -305,18 +305,35 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
     }
     setSalvando(true);
     try {
+      // Se a IA não identificou responsável técnico, usa o preenchido manualmente
+      let dadosParaSalvar = dados;
+      if ((!dados.responsaveis_tecnicos || dados.responsaveis_tecnicos.length === 0) && respManualNome.trim()) {
+        dadosParaSalvar = {
+          ...dados,
+          responsaveis_tecnicos: [{
+            nome: respManualNome.trim(),
+            registro: respManualRegistro.trim() || undefined,
+            formacao: undefined,
+            conselho: undefined,
+            funcao_no_doc: undefined,
+            confianca: "alta",
+          } as any],
+        };
+        setDados(dadosParaSalvar);
+      }
+
       await uploadDocumento.mutateAsync({
         file: state.arquivo,
         tipo: state.tipoDetectado,
         data_emissao: parseDateString(dados.dados_gerais?.data_emissao?.valor) || undefined,
         data_vigencia: dataVigenciaManual || undefined,
-        profissional_responsavel: dados.responsaveis_tecnicos?.[0]?.nome || respManualNome.trim() || undefined,
+        profissional_responsavel: dadosParaSalvar.responsaveis_tecnicos?.[0]?.nome || undefined,
         empresa_emissora: dados.dados_gerais?.empresa?.valor || undefined,
         observacoes: modoRascunho ? "[RASCUNHO] Importação inteligente SST" : "Importação inteligente SST",
         // Persistir todos os dados extraídos pela IA
-        analise_ia: dados,
+        analise_ia: dadosParaSalvar,
       });
-      updateState({ dadosExtraidos: dados, etapa: 5 });
+      updateState({ dadosExtraidos: dadosParaSalvar, etapa: 5 });
       toast.success("Documento importado com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
