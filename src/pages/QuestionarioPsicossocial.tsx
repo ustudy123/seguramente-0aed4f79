@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { calcularIndicadores } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
 import { VerificacaoCPF } from "@/components/avaliacoes/psicossocial/VerificacaoCPF";
+import { InstrucoesQuestionario } from "@/components/avaliacoes/psicossocial/InstrucoesQuestionario";
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
