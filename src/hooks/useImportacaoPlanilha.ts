@@ -551,6 +551,13 @@ export function useImportacaoPlanilha() {
               conta: g("conta"),
               tipoConta: g("tipoConta"),
               chavePix: g("chavePix"),
+              cbo: (() => {
+                const raw = g("cbo");
+                if (!raw) return "";
+                const digits = raw.replace(/\D/g, "");
+                if (digits.length !== 6) { erros.push(`CBO "${raw}" inválido — deve ter 6 dígitos (com ou sem traço).`); return raw; }
+                return digits;
+              })(),
               linha: i + 1,
               erros,
             });
