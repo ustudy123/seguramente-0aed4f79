@@ -328,9 +328,12 @@ export function GHEPanel() {
                 <Input
                   id="codigo"
                   value={form.codigo}
-                  onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))}
+                  readOnly
+                  disabled
+                  className="bg-muted/60 font-semibold cursor-not-allowed"
                   placeholder="GHE 01"
                 />
+                <p className="text-[11px] text-muted-foreground">Gerado automaticamente</p>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="nome">Nome</Label>
