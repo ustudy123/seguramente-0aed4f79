@@ -444,15 +444,10 @@ const Ponto = () => {
                     <TableCell><Badge variant="outline">{ajuste.tipo_ajuste}</Badge></TableCell>
                     <TableCell>{ajuste.tipo_marcacao ? TIPO_MARCACAO_LABELS[ajuste.tipo_marcacao] : "-"}</TableCell>
                     <TableCell className="font-mono">{ajuste.hora_solicitada || "-"}</TableCell>
-                    <TableCell className="max-w-[200px]">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="block truncate cursor-help">{ajuste.motivo}</span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap break-words">
-                          {ajuste.motivo}
-                        </TooltipContent>
-                      </Tooltip>
+                    <TableCell className="max-w-[260px] align-top">
+                      <p className="text-sm whitespace-pre-wrap break-words leading-snug">
+                        {ajuste.motivo}
+                      </p>
                     </TableCell>
                     <TableCell>{ajuste.created_by_nome}</TableCell>
                     <TableCell>
