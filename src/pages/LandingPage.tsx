@@ -736,15 +736,15 @@ export default function LandingPage() {
             <div className="text-center mb-10">
               <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
                 <Zap className="w-4 h-4 mr-1" />
-                LANÇAMENTO EXCLUSIVO — VAGAS LIMITADAS
+                CONSULTORIA EXCLUSIVA — VAGAS LIMITADAS
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
-                Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para acesso{" "}
-                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>COMPLETO</span>
+                Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para{" "}
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>consultoria com especialista</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
-                Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> com acesso total a TODOS os módulos — 
-                sem restrição de funcionalidades. Após as 10 vagas, o acesso será por planos com funcionalidades limitadas.
+                Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> de consultoria 1:1 com um especialista YourEyes para
+                estruturar o diagnóstico SST da sua empresa e desenhar o plano de ação. Após as 10 vagas, o atendimento volta ao formato padrão.
               </p>
             </div>
 
@@ -766,7 +766,7 @@ export default function LandingPage() {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-4 text-center font-medium italic relative z-10">
-                Atenção: Após o preenchimento total, a plataforma passará a cobrar por cada módulo individualmente.
+                Atenção: Após o preenchimento total, novas solicitações entram em lista de espera.
               </p>
             </div>
 
@@ -774,18 +774,18 @@ export default function LandingPage() {
             <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <Award className="w-5 h-5" style={{ color: 'hsl(33 100% 50%)' }} />
-                O que você recebe nas 10 primeiras vagas:
+                O que está incluso na consultoria com especialista:
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  "Todos os +30 módulos desbloqueados",
-                  "IA Psicossocial NR-01 completa",
-                  "Gestão de SST integrada",
-                  "RH completo (admissão ao desligamento)",
-                  "Marketplace de profissionais SST",
-                  "OCR de notas fiscais com IA",
-                  "Sem limite de colaboradores",
-                  "Atualizações vitalícias nesta fase",
+                  "Diagnóstico SST aprofundado da sua operação",
+                  "Sessão 1:1 com especialista YourEyes",
+                  "Mapa de não conformidades e prioridades",
+                  "Plano de ação 5W2H sob medida",
+                  "Recomendação de módulos por dor real",
+                  "Roteiro de implantação dos primeiros 90 dias",
+                  "Benchmark com empresas do mesmo setor",
+                  "Materiais de apoio (PGR, NR-1, eSocial)",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
                     <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'hsl(25 50% 50%)' }} />
@@ -799,9 +799,9 @@ export default function LandingPage() {
             <div className="rounded-2xl p-5 mb-8" style={{ background: 'hsl(38 20% 10%)', border: '1px solid hsl(38 50% 40% / 0.2)' }}>
               <p className="font-bold text-sm mb-2" style={{ color: 'hsl(38 90% 55%)' }}>⚠️ O que acontece depois das 10 vagas?</p>
               <div className="text-xs text-gray-500 space-y-1">
-                <p>• <strong className="text-gray-400">Plano Essencial:</strong> Apenas módulos básicos (Ponto, Admissão, EPIs)</p>
-                <p>• <strong className="text-gray-400">Plano Profissional:</strong> Módulos intermediários (+ Avaliações, PDI, Psicossocial básico)</p>
-                <p>• <strong className="text-gray-400">Plano Enterprise:</strong> Acesso total (o que você recebe GRÁTIS agora)</p>
+                <p>• Novas solicitações entram em <strong className="text-gray-400">lista de espera</strong> até abrirmos a próxima janela.</p>
+                <p>• O atendimento volta ao formato padrão, sem a sessão 1:1 dedicada com especialista.</p>
+                <p>• A apresentação da plataforma continua disponível, porém sem o diagnóstico aprofundado incluso.</p>
               </div>
             </div>
 
