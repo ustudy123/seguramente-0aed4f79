@@ -20619,16 +20619,28 @@ export type Database = {
         }
         Returns: Json
       }
-      salvar_resposta_anonima_campanha: {
-        Args: {
-          p_indicadores: Json
-          p_respostas: Json
-          p_tempo_segundos?: number
-          p_token_publico: string
-          p_user_agent?: string
-        }
-        Returns: Json
-      }
+      salvar_resposta_anonima_campanha:
+        | {
+            Args: {
+              p_indicadores: Json
+              p_respostas: Json
+              p_tempo_segundos?: number
+              p_token_publico: string
+              p_user_agent?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_cpf_hash?: string
+              p_indicadores: Json
+              p_respostas: Json
+              p_tempo_segundos?: number
+              p_token_publico: string
+              p_user_agent?: string
+            }
+            Returns: Json
+          }
       salvar_resposta_por_token_participacao: {
         Args: {
           p_indicadores: Json
