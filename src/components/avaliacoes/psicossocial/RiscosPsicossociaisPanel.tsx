@@ -255,15 +255,6 @@ export function RiscosPsicossociaisPanel() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={!!confirmDel}
-        onOpenChange={(o) => !o && setConfirmDel(null)}
-        title="Remover risco?"
-        description={`Tem certeza que deseja remover "${confirmDel?.nome}"? Esta ação não pode ser desfeita.`}
-        confirmText="Remover"
-        variant="destructive"
-        onConfirm={() => confirmDel && del.mutate(confirmDel.id)}
-      />
     </div>
   );
 }
