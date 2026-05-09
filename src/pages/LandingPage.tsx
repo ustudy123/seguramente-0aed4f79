@@ -20,7 +20,7 @@ import mockupDashboard from "@/assets/landing/mockup-dashboard.png";
 import mockupPsicossocial from "@/assets/landing/mockup-psicossocial.png";
 import mockupGovernanca from "@/assets/landing/mockup-governanca.png";
 import mockupConfiguracoes from "@/assets/landing/mockup-configuracoes.png";
-import logoYoureyes from "@/assets/logo-youreyes.svg";
+import logoYoureyes from "@/assets/logo-youreyes.png";
 import { DiagnosticoQuiz } from "@/components/landing/DiagnosticoQuiz";
 
 const WHATSAPP_NUMBER = "5546993375044";
