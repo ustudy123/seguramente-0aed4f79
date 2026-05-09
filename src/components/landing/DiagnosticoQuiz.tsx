@@ -319,7 +319,7 @@ export function DiagnosticoQuiz({ origem }: Props) {
         {step === 5 && (
           <motion.div key="5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <h3 className="text-2xl font-black text-white mb-1">Quase lá! Como falamos com você?</h3>
-            <p className="text-sm text-gray-400 mb-5">Vamos abrir o WhatsApp já com seu diagnóstico em mãos.</p>
+            <p className="text-sm text-gray-400 mb-5">Em seguida um especialista entra em contato para agendar a apresentação.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {(() => { const ic = "bg-[hsl(215_40%_18%)] border-[hsl(215_40%_28%)] text-white placeholder:text-gray-500"; return (<>
               <Field label="Nome*">     <Input className={ic} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" /></Field>
