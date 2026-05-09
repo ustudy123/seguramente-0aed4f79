@@ -35,6 +35,7 @@ import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
+import { RiscosPsicossociaisPanel } from "./RiscosPsicossociaisPanel";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
@@ -398,13 +399,9 @@ export function PsicossocialDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Riscos Psicossociais (placeholder) */}
+          {/* Tab: Riscos Psicossociais */}
           <TabsContent value="riscos" className="mt-4">
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground text-sm">
-                Em breve — inventário de riscos psicossociais.
-              </CardContent>
-            </Card>
+            <RiscosPsicossociaisPanel />
           </TabsContent>
 
           {/* Tab: Campanhas */}
