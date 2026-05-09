@@ -994,7 +994,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                         role="combobox"
                         className={cn("h-8 text-sm justify-between font-normal", !novaFuncao && "text-muted-foreground")}
                       >
-                        {novaFuncao || "Função (ex: Operador)"}
+                        {novaFuncao || "Função (opcional)"}
                         <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
