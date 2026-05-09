@@ -228,6 +228,7 @@ export function ImportPlanilhaModal({
       "ana@empresa.com", "", "(21) 98000-0000",
       "", "", "", "", "", "", "",
       "1", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente",
+      "",
       "CLT", "15/06/2020", "12000,00", "FIN-01", "",
       "",
       "", "", "", "", "",
