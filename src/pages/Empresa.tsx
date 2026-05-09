@@ -18,6 +18,7 @@ import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import { useAuth } from '@/hooks/useAuth';
 import type { EmpresaCadastro } from '@/types/empresa';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'list' | 'edit' | 'new';
 
@@ -167,9 +168,26 @@ export default function Empresa() {
               (e: any) => (e.cnpj || '').replace(/\D/g, '') === cnpjLimpo,
             );
             if (existente) {
+              // Promove para edição da empresa existente e re-salva os
+              // dados que o usuário acabou de preencher (ex.: razão social
+              // vinda da Receita Federal) na linha já existente.
               setSelectedEmpresaId(existente.id);
               setViewMode('edit');
-              toast.info(`Empresa com este CNPJ já existe — abrindo para edição.`);
+              try {
+                // Update direto pelo id da empresa existente (o hook só
+                // atualiza pelo empresaId/cadastro do escopo do hook,
+                // que aqui ainda não foi reconfigurado).
+                const { id: _ignored, created_at: _c, updated_at: _u, ...rest } = formData as any;
+                const { error: updErr } = await supabase
+                  .from('empresa_cadastro')
+                  .update(rest)
+                  .eq('id', existente.id);
+                if (updErr) throw updErr;
+                toast.info('Empresa com este CNPJ já existe — dados atualizados na empresa existente.');
+              } catch (e2) {
+                console.error('Falha ao atualizar empresa existente:', e2);
+                toast.info('Empresa com este CNPJ já existe — abrindo para edição.');
+              }
             }
           }
         }
