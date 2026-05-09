@@ -151,21 +151,50 @@ export function GHEPanel() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleNovo = () => {
+  const nextCodigo = () => {
     const maxN = ghes.reduce((max, g) => {
       const m = /(\d+)/.exec(g.codigo || "");
       const n = m ? parseInt(m[1], 10) : 0;
       return n > max ? n : max;
     }, 0);
-    const next = `GHE ${String(maxN + 1).padStart(2, "0")}`;
-    setForm({ ...emptyForm, codigo: next });
+    return `GHE ${String(maxN + 1).padStart(2, "0")}`;
+  };
+
+  const handleNovo = () => {
+    setForm({ ...emptyForm, codigo: nextCodigo() });
+    setCategoria(null);
+    setRefPadrao(null);
+    setStep("categoria");
     setOpen(true);
   };
 
   const handleEditar = (g: GHE) => {
     const cargoIds = associacoes.filter((a) => a.ghe_id === g.id).map((a) => a.cargo_id);
     setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", cargoIds });
+    setCategoria(null);
+    setRefPadrao(null);
+    setStep("form");
     setOpen(true);
+  };
+
+  const escolherCategoria = (cat: GHECategoria) => {
+    setCategoria(cat);
+    // Se a categoria tiver só 1 template, aplica direto e pula
+    if (cat.templates.length === 1) {
+      aplicarTemplate(cat.templates[0]);
+    } else {
+      setStep("template");
+    }
+  };
+
+  const aplicarTemplate = (tpl: GHETemplate) => {
+    setRefPadrao(tpl.ref);
+    setForm((f) => ({
+      ...f,
+      nome: tpl.nome,
+      descricao: tpl.descricao,
+    }));
+    setStep("form");
   };
 
   const toggleCargo = (id: string) => {
