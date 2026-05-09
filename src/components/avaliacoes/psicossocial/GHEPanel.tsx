@@ -185,7 +185,21 @@ export function GHEPanel() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("GHE removido");
+      toast.success("GHE excluído");
+      qc.invalidateQueries({ queryKey: ["psicossocial_ghe"] });
+      setDeleteTarget(null);
+      setDeleteText("");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const toggleArquivar = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { error } = await fromTable("psicossocial_ghe").update({ ativo }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.ativo ? "GHE reativado" : "GHE arquivado");
       qc.invalidateQueries({ queryKey: ["psicossocial_ghe"] });
     },
     onError: (e: any) => toast.error(e.message),
