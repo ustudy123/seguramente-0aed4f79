@@ -333,6 +333,29 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         </span>
       </div>
 
+      {/* Data de Vencimento (preenchimento manual obrigatório) */}
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="py-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex items-start gap-2 flex-1">
+              <Clock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">Data de Vencimento do Documento <span className="text-destructive">*</span></p>
+                <p className="text-xs text-muted-foreground">
+                  Informe manualmente a data de vigência. Obrigatório — alimenta o Calendário de Vencimentos.
+                </p>
+              </div>
+            </div>
+            <Input
+              type="date"
+              value={dataVigenciaManual}
+              onChange={e => setDataVigenciaManual(e.target.value)}
+              className="h-9 w-full md:w-52"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Score header */}
       <Card className={score.geral >= 70 ? "border-green-200 bg-green-50/50 dark:bg-green-950/10" : score.geral >= 40 ? "border-amber-200 bg-amber-50/50 dark:bg-amber-950/10" : "border-destructive/30 bg-destructive/5"}>
         <CardContent className="pt-4 pb-4">
