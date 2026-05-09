@@ -229,6 +229,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             gestor_imediato: data.gestor_imediato || null,
             data_admissao: data.data_admissao,
             matricula_esocial: data.matricula_esocial || null,
+            cbo: normalizeCBO(data.cbo) || null,
             foto_url: data.foto_url || null,
           })
           .eq("id", colaborador.id)
