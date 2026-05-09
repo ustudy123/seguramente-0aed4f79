@@ -206,7 +206,7 @@ export function RiscosPsicossociaisPanel() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setConfirmDel(r)}
+                      onClick={() => handleDelete(r)}
                       title="Remover"
                       className="text-destructive hover:text-destructive"
                     >
