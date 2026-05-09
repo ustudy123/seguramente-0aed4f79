@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  Users, Plus, Pencil, Trash2, Loader2, Building2, Briefcase, Search, X, Check,
+  Users, Plus, Pencil, Trash2, Loader2, Building2, Briefcase, Search, X, Check, Archive, ArchiveRestore, AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
