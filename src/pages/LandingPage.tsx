@@ -736,15 +736,15 @@ export default function LandingPage() {
             <div className="text-center mb-10">
               <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
                 <Zap className="w-4 h-4 mr-1" />
-                LANÇAMENTO EXCLUSIVO — VAGAS LIMITADAS
+                CONSULTORIA EXCLUSIVA — VAGAS LIMITADAS
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
-                Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para acesso{" "}
-                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>COMPLETO</span>
+                Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para{" "}
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>consultoria com especialista</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
-                Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> com acesso total a TODOS os módulos — 
-                sem restrição de funcionalidades. Após as 10 vagas, o acesso será por planos com funcionalidades limitadas.
+                Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> de consultoria 1:1 com um especialista YourEyes para
+                estruturar o diagnóstico SST da sua empresa e desenhar o plano de ação. Após as 10 vagas, o atendimento volta ao formato padrão.
               </p>
             </div>
 
