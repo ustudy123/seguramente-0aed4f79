@@ -21,6 +21,7 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
+import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
 
 interface GHE {
   id: string;
