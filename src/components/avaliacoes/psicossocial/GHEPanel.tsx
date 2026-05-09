@@ -98,12 +98,40 @@ export function GHEPanel() {
     enabled: !!tenantId && ghes.length > 0,
   });
 
+  // Vínculos cargo→departamentos (suporte multi-departamento por cargo)
+  const { data: cargoDeptLinks = [] } = useQuery({
+    queryKey: ["cargo_departamentos", tenantId],
+    queryFn: async () => {
+      const { data, error } = await fromTable("cargo_departamentos")
+        .select("cargo_id, departamento_id")
+        .eq("tenant_id", tenantId!);
+      if (error) throw error;
+      return (data || []) as Array<{ cargo_id: string; departamento_id: string }>;
+    },
+    enabled: !!tenantId,
+  });
+
   const cargosById = useMemo(() => Object.fromEntries(cargos.map((c) => [c.id, c])), [cargos]);
   const deptById = useMemo(() => Object.fromEntries(departamentos.map((d) => [d.id, d])), [departamentos]);
+  const gheById = useMemo(() => Object.fromEntries(ghes.map((g) => [g.id, g])), [ghes]);
+
+  // Pares (cargo, departamento) ocupados por OUTROS GHEs
+  const occupiedByOtherGhe = useMemo(() => {
+    const map = new Map<PairKey, string>();
+    associacoes.forEach((a) => {
+      if (form.id && a.ghe_id === form.id) return;
+      map.set(makeKey(a.cargo_id, a.departamento_id), a.ghe_id);
+    });
+    return map;
+  }, [associacoes, form.id]);
 
   const upsert = useMutation({
     mutationFn: async (f: FormState) => {
       if (!f.codigo.trim() || !f.nome.trim()) throw new Error("Código e Nome são obrigatórios");
+      const conflitos = f.pairs.filter((k) => occupiedByOtherGhe.has(k));
+      if (conflitos.length > 0) {
+        throw new Error(`${conflitos.length} função/departamento já pertence(m) a outro GHE.`);
+      }
       let gheId = f.id;
       if (gheId) {
         const { error } = await fromTable("psicossocial_ghe")
@@ -125,13 +153,16 @@ export function GHEPanel() {
         if (error) throw error;
         gheId = (data as any).id;
       }
-      if (f.cargoIds.length > 0) {
-        const rows = f.cargoIds.map((cid) => ({
-          ghe_id: gheId,
-          cargo_id: cid,
-          departamento_id: cargosById[cid]?.departamento_id || null,
-          tenant_id: tenantId!,
-        }));
+      if (f.pairs.length > 0) {
+        const rows = f.pairs.map((k) => {
+          const { cargoId, deptId } = parseKey(k);
+          return {
+            ghe_id: gheId,
+            cargo_id: cargoId,
+            departamento_id: deptId,
+            tenant_id: tenantId!,
+          };
+        });
         const { error } = await fromTable("psicossocial_ghe_cargos").insert(rows);
         if (error) throw error;
       }
@@ -154,7 +185,6 @@ export function GHEPanel() {
     onSuccess: () => {
       toast.success("GHE removido");
       qc.invalidateQueries({ queryKey: ["psicossocial_ghe"] });
-      
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -177,8 +207,10 @@ export function GHEPanel() {
   };
 
   const handleEditar = (g: GHE) => {
-    const cargoIds = associacoes.filter((a) => a.ghe_id === g.id).map((a) => a.cargo_id);
-    setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", cargoIds });
+    const pairs = associacoes
+      .filter((a) => a.ghe_id === g.id)
+      .map((a) => makeKey(a.cargo_id, a.departamento_id));
+    setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", pairs });
     setCategoria(null);
     setRefPadrao(null);
     setStep("form");
@@ -187,7 +219,6 @@ export function GHEPanel() {
 
   const escolherCategoria = (cat: GHECategoria) => {
     setCategoria(cat);
-    // Se a categoria tiver só 1 template, aplica direto e pula
     if (cat.templates.length === 1) {
       aplicarTemplate(cat.templates[0]);
     } else {
@@ -205,36 +236,51 @@ export function GHEPanel() {
     setStep("form");
   };
 
-  const toggleCargo = (id: string) => {
+  const togglePair = (key: PairKey) => {
+    if (occupiedByOtherGhe.has(key)) {
+      const otherGhe = gheById[occupiedByOtherGhe.get(key)!];
+      toast.warning(`Já vinculado ao ${otherGhe?.codigo || "outro GHE"} — ${otherGhe?.nome || ""}`);
+      return;
+    }
     setForm((f) => ({
       ...f,
-      cargoIds: f.cargoIds.includes(id) ? f.cargoIds.filter((c) => c !== id) : [...f.cargoIds, id],
+      pairs: f.pairs.includes(key) ? f.pairs.filter((p) => p !== key) : [...f.pairs, key],
     }));
   };
 
-  // Agrupa cargos por departamento para o seletor (com filtro de busca)
-  const cargosPorDept = useMemo(() => {
+  // Expande cargos pelos departamentos vinculados e agrupa por departamento.
+  type PairRow = { cargoId: string; deptId: string | null; cargoNome: string; key: PairKey };
+  const pairsPorDept = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const map: Record<string, typeof cargos> = {};
+    const rows: PairRow[] = [];
     cargos.forEach((c) => {
+      const linked = cargoDeptLinks.filter((l) => l.cargo_id === c.id).map((l) => l.departamento_id);
+      const depts: (string | null)[] = linked.length ? linked : [c.departamento_id || null];
+      depts.forEach((dId) => {
+        rows.push({ cargoId: c.id, deptId: dId, cargoNome: c.nome, key: makeKey(c.id, dId) });
+      });
+    });
+    const map: Record<string, PairRow[]> = {};
+    rows.forEach((r) => {
       if (term) {
-        const deptName = (deptById[c.departamento_id || ""]?.nome || "").toLowerCase();
-        const matches = c.nome.toLowerCase().includes(term) || deptName.includes(term);
+        const deptName = (deptById[r.deptId || ""]?.nome || "").toLowerCase();
+        const matches = r.cargoNome.toLowerCase().includes(term) || deptName.includes(term);
         if (!matches) return;
       }
-      const key = c.departamento_id || "_sem_dept";
-      (map[key] ||= []).push(c);
+      const key = r.deptId || "_sem_dept";
+      (map[key] ||= []).push(r);
     });
     return map;
-  }, [cargos, search, deptById]);
+  }, [cargos, cargoDeptLinks, search, deptById]);
 
-  const toggleDept = (deptId: string, allIds: string[]) => {
+  const toggleDept = (deptId: string, allKeys: PairKey[]) => {
+    const selectable = allKeys.filter((k) => !occupiedByOtherGhe.has(k));
     setForm((f) => {
-      const allSelected = allIds.every((id) => f.cargoIds.includes(id));
-      const cargoIds = allSelected
-        ? f.cargoIds.filter((id) => !allIds.includes(id))
-        : Array.from(new Set([...f.cargoIds, ...allIds]));
-      return { ...f, cargoIds };
+      const allSelected = selectable.every((k) => f.pairs.includes(k));
+      const pairs = allSelected
+        ? f.pairs.filter((k) => !selectable.includes(k))
+        : Array.from(new Set([...f.pairs, ...selectable]));
+      return { ...f, pairs };
     });
   };
 
