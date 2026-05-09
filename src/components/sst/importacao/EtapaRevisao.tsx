@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,8 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
   const [acoesSalvas, setAcoesSalvas] = useState<Set<number>>(new Set());
   const [importandoTodas, setImportandoTodas] = useState(false);
   const [acaoExpandida, setAcaoExpandida] = useState<number | null>(null);
+  // Data de vencimento manual (preenchida pelo usuário, sobrepõe o que a IA extraiu)
+  const [dataVigenciaManual, setDataVigenciaManual] = useState<string>("");
   // LTCAT: rastreio de ações de folha por índice do risco
   const [acoesEnquadramentoSalvas, setAcoesEnquadramentoSalvas] = useState<Record<number, string>>({}); // index -> acaoId
   const [criandoAcaoEnquadramento, setCriandoAcaoEnquadramento] = useState<number | null>(null);
@@ -294,13 +296,17 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
   const handleSalvar = async () => {
     if (!state.arquivo) return;
+    if (!dataVigenciaManual) {
+      toast.error("Informe a Data de Vencimento do documento antes de confirmar a importação.");
+      return;
+    }
     setSalvando(true);
     try {
       await uploadDocumento.mutateAsync({
         file: state.arquivo,
         tipo: state.tipoDetectado,
         data_emissao: parseDateString(dados.dados_gerais?.data_emissao?.valor) || undefined,
-        data_vigencia: parseDateString(dados.dados_gerais?.data_vigencia?.valor) || undefined,
+        data_vigencia: dataVigenciaManual || undefined,
         profissional_responsavel: dados.responsaveis_tecnicos?.[0]?.nome || undefined,
         empresa_emissora: dados.dados_gerais?.empresa?.valor || undefined,
         observacoes: modoRascunho ? "[RASCUNHO] Importação inteligente SST" : "Importação inteligente SST",
@@ -326,6 +332,29 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
           {" · "}{dados.plano_acao?.length || 0} ação(ões) extraída(s)
         </span>
       </div>
+
+      {/* Data de Vencimento (preenchimento manual obrigatório) */}
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="py-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex items-start gap-2 flex-1">
+              <Clock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">Data de Vencimento do Documento <span className="text-destructive">*</span></p>
+                <p className="text-xs text-muted-foreground">
+                  Informe manualmente a data de vigência. Obrigatório — alimenta o Calendário de Vencimentos.
+                </p>
+              </div>
+            </div>
+            <Input
+              type="date"
+              value={dataVigenciaManual}
+              onChange={e => setDataVigenciaManual(e.target.value)}
+              className="h-9 w-full md:w-52"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Score header */}
       <Card className={score.geral >= 70 ? "border-green-200 bg-green-50/50 dark:bg-green-950/10" : score.geral >= 40 ? "border-amber-200 bg-amber-50/50 dark:bg-amber-950/10" : "border-destructive/30 bg-destructive/5"}>
