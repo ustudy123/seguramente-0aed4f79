@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Loader2, ArrowRight, Lock, EyeOff } from "lucide-react";
+import { ShieldCheck, Loader2, ArrowRight, Lock, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { cleanCpf, validateCpf } from "@/lib/cpf";
+import { supabasePublic } from "@/lib/supabasePublic";
 import { toast } from "sonner";
 
 interface VerificacaoCPFProps {
@@ -25,6 +26,7 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
   const [cpf, setCpf] = useState("");
   const [cpfValido, setCpfValido] = useState(false);
   const [processando, setProcessando] = useState(false);
+  const [jaRespondeu, setJaRespondeu] = useState(false);
 
   const handleConfirmar = async () => {
     const cleaned = cleanCpf(cpf);
@@ -34,9 +36,26 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
     }
 
     setProcessando(true);
+    setJaRespondeu(false);
     try {
       // Hash do CPF + campanha — não trafega nem armazena CPF em texto puro
       const hash = await sha256Hex(`${cleaned}::${campanhaId}`);
+
+      // Checagem prévia: este CPF já respondeu esta campanha?
+      const { data: jaUsado, error: rpcErr } = await supabasePublic
+        .rpc("verificar_hash_ja_respondeu", {
+          p_campanha_id: campanhaId,
+          p_hash: hash,
+        });
+
+      if (rpcErr) throw rpcErr;
+
+      if (jaUsado === true) {
+        setJaRespondeu(true);
+        toast.error("Este CPF já respondeu esta campanha.");
+        return;
+      }
+
       onVerificado(hash);
     } catch (err) {
       console.error("Erro ao processar verificação:", err);
@@ -96,11 +115,20 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
               </label>
               <CpfInput
                 value={cpf}
-                onChange={setCpf}
+                onChange={(v) => { setCpf(v); if (jaRespondeu) setJaRespondeu(false); }}
                 onValidChange={setCpfValido}
                 placeholder="000.000.000-00"
                 autoFocus
               />
+              {jaRespondeu && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <p className="text-xs leading-relaxed">
+                    <strong>Este CPF já respondeu esta campanha.</strong> Para preservar a integridade
+                    dos resultados, cada pessoa pode responder apenas uma vez.
+                  </p>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Validamos apenas a estrutura matemática do CPF (dígitos verificadores).
                 Não consultamos a Receita Federal nem armazenamos o número.
