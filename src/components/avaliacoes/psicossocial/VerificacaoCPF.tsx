@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Loader2, ArrowRight, Lock, EyeOff } from "lucide-react";
+import { ShieldCheck, Loader2, ArrowRight, Lock, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { cleanCpf, validateCpf } from "@/lib/cpf";
+import { supabasePublic } from "@/lib/supabasePublic";
 import { toast } from "sonner";
 
 interface VerificacaoCPFProps {
