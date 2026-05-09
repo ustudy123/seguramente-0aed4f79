@@ -19,6 +19,7 @@ import { calcularIndicadores } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
 import { VerificacaoCPF } from "@/components/avaliacoes/psicossocial/VerificacaoCPF";
 import { InstrucoesQuestionario } from "@/components/avaliacoes/psicossocial/InstrucoesQuestionario";
+import { ResumoQuestionario } from "@/components/avaliacoes/psicossocial/ResumoQuestionario";
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
@@ -29,7 +30,7 @@ import logoYourEyes from "@/assets/logo-youreyes.svg";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
-type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'instrucoes' | 'questionario' | 'concluido';
+type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'instrucoes' | 'questionario' | 'resumo' | 'concluido';
 
 const VERSAO_TERMO_ATUAL = 'v1.0';
 
@@ -549,6 +550,41 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     );
   }
 
+  // ─── Resumo (revisão antes do envio) ──────────────────────
+  if (etapa === 'resumo') {
+    const tempoSeg = Math.floor((Date.now() - startTime.current) / 1000);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50">
+        <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b z-20 px-4 py-3">
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <Brain className="h-4 w-4 text-white" />
+              </div>
+              <span className="font-semibold text-sm">YourEyes</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5 text-emerald-500" />
+              <span className="text-xs text-emerald-600 font-medium">Anônimo</span>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-2xl mx-auto p-4 py-6">
+          <ResumoQuestionario
+            instrumento={instrumento}
+            blocosDinamicos={blocosDinamicosAtivos}
+            respostas={respostas}
+            campanhaNome={campanha?.nome || 'Avaliação Psicossocial'}
+            tempoSegundos={tempoSeg}
+            submitting={submitting}
+            onVoltar={() => setEtapa('questionario')}
+            onConfirmar={handleSubmit}
+          />
+        </main>
+      </div>
+    );
+  }
+
   // ─── Questionário (etapa principal) ────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50">
@@ -574,7 +610,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
           instrumento={instrumento}
           respostas={respostas}
           onRespostaChange={handleRespostaChange}
-          onConcluir={handleSubmit}
+          onConcluir={() => setEtapa('resumo')}
           nomeCampanha={campanha?.nome}
           blocosDinamicos={blocosDinamicosAtivos}
         />
