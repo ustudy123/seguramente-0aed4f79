@@ -80,7 +80,7 @@ const PERFIL_LABEL: Record<string, { l: string; cor: string; msg: string }> = {
   explorador: { l: "Explorador", cor: "hsl(152 60% 50%)",  msg: "Recebemos seus dados. Em breve um consultor entra em contato para tirar dúvidas e marcar uma apresentação." },
 };
 
-export function DiagnosticoQuiz({ origem, whatsappNumber }: Props) {
+export function DiagnosticoQuiz({ origem }: Props) {
   const [step, setStep] = useState<Step>(0);
   const [submitting, setSubmitting] = useState(false);
   const [resultado, setResultado] = useState<{ score: number; perfil: string } | null>(null);
