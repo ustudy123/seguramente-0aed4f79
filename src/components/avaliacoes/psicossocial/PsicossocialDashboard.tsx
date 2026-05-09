@@ -398,7 +398,16 @@ export function PsicossocialDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Campanhas (agora primeiro) */}
+          {/* Tab: Riscos Psicossociais (placeholder) */}
+          <TabsContent value="riscos" className="mt-4">
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground text-sm">
+                Em breve — inventário de riscos psicossociais.
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Campanhas */}
           <TabsContent value="campanhas" className="mt-4">
             <CampanhaList 
               campanhas={campanhas} 
