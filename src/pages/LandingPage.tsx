@@ -848,7 +848,7 @@ export default function LandingPage() {
                 )}
               </Button>
               <p className="text-xs text-gray-500 text-center mt-3">
-                Sem cadastro de cartão • Resultado e plano de ação enviados pelo WhatsApp
+                Sem cadastro de cartão • Um especialista entra em contato para agendar a apresentação
               </p>
             </motion.div>
           </motion.div>
