@@ -458,10 +458,10 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     );
   }
 
-  // ─── Verificação por Telefone (WhatsApp OTP) ──────────────
-  if (etapa === 'verificacao_telefone') {
+  // ─── Verificação por CPF (anti-duplicidade, anônimo) ──────
+  if (etapa === 'verificacao_cpf') {
     return (
-      <VerificacaoTelefone
+      <VerificacaoCPF
         campanhaId={campanha!.id}
         campanhaNome={campanha!.nome}
         onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('questionario'); }}
