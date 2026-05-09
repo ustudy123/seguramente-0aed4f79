@@ -371,7 +371,7 @@ export function PsicossocialDashboard() {
               className="gap-2 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-amber-50 hover:text-amber-700"
             >
               <AlertTriangle className="h-4 w-4" />
-              Riscos Psicossociais
+              Fatores de Riscos Psicossociais
             </TabsTrigger>
             <TabsTrigger
               id="tab-psicossocial-ghe"
