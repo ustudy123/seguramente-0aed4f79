@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { calcularIndicadores } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
 import { VerificacaoCPF } from "@/components/avaliacoes/psicossocial/VerificacaoCPF";
+import { InstrucoesQuestionario } from "@/components/avaliacoes/psicossocial/InstrucoesQuestionario";
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
@@ -28,7 +29,7 @@ import logoYourEyes from "@/assets/logo-youreyes.svg";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
-type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'questionario' | 'concluido';
+type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'instrucoes' | 'questionario' | 'concluido';
 
 const VERSAO_TERMO_ATUAL = 'v1.0';
 
@@ -464,7 +465,17 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
       <VerificacaoCPF
         campanhaId={campanha!.id}
         campanhaNome={campanha!.nome}
-        onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('questionario'); }}
+        onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('instrucoes'); }}
+      />
+    );
+  }
+
+  // ─── Instruções de bem-estar antes do questionário ────────
+  if (etapa === 'instrucoes') {
+    return (
+      <InstrucoesQuestionario
+        campanhaNome={campanha!.nome}
+        onContinuar={() => setEtapa('questionario')}
       />
     );
   }
