@@ -248,19 +248,25 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
-              A NR-01 foi atualizada. Agora <strong className="text-white">fatores de riscos psicossociais são obrigatórios</strong> no GRO/PGR.
-              Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(33 100% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
+            <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-4">
+              A NR-01 mudou. Agora <strong className="text-white">riscos psicossociais são obrigatórios</strong> no GRO/PGR —
+              e o MTE já está autuando. Multas de até <strong style={{ color: 'hsl(33 100% 60%)' }}>R$ 50 mil por infração</strong>,
+              interdição e processos por burnout.
             </p>
 
             <p className="text-base text-gray-500 max-w-2xl mx-auto mb-10">
-              97% das empresas brasileiras NÃO estão preparadas. A sua está entre as 3% que vão se proteger — ou entre as 97% que vão pagar caro?
+              <strong className="text-white">97% das empresas brasileiras NÃO estão preparadas.</strong>
+              Descubra em 60 segundos onde a sua está exposta — e receba um plano de ação pelo WhatsApp.
             </p>
 
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <DiagCTA subtitle="Sem cadastro de cartão • Resultado em tempo real" />
+            </div>
+
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Sem cartão de crédito</span>
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Resultado imediato</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> 60 segundos</span>
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> 100% confidencial</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Diagnóstico personalizado</span>
             </div>
           </motion.div>
 
