@@ -30,6 +30,38 @@ const WHATSAPP_MESSAGE = encodeURIComponent(
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 const openWhatsApp = () => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
 
+const scrollToDiag = () => {
+  document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+// CTA persuasivo reutilizável que rola até o diagnóstico
+function DiagCTA({ children = "Fazer diagnóstico grátis em 60s", subtitle, variant = "primary", size = "lg" }: {
+  children?: React.ReactNode;
+  subtitle?: string;
+  variant?: "primary" | "outline";
+  size?: "lg" | "md";
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <Button
+        size="lg"
+        onClick={scrollToDiag}
+        className={`group text-white font-black tracking-wide rounded-xl shadow-2xl whitespace-normal h-auto transition-transform hover:scale-[1.03] active:scale-95 ${size === "lg" ? "text-base sm:text-lg px-6 sm:px-10 py-6 sm:py-7" : "text-sm sm:text-base px-5 py-5"}`}
+        style={
+          variant === "primary"
+            ? { background: 'linear-gradient(135deg, hsl(152 65% 42%), hsl(152 75% 32%))', boxShadow: '0 10px 40px hsl(152 65% 42% / 0.4)' }
+            : { background: 'transparent', border: '2px solid hsl(152 60% 50%)', color: 'hsl(152 60% 60%)' }
+        }
+      >
+        <Brain className="w-5 h-5 mr-2 shrink-0" />
+        {children}
+        <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
+      </Button>
+      {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+    </div>
+  );
+}
+
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
