@@ -25,8 +25,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCargos, useDepartamentos, Cargo } from "@/hooks/useCadastros";
 import { useSyncCadastros } from "@/hooks/useSyncCadastros";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronsUpDown, X } from "lucide-react";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useTenant } from "@/hooks/useTenant";
+import { cn } from "@/lib/utils";
 
 const NIVEIS = [
   { value: "estagiario", label: "Estagiário" },
@@ -101,6 +107,7 @@ export default function Cargos() {
   const { cargos, isLoading, createCargo, updateCargo, deleteCargo } = useCargos();
   const { departamentos } = useDepartamentos();
   const { sincronizar } = useSyncCadastros();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -108,6 +115,29 @@ export default function Cargos() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<Cargo | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...defaultFormData });
+  const [departamentoIds, setDepartamentoIds] = useState<string[]>([]);
+  const [depPopoverOpen, setDepPopoverOpen] = useState(false);
+
+  // Carrega vínculos cargo→departamentos para badges na tabela e edição
+  const { data: cargoDepLinks = [] } = useQuery({
+    queryKey: ["cargo_departamentos", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data, error } = await fromTable("cargo_departamentos")
+        .select("cargo_id, departamento_id")
+        .eq("tenant_id", tenantId);
+      if (error) throw error;
+      return (data || []) as Array<{ cargo_id: string; departamento_id: string }>;
+    },
+    enabled: !!tenantId,
+  });
+
+  const depsByCargo = new Map<string, string[]>();
+  cargoDepLinks.forEach((l) => {
+    const arr = depsByCargo.get(l.cargo_id) || [];
+    arr.push(l.departamento_id);
+    depsByCargo.set(l.cargo_id, arr);
+  });
 
   useEffect(() => {
     sincronizar();
@@ -125,6 +155,7 @@ export default function Cargos() {
   const handleOpenCreate = () => {
     setSelectedCargo(null);
     setFormData({ ...defaultFormData });
+    setDepartamentoIds([]);
     setIsFormOpen(true);
   };
 
@@ -148,6 +179,10 @@ export default function Cargos() {
       aposentadoria_especial_anos: cargo.aposentadoria_especial_anos,
       ativo: cargo.ativo,
     });
+    // Carrega vínculos da junção; se vazio, faz fallback para o departamento principal
+    const links = depsByCargo.get(cargo.id) || [];
+    const initial = links.length ? links : (cargo.departamento_id ? [cargo.departamento_id] : []);
+    setDepartamentoIds(initial);
     setIsFormOpen(true);
   };
 
@@ -156,13 +191,36 @@ export default function Cargos() {
     setIsDeleteOpen(true);
   };
 
+  const syncCargoDepartamentos = async (cargoId: string) => {
+    if (!tenantId) return;
+    // Apaga vínculos antigos e insere os atuais
+    await fromTable("cargo_departamentos").delete().eq("cargo_id", cargoId);
+    if (departamentoIds.length > 0) {
+      const rows = departamentoIds.map((dep_id) => ({
+        tenant_id: tenantId,
+        cargo_id: cargoId,
+        departamento_id: dep_id,
+      }));
+      const { error } = await fromTable("cargo_departamentos").insert(rows);
+      if (error) throw error;
+    }
+    queryClient.invalidateQueries({ queryKey: ["cargo_departamentos", tenantId] });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Departamento principal = primeiro selecionado (mantém compatibilidade)
+    const principal = departamentoIds[0] || null;
+    const payload = { ...formData, departamento_id: principal };
+    let cargoId: string;
     if (selectedCargo) {
-      await updateCargo.mutateAsync({ id: selectedCargo.id, ...formData });
+      await updateCargo.mutateAsync({ id: selectedCargo.id, ...payload });
+      cargoId = selectedCargo.id;
     } else {
-      await createCargo.mutateAsync(formData);
+      const created = await createCargo.mutateAsync(payload);
+      cargoId = (created as any)?.id;
     }
+    if (cargoId) await syncCargoDepartamentos(cargoId);
     setIsFormOpen(false);
   };
 
@@ -239,7 +297,7 @@ export default function Cargos() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Departamento</TableHead>
+              <TableHead>Departamentos</TableHead>
               <TableHead>Nível</TableHead>
               <TableHead>Faixa Salarial</TableHead>
               <TableHead>Condições Especiais</TableHead>
@@ -268,7 +326,24 @@ export default function Cargos() {
                 <TableRow key={cargo.id}>
                   <TableCell className="font-medium">{cargo.nome}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {(cargo as any).departamento?.nome || "-"}
+                    {(() => {
+                      const ids = depsByCargo.get(cargo.id) || (cargo.departamento_id ? [cargo.departamento_id] : []);
+                      if (ids.length === 0) return "-";
+                      const nomes = ids
+                        .map((id) => departamentos.find((d) => d.id === id)?.nome)
+                        .filter(Boolean) as string[];
+                      if (nomes.length === 0) return "-";
+                      return (
+                        <div className="flex flex-wrap gap-1">
+                          {nomes.slice(0, 3).map((n) => (
+                            <Badge key={n} variant="secondary" className="text-xs font-normal">{n}</Badge>
+                          ))}
+                          {nomes.length > 3 && (
+                            <Badge variant="outline" className="text-xs font-normal">+{nomes.length - 3}</Badge>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>{getNivelLabel(cargo.nivel)}</TableCell>
                   <TableCell className="text-muted-foreground">
@@ -381,19 +456,80 @@ export default function Cargos() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Departamento</Label>
-                    <Select
-                      value={formData.departamento_id || "none"}
-                      onValueChange={(value) => setFormData({ ...formData, departamento_id: value === "none" ? null : value })}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhum</SelectItem>
-                        {departamentos.map((dep) => (
-                          <SelectItem key={dep.id} value={dep.id}>{dep.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Departamentos</Label>
+                    <Popover open={depPopoverOpen} onOpenChange={setDepPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between font-normal h-auto min-h-10 py-2",
+                            departamentoIds.length === 0 && "text-muted-foreground"
+                          )}
+                        >
+                          <div className="flex flex-wrap gap-1 items-center">
+                            {departamentoIds.length === 0 ? (
+                              <span>Selecione um ou mais...</span>
+                            ) : (
+                              departamentoIds.map((id) => {
+                                const dep = departamentos.find((d) => d.id === id);
+                                if (!dep) return null;
+                                return (
+                                  <Badge key={id} variant="secondary" className="gap-1 text-xs font-normal">
+                                    {dep.nome}
+                                    <span
+                                      role="button"
+                                      tabIndex={0}
+                                      className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5 cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDepartamentoIds((prev) => prev.filter((x) => x !== id));
+                                      }}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </span>
+                                  </Badge>
+                                );
+                              })
+                            )}
+                          </div>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <div className="max-h-[260px] overflow-y-auto p-1">
+                          {departamentos.length === 0 ? (
+                            <p className="text-sm text-muted-foreground p-3 text-center">
+                              Nenhum departamento cadastrado
+                            </p>
+                          ) : (
+                            departamentos.map((dep) => {
+                              const checked = departamentoIds.includes(dep.id);
+                              return (
+                                <label
+                                  key={dep.id}
+                                  className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent cursor-pointer"
+                                >
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={(v) => {
+                                      setDepartamentoIds((prev) =>
+                                        v ? [...prev, dep.id] : prev.filter((x) => x !== dep.id)
+                                      );
+                                    }}
+                                  />
+                                  <span>{dep.nome}</span>
+                                </label>
+                              );
+                            })
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                      O primeiro selecionado será considerado o departamento principal.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label>Nível</Label>
