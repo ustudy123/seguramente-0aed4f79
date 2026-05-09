@@ -256,7 +256,7 @@ export default function LandingPage() {
 
             <p className="text-base text-gray-500 max-w-2xl mx-auto mb-10">
               <strong className="text-white">97% das empresas brasileiras NÃO estão preparadas.</strong>
-              Descubra em 60 segundos onde a sua está exposta — e receba um plano de ação pelo WhatsApp.
+              Descubra em 60 segundos onde a sua está exposta — receba um diagnóstico personalizado e fale com um especialista.
             </p>
 
             <div className="flex flex-col items-center gap-3 mb-8">
