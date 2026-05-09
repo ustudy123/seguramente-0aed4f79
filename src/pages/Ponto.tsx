@@ -204,7 +204,7 @@ const Ponto = () => {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-3">
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
             <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Controle de Ponto
@@ -213,21 +213,20 @@ const Ponto = () => {
             <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Registro fiel e auditável da jornada
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap sm:justify-end">
           <Button
             id="btn-guia-rapido-ponto"
             variant="outline"
             size="sm"
             onClick={() => setShowGuia(true)}
-            className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5 text-xs sm:text-sm"
+            className="gap-2 text-primary border-primary/30 hover:bg-primary/5"
           >
-            <HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <HelpCircle className="h-4 w-4" />
             Guia Rápido
           </Button>
-          <Button id="btn-solicitar-ajuste" variant="outline" size="sm" onClick={() => setShowAjusteModal(true)} className="text-xs sm:text-sm">
-            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Solicitar Ajuste
+          <Button id="btn-solicitar-ajuste" size="sm" onClick={() => setShowAjusteModal(true)}>
+            <FileText className="h-4 w-4 mr-2" /> Solicitar Ajuste
           </Button>
-          {/* Manual registration removed as per user request */}
         </div>
       </motion.div>
 
