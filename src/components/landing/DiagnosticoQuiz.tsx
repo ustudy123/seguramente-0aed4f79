@@ -327,7 +327,7 @@ export function DiagnosticoQuiz({ origem }: Props) {
               <Field label="Cargo">     <Input className={ic} value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Ex: Gestor SST" /></Field>
               <Field label="E-mail*">   <Input className={ic} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@empresa.com" /></Field>
               <div className="md:col-span-2">
-                <Field label="WhatsApp*"><Input className={ic} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" /></Field>
+                <Field label="Telefone*"><Input className={ic} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" /></Field>
               </div>
               </>); })()}
             </div>
