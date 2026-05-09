@@ -46,6 +46,7 @@ export interface DadosPlanilha {
   conta: string;
   tipoConta: string;
   chavePix: string;
+  cbo: string;
   linha: number;
   erros: string[];
   empresaId?: string;
