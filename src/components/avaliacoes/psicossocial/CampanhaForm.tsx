@@ -323,14 +323,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
   };
 
   const onSubmit = async (data: FormValues) => {
-    // ── GAP-P1: Bloqueio obrigatório — NR-17 exige vínculo Setor+Função ──────
-    if (situacoes.length === 0) {
-      setSituacaoError("Adicione pelo menos um par Setor + Função antes de salvar a campanha.");
-      // Mostrar erro no formulário e rolar até a seção
-      document.getElementById('situacoes-trabalho-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return; // bloqueia submissão
-    }
-
+    // Segmentação Setor/Função vem automaticamente do CPF do respondente (convite/cadastro).
     if (isEdicao && campanhaParaEditar) {
       await editarCampanha.mutateAsync({
         id: campanhaParaEditar.id,
