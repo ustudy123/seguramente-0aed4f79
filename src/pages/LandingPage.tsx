@@ -20,7 +20,7 @@ import mockupDashboard from "@/assets/landing/mockup-dashboard.png";
 import mockupPsicossocial from "@/assets/landing/mockup-psicossocial.png";
 import mockupGovernanca from "@/assets/landing/mockup-governanca.png";
 import mockupConfiguracoes from "@/assets/landing/mockup-configuracoes.png";
-import logoYoureyes from "@/assets/logo-youreyes.svg";
+import logoYoureyes from "@/assets/logo-youreyes.png";
 import { DiagnosticoQuiz } from "@/components/landing/DiagnosticoQuiz";
 
 const WHATSAPP_NUMBER = "5546993375044";
@@ -230,21 +230,28 @@ export default function LandingPage() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="my-16 max-w-5xl mx-auto relative"
             >
-              {/* Decorative elements around mockup */}
+              {/* Decorative elements around video */}
               <div className="absolute -top-6 -left-6 w-24 h-24 border-t-2 border-l-2 border-hsl(207 90% 45% / 0.3) rounded-tl-2xl hidden md:block" />
               <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b-2 border-r-2 border-hsl(33 100% 50% / 0.3) rounded-br-2xl hidden md:block" />
-              
-              <div className="relative rounded-2xl overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border border-white/5 bg-white/5 backdrop-blur-sm p-1">
+
+              <div
+                className="relative rounded-2xl overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border border-white/5 bg-white/5 backdrop-blur-sm p-1"
+                style={{ boxShadow: '0 30px 80px -20px hsl(25 66% 40% / 0.35)' }}
+              >
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-orange-500/10 pointer-events-none" />
-                <img
-                  src={mockupDashboard}
-                  alt="Dashboard YourEyes - Painel de controle inteligente"
-                  className="w-full h-auto rounded-xl shadow-2xl relative z-10"
-                  loading="lazy"
-                />
+                <video
+                  src="/videos/hero.mp4"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/og-image.png"
+                  className="w-full h-auto block bg-black rounded-xl relative z-10"
+                >
+                  Seu navegador não suporta vídeo HTML5.
+                </video>
               </div>
               <p className="text-center text-[10px] uppercase tracking-widest text-gray-500 mt-6 font-bold opacity-60">
-                Visualização real da plataforma YourEyes
+                Veja em 2 minutos como a YourEyes blinda sua empresa
               </p>
             </motion.div>
 
@@ -268,32 +275,6 @@ export default function LandingPage() {
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(25 50% 50%)' }} /> 100% confidencial</span>
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(25 50% 50%)' }} /> Diagnóstico personalizado</span>
             </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            className="mt-14 max-w-4xl mx-auto"
-          >
-            <div
-              className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10"
-              style={{ boxShadow: '0 30px 80px -20px hsl(25 66% 40% / 0.35)' }}
-            >
-              <video
-                src="/videos/hero.mp4"
-                controls
-                playsInline
-                preload="metadata"
-                poster="/og-image.png"
-                className="w-full h-auto block bg-black"
-              >
-                Seu navegador não suporta vídeo HTML5.
-              </video>
-            </div>
-            <p className="text-center text-sm text-gray-500 mt-4">
-              Veja em 2 minutos como a YourEyes blinda sua empresa
-            </p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="mt-10">
