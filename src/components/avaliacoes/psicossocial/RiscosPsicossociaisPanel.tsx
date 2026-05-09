@@ -117,7 +117,7 @@ export function RiscosPsicossociaisPanel() {
     const ok = await confirm({
       title: "Remover risco?",
       description: `Tem certeza que deseja remover "${r.nome}"? Esta ação não pode ser desfeita.`,
-      confirmText: "Remover",
+      confirmLabel: "Remover",
       variant: "destructive",
     });
     if (ok) del.mutate(r.id);
