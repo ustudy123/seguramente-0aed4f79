@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { GuiaRapidoPonto } from "@/components/ponto/GuiaRapidoPonto";
+import { AnexosAjusteModal } from "@/components/ponto/AnexosAjusteModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
