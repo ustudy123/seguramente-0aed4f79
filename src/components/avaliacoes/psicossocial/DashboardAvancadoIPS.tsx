@@ -16,7 +16,8 @@ import {
   FileText,
   Activity,
   Flame,
-  Battery
+  Battery,
+  Building2
 } from "lucide-react";
 import {
   Dialog,
@@ -39,6 +40,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { RadarPsicossocial } from "./RadarPsicossocial";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
+import { AnaliseSegmentadaSection } from "./AnaliseSegmentadaSection";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel, getIPSColor } from "@/types/psicossocial";
 import { 
@@ -232,9 +234,10 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
           </div>
 
           <Tabs defaultValue="visao-geral" className="space-y-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-5 bg-muted/50 p-1 border">
+            <TabsList className="grid w-full max-w-3xl grid-cols-6 bg-muted/50 p-1 border">
               <TabsTrigger value="visao-geral" className="gap-2 text-xs py-2"><BarChart3 className="h-3.5 w-3.5" /> Visão Geral</TabsTrigger>
               <TabsTrigger value="dimensoes" className="gap-2 text-xs py-2"><Target className="h-3.5 w-3.5" /> Dimensões</TabsTrigger>
+              <TabsTrigger value="segmentos" className="gap-2 text-xs py-2"><Building2 className="h-3.5 w-3.5" /> Segmentos</TabsTrigger>
               <TabsTrigger value="burnout" className="gap-2 text-xs py-2"><Flame className="h-3.5 w-3.5" /> Burnout & Boreout</TabsTrigger>
               <TabsTrigger value="indices" className="gap-2 text-xs py-2"><Zap className="h-3.5 w-3.5" /> SIPRO</TabsTrigger>
               <TabsTrigger value="evolucao" className="gap-2 text-xs py-2"><TrendingUp className="h-3.5 w-3.5" /> Evolução</TabsTrigger>
@@ -356,6 +359,10 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
                   );
                 })}
               </div>
+            </TabsContent>
+
+            <TabsContent value="segmentos" className="space-y-6">
+              <AnaliseSegmentadaSection campanhas={campanhasFiltradas} />
             </TabsContent>
 
             <TabsContent value="burnout" className="space-y-6">

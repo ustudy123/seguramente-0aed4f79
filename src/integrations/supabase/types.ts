@@ -18503,50 +18503,68 @@ export type Database = {
       questionario_psicossocial_respostas: {
         Row: {
           campanha_id: string
+          cargo_snapshot: string | null
           colaborador_id: string | null
           concluido_em: string | null
           convite_id: string | null
           cpf_hash: string | null
           created_at: string
+          ghe_id_snapshot: string | null
+          ghe_nome_snapshot: string | null
           id: string
           identificacao_voluntaria: boolean
           indicadores: Json | null
           ip_address: string | null
+          participacao_id: string | null
           respostas: Json
+          setor_snapshot: string | null
           tempo_resposta_segundos: number | null
           tenant_id: string
+          unidade_snapshot: string | null
           user_agent: string | null
         }
         Insert: {
           campanha_id: string
+          cargo_snapshot?: string | null
           colaborador_id?: string | null
           concluido_em?: string | null
           convite_id?: string | null
           cpf_hash?: string | null
           created_at?: string
+          ghe_id_snapshot?: string | null
+          ghe_nome_snapshot?: string | null
           id?: string
           identificacao_voluntaria?: boolean
           indicadores?: Json | null
           ip_address?: string | null
+          participacao_id?: string | null
           respostas?: Json
+          setor_snapshot?: string | null
           tempo_resposta_segundos?: number | null
           tenant_id: string
+          unidade_snapshot?: string | null
           user_agent?: string | null
         }
         Update: {
           campanha_id?: string
+          cargo_snapshot?: string | null
           colaborador_id?: string | null
           concluido_em?: string | null
           convite_id?: string | null
           cpf_hash?: string | null
           created_at?: string
+          ghe_id_snapshot?: string | null
+          ghe_nome_snapshot?: string | null
           id?: string
           identificacao_voluntaria?: boolean
           indicadores?: Json | null
           ip_address?: string | null
+          participacao_id?: string | null
           respostas?: Json
+          setor_snapshot?: string | null
           tempo_resposta_segundos?: number | null
           tenant_id?: string
+          unidade_snapshot?: string | null
           user_agent?: string | null
         }
         Relationships: [
@@ -18562,6 +18580,13 @@ export type Database = {
             columns: ["convite_id"]
             isOneToOne: false
             referencedRelation: "questionario_psicossocial_convites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionario_psicossocial_respostas_participacao_id_fkey"
+            columns: ["participacao_id"]
+            isOneToOne: false
+            referencedRelation: "psicossocial_participacoes"
             referencedColumns: ["id"]
           },
           {
@@ -20641,16 +20666,28 @@ export type Database = {
             }
             Returns: Json
           }
-      salvar_resposta_por_token_participacao: {
-        Args: {
-          p_indicadores: Json
-          p_respostas: Json
-          p_tempo_segundos?: number
-          p_token: string
-          p_user_agent?: string
-        }
-        Returns: Json
-      }
+      salvar_resposta_por_token_participacao:
+        | {
+            Args: {
+              p_indicadores: Json
+              p_respostas: Json
+              p_tempo_segundos?: number
+              p_token: string
+              p_user_agent?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_cpf_hash?: string
+              p_indicadores: Json
+              p_respostas: Json
+              p_tempo_segundos?: number
+              p_token: string
+              p_user_agent?: string
+            }
+            Returns: Json
+          }
       salvar_resposta_psicossocial: {
         Args: {
           p_identificacao_voluntaria: boolean
