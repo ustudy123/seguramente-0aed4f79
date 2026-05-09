@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,9 +42,32 @@ export function SSTOrdemServicoTab() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
   const [colabSelecionado, setColabSelecionado] = useState<ColaboradorRow | null>(null);
+  const storageKey = `sst-os-resp:${tenantId || "_"}:${empresaAtivaId || "_"}`;
   const [respTecnico, setRespTecnico] = useState("");
   const [respRegistro, setRespRegistro] = useState("");
-  
+
+  // Persistência local por tenant/empresa — sobrevive a troca de abas
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const v = JSON.parse(raw);
+        setRespTecnico(v.nome || "");
+        setRespRegistro(v.registro || "");
+      } else {
+        setRespTecnico("");
+        setRespRegistro("");
+      }
+    } catch {/* noop */}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ nome: respTecnico, registro: respRegistro }));
+    } catch {/* noop */}
+  }, [respTecnico, respRegistro, storageKey, tenantId]);
 
   const pgrVigente = useMemo(
     () => documentos.find(d => d.tipo === "PGR" && d.status === "vigente" && d.analise_ia_status === "concluida"),
