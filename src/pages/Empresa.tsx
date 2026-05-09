@@ -146,10 +146,15 @@ export default function Empresa() {
 
     const t = setTimeout(async () => {
       try {
-        await upsertCadastro.mutateAsync(formData);
+        const saved: any = await upsertCadastro.mutateAsync(formData);
         setHasChanges(false);
-        // Não limpamos o rascunho local aqui para evitar perda em caso de oscilação de rede,
-        // mas o estado principal agora está sincronizado com o banco.
+        // Se acabamos de criar a empresa (modo 'new'), promovemos para 'edit'
+        // usando o id retornado, evitando que o próximo autosave tente inserir
+        // novamente e dispare o erro de "CNPJ já cadastrado".
+        if (viewMode === 'new' && saved?.id) {
+          setSelectedEmpresaId(saved.id);
+          setViewMode('edit');
+        }
       } catch (error) {
         console.error('Erro no salvamento automático:', error);
       }
@@ -178,10 +183,14 @@ export default function Empresa() {
         toast.error('O CPF é obrigatório para Pessoa Física.');
         return;
       }
-      await upsertCadastro.mutateAsync(formData);
+      const saved: any = await upsertCadastro.mutateAsync(formData);
       clearDraft();
       setHasChanges(false);
       setRascunhoRestaurado(false);
+      if (viewMode === 'new' && saved?.id) {
+        setSelectedEmpresaId(saved.id);
+        setViewMode('edit');
+      }
       toast.success('Alterações salvas com sucesso!');
       // Mantém na tela de edição conforme solicitado
     } catch (error: any) {
