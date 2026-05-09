@@ -296,6 +296,10 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
   const handleSalvar = async () => {
     if (!state.arquivo) return;
+    if (!dataVigenciaManual) {
+      toast.error("Informe a Data de Vencimento do documento antes de confirmar a importação.");
+      return;
+    }
     setSalvando(true);
     try {
       await uploadDocumento.mutateAsync({
