@@ -26,6 +26,7 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
   const [cpf, setCpf] = useState("");
   const [cpfValido, setCpfValido] = useState(false);
   const [processando, setProcessando] = useState(false);
+  const [jaRespondeu, setJaRespondeu] = useState(false);
 
   const handleConfirmar = async () => {
     const cleaned = cleanCpf(cpf);
@@ -35,9 +36,26 @@ export function VerificacaoCPF({ campanhaId, campanhaNome, onVerificado }: Verif
     }
 
     setProcessando(true);
+    setJaRespondeu(false);
     try {
       // Hash do CPF + campanha — não trafega nem armazena CPF em texto puro
       const hash = await sha256Hex(`${cleaned}::${campanhaId}`);
+
+      // Checagem prévia: este CPF já respondeu esta campanha?
+      const { data: jaUsado, error: rpcErr } = await supabasePublic
+        .rpc("verificar_hash_ja_respondeu", {
+          p_campanha_id: campanhaId,
+          p_hash: hash,
+        });
+
+      if (rpcErr) throw rpcErr;
+
+      if (jaUsado === true) {
+        setJaRespondeu(true);
+        toast.error("Este CPF já respondeu esta campanha.");
+        return;
+      }
+
       onVerificado(hash);
     } catch (err) {
       console.error("Erro ao processar verificação:", err);
