@@ -270,7 +270,33 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="mt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+            className="mt-14 max-w-4xl mx-auto"
+          >
+            <div
+              className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10"
+              style={{ boxShadow: '0 30px 80px -20px hsl(152 66% 40% / 0.35)' }}
+            >
+              <video
+                src="/videos/hero.mp4"
+                controls
+                playsInline
+                preload="metadata"
+                poster="/og-image.png"
+                className="w-full h-auto block bg-black"
+              >
+                Seu navegador não suporta vídeo HTML5.
+              </video>
+            </div>
+            <p className="text-center text-sm text-gray-500 mt-4">
+              Veja em 2 minutos como a YourEyes blinda sua empresa
+            </p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="mt-10">
             <ChevronDown className="w-8 h-8 mx-auto text-gray-600 animate-bounce" />
           </motion.div>
         </div>
