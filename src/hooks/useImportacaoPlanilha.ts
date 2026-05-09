@@ -92,6 +92,7 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   conta: ["conta", "numero conta", "número conta", "conta corrente", "conta_corrente"],
   tipoConta: ["tipo conta", "tipo_conta", "tipoconta"],
   chavePix: ["chave pix", "chave_pix", "pix", "chavepix"],
+  cbo: ["cbo", "código cbo", "codigo cbo", "cbo ocupação", "cbo ocupacao", "ocupação cbo", "ocupacao cbo"],
 };
 
 // Tipos de contrato/vínculo válidos (mapeados para valores aceitos pelo sistema)
