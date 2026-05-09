@@ -148,7 +148,12 @@ export function GHEPanel() {
   });
 
   const handleNovo = () => {
-    const next = `GHE ${String(ghes.length + 1).padStart(2, "0")}`;
+    const maxN = ghes.reduce((max, g) => {
+      const m = /(\d+)/.exec(g.codigo || "");
+      const n = m ? parseInt(m[1], 10) : 0;
+      return n > max ? n : max;
+    }, 0);
+    const next = `GHE ${String(maxN + 1).padStart(2, "0")}`;
     setForm({ ...emptyForm, codigo: next });
     setOpen(true);
   };
