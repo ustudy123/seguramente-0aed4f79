@@ -167,6 +167,21 @@ const Ponto = () => {
     } catch {}
   };
 
+  const resetAjusteForm = () => {
+    setAjusteColaborador("");
+    setAjusteData(format(new Date(), "yyyy-MM-dd"));
+    setAjusteTipo("inclusao");
+    setAjusteMarcacao("entrada");
+    setAjusteHora("");
+    setAjusteMotivo("");
+    setAjusteAnexos([]);
+  };
+
+  const handleCloseAjusteModal = (open: boolean) => {
+    setShowAjusteModal(open);
+    if (!open) resetAjusteForm();
+  };
+
   const handleSolicitarAjuste = async () => {
     const colab = colaboradores.find(c => c.id === ajusteColaborador);
     if (!colab) return;
@@ -183,9 +198,7 @@ const Ponto = () => {
         anexos: ajusteAnexos,
       });
       setShowAjusteModal(false);
-      setAjusteMotivo("");
-      setAjusteHora("");
-      setAjusteAnexos([]);
+      resetAjusteForm();
     } catch {}
   };
 
@@ -599,7 +612,7 @@ const Ponto = () => {
       </Dialog>
 
       {/* Modal: Solicitar Ajuste */}
-      <Dialog open={showAjusteModal} onOpenChange={setShowAjusteModal}>
+      <Dialog open={showAjusteModal} onOpenChange={handleCloseAjusteModal}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Solicitar Ajuste de Ponto</DialogTitle>
@@ -672,7 +685,7 @@ const Ponto = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAjusteModal(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => handleCloseAjusteModal(false)}>Cancelar</Button>
             <Button
               onClick={handleSolicitarAjuste}
               disabled={
