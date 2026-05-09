@@ -35,6 +35,7 @@ import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
+import { RiscosPsicossociaisPanel } from "./RiscosPsicossociaisPanel";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
