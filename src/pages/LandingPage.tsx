@@ -645,6 +645,12 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div {...fadeUp} className="mt-14 text-center">
+            <DiagCTA subtitle="Levamos sua empresa nesse mesmo cenário em até 7 dias">
+              Quero esse nível de controle
+            </DiagCTA>
+          </motion.div>
         </div>
       </section>
 
@@ -666,13 +672,13 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {[
               { src: mockupGovernanca, title: "Governança do Trabalho Humano", desc: "Visão integrada dos 4 pilares estratégicos com escore de maturidade em tempo real." },
-              { src: mockupPsicossocial, title: "Gestão Psicossocial NR-01", desc: "IPS, Confiabilidade e campanhas anônimas com privacidade garantida (mín. 5 respondentes)." },
+              { src: mockupPsicossocial, title: "Gestão Psicossocial NR-01", desc: "IRP-S, Confiabilidade e campanhas anônimas com privacidade garantida (mín. 5 respondentes)." },
               { src: mockupConfiguracoes, title: "Configurações e Perfis de Acesso", desc: "Controle granular de papéis, vínculos e permissões por empresa e estabelecimento." },
               { src: mockupDashboard, title: "Dashboard Operacional", desc: "KPIs de Colaboradores, Admissões, EPIs, Documentos, Avaliações e Metas em um só lugar." },
             ].map((m, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-                  <img src={m.src} alt={m.title} loading="lazy" className="w-full h-auto" />
+                <div className="rounded-2xl overflow-hidden group hover:scale-[1.01] transition-transform" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
+                  <img src={m.src} alt={m.title} loading="lazy" width={1536} height={1024} className="w-full h-auto" />
                   <div className="p-5">
                     <h3 className="font-bold text-lg mb-1">{m.title}</h3>
                     <p className="text-sm text-gray-400">{m.desc}</p>
@@ -681,6 +687,12 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div {...fadeUp} className="mt-12 text-center">
+            <DiagCTA subtitle="Em 60 segundos você descobre por onde começar">
+              Mapear minha empresa agora
+            </DiagCTA>
+          </motion.div>
         </div>
       </section>
 
