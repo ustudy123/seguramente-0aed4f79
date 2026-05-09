@@ -41,6 +41,7 @@ import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxField";
 import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxField";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
+import { CBOAutocomplete, normalizeCBO } from "@/components/cbo/CBOAutocomplete";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
@@ -67,6 +68,7 @@ const formSchema = z.object({
   gestor_imediato: z.string().optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
   matricula_esocial: z.string().optional(),
+  cbo: z.string().optional(),
   foto_url: z.string().optional(),
 });
 
@@ -86,6 +88,7 @@ export interface ColaboradorEditData {
   gestor_imediato: string | null;
   data_admissao: string | null;
   matricula_esocial?: string | null;
+  cbo?: string | null;
   foto_url?: string | null;
 }
 
@@ -132,6 +135,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       gestor_imediato: "",
       data_admissao: new Date().toISOString().split("T")[0],
       matricula_esocial: "",
+      cbo: "",
       foto_url: "",
     },
   });
@@ -152,6 +156,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: colaborador.gestor_imediato || "",
         data_admissao: colaborador.data_admissao || "",
         matricula_esocial: colaborador.matricula_esocial || "",
+        cbo: colaborador.cbo || "",
         foto_url: colaborador.foto_url || "",
       });
     } else if (open && !colaborador) {
@@ -168,6 +173,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: "",
         data_admissao: new Date().toISOString().split("T")[0],
         matricula_esocial: "",
+        cbo: "",
         foto_url: "",
       });
     }
@@ -223,6 +229,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             gestor_imediato: data.gestor_imediato || null,
             data_admissao: data.data_admissao,
             matricula_esocial: data.matricula_esocial || null,
+            cbo: normalizeCBO(data.cbo) || null,
             foto_url: data.foto_url || null,
           })
           .eq("id", colaborador.id)
@@ -255,6 +262,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           status: "concluido",
           criado_por: user?.id,
           matricula_esocial: data.matricula_esocial || null,
+          cbo: normalizeCBO(data.cbo) || null,
           foto_url: data.foto_url || null,
         }).select("id").single();
 
@@ -626,6 +634,25 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   )}
                 />
               </div>
+
+              {/* CBO — Classificação Brasileira de Ocupações */}
+              <FormField
+                control={form.control}
+                name="cbo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CBO — Ocupação</FormLabel>
+                    <FormControl>
+                      <CBOAutocomplete
+                        value={field.value || null}
+                        onChange={(codigo) => field.onChange(codigo || "")}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
             </div>
 
