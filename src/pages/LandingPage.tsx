@@ -742,9 +742,9 @@ export default function LandingPage() {
                 CONSULTORIA EXCLUSIVA — VAGAS LIMITADAS
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4 text-white">
-                Apenas{" "}
+                Restam{" "}
                 <span style={{ color: 'hsl(265 90% 72%)' }}>{vagasRestantes}</span>{" "}
-                vagas para{" "}
+                {vagasRestantes === 1 ? "vaga" : "vagas"} para{" "}
                 <span style={{ color: 'hsl(265 90% 72%)' }}>consultoria com especialista</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
