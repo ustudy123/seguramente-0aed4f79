@@ -427,69 +427,180 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ PSYCHOSOCIAL DEEP DIVE ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(215 60% 10%) 0%, hsl(215 65% 8%) 100%)' }}>
-        <div className="max-w-6xl mx-auto">
+      <section className="relative py-24 px-4 overflow-hidden" style={{ background: 'linear-gradient(180deg, hsl(215 60% 10%) 0%, hsl(215 70% 6%) 100%)' }}>
+        {/* Ambient glow orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div
+            className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
+            style={{ background: 'radial-gradient(circle, hsl(33 100% 50% / 0.6), transparent 70%)' }}
+            animate={{ x: [0, 60, 0], y: [0, 40, 0] }}
+            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full opacity-25 blur-3xl"
+            style={{ background: 'radial-gradient(circle, hsl(207 90% 55% / 0.6), transparent 70%)' }}
+            animate={{ x: [0, -80, 0], y: [0, -60, 0] }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* subtle grid */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(hsl(33 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(33 100% 50%) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
-              <AlertTriangle className="w-4 h-4 mr-1" /> NR-01 — OBRIGATÓRIO
-            </Badge>
-            <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Gestão Psicossocial <span style={{ color: 'hsl(33 100% 50%)' }}>Completa</span> e Automatizada
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex"
+            >
+              <Badge className="mb-5 px-4 py-1.5 text-xs tracking-widest" style={{ background: 'linear-gradient(90deg, hsl(33 100% 50% / 0.2), hsl(0 80% 55% / 0.2))', color: 'hsl(33 100% 65%)', border: '1px solid hsl(33 100% 50% / 0.4)', boxShadow: '0 0 30px hsl(33 100% 50% / 0.3)' }}>
+                <AlertTriangle className="w-4 h-4 mr-1.5" /> NR-01 — OBRIGATÓRIO DESDE MAIO/2025
+              </Badge>
+            </motion.div>
+            <h2 className="text-4xl md:text-6xl font-black mb-5 leading-tight tracking-tight">
+              Gestão Psicossocial{' '}
+              <span className="relative inline-block">
+                <span style={{ backgroundImage: 'linear-gradient(135deg, hsl(33 100% 60%) 0%, hsl(15 90% 55%) 50%, hsl(0 85% 60%) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 24px hsl(33 100% 50% / 0.5))' }}>
+                  Completa
+                </span>
+              </span>
+              <br className="hidden md:block" />
+              {' '}e <span className="text-white">Automatizada</span>
             </h2>
-            <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-              O YourEyes é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores de riscos psicossociais exigidos pela NR-01 atualizada, 
+            <p className="text-gray-300 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
+              O YourEyes é a <strong className="text-white" style={{ borderBottom: '2px solid hsl(33 100% 50%)' }}>única plataforma</strong> que cobre 100% dos fatores de riscos psicossociais exigidos pela NR-01,
               com questionários validados, indicadores automáticos e relatórios prontos para a fiscalização.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <motion.div {...fadeUp} className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <FileText className="w-6 h-6" style={{ color: 'hsl(207 90% 60%)' }} />
-                Questionário NR-01 Completo
-              </h3>
-              <div className="space-y-3 text-sm text-gray-400">
-                {[
-                  "14 blocos temáticos cobrindo TODOS os fatores de risco",
-                  "R01: Assédio e Violência no Trabalho",
-                  "R02: Gestão de Mudanças Organizacionais",
-                  "R08: Eventos Violentos e Traumáticos",
-                  "R12: Comunicação Organizacional",
-                  "Escala de 5 níveis (0 a 4) com matriz de risco NR-01",
-                  "Modelo híbrido: anônimo com identificação opcional",
-                  "Ciclos regulares e extraordinários por gatilhos",
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'hsl(25 50% 50%)' }} />
-                    <span>{item}</span>
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+            {/* Card 1 — Questionário */}
+            <motion.div
+              {...fadeUp}
+              whileHover={{ y: -6 }}
+              className="group relative rounded-3xl p-8 backdrop-blur-xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, hsl(215 60% 14% / 0.9), hsl(215 65% 10% / 0.9))',
+                border: '1px solid hsl(207 90% 55% / 0.25)',
+                boxShadow: '0 20px 60px -20px hsl(207 90% 30% / 0.4), inset 0 1px 0 hsl(207 90% 60% / 0.1)',
+              }}
+            >
+              {/* corner glow */}
+              <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-40 blur-3xl group-hover:opacity-70 transition-opacity" style={{ background: 'radial-gradient(circle, hsl(207 90% 55%), transparent 70%)' }} />
+
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 rounded-2xl" style={{ background: 'linear-gradient(135deg, hsl(207 90% 55%), hsl(220 90% 50%))', boxShadow: '0 10px 30px hsl(207 90% 50% / 0.4)' }}>
+                    <FileText className="w-6 h-6 text-white" />
                   </div>
-                ))}
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Questionário NR-01 Completo</h3>
+                    <p className="text-xs text-gray-500 font-medium">14 blocos · validação científica</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 text-sm text-gray-300">
+                  {[
+                    "14 blocos temáticos cobrindo TODOS os fatores de risco",
+                    "R01: Assédio e Violência no Trabalho",
+                    "R02: Gestão de Mudanças Organizacionais",
+                    "R08: Eventos Violentos e Traumáticos",
+                    "R12: Comunicação Organizacional",
+                    "Escala de 5 níveis (0 a 4) com matriz de risco NR-01",
+                    "Modelo híbrido: anônimo com identificação opcional",
+                    "Ciclos regulares e extraordinários por gatilhos",
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.04 }}
+                      className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                    >
+                      <div className="mt-0.5 shrink-0 p-0.5 rounded-full" style={{ background: 'hsl(207 90% 55% / 0.2)' }}>
+                        <CheckCircle className="w-3.5 h-3.5" style={{ color: 'hsl(207 90% 65%)' }} />
+                      </div>
+                      <span>{item}</span>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </motion.div>
 
-            <motion.div {...fadeUp} transition={{ delay: 0.15 }} className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6" style={{ color: 'hsl(25 66% 50%)' }} />
-                Indicadores Automáticos
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { code: "IRP-S", name: "Índice de Risco Psicossocial" },
-                  { code: "IBO-S", name: "Índice de Burnout Organizacional" },
-                  { code: "IBD-S", name: "Índice de Bem-Estar e Desgaste" },
-                  { code: "IREC-S", name: "Índice de Reconhecimento" },
-                  { code: "ICOP-S", name: "Índice de Cooperação Social" },
-                  { code: "INOT-S", name: "Índice de Notificações de Risco" },
-                ].map((ind, i) => (
-                  <div key={i} className="rounded-xl p-3" style={{ background: 'hsl(215 65% 8%)', border: '1px solid hsl(215 40% 20%)' }}>
-                    <p className="text-xs font-mono font-bold" style={{ color: 'hsl(25 66% 55%)' }}>{ind.code}</p>
-                    <p className="text-xs text-gray-500 mt-1">{ind.name}</p>
+            {/* Card 2 — Indicadores */}
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: 0.15 }}
+              whileHover={{ y: -6 }}
+              className="group relative rounded-3xl p-8 backdrop-blur-xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, hsl(215 60% 14% / 0.9), hsl(215 65% 10% / 0.9))',
+                border: '1px solid hsl(33 100% 50% / 0.25)',
+                boxShadow: '0 20px 60px -20px hsl(33 100% 30% / 0.4), inset 0 1px 0 hsl(33 100% 60% / 0.1)',
+              }}
+            >
+              <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-40 blur-3xl group-hover:opacity-70 transition-opacity" style={{ background: 'radial-gradient(circle, hsl(33 100% 50%), transparent 70%)' }} />
+
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 rounded-2xl" style={{ background: 'linear-gradient(135deg, hsl(33 100% 55%), hsl(15 90% 50%))', boxShadow: '0 10px 30px hsl(33 100% 50% / 0.4)' }}>
+                    <BarChart3 className="w-6 h-6 text-white" />
                   </div>
-                ))}
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Indicadores Automáticos</h3>
+                    <p className="text-xs text-gray-500 font-medium">cálculo em tempo real · auditável</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { code: "IRP-S", name: "Índice de Risco Psicossocial", icon: Brain },
+                    { code: "IBO-S", name: "Índice de Burnout Organizacional", icon: TrendingDown },
+                    { code: "IBD-S", name: "Índice de Bem-Estar e Desgaste", icon: Heart },
+                    { code: "IREC-S", name: "Índice de Reconhecimento", icon: Award },
+                    { code: "ICOP-S", name: "Índice de Cooperação Social", icon: Users },
+                    { code: "INOT-S", name: "Índice de Notificações de Risco", icon: AlertTriangle },
+                  ].map((ind, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.06 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      className="relative rounded-xl p-3 cursor-default overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(135deg, hsl(215 70% 8%), hsl(215 75% 5%))',
+                        border: '1px solid hsl(33 100% 50% / 0.2)',
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-1.5">
+                        <p className="text-xs font-mono font-black tracking-tight" style={{ color: 'hsl(33 100% 65%)', textShadow: '0 0 12px hsl(33 100% 50% / 0.6)' }}>{ind.code}</p>
+                        <ind.icon className="w-3.5 h-3.5 opacity-50" style={{ color: 'hsl(33 100% 65%)' }} />
+                      </div>
+                      <p className="text-[11px] text-gray-400 leading-tight">{ind.name}</p>
+                      {/* Animated bar */}
+                      <motion.div
+                        className="absolute bottom-0 left-0 h-0.5"
+                        style={{ background: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(15 90% 55%))' }}
+                        initial={{ width: '0%' }}
+                        whileInView={{ width: `${60 + (i * 5)}%` }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 + i * 0.06, duration: 1 }}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="mt-5 flex items-center gap-2 p-3 rounded-xl" style={{ background: 'hsl(33 100% 50% / 0.08)', border: '1px dashed hsl(33 100% 50% / 0.3)' }}>
+                  <Sparkles className="w-4 h-4 shrink-0" style={{ color: 'hsl(33 100% 65%)' }} />
+                  <p className="text-xs text-gray-300">
+                    Calculados em tempo real e <strong className="text-white">exportáveis para relatórios</strong> de auditoria.
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-gray-600 mt-4">
-                Todos os indicadores são calculados em tempo real e exportáveis para relatórios de auditoria.
-              </p>
             </motion.div>
           </div>
         </div>
