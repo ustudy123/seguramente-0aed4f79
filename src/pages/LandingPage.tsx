@@ -508,7 +508,7 @@ export default function LandingPage() {
                     "R08: Eventos Violentos e Traumáticos",
                     "R12: Comunicação Organizacional",
                     "Escala de 5 níveis (0 a 4) com matriz de risco NR-01",
-                    "Modelo híbrido: anônimo com identificação opcional",
+                    "100% anônimo — privacidade garantida (mín. 5 respondentes)",
                     "Ciclos regulares e extraordinários por gatilhos",
                   ].map((item, i) => (
                     <motion.div
