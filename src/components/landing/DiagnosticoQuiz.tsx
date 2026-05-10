@@ -357,7 +357,11 @@ export function DiagnosticoQuiz({ origem }: Props) {
           })()}
         </div>
         <div className="flex gap-2 mt-6">
-          <Button variant="outline" onClick={prev} className="flex-1 sm:flex-none">
+          <Button
+            onClick={prev}
+            className="flex-1 sm:flex-none bg-transparent border text-white hover:bg-white/10"
+            style={{ borderColor: 'hsl(215 40% 35%)', color: 'white' }}
+          >
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
           </Button>
           <Button
