@@ -42,7 +42,7 @@ const RESP_OPCOES: { v: RespKey; l: string; risco: number }[] = [
 ];
 
 // Dimensões avaliadas
-type Dim = "documentacao" | "psicossocial" | "epi" | "esocial" | "jornada" | "auditoria";
+type Dim = "documentacao" | "psicossocial" | "epi" | "pessoas" | "jornada" | "auditoria";
 
 interface Pergunta {
   id: string;
@@ -52,14 +52,14 @@ interface Pergunta {
 }
 
 const PERGUNTAS: Pergunta[] = [
-  { id: "q_pgr",  dim: "documentacao",  pergunta: "PGR (Programa de Gerenciamento de Riscos) está atualizado nos últimos 12 meses?", ajuda: "NR-1 exige revisão anual ou após mudanças relevantes." },
-  { id: "q_aso",  dim: "documentacao",  pergunta: "Todos os colaboradores possuem ASO vigente e PCMSO ativo?", ajuda: "Admissionais, periódicos, demissionais e mudança de função." },
-  { id: "q_psi",  dim: "psicossocial",  pergunta: "Riscos psicossociais (NR-1 / NR-17) já foram identificados e estão no inventário de riscos?", ajuda: "Vigência reforçada da NR-1 sobre riscos psicossociais em 2025/2026." },
-  { id: "q_epi",  dim: "epi",           pergunta: "A entrega de EPIs é rastreável (assinatura, CA e validade) por colaborador?", ajuda: "NR-6 e Súmula 289 TST — sem prova, ônus é do empregador." },
-  { id: "q_eso",  dim: "esocial",       pergunta: "Eventos eSocial de SST (S-2210 / S-2220 / S-2240) estão sendo enviados no prazo?", ajuda: "Atrasos geram multa por evento e bloqueio de CND." },
-  { id: "q_pto",  dim: "jornada",       pergunta: "O ponto eletrônico é válido (REP-C/REP-P) e há acordo formal de banco de horas?", ajuda: "Súmula 338 TST presume jornada do empregado se o controle for inválido." },
-  { id: "q_act",  dim: "auditoria",     pergunta: "Achados de auditoria/inspeção viram plano de ação 5W2H rastreável?", ajuda: "Reincidência sem ação documentada dobra multas e pesa em juízo." },
-  { id: "q_doc",  dim: "documentacao",  pergunta: "A documentação de SST está centralizada digitalmente e acessível em uma fiscalização?", ajuda: "Planilhas e papel = perda de defesa em ação trabalhista." },
+  { id: "q_pgr",      dim: "documentacao", pergunta: "Sua empresa tem um documento atualizado descrevendo os riscos do trabalho (tipo o PGR)?", ajuda: "É o documento que mostra quais perigos existem em cada função e o que está sendo feito para evitá-los." },
+  { id: "q_aso",      dim: "documentacao", pergunta: "Todos os colaboradores estão com o exame médico (ASO) em dia?", ajuda: "Inclui exame de admissão, periódico e quando muda de função." },
+  { id: "q_psi",      dim: "psicossocial", pergunta: "Sua empresa já olhou para riscos como estresse, sobrecarga e assédio?", ajuda: "Conhecidos como riscos psicossociais — agora cobrados pela legislação." },
+  { id: "q_epi",      dim: "epi",          pergunta: "Quando entrega capacete, luva ou outro EPI, você consegue provar quem recebeu e quando?", ajuda: "Sem essa prova, em uma ação trabalhista a responsabilidade fica com a empresa." },
+  { id: "q_clima",    dim: "pessoas",      pergunta: "Você sabe como anda o clima e o engajamento da sua equipe?", ajuda: "Pesquisas de clima, conversas estruturadas, indicadores de turnover, etc." },
+  { id: "q_feedback", dim: "pessoas",      pergunta: "Existe um processo claro de feedback e avaliação de desempenho?", ajuda: "Ciclos de avaliação, 1:1, plano de desenvolvimento individual (PDI)." },
+  { id: "q_pto",      dim: "jornada",      pergunta: "Você acompanha com facilidade as horas trabalhadas, faltas e horas extras de cada um?", ajuda: "Quanto mais simples acompanhar, menor o risco de processos por jornada." },
+  { id: "q_act",      dim: "auditoria",    pergunta: "Quando acontece um problema (acidente, reclamação, achado de auditoria), ele vira um plano de ação com responsável e prazo?", ajuda: "Sem plano de ação documentado, o mesmo problema tende a se repetir e pesa em juízo." },
 ];
 
 function calcularDiagnostico(respostas: Record<string, RespKey>) {
@@ -70,7 +70,7 @@ function calcularDiagnostico(respostas: Record<string, RespKey>) {
     documentacao: { soma: 0, max: 0 },
     psicossocial: { soma: 0, max: 0 },
     epi: { soma: 0, max: 0 },
-    esocial: { soma: 0, max: 0 },
+    pessoas: { soma: 0, max: 0 },
     jornada: { soma: 0, max: 0 },
     auditoria: { soma: 0, max: 0 },
   };
@@ -104,38 +104,38 @@ function calcularDiagnostico(respostas: Record<string, RespKey>) {
 }
 
 const PERFIL_LABEL: Record<string, { l: string; cor: string; msg: string }> = {
-  critico:    { l: "Crítico",    cor: "hsl(0 70% 55%)",    msg: "Cenário de exposição alta. Recomendamos priorizar plano de ação imediato. Um especialista da YourEyes vai entrar em contato para apresentar como estruturar." },
-  alto:       { l: "Alto risco", cor: "hsl(33 100% 55%)",  msg: "Há lacunas relevantes que podem virar autuação ou passivo trabalhista. Vamos entrar em contato para apresentar caminhos de remediação." },
-  moderado:   { l: "Moderado",   cor: "hsl(207 90% 55%)",  msg: "Bom momento para estruturar a governança de SST antes que vire risco. Um especialista entra em contato para uma apresentação." },
-  controlado: { l: "Controlado", cor: "hsl(152 60% 50%)",  msg: "Cenário relativamente maduro. Mostramos como ganhar eficiência e blindagem documental adicional. Em breve entramos em contato." },
+  critico:    { l: "Crítico",    cor: "hsl(0 70% 55%)",    msg: "Cenário com várias frentes em aberto. Recomendamos priorizar um plano de ação imediato. Um especialista da YourEyes vai entrar em contato para apresentar como estruturar." },
+  alto:       { l: "Alto risco", cor: "hsl(33 100% 55%)",  msg: "Há lacunas relevantes que podem virar problema com fiscalização ou processos. Vamos entrar em contato para apresentar caminhos de remediação." },
+  moderado:   { l: "Moderado",   cor: "hsl(207 90% 55%)",  msg: "Bom momento para estruturar a gestão antes que vire risco. Um especialista entra em contato para uma apresentação." },
+  controlado: { l: "Controlado", cor: "hsl(152 60% 50%)",  msg: "Cenário relativamente maduro. Mostramos como ganhar eficiência e blindagem adicional. Em breve entramos em contato." },
 };
 
 const DIM_LABEL: Record<Dim, string> = {
-  documentacao: "Documentação SST",
-  psicossocial: "Riscos psicossociais (NR-1/NR-17)",
-  epi: "EPI / NR-6",
-  esocial: "eSocial SST",
-  jornada: "Ponto e jornada (CLT)",
-  auditoria: "Plano de ação / Auditoria",
+  documentacao: "Documentação e conformidade",
+  psicossocial: "Saúde mental e psicossocial",
+  epi: "Equipamentos de proteção (EPI)",
+  pessoas: "Gestão de pessoas",
+  jornada: "Controle de jornada",
+  auditoria: "Plano de ação e melhoria contínua",
 };
 
 const RISCO_POR_PERGUNTA: Record<string, string> = {
-  q_pgr: "PGR desatualizado — autuação NR-1 e perda de defesa em juízo.",
-  q_aso: "ASO/PCMSO sem evidência — presunção de nexo em adoecimento.",
-  q_psi: "Risco psicossocial não inventariado — não conformidade NR-1 (item 1.5.3.2).",
-  q_epi: "EPI sem rastreabilidade — inversão do ônus da prova (Súmula 289 TST).",
-  q_eso: "Eventos eSocial atrasados — multa por evento + bloqueio de CND.",
-  q_pto: "Controle de jornada inválido — Súmula 338 TST presume jornada do empregado.",
-  q_act: "Achados sem plano de ação — reincidência dobra multa e pesa em juízo.",
-  q_doc: "Documentação dispersa — perda de defesa em fiscalização.",
+  q_pgr:      "Sem documento de riscos atualizado, a empresa fica exposta em fiscalização e em ações trabalhistas.",
+  q_aso:      "Exames médicos vencidos abrem brecha para presunção de nexo em adoecimento.",
+  q_psi:      "Riscos psicossociais não mapeados — não conformidade direta com a NR-1 atualizada.",
+  q_epi:      "EPI sem prova de entrega — em juízo, a culpa tende a ficar com a empresa.",
+  q_clima:    "Sem visibilidade de clima e engajamento, problemas (turnover, assédio, burnout) só aparecem tarde.",
+  q_feedback: "Sem feedback estruturado, perde-se talento e cresce o risco de conflito e ação trabalhista.",
+  q_pto:      "Controle de jornada frágil é uma das principais causas de processos trabalhistas.",
+  q_act:      "Achados sem plano de ação se repetem e pesam em juízo como negligência reiterada.",
 };
 
 const ACAO_POR_DIM: Record<Dim, string[]> = {
   documentacao: ["Dossiê digital por colaborador", "Auto-arquivamento por categoria", "Alertas de validade ASO/PGR/PCMSO"],
-  psicossocial: ["Aplicar SIPRO (questionário psicossocial anônimo)", "Mapear GHE com riscos NR-17", "Plano de ação 5W2H por unidade"],
-  epi:          ["Matriz EPI × Função × CET", "Entrega digital com selfie + geolocalização", "Estoque com validade e CA monitorado"],
-  esocial:      ["Auditoria de eventos pendentes", "Calendário S-22XX automatizado", "Integração com folha e SST"],
-  jornada:      ["REP-C/REP-P com OTP", "Fechamento mensal com banco de horas válido", "Análise de jornada × CLT"],
+  psicossocial: ["Aplicar questionário psicossocial anônimo", "Mapear setores e funções com maior carga", "Plano de ação 5W2H por unidade"],
+  epi:          ["Matriz EPI × Função × Risco", "Entrega digital com selfie + geolocalização", "Estoque com validade e CA monitorado"],
+  pessoas:      ["Pesquisa de clima e engajamento recorrente", "Ciclos de feedback e avaliação 360º", "PDI (Plano de Desenvolvimento) por colaborador"],
+  jornada:      ["Ponto digital simples (com OTP/geolocalização)", "Fechamento mensal com banco de horas", "Alertas de horas extras e faltas"],
   auditoria:    ["Plano de ação 5W2H rastreável", "Evidência fotográfica e assinaturas digitais", "Dashboard de conformidade por unidade"],
 };
 
