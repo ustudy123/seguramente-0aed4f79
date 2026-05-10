@@ -79,7 +79,7 @@ const pulseGlow = {
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [vagasRestantes, setVagasRestantes] = useState(10);
+  const [vagasRestantes, setVagasRestantes] = useState(4);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
