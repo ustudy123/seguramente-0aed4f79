@@ -737,13 +737,15 @@ export default function LandingPage() {
         <div className="relative max-w-2xl mx-auto">
           <motion.div {...fadeUp}>
             <div className="text-center mb-10">
-              <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
+              <Badge className="mb-4 animate-pulse text-sm border" style={{ background: 'linear-gradient(90deg, hsl(265 85% 60% / 0.18), hsl(330 85% 60% / 0.18))', color: 'hsl(320 95% 80%)', borderColor: 'hsl(290 80% 60% / 0.4)' }}>
                 <Zap className="w-4 h-4 mr-1" />
                 CONSULTORIA EXCLUSIVA — VAGAS LIMITADAS
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
-                Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para{" "}
-                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>consultoria com especialista</span>
+                Apenas{" "}
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(265 90% 65%), hsl(330 90% 65%), hsl(38 95% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{vagasRestantes}</span>{" "}
+                vagas para{" "}
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(200 90% 60%), hsl(265 85% 65%), hsl(330 90% 65%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>consultoria com especialista</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
                 Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> de consultoria 1:1 com um especialista YourEyes para
@@ -752,16 +754,21 @@ export default function LandingPage() {
             </div>
 
             {/* Vagas visual */}
-            <div className="rounded-[2rem] p-8 mb-10 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 pointer-events-none" />
+            <div className="rounded-[2rem] p-8 mb-10 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 0%, hsl(265 85% 55% / 0.12), transparent 60%), radial-gradient(circle at 90% 100%, hsl(330 85% 55% / 0.12), transparent 60%)' }} />
               <div className="flex items-center justify-between mb-4 relative z-10">
-                <span className="text-sm font-bold uppercase tracking-widest text-gray-500">Status das Vagas</span>
-                <span className="text-xl font-black px-3 py-1 rounded-lg" style={{ background: 'hsl(33 100% 50% / 0.1)', color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
+                <span className="text-sm font-bold uppercase tracking-widest text-gray-400">Status das Vagas</span>
+                <span
+                  className="text-xl font-black px-3 py-1 rounded-lg text-white"
+                  style={{ background: 'linear-gradient(135deg, hsl(265 85% 55%), hsl(330 85% 55%))', boxShadow: '0 6px 24px hsl(290 85% 55% / 0.35)' }}
+                >
+                  {10 - vagasRestantes}/10
+                </span>
               </div>
-              <div className="w-full rounded-full h-5 overflow-hidden p-1 relative z-10" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <div className="w-full rounded-full h-5 overflow-hidden p-1 relative z-10" style={{ background: 'rgba(255,255,255,0.06)' }}>
                 <motion.div
-                  className="h-full rounded-full shadow-[0_0_20px_rgba(249,115,22,0.4)]"
-                  style={{ background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
+                  className="h-full rounded-full"
+                  style={{ background: 'linear-gradient(90deg, hsl(200 90% 55%), hsl(265 85% 60%), hsl(330 90% 60%), hsl(38 95% 58%))', boxShadow: '0 0 24px hsl(290 85% 55% / 0.5)' }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${((10 - vagasRestantes) / 10) * 100}%` }}
                   viewport={{ once: true }}
