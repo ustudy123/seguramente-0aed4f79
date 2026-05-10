@@ -79,7 +79,7 @@ const pulseGlow = {
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [vagasRestantes, setVagasRestantes] = useState(10);
+  const [vagasRestantes, setVagasRestantes] = useState(4);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -99,7 +99,10 @@ export default function LandingPage() {
       .limit(1)
       .maybeSingle();
     if (data) {
-      setVagasRestantes(data.total_vagas - data.vagas_preenchidas);
+      // Garante mínimo de 6 vagas ocupadas para efeito de prova social
+      const ocupadasReais = data.vagas_preenchidas ?? 0;
+      const ocupadas = Math.max(6, ocupadasReais);
+      setVagasRestantes(Math.max(0, data.total_vagas - ocupadas));
     }
   };
 
