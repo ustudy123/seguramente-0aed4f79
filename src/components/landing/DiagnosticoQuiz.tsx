@@ -52,14 +52,17 @@ interface Pergunta {
 }
 
 const PERGUNTAS: Pergunta[] = [
-  { id: "q_pgr",      dim: "documentacao", pergunta: "Sua empresa tem um documento atualizado descrevendo os riscos do trabalho (tipo o PGR)?", ajuda: "É o documento que mostra quais perigos existem em cada função e o que está sendo feito para evitá-los." },
-  { id: "q_aso",      dim: "documentacao", pergunta: "Todos os colaboradores estão com o exame médico (ASO) em dia?", ajuda: "Inclui exame de admissão, periódico e quando muda de função." },
-  { id: "q_psi",      dim: "psicossocial", pergunta: "Sua empresa já olhou para riscos como estresse, sobrecarga e assédio?", ajuda: "Conhecidos como riscos psicossociais — agora cobrados pela legislação." },
-  { id: "q_epi",      dim: "epi",          pergunta: "Quando entrega capacete, luva ou outro EPI, você consegue provar quem recebeu e quando?", ajuda: "Sem essa prova, em uma ação trabalhista a responsabilidade fica com a empresa." },
-  { id: "q_clima",    dim: "pessoas",      pergunta: "Você sabe como anda o clima e o engajamento da sua equipe?", ajuda: "Pesquisas de clima, conversas estruturadas, indicadores de turnover, etc." },
-  { id: "q_feedback", dim: "pessoas",      pergunta: "Existe um processo claro de feedback e avaliação de desempenho?", ajuda: "Ciclos de avaliação, 1:1, plano de desenvolvimento individual (PDI)." },
-  { id: "q_pto",      dim: "jornada",      pergunta: "Você acompanha com facilidade as horas trabalhadas, faltas e horas extras de cada um?", ajuda: "Quanto mais simples acompanhar, menor o risco de processos por jornada." },
-  { id: "q_act",      dim: "auditoria",    pergunta: "Quando acontece um problema (acidente, reclamação, achado de auditoria), ele vira um plano de ação com responsável e prazo?", ajuda: "Sem plano de ação documentado, o mesmo problema tende a se repetir e pesa em juízo." },
+  { id: "q_pgr",       dim: "documentacao", pergunta: "Sua empresa tem um documento atualizado descrevendo os riscos do trabalho (tipo o PGR)?", ajuda: "É o documento que mostra quais perigos existem em cada função e o que está sendo feito para evitá-los." },
+  { id: "q_aso",       dim: "documentacao", pergunta: "Todos os colaboradores estão com o exame médico (ASO) em dia?", ajuda: "Inclui exame de admissão, periódico e quando muda de função." },
+  { id: "q_cargos",    dim: "documentacao", pergunta: "Existe um descritivo formal de cargos e funções?", ajuda: "Define o que cada função faz, quais responsabilidades tem e quais riscos enfrenta." },
+  { id: "q_psi",       dim: "psicossocial", pergunta: "Sua empresa já olhou para riscos como estresse, sobrecarga e assédio?", ajuda: "Conhecidos como riscos psicossociais — agora cobrados pela legislação." },
+  { id: "q_ouvidoria", dim: "psicossocial", pergunta: "Existe um canal de ouvidoria para o colaborador relatar problemas (assédio, conflitos, denúncias)?", ajuda: "Pode ser anônimo. Reduz risco de ação trabalhista e melhora o clima." },
+  { id: "q_epi",       dim: "epi",          pergunta: "Quando entrega capacete, luva ou outro EPI, você consegue provar quem recebeu e quando?", ajuda: "Sem essa prova, em uma ação trabalhista a responsabilidade fica com a empresa." },
+  { id: "q_clima",     dim: "pessoas",      pergunta: "Você sabe como anda o clima e o engajamento da sua equipe?", ajuda: "Pesquisas de clima, conversas estruturadas, indicadores de turnover, etc." },
+  { id: "q_feedback",  dim: "pessoas",      pergunta: "Existe um processo claro de feedback, avaliação de desempenho e plano de desenvolvimento (PDI)?", ajuda: "Ciclos de avaliação, 1:1, PDI por colaborador." },
+  { id: "q_metas",     dim: "pessoas",      pergunta: "A empresa tem uma gestão de metas (objetivos, indicadores, acompanhamento)?", ajuda: "Metas claras por área ou colaborador, com acompanhamento periódico." },
+  { id: "q_pto",       dim: "jornada",      pergunta: "Você acompanha com facilidade o ponto, as pausas, horas extras e faltas de cada colaborador?", ajuda: "Quanto mais simples acompanhar, menor o risco de processos por jornada." },
+  { id: "q_act",       dim: "auditoria",    pergunta: "Quando acontece um problema (acidente, reclamação, achado de auditoria), ele vira um plano de ação com responsável e prazo?", ajuda: "Sem plano de ação documentado, o mesmo problema tende a se repetir e pesa em juízo." },
 ];
 
 function calcularDiagnostico(respostas: Record<string, RespKey>) {
