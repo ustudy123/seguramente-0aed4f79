@@ -123,14 +123,17 @@ const DIM_LABEL: Record<Dim, string> = {
 };
 
 const RISCO_POR_PERGUNTA: Record<string, string> = {
-  q_pgr:      "Sem documento de riscos atualizado, a empresa fica exposta em fiscalização e em ações trabalhistas.",
-  q_aso:      "Exames médicos vencidos abrem brecha para presunção de nexo em adoecimento.",
-  q_psi:      "Riscos psicossociais não mapeados — não conformidade direta com a NR-1 atualizada.",
-  q_epi:      "EPI sem prova de entrega — em juízo, a culpa tende a ficar com a empresa.",
-  q_clima:    "Sem visibilidade de clima e engajamento, problemas (turnover, assédio, burnout) só aparecem tarde.",
-  q_feedback: "Sem feedback estruturado, perde-se talento e cresce o risco de conflito e ação trabalhista.",
-  q_pto:      "Controle de jornada frágil é uma das principais causas de processos trabalhistas.",
-  q_act:      "Achados sem plano de ação se repetem e pesam em juízo como negligência reiterada.",
+  q_pgr:       "Sem documento de riscos atualizado, a empresa fica exposta em fiscalização e em ações trabalhistas.",
+  q_aso:       "Exames médicos vencidos abrem brecha para presunção de nexo em adoecimento.",
+  q_cargos:    "Sem descritivo de cargos, fica difícil definir riscos, EPIs, treinamentos e responsabilidades.",
+  q_psi:       "Riscos psicossociais não mapeados — não conformidade direta com a NR-1 atualizada.",
+  q_ouvidoria: "Sem canal de escuta, problemas (assédio, conflitos) viram processo antes de serem resolvidos.",
+  q_epi:       "EPI sem prova de entrega — em juízo, a culpa tende a ficar com a empresa.",
+  q_clima:     "Sem visibilidade de clima e engajamento, problemas (turnover, assédio, burnout) só aparecem tarde.",
+  q_feedback:  "Sem feedback e PDI estruturados, perde-se talento e cresce o risco de conflito e ação trabalhista.",
+  q_metas:     "Sem gestão de metas, a empresa não mede performance — e perde produtividade e direção.",
+  q_pto:       "Controle frágil de ponto e pausas é uma das principais causas de processos trabalhistas.",
+  q_act:       "Achados sem plano de ação se repetem e pesam em juízo como negligência reiterada.",
 };
 
 const ACAO_POR_DIM: Record<Dim, string[]> = {
