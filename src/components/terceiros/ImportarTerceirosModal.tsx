@@ -55,29 +55,47 @@ export function ImportarTerceirosModal({ open, onOpenChange }: Props) {
       "atividade_risco",
     ];
 
-    const rows = [
-      headers,
-      [
-        "Exemplo Empresa LTDA",
-        "Nome Fantasia",
-        "00.000.000/0000-00",
-        "contato@empresa.com",
-        "(00) 00000-0000",
-        "recorrente",
-        "nao",
-      ],
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Valores aceitos: eventual | recorrente | continuo",
-        "Valores aceitos: sim | nao",
-      ],
+    const exampleRows = [
+      ["Exemplo Empresa 1 LTDA", "Empresa 1", "00.000.000/0000-01", "contato1@empresa.com", "(11) 90000-0001", "eventual", "nao"],
+      ["Exemplo Empresa 2 LTDA", "Empresa 2", "00.000.000/0000-02", "contato2@empresa.com", "(11) 90000-0002", "recorrente", "sim"],
+      ["Exemplo Empresa 3 LTDA", "Empresa 3", "00.000.000/0000-03", "contato3@empresa.com", "(11) 90000-0003", "continuo", "nao"],
     ];
 
+    const rows = [headers, ...exampleRows];
+
     const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Add dropdown (data validation) for tipo_acesso (col F) and atividade_risco (col G)
+    // Apply to rows 2..1000 to cover bulk imports
+    (ws as any)["!dataValidation"] = [
+      {
+        sqref: "F2:F1000",
+        type: "list",
+        formula1: '"eventual,recorrente,continuo"',
+        showErrorMessage: true,
+        errorTitle: "Valor inválido",
+        error: "Use: eventual, recorrente ou continuo",
+        showInputMessage: true,
+        promptTitle: "Tipo de Acesso",
+        prompt: "eventual | recorrente | continuo",
+      },
+      {
+        sqref: "G2:G1000",
+        type: "list",
+        formula1: '"sim,nao"',
+        showErrorMessage: true,
+        errorTitle: "Valor inválido",
+        error: "Use: sim ou nao",
+        showInputMessage: true,
+        promptTitle: "Atividade de Risco",
+        prompt: "sim | nao",
+      },
+    ];
+
+    // Column widths for better readability
+    (ws as any)["!cols"] = [
+      { wch: 28 }, { wch: 20 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 16 },
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Terceiros");
     XLSX.writeFile(wb, "template_importacao_terceiros.xlsx");
