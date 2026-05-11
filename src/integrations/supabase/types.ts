@@ -15100,6 +15100,9 @@ export type Database = {
       }
       plano_acoes: {
         Row: {
+          arquivada: boolean
+          arquivada_em: string | null
+          arquivada_por: string | null
           codigo: string
           como: string | null
           created_at: string | null
@@ -15136,6 +15139,9 @@ export type Database = {
           urgencia: number | null
         }
         Insert: {
+          arquivada?: boolean
+          arquivada_em?: string | null
+          arquivada_por?: string | null
           codigo: string
           como?: string | null
           created_at?: string | null
@@ -15172,6 +15178,9 @@ export type Database = {
           urgencia?: number | null
         }
         Update: {
+          arquivada?: boolean
+          arquivada_em?: string | null
+          arquivada_por?: string | null
           codigo?: string
           como?: string | null
           created_at?: string | null
