@@ -53,7 +53,35 @@ const CRITICIDADE_COLOR: Record<string, string> = {
 
 export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
   const navigate = useNavigate();
-  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro(cadastro?.id);
+  const { obrigacoes, createObrigacao, updateObrigacao, deleteObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro(cadastro?.id);
+  const [toDelete, setToDelete] = useState<EmpresaObrigacao | null>(null);
+  const [confirmText, setConfirmText] = useState('');
+
+  const handleToggleAtivo = (obrigacao: EmpresaObrigacao, ativo: boolean) => {
+    updateObrigacao.mutate(
+      { id: obrigacao.id, ativo },
+      {
+        onSuccess: () => toast.success(ativo ? 'Obrigação ativada' : 'Obrigação inativada'),
+        onError: (e: Error) => toast.error('Erro: ' + e.message),
+      }
+    );
+  };
+
+  const handleConfirmDelete = () => {
+    if (!toDelete) return;
+    if (confirmText.trim().toUpperCase() !== 'EXCLUIR') {
+      toast.error('Digite EXCLUIR para confirmar');
+      return;
+    }
+    deleteObrigacao.mutate(toDelete.id, {
+      onSuccess: () => {
+        toast.success('Obrigação excluída');
+        setToDelete(null);
+        setConfirmText('');
+      },
+      onError: (e: Error) => toast.error('Erro: ' + e.message),
+    });
+  };
 
   // Detect obligations from cadastro data
   const obrigacoesDetectadas = useMemo(() => {
