@@ -1,0 +1,1 @@
+ALTER TABLE public.empresa_obrigacoes ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;

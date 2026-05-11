@@ -3956,6 +3956,7 @@ export type Database = {
       empresa_obrigacoes: {
         Row: {
           acao_gerada_id: string | null
+          ativo: boolean
           base_legal: string | null
           categoria: string
           created_at: string
@@ -3975,6 +3976,7 @@ export type Database = {
         }
         Insert: {
           acao_gerada_id?: string | null
+          ativo?: boolean
           base_legal?: string | null
           categoria: string
           created_at?: string
@@ -3994,6 +3996,7 @@ export type Database = {
         }
         Update: {
           acao_gerada_id?: string | null
+          ativo?: boolean
           base_legal?: string | null
           categoria?: string
           created_at?: string

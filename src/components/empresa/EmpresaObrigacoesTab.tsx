@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -13,6 +24,7 @@ import {
   Edit,
   Info,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
@@ -41,7 +53,35 @@ const CRITICIDADE_COLOR: Record<string, string> = {
 
 export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
   const navigate = useNavigate();
-  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro(cadastro?.id);
+  const { obrigacoes, createObrigacao, updateObrigacao, deleteObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro(cadastro?.id);
+  const [toDelete, setToDelete] = useState<EmpresaObrigacao | null>(null);
+  const [confirmText, setConfirmText] = useState('');
+
+  const handleToggleAtivo = (obrigacao: EmpresaObrigacao, ativo: boolean) => {
+    updateObrigacao.mutate(
+      { id: obrigacao.id, ativo },
+      {
+        onSuccess: () => toast.success(ativo ? 'Obrigação ativada' : 'Obrigação inativada'),
+        onError: (e: Error) => toast.error('Erro: ' + e.message),
+      }
+    );
+  };
+
+  const handleConfirmDelete = () => {
+    if (!toDelete) return;
+    if (confirmText.trim().toUpperCase() !== 'EXCLUIR') {
+      toast.error('Digite EXCLUIR para confirmar');
+      return;
+    }
+    deleteObrigacao.mutate(toDelete.id, {
+      onSuccess: () => {
+        toast.success('Obrigação excluída');
+        setToDelete(null);
+        setConfirmText('');
+      },
+      onError: (e: Error) => toast.error('Erro: ' + e.message),
+    });
+  };
 
   // Detect obligations from cadastro data
   const obrigacoesDetectadas = useMemo(() => {
@@ -75,6 +115,7 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
         prazo_sugerido: null,
         responsavel_sugerido: null,
         acao_gerada_id: null,
+        ativo: true,
       });
       count++;
     }
@@ -148,16 +189,19 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
             return (
               <Card
                 key={obrigacao.id}
-                className={`border-l-4 ${CRITICIDADE_COLOR[obrigacao.criticidade]}`}
+                className={`border-l-4 ${CRITICIDADE_COLOR[obrigacao.criticidade]} ${obrigacao.ativo === false ? 'opacity-60' : ''}`}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-sm">{obrigacao.titulo}</h4>
+                        <h4 className={`font-medium text-sm ${obrigacao.ativo === false ? 'line-through' : ''}`}>{obrigacao.titulo}</h4>
                         <Badge variant="outline" className="text-xs">
                           {obrigacao.subcategoria?.toUpperCase()}
                         </Badge>
+                        {obrigacao.ativo === false && (
+                          <Badge variant="secondary" className="text-xs">Inativa</Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">{obrigacao.descricao}</p>
                       {obrigacao.base_legal && (
@@ -165,6 +209,17 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                        <Switch
+                          checked={obrigacao.ativo !== false}
+                          onCheckedChange={(checked) => handleToggleAtivo(obrigacao, checked)}
+                          disabled={updateObrigacao.isPending}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {obrigacao.ativo !== false ? 'Ativa' : 'Inativa'}
+                        </span>
+                      </div>
+
                       <Badge className={`${statusConf.color} text-xs`}>
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {statusConf.label}
@@ -205,6 +260,16 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                           Abrir Ação
                         </Button>
                       )}
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setToDelete(obrigacao); setConfirmText(''); }}
+                        className="text-xs h-8 text-destructive hover:text-destructive"
+                        title="Excluir obrigação"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -213,6 +278,42 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
           })}
         </div>
       )}
+
+      <Dialog open={!!toDelete} onOpenChange={(o) => { if (!o) { setToDelete(null); setConfirmText(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" /> Excluir obrigação
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é permanente. Para confirmar a exclusão de <strong>"{toDelete?.titulo}"</strong>,
+              digite <strong>EXCLUIR</strong> no campo abaixo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-excluir">Confirmação</Label>
+            <Input
+              id="confirm-excluir"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Digite EXCLUIR"
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setToDelete(null); setConfirmText(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={confirmText.trim().toUpperCase() !== 'EXCLUIR' || deleteObrigacao.isPending}
+            >
+              <Trash2 className="w-4 h-4 mr-1" /> Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
