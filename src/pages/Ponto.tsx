@@ -46,6 +46,8 @@ import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
+import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
+import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 
 const Ponto = () => {
   const { profile } = useAuth();
