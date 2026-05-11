@@ -8,8 +8,10 @@ import {
   AlertTriangle,
   Filter,
   Search,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlanoAcaoStats } from "@/components/planoAcao/PlanoAcaoStats";
@@ -117,15 +119,84 @@ export default function PlanoAcao() {
       <PlanoAcaoIAAssistant />
 
       {/* Search and Filters */}
-      <div className="space-y-4">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por código, título, descrição ou responsável..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10"
-          />
+      <div className="space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por código, título, descrição ou responsável..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Chips rápidos de Status */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { v: "pendente", label: "Pendentes" },
+              { v: "em_andamento", label: "Em andamento" },
+              { v: "concluida", label: "Concluídas" },
+            ].map((s) => {
+              const active = filters.status?.includes(s.v as any);
+              return (
+                <Badge
+                  key={s.v}
+                  variant={active ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const cur = filters.status || [];
+                    const upd = cur.includes(s.v as any)
+                      ? cur.filter((x) => x !== s.v)
+                      : [...cur, s.v as any];
+                    setFilters({ ...filters, status: upd.length ? upd : undefined });
+                  }}
+                >
+                  {s.label}
+                </Badge>
+              );
+            })}
+          </div>
+
+          {/* Chips rápidos de Prioridade */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { v: "imediato", label: "🔴 Imediato" },
+              { v: "urgente", label: "🟠 Urgente" },
+            ].map((p) => {
+              const active = filters.prioridade?.includes(p.v as any);
+              return (
+                <Badge
+                  key={p.v}
+                  variant={active ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const cur = filters.prioridade || [];
+                    const upd = cur.includes(p.v as any)
+                      ? cur.filter((x) => x !== p.v)
+                      : [...cur, p.v as any];
+                    setFilters({ ...filters, prioridade: upd.length ? upd : undefined });
+                  }}
+                >
+                  {p.label}
+                </Badge>
+              );
+            })}
+          </div>
+
+          {(searchTerm || Object.keys(filters).length > 0) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setFilters({});
+                setActiveStatFilter(null);
+              }}
+            >
+              <X className="h-4 w-4 mr-1" /> Limpar
+            </Button>
+          )}
         </div>
 
         {showFilters && (

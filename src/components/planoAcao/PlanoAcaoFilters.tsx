@@ -39,6 +39,15 @@ const ORIGEM_OPTIONS: { value: OrigemModulo; label: string }[] = [
   { value: "epi", label: "EPIs" },
   { value: "ponto", label: "Ponto" },
   { value: "humor", label: "Humor" },
+  { value: "psicossocial", label: "Psicossocial" },
+  { value: "atestados", label: "Atestados" },
+  { value: "sst", label: "SST" },
+  { value: "compliance_sst", label: "Compliance SST" },
+  { value: "compliance", label: "Compliance" },
+  { value: "documentos", label: "Documentos" },
+  { value: "avaliacoes", label: "Avaliações" },
+  { value: "estrategia", label: "Estratégia" },
+  { value: "gro", label: "GRO" },
 ];
 
 export function PlanoAcaoFilters({ filters, onChange, onClear }: PlanoAcaoFiltersProps) {
