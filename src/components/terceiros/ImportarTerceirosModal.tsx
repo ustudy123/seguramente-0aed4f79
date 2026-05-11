@@ -117,7 +117,10 @@ export function ImportarTerceirosModal({ open, onOpenChange }: Props) {
         const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
         const data = rawData.map((row) => {
           return Object.entries(row).reduce<Record<string, unknown>>((acc, [key, value]) => {
-            const normalizedKey = key.replace(/\s*\*\s*$/, "").trim().toLowerCase();
+            // Normaliza cabeçalho: remove asterisco, acentos, espaços e converte para snake_case lowercase
+            const normalizedKey = stripAccents(
+              key.replace(/\s*\*\s*$/, "").trim().toLowerCase()
+            ).replace(/\s+/g, "_");
             acc[normalizedKey] = typeof value === "string" ? value.trim() : value;
             return acc;
           }, {});
