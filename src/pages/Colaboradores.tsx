@@ -578,11 +578,17 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                           Copiar Link de Cadastro
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { setInativarColab(colab); setInativarMotivo(""); }}>
+                          {(colab as any).inativo ? "Reativar" : "Inativar"}
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => {
                           if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
                           setDesligarColab(colab);
                         }}>
                           Desligar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
+                          Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
