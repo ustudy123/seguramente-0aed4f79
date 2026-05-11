@@ -541,32 +541,47 @@ const Ponto = () => {
         {/* Escalas */}
         <TabsContent value="escalas"><PontoEscalasTab /></TabsContent>
 
-        {/* Banco de Horas */}
-        <TabsContent value="banco"><PontoBancoHorasTab /></TabsContent>
+        {/* Apuração */}
+        <TabsContent value="apuracao">
+          <Tabs value={apuracaoTab} onValueChange={setApuracaoTab} className="w-full">
+            <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-4">
+              <TabsTrigger value="banco" className="text-xs"><Wallet className="h-3.5 w-3.5 mr-1" />Banco Horas</TabsTrigger>
+              <TabsTrigger value="fechamento" className="text-xs"><Lock className="h-3.5 w-3.5 mr-1" />Fechamento</TabsTrigger>
+              <TabsTrigger value="folha" className="text-xs"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Folha</TabsTrigger>
+              <TabsTrigger value="relatorios" className="text-xs"><FileDown className="h-3.5 w-3.5 mr-1" />Relatórios</TabsTrigger>
+            </TabsList>
+            <TabsContent value="banco"><PontoBancoHorasTab /></TabsContent>
+            <TabsContent value="fechamento"><PontoFechamentoTab /></TabsContent>
+            <TabsContent value="folha"><PontoFolhaTab /></TabsContent>
+            <TabsContent value="relatorios"><PontoRelatoriosTab /></TabsContent>
+          </Tabs>
+        </TabsContent>
 
-        {/* Fechamento */}
-        <TabsContent value="fechamento"><PontoFechamentoTab /></TabsContent>
+        {/* Compliance */}
+        <TabsContent value="compliance">
+          <Tabs value={complianceTab} onValueChange={setComplianceTab} className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+              <TabsTrigger value="alertas" className="text-xs"><Bell className="h-3.5 w-3.5 mr-1" />Alertas CLT</TabsTrigger>
+              <TabsTrigger value="cct" className="text-xs"><Scale className="h-3.5 w-3.5 mr-1" />CCT / Acordos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="alertas"><PontoAlertasTab /></TabsContent>
+            <TabsContent value="cct"><PontoCCTTab /></TabsContent>
+          </Tabs>
+        </TabsContent>
 
-        {/* Alertas */}
-        <TabsContent value="alertas"><PontoAlertasTab /></TabsContent>
-
-        {/* Links WhatsApp */}
-        <TabsContent value="links"><PontoLinksTab /></TabsContent>
-
-        {/* REP-C */}
-        <TabsContent value="repc"><PontoRepCTab /></TabsContent>
-
-        {/* CCT */}
-        <TabsContent value="cct"><PontoCCTTab /></TabsContent>
-
-        {/* Folha */}
-        <TabsContent value="folha"><PontoFolhaTab /></TabsContent>
-
-        {/* Relatórios */}
-        <TabsContent value="relatorios"><PontoRelatoriosTab /></TabsContent>
-
-        {/* Configuração */}
-        <TabsContent value="config"><PontoConfigTab /></TabsContent>
+        {/* Configurações */}
+        <TabsContent value="configuracoes">
+          <Tabs value={configTab} onValueChange={setConfigTab} className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-3 mb-4">
+              <TabsTrigger value="config" className="text-xs"><Settings className="h-3.5 w-3.5 mr-1" />Geral</TabsTrigger>
+              <TabsTrigger value="links" className="text-xs"><Link2 className="h-3.5 w-3.5 mr-1" />Links</TabsTrigger>
+              <TabsTrigger value="repc" className="text-xs"><HardDrive className="h-3.5 w-3.5 mr-1" />REP-C</TabsTrigger>
+            </TabsList>
+            <TabsContent value="config"><PontoConfigTab /></TabsContent>
+            <TabsContent value="links"><PontoLinksTab /></TabsContent>
+            <TabsContent value="repc"><PontoRepCTab /></TabsContent>
+          </Tabs>
+        </TabsContent>
       </Tabs>
 
       {/* Modal: Registrar Ponto */}
