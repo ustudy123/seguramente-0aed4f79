@@ -105,18 +105,17 @@ export function PontoAcordosTab() {
     }
   };
 
-  const onExcluir = (a: any) => {
-    confirm({
+  const onExcluir = async (a: any) => {
+    const ok = await confirmDialog({
       title: "Excluir acordo",
-      description: `Confirma exclusão de "${a.titulo}"?`,
+      description: `Confirma exclusão de "${a.titulo}"? Digite EXCLUIR para confirmar.`,
       requiredWord: "EXCLUIR",
       variant: "destructive",
-      onConfirm: async () => {
-        await fromTable("ponto_acordos").delete().eq("id", a.id);
-        qc.invalidateQueries({ queryKey: ["ponto-acordos"] });
-        toast.success("Acordo removido");
-      },
     });
+    if (!ok) return;
+    await fromTable("ponto_acordos").delete().eq("id", a.id);
+    qc.invalidateQueries({ queryKey: ["ponto-acordos"] });
+    toast.success("Acordo removido");
   };
 
   const tipoLabel = (t: string) => t === "individual" ? "Acordo Individual" : t === "act" ? "ACT" : "CCT";
