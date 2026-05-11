@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,35 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     atividade_risco: initial?.atividade_risco || false,
     observacoes: initial?.observacoes || "",
   });
+
+  // Reseta o formulário ao abrir/fechar ou trocar o registro em edição
+  useEffect(() => {
+    if (!open) return;
+    setForm({
+      razao_social: initial?.razao_social || "",
+      nome_fantasia: initial?.nome_fantasia || "",
+      cnpj: initial?.cnpj || "",
+      atividade_principal: initial?.atividade_principal || "",
+      cnae: initial?.cnae || "",
+      responsavel_nome: initial?.responsavel_nome || "",
+      responsavel_cargo: initial?.responsavel_cargo || "",
+      email: initial?.email || "",
+      telefone: initial?.telefone || "",
+      tipo_servico: initial?.tipo_servico || [],
+      unidades: initial?.unidades || [],
+      setores: initial?.setores || [],
+      tipo_acesso: initial?.tipo_acesso || "eventual",
+      contrato_inicio: initial?.contrato_inicio || "",
+      contrato_fim: initial?.contrato_fim || "",
+      atividade_risco: initial?.atividade_risco || false,
+      observacoes: initial?.observacoes || "",
+    });
+    setUnidadesText((initial?.unidades || []).join(", "));
+    setSetoresText((initial?.setores || []).join(", "));
+    setCustomServicos([]);
+    setServicoSearch("");
+    setContractFile(null);
+  }, [open, initial]);
 
   const set = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
 
