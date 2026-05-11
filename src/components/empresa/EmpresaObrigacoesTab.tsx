@@ -201,8 +201,8 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                           onClick={() => navigate(`/plano-acao/${obrigacao.acao_gerada_id}`)}
                           className="text-xs h-8"
                         >
-                          <Target className="w-3 h-3 mr-1" />
-                          Ação vinculada
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          Abrir Ação
                         </Button>
                       )}
                     </div>
