@@ -89,7 +89,7 @@ export function ImportarTerceirosModal({ open, onOpenChange }: Props) {
               cnpj: String(row.cnpj).replace(/\D/g, ""),
               email: row.email ? String(row.email) : null,
               telefone: row.telefone ? String(row.telefone) : null,
-              tipo_acesso: (row.tipo_acesso?.toLowerCase() || "eventual") as any,
+               tipo_acesso: (String(row.tipo_acesso || "eventual").toLowerCase() || "eventual") as any,
               atividade_risco: String(row.atividade_risco).toLowerCase() === "sim",
               status: "liberado",
               tenant_id: tenantId!,
