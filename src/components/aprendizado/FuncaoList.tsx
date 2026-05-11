@@ -297,19 +297,54 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
       `;
     }).join('');
 
+    // Wrapper neutraliza qualquer layout de colunas/grid/flex herdado do Manual
+    const resetWrapperStyle = [
+      "all: initial",
+      "display: block",
+      "width: 100%",
+      "max-width: 100%",
+      "column-count: 1 !important",
+      "columns: auto !important",
+      "column-span: all !important",
+      "-webkit-column-count: 1 !important",
+      "-webkit-column-span: all !important",
+      "float: none",
+      "clear: both",
+      "box-sizing: border-box",
+      "font-family: inherit",
+      "color: #333",
+      "background: #ffffff",
+    ].join("; ");
+
     return `
-      <div style="page-break-before: always; padding: 40px 24px; text-align: center; box-sizing: border-box;">
-        <h1 style="font-size: 28px; color: #1e3a5f; margin-bottom: 8px;">Procedimentos Operacionais Padrão (POPs)</h1>
-        <p style="font-size: 14px; color: #888;">${pops.length} procedimento${pops.length !== 1 ? 's' : ''} vinculado${pops.length !== 1 ? 's' : ''}</p>
-        <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
+      <div style="${resetWrapperStyle}">
+        <style>
+          .pop-reset-container, .pop-reset-container * {
+            column-count: 1 !important;
+            column-span: all !important;
+            -webkit-column-count: 1 !important;
+            -webkit-column-span: all !important;
+            float: none !important;
+          }
+          .pop-reset-container { display: block !important; width: 100% !important; }
+        </style>
+        <div class="pop-reset-container">
+          <div style="page-break-before: always; padding: 40px 24px; text-align: center; box-sizing: border-box;">
+            <h1 style="font-size: 28px; color: #1e3a5f; margin-bottom: 8px;">Procedimentos Operacionais Padrão (POPs)</h1>
+            <p style="font-size: 14px; color: #888;">${pops.length} procedimento${pops.length !== 1 ? 's' : ''} vinculado${pops.length !== 1 ? 's' : ''}</p>
+            <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
+          </div>
+          ${popSections}
+        </div>
       </div>
-      ${popSections}
     `;
   };
 
   const combineManualWithPops = (manualHtml: string, popsHtml: string): string => {
     if (!popsHtml) return manualHtml;
-    // Insert POPs HTML before </body> if present, otherwise append
+    // Inserir os POPs APÓS </body> e </html> não é válido; então fechamos qualquer
+    // container de colunas inserindo os POPs depois do </body> original via replace,
+    // mas envoltos no wrapper que reseta colunas.
     if (manualHtml.toLowerCase().includes("</body>")) {
       return manualHtml.replace(/<\/body>/i, `${popsHtml}</body>`);
     }
