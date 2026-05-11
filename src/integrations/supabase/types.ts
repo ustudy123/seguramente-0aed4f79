@@ -16749,6 +16749,7 @@ export type Database = {
           ciclo_horas_trabalho: number | null
           ciclo_inicio_data: string | null
           ciclo_inicio_hora: string | null
+          compensacoes_mensais: Json | null
           created_at: string | null
           descricao_contratual: string | null
           descricao_original: string | null
@@ -16791,6 +16792,7 @@ export type Database = {
           ciclo_horas_trabalho?: number | null
           ciclo_inicio_data?: string | null
           ciclo_inicio_hora?: string | null
+          compensacoes_mensais?: Json | null
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
@@ -16833,6 +16835,7 @@ export type Database = {
           ciclo_horas_trabalho?: number | null
           ciclo_inicio_data?: string | null
           ciclo_inicio_hora?: string | null
+          compensacoes_mensais?: Json | null
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
