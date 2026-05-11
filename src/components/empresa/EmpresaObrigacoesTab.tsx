@@ -189,16 +189,19 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
             return (
               <Card
                 key={obrigacao.id}
-                className={`border-l-4 ${CRITICIDADE_COLOR[obrigacao.criticidade]}`}
+                className={`border-l-4 ${CRITICIDADE_COLOR[obrigacao.criticidade]} ${obrigacao.ativo === false ? 'opacity-60' : ''}`}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-sm">{obrigacao.titulo}</h4>
+                        <h4 className={`font-medium text-sm ${obrigacao.ativo === false ? 'line-through' : ''}`}>{obrigacao.titulo}</h4>
                         <Badge variant="outline" className="text-xs">
                           {obrigacao.subcategoria?.toUpperCase()}
                         </Badge>
+                        {obrigacao.ativo === false && (
+                          <Badge variant="secondary" className="text-xs">Inativa</Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">{obrigacao.descricao}</p>
                       {obrigacao.base_legal && (
@@ -206,6 +209,17 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                        <Switch
+                          checked={obrigacao.ativo !== false}
+                          onCheckedChange={(checked) => handleToggleAtivo(obrigacao, checked)}
+                          disabled={updateObrigacao.isPending}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {obrigacao.ativo !== false ? 'Ativa' : 'Inativa'}
+                        </span>
+                      </div>
+
                       <Badge className={`${statusConf.color} text-xs`}>
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {statusConf.label}
@@ -246,6 +260,16 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                           Abrir Ação
                         </Button>
                       )}
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setToDelete(obrigacao); setConfirmText(''); }}
+                        className="text-xs h-8 text-destructive hover:text-destructive"
+                        title="Excluir obrigação"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
