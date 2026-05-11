@@ -14,6 +14,7 @@ import { TrabalhadorForm } from "./TrabalhadorForm";
 import { DocumentoUploadForm } from "./DocumentoUploadForm";
 import { TreinamentoForm } from "./TreinamentoForm";
 import { format } from "date-fns";
+import { formatCnpj } from "@/lib/brasilapi";
 
 const statusIcon = (s: string) => {
   switch (s) {
