@@ -53,7 +53,7 @@ import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
 import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 
 const Ponto = () => {
-  const { profile } = useAuth();
+  const { profile, tenantId: tenantIdAtivo } = useAuth();
   // Ponto eletrônico é exclusivo para vínculos CLT — exclui PJ/Pró-labore/Terceiros.
   const { colaboradores } = useColaboradores({ excluirPJ: true });
   const {
@@ -101,7 +101,6 @@ const Ponto = () => {
 
   // Marcações detalhadas do dia selecionado (todas, em ordem cronológica)
   const { empresaAtivaId } = useEmpresaAtiva();
-  const tenantIdAtivo = (profile as any)?.tenant_id;
   const dataSelStr = format(selectedDate, "yyyy-MM-dd");
   const { data: marcacoesDoDia = [] } = useQuery({
     queryKey: ["ponto-marcacoes-dia", tenantIdAtivo, dataSelStr, empresaAtivaId],
