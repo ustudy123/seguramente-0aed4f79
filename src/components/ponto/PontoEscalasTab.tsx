@@ -176,11 +176,20 @@ export function PontoEscalasTab() {
     const semanalMin = ciclo > 0 ? Math.round((168 / ciclo) * ht * 60) : 0;
     return { diaria: ht * 60, semanal: semanalMin };
   };
-  const [atribuicaoForm, setAtribuicaoForm] = useState({
+  const queryClient = useQueryClient();
+  const [atribuicaoForm, setAtribuicaoForm] = useState<{
+    escala_id: string;
+    colaborador_ids: string[];
+    data_inicio: string;
+    substituir: boolean;
+  }>({
     escala_id: "",
-    colaborador_id: "",
+    colaborador_ids: [],
     data_inicio: new Date().toISOString().split("T")[0],
+    substituir: false,
   });
+  const [atribBusca, setAtribBusca] = useState("");
+  const [atribuindoLote, setAtribuindoLote] = useState(false);
 
   const formatMinutos = (min: number) => {
     const h = Math.floor(min / 60);
