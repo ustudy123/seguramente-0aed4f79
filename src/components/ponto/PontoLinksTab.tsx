@@ -29,14 +29,21 @@ function getPontoExternoUrl(token: string): string {
 
 export function PontoLinksTab() {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const { colaboradores } = useColaboradores();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
 
+  // CPFs válidos da empresa ativa (para filtrar links)
+  const cpfsAtivos = useMemo(
+    () => new Set(colaboradores.map(c => (c.cpf || "").replace(/\D/g, ""))),
+    [colaboradores]
+  );
+
   // Fetch existing links
-  const { data: links = [], isLoading } = useQuery({
-    queryKey: ["ponto-links", tenantId],
+  const { data: linksRaw = [], isLoading } = useQuery({
+    queryKey: ["ponto-links", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       const { data, error } = await supabase
@@ -49,6 +56,12 @@ export function PontoLinksTab() {
     },
     enabled: !!tenantId,
   });
+
+  // Filtra links apenas dos colaboradores da empresa ativa
+  const links = useMemo(
+    () => linksRaw.filter((l: any) => cpfsAtivos.has((l.colaborador_cpf || "").replace(/\D/g, ""))),
+    [linksRaw, cpfsAtivos]
+  );
 
   // Map of CPF -> link
   const linksByCpf = useMemo(() => {
