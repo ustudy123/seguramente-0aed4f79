@@ -31,6 +31,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [uploadingContract, setUploadingContract] = useState(false);
   const [contractFile, setContractFile] = useState<File | null>(null);
+  const [unidadesText, setUnidadesText] = useState((initial?.unidades || []).join(", "));
+  const [setoresText, setSetoresText] = useState((initial?.setores || []).join(", "));
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
     nome_fantasia: initial?.nome_fantasia || "",
