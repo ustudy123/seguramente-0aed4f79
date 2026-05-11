@@ -64,7 +64,10 @@ const Ponto = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("visao_geral");
+  const [apuracaoTab, setApuracaoTab] = useState("banco");
+  const [complianceTab, setComplianceTab] = useState("alertas");
+  const [configTab, setConfigTab] = useState("config");
   
   // Modals
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
