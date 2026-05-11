@@ -42,7 +42,6 @@ export function PontoAcordosTab() {
   const { tenantId } = useTenant();
   const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
-  const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<AcordoForm>(defaultForm);
