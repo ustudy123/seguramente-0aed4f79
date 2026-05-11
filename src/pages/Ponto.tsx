@@ -106,7 +106,7 @@ const Ponto = () => {
   }, [selectedColaborador, tiposJaRegistrados.join(",")]);
   const { data: ajustesPendentesRaw = [] } = useAjustesPendentes();
   // Filtra ajustes pela empresa ativa cruzando pelo CPF dos colaboradores carregados
-  const ajustesPendentes = React.useMemo(() => {
+  const ajustesPendentes = useMemo(() => {
     const cpfsEmpresa = new Set(
       colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
     );
