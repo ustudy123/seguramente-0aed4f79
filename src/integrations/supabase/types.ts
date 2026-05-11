@@ -683,10 +683,14 @@ export type Database = {
           genero: string | null
           gestor_imediato: string | null
           id: string
+          inativado_em: string | null
+          inativado_por: string | null
+          inativo: boolean
           jornada_trabalho: string | null
           matricula_esocial: string | null
           medico_exame_demissional: string | null
           motivo_desligamento: string | null
+          motivo_inativacao: string | null
           multa_fgts: boolean | null
           nacionalidade: string | null
           naturalidade: string | null
@@ -759,10 +763,14 @@ export type Database = {
           genero?: string | null
           gestor_imediato?: string | null
           id?: string
+          inativado_em?: string | null
+          inativado_por?: string | null
+          inativo?: boolean
           jornada_trabalho?: string | null
           matricula_esocial?: string | null
           medico_exame_demissional?: string | null
           motivo_desligamento?: string | null
+          motivo_inativacao?: string | null
           multa_fgts?: boolean | null
           nacionalidade?: string | null
           naturalidade?: string | null
@@ -835,10 +843,14 @@ export type Database = {
           genero?: string | null
           gestor_imediato?: string | null
           id?: string
+          inativado_em?: string | null
+          inativado_por?: string | null
+          inativo?: boolean
           jornada_trabalho?: string | null
           matricula_esocial?: string | null
           medico_exame_demissional?: string | null
           motivo_desligamento?: string | null
+          motivo_inativacao?: string | null
           multa_fgts?: boolean | null
           nacionalidade?: string | null
           naturalidade?: string | null
@@ -20590,6 +20602,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      colaborador_tem_vinculos: {
+        Args: { _admissao_id: string }
+        Returns: Json
+      }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
       delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
       epi_atualizar_estoque_local_otimista: {
@@ -20607,6 +20623,10 @@ export type Database = {
           p_quantidade_esperada: number
         }
         Returns: boolean
+      }
+      excluir_colaborador_seguro: {
+        Args: { _admissao_id: string }
+        Returns: Json
       }
       gerar_estrutura_padrao_pastas: {
         Args: {
@@ -20637,6 +20657,10 @@ export type Database = {
       haversine_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
+      }
+      inativar_colaborador: {
+        Args: { _admissao_id: string; _motivo?: string; _reverter?: boolean }
+        Returns: undefined
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }

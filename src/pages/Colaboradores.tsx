@@ -180,6 +180,69 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [desligarColab, setDesligarColab] = useState<ColaboradorExtendido | null>(null);
+  const [inativarColab, setInativarColab] = useState<ColaboradorExtendido | null>(null);
+  const [inativarMotivo, setInativarMotivo] = useState("");
+  const [excluirColab, setExcluirColab] = useState<ColaboradorExtendido | null>(null);
+  const [excluirText, setExcluirText] = useState("");
+  const [excluirVinculos, setExcluirVinculos] = useState<{ tem: boolean; detalhes: any } | null>(null);
+  const [excluirChecking, setExcluirChecking] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const checkVinculosEAbrirExcluir = async (colab: ColaboradorExtendido) => {
+    setExcluirColab(colab);
+    setExcluirText("");
+    setExcluirVinculos(null);
+    setExcluirChecking(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("colaborador_tem_vinculos", { _admissao_id: colab.id });
+      if (error) throw error;
+      setExcluirVinculos({ tem: !!data?.tem_vinculos, detalhes: data?.detalhes || {} });
+    } catch (e: any) {
+      toast.error("Erro ao verificar vínculos: " + (e.message || e));
+      setExcluirColab(null);
+    } finally {
+      setExcluirChecking(false);
+    }
+  };
+
+  const handleConfirmInativar = async () => {
+    if (!inativarColab) return;
+    setActionLoading(true);
+    try {
+      const reverter = !!(inativarColab as any).inativo;
+      const { error } = await (supabase as any).rpc("inativar_colaborador", {
+        _admissao_id: inativarColab.id,
+        _motivo: inativarMotivo || null,
+        _reverter: reverter,
+      });
+      if (error) throw error;
+      toast.success(reverter ? "Colaborador reativado" : "Colaborador inativado");
+      setInativarColab(null);
+      setInativarMotivo("");
+      refetch();
+    } catch (e: any) {
+      toast.error("Erro: " + (e.message || e));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmExcluir = async () => {
+    if (!excluirColab) return;
+    setActionLoading(true);
+    try {
+      const { error } = await (supabase as any).rpc("excluir_colaborador_seguro", { _admissao_id: excluirColab.id });
+      if (error) throw error;
+      toast.success("Colaborador excluído");
+      setExcluirColab(null);
+      setExcluirText("");
+      refetch();
+    } catch (e: any) {
+      toast.error("Erro ao excluir: " + (e.message || e));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleNovoCadastro = () => setShowNovoChoice(true);
@@ -255,7 +318,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       if (!tenantId) return [];
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url, inativo")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
 
@@ -399,11 +462,17 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                         Compartilhar Link
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { setInativarColab(colab); setInativarMotivo(""); }}>
+                        {(colab as any).inativo ? "Reativar" : "Inativar"}
+                      </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => {
                         if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
                         setDesligarColab(colab);
                       }}>
                         Desligar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
+                        Excluir
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -509,11 +578,17 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                           Copiar Link de Cadastro
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { setInativarColab(colab); setInativarMotivo(""); }}>
+                          {(colab as any).inativo ? "Reativar" : "Inativar"}
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => {
                           if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
                           setDesligarColab(colab);
                         }}>
                           Desligar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
+                          Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -661,6 +736,92 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
           }}
         />
       )}
+
+      {/* Dialog Inativar/Reativar */}
+      <AlertDialog open={!!inativarColab} onOpenChange={(o) => { if (!o) { setInativarColab(null); setInativarMotivo(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {(inativarColab as any)?.inativo ? "Reativar colaborador" : "Inativar colaborador"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  {(inativarColab as any)?.inativo
+                    ? `O colaborador ${inativarColab?.nome_completo} voltará a aparecer nas listagens ativas.`
+                    : `${inativarColab?.nome_completo} ficará marcado como inativo. Os registros e vínculos existentes serão preservados.`}
+                </p>
+                {!(inativarColab as any)?.inativo && (
+                  <Input
+                    placeholder="Motivo (opcional)"
+                    value={inativarMotivo}
+                    onChange={(e) => setInativarMotivo(e.target.value)}
+                  />
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmInativar} disabled={actionLoading}>
+              {actionLoading ? "Salvando..." : ((inativarColab as any)?.inativo ? "Reativar" : "Inativar")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Excluir */}
+      <AlertDialog open={!!excluirColab} onOpenChange={(o) => { if (!o) { setExcluirColab(null); setExcluirText(""); setExcluirVinculos(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Excluir colaborador permanentemente</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                {excluirChecking && <p>Verificando vínculos no sistema...</p>}
+                {!excluirChecking && excluirVinculos?.tem && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+                    <p className="font-medium text-destructive">Não é possível excluir.</p>
+                    <p className="text-sm">
+                      O colaborador <strong>{excluirColab?.nome_completo}</strong> possui registros vinculados nos módulos:
+                    </p>
+                    <ul className="text-xs list-disc pl-5 text-muted-foreground">
+                      {Object.entries(excluirVinculos.detalhes || {}).map(([k, v]) => (
+                        <li key={k}>{k.replace(/_/g, " ")}: {String(v)}</li>
+                      ))}
+                    </ul>
+                    <p className="text-sm">Use a opção <strong>Inativar</strong> para preservar o histórico.</p>
+                  </div>
+                )}
+                {!excluirChecking && excluirVinculos && !excluirVinculos.tem && (
+                  <>
+                    <p>
+                      O colaborador <strong>{excluirColab?.nome_completo}</strong> não possui vínculos. Esta ação é
+                      <strong> irreversível</strong>.
+                    </p>
+                    <p>Para confirmar, digite <strong>EXCLUIR</strong>:</p>
+                    <Input
+                      autoFocus
+                      value={excluirText}
+                      onChange={(e) => setExcluirText(e.target.value)}
+                      placeholder="Digite EXCLUIR"
+                    />
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              disabled={actionLoading || excluirChecking || !excluirVinculos || excluirVinculos.tem || excluirText.trim() !== "EXCLUIR"}
+              onClick={handleConfirmExcluir}
+            >
+              {actionLoading ? "Excluindo..." : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
