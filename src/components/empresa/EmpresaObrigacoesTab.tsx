@@ -278,6 +278,42 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
           })}
         </div>
       )}
+
+      <Dialog open={!!toDelete} onOpenChange={(o) => { if (!o) { setToDelete(null); setConfirmText(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" /> Excluir obrigação
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é permanente. Para confirmar a exclusão de <strong>"{toDelete?.titulo}"</strong>,
+              digite <strong>EXCLUIR</strong> no campo abaixo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-excluir">Confirmação</Label>
+            <Input
+              id="confirm-excluir"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Digite EXCLUIR"
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setToDelete(null); setConfirmText(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={confirmText.trim().toUpperCase() !== 'EXCLUIR' || deleteObrigacao.isPending}
+            >
+              <Trash2 className="w-4 h-4 mr-1" /> Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
