@@ -11,6 +11,8 @@ import {
   RefreshCw,
   Plus,
   Edit,
+  Info,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
