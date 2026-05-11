@@ -11,12 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
-import { useEmpresaAtiva } from "@/hooks/useEmpresaAtiva";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { confirm as confirmDialog } from "@/components/ui/confirm-dialog";
 
 interface AcordoForm {
   tipo: "individual" | "act" | "cct";
