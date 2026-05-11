@@ -341,8 +341,9 @@ const Ponto = () => {
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button id="btn-ponto-prev-dia" variant="outline" size="icon" onClick={handlePrevDay}><ChevronLeft className="w-4 h-4" /></Button>
-                  <div className="px-4 py-2 bg-muted rounded-lg min-w-[180px] text-center">
-                    <span className="font-medium">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                  <div className="px-4 py-2 bg-muted rounded-lg min-w-[220px] text-center">
+                    <div className="font-medium leading-tight">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</div>
+                    <div className="text-[11px] text-muted-foreground capitalize leading-tight">{format(selectedDate, "EEEE", { locale: ptBR })}</div>
                   </div>
                   <Button id="btn-ponto-next-dia" variant="outline" size="icon" onClick={handleNextDay}><ChevronRight className="w-4 h-4" /></Button>
                   <Button id="btn-ponto-hoje" variant="outline" size="sm" onClick={handleToday}>Hoje</Button>
