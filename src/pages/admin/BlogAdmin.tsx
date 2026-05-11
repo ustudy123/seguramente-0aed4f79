@@ -36,6 +36,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { BlogPostEditor } from '@/components/blog/BlogPostEditor';
+import { BlogPostPreview } from '@/components/blog/BlogPostPreview';
 
 interface BlogPost {
   id: string;
@@ -52,6 +54,10 @@ export default function BlogAdmin() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -119,7 +125,7 @@ export default function BlogAdmin() {
               Crie e gerencie os artigos do blog da plataforma
             </p>
           </div>
-          <Button onClick={() => toast.info('Funcionalidade de criação em breve')}>
+          <Button onClick={() => { setEditingId(null); setEditorOpen(true); }}>
             <Plus className="w-4 h-4 mr-2" />
             Novo Post
           </Button>
@@ -196,11 +202,11 @@ export default function BlogAdmin() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => toast.info('Visualização em breve')}>
+                            <DropdownMenuItem onClick={() => { setPreviewId(post.id); setPreviewOpen(true); }}>
                               <Eye className="w-4 h-4 mr-2" />
                               Visualizar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast.info('Edição em breve')}>
+                            <DropdownMenuItem onClick={() => { setEditingId(post.id); setEditorOpen(true); }}>
                               <Edit className="w-4 h-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
@@ -222,6 +228,18 @@ export default function BlogAdmin() {
           </CardContent>
         </Card>
       </div>
+
+      <BlogPostEditor
+        open={editorOpen}
+        postId={editingId}
+        onClose={() => setEditorOpen(false)}
+        onSaved={fetchPosts}
+      />
+      <BlogPostPreview
+        open={previewOpen}
+        postId={previewId}
+        onClose={() => setPreviewOpen(false)}
+      />
     </div>
   );
 }
