@@ -206,7 +206,7 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {acao.status !== "concluida" && (
             <Button 
               size="sm" 
@@ -220,6 +220,26 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
           <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowArquivarDialog(true)}
+            disabled={isUpdatingAcao}
+          >
+            {(acao as any).arquivada ? (
+              <><ArchiveRestore className="h-4 w-4 mr-2" />Desarquivar</>
+            ) : (
+              <><Archive className="h-4 w-4 mr-2" />Arquivar</>
+            )}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => { setExcluirConfirmText(""); setShowExcluirDialog(true); }}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir
           </Button>
         </div>
       </div>
