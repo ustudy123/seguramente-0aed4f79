@@ -220,13 +220,13 @@ export function PontoEscalasTab() {
           <p className="text-sm text-muted-foreground">Gerencie escalas de trabalho e atribua a colaboradores</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button onClick={abrirNova} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90">
+            <Plus className="w-4 h-4 mr-2" /> Criar Escala
+          </Button>
           <Button variant="outline" onClick={() => setShowAtribuir(true)}>
             <Users className="w-4 h-4 mr-2" /> Atribuir Escala
           </Button>
-          <Button variant="outline" onClick={abrirNova}>
-            <Plus className="w-4 h-4 mr-2" /> Nova Escala
-          </Button>
-          <Button onClick={() => setShowInteligente(true)} className="bg-gradient-to-r from-primary to-primary/80">
+          <Button onClick={() => setShowInteligente(true)} variant="outline" className="border-primary/40 text-primary">
             <Sparkles className="w-4 h-4 mr-2" /> Cadastro Inteligente
           </Button>
         </div>
