@@ -20,19 +20,30 @@ export function ImportarTerceirosModal({ open, onOpenChange }: Props) {
   const [importing, setImporting] = useState(false);
 
   const downloadTemplate = () => {
-    const data = [
-      {
-        razao_social: "Exemplo Empresa LTDA",
-        nome_fantasia: "Nome Fantasia",
-        cnpj: "00.000.000/0000-00",
-        email: "contato@empresa.com",
-        telefone: "(00) 00000-0000",
-        tipo_acesso: "recorrente", // eventual, recorrente, continuo
-        atividade_risco: "nao", // sim, nao
-      },
+    const headers = [
+      "razao_social *",
+      "nome_fantasia",
+      "cnpj *",
+      "email",
+      "telefone",
+      "tipo_acesso",
+      "atividade_risco",
     ];
 
-    const ws = XLSX.utils.json_to_sheet(data);
+    const rows = [
+      headers,
+      [
+        "Exemplo Empresa LTDA",
+        "Nome Fantasia",
+        "00.000.000/0000-00",
+        "contato@empresa.com",
+        "(00) 00000-0000",
+        "recorrente",
+        "nao",
+      ],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Terceiros");
     XLSX.writeFile(wb, "template_importacao_terceiros.xlsx");
@@ -50,7 +61,16 @@ export function ImportarTerceirosModal({ open, onOpenChange }: Props) {
         const wb = XLSX.read(bstr, { type: "binary" });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws) as any[];
+        const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
+        const data = rawData.map((row) => {
+          const normalized = Object.entries(row).reduce<Record<string, unknown>>((acc, [key, value]) => {
+            const normalizedKey = key.replace(/\s*\*\s*$/, "").trim().toLowerCase();
+            acc[normalizedKey] = value;
+            return acc;
+          }, {});
+
+          return normalized;
+        });
 
         let successCount = 0;
         let errorCount = 0;
