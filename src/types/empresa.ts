@@ -225,7 +225,7 @@ export const OBRIGACOES_TEMPLATES: ObrigacaoTemplate[] = [
     base_legal: 'Lei 8.213/91, Art. 93',
     criticidade: 'alta',
     origem_campo: 'pcd_quantidade_atual',
-    condicao: (c) => c.pcd_obrigatoria && c.pcd_quantidade_atual < c.pcd_quantidade_exigida,
+    condicao: (c) => !!c.pcd_obrigatoria && (c.pcd_quantidade_atual || 0) < (c.pcd_quantidade_exigida || 0),
   },
   // FAP
   {
