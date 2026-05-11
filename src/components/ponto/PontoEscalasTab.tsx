@@ -223,6 +223,7 @@ export function PontoEscalasTab() {
     setEscalaForm({
       nome: "", tipo: "5x2", modalidade: "fixa",
       dias_config: diasConfigPadrao(),
+      compensacoes_mensais: [],
       ciclo_horas_trabalho: 12, ciclo_horas_descanso: 36,
       ciclo_inicio_data: new Date().toISOString().split("T")[0], ciclo_inicio_hora: "07:00",
       jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
