@@ -98,6 +98,39 @@ const Ponto = () => {
   // Queries
   const { data: pontosDiarios = [], isLoading: loadingPontos } = usePontoDiario(selectedDate);
   const { data: marcacoesHoje = [] } = useMarcacoesHoje();
+
+  // Marcações detalhadas do dia selecionado (todas, em ordem cronológica)
+  const { profile: profileAuth } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const tenantIdAtivo = profileAuth?.tenant_id;
+  const dataSelStr = format(selectedDate, "yyyy-MM-dd");
+  const { data: marcacoesDoDia = [] } = useQuery({
+    queryKey: ["ponto-marcacoes-dia", tenantIdAtivo, dataSelStr, empresaAtivaId],
+    queryFn: async () => {
+      if (!tenantIdAtivo) return [] as any[];
+      let q = fromTable("ponto_marcacoes")
+        .select("colaborador_cpf,hora_marcacao,tipo_marcacao")
+        .eq("tenant_id", tenantIdAtivo)
+        .eq("data_marcacao", dataSelStr);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q.order("hora_marcacao", { ascending: true }) as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantIdAtivo,
+  });
+
+  // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
+  const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
+  const marcacoesPorCpf = useMemo(() => {
+    const map = new Map<string, Array<{ hora: string; tipo: string }>>();
+    for (const m of marcacoesDoDia) {
+      const k = onlyDigits(m.colaborador_cpf);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push({ hora: m.hora_marcacao, tipo: m.tipo_marcacao });
+    }
+    return map;
+  }, [marcacoesDoDia]);
   
   // Determine which markings the selected collaborator already has today
   const marcacoesColaboradorHoje = marcacoesHoje.filter(
