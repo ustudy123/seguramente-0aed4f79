@@ -54,7 +54,9 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
   });
 
   const { hasRole, isSuperAdmin } = useAuthContext() as any;
-  const podeExcluir = isSuperAdmin || hasRole?.('owner') || hasRole?.('admin') || hasRole?.('master');
+  // Exclusão liberada para todos os usuários autenticados — protegida por
+  // confirmação dupla (palavra "EXCLUIR") + RLS do banco.
+  const podeExcluir = true;
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
