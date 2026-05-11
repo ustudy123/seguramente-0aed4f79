@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, AlertTriangle, Trash2, Edit, ChevronRight } from "lucide-react";
 import type { Terceiro } from "@/types/terceiros";
 import { format } from "date-fns";
+import { formatCnpj } from "@/lib/brasilapi";
 
 const statusMap: Record<string, { label: string; class: string }> = {
   liberado: { label: "Liberado", class: "bg-green-100 text-green-800" },
@@ -56,7 +57,7 @@ export function TerceiroList({ terceiros, onSelect, onEdit, onDelete }: Props) {
                   )}
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                  <span>CNPJ: {t.cnpj}</span>
+                  <span>CNPJ: {formatCnpj(t.cnpj)}</span>
                   <span>Acesso: {acessoMap[t.tipo_acesso]}</span>
                   {t.contrato_fim && (
                     <span>Contrato até {format(new Date(t.contrato_fim), "dd/MM/yyyy")}</span>

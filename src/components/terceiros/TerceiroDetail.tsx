@@ -14,6 +14,7 @@ import { TrabalhadorForm } from "./TrabalhadorForm";
 import { DocumentoUploadForm } from "./DocumentoUploadForm";
 import { TreinamentoForm } from "./TreinamentoForm";
 import { format } from "date-fns";
+import { formatCnpj } from "@/lib/brasilapi";
 
 const statusIcon = (s: string) => {
   switch (s) {
@@ -60,7 +61,7 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
           <h2 className="text-xl font-bold">{terceiro.razao_social}</h2>
-          <p className="text-sm text-muted-foreground">CNPJ: {terceiro.cnpj}</p>
+          <p className="text-sm text-muted-foreground">CNPJ: {formatCnpj(terceiro.cnpj)}</p>
         </div>
         {statusBadge(terceiro.status)}
         {terceiro.atividade_risco && (
