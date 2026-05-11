@@ -440,21 +440,30 @@ export function PontoEscalasTab() {
             {escalaForm.modalidade === "fixa" ? (
               <>
               <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label className="text-sm font-semibold flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /> Dias da semana — 4 marcações</Label>
-                  <span className="text-xs text-muted-foreground">
-                    {(() => {
-                      const j = calcularJornadasFixa(escalaForm.dias_config);
-                      const compMin = calcularCompensacaoSemanal(escalaForm.compensacoes_mensais || []);
-                      const total = j.semanal + compMin;
-                      const fmt = (m: number) => `${Math.floor(m/60)}h${m%60?` ${m%60}min`:""}`;
-                      return compMin > 0
-                        ? `Base: ${fmt(j.semanal)}/sem + Comp: ${fmt(compMin)}/sem = ${fmt(total)}/sem`
-                        : `Total: ${fmt(j.semanal)}/sem`;
-                    })()}
-                  </span>
+                  <div className="flex gap-1.5 flex-wrap">
+                    <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]"
+                      onClick={() => {
+                        const seg = escalaForm.dias_config.segunda as DiaConfig;
+                        const nova = { ...escalaForm.dias_config };
+                        ["terca","quarta","quinta","sexta"].forEach(k => { nova[k] = { ...seg }; });
+                        setEscalaForm({ ...escalaForm, dias_config: nova });
+                      }}>
+                      <Copy className="w-3 h-3 mr-1" /> Seg→Sex iguais
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]"
+                      onClick={() => {
+                        const seg = escalaForm.dias_config.segunda as DiaConfig;
+                        const nova = { ...escalaForm.dias_config };
+                        ["terca","quarta","quinta","sexta","sabado"].forEach(k => { nova[k] = { ...seg }; });
+                        setEscalaForm({ ...escalaForm, dias_config: nova });
+                      }}>
+                      <Copy className="w-3 h-3 mr-1" /> Seg→Sáb iguais
+                    </Button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px] gap-1.5 text-[10px] font-medium text-muted-foreground px-1 uppercase tracking-wide">
+                <div className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px_36px] gap-1.5 text-[10px] font-medium text-muted-foreground px-1 uppercase tracking-wide">
                   <span>Dia</span>
                   <span className="text-center">Trab.</span>
                   <span className="text-center">Almoço</span>
@@ -463,6 +472,7 @@ export function PontoEscalasTab() {
                   <span>Fim almoço</span>
                   <span>Saída</span>
                   <span className="text-right">Total</span>
+                  <span></span>
                 </div>
                 {DIAS_KEYS.map(d => {
                   const c = escalaForm.dias_config[d] as DiaConfig;
@@ -470,10 +480,20 @@ export function PontoEscalasTab() {
                     ...escalaForm,
                     dias_config: { ...escalaForm.dias_config, [d]: { ...c, ...patch } },
                   });
+                  const replicarParaTrab = () => {
+                    const nova = { ...escalaForm.dias_config };
+                    DIAS_KEYS.forEach(k => {
+                      if (k !== d && (nova[k] as DiaConfig).trabalha) {
+                        nova[k] = { ...c };
+                      }
+                    });
+                    setEscalaForm({ ...escalaForm, dias_config: nova });
+                    toast.success(`Horário de ${DIAS_LBL[d]} replicado nos demais dias trabalhados.`);
+                  };
                   const min = minutosDia(c);
                   const intMin = intervaloDia(c);
                   return (
-                    <div key={d} className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px] gap-1.5 items-center">
+                    <div key={d} className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px_36px] gap-1.5 items-center">
                       <span className="text-sm font-medium">{DIAS_LBL[d]}</span>
                       <div className="flex justify-center"><Switch checked={c.trabalha} onCheckedChange={v => upd({ trabalha: v })} /></div>
                       <div className="flex justify-center"><Switch checked={c.tem_almoco} disabled={!c.trabalha} onCheckedChange={v => upd({ tem_almoco: v })} /></div>
@@ -485,9 +505,48 @@ export function PontoEscalasTab() {
                         {c.trabalha ? `${Math.floor(min/60)}h${min%60?String(min%60).padStart(2,"0"):""}` : "—"}
                         {c.trabalha && c.tem_almoco && <span className="block text-[9px] opacity-70">int {intMin}min</span>}
                       </span>
+                      <Button type="button" size="icon" variant="ghost" className="h-7 w-7" disabled={!c.trabalha} title="Replicar este horário para os demais dias trabalhados" onClick={replicarParaTrab}>
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   );
                 })}
+
+                {/* Contador de carga semanal */}
+                {(() => {
+                  const j = calcularJornadasFixa(escalaForm.dias_config);
+                  const compMin = calcularCompensacaoSemanal(escalaForm.compensacoes_mensais || []);
+                  const total = j.semanal + compMin;
+                  const fmt = (m: number) => `${Math.floor(m/60)}h${m%60?` ${String(m%60).padStart(2,"0")}min`:""}`;
+                  const meta44 = 44 * 60;
+                  const meta40 = 40 * 60;
+                  const pct = Math.min(100, Math.round((total / meta44) * 100));
+                  let cor = "bg-emerald-500";
+                  let alerta = "";
+                  if (total < meta40) { cor = "bg-amber-500"; alerta = `Faltam ${fmt(meta40 - total)} para 40h ou ${fmt(meta44 - total)} para 44h. Considere usar Compensações Mensais.`; }
+                  else if (total < meta44) { cor = "bg-blue-500"; alerta = `${fmt(meta44 - total)} abaixo do limite de 44h/sem (CLT). Compensação opcional.`; }
+                  else if (total === meta44) { cor = "bg-emerald-500"; alerta = "Carga semanal exatamente no limite CLT (44h)."; }
+                  else { cor = "bg-red-500"; alerta = `Excede ${fmt(total - meta44)} sobre o limite CLT de 44h/sem. Revise a escala.`; }
+                  return (
+                    <div className="mt-3 rounded-md border bg-background p-3 space-y-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Carga semanal calculada</span>
+                          <span className="text-2xl font-bold text-primary tabular-nums">{fmt(total)}</span>
+                          <span className="text-xs text-muted-foreground">/ semana</span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground text-right">
+                          {compMin > 0 ? <>Base {fmt(j.semanal)} + Comp {fmt(compMin)}</> : <>Sem compensações</>}
+                          <div>Meta CLT: 44h • Padrão: 40h</div>
+                        </div>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                        <div className={`h-full ${cor} transition-all`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">{alerta}</p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Compensações Mensais — equalização da carga semanal */}
