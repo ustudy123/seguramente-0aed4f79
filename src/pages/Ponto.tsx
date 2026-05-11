@@ -399,21 +399,38 @@ const Ponto = () => {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead>Colaborador</TableHead>
-                  <TableHead className="text-center"><div className="flex items-center justify-center gap-1"><LogIn className="w-4 h-4" />Entrada</div></TableHead>
-                  <TableHead className="text-center"><div className="flex items-center justify-center gap-1"><Utensils className="w-4 h-4" />Saída Almoço</div></TableHead>
-                  <TableHead className="text-center"><div className="flex items-center justify-center gap-1"><Coffee className="w-4 h-4" />Retorno</div></TableHead>
-                  <TableHead className="text-center"><div className="flex items-center justify-center gap-1"><LogOut className="w-4 h-4" />Saída</div></TableHead>
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead><div className="flex items-center gap-1"><Clock className="w-4 h-4" />Marcações do dia</div></TableHead>
+                  <TableHead className="text-center w-28">Registros</TableHead>
+                  <TableHead className="text-center w-28">Total</TableHead>
+                  <TableHead className="text-center w-32">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loadingPontos ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8">Carregando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-8">Carregando...</TableCell></TableRow>
                 ) : filteredPontos.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
                 ) : filteredPontos.map((ponto) => {
                   const statusConfig = STATUS_PONTO_CONFIG[ponto.status] || STATUS_PONTO_CONFIG.pendente;
+                  const cpfKey = onlyDigits(ponto.colaborador_cpf);
+                  const marcs = marcacoesPorCpf.get(cpfKey) || [];
+                  // Calcula total a partir dos pares (entrada → saída), independente do label
+                  let totalMin = 0;
+                  let pendingEntry: string | null = null;
+                  for (const m of marcs) {
+                    const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
+                    if (isEntry) {
+                      pendingEntry = m.hora;
+                    } else if (pendingEntry) {
+                      const [h1, mi1] = pendingEntry.split(":").map(Number);
+                      const [h2, mi2] = m.hora.split(":").map(Number);
+                      totalMin += (h2 * 60 + mi2) - (h1 * 60 + mi1);
+                      pendingEntry = null;
+                    }
+                  }
+                  const totalLabel = marcs.length > 0
+                    ? `${Math.floor(Math.max(0, totalMin) / 60).toString().padStart(2, "0")}h ${(Math.max(0, totalMin) % 60).toString().padStart(2, "0")}min`
+                    : formatInterval(ponto.horas_trabalhadas);
                   return (
                     <TableRow key={ponto.id} className="hover:bg-muted/30">
                       <TableCell>
@@ -429,11 +446,40 @@ const Ponto = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center font-mono">{formatHora(ponto.entrada)}</TableCell>
-                      <TableCell className="text-center font-mono">{formatHora(ponto.saida_almoco)}</TableCell>
-                      <TableCell className="text-center font-mono">{formatHora(ponto.retorno_almoco)}</TableCell>
-                      <TableCell className="text-center font-mono">{formatHora(ponto.saida)}</TableCell>
-                      <TableCell className="text-center font-medium">{formatInterval(ponto.horas_trabalhadas)}</TableCell>
+                      <TableCell>
+                        {marcs.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">Sem marcações</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {marcs.map((m, idx) => {
+                              // Alterna E/S pela ordem (par=Entrada, ímpar=Saída) — não confia em rótulos fixos
+                              const isEntry = idx % 2 === 0;
+                              return (
+                                <span
+                                  key={idx}
+                                  className={cn(
+                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono border",
+                                    isEntry
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                      : "bg-rose-50 text-rose-700 border-rose-200"
+                                  )}
+                                  title={isEntry ? "Entrada" : "Saída"}
+                                >
+                                  {isEntry ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}
+                                  {m.hora?.substring(0, 5)}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="font-mono text-[11px]">
+                          {marcs.length}
+                          {marcs.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
                       <TableCell className="text-center">
                         <Badge className={cn("text-xs", statusConfig.color)}>{statusConfig.label}</Badge>
                       </TableCell>
