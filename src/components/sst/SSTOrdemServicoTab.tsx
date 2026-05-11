@@ -69,10 +69,14 @@ export function SSTOrdemServicoTab() {
     } catch {/* noop */}
   }, [respTecnico, respRegistro, storageKey, tenantId]);
 
-  const pgrVigente = useMemo(
-    () => documentos.find(d => d.tipo === "PGR" && d.status === "vigente" && d.analise_ia_status === "concluida"),
-    [documentos]
-  );
+  // Aceita o PGR mais recente com análise concluída, mesmo se "vencido" (exibe aviso).
+  const pgrVigente = useMemo(() => {
+    const pgrs = documentos
+      .filter(d => d.tipo === "PGR" && d.analise_ia_status === "concluida")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return pgrs.find(p => p.status === "vigente") || pgrs[0] || null;
+  }, [documentos]);
+  const pgrVencido = !!pgrVigente && pgrVigente.status === "vencido";
 
   const { data: colaboradores = [] } = useQuery({
     queryKey: ["admissoes-os", tenantId, empresaAtivaId],
@@ -199,6 +203,16 @@ export function SSTOrdemServicoTab() {
             <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
             <p className="text-sm">
               <b>PGR não disponível.</b> Para gerar Ordens de Serviço, importe o PGR vigente da empresa na aba <b>Importação IA</b> e aguarde a análise concluir.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      {pgrVencido && (
+        <Card className="border-yellow-500/50 bg-yellow-500/5">
+          <CardContent className="py-3 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5" />
+            <p className="text-sm">
+              <b>PGR vencido.</b> O PGR mais recente está com a vigência expirada ({pgrVigente?.data_vigencia ? format(new Date(pgrVigente.data_vigencia), "dd/MM/yyyy") : "data não informada"}). Você ainda pode gerar OS, mas recomendamos importar a versão atualizada na aba <b>Importação IA</b>.
             </p>
           </CardContent>
         </Card>
