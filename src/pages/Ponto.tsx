@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { motion } from "framer-motion";
 import { format, addDays, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
