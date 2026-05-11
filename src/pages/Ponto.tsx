@@ -260,15 +260,21 @@ const Ponto = () => {
         </div>
       </motion.div>
 
-      {/* Main Tabs */}
+      {/* Main Tabs — 7 grupos funcionais */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <ScrollArea className="w-full">
           <TabsList className="inline-flex w-max min-w-full h-auto gap-0.5 p-1">
-            <TabsTrigger id="tab-ponto-dashboard" value="dashboard" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <BarChart3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Dashboard</span><span className="sm:hidden">Dash</span>
+            <TabsTrigger id="tab-ponto-visao-geral" value="visao_geral" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <BarChart3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Visão Geral</span><span className="sm:hidden">Visão</span>
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-registros" value="registros" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Clock className="h-3.5 w-3.5" /> Registros
+            <TabsTrigger id="tab-ponto-espelho" value="espelho" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Clock className="h-3.5 w-3.5" /> Espelho
+            </TabsTrigger>
+            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Calendar className="h-3.5 w-3.5" /> Escalas
+            </TabsTrigger>
+            <TabsTrigger id="tab-ponto-apuracao" value="apuracao" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Wallet className="h-3.5 w-3.5" /> Apuração
             </TabsTrigger>
             <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileText className="h-3.5 w-3.5" /> Ajustes
@@ -278,45 +284,21 @@ const Ponto = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Settings className="h-3.5 w-3.5" /> Escalas
+            <TabsTrigger id="tab-ponto-compliance" value="compliance" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Shield className="h-3.5 w-3.5" /> Compliance
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-banco" value="banco" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Wallet className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Banco Horas</span><span className="sm:hidden">BH</span>
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-fechamento" value="fechamento" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Lock className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Fechamento</span><span className="sm:hidden">Fech.</span>
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-alertas" value="alertas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Bell className="h-3.5 w-3.5" /> Alertas
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-links" value="links" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Link2 className="h-3.5 w-3.5" /> Links
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-repc" value="repc" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <HardDrive className="h-3.5 w-3.5" /> REP-C
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-cct" value="cct" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Scale className="h-3.5 w-3.5" /> CCT
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-folha" value="folha" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <FileSpreadsheet className="h-3.5 w-3.5" /> Folha
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-relatorios" value="relatorios" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <FileDown className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Relatórios</span><span className="sm:hidden">Relat.</span>
-            </TabsTrigger>
-            <TabsTrigger id="tab-ponto-config" value="config" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
-              <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Configuração</span><span className="sm:hidden">Config</span>
+            <TabsTrigger id="tab-ponto-configuracoes" value="configuracoes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Configurações</span><span className="sm:hidden">Config</span>
             </TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        {/* Dashboard */}
-        <TabsContent value="dashboard"><PontoDashboardTab /></TabsContent>
+        {/* Visão Geral */}
+        <TabsContent value="visao_geral"><PontoDashboardTab /></TabsContent>
 
-        {/* Registros */}
-        <TabsContent value="registros" className="space-y-4">
+        {/* Espelho */}
+        <TabsContent value="espelho" className="space-y-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border p-4">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
