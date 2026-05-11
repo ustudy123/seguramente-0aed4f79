@@ -92,6 +92,9 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
   const [selectedInfoCard, setSelectedInfoCard] = useState<string | null>(null);
   const [showGutModal, setShowGutModal] = useState(false);
   const [showConcluirDialog, setShowConcluirDialog] = useState(false);
+  const [showArquivarDialog, setShowArquivarDialog] = useState(false);
+  const [showExcluirDialog, setShowExcluirDialog] = useState(false);
+  const [excluirConfirmText, setExcluirConfirmText] = useState("");
   const [isEditingGut, setIsEditingGut] = useState(false);
   const [gutDraft, setGutDraft] = useState<{ gravidade: number; urgencia: number; tendencia: number }>({
     gravidade: 1,
@@ -99,7 +102,7 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
     tendencia: 1,
   });
   
-  const { useAcao, useTarefas, useHistorico, useComentarios, updateAcao, isUpdatingAcao } = usePlanoAcao();
+  const { useAcao, useTarefas, useHistorico, useComentarios, updateAcao, isUpdatingAcao, deleteAcao, isDeletingAcao } = usePlanoAcao();
   
   const { data: acao, isLoading } = useAcao(acaoId);
   const { data: tarefas = [] } = useTarefas(acaoId);
