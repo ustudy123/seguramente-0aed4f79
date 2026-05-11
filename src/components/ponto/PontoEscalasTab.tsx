@@ -527,23 +527,38 @@ export function PontoEscalasTab() {
                   else if (total < meta44) { cor = "bg-blue-500"; alerta = `${fmt(meta44 - total)} abaixo do limite de 44h/sem (CLT). Compensação opcional.`; }
                   else if (total === meta44) { cor = "bg-emerald-500"; alerta = "Carga semanal exatamente no limite CLT (44h)."; }
                   else { cor = "bg-red-500"; alerta = `Excede ${fmt(total - meta44)} sobre o limite CLT de 44h/sem. Revise a escala.`; }
+                  // Mensal: semana × 4.345 (média de semanas/mês). Padrão CLT folha = 220h
+                  const mensalMin = Math.round(total * 4.345);
+                  const mensalCLT = 220 * 60;
                   return (
                     <div className="mt-3 rounded-md border bg-background p-3 space-y-2">
-                      <div className="flex items-baseline justify-between gap-2">
+                      <div className="flex items-baseline justify-between gap-2 flex-wrap">
                         <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Carga semanal calculada</span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Carga calculada</span>
                           <span className="text-2xl font-bold text-primary tabular-nums">{fmt(total)}</span>
                           <span className="text-xs text-muted-foreground">/ semana</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-2xl font-bold text-primary tabular-nums">{fmt(mensalMin)}</span>
+                          <span className="text-xs text-muted-foreground">/ mês (≈ × 4,345)</span>
                         </div>
                         <div className="text-[11px] text-muted-foreground text-right">
-                          {compMin > 0 ? <>Base {fmt(j.semanal)} + Comp {fmt(compMin)}</> : <>Sem compensações</>}
-                          <div>Meta CLT: 44h • Padrão: 40h</div>
+                          {compMin > 0 ? <>Base {fmt(j.semanal)} + Comp {fmt(compMin)}/sem</> : <>Sem compensações</>}
+                          <div>Meta CLT: 44h/sem • 220h/mês</div>
                         </div>
                       </div>
                       <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                         <div className={`h-full ${cor} transition-all`} style={{ width: `${pct}%` }} />
                       </div>
-                      <p className="text-[11px] text-muted-foreground">{alerta}</p>
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span>{alerta}</span>
+                        <span className="tabular-nums">
+                          {mensalMin < mensalCLT
+                            ? `${fmt(mensalCLT - mensalMin)} abaixo de 220h/mês`
+                            : mensalMin === mensalCLT
+                              ? "Exatamente 220h/mês"
+                              : `${fmt(mensalMin - mensalCLT)} acima de 220h/mês`}
+                        </span>
+                      </div>
                     </div>
                   );
                 })()}
