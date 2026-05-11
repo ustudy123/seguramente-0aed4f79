@@ -15708,6 +15708,51 @@ export type Database = {
           },
         ]
       }
+      ponto_acordos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          documento_url: string | null
+          empresa_id: string | null
+          id: string
+          observacoes: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          documento_url?: string | null
+          empresa_id?: string | null
+          id?: string
+          observacoes?: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          documento_url?: string | null
+          empresa_id?: string | null
+          id?: string
+          observacoes?: string | null
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Relationships: []
+      }
       ponto_ajustes: {
         Row: {
           anexos: Json
@@ -16001,6 +16046,84 @@ export type Database = {
           },
         ]
       }
+      ponto_banco_horas_config: {
+        Row: {
+          acordo_id: string | null
+          ativo: boolean | null
+          created_at: string
+          data_inicio: string | null
+          empresa_id: string | null
+          escala_id: string | null
+          exige_acordo_individual: boolean | null
+          exige_cct_act: boolean | null
+          forma_compensacao: string | null
+          forma_pagamento_vencer: string | null
+          id: string
+          limite_acumulo_horas: number | null
+          permite_saldo_negativo: boolean | null
+          permite_saldo_positivo: boolean | null
+          prazo_compensacao_dias: number | null
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          acordo_id?: string | null
+          ativo?: boolean | null
+          created_at?: string
+          data_inicio?: string | null
+          empresa_id?: string | null
+          escala_id?: string | null
+          exige_acordo_individual?: boolean | null
+          exige_cct_act?: boolean | null
+          forma_compensacao?: string | null
+          forma_pagamento_vencer?: string | null
+          id?: string
+          limite_acumulo_horas?: number | null
+          permite_saldo_negativo?: boolean | null
+          permite_saldo_positivo?: boolean | null
+          prazo_compensacao_dias?: number | null
+          tenant_id: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          acordo_id?: string | null
+          ativo?: boolean | null
+          created_at?: string
+          data_inicio?: string | null
+          empresa_id?: string | null
+          escala_id?: string | null
+          exige_acordo_individual?: boolean | null
+          exige_cct_act?: boolean | null
+          forma_compensacao?: string | null
+          forma_pagamento_vencer?: string | null
+          id?: string
+          limite_acumulo_horas?: number | null
+          permite_saldo_negativo?: boolean | null
+          permite_saldo_positivo?: boolean | null
+          prazo_compensacao_dias?: number | null
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_banco_horas_config_acordo_id_fkey"
+            columns: ["acordo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_acordos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_banco_horas_config_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_escalas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_banco_horas_movimentacoes: {
         Row: {
           banco_horas_id: string
@@ -16167,13 +16290,19 @@ export type Database = {
           exigir_localizacao: boolean
           exigir_selfie_interno: boolean
           exigir_selfie_link: boolean
+          he_diaria_max_minutos: number | null
           hora_entrada_padrao: string
           hora_retorno_almoco_padrao: string
           hora_saida_almoco_padrao: string
           hora_saida_padrao: string
           id: string
+          interjornada_min_minutos: number | null
+          jornada_diaria_max_minutos: number | null
+          jornada_semanal_max_minutos: number | null
+          modo_apuracao: string | null
           modo_registro: string
           permitir_registro_fora_horario: boolean
+          ponto_excecao_acordo_url: string | null
           tenant_id: string
           tolerancia_atraso: number
           tolerancia_hora_extra: number
@@ -16185,13 +16314,19 @@ export type Database = {
           exigir_localizacao?: boolean
           exigir_selfie_interno?: boolean
           exigir_selfie_link?: boolean
+          he_diaria_max_minutos?: number | null
           hora_entrada_padrao?: string
           hora_retorno_almoco_padrao?: string
           hora_saida_almoco_padrao?: string
           hora_saida_padrao?: string
           id?: string
+          interjornada_min_minutos?: number | null
+          jornada_diaria_max_minutos?: number | null
+          jornada_semanal_max_minutos?: number | null
+          modo_apuracao?: string | null
           modo_registro?: string
           permitir_registro_fora_horario?: boolean
+          ponto_excecao_acordo_url?: string | null
           tenant_id: string
           tolerancia_atraso?: number
           tolerancia_hora_extra?: number
@@ -16203,13 +16338,19 @@ export type Database = {
           exigir_localizacao?: boolean
           exigir_selfie_interno?: boolean
           exigir_selfie_link?: boolean
+          he_diaria_max_minutos?: number | null
           hora_entrada_padrao?: string
           hora_retorno_almoco_padrao?: string
           hora_saida_almoco_padrao?: string
           hora_saida_padrao?: string
           id?: string
+          interjornada_min_minutos?: number | null
+          jornada_diaria_max_minutos?: number | null
+          jornada_semanal_max_minutos?: number | null
+          modo_apuracao?: string | null
           modo_registro?: string
           permitir_registro_fora_horario?: boolean
+          ponto_excecao_acordo_url?: string | null
           tenant_id?: string
           tolerancia_atraso?: number
           tolerancia_hora_extra?: number
@@ -16599,26 +16740,33 @@ export type Database = {
       }
       ponto_escalas: {
         Row: {
+          acordo_individual_url: string | null
           adicional_noturno_fim: string | null
           adicional_noturno_inicio: string | null
           ativa: boolean | null
+          cct_act_url: string | null
           created_at: string | null
           descricao_contratual: string | null
           descricao_original: string | null
+          dias_semana: Json | null
           domingo_util: boolean | null
           empresa_id: string | null
           hora_entrada_padrao: string | null
           hora_saida_padrao: string | null
           id: string
           intervalo_intrajornada_minutos: number
+          janela_flexivel: Json | null
           jornada_diaria_minutos: number
+          jornada_mensal_minutos: number | null
           jornada_semanal_minutos: number
           nivel_confianca: string | null
           nome: string
+          observacoes: string | null
           origem_input: string | null
           percentual_adicional_noturno: number | null
           percentual_hora_extra_100: number | null
           percentual_hora_extra_50: number | null
+          regras_extras: Json | null
           sabado_util: boolean | null
           tenant_id: string
           tipo: string
@@ -16628,26 +16776,33 @@ export type Database = {
           usa_hora_ficta_noturna: boolean | null
         }
         Insert: {
+          acordo_individual_url?: string | null
           adicional_noturno_fim?: string | null
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
+          cct_act_url?: string | null
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
+          dias_semana?: Json | null
           domingo_util?: boolean | null
           empresa_id?: string | null
           hora_entrada_padrao?: string | null
           hora_saida_padrao?: string | null
           id?: string
           intervalo_intrajornada_minutos?: number
+          janela_flexivel?: Json | null
           jornada_diaria_minutos?: number
+          jornada_mensal_minutos?: number | null
           jornada_semanal_minutos?: number
           nivel_confianca?: string | null
           nome: string
+          observacoes?: string | null
           origem_input?: string | null
           percentual_adicional_noturno?: number | null
           percentual_hora_extra_100?: number | null
           percentual_hora_extra_50?: number | null
+          regras_extras?: Json | null
           sabado_util?: boolean | null
           tenant_id: string
           tipo?: string
@@ -16657,26 +16812,33 @@ export type Database = {
           usa_hora_ficta_noturna?: boolean | null
         }
         Update: {
+          acordo_individual_url?: string | null
           adicional_noturno_fim?: string | null
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
+          cct_act_url?: string | null
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
+          dias_semana?: Json | null
           domingo_util?: boolean | null
           empresa_id?: string | null
           hora_entrada_padrao?: string | null
           hora_saida_padrao?: string | null
           id?: string
           intervalo_intrajornada_minutos?: number
+          janela_flexivel?: Json | null
           jornada_diaria_minutos?: number
+          jornada_mensal_minutos?: number | null
           jornada_semanal_minutos?: number
           nivel_confianca?: string | null
           nome?: string
+          observacoes?: string | null
           origem_input?: string | null
           percentual_adicional_noturno?: number | null
           percentual_hora_extra_100?: number | null
           percentual_hora_extra_50?: number | null
+          regras_extras?: Json | null
           sabado_util?: boolean | null
           tenant_id?: string
           tipo?: string
@@ -16995,6 +17157,7 @@ export type Database = {
       }
       ponto_marcacoes: {
         Row: {
+          classificacao_clt: string | null
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -17019,6 +17182,7 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          classificacao_clt?: string | null
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -17043,6 +17207,7 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          classificacao_clt?: string | null
           colaborador_cpf?: string
           colaborador_id?: string
           colaborador_nome?: string
@@ -20596,6 +20761,10 @@ export type Database = {
           total_avaliacoes: number
           total_servicos_executados: number
         }[]
+      }
+      classificar_marcacao_clt: {
+        Args: { p_marcacao_id: string }
+        Returns: string
       }
       clone_perfil_permissoes: {
         Args: {
