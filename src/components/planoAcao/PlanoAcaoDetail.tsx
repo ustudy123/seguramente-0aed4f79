@@ -21,7 +21,10 @@ import {
   Navigation,
   Save,
   X,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -89,6 +92,9 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
   const [selectedInfoCard, setSelectedInfoCard] = useState<string | null>(null);
   const [showGutModal, setShowGutModal] = useState(false);
   const [showConcluirDialog, setShowConcluirDialog] = useState(false);
+  const [showArquivarDialog, setShowArquivarDialog] = useState(false);
+  const [showExcluirDialog, setShowExcluirDialog] = useState(false);
+  const [excluirConfirmText, setExcluirConfirmText] = useState("");
   const [isEditingGut, setIsEditingGut] = useState(false);
   const [gutDraft, setGutDraft] = useState<{ gravidade: number; urgencia: number; tendencia: number }>({
     gravidade: 1,
@@ -96,7 +102,7 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
     tendencia: 1,
   });
   
-  const { useAcao, useTarefas, useHistorico, useComentarios, updateAcao, isUpdatingAcao } = usePlanoAcao();
+  const { useAcao, useTarefas, useHistorico, useComentarios, updateAcao, isUpdatingAcao, deleteAcao, isDeletingAcao } = usePlanoAcao();
   
   const { data: acao, isLoading } = useAcao(acaoId);
   const { data: tarefas = [] } = useTarefas(acaoId);
@@ -200,7 +206,7 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {acao.status !== "concluida" && (
             <Button 
               size="sm" 
@@ -214,6 +220,26 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
           <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowArquivarDialog(true)}
+            disabled={isUpdatingAcao}
+          >
+            {(acao as any).arquivada ? (
+              <><ArchiveRestore className="h-4 w-4 mr-2" />Desarquivar</>
+            ) : (
+              <><Archive className="h-4 w-4 mr-2" />Arquivar</>
+            )}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => { setExcluirConfirmText(""); setShowExcluirDialog(true); }}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir
           </Button>
         </div>
       </div>
@@ -604,6 +630,89 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
               }}
             >
               {isUpdatingAcao ? "Concluindo..." : "Sim, concluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de Arquivar / Desarquivar */}
+      <AlertDialog open={showArquivarDialog} onOpenChange={setShowArquivarDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {(acao as any).arquivada ? (
+                <><ArchiveRestore className="h-5 w-5 text-primary" />Desarquivar Ação</>
+              ) : (
+                <><Archive className="h-5 w-5 text-primary" />Arquivar Ação</>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {(acao as any).arquivada
+                ? "A ação voltará a aparecer nas listagens ativas e relatórios."
+                : "A ação será removida das listagens ativas mas continuará disponível em filtros de arquivadas. Você poderá desarquivá-la a qualquer momento."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isUpdatingAcao}
+              onClick={async () => {
+                const isArq = (acao as any).arquivada;
+                await updateAcao({
+                  id: acaoId,
+                  data: {
+                    arquivada: !isArq,
+                    arquivada_em: !isArq ? new Date().toISOString() : null,
+                  } as any,
+                });
+                setShowArquivarDialog(false);
+              }}
+            >
+              {isUpdatingAcao ? "Salvando..." : ((acao as any).arquivada ? "Desarquivar" : "Arquivar")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de Exclusão (requer digitar EXCLUIR) */}
+      <AlertDialog open={showExcluirDialog} onOpenChange={setShowExcluirDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir Ação Permanentemente
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Esta operação é <strong>irreversível</strong>. A ação, suas tarefas, comentários e histórico
+                  serão removidos definitivamente.
+                </p>
+                <p>
+                  Para confirmar, digite <strong>EXCLUIR</strong> no campo abaixo:
+                </p>
+                <Input
+                  autoFocus
+                  value={excluirConfirmText}
+                  onChange={(e) => setExcluirConfirmText(e.target.value)}
+                  placeholder="Digite EXCLUIR"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setExcluirConfirmText("")}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              disabled={excluirConfirmText.trim() !== "EXCLUIR" || isDeletingAcao}
+              onClick={async () => {
+                await deleteAcao(acaoId);
+                setShowExcluirDialog(false);
+                setExcluirConfirmText("");
+                onClose();
+              }}
+            >
+              {isDeletingAcao ? "Excluindo..." : "Excluir definitivamente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
