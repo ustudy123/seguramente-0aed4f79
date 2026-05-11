@@ -208,24 +208,36 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                 <Label>Qtd. Mínima</Label>
                 <Input
                   type="number"
-                  value={data.aprendiz_quantidade_minima || ''}
-                  onChange={(e) => onChange({ aprendiz_quantidade_minima: parseInt(e.target.value) || 0 })}
+                  min={0}
+                  value={data.aprendiz_quantidade_minima ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    onChange({ aprendiz_quantidade_minima: v === '' ? 0 : (parseInt(v) || 0) });
+                  }}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Qtd. Máxima</Label>
                 <Input
                   type="number"
-                  value={data.aprendiz_quantidade_maxima || ''}
-                  onChange={(e) => onChange({ aprendiz_quantidade_maxima: parseInt(e.target.value) || 0 })}
+                  min={0}
+                  value={data.aprendiz_quantidade_maxima ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    onChange({ aprendiz_quantidade_maxima: v === '' ? 0 : (parseInt(v) || 0) });
+                  }}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Qtd. Atual</Label>
                 <Input
                   type="number"
-                  value={data.aprendiz_quantidade_atual || ''}
-                  onChange={(e) => onChange({ aprendiz_quantidade_atual: parseInt(e.target.value) || 0 })}
+                  min={0}
+                  value={data.aprendiz_quantidade_atual ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    onChange({ aprendiz_quantidade_atual: v === '' ? 0 : (parseInt(v) || 0) });
+                  }}
                 />
               </div>
               <div className="flex flex-col justify-end gap-1">
