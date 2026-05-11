@@ -30,9 +30,27 @@ export function PontoEscalasTab() {
   const [editando, setEditando] = useState<PontoEscala | null>(null);
   const [showInteligente, setShowInteligente] = useState(false);
   const [showAtribuir, setShowAtribuir] = useState(false);
-  const [escalaForm, setEscalaForm] = useState({
+  const DIAS_KEYS = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"] as const;
+  const DIAS_LBL: Record<string,string> = { segunda:"Segunda", terca:"Terça", quarta:"Quarta", quinta:"Quinta", sexta:"Sexta", sabado:"Sábado", domingo:"Domingo" };
+  type DiaConfig = { trabalha: boolean; entrada: string; saida: string; intervalo: number };
+  const diasConfigPadrao = (): Record<string, DiaConfig> => ({
+    segunda: { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    terca:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    quarta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    quinta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    sexta:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    sabado:  { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
+    domingo: { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
+  });
+  const [escalaForm, setEscalaForm] = useState<any>({
     nome: "",
     tipo: "5x2",
+    modalidade: "fixa",
+    dias_config: diasConfigPadrao(),
+    ciclo_horas_trabalho: 12,
+    ciclo_horas_descanso: 36,
+    ciclo_inicio_data: new Date().toISOString().split("T")[0],
+    ciclo_inicio_hora: "07:00",
     jornada_diaria_minutos: 480,
     jornada_semanal_minutos: 2640,
     intervalo_intrajornada_minutos: 60,
@@ -47,6 +65,27 @@ export function PontoEscalasTab() {
     percentual_adicional_noturno: 20,
     usa_hora_ficta_noturna: true,
   });
+
+  // Cálculo automático de jornadas a partir da configuração
+  const calcularJornadasFixa = (dc: Record<string, DiaConfig>) => {
+    let semanal = 0;
+    let diasTrab = 0;
+    DIAS_KEYS.forEach(d => {
+      const c = dc[d];
+      if (!c?.trabalha) return;
+      const [h1,m1] = c.entrada.split(":").map(Number);
+      const [h2,m2] = c.saida.split(":").map(Number);
+      const min = (h2*60+m2) - (h1*60+m1) - (c.intervalo || 0);
+      if (min > 0) { semanal += min; diasTrab++; }
+    });
+    return { semanal, diaria: diasTrab > 0 ? Math.round(semanal/diasTrab) : 0, diasTrab };
+  };
+  const calcularJornadasMovel = (ht: number, hd: number) => {
+    // jornada diária = horas trabalho do ciclo; semanal = média (7d / ciclo) * ht
+    const ciclo = ht + hd;
+    const semanalMin = ciclo > 0 ? Math.round((168 / ciclo) * ht * 60) : 0;
+    return { diaria: ht * 60, semanal: semanalMin };
+  };
   const [atribuicaoForm, setAtribuicaoForm] = useState({
     escala_id: "",
     colaborador_id: "",
