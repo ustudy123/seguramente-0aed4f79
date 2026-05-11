@@ -1,34 +1,129 @@
-## Diagnóstico
+# Repensando o Módulo Ponto Eletrônico
 
-O usuário `tecnico.capanema@sudomed.com.br` (Cassiano Henrique) está cadastrado como `tipo_usuario = 'gestor'` no `usuarios_base`. Verifiquei no banco:
+Mantemos o que já funciona (link externo, selfie, geolocalização, auditoria, ajustes, configurações REP-C/REP-P) e reorganizamos em torno de uma **regra central**:
 
-- **22 empresas ativas** existem no tenant `299779a8-1cd2-4ffe-9462-78181426cd1a` (todas aparecem em Estrutura Organizacional → Empresa).
-- **Apenas 5 vínculos** existem na tabela `usuario_vinculos` para esse usuário (BARROS & NUERNBERG, NUERNBERG & BARROS, SUDOCLIN, 2x Rline Telecom).
+> A escala define o planejado. O ponto registra o realizado. O motor de regras compara e classifica como Regular, Atenção ou Risco Trabalhista.
 
-A lógica de `src/hooks/useUsuarioVinculos.ts` define como "acesso global" (sem filtro por vínculo) apenas: `proprietario`, `owner`, `admin`, `administrador`. Como `gestor` **não** está nessa lista, o seletor do topo trata o usuário como "restrito" e mostra somente as 5 empresas vinculadas.
+## 1. Nova arquitetura de Escalas (cadastro flexível)
 
-**Os dados estão íntegros** — nenhuma empresa foi perdida. O problema é apenas de visibilidade no seletor superior.
+Hoje as escalas são limitadas. Vamos transformar em um cadastro completo, multi-tipo:
 
-## Correção (1 linha)
+**Tipos suportados** (campo `tipo_escala`):
+- `5x2`, `6x1`, `seg_sabado`, `12x36`, `personalizada`, `flexivel`, `por_ciclo`, `por_turnos`
 
-Adicionar `"gestor"` à constante `TIPOS_ACESSO_GLOBAL` em `src/hooks/useUsuarioVinculos.ts`. Gestores são perfis administrativos do tenant e devem enxergar todas as empresas do tenant no seletor (mesmo comportamento de Owner/Admin).
+**Campos por escala** (tabela `ponto_escalas` — adicionar colunas):
+- Carga horária diária / semanal / mensal prevista
+- Dias trabalhados / dias de folga (JSON por dia da semana com horários)
+- Janela flexível (entrada mín/máx) quando `flexivel`
+- Intervalo previsto (minutos)
+- Regras: tolerância, banco de horas, hora extra, feriado, domingo, adicional noturno
+- Vínculo: `acordo_individual_id`, `cct_act_id` (texto/url do documento)
 
-```ts
-const TIPOS_ACESSO_GLOBAL = [
-  "proprietario",
-  "owner",
-  "admin",
-  "administrador",
-  "gestor",   // <-- adicionar
-] as const;
+**Editor visual de escala** com preview semanal (grade de 7 dias × horários).
+
+## 2. Motor de Regras (validador automático)
+
+Nova função SQL `public.validar_marcacao_ponto(marcacao_id)` que roda após cada inserção/edição e popula `ponto_alertas` + classificação `verde/amarelo/vermelho`.
+
+**Validações automáticas** (as 20 regras do documento):
+- Jornada > 8h ordinárias / > 44h semanais / > 2h extras dia
+- Interjornada < 11h
+- Intrajornada (15min se 4-6h, 1h se >6h)
+- DSR 24h consecutivas
+- 12x36 sem 36h de descanso → **alerta crítico**
+- Trabalho noturno (22h-05h, hora reduzida 52'30")
+- Domingo/feriado sem regra configurada
+- Tolerância > 10min/dia
+- Janela flexível desrespeitada
+- Banco de horas vencido
+- Marcação faltante / pendente justificativa / pendente aprovação
+
+## 3. Classificação Verde / Amarelo / Vermelho
+
+Substituir os badges atuais por **semáforo CLT** em todas as listagens (espelho + dashboard):
+
+- 🟢 **Regular**: jornada ok, intervalos ok
+- 🟡 **Atenção**: hora extra dentro do limite, marcação manual, pequena divergência → exige justificativa
+- 🔴 **Risco Trabalhista**: viola CLT → bloqueia fechamento sem ação corretiva, gera Ação 5W2H automaticamente (padrão do projeto)
+
+## 4. Banco de Horas configurável
+
+Nova tabela `ponto_banco_horas_config` por escala/empresa:
+- Tipo (semanal, mensal, individual, ACT)
+- Prazo de compensação, limites positivo/negativo
+- Forma de compensação / pagamento ao vencer
+- Vínculo com acordo
+
+Job diário `ponto-banco-horas-vencimento` (edge function) gera alerta vermelho quando vencer.
+
+## 5. Adicional Noturno e Hora Extra automáticos
+
+Cálculo em SQL ao consolidar o dia:
+- Decompõe marcação em janelas diurnas/noturnas
+- Aplica hora reduzida 52'30"
+- Calcula adicional noturno (% configurável, padrão 20%)
+- Separa HE 50%/100% conforme dia (útil/domingo/feriado)
+- Roteamento: pagamento ou banco de horas
+
+## 6. Ponto por Exceção (modalidade)
+
+Nova opção em `ponto_configuracao.modo_apuracao`:
+- `padrao` (toda marcação)
+- `por_excecao` (registra apenas atraso, falta, HE, ausência)
+- Exige acordo vinculado e ciência do colaborador (campo `ciencia_aceita_em`)
+
+## 7. Reorganização das Abas (UI)
+
+Estrutura atual: Espelho · Escalas · Ajustes · Banco de Horas · Fechamento · Config · Alertas
+Nova estrutura mais funcional:
+
+```text
+Visão Geral  →  KPIs + semáforo do dia + alertas vermelhos no topo
+Espelho      →  marcações + classificação + justificativa inline
+Escalas      →  cadastro multi-tipo com editor visual + atribuições
+Apuração     →  HE, banco horas, adicional noturno, DSR, fechamento mensal
+Ajustes      →  pendências (já filtrado por empresa)
+Auditoria    →  trilha completa antes/depois, origem, IP, geo
+Configurações→  modo registro, tolerâncias, modo apuração, acordos
 ```
 
-## Impacto
+## 8. O que se mantém (sem mexer)
+- Link externo `/ponto/:token` com selfie + geo
+- WhatsApp OTP
+- REP-C / REP-P
+- Solicitação de ajuste pelo colaborador
+- Filtragem por empresa ativa nos ajustes/escalas (já corrigido)
+- ConfirmDialog para destrutivos
 
-- Cassiano e qualquer outro `gestor` do tenant passará a ver as 22 empresas no seletor do topo.
-- Tipos restritivos (`clinica_parceira`, `consultor_externo`, `prestador_terceiro`, `auditor`, `suporte_autorizado`) continuam filtrados por vínculo — sem alteração de segurança para perfis externos.
-- Nenhuma migration de banco necessária. Nenhum dado é alterado.
+## Detalhes técnicos
 
-## Validação após implementar
+**Migrations necessárias:**
+1. Adicionar colunas em `ponto_escalas` (tipo, cargas, janela flexível, regras JSON, vínculo acordo)
+2. Criar `ponto_banco_horas_config`
+3. Criar `ponto_acordos` (individual/ACT/CCT com upload de documento)
+4. Adicionar `classificacao_clt` (verde/amarelo/vermelho) em `ponto_marcacoes` e `ponto_dia_consolidado`
+5. Função `public.validar_marcacao_ponto()` + trigger AFTER INSERT/UPDATE em `ponto_marcacoes`
+6. Função `public.consolidar_dia_ponto(colaborador_id, data)` para fechar o dia com HE/noturno/banco
+7. Adicionar `modo_apuracao`, `permite_ponto_excecao` em `ponto_configuracao`
 
-Pedir ao usuário recarregar a página e abrir o seletor de empresas no topo — deve listar todas as 22 empresas ativas do tenant SudoMed.
+**Frontend (componentes novos):**
+- `EscalaEditor.tsx` (editor visual semanal, multi-tipo)
+- `MotorRegrasIndicator.tsx` (semáforo verde/amarelo/vermelho)
+- `BancoHorasConfig.tsx`
+- `AcordosManager.tsx` (acordo individual / CCT / ACT)
+- `AuditoriaTab.tsx` (nova aba)
+- `VisaoGeralTab.tsx` (nova aba KPI)
+
+**Não muda:**
+- `PontoExterno.tsx` (link público) — apenas passa a receber classificação
+- `useGeolocation`, `PontoSelfieCapture`, `SolicitarAjusteModal`
+
+## Entrega faseada
+
+Para evitar regressão, sugiro entregar em 3 fases:
+
+**Fase 1 (esta) — Fundação**: migrations + motor de regras + classificação CLT + reorganização das abas + EscalaEditor multi-tipo
+**Fase 2** — Banco de horas, adicional noturno automático, acordos
+**Fase 3** — Ponto por exceção, auditoria avançada, relatórios de risco
+
+Confirma esse caminho? Posso já iniciar pela Fase 1 ao aprovar.
