@@ -433,9 +433,9 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       queryClient.invalidateQueries({ queryKey: ["plano-acoes-stats"] });
       toast.success("Ação excluída!");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Erro ao excluir ação:", error);
-      toast.error("Erro ao excluir ação");
+      toast.error("Erro ao excluir ação: " + (error?.message || "tente novamente"));
     },
   });
 
