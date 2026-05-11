@@ -32,21 +32,101 @@ export function PontoEscalasTab() {
   const [showAtribuir, setShowAtribuir] = useState(false);
   const DIAS_KEYS = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"] as const;
   const DIAS_LBL: Record<string,string> = { segunda:"Segunda", terca:"Terça", quarta:"Quarta", quinta:"Quinta", sexta:"Sexta", sabado:"Sábado", domingo:"Domingo" };
-  type DiaConfig = { trabalha: boolean; entrada: string; saida: string; intervalo: number };
-  const diasConfigPadrao = (): Record<string, DiaConfig> => ({
-    segunda: { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    terca:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    quarta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    quinta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    sexta:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    sabado:  { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
-    domingo: { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
+  type DiaConfig = {
+    trabalha: boolean;
+    tem_almoco: boolean;
+    entrada: string;        // 1ª marcação (início do expediente)
+    inicio_almoco: string;  // 2ª marcação (saída p/ almoço)
+    fim_almoco: string;     // 3ª marcação (retorno do almoço)
+    saida: string;          // 4ª marcação (fim do expediente)
+  };
+  type Compensacao = {
+    ordinal_mes: string;   // "1","2","3","4","ultimo"
+    dia_semana: string;
+    entrada: string;
+    saida: string;
+    intervalo: number;
+    descricao?: string;
+  };
+  const ORDINAIS_MES = [
+    { value: "1", label: "1º" },
+    { value: "2", label: "2º" },
+    { value: "3", label: "3º" },
+    { value: "4", label: "4º" },
+    { value: "ultimo", label: "Último" },
+  ];
+  const diaPadrao = (trabalha: boolean): DiaConfig => ({
+    trabalha,
+    tem_almoco: trabalha,
+    entrada: "08:00",
+    inicio_almoco: "12:00",
+    fim_almoco: "13:00",
+    saida: "17:00",
   });
+  const diasConfigPadrao = (): Record<string, DiaConfig> => ({
+    segunda: diaPadrao(true),
+    terca:   diaPadrao(true),
+    quarta:  diaPadrao(true),
+    quinta:  diaPadrao(true),
+    sexta:   diaPadrao(true),
+    sabado:  diaPadrao(false),
+    domingo: diaPadrao(false),
+  });
+  // Migra formato antigo (entrada/saida/intervalo) para novo (4 marcações)
+  const migrarDiaConfig = (raw: any): Record<string, DiaConfig> => {
+    if (!raw) return diasConfigPadrao();
+    const out: Record<string, DiaConfig> = {} as any;
+    DIAS_KEYS.forEach(d => {
+      const c = raw[d] || {};
+      if (c.entrada && c.saida && !("inicio_almoco" in c)) {
+        const intervalo = +(c.intervalo || 0);
+        const [h1,m1] = c.entrada.split(":").map(Number);
+        const [h2,m2] = c.saida.split(":").map(Number);
+        const totalMin = (h2*60+m2) - (h1*60+m1);
+        const meio = h1*60+m1 + Math.floor((totalMin - intervalo)/2);
+        const ini = `${String(Math.floor(meio/60)).padStart(2,"0")}:${String(meio%60).padStart(2,"0")}`;
+        const fimMin = meio + intervalo;
+        const fim = `${String(Math.floor(fimMin/60)).padStart(2,"0")}:${String(fimMin%60).padStart(2,"0")}`;
+        out[d] = {
+          trabalha: !!c.trabalha,
+          tem_almoco: intervalo > 0,
+          entrada: c.entrada,
+          inicio_almoco: intervalo > 0 ? ini : c.entrada,
+          fim_almoco: intervalo > 0 ? fim : c.entrada,
+          saida: c.saida,
+        };
+      } else {
+        out[d] = {
+          trabalha: !!c.trabalha,
+          tem_almoco: c.tem_almoco !== false,
+          entrada: c.entrada || "08:00",
+          inicio_almoco: c.inicio_almoco || "12:00",
+          fim_almoco: c.fim_almoco || "13:00",
+          saida: c.saida || "17:00",
+        };
+      }
+    });
+    return out;
+  };
+  const minutosDia = (c: DiaConfig): number => {
+    if (!c.trabalha) return 0;
+    const toMin = (s: string) => { const [h,m]=s.split(":").map(Number); return h*60+m; };
+    if (c.tem_almoco) {
+      return Math.max(0, (toMin(c.inicio_almoco) - toMin(c.entrada)) + (toMin(c.saida) - toMin(c.fim_almoco)));
+    }
+    return Math.max(0, toMin(c.saida) - toMin(c.entrada));
+  };
+  const intervaloDia = (c: DiaConfig): number => {
+    if (!c.trabalha || !c.tem_almoco) return 0;
+    const toMin = (s: string) => { const [h,m]=s.split(":").map(Number); return h*60+m; };
+    return Math.max(0, toMin(c.fim_almoco) - toMin(c.inicio_almoco));
+  };
   const [escalaForm, setEscalaForm] = useState<any>({
     nome: "",
     tipo: "5x2",
     modalidade: "fixa",
     dias_config: diasConfigPadrao(),
+    compensacoes_mensais: [] as Compensacao[],
     ciclo_horas_trabalho: 12,
     ciclo_horas_descanso: 36,
     ciclo_inicio_data: new Date().toISOString().split("T")[0],
