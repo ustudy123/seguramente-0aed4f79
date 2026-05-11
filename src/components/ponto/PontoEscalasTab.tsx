@@ -17,8 +17,15 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
 
 export function PontoEscalasTab() {
-  const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atualizarEscala, atualizandoEscala, excluirEscala, atribuirEscala } = usePontoEscalas();
+  const { escalas, loadingEscalas, atribuicoes: atribuicoesRaw, criarEscala, criandoEscala, atualizarEscala, atualizandoEscala, excluirEscala, atribuirEscala } = usePontoEscalas();
   const { colaboradores } = useColaboradores();
+  // Filtra atribuições pelos colaboradores da empresa ativa (cruzamento por CPF/ID)
+  const cpfsEmpresa = new Set(colaboradores.map(c => (c.cpf || "").replace(/\D/g, "")).filter(Boolean));
+  const idsEmpresa = new Set(colaboradores.map(c => c.id));
+  const atribuicoes = atribuicoesRaw.filter((a: any) => {
+    const cpf = (a.colaborador_cpf || "").replace(/\D/g, "");
+    return (cpf && cpfsEmpresa.has(cpf)) || (a.colaborador_id && idsEmpresa.has(a.colaborador_id));
+  });
   const [showCriar, setShowCriar] = useState(false);
   const [editando, setEditando] = useState<PontoEscala | null>(null);
   const [showInteligente, setShowInteligente] = useState(false);
