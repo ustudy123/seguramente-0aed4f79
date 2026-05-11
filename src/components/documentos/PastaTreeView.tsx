@@ -164,13 +164,15 @@ function PastaNode({
           "flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer transition-colors group",
           isSelected && "bg-primary/10 text-primary",
           isDragOver && "bg-primary/20 ring-2 ring-primary/50",
-          !isSelected && !isDragOver && "hover:bg-muted/50"
+          isVirtual && "bg-muted/30 text-muted-foreground italic",
+          !isSelected && !isDragOver && !isVirtual && "hover:bg-muted/50",
+          !isSelected && !isDragOver && isVirtual && "hover:bg-muted/50"
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
-        onClick={() => onSelectPasta(node)}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onClick={() => isVirtual ? setExpanded(!expanded) : onSelectPasta(node)}
+        onDragOver={isVirtual ? undefined : handleDragOver}
+        onDragLeave={isVirtual ? undefined : handleDragLeave}
+        onDrop={isVirtual ? undefined : handleDrop}
       >
         {/* Expand/Collapse button */}
         <button
