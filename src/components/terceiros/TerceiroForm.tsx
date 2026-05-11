@@ -31,6 +31,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [uploadingContract, setUploadingContract] = useState(false);
   const [contractFile, setContractFile] = useState<File | null>(null);
+  const [unidadesText, setUnidadesText] = useState((initial?.unidades || []).join(", "));
+  const [setoresText, setSetoresText] = useState((initial?.setores || []).join(", "));
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
     nome_fantasia: initial?.nome_fantasia || "",
@@ -269,16 +271,24 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             <div>
               <Label>Unidades onde atua</Label>
               <Input
-                value={(form.unidades || []).join(", ")}
-                onChange={(e) => set("unidades", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                value={unidadesText}
+                onChange={(e) => {
+                  setUnidadesText(e.target.value);
+                  set("unidades", e.target.value.split(",").map((s) => s.trim()).filter(Boolean));
+                }}
+                onBlur={() => setUnidadesText((form.unidades || []).join(", "))}
                 placeholder="Ex: Matriz, Filial SP (separar por vírgula)"
               />
             </div>
             <div>
               <Label>Setores onde pode atuar</Label>
               <Input
-                value={(form.setores || []).join(", ")}
-                onChange={(e) => set("setores", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                value={setoresText}
+                onChange={(e) => {
+                  setSetoresText(e.target.value);
+                  set("setores", e.target.value.split(",").map((s) => s.trim()).filter(Boolean));
+                }}
+                onBlur={() => setSetoresText((form.setores || []).join(", "))}
                 placeholder="Ex: Produção, Manutenção (separar por vírgula)"
               />
             </div>
