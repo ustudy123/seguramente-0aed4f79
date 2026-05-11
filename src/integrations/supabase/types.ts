@@ -20762,6 +20762,10 @@ export type Database = {
           total_servicos_executados: number
         }[]
       }
+      calcular_he_adicional_noturno_dia: {
+        Args: { p_colaborador_id: string; p_data: string }
+        Returns: Json
+      }
       classificar_marcacao_clt: {
         Args: { p_marcacao_id: string }
         Returns: string

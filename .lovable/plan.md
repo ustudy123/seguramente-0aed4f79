@@ -127,3 +127,14 @@ Para evitar regressão, sugiro entregar em 3 fases:
 **Fase 3** — Ponto por exceção, auditoria avançada, relatórios de risco
 
 Confirma esse caminho? Posso já iniciar pela Fase 1 ao aprovar.
+
+---
+
+## Status de Entrega
+
+- **Fase 1 (concluída)**: Migrations base (escalas flexíveis, acordos, banco de horas config, classificação CLT verde/amarelo/vermelho), reorganização de abas em 7 grupos.
+- **Fase 2 (concluída)**: 
+  - UI de Acordos (`PontoAcordosTab` em Compliance > Acordos)
+  - UI de Configuração de Banco de Horas por escala (`PontoBancoHorasConfigTab` em Apuração > Config BH)
+  - Função SQL `calcular_he_adicional_noturno_dia` que aplica CCT vigente (ou padrão CLT) e calcula HE 50%/100% e adicional noturno com hora ficta 52'30".
+- **Fase 3 (pendente)**: Modo "Ponto por Exceção", auditoria avançada, relatórios de risco trabalhista, trigger automático no consolidado diário.
