@@ -207,6 +207,16 @@ export function SSTOrdemServicoTab() {
           </CardContent>
         </Card>
       )}
+      {pgrVencido && (
+        <Card className="border-yellow-500/50 bg-yellow-500/5">
+          <CardContent className="py-3 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5" />
+            <p className="text-sm">
+              <b>PGR vencido.</b> O PGR mais recente está com a vigência expirada ({pgrVigente?.data_vigencia ? format(new Date(pgrVigente.data_vigencia), "dd/MM/yyyy") : "data não informada"}). Você ainda pode gerar OS, mas recomendamos importar a versão atualizada na aba <b>Importação IA</b>.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
