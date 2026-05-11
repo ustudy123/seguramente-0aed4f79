@@ -544,13 +544,15 @@ const Ponto = () => {
         {/* Apuração */}
         <TabsContent value="apuracao">
           <Tabs value={apuracaoTab} onValueChange={setApuracaoTab} className="w-full">
-            <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-4">
+            <TabsList className="grid w-full max-w-3xl grid-cols-5 mb-4">
               <TabsTrigger value="banco" className="text-xs"><Wallet className="h-3.5 w-3.5 mr-1" />Banco Horas</TabsTrigger>
+              <TabsTrigger value="banco_config" className="text-xs"><Settings className="h-3.5 w-3.5 mr-1" />Config BH</TabsTrigger>
               <TabsTrigger value="fechamento" className="text-xs"><Lock className="h-3.5 w-3.5 mr-1" />Fechamento</TabsTrigger>
               <TabsTrigger value="folha" className="text-xs"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Folha</TabsTrigger>
               <TabsTrigger value="relatorios" className="text-xs"><FileDown className="h-3.5 w-3.5 mr-1" />Relatórios</TabsTrigger>
             </TabsList>
             <TabsContent value="banco"><PontoBancoHorasTab /></TabsContent>
+            <TabsContent value="banco_config"><PontoBancoHorasConfigTab /></TabsContent>
             <TabsContent value="fechamento"><PontoFechamentoTab /></TabsContent>
             <TabsContent value="folha"><PontoFolhaTab /></TabsContent>
             <TabsContent value="relatorios"><PontoRelatoriosTab /></TabsContent>
@@ -560,11 +562,13 @@ const Ponto = () => {
         {/* Compliance */}
         <TabsContent value="compliance">
           <Tabs value={complianceTab} onValueChange={setComplianceTab} className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+            <TabsList className="grid w-full max-w-xl grid-cols-3 mb-4">
               <TabsTrigger value="alertas" className="text-xs"><Bell className="h-3.5 w-3.5 mr-1" />Alertas CLT</TabsTrigger>
-              <TabsTrigger value="cct" className="text-xs"><Scale className="h-3.5 w-3.5 mr-1" />CCT / Acordos</TabsTrigger>
+              <TabsTrigger value="acordos" className="text-xs"><FileText className="h-3.5 w-3.5 mr-1" />Acordos</TabsTrigger>
+              <TabsTrigger value="cct" className="text-xs"><Scale className="h-3.5 w-3.5 mr-1" />CCT</TabsTrigger>
             </TabsList>
             <TabsContent value="alertas"><PontoAlertasTab /></TabsContent>
+            <TabsContent value="acordos"><PontoAcordosTab /></TabsContent>
             <TabsContent value="cct"><PontoCCTTab /></TabsContent>
           </Tabs>
         </TabsContent>
