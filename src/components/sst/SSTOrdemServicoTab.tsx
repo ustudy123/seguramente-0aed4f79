@@ -69,10 +69,14 @@ export function SSTOrdemServicoTab() {
     } catch {/* noop */}
   }, [respTecnico, respRegistro, storageKey, tenantId]);
 
-  const pgrVigente = useMemo(
-    () => documentos.find(d => d.tipo === "PGR" && d.status === "vigente" && d.analise_ia_status === "concluida"),
-    [documentos]
-  );
+  // Aceita o PGR mais recente com análise concluída, mesmo se "vencido" (exibe aviso).
+  const pgrVigente = useMemo(() => {
+    const pgrs = documentos
+      .filter(d => d.tipo === "PGR" && d.analise_ia_status === "concluida")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return pgrs.find(p => p.status === "vigente") || pgrs[0] || null;
+  }, [documentos]);
+  const pgrVencido = !!pgrVigente && pgrVigente.status === "vencido";
 
   const { data: colaboradores = [] } = useQuery({
     queryKey: ["admissoes-os", tenantId, empresaAtivaId],
