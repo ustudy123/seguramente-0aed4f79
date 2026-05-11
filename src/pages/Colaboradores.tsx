@@ -180,6 +180,69 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [desligarColab, setDesligarColab] = useState<ColaboradorExtendido | null>(null);
+  const [inativarColab, setInativarColab] = useState<ColaboradorExtendido | null>(null);
+  const [inativarMotivo, setInativarMotivo] = useState("");
+  const [excluirColab, setExcluirColab] = useState<ColaboradorExtendido | null>(null);
+  const [excluirText, setExcluirText] = useState("");
+  const [excluirVinculos, setExcluirVinculos] = useState<{ tem: boolean; detalhes: any } | null>(null);
+  const [excluirChecking, setExcluirChecking] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const checkVinculosEAbrirExcluir = async (colab: ColaboradorExtendido) => {
+    setExcluirColab(colab);
+    setExcluirText("");
+    setExcluirVinculos(null);
+    setExcluirChecking(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("colaborador_tem_vinculos", { _admissao_id: colab.id });
+      if (error) throw error;
+      setExcluirVinculos({ tem: !!data?.tem_vinculos, detalhes: data?.detalhes || {} });
+    } catch (e: any) {
+      toast.error("Erro ao verificar vínculos: " + (e.message || e));
+      setExcluirColab(null);
+    } finally {
+      setExcluirChecking(false);
+    }
+  };
+
+  const handleConfirmInativar = async () => {
+    if (!inativarColab) return;
+    setActionLoading(true);
+    try {
+      const reverter = !!(inativarColab as any).inativo;
+      const { error } = await (supabase as any).rpc("inativar_colaborador", {
+        _admissao_id: inativarColab.id,
+        _motivo: inativarMotivo || null,
+        _reverter: reverter,
+      });
+      if (error) throw error;
+      toast.success(reverter ? "Colaborador reativado" : "Colaborador inativado");
+      setInativarColab(null);
+      setInativarMotivo("");
+      refetch();
+    } catch (e: any) {
+      toast.error("Erro: " + (e.message || e));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmExcluir = async () => {
+    if (!excluirColab) return;
+    setActionLoading(true);
+    try {
+      const { error } = await (supabase as any).rpc("excluir_colaborador_seguro", { _admissao_id: excluirColab.id });
+      if (error) throw error;
+      toast.success("Colaborador excluído");
+      setExcluirColab(null);
+      setExcluirText("");
+      refetch();
+    } catch (e: any) {
+      toast.error("Erro ao excluir: " + (e.message || e));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleNovoCadastro = () => setShowNovoChoice(true);
