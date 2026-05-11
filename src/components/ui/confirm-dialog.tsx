@@ -62,7 +62,8 @@ export function ConfirmDialogProvider() {
     globalResolve = null;
   }, []);
 
-  const isConfirmDisabled = state.requiredWord && inputValue !== state.requiredWord;
+  const normalize = (s: string) => (s || "").trim().toUpperCase();
+  const isConfirmDisabled = !!state.requiredWord && normalize(inputValue) !== normalize(state.requiredWord);
 
   return (
     <AlertDialog open={state.open} onOpenChange={(open) => { if (!open) handleClose(false); }}>
@@ -83,6 +84,10 @@ export function ConfirmDialogProvider() {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={`Digite ${state.requiredWord}`}
               className="uppercase"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
             />
           </div>
         )}
