@@ -157,17 +157,38 @@ export function useErgonomia() {
         empresa_id: empresaAtivaId || null,
       }));
 
+      // Busca códigos já existentes para este tenant para evitar conflito de unique key
+      const { data: existentes, error: errExist } = await supabase
+        .from("ergonomia_itens_nr17")
+        .select("codigo")
+        .eq("tenant_id", tenantId);
+
+      if (errExist) throw errExist;
+
+      const codigosExistentes = new Set((existentes || []).map((e: any) => e.codigo));
+      const itensNovos = itensComTenant.filter((i: any) => !codigosExistentes.has(i.codigo));
+
+      if (itensNovos.length === 0) {
+        return { inserted: 0, skipped: itensComTenant.length };
+      }
+
       const { data, error } = await supabase
         .from("ergonomia_itens_nr17")
-        .insert(itensComTenant)
+        .insert(itensNovos)
         .select();
 
       if (error) throw error;
-      return data;
+      return { inserted: data?.length || 0, skipped: itensComTenant.length - (data?.length || 0) };
     },
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["ergonomia-itens-nr17"] });
-      toast.success("Itens NR-17 inicializados com sucesso!");
+      if (res?.inserted === 0) {
+        toast.info("Itens NR-17 já estavam inicializados.");
+      } else if (res?.skipped > 0) {
+        toast.success(`${res.inserted} itens criados (${res.skipped} já existiam).`);
+      } else {
+        toast.success("Itens NR-17 inicializados com sucesso!");
+      }
     },
     onError: (error) => {
       console.error("Erro ao inicializar itens:", error);
