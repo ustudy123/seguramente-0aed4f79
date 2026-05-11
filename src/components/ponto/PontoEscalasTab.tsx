@@ -301,17 +301,53 @@ export function PontoEscalasTab() {
     await excluirEscala(e.id);
   };
 
-  const handleAtribuir = async () => {
-    const colab = colaboradores.find(c => c.id === atribuicaoForm.colaborador_id);
-    if (!colab || !atribuicaoForm.escala_id) { toast.error("Selecione escala e colaborador"); return; }
-    await atribuirEscala({
-      escala_id: atribuicaoForm.escala_id,
-      colaborador_id: colab.id,
-      colaborador_nome: colab.nome_completo,
-      colaborador_cpf: colab.cpf,
-      data_inicio: atribuicaoForm.data_inicio,
-    });
-    setShowAtribuir(false);
+  // Mapa colaborador_id → atribuição ativa atual (para detectar duplicidade)
+  const atribuicoesPorColaborador = useMemo(() => {
+    const map = new Map<string, typeof atribuicoes[number]>();
+    atribuicoes.forEach(a => { if (a.colaborador_id) map.set(a.colaborador_id, a); });
+    return map;
+  }, [atribuicoes]);
+
+  const handleAtribuirLote = async () => {
+    if (!atribuicaoForm.escala_id) { toast.error("Selecione uma escala"); return; }
+    if (atribuicaoForm.colaborador_ids.length === 0) { toast.error("Selecione ao menos um colaborador"); return; }
+    setAtribuindoLote(true);
+    let sucesso = 0, pulados = 0, substituidos = 0;
+    try {
+      for (const colabId of atribuicaoForm.colaborador_ids) {
+        const colab = colaboradores.find(c => c.id === colabId);
+        if (!colab) continue;
+        const atual = atribuicoesPorColaborador.get(colabId);
+        if (atual) {
+          if (atual.escala_id === atribuicaoForm.escala_id) { pulados++; continue; }
+          if (!atribuicaoForm.substituir) { pulados++; continue; }
+          // Inativa atribuição anterior
+          await fromTable("ponto_escala_atribuicoes")
+            .update({ ativa: false, data_fim: atribuicaoForm.data_inicio } as any)
+            .eq("id", atual.id);
+          substituidos++;
+        }
+        await atribuirEscala({
+          escala_id: atribuicaoForm.escala_id,
+          colaborador_id: colab.id,
+          colaborador_nome: colab.nome_completo,
+          colaborador_cpf: colab.cpf,
+          data_inicio: atribuicaoForm.data_inicio,
+        });
+        sucesso++;
+      }
+      queryClient.invalidateQueries({ queryKey: ["ponto-escala-atribuicoes"] });
+      const partes = [
+        sucesso > 0 ? `${sucesso} atribuída(s)` : null,
+        substituidos > 0 ? `${substituidos} substituída(s)` : null,
+        pulados > 0 ? `${pulados} ignorada(s) (já em outra escala)` : null,
+      ].filter(Boolean).join(" · ");
+      toast.success(partes || "Nenhuma alteração");
+      setShowAtribuir(false);
+      setAtribuicaoForm(f => ({ ...f, colaborador_ids: [], substituir: false }));
+    } finally {
+      setAtribuindoLote(false);
+    }
   };
 
   return (
