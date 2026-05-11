@@ -65,11 +65,34 @@ export function useTerceiros() {
     enabled: !!tenantId,
   });
 
+  const cleanCnpj = (v?: string | null) => (v || "").replace(/\D/g, "");
+
+  const ensureCnpjUnique = async (cnpj: string, ignoreId?: string) => {
+    if (!tenantId || !cnpj) return;
+    let q = fromTable("terceiros")
+      .select("id, razao_social")
+      .eq("tenant_id", tenantId)
+      .eq("cnpj", cnpj)
+      .limit(1);
+    if (ignoreId) q = q.neq("id", ignoreId);
+    const { data, error } = await q;
+    if (error) throw error;
+    if (data && data.length > 0) {
+      const existente = (data[0] as any).razao_social || "outro prestador";
+      throw new Error(`CNPJ já cadastrado para "${existente}". Não é possível duplicar.`);
+    }
+  };
+
   const createTerceiro = useMutation({
     mutationFn: async (payload: Partial<Terceiro>) => {
       if (!tenantId) throw new Error("Sem tenant");
+      const cnpj = cleanCnpj(payload.cnpj);
+      if (!cnpj || cnpj.length !== 14) {
+        throw new Error("CNPJ inválido. Informe os 14 dígitos.");
+      }
+      await ensureCnpjUnique(cnpj);
       const { data, error } = await fromTable("terceiros")
-        .insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
+        .insert({ ...payload, cnpj, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
         .select()
         .single();
       if (error) throw error;
@@ -84,6 +107,14 @@ export function useTerceiros() {
 
   const updateTerceiro = useMutation({
     mutationFn: async ({ id, ...payload }: Partial<Terceiro> & { id: string }) => {
+      if (payload.cnpj !== undefined) {
+        const cnpj = cleanCnpj(payload.cnpj);
+        if (!cnpj || cnpj.length !== 14) {
+          throw new Error("CNPJ inválido. Informe os 14 dígitos.");
+        }
+        await ensureCnpjUnique(cnpj, id);
+        payload.cnpj = cnpj;
+      }
       const { error } = await fromTable("terceiros")
         .update(payload as any)
         .eq("id", id);
