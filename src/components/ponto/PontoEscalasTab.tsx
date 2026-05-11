@@ -151,14 +151,21 @@ export function PontoEscalasTab() {
     let semanal = 0;
     let diasTrab = 0;
     DIAS_KEYS.forEach(d => {
-      const c = dc[d];
-      if (!c?.trabalha) return;
-      const [h1,m1] = c.entrada.split(":").map(Number);
-      const [h2,m2] = c.saida.split(":").map(Number);
-      const min = (h2*60+m2) - (h1*60+m1) - (c.intervalo || 0);
+      const min = minutosDia(dc[d]);
       if (min > 0) { semanal += min; diasTrab++; }
     });
     return { semanal, diaria: diasTrab > 0 ? Math.round(semanal/diasTrab) : 0, diasTrab };
+  };
+  // Média semanal de horas extras vindas das compensações mensais (≈ 4.345 semanas/mês)
+  const calcularCompensacaoSemanal = (lista: Compensacao[]) => {
+    if (!lista?.length) return 0;
+    const totalMes = lista.reduce((acc, c) => {
+      const toMin = (s: string) => { const [h,m]=s.split(":").map(Number); return h*60+m; };
+      const min = Math.max(0, toMin(c.saida) - toMin(c.entrada) - (c.intervalo || 0));
+      // "ultimo" e "1..4" ocorrem 1x/mês cada
+      return acc + min;
+    }, 0);
+    return Math.round(totalMes / 4.345);
   };
   const calcularJornadasMovel = (ht: number, hd: number) => {
     // jornada diária = horas trabalho do ciclo; semanal = média (7d / ciclo) * ht
