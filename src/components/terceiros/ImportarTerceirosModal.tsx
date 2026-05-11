@@ -139,8 +139,9 @@ export function ImportarTerceirosModal({ open, onOpenChange }: Props) {
             <div className="text-xs space-y-1">
               <p className="font-semibold">Importante:</p>
               <ul className="list-disc pl-4">
-                <li>O CNPJ deve ser único no sistema.</li>
-                <li>Campos com * são obrigatórios.</li>
+              <li>O CNPJ deve ser único no sistema.</li>
+                <li>Campos obrigatórios: <strong>razao_social</strong> e <strong>cnpj</strong>.</li>
+                <li>Demais campos são opcionais.</li>
                 <li>Formatos de data sugeridos: DD/MM/YYYY.</li>
               </ul>
             </div>
