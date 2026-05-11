@@ -62,7 +62,8 @@ export function ConfirmDialogProvider() {
     globalResolve = null;
   }, []);
 
-  const isConfirmDisabled = state.requiredWord && inputValue !== state.requiredWord;
+  const normalize = (s: string) => (s || "").trim().toUpperCase();
+  const isConfirmDisabled = !!state.requiredWord && normalize(inputValue) !== normalize(state.requiredWord);
 
   return (
     <AlertDialog open={state.open} onOpenChange={(open) => { if (!open) handleClose(false); }}>
