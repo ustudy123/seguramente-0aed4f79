@@ -36,6 +36,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { BlogPostEditor } from '@/components/blog/BlogPostEditor';
+import { BlogPostPreview } from '@/components/blog/BlogPostPreview';
 
 interface BlogPost {
   id: string;
@@ -52,6 +54,10 @@ export default function BlogAdmin() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     setIsLoading(true);
