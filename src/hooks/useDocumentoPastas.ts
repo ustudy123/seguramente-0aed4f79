@@ -227,9 +227,16 @@ export function useDocumentoPastas() {
       }
     });
 
-    // Construir hierarquia
+    // Set de colaboradores válidos da empresa ativa (evita exibir pastas vazadas)
+    const colaboradorIdsValidos = new Set(colaboradores.map((c: Colaborador) => c.id));
+
+    // Construir hierarquia (excluindo pastas de colaborador que não pertencem à empresa ativa)
     pastas.forEach(pasta => {
       const node = nodeMap.get(pasta.id)!;
+      // Bloqueia pastas de colaborador "vazadas" de outra empresa
+      if (pasta.tipo === "colaborador" && pasta.colaborador_id && !colaboradorIdsValidos.has(pasta.colaborador_id)) {
+        return;
+      }
       if (pasta.pasta_pai_id && nodeMap.has(pasta.pasta_pai_id)) {
         nodeMap.get(pasta.pasta_pai_id)!.children.push(node);
       } else {
@@ -240,19 +247,64 @@ export function useDocumentoPastas() {
     // Ordenar por ordem, depois alfabeticamente para mesmo nível
     const sortNodes = (nodes: DocumentoPastaNode[]) => {
       nodes.sort((a, b) => {
-        // First sort by type priority: root > unidade > categoria > colaborador > custom
         const typePriority: Record<string, number> = { root: 0, unidade: 1, ano: 2, mes: 3, categoria: 4, colaborador: 5, custom: 6 };
         const tA = typePriority[a.tipo] ?? 9;
         const tB = typePriority[b.tipo] ?? 9;
         if (tA !== tB) return tA - tB;
-        // Then by ordem
         if (a.ordem !== b.ordem) return a.ordem - b.ordem;
-        // Then alphabetically
         return a.nome.localeCompare(b.nome, 'pt-BR');
       });
       nodes.forEach(node => sortNodes(node.children));
     };
     sortNodes(roots);
+
+    // Agrupar pastas de colaborador alfabeticamente quando houver muitas (> 20)
+    const AGRUPAR_LIMIAR = 20;
+    const agruparColaboradores = (nodes: DocumentoPastaNode[]) => {
+      nodes.forEach(parent => {
+        const colabChildren = parent.children.filter(c => c.tipo === "colaborador");
+        const outrosChildren = parent.children.filter(c => c.tipo !== "colaborador");
+        if (colabChildren.length > AGRUPAR_LIMIAR) {
+          const grupos = new Map<string, DocumentoPastaNode[]>();
+          colabChildren.forEach(c => {
+            const primeira = (c.nome.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "")[0] || "#").toUpperCase();
+            const letra = /[A-Z]/.test(primeira) ? primeira : "#";
+            if (!grupos.has(letra)) grupos.set(letra, []);
+            grupos.get(letra)!.push(c);
+          });
+          const virtualNodes: DocumentoPastaNode[] = Array.from(grupos.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([letra, items]) => ({
+              id: `__az__${parent.id}__${letra}`,
+              tenant_id: parent.tenant_id,
+              nome: `${letra}  •  ${items.length} colaborador${items.length > 1 ? "es" : ""}`,
+              tipo: "categoria" as const,
+              pasta_pai_id: parent.id,
+              filial_id: null,
+              colaborador_id: null,
+              colaborador_cpf: null,
+              colaborador_nome: null,
+              ano: null,
+              mes: null,
+              ordem: 0,
+              icone: "Users",
+              cor: null,
+              criado_por: null,
+              criado_por_nome: null,
+              created_at: parent.created_at,
+              updated_at: parent.updated_at,
+              children: items,
+              documentos: [],
+              isVirtual: true,
+              virtualLabel: letra,
+              totalDescendantes: items.length,
+            }));
+          parent.children = [...outrosChildren, ...virtualNodes];
+        }
+        agruparColaboradores(parent.children);
+      });
+    };
+    agruparColaboradores(roots);
 
     return roots;
   };
