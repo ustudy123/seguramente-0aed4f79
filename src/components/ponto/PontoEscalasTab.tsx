@@ -32,21 +32,101 @@ export function PontoEscalasTab() {
   const [showAtribuir, setShowAtribuir] = useState(false);
   const DIAS_KEYS = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"] as const;
   const DIAS_LBL: Record<string,string> = { segunda:"Segunda", terca:"Terça", quarta:"Quarta", quinta:"Quinta", sexta:"Sexta", sabado:"Sábado", domingo:"Domingo" };
-  type DiaConfig = { trabalha: boolean; entrada: string; saida: string; intervalo: number };
-  const diasConfigPadrao = (): Record<string, DiaConfig> => ({
-    segunda: { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    terca:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    quarta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    quinta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    sexta:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
-    sabado:  { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
-    domingo: { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
+  type DiaConfig = {
+    trabalha: boolean;
+    tem_almoco: boolean;
+    entrada: string;        // 1ª marcação (início do expediente)
+    inicio_almoco: string;  // 2ª marcação (saída p/ almoço)
+    fim_almoco: string;     // 3ª marcação (retorno do almoço)
+    saida: string;          // 4ª marcação (fim do expediente)
+  };
+  type Compensacao = {
+    ordinal_mes: string;   // "1","2","3","4","ultimo"
+    dia_semana: string;
+    entrada: string;
+    saida: string;
+    intervalo: number;
+    descricao?: string;
+  };
+  const ORDINAIS_MES = [
+    { value: "1", label: "1º" },
+    { value: "2", label: "2º" },
+    { value: "3", label: "3º" },
+    { value: "4", label: "4º" },
+    { value: "ultimo", label: "Último" },
+  ];
+  const diaPadrao = (trabalha: boolean): DiaConfig => ({
+    trabalha,
+    tem_almoco: trabalha,
+    entrada: "08:00",
+    inicio_almoco: "12:00",
+    fim_almoco: "13:00",
+    saida: "17:00",
   });
+  const diasConfigPadrao = (): Record<string, DiaConfig> => ({
+    segunda: diaPadrao(true),
+    terca:   diaPadrao(true),
+    quarta:  diaPadrao(true),
+    quinta:  diaPadrao(true),
+    sexta:   diaPadrao(true),
+    sabado:  diaPadrao(false),
+    domingo: diaPadrao(false),
+  });
+  // Migra formato antigo (entrada/saida/intervalo) para novo (4 marcações)
+  const migrarDiaConfig = (raw: any): Record<string, DiaConfig> => {
+    if (!raw) return diasConfigPadrao();
+    const out: Record<string, DiaConfig> = {} as any;
+    DIAS_KEYS.forEach(d => {
+      const c = raw[d] || {};
+      if (c.entrada && c.saida && !("inicio_almoco" in c)) {
+        const intervalo = +(c.intervalo || 0);
+        const [h1,m1] = c.entrada.split(":").map(Number);
+        const [h2,m2] = c.saida.split(":").map(Number);
+        const totalMin = (h2*60+m2) - (h1*60+m1);
+        const meio = h1*60+m1 + Math.floor((totalMin - intervalo)/2);
+        const ini = `${String(Math.floor(meio/60)).padStart(2,"0")}:${String(meio%60).padStart(2,"0")}`;
+        const fimMin = meio + intervalo;
+        const fim = `${String(Math.floor(fimMin/60)).padStart(2,"0")}:${String(fimMin%60).padStart(2,"0")}`;
+        out[d] = {
+          trabalha: !!c.trabalha,
+          tem_almoco: intervalo > 0,
+          entrada: c.entrada,
+          inicio_almoco: intervalo > 0 ? ini : c.entrada,
+          fim_almoco: intervalo > 0 ? fim : c.entrada,
+          saida: c.saida,
+        };
+      } else {
+        out[d] = {
+          trabalha: !!c.trabalha,
+          tem_almoco: c.tem_almoco !== false,
+          entrada: c.entrada || "08:00",
+          inicio_almoco: c.inicio_almoco || "12:00",
+          fim_almoco: c.fim_almoco || "13:00",
+          saida: c.saida || "17:00",
+        };
+      }
+    });
+    return out;
+  };
+  const minutosDia = (c: DiaConfig): number => {
+    if (!c.trabalha) return 0;
+    const toMin = (s: string) => { const [h,m]=s.split(":").map(Number); return h*60+m; };
+    if (c.tem_almoco) {
+      return Math.max(0, (toMin(c.inicio_almoco) - toMin(c.entrada)) + (toMin(c.saida) - toMin(c.fim_almoco)));
+    }
+    return Math.max(0, toMin(c.saida) - toMin(c.entrada));
+  };
+  const intervaloDia = (c: DiaConfig): number => {
+    if (!c.trabalha || !c.tem_almoco) return 0;
+    const toMin = (s: string) => { const [h,m]=s.split(":").map(Number); return h*60+m; };
+    return Math.max(0, toMin(c.fim_almoco) - toMin(c.inicio_almoco));
+  };
   const [escalaForm, setEscalaForm] = useState<any>({
     nome: "",
     tipo: "5x2",
     modalidade: "fixa",
     dias_config: diasConfigPadrao(),
+    compensacoes_mensais: [] as Compensacao[],
     ciclo_horas_trabalho: 12,
     ciclo_horas_descanso: 36,
     ciclo_inicio_data: new Date().toISOString().split("T")[0],
@@ -71,14 +151,21 @@ export function PontoEscalasTab() {
     let semanal = 0;
     let diasTrab = 0;
     DIAS_KEYS.forEach(d => {
-      const c = dc[d];
-      if (!c?.trabalha) return;
-      const [h1,m1] = c.entrada.split(":").map(Number);
-      const [h2,m2] = c.saida.split(":").map(Number);
-      const min = (h2*60+m2) - (h1*60+m1) - (c.intervalo || 0);
+      const min = minutosDia(dc[d]);
       if (min > 0) { semanal += min; diasTrab++; }
     });
     return { semanal, diaria: diasTrab > 0 ? Math.round(semanal/diasTrab) : 0, diasTrab };
+  };
+  // Média semanal de horas extras vindas das compensações mensais (≈ 4.345 semanas/mês)
+  const calcularCompensacaoSemanal = (lista: Compensacao[]) => {
+    if (!lista?.length) return 0;
+    const totalMes = lista.reduce((acc, c) => {
+      const toMin = (s: string) => { const [h,m]=s.split(":").map(Number); return h*60+m; };
+      const min = Math.max(0, toMin(c.saida) - toMin(c.entrada) - (c.intervalo || 0));
+      // "ultimo" e "1..4" ocorrem 1x/mês cada
+      return acc + min;
+    }, 0);
+    return Math.round(totalMes / 4.345);
   };
   const calcularJornadasMovel = (ht: number, hd: number) => {
     // jornada diária = horas trabalho do ciclo; semanal = média (7d / ciclo) * ht
@@ -103,10 +190,12 @@ export function PontoEscalasTab() {
     let payload: any = { ...escalaForm };
     if (escalaForm.modalidade === "fixa") {
       const { diaria, semanal } = calcularJornadasFixa(escalaForm.dias_config);
+      const compMin = calcularCompensacaoSemanal(escalaForm.compensacoes_mensais || []);
       payload.jornada_diaria_minutos = diaria;
-      payload.jornada_semanal_minutos = semanal;
-      payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha;
-      payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha;
+      payload.jornada_semanal_minutos = semanal + compMin;
+      payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha || (escalaForm.compensacoes_mensais || []).some((c: Compensacao) => c.dia_semana === "sabado");
+      payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha || (escalaForm.compensacoes_mensais || []).some((c: Compensacao) => c.dia_semana === "domingo");
+      payload.compensacoes_mensais = escalaForm.compensacoes_mensais || [];
       // limpa campos ciclo
       payload.ciclo_horas_trabalho = null;
       payload.ciclo_horas_descanso = null;
@@ -117,6 +206,7 @@ export function PontoEscalasTab() {
       payload.jornada_diaria_minutos = diaria;
       payload.jornada_semanal_minutos = semanal;
       payload.dias_config = null;
+      payload.compensacoes_mensais = [];
       payload.tipo = "personalizada";
     }
     if (editando) {
@@ -133,6 +223,7 @@ export function PontoEscalasTab() {
     setEscalaForm({
       nome: "", tipo: "5x2", modalidade: "fixa",
       dias_config: diasConfigPadrao(),
+      compensacoes_mensais: [],
       ciclo_horas_trabalho: 12, ciclo_horas_descanso: 36,
       ciclo_inicio_data: new Date().toISOString().split("T")[0], ciclo_inicio_hora: "07:00",
       jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
@@ -151,7 +242,8 @@ export function PontoEscalasTab() {
       nome: e.nome,
       tipo: e.tipo,
       modalidade: anyE.modalidade || "fixa",
-      dias_config: anyE.dias_config || diasConfigPadrao(),
+      dias_config: migrarDiaConfig(anyE.dias_config),
+      compensacoes_mensais: Array.isArray(anyE.compensacoes_mensais) ? anyE.compensacoes_mensais : [],
       ciclo_horas_trabalho: anyE.ciclo_horas_trabalho ?? 12,
       ciclo_horas_descanso: anyE.ciclo_horas_descanso ?? 36,
       ciclo_inicio_data: anyE.ciclo_inicio_data || new Date().toISOString().split("T")[0],
@@ -322,7 +414,7 @@ export function PontoEscalasTab() {
 
       {/* Dialog Criar Escala */}
       <Dialog open={showCriar} onOpenChange={(o) => { setShowCriar(o); if (!o) setEditando(null); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editando ? "Editar Escala" : "Nova Escala de Trabalho"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -346,33 +438,122 @@ export function PontoEscalasTab() {
             </div>
 
             {escalaForm.modalidade === "fixa" ? (
+              <>
               <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /> Dias da semana</Label>
+                  <Label className="text-sm font-semibold flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /> Dias da semana — 4 marcações</Label>
                   <span className="text-xs text-muted-foreground">
-                    Total: {(() => { const j = calcularJornadasFixa(escalaForm.dias_config); return `${Math.floor(j.semanal/60)}h${j.semanal%60?` ${j.semanal%60}min`:""} / sem`; })()}
+                    {(() => {
+                      const j = calcularJornadasFixa(escalaForm.dias_config);
+                      const compMin = calcularCompensacaoSemanal(escalaForm.compensacoes_mensais || []);
+                      const total = j.semanal + compMin;
+                      const fmt = (m: number) => `${Math.floor(m/60)}h${m%60?` ${m%60}min`:""}`;
+                      return compMin > 0
+                        ? `Base: ${fmt(j.semanal)}/sem + Comp: ${fmt(compMin)}/sem = ${fmt(total)}/sem`
+                        : `Total: ${fmt(j.semanal)}/sem`;
+                    })()}
                   </span>
                 </div>
-                <div className="grid grid-cols-[100px_60px_1fr_1fr_90px] gap-2 text-xs font-medium text-muted-foreground px-1">
-                  <span>Dia</span><span>Trabalha</span><span>Entrada</span><span>Saída</span><span>Intervalo</span>
+                <div className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px] gap-1.5 text-[10px] font-medium text-muted-foreground px-1 uppercase tracking-wide">
+                  <span>Dia</span>
+                  <span className="text-center">Trab.</span>
+                  <span className="text-center">Almoço</span>
+                  <span>Entrada</span>
+                  <span>Início almoço</span>
+                  <span>Fim almoço</span>
+                  <span>Saída</span>
+                  <span className="text-right">Total</span>
                 </div>
                 {DIAS_KEYS.map(d => {
-                  const c = escalaForm.dias_config[d];
+                  const c = escalaForm.dias_config[d] as DiaConfig;
                   const upd = (patch: Partial<DiaConfig>) => setEscalaForm({
                     ...escalaForm,
                     dias_config: { ...escalaForm.dias_config, [d]: { ...c, ...patch } },
                   });
+                  const min = minutosDia(c);
+                  const intMin = intervaloDia(c);
                   return (
-                    <div key={d} className="grid grid-cols-[100px_60px_1fr_1fr_90px] gap-2 items-center">
+                    <div key={d} className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px] gap-1.5 items-center">
                       <span className="text-sm font-medium">{DIAS_LBL[d]}</span>
-                      <Switch checked={c.trabalha} onCheckedChange={v => upd({ trabalha: v })} />
-                      <Input type="time" disabled={!c.trabalha} value={c.entrada} onChange={e => upd({ entrada: e.target.value })} />
-                      <Input type="time" disabled={!c.trabalha} value={c.saida} onChange={e => upd({ saida: e.target.value })} />
-                      <Input type="number" disabled={!c.trabalha} value={c.intervalo} onChange={e => upd({ intervalo: +e.target.value })} placeholder="min" />
+                      <div className="flex justify-center"><Switch checked={c.trabalha} onCheckedChange={v => upd({ trabalha: v })} /></div>
+                      <div className="flex justify-center"><Switch checked={c.tem_almoco} disabled={!c.trabalha} onCheckedChange={v => upd({ tem_almoco: v })} /></div>
+                      <Input type="time" disabled={!c.trabalha} value={c.entrada} onChange={e => upd({ entrada: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <Input type="time" disabled={!c.trabalha || !c.tem_almoco} value={c.inicio_almoco} onChange={e => upd({ inicio_almoco: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <Input type="time" disabled={!c.trabalha || !c.tem_almoco} value={c.fim_almoco} onChange={e => upd({ fim_almoco: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <Input type="time" disabled={!c.trabalha} value={c.saida} onChange={e => upd({ saida: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <span className="text-right text-xs font-mono text-muted-foreground">
+                        {c.trabalha ? `${Math.floor(min/60)}h${min%60?String(min%60).padStart(2,"0"):""}` : "—"}
+                        {c.trabalha && c.tem_almoco && <span className="block text-[9px] opacity-70">int {intMin}min</span>}
+                      </span>
                     </div>
                   );
                 })}
               </div>
+
+              {/* Compensações Mensais — equalização da carga semanal */}
+              <div className="rounded-lg border p-3 space-y-2 bg-amber-50/40 dark:bg-amber-950/10">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <Repeat className="w-4 h-4 text-amber-600" /> Compensações Mensais (equalização)
+                  </Label>
+                  <Button
+                    type="button" size="sm" variant="outline"
+                    onClick={() => setEscalaForm({
+                      ...escalaForm,
+                      compensacoes_mensais: [
+                        ...(escalaForm.compensacoes_mensais || []),
+                        { ordinal_mes: "1", dia_semana: "sabado", entrada: "08:00", saida: "12:00", intervalo: 0, descricao: "" } as Compensacao,
+                      ],
+                    })}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Use para equalizar quando a escala fixa fica abaixo da carga semanal contratada (ex.: 1º sábado do mês trabalhado para fechar 44h).
+                </p>
+                {(escalaForm.compensacoes_mensais || []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-2 text-center">Nenhuma compensação configurada.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {(escalaForm.compensacoes_mensais as Compensacao[]).map((comp, idx) => {
+                      const updComp = (patch: Partial<Compensacao>) => {
+                        const arr = [...escalaForm.compensacoes_mensais];
+                        arr[idx] = { ...arr[idx], ...patch };
+                        setEscalaForm({ ...escalaForm, compensacoes_mensais: arr });
+                      };
+                      const remComp = () => {
+                        const arr = escalaForm.compensacoes_mensais.filter((_: any, i: number) => i !== idx);
+                        setEscalaForm({ ...escalaForm, compensacoes_mensais: arr });
+                      };
+                      return (
+                        <div key={idx} className="grid grid-cols-[90px_110px_1fr_1fr_70px_1fr_36px] gap-1.5 items-center">
+                          <Select value={comp.ordinal_mes} onValueChange={v => updComp({ ordinal_mes: v })}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {ORDINAIS_MES.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Select value={comp.dia_semana} onValueChange={v => updComp({ dia_semana: v })}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {DIAS_KEYS.map(d => <SelectItem key={d} value={d}>{DIAS_LBL[d]}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Input type="time" value={comp.entrada} onChange={e => updComp({ entrada: e.target.value })} className="h-8 text-xs px-1.5" />
+                          <Input type="time" value={comp.saida} onChange={e => updComp({ saida: e.target.value })} className="h-8 text-xs px-1.5" />
+                          <Input type="number" value={comp.intervalo} onChange={e => updComp({ intervalo: +e.target.value })} className="h-8 text-xs px-1.5" placeholder="int" />
+                          <Input value={comp.descricao || ""} onChange={e => updComp({ descricao: e.target.value })} className="h-8 text-xs px-1.5" placeholder="Descrição" />
+                          <Button type="button" size="icon" variant="ghost" onClick={remComp} className="h-8 w-8">
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              </>
             ) : (
               <div className="rounded-lg border p-4 space-y-3 bg-muted/20">
                 <Label className="text-sm font-semibold flex items-center gap-2"><Repeat className="w-4 h-4 text-primary" /> Configuração do ciclo</Label>
