@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, AlertTriangle, Trash2, Edit, ChevronRight } from "lucide-react";
 import type { Terceiro } from "@/types/terceiros";
 import { format } from "date-fns";
+import { formatCnpj } from "@/lib/brasilapi";
 
 const statusMap: Record<string, { label: string; class: string }> = {
   liberado: { label: "Liberado", class: "bg-green-100 text-green-800" },
