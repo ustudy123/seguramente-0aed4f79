@@ -438,33 +438,122 @@ export function PontoEscalasTab() {
             </div>
 
             {escalaForm.modalidade === "fixa" ? (
+              <>
               <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /> Dias da semana</Label>
+                  <Label className="text-sm font-semibold flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /> Dias da semana — 4 marcações</Label>
                   <span className="text-xs text-muted-foreground">
-                    Total: {(() => { const j = calcularJornadasFixa(escalaForm.dias_config); return `${Math.floor(j.semanal/60)}h${j.semanal%60?` ${j.semanal%60}min`:""} / sem`; })()}
+                    {(() => {
+                      const j = calcularJornadasFixa(escalaForm.dias_config);
+                      const compMin = calcularCompensacaoSemanal(escalaForm.compensacoes_mensais || []);
+                      const total = j.semanal + compMin;
+                      const fmt = (m: number) => `${Math.floor(m/60)}h${m%60?` ${m%60}min`:""}`;
+                      return compMin > 0
+                        ? `Base: ${fmt(j.semanal)}/sem + Comp: ${fmt(compMin)}/sem = ${fmt(total)}/sem`
+                        : `Total: ${fmt(j.semanal)}/sem`;
+                    })()}
                   </span>
                 </div>
-                <div className="grid grid-cols-[100px_60px_1fr_1fr_90px] gap-2 text-xs font-medium text-muted-foreground px-1">
-                  <span>Dia</span><span>Trabalha</span><span>Entrada</span><span>Saída</span><span>Intervalo</span>
+                <div className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px] gap-1.5 text-[10px] font-medium text-muted-foreground px-1 uppercase tracking-wide">
+                  <span>Dia</span>
+                  <span className="text-center">Trab.</span>
+                  <span className="text-center">Almoço</span>
+                  <span>Entrada</span>
+                  <span>Início almoço</span>
+                  <span>Fim almoço</span>
+                  <span>Saída</span>
+                  <span className="text-right">Total</span>
                 </div>
                 {DIAS_KEYS.map(d => {
-                  const c = escalaForm.dias_config[d];
+                  const c = escalaForm.dias_config[d] as DiaConfig;
                   const upd = (patch: Partial<DiaConfig>) => setEscalaForm({
                     ...escalaForm,
                     dias_config: { ...escalaForm.dias_config, [d]: { ...c, ...patch } },
                   });
+                  const min = minutosDia(c);
+                  const intMin = intervaloDia(c);
                   return (
-                    <div key={d} className="grid grid-cols-[100px_60px_1fr_1fr_90px] gap-2 items-center">
+                    <div key={d} className="grid grid-cols-[80px_50px_55px_1fr_1fr_1fr_1fr_70px] gap-1.5 items-center">
                       <span className="text-sm font-medium">{DIAS_LBL[d]}</span>
-                      <Switch checked={c.trabalha} onCheckedChange={v => upd({ trabalha: v })} />
-                      <Input type="time" disabled={!c.trabalha} value={c.entrada} onChange={e => upd({ entrada: e.target.value })} />
-                      <Input type="time" disabled={!c.trabalha} value={c.saida} onChange={e => upd({ saida: e.target.value })} />
-                      <Input type="number" disabled={!c.trabalha} value={c.intervalo} onChange={e => upd({ intervalo: +e.target.value })} placeholder="min" />
+                      <div className="flex justify-center"><Switch checked={c.trabalha} onCheckedChange={v => upd({ trabalha: v })} /></div>
+                      <div className="flex justify-center"><Switch checked={c.tem_almoco} disabled={!c.trabalha} onCheckedChange={v => upd({ tem_almoco: v })} /></div>
+                      <Input type="time" disabled={!c.trabalha} value={c.entrada} onChange={e => upd({ entrada: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <Input type="time" disabled={!c.trabalha || !c.tem_almoco} value={c.inicio_almoco} onChange={e => upd({ inicio_almoco: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <Input type="time" disabled={!c.trabalha || !c.tem_almoco} value={c.fim_almoco} onChange={e => upd({ fim_almoco: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <Input type="time" disabled={!c.trabalha} value={c.saida} onChange={e => upd({ saida: e.target.value })} className="h-8 text-xs px-1.5" />
+                      <span className="text-right text-xs font-mono text-muted-foreground">
+                        {c.trabalha ? `${Math.floor(min/60)}h${min%60?String(min%60).padStart(2,"0"):""}` : "—"}
+                        {c.trabalha && c.tem_almoco && <span className="block text-[9px] opacity-70">int {intMin}min</span>}
+                      </span>
                     </div>
                   );
                 })}
               </div>
+
+              {/* Compensações Mensais — equalização da carga semanal */}
+              <div className="rounded-lg border p-3 space-y-2 bg-amber-50/40 dark:bg-amber-950/10">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <Repeat className="w-4 h-4 text-amber-600" /> Compensações Mensais (equalização)
+                  </Label>
+                  <Button
+                    type="button" size="sm" variant="outline"
+                    onClick={() => setEscalaForm({
+                      ...escalaForm,
+                      compensacoes_mensais: [
+                        ...(escalaForm.compensacoes_mensais || []),
+                        { ordinal_mes: "1", dia_semana: "sabado", entrada: "08:00", saida: "12:00", intervalo: 0, descricao: "" } as Compensacao,
+                      ],
+                    })}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Use para equalizar quando a escala fixa fica abaixo da carga semanal contratada (ex.: 1º sábado do mês trabalhado para fechar 44h).
+                </p>
+                {(escalaForm.compensacoes_mensais || []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-2 text-center">Nenhuma compensação configurada.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {(escalaForm.compensacoes_mensais as Compensacao[]).map((comp, idx) => {
+                      const updComp = (patch: Partial<Compensacao>) => {
+                        const arr = [...escalaForm.compensacoes_mensais];
+                        arr[idx] = { ...arr[idx], ...patch };
+                        setEscalaForm({ ...escalaForm, compensacoes_mensais: arr });
+                      };
+                      const remComp = () => {
+                        const arr = escalaForm.compensacoes_mensais.filter((_: any, i: number) => i !== idx);
+                        setEscalaForm({ ...escalaForm, compensacoes_mensais: arr });
+                      };
+                      return (
+                        <div key={idx} className="grid grid-cols-[90px_110px_1fr_1fr_70px_1fr_36px] gap-1.5 items-center">
+                          <Select value={comp.ordinal_mes} onValueChange={v => updComp({ ordinal_mes: v })}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {ORDINAIS_MES.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Select value={comp.dia_semana} onValueChange={v => updComp({ dia_semana: v })}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {DIAS_KEYS.map(d => <SelectItem key={d} value={d}>{DIAS_LBL[d]}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Input type="time" value={comp.entrada} onChange={e => updComp({ entrada: e.target.value })} className="h-8 text-xs px-1.5" />
+                          <Input type="time" value={comp.saida} onChange={e => updComp({ saida: e.target.value })} className="h-8 text-xs px-1.5" />
+                          <Input type="number" value={comp.intervalo} onChange={e => updComp({ intervalo: +e.target.value })} className="h-8 text-xs px-1.5" placeholder="int" />
+                          <Input value={comp.descricao || ""} onChange={e => updComp({ descricao: e.target.value })} className="h-8 text-xs px-1.5" placeholder="Descrição" />
+                          <Button type="button" size="icon" variant="ghost" onClick={remComp} className="h-8 w-8">
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              </>
             ) : (
               <div className="rounded-lg border p-4 space-y-3 bg-muted/20">
                 <Label className="text-sm font-semibold flex items-center gap-2"><Repeat className="w-4 h-4 text-primary" /> Configuração do ciclo</Label>
