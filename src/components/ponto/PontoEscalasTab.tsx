@@ -190,10 +190,12 @@ export function PontoEscalasTab() {
     let payload: any = { ...escalaForm };
     if (escalaForm.modalidade === "fixa") {
       const { diaria, semanal } = calcularJornadasFixa(escalaForm.dias_config);
+      const compMin = calcularCompensacaoSemanal(escalaForm.compensacoes_mensais || []);
       payload.jornada_diaria_minutos = diaria;
-      payload.jornada_semanal_minutos = semanal;
-      payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha;
-      payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha;
+      payload.jornada_semanal_minutos = semanal + compMin;
+      payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha || (escalaForm.compensacoes_mensais || []).some((c: Compensacao) => c.dia_semana === "sabado");
+      payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha || (escalaForm.compensacoes_mensais || []).some((c: Compensacao) => c.dia_semana === "domingo");
+      payload.compensacoes_mensais = escalaForm.compensacoes_mensais || [];
       // limpa campos ciclo
       payload.ciclo_horas_trabalho = null;
       payload.ciclo_horas_descanso = null;
@@ -204,6 +206,7 @@ export function PontoEscalasTab() {
       payload.jornada_diaria_minutos = diaria;
       payload.jornada_semanal_minutos = semanal;
       payload.dias_config = null;
+      payload.compensacoes_mensais = [];
       payload.tipo = "personalizada";
     }
     if (editando) {
