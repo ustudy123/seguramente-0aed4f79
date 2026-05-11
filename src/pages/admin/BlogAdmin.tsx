@@ -125,7 +125,7 @@ export default function BlogAdmin() {
               Crie e gerencie os artigos do blog da plataforma
             </p>
           </div>
-          <Button onClick={() => toast.info('Funcionalidade de criação em breve')}>
+          <Button onClick={() => { setEditingId(null); setEditorOpen(true); }}>
             <Plus className="w-4 h-4 mr-2" />
             Novo Post
           </Button>
@@ -202,11 +202,11 @@ export default function BlogAdmin() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => toast.info('Visualização em breve')}>
+                            <DropdownMenuItem onClick={() => { setPreviewId(post.id); setPreviewOpen(true); }}>
                               <Eye className="w-4 h-4 mr-2" />
                               Visualizar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast.info('Edição em breve')}>
+                            <DropdownMenuItem onClick={() => { setEditingId(post.id); setEditorOpen(true); }}>
                               <Edit className="w-4 h-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
