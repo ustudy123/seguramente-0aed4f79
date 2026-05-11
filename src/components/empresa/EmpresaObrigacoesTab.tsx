@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -13,6 +24,7 @@ import {
   Edit,
   Info,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
