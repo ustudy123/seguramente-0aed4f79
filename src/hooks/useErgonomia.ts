@@ -31,7 +31,7 @@ export function useErgonomia() {
         .eq("tenant_id", tenantId)
         .order("codigo", { ascending: true });
 
-      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
 
       const { data, error } = await query;
       if (error) throw error;
