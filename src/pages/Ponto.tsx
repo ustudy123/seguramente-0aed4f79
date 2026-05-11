@@ -101,7 +101,6 @@ const Ponto = () => {
 
   // Marcações detalhadas do dia selecionado (todas, em ordem cronológica)
   const { empresaAtivaId } = useEmpresaAtiva();
-  const tenantIdAtivo = (profile as any)?.tenant_id;
   const dataSelStr = format(selectedDate, "yyyy-MM-dd");
   const { data: marcacoesDoDia = [] } = useQuery({
     queryKey: ["ponto-marcacoes-dia", tenantIdAtivo, dataSelStr, empresaAtivaId],
