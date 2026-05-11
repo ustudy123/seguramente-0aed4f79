@@ -112,7 +112,8 @@ function PastaNode({
   onDropDocument,
   expandAllSignal,
 }: PastaNodeProps) {
-  const [expanded, setExpanded] = useState(level < 2);
+  const isVirtual = !!node.isVirtual;
+  const [expanded, setExpanded] = useState(level < 2 && !isVirtual);
 
   useEffect(() => {
     if (expandAllSignal && expandAllSignal.key > 0) {
@@ -163,13 +164,15 @@ function PastaNode({
           "flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer transition-colors group",
           isSelected && "bg-primary/10 text-primary",
           isDragOver && "bg-primary/20 ring-2 ring-primary/50",
-          !isSelected && !isDragOver && "hover:bg-muted/50"
+          isVirtual && "bg-muted/30 text-muted-foreground italic",
+          !isSelected && !isDragOver && !isVirtual && "hover:bg-muted/50",
+          !isSelected && !isDragOver && isVirtual && "hover:bg-muted/50"
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
-        onClick={() => onSelectPasta(node)}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onClick={() => isVirtual ? setExpanded(!expanded) : onSelectPasta(node)}
+        onDragOver={isVirtual ? undefined : handleDragOver}
+        onDragLeave={isVirtual ? undefined : handleDragLeave}
+        onDrop={isVirtual ? undefined : handleDrop}
       >
         {/* Expand/Collapse button */}
         <button
@@ -225,37 +228,39 @@ function PastaNode({
           </div>
         )}
 
-        {/* Actions menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="w-3.5 h-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => onCreateSubfolder(node.id)}>
-              <FolderPlus className="w-4 h-4 mr-2" />
-              Nova Subpasta
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onRenamePasta(node)}>
-              <Pencil className="w-4 h-4 mr-2" />
-              Renomear
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => onDeletePasta(node.id)}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Excluir
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Actions menu — desabilitado em nós virtuais (agrupadores A-Z) */}
+        {!isVirtual && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => onCreateSubfolder(node.id)}>
+                <FolderPlus className="w-4 h-4 mr-2" />
+                Nova Subpasta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onRenamePasta(node)}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Renomear
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => onDeletePasta(node.id)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Children */}
