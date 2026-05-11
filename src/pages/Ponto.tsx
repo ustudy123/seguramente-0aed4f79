@@ -104,7 +104,17 @@ const Ponto = () => {
     const proximo = ordem.find((t) => !tiposJaRegistrados.includes(t));
     if (proximo) setTipoMarcacao(proximo);
   }, [selectedColaborador, tiposJaRegistrados.join(",")]);
-  const { data: ajustesPendentes = [] } = useAjustesPendentes();
+  const { data: ajustesPendentesRaw = [] } = useAjustesPendentes();
+  // Filtra ajustes pela empresa ativa cruzando pelo CPF dos colaboradores carregados
+  const ajustesPendentes = React.useMemo(() => {
+    const cpfsEmpresa = new Set(
+      colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
+    );
+    if (cpfsEmpresa.size === 0) return [];
+    return ajustesPendentesRaw.filter((a: any) =>
+      cpfsEmpresa.has((a.colaborador_cpf || "").replace(/\D/g, ""))
+    );
+  }, [ajustesPendentesRaw, colaboradores]);
 
   // Auto-capture geolocation when modal opens
   useEffect(() => {
