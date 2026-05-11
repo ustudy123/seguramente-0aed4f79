@@ -151,6 +151,7 @@ export interface EmpresaObrigacao {
   acao_gerada_id: string | null;
   origem: string;
   origem_campo: string | null;
+  ativo: boolean;
   created_at: string;
   updated_at: string;
 }
