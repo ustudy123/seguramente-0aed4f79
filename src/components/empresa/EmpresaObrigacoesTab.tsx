@@ -75,6 +75,7 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
         prazo_sugerido: null,
         responsavel_sugerido: null,
         acao_gerada_id: null,
+        ativo: true,
       });
       count++;
     }
