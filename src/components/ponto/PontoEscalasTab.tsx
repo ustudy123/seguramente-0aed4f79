@@ -100,20 +100,42 @@ export function PontoEscalasTab() {
 
   const handleSalvar = async () => {
     if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }
-    if (editando) {
-      await atualizarEscala({ id: editando.id, ...escalaForm } as any);
+    let payload: any = { ...escalaForm };
+    if (escalaForm.modalidade === "fixa") {
+      const { diaria, semanal } = calcularJornadasFixa(escalaForm.dias_config);
+      payload.jornada_diaria_minutos = diaria;
+      payload.jornada_semanal_minutos = semanal;
+      payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha;
+      payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha;
+      // limpa campos ciclo
+      payload.ciclo_horas_trabalho = null;
+      payload.ciclo_horas_descanso = null;
+      payload.ciclo_inicio_data = null;
+      payload.ciclo_inicio_hora = null;
     } else {
-      await criarEscala(escalaForm as any);
+      const { diaria, semanal } = calcularJornadasMovel(escalaForm.ciclo_horas_trabalho, escalaForm.ciclo_horas_descanso);
+      payload.jornada_diaria_minutos = diaria;
+      payload.jornada_semanal_minutos = semanal;
+      payload.dias_config = null;
+      payload.tipo = "personalizada";
+    }
+    if (editando) {
+      await atualizarEscala({ id: editando.id, ...payload } as any);
+    } else {
+      await criarEscala(payload as any);
     }
     setShowCriar(false);
     setEditando(null);
-    setEscalaForm({ ...escalaForm, nome: "" });
   };
 
   const abrirNova = () => {
     setEditando(null);
     setEscalaForm({
-      nome: "", tipo: "5x2", jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
+      nome: "", tipo: "5x2", modalidade: "fixa",
+      dias_config: diasConfigPadrao(),
+      ciclo_horas_trabalho: 12, ciclo_horas_descanso: 36,
+      ciclo_inicio_data: new Date().toISOString().split("T")[0], ciclo_inicio_hora: "07:00",
+      jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
       intervalo_intrajornada_minutos: 60, tolerancia_minutos: 5, tolerancia_diaria_minutos: 10,
       hora_entrada_padrao: "08:00", hora_saida_padrao: "17:00", sabado_util: false, domingo_util: false,
       percentual_hora_extra_50: 50, percentual_hora_extra_100: 100, percentual_adicional_noturno: 20,
@@ -124,9 +146,16 @@ export function PontoEscalasTab() {
 
   const abrirEditar = (e: PontoEscala) => {
     setEditando(e);
+    const anyE = e as any;
     setEscalaForm({
       nome: e.nome,
       tipo: e.tipo,
+      modalidade: anyE.modalidade || "fixa",
+      dias_config: anyE.dias_config || diasConfigPadrao(),
+      ciclo_horas_trabalho: anyE.ciclo_horas_trabalho ?? 12,
+      ciclo_horas_descanso: anyE.ciclo_horas_descanso ?? 36,
+      ciclo_inicio_data: anyE.ciclo_inicio_data || new Date().toISOString().split("T")[0],
+      ciclo_inicio_hora: (anyE.ciclo_inicio_hora || "07:00").substring(0,5),
       jornada_diaria_minutos: e.jornada_diaria_minutos,
       jornada_semanal_minutos: e.jornada_semanal_minutos,
       intervalo_intrajornada_minutos: e.intervalo_intrajornada_minutos,
