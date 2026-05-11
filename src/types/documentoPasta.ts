@@ -23,6 +23,9 @@ export interface DocumentoPastaNode extends DocumentoPasta {
   children: DocumentoPastaNode[];
   documentos: DocumentoItem[];
   filial_nome?: string;
+  isVirtual?: boolean;
+  virtualLabel?: string;
+  totalDescendantes?: number;
 }
 
 export interface DocumentoItem {
