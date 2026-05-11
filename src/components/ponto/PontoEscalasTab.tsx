@@ -750,37 +750,119 @@ export function PontoEscalasTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Atribuir */}
-      <Dialog open={showAtribuir} onOpenChange={setShowAtribuir}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Atribuir Escala a Colaborador</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Escala</Label>
-              <Select value={atribuicaoForm.escala_id} onValueChange={v => setAtribuicaoForm({ ...atribuicaoForm, escala_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione a escala" /></SelectTrigger>
-                <SelectContent>
-                  {escalas.filter(e => e.ativa).map(e => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
+      {/* Dialog Atribuir (multi-seleção) */}
+      <Dialog open={showAtribuir} onOpenChange={(o) => { setShowAtribuir(o); if (!o) setAtribBusca(""); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Atribuir Escala a Colaboradores</DialogTitle>
+            <p className="text-xs text-muted-foreground">Selecione vários colaboradores. Cada pessoa pode estar ativa em apenas <strong>uma escala</strong> por vez.</p>
+          </DialogHeader>
+          <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Escala</Label>
+                <Select value={atribuicaoForm.escala_id} onValueChange={v => setAtribuicaoForm({ ...atribuicaoForm, escala_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a escala" /></SelectTrigger>
+                  <SelectContent>
+                    {escalas.filter(e => e.ativa).map(e => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Data Início</Label>
+                <Input type="date" value={atribuicaoForm.data_inicio} onChange={e => setAtribuicaoForm({ ...atribuicaoForm, data_inicio: e.target.value })} />
+              </div>
             </div>
+
             <div className="space-y-2">
-              <Label>Colaborador</Label>
-              <Select value={atribuicaoForm.colaborador_id} onValueChange={v => setAtribuicaoForm({ ...atribuicaoForm, colaborador_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione o colaborador" /></SelectTrigger>
-                <SelectContent>
-                  {colaboradores.map(c => <SelectItem key={c.id} value={c.id}>{c.nome_completo}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Data Início</Label>
-              <Input type="date" value={atribuicaoForm.data_inicio} onChange={e => setAtribuicaoForm({ ...atribuicaoForm, data_inicio: e.target.value })} />
+              <div className="flex items-center justify-between">
+                <Label>Colaboradores ({atribuicaoForm.colaborador_ids.length} selecionados)</Label>
+                <div className="flex gap-1.5">
+                  {(() => {
+                    const filtrados = colaboradores.filter(c => c.nome_completo.toLowerCase().includes(atribBusca.toLowerCase()));
+                    const elegiveis = filtrados.filter(c => {
+                      const at = atribuicoesPorColaborador.get(c.id);
+                      return atribuicaoForm.substituir || !at || at.escala_id === atribuicaoForm.escala_id;
+                    });
+                    const todosSel = elegiveis.length > 0 && elegiveis.every(c => atribuicaoForm.colaborador_ids.includes(c.id));
+                    return (
+                      <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]"
+                        onClick={() => setAtribuicaoForm(f => ({
+                          ...f,
+                          colaborador_ids: todosSel
+                            ? f.colaborador_ids.filter(id => !elegiveis.some(c => c.id === id))
+                            : Array.from(new Set([...f.colaborador_ids, ...elegiveis.map(c => c.id)])),
+                        }))}>
+                        {todosSel ? "Limpar visíveis" : "Selecionar visíveis"}
+                      </Button>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+                <Input className="pl-8 h-9" placeholder="Buscar colaborador…" value={atribBusca} onChange={e => setAtribBusca(e.target.value)} />
+              </div>
+
+              <div className="rounded-lg border max-h-72 overflow-y-auto divide-y">
+                {colaboradores
+                  .filter(c => c.nome_completo.toLowerCase().includes(atribBusca.toLowerCase()))
+                  .map(c => {
+                    const atual = atribuicoesPorColaborador.get(c.id);
+                    const escalaAtual = atual ? escalas.find(e => e.id === atual.escala_id) : null;
+                    const jaNessa = atual && atual.escala_id === atribuicaoForm.escala_id;
+                    const bloqueado = !!atual && !jaNessa && !atribuicaoForm.substituir;
+                    const checked = atribuicaoForm.colaborador_ids.includes(c.id);
+                    return (
+                      <label
+                        key={c.id}
+                        className={`flex items-center gap-3 px-3 py-2 ${bloqueado ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50"}`}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          disabled={bloqueado || jaNessa}
+                          onCheckedChange={(v) => {
+                            setAtribuicaoForm(f => ({
+                              ...f,
+                              colaborador_ids: v
+                                ? [...f.colaborador_ids, c.id]
+                                : f.colaborador_ids.filter(id => id !== c.id),
+                            }));
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{c.nome_completo}</div>
+                          {escalaAtual && (
+                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 text-amber-500" />
+                              {jaNessa ? "Já atribuído a esta escala" : `Já em: ${escalaAtual.nome}`}
+                            </div>
+                          )}
+                        </div>
+                        {jaNessa && <Badge variant="outline" className="text-[10px]">Atual</Badge>}
+                        {bloqueado && <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700">Bloqueado</Badge>}
+                      </label>
+                    );
+                  })}
+                {colaboradores.length === 0 && (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Nenhum colaborador encontrado.</div>
+                )}
+              </div>
+
+              <label className="flex items-start gap-2 rounded-md border bg-amber-50/40 dark:bg-amber-950/10 px-3 py-2 cursor-pointer">
+                <Checkbox checked={atribuicaoForm.substituir} onCheckedChange={(v) => setAtribuicaoForm(f => ({ ...f, substituir: !!v }))} />
+                <div className="text-xs">
+                  <span className="font-semibold">Substituir escala atual</span> dos selecionados que já estão em outra escala.
+                  <div className="text-muted-foreground">Inativa a atribuição anterior na data de início informada.</div>
+                </div>
+              </label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAtribuir(false)}>Cancelar</Button>
-            <Button onClick={handleAtribuir}>Atribuir</Button>
+            <Button variant="outline" onClick={() => setShowAtribuir(false)} disabled={atribuindoLote}>Cancelar</Button>
+            <Button onClick={handleAtribuirLote} disabled={atribuindoLote || atribuicaoForm.colaborador_ids.length === 0}>
+              {atribuindoLote ? "Atribuindo..." : `Atribuir ${atribuicaoForm.colaborador_ids.length || ""}`.trim()}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
