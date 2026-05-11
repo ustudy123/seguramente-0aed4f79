@@ -736,6 +736,92 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
           }}
         />
       )}
+
+      {/* Dialog Inativar/Reativar */}
+      <AlertDialog open={!!inativarColab} onOpenChange={(o) => { if (!o) { setInativarColab(null); setInativarMotivo(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {(inativarColab as any)?.inativo ? "Reativar colaborador" : "Inativar colaborador"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  {(inativarColab as any)?.inativo
+                    ? `O colaborador ${inativarColab?.nome_completo} voltará a aparecer nas listagens ativas.`
+                    : `${inativarColab?.nome_completo} ficará marcado como inativo. Os registros e vínculos existentes serão preservados.`}
+                </p>
+                {!(inativarColab as any)?.inativo && (
+                  <Input
+                    placeholder="Motivo (opcional)"
+                    value={inativarMotivo}
+                    onChange={(e) => setInativarMotivo(e.target.value)}
+                  />
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmInativar} disabled={actionLoading}>
+              {actionLoading ? "Salvando..." : ((inativarColab as any)?.inativo ? "Reativar" : "Inativar")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Excluir */}
+      <AlertDialog open={!!excluirColab} onOpenChange={(o) => { if (!o) { setExcluirColab(null); setExcluirText(""); setExcluirVinculos(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Excluir colaborador permanentemente</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                {excluirChecking && <p>Verificando vínculos no sistema...</p>}
+                {!excluirChecking && excluirVinculos?.tem && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+                    <p className="font-medium text-destructive">Não é possível excluir.</p>
+                    <p className="text-sm">
+                      O colaborador <strong>{excluirColab?.nome_completo}</strong> possui registros vinculados nos módulos:
+                    </p>
+                    <ul className="text-xs list-disc pl-5 text-muted-foreground">
+                      {Object.entries(excluirVinculos.detalhes || {}).map(([k, v]) => (
+                        <li key={k}>{k.replace(/_/g, " ")}: {String(v)}</li>
+                      ))}
+                    </ul>
+                    <p className="text-sm">Use a opção <strong>Inativar</strong> para preservar o histórico.</p>
+                  </div>
+                )}
+                {!excluirChecking && excluirVinculos && !excluirVinculos.tem && (
+                  <>
+                    <p>
+                      O colaborador <strong>{excluirColab?.nome_completo}</strong> não possui vínculos. Esta ação é
+                      <strong> irreversível</strong>.
+                    </p>
+                    <p>Para confirmar, digite <strong>EXCLUIR</strong>:</p>
+                    <Input
+                      autoFocus
+                      value={excluirText}
+                      onChange={(e) => setExcluirText(e.target.value)}
+                      placeholder="Digite EXCLUIR"
+                    />
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              disabled={actionLoading || excluirChecking || !excluirVinculos || excluirVinculos.tem || excluirText.trim() !== "EXCLUIR"}
+              onClick={handleConfirmExcluir}
+            >
+              {actionLoading ? "Excluindo..." : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
