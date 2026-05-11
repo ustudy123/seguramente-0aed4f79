@@ -54,7 +54,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
   });
 
   const { hasRole, isSuperAdmin } = useAuthContext() as any;
-  const podeExcluir = isSuperAdmin || hasRole?.('owner');
+  const podeExcluir = isSuperAdmin || hasRole?.('owner') || hasRole?.('admin') || hasRole?.('master');
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');

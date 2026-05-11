@@ -140,61 +140,19 @@ export default function Empresa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cadastro, viewMode, cliente, user, profile, selectedEmpresaId]);
 
-  // Auto-save no banco de dados com debounce
+  // Auto-save desativado a pedido — o salvamento é manual via botão "Salvar".
+  // Mantemos apenas o rascunho local (localStorage) para evitar perda de dados.
   useEffect(() => {
     if (viewMode === 'list') return;
     if (!hasChanges) return;
-
-    const t = setTimeout(async () => {
+    if (!draftKey) return;
+    const t = setTimeout(() => {
       try {
-        const saved: any = await upsertCadastro.mutateAsync(formData);
-        setHasChanges(false);
-        if (viewMode === 'new' && saved?.id) {
-          setSelectedEmpresaId(saved.id);
-          setViewMode('edit');
-        }
-      } catch (error: any) {
-        console.error('Erro no salvamento automático:', error);
-        // Para o loop de retry — o usuário pode acionar "Salvar" manualmente
-        // para ver o erro detalhado.
-        setHasChanges(false);
-
-        // Se em modo 'new' o CNPJ já pertence a outra empresa do tenant,
-        // promovemos para edição daquela empresa em vez de seguir tentando.
-        if (viewMode === 'new') {
-          const cnpjLimpo = (formData.cnpj || '').replace(/\D/g, '');
-          if (cnpjLimpo.length === 14) {
-            const existente = empresas.find(
-              (e: any) => (e.cnpj || '').replace(/\D/g, '') === cnpjLimpo,
-            );
-            if (existente) {
-              // Promove para edição da empresa existente e re-salva os
-              // dados que o usuário acabou de preencher (ex.: razão social
-              // vinda da Receita Federal) na linha já existente.
-              setSelectedEmpresaId(existente.id);
-              setViewMode('edit');
-              try {
-                // Update direto pelo id da empresa existente (o hook só
-                // atualiza pelo empresaId/cadastro do escopo do hook,
-                // que aqui ainda não foi reconfigurado).
-                const { id: _ignored, created_at: _c, updated_at: _u, ...rest } = formData as any;
-                const { error: updErr } = await supabase
-                  .from('empresa_cadastro')
-                  .update(rest)
-                  .eq('id', existente.id);
-                if (updErr) throw updErr;
-                toast.info('Empresa com este CNPJ já existe — dados atualizados na empresa existente.');
-              } catch (e2) {
-                console.error('Falha ao atualizar empresa existente:', e2);
-                toast.info('Empresa com este CNPJ já existe — abrindo para edição.');
-              }
-            }
-          }
-        }
-      }
-    }, 1500); // Debounce de 1.5s para não sobrecarregar o banco
+        localStorage.setItem(draftKey, JSON.stringify({ data: formData, ts: Date.now() }));
+      } catch { /* ignore */ }
+    }, 800);
     return () => clearTimeout(t);
-  }, [formData, hasChanges, viewMode, upsertCadastro]);
+  }, [formData, hasChanges, viewMode, draftKey]);
 
   const clearDraft = () => {
     if (draftKey) {
@@ -381,16 +339,18 @@ export default function Empresa() {
         </Button>
       </div>
 
-      {/* Aviso de auto-save */}
-      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 flex items-center justify-between gap-3">
+      {/* Aviso de salvamento manual */}
+      <div className={`rounded-lg border px-4 py-2 flex items-center justify-between gap-3 ${hasChanges ? 'border-amber-500/30 bg-amber-500/5' : 'border-primary/20 bg-primary/5'}`}>
         <p className="text-xs text-muted-foreground">
           {upsertCadastro.isPending ? (
             <span className="flex items-center gap-1.5">
               <Loader2 className="w-3 h-3 animate-spin text-primary" />
-              Salvando alterações automaticamente...
+              Salvando alterações...
             </span>
+          ) : hasChanges ? (
+            <span>⚠️ Você tem alterações não salvas. Clique em <strong>Salvar</strong> para gravar no banco de dados. (Rascunho local mantido automaticamente.)</span>
           ) : (
-            <span>✅ Todas as alterações foram salvas automaticamente no banco de dados.</span>
+            <span>✅ Tudo salvo. As alterações são gravadas apenas ao clicar em <strong>Salvar</strong>.</span>
           )}
         </p>
       </div>
