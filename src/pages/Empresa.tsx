@@ -339,16 +339,18 @@ export default function Empresa() {
         </Button>
       </div>
 
-      {/* Aviso de auto-save */}
-      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 flex items-center justify-between gap-3">
+      {/* Aviso de salvamento manual */}
+      <div className={`rounded-lg border px-4 py-2 flex items-center justify-between gap-3 ${hasChanges ? 'border-amber-500/30 bg-amber-500/5' : 'border-primary/20 bg-primary/5'}`}>
         <p className="text-xs text-muted-foreground">
           {upsertCadastro.isPending ? (
             <span className="flex items-center gap-1.5">
               <Loader2 className="w-3 h-3 animate-spin text-primary" />
-              Salvando alterações automaticamente...
+              Salvando alterações...
             </span>
+          ) : hasChanges ? (
+            <span>⚠️ Você tem alterações não salvas. Clique em <strong>Salvar</strong> para gravar no banco de dados. (Rascunho local mantido automaticamente.)</span>
           ) : (
-            <span>✅ Todas as alterações foram salvas automaticamente no banco de dados.</span>
+            <span>✅ Tudo salvo. As alterações são gravadas apenas ao clicar em <strong>Salvar</strong>.</span>
           )}
         </p>
       </div>
