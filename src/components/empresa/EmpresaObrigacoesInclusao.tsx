@@ -148,8 +148,12 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                 <Label>Qtd. Atual</Label>
                 <Input
                   type="number"
-                  value={data.pcd_quantidade_atual || ''}
-                  onChange={(e) => onChange({ pcd_quantidade_atual: parseInt(e.target.value) || 0 })}
+                  min={0}
+                  value={data.pcd_quantidade_atual ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    onChange({ pcd_quantidade_atual: v === '' ? 0 : (parseInt(v) || 0) });
+                  }}
                 />
               </div>
               <div className="flex flex-col justify-end gap-1">
