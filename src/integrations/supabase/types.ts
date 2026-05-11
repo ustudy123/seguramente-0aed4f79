@@ -16745,9 +16745,14 @@ export type Database = {
           adicional_noturno_inicio: string | null
           ativa: boolean | null
           cct_act_url: string | null
+          ciclo_horas_descanso: number | null
+          ciclo_horas_trabalho: number | null
+          ciclo_inicio_data: string | null
+          ciclo_inicio_hora: string | null
           created_at: string | null
           descricao_contratual: string | null
           descricao_original: string | null
+          dias_config: Json | null
           dias_semana: Json | null
           domingo_util: boolean | null
           empresa_id: string | null
@@ -16759,6 +16764,7 @@ export type Database = {
           jornada_diaria_minutos: number
           jornada_mensal_minutos: number | null
           jornada_semanal_minutos: number
+          modalidade: string
           nivel_confianca: string | null
           nome: string
           observacoes: string | null
@@ -16781,9 +16787,14 @@ export type Database = {
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
           cct_act_url?: string | null
+          ciclo_horas_descanso?: number | null
+          ciclo_horas_trabalho?: number | null
+          ciclo_inicio_data?: string | null
+          ciclo_inicio_hora?: string | null
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
+          dias_config?: Json | null
           dias_semana?: Json | null
           domingo_util?: boolean | null
           empresa_id?: string | null
@@ -16795,6 +16806,7 @@ export type Database = {
           jornada_diaria_minutos?: number
           jornada_mensal_minutos?: number | null
           jornada_semanal_minutos?: number
+          modalidade?: string
           nivel_confianca?: string | null
           nome: string
           observacoes?: string | null
@@ -16817,9 +16829,14 @@ export type Database = {
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
           cct_act_url?: string | null
+          ciclo_horas_descanso?: number | null
+          ciclo_horas_trabalho?: number | null
+          ciclo_inicio_data?: string | null
+          ciclo_inicio_hora?: string | null
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
+          dias_config?: Json | null
           dias_semana?: Json | null
           domingo_util?: boolean | null
           empresa_id?: string | null
@@ -16831,6 +16848,7 @@ export type Database = {
           jornada_diaria_minutos?: number
           jornada_mensal_minutos?: number | null
           jornada_semanal_minutos?: number
+          modalidade?: string
           nivel_confianca?: string | null
           nome?: string
           observacoes?: string | null

@@ -30,9 +30,27 @@ export function PontoEscalasTab() {
   const [editando, setEditando] = useState<PontoEscala | null>(null);
   const [showInteligente, setShowInteligente] = useState(false);
   const [showAtribuir, setShowAtribuir] = useState(false);
-  const [escalaForm, setEscalaForm] = useState({
+  const DIAS_KEYS = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"] as const;
+  const DIAS_LBL: Record<string,string> = { segunda:"Segunda", terca:"Terça", quarta:"Quarta", quinta:"Quinta", sexta:"Sexta", sabado:"Sábado", domingo:"Domingo" };
+  type DiaConfig = { trabalha: boolean; entrada: string; saida: string; intervalo: number };
+  const diasConfigPadrao = (): Record<string, DiaConfig> => ({
+    segunda: { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    terca:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    quarta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    quinta:  { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    sexta:   { trabalha: true, entrada: "08:00", saida: "17:00", intervalo: 60 },
+    sabado:  { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
+    domingo: { trabalha: false, entrada: "08:00", saida: "12:00", intervalo: 0 },
+  });
+  const [escalaForm, setEscalaForm] = useState<any>({
     nome: "",
     tipo: "5x2",
+    modalidade: "fixa",
+    dias_config: diasConfigPadrao(),
+    ciclo_horas_trabalho: 12,
+    ciclo_horas_descanso: 36,
+    ciclo_inicio_data: new Date().toISOString().split("T")[0],
+    ciclo_inicio_hora: "07:00",
     jornada_diaria_minutos: 480,
     jornada_semanal_minutos: 2640,
     intervalo_intrajornada_minutos: 60,
@@ -47,6 +65,27 @@ export function PontoEscalasTab() {
     percentual_adicional_noturno: 20,
     usa_hora_ficta_noturna: true,
   });
+
+  // Cálculo automático de jornadas a partir da configuração
+  const calcularJornadasFixa = (dc: Record<string, DiaConfig>) => {
+    let semanal = 0;
+    let diasTrab = 0;
+    DIAS_KEYS.forEach(d => {
+      const c = dc[d];
+      if (!c?.trabalha) return;
+      const [h1,m1] = c.entrada.split(":").map(Number);
+      const [h2,m2] = c.saida.split(":").map(Number);
+      const min = (h2*60+m2) - (h1*60+m1) - (c.intervalo || 0);
+      if (min > 0) { semanal += min; diasTrab++; }
+    });
+    return { semanal, diaria: diasTrab > 0 ? Math.round(semanal/diasTrab) : 0, diasTrab };
+  };
+  const calcularJornadasMovel = (ht: number, hd: number) => {
+    // jornada diária = horas trabalho do ciclo; semanal = média (7d / ciclo) * ht
+    const ciclo = ht + hd;
+    const semanalMin = ciclo > 0 ? Math.round((168 / ciclo) * ht * 60) : 0;
+    return { diaria: ht * 60, semanal: semanalMin };
+  };
   const [atribuicaoForm, setAtribuicaoForm] = useState({
     escala_id: "",
     colaborador_id: "",
@@ -61,20 +100,42 @@ export function PontoEscalasTab() {
 
   const handleSalvar = async () => {
     if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }
-    if (editando) {
-      await atualizarEscala({ id: editando.id, ...escalaForm } as any);
+    let payload: any = { ...escalaForm };
+    if (escalaForm.modalidade === "fixa") {
+      const { diaria, semanal } = calcularJornadasFixa(escalaForm.dias_config);
+      payload.jornada_diaria_minutos = diaria;
+      payload.jornada_semanal_minutos = semanal;
+      payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha;
+      payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha;
+      // limpa campos ciclo
+      payload.ciclo_horas_trabalho = null;
+      payload.ciclo_horas_descanso = null;
+      payload.ciclo_inicio_data = null;
+      payload.ciclo_inicio_hora = null;
     } else {
-      await criarEscala(escalaForm as any);
+      const { diaria, semanal } = calcularJornadasMovel(escalaForm.ciclo_horas_trabalho, escalaForm.ciclo_horas_descanso);
+      payload.jornada_diaria_minutos = diaria;
+      payload.jornada_semanal_minutos = semanal;
+      payload.dias_config = null;
+      payload.tipo = "personalizada";
+    }
+    if (editando) {
+      await atualizarEscala({ id: editando.id, ...payload } as any);
+    } else {
+      await criarEscala(payload as any);
     }
     setShowCriar(false);
     setEditando(null);
-    setEscalaForm({ ...escalaForm, nome: "" });
   };
 
   const abrirNova = () => {
     setEditando(null);
     setEscalaForm({
-      nome: "", tipo: "5x2", jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
+      nome: "", tipo: "5x2", modalidade: "fixa",
+      dias_config: diasConfigPadrao(),
+      ciclo_horas_trabalho: 12, ciclo_horas_descanso: 36,
+      ciclo_inicio_data: new Date().toISOString().split("T")[0], ciclo_inicio_hora: "07:00",
+      jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
       intervalo_intrajornada_minutos: 60, tolerancia_minutos: 5, tolerancia_diaria_minutos: 10,
       hora_entrada_padrao: "08:00", hora_saida_padrao: "17:00", sabado_util: false, domingo_util: false,
       percentual_hora_extra_50: 50, percentual_hora_extra_100: 100, percentual_adicional_noturno: 20,
@@ -85,9 +146,16 @@ export function PontoEscalasTab() {
 
   const abrirEditar = (e: PontoEscala) => {
     setEditando(e);
+    const anyE = e as any;
     setEscalaForm({
       nome: e.nome,
       tipo: e.tipo,
+      modalidade: anyE.modalidade || "fixa",
+      dias_config: anyE.dias_config || diasConfigPadrao(),
+      ciclo_horas_trabalho: anyE.ciclo_horas_trabalho ?? 12,
+      ciclo_horas_descanso: anyE.ciclo_horas_descanso ?? 36,
+      ciclo_inicio_data: anyE.ciclo_inicio_data || new Date().toISOString().split("T")[0],
+      ciclo_inicio_hora: (anyE.ciclo_inicio_hora || "07:00").substring(0,5),
       jornada_diaria_minutos: e.jornada_diaria_minutos,
       jornada_semanal_minutos: e.jornada_semanal_minutos,
       intervalo_intrajornada_minutos: e.intervalo_intrajornada_minutos,
@@ -152,13 +220,13 @@ export function PontoEscalasTab() {
           <p className="text-sm text-muted-foreground">Gerencie escalas de trabalho e atribua a colaboradores</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button onClick={abrirNova} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90">
+            <Plus className="w-4 h-4 mr-2" /> Criar Escala
+          </Button>
           <Button variant="outline" onClick={() => setShowAtribuir(true)}>
             <Users className="w-4 h-4 mr-2" /> Atribuir Escala
           </Button>
-          <Button variant="outline" onClick={abrirNova}>
-            <Plus className="w-4 h-4 mr-2" /> Nova Escala
-          </Button>
-          <Button onClick={() => setShowInteligente(true)} className="bg-gradient-to-r from-primary to-primary/80">
+          <Button onClick={() => setShowInteligente(true)} variant="outline" className="border-primary/40 text-primary">
             <Sparkles className="w-4 h-4 mr-2" /> Cadastro Inteligente
           </Button>
         </div>
@@ -263,52 +331,83 @@ export function PontoEscalasTab() {
                 <Input value={escalaForm.nome} onChange={e => setEscalaForm({ ...escalaForm, nome: e.target.value })} placeholder="Ex: Administrativo" />
               </div>
               <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={escalaForm.tipo} onValueChange={v => {
-                  const presets: Record<string, any> = {
-                    "5x2": { jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640, sabado_util: false },
-                    "6x1": { jornada_diaria_minutos: 440, jornada_semanal_minutos: 2640, sabado_util: true },
-                    "12x36": { jornada_diaria_minutos: 720, jornada_semanal_minutos: 2160 },
-                  };
-                  setEscalaForm({ ...escalaForm, tipo: v, ...(presets[v] || {}) });
-                }}>
+                <Label>Modalidade</Label>
+                <Select
+                  value={escalaForm.modalidade}
+                  onValueChange={v => setEscalaForm({ ...escalaForm, modalidade: v, tipo: v === "movel" ? "12x36" : "5x2" })}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {ESCALA_TIPOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                    <SelectItem value="fixa">Fixa (dias da semana definidos)</SelectItem>
+                    <SelectItem value="movel">Móvel (12x36, 24x72, etc.)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
+            {escalaForm.modalidade === "fixa" ? (
+              <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /> Dias da semana</Label>
+                  <span className="text-xs text-muted-foreground">
+                    Total: {(() => { const j = calcularJornadasFixa(escalaForm.dias_config); return `${Math.floor(j.semanal/60)}h${j.semanal%60?` ${j.semanal%60}min`:""} / sem`; })()}
+                  </span>
+                </div>
+                <div className="grid grid-cols-[100px_60px_1fr_1fr_90px] gap-2 text-xs font-medium text-muted-foreground px-1">
+                  <span>Dia</span><span>Trabalha</span><span>Entrada</span><span>Saída</span><span>Intervalo</span>
+                </div>
+                {DIAS_KEYS.map(d => {
+                  const c = escalaForm.dias_config[d];
+                  const upd = (patch: Partial<DiaConfig>) => setEscalaForm({
+                    ...escalaForm,
+                    dias_config: { ...escalaForm.dias_config, [d]: { ...c, ...patch } },
+                  });
+                  return (
+                    <div key={d} className="grid grid-cols-[100px_60px_1fr_1fr_90px] gap-2 items-center">
+                      <span className="text-sm font-medium">{DIAS_LBL[d]}</span>
+                      <Switch checked={c.trabalha} onCheckedChange={v => upd({ trabalha: v })} />
+                      <Input type="time" disabled={!c.trabalha} value={c.entrada} onChange={e => upd({ entrada: e.target.value })} />
+                      <Input type="time" disabled={!c.trabalha} value={c.saida} onChange={e => upd({ saida: e.target.value })} />
+                      <Input type="number" disabled={!c.trabalha} value={c.intervalo} onChange={e => upd({ intervalo: +e.target.value })} placeholder="min" />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-lg border p-4 space-y-3 bg-muted/20">
+                <Label className="text-sm font-semibold flex items-center gap-2"><Repeat className="w-4 h-4 text-primary" /> Configuração do ciclo</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Horas trabalhadas</Label>
+                    <Input type="number" value={escalaForm.ciclo_horas_trabalho} onChange={e => setEscalaForm({ ...escalaForm, ciclo_horas_trabalho: +e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Horas de descanso</Label>
+                    <Input type="number" value={escalaForm.ciclo_horas_descanso} onChange={e => setEscalaForm({ ...escalaForm, ciclo_horas_descanso: +e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de referência (1º turno)</Label>
+                    <Input type="date" value={escalaForm.ciclo_inicio_data} onChange={e => setEscalaForm({ ...escalaForm, ciclo_inicio_data: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Hora de início do turno</Label>
+                    <Input type="time" value={escalaForm.ciclo_inicio_hora} onChange={e => setEscalaForm({ ...escalaForm, ciclo_inicio_hora: e.target.value })} />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ex: 12x36 = 12h trabalho / 36h descanso. O sistema usa a data e hora de referência para calcular automaticamente os dias de plantão de cada colaborador.
+                  {(() => { const j = calcularJornadasMovel(escalaForm.ciclo_horas_trabalho, escalaForm.ciclo_horas_descanso); return ` Jornada equivalente: ${Math.round(j.semanal/60)}h/semana.`; })()}
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Jornada Diária (min)</Label>
-                <Input type="number" value={escalaForm.jornada_diaria_minutos} onChange={e => setEscalaForm({ ...escalaForm, jornada_diaria_minutos: +e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Jornada Semanal (min)</Label>
-                <Input type="number" value={escalaForm.jornada_semanal_minutos} onChange={e => setEscalaForm({ ...escalaForm, jornada_semanal_minutos: +e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Intervalo Intrajornada (min)</Label>
+                <Label>Intervalo (min)</Label>
                 <Input type="number" value={escalaForm.intervalo_intrajornada_minutos} onChange={e => setEscalaForm({ ...escalaForm, intervalo_intrajornada_minutos: +e.target.value })} />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Hora Entrada</Label>
-                <Input type="time" value={escalaForm.hora_entrada_padrao} onChange={e => setEscalaForm({ ...escalaForm, hora_entrada_padrao: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Hora Saída</Label>
-                <Input type="time" value={escalaForm.hora_saida_padrao} onChange={e => setEscalaForm({ ...escalaForm, hora_saida_padrao: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tolerância por marcação (min)</Label>
+                <Label>Tolerância marcação (min)</Label>
                 <Input type="number" value={escalaForm.tolerancia_minutos} onChange={e => setEscalaForm({ ...escalaForm, tolerancia_minutos: +e.target.value })} />
               </div>
               <div className="space-y-2">
@@ -332,19 +431,9 @@ export function PontoEscalasTab() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6 rounded-md border bg-muted/30 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Switch checked={escalaForm.sabado_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, sabado_util: v })} />
-                <Label className="cursor-pointer">Sábado útil</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={escalaForm.domingo_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, domingo_util: v })} />
-                <Label className="cursor-pointer">Domingo útil</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
-                <Label className="cursor-pointer">Hora ficta noturna (52m30s)</Label>
-              </div>
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-4 py-3">
+              <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
+              <Label className="cursor-pointer">Hora ficta noturna (52m30s)</Label>
             </div>
 
             {editando && <DetalhesEscalaPanel escalaId={editando.id} />}
