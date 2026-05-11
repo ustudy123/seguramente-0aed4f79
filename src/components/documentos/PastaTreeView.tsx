@@ -112,7 +112,8 @@ function PastaNode({
   onDropDocument,
   expandAllSignal,
 }: PastaNodeProps) {
-  const [expanded, setExpanded] = useState(level < 2);
+  const isVirtual = !!node.isVirtual;
+  const [expanded, setExpanded] = useState(level < 2 && !isVirtual);
 
   useEffect(() => {
     if (expandAllSignal && expandAllSignal.key > 0) {
