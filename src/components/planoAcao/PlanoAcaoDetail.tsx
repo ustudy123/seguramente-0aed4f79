@@ -147,13 +147,15 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
     iconColor?: string;
   }) => (
     <Card 
-      className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all duration-200"
-      onClick={() => setSelectedInfoCard(cardKey)}
+      className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all duration-200 group relative"
+      onClick={() => setShowEditModal(true)}
+      title="Clique para editar"
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <Icon className={`h-4 w-4 ${iconColor}`} />
           {title}
+          <Edit className="h-3 w-3 ml-auto text-muted-foreground/40 group-hover:text-primary transition-colors" />
         </CardTitle>
       </CardHeader>
       <CardContent>
