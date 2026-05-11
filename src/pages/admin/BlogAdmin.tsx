@@ -228,6 +228,18 @@ export default function BlogAdmin() {
           </CardContent>
         </Card>
       </div>
+
+      <BlogPostEditor
+        open={editorOpen}
+        postId={editingId}
+        onClose={() => setEditorOpen(false)}
+        onSaved={fetchPosts}
+      />
+      <BlogPostPreview
+        open={previewOpen}
+        postId={previewId}
+        onClose={() => setPreviewOpen(false)}
+      />
     </div>
   );
 }
