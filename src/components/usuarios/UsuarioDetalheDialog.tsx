@@ -668,7 +668,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
         </div>
 
         {/* Content — scrollable */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <div className="px-6 py-4">
 
             {/* ── Tab: Dados ── */}
@@ -1015,7 +1015,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
