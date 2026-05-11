@@ -84,6 +84,10 @@ export function ConfirmDialogProvider() {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={`Digite ${state.requiredWord}`}
               className="uppercase"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
             />
           </div>
         )}
