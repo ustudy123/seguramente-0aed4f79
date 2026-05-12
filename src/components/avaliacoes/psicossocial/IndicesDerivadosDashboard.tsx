@@ -269,6 +269,42 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
           <Badge variant="outline" className="text-xs">
             {filtroCampanha === "recente" ? "Última campanha analisada" : "Campanha selecionada"}
           </Badge>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label="O que são os índices derivados"
+                className="inline-flex items-center justify-center rounded-full p-1 text-muted-foreground hover:text-purple-700 hover:bg-purple-50 transition-colors"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[360px] text-sm" align="start">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-purple-600" />
+                  <p className="font-semibold">O que são os Índices Derivados SIPRO?</p>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  São <strong>6 indicadores secundários</strong> calculados a partir das respostas do
+                  questionário psicossocial. Cada um mede uma <strong>dimensão específica de risco</strong>
+                  {" "}(burnout, boreout, recuperação, clareza, trabalho noturno) e o <strong>IRP-S</strong>{" "}
+                  consolida tudo em um número único.
+                </p>
+                <div className="rounded-md bg-muted/50 p-2 text-xs space-y-1">
+                  <p className="font-medium">Escala de risco (0–100):</p>
+                  <p>· <span className="text-emerald-700 font-medium">0–24 Favorável</span> — situação saudável</p>
+                  <p>· <span className="text-amber-700 font-medium">25–49 Atenção</span> — monitorar</p>
+                  <p>· <span className="text-orange-700 font-medium">50–74 Moderado</span> — entrar no PGR</p>
+                  <p>· <span className="text-red-700 font-medium">75–100 Elevado</span> — ação prioritária</p>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Clique no <HelpCircle className="inline h-3 w-3" /> de cada card para ver
+                  o que ele mede, como ler e exemplos práticos.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {validas.length > 0 && (
@@ -310,7 +346,42 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
                     <Badge variant="secondary" className={cn("text-xs font-bold", sem?.text)}>
                       {item.codigo}
                     </Badge>
-                    <Icon className={cn("h-4 w-4", sem?.text || "text-muted-foreground")} />
+                    <div className="flex items-center gap-1">
+                      <Icon className={cn("h-4 w-4", sem?.text || "text-muted-foreground")} />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Saiba mais sobre ${item.codigo}`}
+                            className="inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-background/60 transition-colors"
+                          >
+                            <HelpCircle className="h-3.5 w-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[340px] text-sm" align="end">
+                          <div className="space-y-2.5">
+                            <div>
+                              <p className="font-semibold leading-tight">{item.nomeCompleto}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{item.baseNorma}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">O que mede</p>
+                              <p className="text-xs leading-relaxed mt-0.5">{item.oQueMede}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Como ler</p>
+                              <p className="text-xs leading-relaxed mt-0.5">{item.comoLer}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Quando aparece elevado</p>
+                              <ul className="text-xs leading-relaxed mt-0.5 space-y-0.5 list-disc pl-4 text-muted-foreground">
+                                {item.exemplos.map((e, idx) => <li key={idx}>{e}</li>)}
+                              </ul>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 pt-1">
