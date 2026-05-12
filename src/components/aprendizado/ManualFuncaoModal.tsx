@@ -114,6 +114,16 @@ export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfG
           )}
         </div>
       </DialogContent>
+      {cargoId && cargoNome && (
+        <EnviarManualAssinaturaDialog
+          open={enviarOpen}
+          onClose={() => setEnviarOpen(false)}
+          cargoId={cargoId}
+          cargoNome={cargoNome}
+          manualHtml={normalizedHtml}
+          manualTitulo={titulo || "Manual da Função"}
+        />
+      )}
     </Dialog>
   );
 }
