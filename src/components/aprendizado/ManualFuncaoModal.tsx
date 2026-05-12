@@ -78,6 +78,11 @@ export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfG
                   <Button variant="outline" size="sm" onClick={handleDownloadHtml}>
                     <Download className="w-4 h-4 mr-1" /> Baixar HTML
                   </Button>
+                  {cargoId && cargoNome && (
+                    <Button size="sm" onClick={() => setEnviarOpen(true)}>
+                      <Send className="w-4 h-4 mr-1" /> Enviar para Assinatura
+                    </Button>
+                  )}
                 </>
               )}
             </div>
