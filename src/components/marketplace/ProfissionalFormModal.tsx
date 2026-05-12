@@ -31,7 +31,7 @@ interface ProfissionalFormModalProps {
 }
 
 export function ProfissionalFormModal({ open, onClose, onSuccess }: ProfissionalFormModalProps) {
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
