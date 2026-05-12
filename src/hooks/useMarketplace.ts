@@ -111,16 +111,14 @@ export function useMarketplace() {
   const { data: servicos = [], isLoading: isLoadingServicos } = useQuery({
     queryKey: ["marketplace-servicos", tenantId, filters],
     queryFn: async () => {
-      if (!tenantId) return [];
-
-      const { data: profsDoTenant, error: profsError } = await supabase
+      // Vitrine global: serviços de todos os profissionais ativos, sem filtro de tenant
+      const { data: profsAtivos, error: profsError } = await supabase
         .from("marketplace_profissionais")
         .select("id")
-        .eq("status", "ativo")
-        .eq("tenant_id", tenantId);
+        .eq("status", "ativo");
 
       if (profsError) throw profsError;
-      const profissionalIds = (profsDoTenant || []).map((p) => p.id);
+      const profissionalIds = (profsAtivos || []).map((p) => p.id);
       if (profissionalIds.length === 0) return [];
 
       let query = supabase
