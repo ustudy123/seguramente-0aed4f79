@@ -13,10 +13,13 @@ import {
   TrendingUp,
   Minus,
   Filter,
+  Info,
+  HelpCircle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 
@@ -25,7 +28,12 @@ const MINIMO_ANONIMATO = 5;
 interface IndiceConfig {
   codigo: string;
   nome: string;
+  nomeCompleto: string;
   descricao: string;
+  oQueMede: string;
+  comoLer: string;
+  baseNorma: string;
+  exemplos: string[];
   icon: React.ElementType;
   /** Campo no objeto campanha */
   campo: keyof CampanhaPsicossocial;
@@ -37,7 +45,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IRP-S",
     nome: "Risco Psicossocial",
+    nomeCompleto: "Índice de Risco Psicossocial — SIPRO",
     descricao: "Exposição geral a fatores de risco",
+    oQueMede:
+      "Resumo único da exposição da equipe a fatores psicossociais (demanda, controle, suporte, reconhecimento, conflito, equilíbrio). É o 'IPS invertido': quanto mais alto, pior.",
+    comoLer:
+      "0–24 favorável · 25–49 atenção · 50–74 moderado · 75–100 elevado. Acima de 50 já indica que medidas de controle precisam entrar no PGR (NR-1).",
+    baseNorma: "NR-01 (GRO/PGR) · ISO 45003 · COPSOQ III",
+    exemplos: [
+      "Triagem geral do clima de risco da unidade",
+      "Comparar setores ou turnos",
+      "Acompanhar evolução entre campanhas",
+    ],
     icon: ShieldAlert,
     campo: "irps_score",
     invertido: true,
@@ -45,7 +64,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IBO-S",
     nome: "Burnout",
-    descricao: "Esgotamento profissional",
+    nomeCompleto: "Índice de Burnout — Esgotamento Profissional",
+    descricao: "Esgotamento emocional e exaustão pelo trabalho",
+    oQueMede:
+      "Sinais de exaustão emocional, sensação de estar esgotado pela manhã, cansaço crônico ligado ao trabalho — combina demanda emocional alta + baixa recuperação.",
+    comoLer:
+      "Elevado (≥75) sugere afastamentos prováveis, queda de produtividade e risco de CAT por transtorno mental relacionado ao trabalho (CID F43).",
+    baseNorma: "CID-11 QD85 · ISO 45003 · NR-01",
+    exemplos: [
+      "Equipes com pico sazonal (fechamento, safra)",
+      "Áreas de atendimento e cuidado (saúde, call center)",
+      "Times com liderança sob pressão",
+    ],
     icon: Flame,
     campo: "ibo_score",
     invertido: true,
@@ -53,7 +83,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IBD-S",
     nome: "Boreout",
-    descricao: "Desengajamento e subcarga",
+    nomeCompleto: "Índice de Boreout — Tédio e Subcarga",
+    descricao: "Desengajamento por subcarga e falta de sentido",
+    oQueMede:
+      "O oposto do burnout: tédio crônico, subutilização de competências, falta de desafio e de sentido. Gera presenteísmo, erros e turnover silencioso.",
+    comoLer:
+      "Elevado (≥75) indica funções mal desenhadas, baixa autonomia ou alocação errada — atue revendo escopo, metas e rotação de tarefas.",
+    baseNorma: "ISO 45003 (carga inadequada) · NR-17",
+    exemplos: [
+      "Cargo sem desafio para o nível de senioridade",
+      "Tarefas repetitivas sem propósito comunicado",
+      "Pessoas 'esquecidas' em áreas de baixa demanda",
+    ],
     icon: Battery,
     campo: "ibd_score",
     invertido: true,
@@ -61,7 +102,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IREC-S",
     nome: "Recuperação",
-    descricao: "Capacidade de descanso pós-trabalho",
+    nomeCompleto: "Índice de Recuperação Pós-Trabalho",
+    descricao: "Capacidade de desligar e descansar fora do trabalho",
+    oQueMede:
+      "Mede se o trabalhador consegue 'desligar' nos intervalos, no fim do dia e nas folgas. Baixa recuperação acumula fadiga e antecipa burnout.",
+    comoLer:
+      "Elevado (≥75) = baixa recuperação. Verifique jornada, hiperconexão (e-mails fora do expediente), insônia e DSR (descanso semanal remunerado).",
+    baseNorma: "CLT art. 66/67 · ISO 45003 · NR-17",
+    exemplos: [
+      "Times com comunicação 24/7",
+      "Plantões e escalas 12x36",
+      "Lideranças que não tiram férias",
+    ],
     icon: Eye,
     campo: "irec_score",
     invertido: true,
@@ -69,7 +121,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "ICOP-S",
     nome: "Clareza Organizacional",
-    descricao: "Clareza de papéis e direcionamento",
+    nomeCompleto: "Índice de Clareza Organizacional e de Papéis",
+    descricao: "Clareza de papéis, metas e direcionamento",
+    oQueMede:
+      "Mede o quanto a pessoa entende o que se espera dela, quais as prioridades, a quem reportar e como será avaliada. Ambiguidade gera estresse e conflito.",
+    comoLer:
+      "Elevado (≥75) = papéis confusos. Atue com Manual de Função, OS NR-1, descrição de cargo, reuniões 1:1 e metas SMART.",
+    baseNorma: "NR-01 (informação ao trabalhador) · ISO 45003",
+    exemplos: [
+      "Reestruturações recentes sem comunicação",
+      "Vários líderes pedindo coisas conflitantes",
+      "Cargos novos sem descrição formal",
+    ],
     icon: BrainCircuit,
     campo: "icop_score",
     invertido: true,
@@ -77,7 +140,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "INOT-S",
     nome: "Trabalho Noturno",
-    descricao: "Risco específico do trabalho noturno/3º turno",
+    nomeCompleto: "Índice de Risco do Trabalho Noturno / 3º Turno",
+    descricao: "Risco específico do trabalho noturno e turnos rotativos",
+    oQueMede:
+      "Risco adicional ligado a turnos noturnos e rotativos: privação de sono, desregulação do ciclo circadiano, isolamento social e maior risco metabólico/cardiovascular.",
+    comoLer:
+      "Só aparece quando há respondentes em jornada noturna. Elevado exige PCMSO específico, pausas e revisão de escala (CLT art. 73).",
+    baseNorma: "CLT art. 73 · NR-15 Anexo · ISO 45003",
+    exemplos: [
+      "Operação industrial 24h",
+      "Hospitais e segurança patrimonial",
+      "Logística e transporte de carga",
+    ],
     icon: Moon,
     campo: "inot_score",
     invertido: true,
