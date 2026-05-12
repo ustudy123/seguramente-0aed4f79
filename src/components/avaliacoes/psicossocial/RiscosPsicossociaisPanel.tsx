@@ -130,6 +130,17 @@ export function RiscosPsicossociaisPanel() {
     [campanhas],
   );
 
+  // Pré-seleciona a campanha mais recente assim que estiverem disponíveis
+  useEffect(() => {
+    if (campanhaId || campanhasComResultado.length === 0) return;
+    const maisRecente = [...campanhasComResultado].sort((a, b) => {
+      const da = new Date((a as any).created_at ?? (a as any).data_inicio ?? 0).getTime();
+      const db = new Date((b as any).created_at ?? (b as any).data_inicio ?? 0).getTime();
+      return db - da;
+    })[0];
+    if (maisRecente) setCampanhaId(maisRecente.id);
+  }, [campanhasComResultado, campanhaId]);
+
   const isConsolidado = campanhaId === "__all__";
 
   const campanhaSel = useMemo(
