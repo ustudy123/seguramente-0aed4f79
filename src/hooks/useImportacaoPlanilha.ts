@@ -397,8 +397,9 @@ export function useImportacaoPlanilha() {
   const getEmpresasValidas = async () => {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
     const { data } = await fromTable("empresa_cadastro")
-      .select("id, cnpj, cpf, tipo_pessoa, razao_social")
-      .eq("tenant_id", tenantId);
+      .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
+      .eq("tenant_id", tenantId)
+      .eq("ativo", true);
 
     const mapa: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
