@@ -198,31 +198,47 @@ export function RiscosPsicossociaisPanel() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {riscos.map((r) => (
-                <motion.div
-                  key={r.id}
-                  whileHover={{ y: -2 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <Card className="h-full">
-                    <CardContent className="p-4 flex flex-col gap-2 h-full">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm leading-snug">{r.nome}</p>
-                          {r.descricao && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
-                              {r.descricao}
-                            </p>
-                          )}
+              {riscos.map((r) => {
+                const sev = getSeveridadeInfo(r.severidade);
+                return (
+                  <motion.div
+                    key={r.id}
+                    whileHover={{ y: -2 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Card
+                      className="h-full cursor-pointer hover:border-primary/40 transition-colors"
+                      onClick={() => setRiscoDetalhe(r)}
+                    >
+                      <CardContent className="p-4 flex flex-col gap-2 h-full">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm leading-snug">{r.nome}</p>
+                            {r.descricao && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                                {r.descricao}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="secondary" className="gap-1 shrink-0">
+                            <Sparkles className="h-3 w-3" /> Padrão
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="gap-1 shrink-0">
-                          <Sparkles className="h-3 w-3" /> Padrão
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                        {sev && (
+                          <div className="flex items-center justify-between gap-2 pt-2 mt-auto border-t">
+                            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                              <ShieldAlert className="h-3 w-3" /> Severidade
+                            </span>
+                            <Badge variant="outline" className={`text-[10px] ${sev.badgeClass}`}>
+                              {sev.valor} · {sev.label}
+                            </Badge>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
