@@ -13,10 +13,13 @@ import {
   TrendingUp,
   Minus,
   Filter,
+  Info,
+  HelpCircle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 
@@ -25,7 +28,12 @@ const MINIMO_ANONIMATO = 5;
 interface IndiceConfig {
   codigo: string;
   nome: string;
+  nomeCompleto: string;
   descricao: string;
+  oQueMede: string;
+  comoLer: string;
+  baseNorma: string;
+  exemplos: string[];
   icon: React.ElementType;
   /** Campo no objeto campanha */
   campo: keyof CampanhaPsicossocial;
@@ -37,7 +45,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IRP-S",
     nome: "Risco Psicossocial",
+    nomeCompleto: "Índice de Risco Psicossocial — SIPRO",
     descricao: "Exposição geral a fatores de risco",
+    oQueMede:
+      "Resumo único da exposição da equipe a fatores psicossociais (demanda, controle, suporte, reconhecimento, conflito, equilíbrio). É o 'IPS invertido': quanto mais alto, pior.",
+    comoLer:
+      "0–24 favorável · 25–49 atenção · 50–74 moderado · 75–100 elevado. Acima de 50 já indica que medidas de controle precisam entrar no PGR (NR-1).",
+    baseNorma: "NR-01 (GRO/PGR) · ISO 45003 · COPSOQ III",
+    exemplos: [
+      "Triagem geral do clima de risco da unidade",
+      "Comparar setores ou turnos",
+      "Acompanhar evolução entre campanhas",
+    ],
     icon: ShieldAlert,
     campo: "irps_score",
     invertido: true,
@@ -45,7 +64,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IBO-S",
     nome: "Burnout",
-    descricao: "Esgotamento profissional",
+    nomeCompleto: "Índice de Burnout — Esgotamento Profissional",
+    descricao: "Esgotamento emocional e exaustão pelo trabalho",
+    oQueMede:
+      "Sinais de exaustão emocional, sensação de estar esgotado pela manhã, cansaço crônico ligado ao trabalho — combina demanda emocional alta + baixa recuperação.",
+    comoLer:
+      "Elevado (≥75) sugere afastamentos prováveis, queda de produtividade e risco de CAT por transtorno mental relacionado ao trabalho (CID F43).",
+    baseNorma: "CID-11 QD85 · ISO 45003 · NR-01",
+    exemplos: [
+      "Equipes com pico sazonal (fechamento, safra)",
+      "Áreas de atendimento e cuidado (saúde, call center)",
+      "Times com liderança sob pressão",
+    ],
     icon: Flame,
     campo: "ibo_score",
     invertido: true,
@@ -53,7 +83,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IBD-S",
     nome: "Boreout",
-    descricao: "Desengajamento e subcarga",
+    nomeCompleto: "Índice de Boreout — Tédio e Subcarga",
+    descricao: "Desengajamento por subcarga e falta de sentido",
+    oQueMede:
+      "O oposto do burnout: tédio crônico, subutilização de competências, falta de desafio e de sentido. Gera presenteísmo, erros e turnover silencioso.",
+    comoLer:
+      "Elevado (≥75) indica funções mal desenhadas, baixa autonomia ou alocação errada — atue revendo escopo, metas e rotação de tarefas.",
+    baseNorma: "ISO 45003 (carga inadequada) · NR-17",
+    exemplos: [
+      "Cargo sem desafio para o nível de senioridade",
+      "Tarefas repetitivas sem propósito comunicado",
+      "Pessoas 'esquecidas' em áreas de baixa demanda",
+    ],
     icon: Battery,
     campo: "ibd_score",
     invertido: true,
@@ -61,7 +102,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "IREC-S",
     nome: "Recuperação",
-    descricao: "Capacidade de descanso pós-trabalho",
+    nomeCompleto: "Índice de Recuperação Pós-Trabalho",
+    descricao: "Capacidade de desligar e descansar fora do trabalho",
+    oQueMede:
+      "Mede se o trabalhador consegue 'desligar' nos intervalos, no fim do dia e nas folgas. Baixa recuperação acumula fadiga e antecipa burnout.",
+    comoLer:
+      "Elevado (≥75) = baixa recuperação. Verifique jornada, hiperconexão (e-mails fora do expediente), insônia e DSR (descanso semanal remunerado).",
+    baseNorma: "CLT art. 66/67 · ISO 45003 · NR-17",
+    exemplos: [
+      "Times com comunicação 24/7",
+      "Plantões e escalas 12x36",
+      "Lideranças que não tiram férias",
+    ],
     icon: Eye,
     campo: "irec_score",
     invertido: true,
@@ -69,7 +121,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "ICOP-S",
     nome: "Clareza Organizacional",
-    descricao: "Clareza de papéis e direcionamento",
+    nomeCompleto: "Índice de Clareza Organizacional e de Papéis",
+    descricao: "Clareza de papéis, metas e direcionamento",
+    oQueMede:
+      "Mede o quanto a pessoa entende o que se espera dela, quais as prioridades, a quem reportar e como será avaliada. Ambiguidade gera estresse e conflito.",
+    comoLer:
+      "Elevado (≥75) = papéis confusos. Atue com Manual de Função, OS NR-1, descrição de cargo, reuniões 1:1 e metas SMART.",
+    baseNorma: "NR-01 (informação ao trabalhador) · ISO 45003",
+    exemplos: [
+      "Reestruturações recentes sem comunicação",
+      "Vários líderes pedindo coisas conflitantes",
+      "Cargos novos sem descrição formal",
+    ],
     icon: BrainCircuit,
     campo: "icop_score",
     invertido: true,
@@ -77,7 +140,18 @@ const INDICES: IndiceConfig[] = [
   {
     codigo: "INOT-S",
     nome: "Trabalho Noturno",
-    descricao: "Risco específico do trabalho noturno/3º turno",
+    nomeCompleto: "Índice de Risco do Trabalho Noturno / 3º Turno",
+    descricao: "Risco específico do trabalho noturno e turnos rotativos",
+    oQueMede:
+      "Risco adicional ligado a turnos noturnos e rotativos: privação de sono, desregulação do ciclo circadiano, isolamento social e maior risco metabólico/cardiovascular.",
+    comoLer:
+      "Só aparece quando há respondentes em jornada noturna. Elevado exige PCMSO específico, pausas e revisão de escala (CLT art. 73).",
+    baseNorma: "CLT art. 73 · NR-15 Anexo · ISO 45003",
+    exemplos: [
+      "Operação industrial 24h",
+      "Hospitais e segurança patrimonial",
+      "Logística e transporte de carga",
+    ],
     icon: Moon,
     campo: "inot_score",
     invertido: true,
@@ -195,6 +269,42 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
           <Badge variant="outline" className="text-xs">
             {filtroCampanha === "recente" ? "Última campanha analisada" : "Campanha selecionada"}
           </Badge>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label="O que são os índices derivados"
+                className="inline-flex items-center justify-center rounded-full p-1 text-muted-foreground hover:text-purple-700 hover:bg-purple-50 transition-colors"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[360px] text-sm" align="start">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-purple-600" />
+                  <p className="font-semibold">O que são os Índices Derivados SIPRO?</p>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  São <strong>6 indicadores secundários</strong> calculados a partir das respostas do
+                  questionário psicossocial. Cada um mede uma <strong>dimensão específica de risco</strong>
+                  {" "}(burnout, boreout, recuperação, clareza, trabalho noturno) e o <strong>IRP-S</strong>{" "}
+                  consolida tudo em um número único.
+                </p>
+                <div className="rounded-md bg-muted/50 p-2 text-xs space-y-1">
+                  <p className="font-medium">Escala de risco (0–100):</p>
+                  <p>· <span className="text-emerald-700 font-medium">0–24 Favorável</span> — situação saudável</p>
+                  <p>· <span className="text-amber-700 font-medium">25–49 Atenção</span> — monitorar</p>
+                  <p>· <span className="text-orange-700 font-medium">50–74 Moderado</span> — entrar no PGR</p>
+                  <p>· <span className="text-red-700 font-medium">75–100 Elevado</span> — ação prioritária</p>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Clique no <HelpCircle className="inline h-3 w-3" /> de cada card para ver
+                  o que ele mede, como ler e exemplos práticos.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {validas.length > 0 && (
@@ -236,7 +346,42 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
                     <Badge variant="secondary" className={cn("text-xs font-bold", sem?.text)}>
                       {item.codigo}
                     </Badge>
-                    <Icon className={cn("h-4 w-4", sem?.text || "text-muted-foreground")} />
+                    <div className="flex items-center gap-1">
+                      <Icon className={cn("h-4 w-4", sem?.text || "text-muted-foreground")} />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Saiba mais sobre ${item.codigo}`}
+                            className="inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-background/60 transition-colors"
+                          >
+                            <HelpCircle className="h-3.5 w-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[340px] text-sm" align="end">
+                          <div className="space-y-2.5">
+                            <div>
+                              <p className="font-semibold leading-tight">{item.nomeCompleto}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{item.baseNorma}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">O que mede</p>
+                              <p className="text-xs leading-relaxed mt-0.5">{item.oQueMede}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Como ler</p>
+                              <p className="text-xs leading-relaxed mt-0.5">{item.comoLer}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Quando aparece elevado</p>
+                              <ul className="text-xs leading-relaxed mt-0.5 space-y-0.5 list-disc pl-4 text-muted-foreground">
+                                {item.exemplos.map((e, idx) => <li key={idx}>{e}</li>)}
+                              </ul>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 pt-1">
@@ -282,9 +427,14 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
                     <p className="text-xs text-muted-foreground mt-1">Sem dados</p>
                   )}
 
-                  <p className="text-[11px] text-muted-foreground mt-2 leading-tight">
-                    {item.descricao}
-                  </p>
+                  <div className="mt-2 leading-tight">
+                    <p className={cn("text-xs font-semibold", sem?.text || "text-foreground")}>
+                      {item.nome}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {item.descricao}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
