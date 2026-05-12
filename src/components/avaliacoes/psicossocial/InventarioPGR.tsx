@@ -354,7 +354,9 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   };
 
   return (
-    <Card>
+    <div className="space-y-4">
+      <ExplicacaoPGRGRO />
+      <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
