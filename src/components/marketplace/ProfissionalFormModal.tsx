@@ -265,7 +265,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Nº Registro *</Label>
+                <Label>Nº Registro</Label>
                 <Input value={form.registro_profissional} onChange={(e) => updateField("registro_profissional", e.target.value)} />
               </div>
               <div className="space-y-1.5">
