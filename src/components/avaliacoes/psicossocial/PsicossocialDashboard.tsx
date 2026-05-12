@@ -301,7 +301,7 @@ export function PsicossocialDashboard() {
           {/* Campanhas Ativas */}
           <Card
             className="cursor-pointer hover:border-purple-200 transition-colors"
-            onClick={() => setActiveTab("campanhas")}
+            onClick={() => handleTabChange("campanhas")}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Campanhas Ativas</CardTitle>
@@ -347,7 +347,7 @@ export function PsicossocialDashboard() {
           {/* Concluídas */}
           <Card
             className="cursor-pointer hover:border-emerald-200 transition-colors"
-            onClick={() => setActiveTab("historico")}
+            onClick={() => handleTabChange("historico")}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
