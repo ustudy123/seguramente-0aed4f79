@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, FileText } from "lucide-react";
+import { Loader2, Download, FileText, Send } from "lucide-react";
 import { toast } from "sonner";
 import { generatePdfFromHtml, normalizeManualHtml } from "@/utils/generatePdfFromHtml";
+import { EnviarManualAssinaturaDialog } from "./EnviarManualAssinaturaDialog";
 
 interface ManualFuncaoModalProps {
   open: boolean;
@@ -12,9 +13,12 @@ interface ManualFuncaoModalProps {
   loading: boolean;
   titulo?: string;
   onPdfGenerated?: (blob: Blob, filename: string) => Promise<void> | void;
+  cargoId?: string | null;
+  cargoNome?: string | null;
 }
 
-export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfGenerated }: ManualFuncaoModalProps) {
+export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfGenerated, cargoId, cargoNome }: ManualFuncaoModalProps) {
+  const [enviarOpen, setEnviarOpen] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const normalizedHtml = useMemo(() => normalizeManualHtml(html), [html]);
 
