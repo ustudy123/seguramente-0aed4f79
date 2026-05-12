@@ -239,13 +239,19 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
                     key={child.path}
                     to={child.path}
                     className={cn(
-                      "block px-3 py-2 rounded-lg text-[13px] transition-all duration-200",
+                      "flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all duration-200",
                       isActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
-                        : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                        : cn("hover:bg-white/[0.06]", child.color ?? "text-sidebar-foreground/55")
                     )}
                   >
-                    {child.title}
+                    <span
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all",
+                        isActive ? "bg-sidebar-primary-foreground" : (child.dot ?? "bg-sidebar-foreground/40")
+                      )}
+                    />
+                    <span>{child.title}</span>
                   </NavLink>
                 );
               })}
