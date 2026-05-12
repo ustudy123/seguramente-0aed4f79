@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers, BarChart3, Inbox } from "lucide-react";
+import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers, BarChart3, Inbox, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { SEVERIDADE_ESCALA, getSeveridadeInfo } from "@/lib/psicossocial-severidade";
 
 interface RiscoPsicossocial {
   id: string;
@@ -19,6 +21,7 @@ interface RiscoPsicossocial {
   descricao: string | null;
   padrao: boolean;
   ativo: boolean;
+  severidade: number | null;
   created_at: string;
 }
 
@@ -70,6 +73,7 @@ export function RiscosPsicossociaisPanel() {
   const qc = useQueryClient();
   const { campanhas, isLoadingCampanhas } = usePsicossocial();
   const [campanhaId, setCampanhaId] = useState<string | undefined>();
+  const [riscoDetalhe, setRiscoDetalhe] = useState<RiscoPsicossocial | null>(null);
 
   const { data: riscos = [], isLoading } = useQuery({
     queryKey: ["psicossocial_riscos", tenantId],
@@ -160,11 +164,11 @@ export function RiscosPsicossociaisPanel() {
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
-          Fatores de Riscos Psicossociais
+          Riscos Psicossociais
         </h2>
         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5" />
-          Catálogo padrão do sistema — {total} fatores (somente leitura)
+          Catálogo padrão do sistema — {total} riscos (somente leitura). Clique em um risco para ver a severidade.
         </p>
       </div>
 
@@ -194,31 +198,47 @@ export function RiscosPsicossociaisPanel() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {riscos.map((r) => (
-                <motion.div
-                  key={r.id}
-                  whileHover={{ y: -2 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <Card className="h-full">
-                    <CardContent className="p-4 flex flex-col gap-2 h-full">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm leading-snug">{r.nome}</p>
-                          {r.descricao && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
-                              {r.descricao}
-                            </p>
-                          )}
+              {riscos.map((r) => {
+                const sev = getSeveridadeInfo(r.severidade);
+                return (
+                  <motion.div
+                    key={r.id}
+                    whileHover={{ y: -2 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Card
+                      className="h-full cursor-pointer hover:border-primary/40 transition-colors"
+                      onClick={() => setRiscoDetalhe(r)}
+                    >
+                      <CardContent className="p-4 flex flex-col gap-2 h-full">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm leading-snug">{r.nome}</p>
+                            {r.descricao && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                                {r.descricao}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="secondary" className="gap-1 shrink-0">
+                            <Sparkles className="h-3 w-3" /> Padrão
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="gap-1 shrink-0">
-                          <Sparkles className="h-3 w-3" /> Padrão
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                        {sev && (
+                          <div className="flex items-center justify-between gap-2 pt-2 mt-auto border-t">
+                            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                              <ShieldAlert className="h-3 w-3" /> Severidade
+                            </span>
+                            <Badge variant="outline" className={`text-[10px] ${sev.badgeClass}`}>
+                              {sev.valor} · {sev.label}
+                            </Badge>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
@@ -424,6 +444,89 @@ export function RiscosPsicossociaisPanel() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!riscoDetalhe} onOpenChange={(o) => !o && setRiscoDetalhe(null)}>
+        <DialogContent className="max-w-2xl">
+          {riscoDetalhe && (() => {
+            const sev = getSeveridadeInfo(riscoDetalhe.severidade);
+            const maps = mapsPorRisco[riscoDetalhe.nome] || [];
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-amber-600" />
+                    {riscoDetalhe.nome}
+                  </DialogTitle>
+                  {riscoDetalhe.descricao && (
+                    <DialogDescription>{riscoDetalhe.descricao}</DialogDescription>
+                  )}
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Severidade atribuída</p>
+                    {sev ? (
+                      <div className={`rounded-lg border p-4 ${sev.badgeClass}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold">{sev.label}</span>
+                          <Badge variant="outline" className={sev.badgeClass}>
+                            Nível {sev.valor} de 5
+                          </Badge>
+                        </div>
+                        <p className="text-xs">{sev.exemplo}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Severidade não definida.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Escala de severidade (referência)</p>
+                    <div className="space-y-1.5">
+                      {SEVERIDADE_ESCALA.map((s) => (
+                        <div
+                          key={s.valor}
+                          className={`flex items-start gap-3 p-2 rounded-md border text-xs ${
+                            sev?.valor === s.valor ? s.badgeClass + " font-medium" : "bg-muted/30"
+                          }`}
+                        >
+                          <span className={`shrink-0 w-6 h-6 rounded-full ${s.bgClass} text-white flex items-center justify-center text-[11px] font-bold`}>
+                            {s.valor}
+                          </span>
+                          <div className="flex-1">
+                            <p className="font-semibold">{s.label}</p>
+                            <p className="text-muted-foreground">{s.exemplo}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {maps.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                        Dimensões mapeadas em instrumentos ({maps.length})
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {maps.map((m) => (
+                          <Badge key={m.id} variant="outline" className={`text-[10px] ${instrColor(m.instrumento)}`}>
+                            {instrLabel(m.instrumento)} · {m.dimensao}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-muted-foreground border-t pt-3">
+                    A severidade compõe a matriz de riscos junto com a probabilidade (calculada a partir do
+                    cruzamento das respostas dos instrumentos com este risco).
+                  </p>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
