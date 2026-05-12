@@ -614,6 +614,12 @@ export function usePsicossocial() {
       queryKey: ["psicossocial-estatisticas", campanhaId],
       queryFn: () => calcularEstatisticas(campanhaId!),
       enabled: !!campanhaId,
+      // Respostas anônimas chegam pela rota pública sem invalidar cache do dashboard,
+      // então sempre revalidamos ao montar / focar para refletir o real.
+      staleTime: 0,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
+      refetchInterval: 60_000,
     });
   };
 
