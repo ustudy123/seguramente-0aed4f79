@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Briefcase, ClipboardList, Shield, Settings, ChevronLeft, BarChart3 } from "lucide-react";
+import { BookOpen, Briefcase, Settings, ChevronLeft, BarChart3, FileSignature } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCargos } from "@/hooks/useCadastros";
 import { FuncaoList } from "@/components/aprendizado/FuncaoList";
 import { FuncaoDetail } from "@/components/aprendizado/FuncaoDetail";
 import { AprendizadoStats } from "@/components/aprendizado/AprendizadoStats";
 import { AprendizadoConfig } from "@/components/aprendizado/AprendizadoConfig";
+import { AssinaturasManualTab } from "@/components/aprendizado/AssinaturasManualTab";
 import { Button } from "@/components/ui/button";
 
 export default function AprendizadoPapeis() {
