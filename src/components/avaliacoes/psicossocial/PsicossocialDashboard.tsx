@@ -71,8 +71,24 @@ export function PsicossocialDashboard() {
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
   const [bannerResultados, setBannerResultados] = useState<CampanhaPsicossocial | null>(null);
-  const [activeTab, setActiveTab] = useState("campanhas");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab") || "visao";
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [apenasAtivas, setApenasAtivas] = useState(false);
+
+  // Sincroniza tab com URL (deep-link via sidebar)
+  useEffect(() => {
+    if (tabFromUrl !== activeTab) setActiveTab(tabFromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabFromUrl]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const next = new URLSearchParams(searchParams);
+    if (value === "visao") next.delete("tab");
+    else next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
 
   const { campanhas: campanhasAll, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
   const campanhas = apenasAtivas ? campanhasAll.filter(c => c.status === 'ativa') : campanhasAll;
