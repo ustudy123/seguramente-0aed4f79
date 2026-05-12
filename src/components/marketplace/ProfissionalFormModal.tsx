@@ -103,7 +103,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
   };
 
   const handleSubmit = async () => {
-    if (!form.nome_completo || !form.email || !form.registro_profissional || !form.conselho) {
+    if (!form.nome_completo || !form.email) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -147,8 +147,8 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
         cpf_cnpj: form.cpf_cnpj || null,
         bio: form.bio || null,
         formacao_academica: form.formacao_academica || null,
-        registro_profissional: form.registro_profissional,
-        conselho: form.conselho,
+        registro_profissional: form.registro_profissional || null,
+        conselho: form.conselho || null,
         uf_registro: form.uf_registro || null,
         registro_validade: form.registro_validade || null,
         certificacoes: form.certificacoes ? form.certificacoes.split(",").map((s) => s.trim()) : null,
@@ -256,7 +256,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Conselho *</Label>
+                <Label>Conselho</Label>
                 <Select value={form.conselho} onValueChange={(v) => updateField("conselho", v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
@@ -265,7 +265,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Nº Registro *</Label>
+                <Label>Nº Registro</Label>
                 <Input value={form.registro_profissional} onChange={(e) => updateField("registro_profissional", e.target.value)} />
               </div>
               <div className="space-y-1.5">
