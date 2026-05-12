@@ -36,8 +36,8 @@ const DOC_CATEGORIES: DocCategory[] = [
   {
     id: "registro_conselho",
     label: "Carteira / Certidão do Conselho Profissional",
-    descricao: "Documento emitido pelo conselho com nº de registro e validade",
-    obrigatorio: true,
+    descricao: "Documento emitido pelo conselho com nº de registro e validade (opcional)",
+    obrigatorio: false,
     accept: ["image/*", "application/pdf"],
   },
   {
