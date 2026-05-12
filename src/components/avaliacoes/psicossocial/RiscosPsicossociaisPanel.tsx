@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers, BarChart3, Inbox } from "lucide-react";
+import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers, BarChart3, Inbox, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { SEVERIDADE_ESCALA, getSeveridadeInfo } from "@/lib/psicossocial-severidade";
 
 interface RiscoPsicossocial {
   id: string;
@@ -19,6 +21,7 @@ interface RiscoPsicossocial {
   descricao: string | null;
   padrao: boolean;
   ativo: boolean;
+  severidade: number | null;
   created_at: string;
 }
 
