@@ -46,29 +46,6 @@ export function SSTOrdemServicoTab() {
   const [respTecnico, setRespTecnico] = useState("");
   const [respRegistro, setRespRegistro] = useState("");
 
-  // Persistência local por tenant/empresa — sobrevive a troca de abas
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const v = JSON.parse(raw);
-        setRespTecnico(v.nome || "");
-        setRespRegistro(v.registro || "");
-      } else {
-        setRespTecnico("");
-        setRespRegistro("");
-      }
-    } catch {/* noop */}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!tenantId) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify({ nome: respTecnico, registro: respRegistro }));
-    } catch {/* noop */}
-  }, [respTecnico, respRegistro, storageKey, tenantId]);
-
   // Aceita o PGR mais recente com análise concluída, mesmo se "vencido" (exibe aviso).
   const pgrVigente = useMemo(() => {
     const pgrs = documentos
@@ -77,6 +54,35 @@ export function SSTOrdemServicoTab() {
     return pgrs.find(p => p.status === "vigente") || pgrs[0] || null;
   }, [documentos]);
   const pgrVencido = !!pgrVigente && pgrVigente.status === "vencido";
+
+  // Extrai responsável técnico do PGR (campo direto ou da análise IA)
+  const pgrResponsavel = useMemo(() => {
+    if (!pgrVigente) return { nome: "", registro: "" };
+    const ai: any = pgrVigente.analise_ia || {};
+    const respArr = Array.isArray(ai.responsaveis_tecnicos) ? ai.responsaveis_tecnicos : [];
+    const primeiro = respArr[0] || {};
+    return {
+      nome: primeiro.nome || pgrVigente.profissional_responsavel || "",
+      registro: primeiro.registro || ai.registro_profissional || "",
+    };
+  }, [pgrVigente]);
+
+  // Persistência local por tenant/empresa — sobrevive a troca de abas.
+  // Se nada salvo, pré-preenche com dados do PGR importado.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const v = JSON.parse(raw);
+        setRespTecnico(v.nome || pgrResponsavel.nome || "");
+        setRespRegistro(v.registro || pgrResponsavel.registro || "");
+      } else {
+        setRespTecnico(pgrResponsavel.nome || "");
+        setRespRegistro(pgrResponsavel.registro || "");
+      }
+    } catch {/* noop */}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey, pgrResponsavel.nome, pgrResponsavel.registro]);
 
   const { data: colaboradores = [] } = useQuery({
     queryKey: ["admissoes-os", tenantId, empresaAtivaId],
