@@ -11900,7 +11900,7 @@ export type Database = {
           certificacoes: string[] | null
           cidade: string | null
           codigo_afiliado: string | null
-          conselho: string
+          conselho: string | null
           cpf_cnpj: string | null
           created_at: string
           email: string
@@ -11918,7 +11918,7 @@ export type Database = {
           nome_completo: string
           nota_media: number | null
           plano: Database["public"]["Enums"]["marketplace_plano_tipo"] | null
-          registro_profissional: string
+          registro_profissional: string | null
           registro_validade: string | null
           selo_verificado: boolean | null
           status:
@@ -11941,7 +11941,7 @@ export type Database = {
           certificacoes?: string[] | null
           cidade?: string | null
           codigo_afiliado?: string | null
-          conselho: string
+          conselho?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           email: string
@@ -11959,7 +11959,7 @@ export type Database = {
           nome_completo: string
           nota_media?: number | null
           plano?: Database["public"]["Enums"]["marketplace_plano_tipo"] | null
-          registro_profissional: string
+          registro_profissional?: string | null
           registro_validade?: string | null
           selo_verificado?: boolean | null
           status?:
@@ -11982,7 +11982,7 @@ export type Database = {
           certificacoes?: string[] | null
           cidade?: string | null
           codigo_afiliado?: string | null
-          conselho?: string
+          conselho?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           email?: string
@@ -12000,7 +12000,7 @@ export type Database = {
           nome_completo?: string
           nota_media?: number | null
           plano?: Database["public"]["Enums"]["marketplace_plano_tipo"] | null
-          registro_profissional?: string
+          registro_profissional?: string | null
           registro_validade?: string | null
           selo_verificado?: boolean | null
           status?:

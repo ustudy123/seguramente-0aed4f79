@@ -1,0 +1,1 @@
+ALTER TABLE public.marketplace_profissionais ALTER COLUMN conselho DROP NOT NULL, ALTER COLUMN registro_profissional DROP NOT NULL;
