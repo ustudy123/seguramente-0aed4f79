@@ -46,29 +46,6 @@ export function SSTOrdemServicoTab() {
   const [respTecnico, setRespTecnico] = useState("");
   const [respRegistro, setRespRegistro] = useState("");
 
-  // Persistência local por tenant/empresa — sobrevive a troca de abas
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const v = JSON.parse(raw);
-        setRespTecnico(v.nome || "");
-        setRespRegistro(v.registro || "");
-      } else {
-        setRespTecnico("");
-        setRespRegistro("");
-      }
-    } catch {/* noop */}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!tenantId) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify({ nome: respTecnico, registro: respRegistro }));
-    } catch {/* noop */}
-  }, [respTecnico, respRegistro, storageKey, tenantId]);
-
   // Aceita o PGR mais recente com análise concluída, mesmo se "vencido" (exibe aviso).
   const pgrVigente = useMemo(() => {
     const pgrs = documentos
@@ -77,6 +54,43 @@ export function SSTOrdemServicoTab() {
     return pgrs.find(p => p.status === "vigente") || pgrs[0] || null;
   }, [documentos]);
   const pgrVencido = !!pgrVigente && pgrVigente.status === "vencido";
+
+  // Extrai responsável técnico do PGR (campo direto ou da análise IA)
+  const pgrResponsavel = useMemo(() => {
+    if (!pgrVigente) return { nome: "", registro: "" };
+    const ai: any = pgrVigente.analise_ia || {};
+    const respArr = Array.isArray(ai.responsaveis_tecnicos) ? ai.responsaveis_tecnicos : [];
+    const primeiro = respArr[0] || {};
+    return {
+      nome: primeiro.nome || pgrVigente.profissional_responsavel || "",
+      registro: primeiro.registro || ai.registro_profissional || "",
+    };
+  }, [pgrVigente]);
+
+  // Persistência local por tenant/empresa — sobrevive a troca de abas.
+  // Se nada salvo, pré-preenche com dados do PGR importado.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const v = JSON.parse(raw);
+        setRespTecnico(v.nome || pgrResponsavel.nome || "");
+        setRespRegistro(v.registro || pgrResponsavel.registro || "");
+      } else {
+        setRespTecnico(pgrResponsavel.nome || "");
+        setRespRegistro(pgrResponsavel.registro || "");
+      }
+    } catch {/* noop */}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey, pgrResponsavel.nome, pgrResponsavel.registro]);
+
+  // Persiste alterações manuais no localStorage
+  useEffect(() => {
+    if (!tenantId) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ nome: respTecnico, registro: respRegistro }));
+    } catch {/* noop */}
+  }, [respTecnico, respRegistro, storageKey, tenantId]);
 
   const { data: colaboradores = [] } = useQuery({
     queryKey: ["admissoes-os", tenantId, empresaAtivaId],
@@ -196,16 +210,27 @@ export function SSTOrdemServicoTab() {
   return (
     <div className="space-y-4">
       {/* Aviso PGR */}
-      {!pgrVigente && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="py-3 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
-            <p className="text-sm">
-              <b>PGR não disponível.</b> Para gerar Ordens de Serviço, importe o PGR vigente da empresa na aba <b>Importação IA</b> e aguarde a análise concluir.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {!pgrVigente && (() => {
+        const pgrsBrutos = documentos.filter(d => d.tipo === "PGR");
+        const pendentes = pgrsBrutos.filter(d => d.analise_ia_status !== "concluida");
+        return (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-3 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
+              <p className="text-sm">
+                <b>PGR não disponível para esta empresa.</b>{" "}
+                {pgrsBrutos.length === 0 ? (
+                  <>Nenhum PGR foi importado para a empresa selecionada. Importe na aba <b>Importação IA</b>.</>
+                ) : pendentes.length > 0 ? (
+                  <>Há {pendentes.length} PGR(s) importado(s), mas a análise da IA ainda não foi concluída (status: {pendentes.map(p => p.analise_ia_status || "pendente").join(", ")}). Aguarde a conclusão ou reprocesse na aba <b>Importação IA</b>.</>
+                ) : (
+                  <>Importe o PGR vigente na aba <b>Importação IA</b>.</>
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
       {pgrVencido && (
         <Card className="border-yellow-500/50 bg-yellow-500/5">
           <CardContent className="py-3 flex items-start gap-2">
