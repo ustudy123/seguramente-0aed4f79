@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Briefcase, ClipboardList, Shield, Settings, ChevronLeft, BarChart3 } from "lucide-react";
+import { BookOpen, Briefcase, Settings, ChevronLeft, BarChart3, FileSignature } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCargos } from "@/hooks/useCadastros";
 import { FuncaoList } from "@/components/aprendizado/FuncaoList";
 import { FuncaoDetail } from "@/components/aprendizado/FuncaoDetail";
 import { AprendizadoStats } from "@/components/aprendizado/AprendizadoStats";
 import { AprendizadoConfig } from "@/components/aprendizado/AprendizadoConfig";
+import { AssinaturasManualTab } from "@/components/aprendizado/AssinaturasManualTab";
 import { Button } from "@/components/ui/button";
 
 export default function AprendizadoPapeis() {
@@ -39,6 +40,9 @@ export default function AprendizadoPapeis() {
           <TabsTrigger value="funcoes" className="gap-1">
             <Briefcase className="w-4 h-4" /> Funções
           </TabsTrigger>
+          <TabsTrigger value="assinaturas" className="gap-1">
+            <FileSignature className="w-4 h-4" /> Assinaturas
+          </TabsTrigger>
           <TabsTrigger value="indicadores" className="gap-1">
             <BarChart3 className="w-4 h-4" /> Indicadores
           </TabsTrigger>
@@ -62,6 +66,10 @@ export default function AprendizadoPapeis() {
               onSelect={(id) => setSelectedCargoId(id)}
             />
           )}
+        </TabsContent>
+
+        <TabsContent value="assinaturas" className="mt-4">
+          <AssinaturasManualTab />
         </TabsContent>
 
         <TabsContent value="indicadores" className="mt-4">

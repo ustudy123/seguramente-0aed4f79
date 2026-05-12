@@ -569,6 +569,8 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         loading={manualLoading}
         titulo={manualTitulo}
         onPdfGenerated={handlePdfArchive}
+        cargoId={currentManualRef}
+        cargoNome={currentManualRef ? (cargos.find((c) => c.id === currentManualRef)?.nome || null) : null}
       />
     </div>
   );
