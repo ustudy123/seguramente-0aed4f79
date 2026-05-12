@@ -382,11 +382,11 @@ export function RiscosPsicossociaisPanel() {
             <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando campanhas…
             </div>
-          ) : !campanhaSel ? (
+          ) : !campanhaSel && !isConsolidado ? (
             <Card>
               <CardContent className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
                 <Inbox className="h-8 w-8 opacity-40" />
-                Selecione uma campanha acima para visualizar o cruzamento.
+                Selecione uma campanha acima ou escolha "Todas as campanhas (consolidado)" para visualizar o cruzamento.
               </CardContent>
             </Card>
           ) : (
@@ -394,25 +394,50 @@ export function RiscosPsicossociaisPanel() {
               <Card className="bg-gradient-to-br from-primary/5 to-purple-500/5 border-primary/20">
                 <CardContent className="p-4 flex flex-wrap items-center gap-4">
                   <div className="flex-1 min-w-[200px]">
-                    <p className="text-xs text-muted-foreground">Campanha</p>
-                    <p className="font-semibold text-sm">{campanhaSel.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isConsolidado ? "Visão" : "Campanha"}
+                    </p>
+                    <p className="font-semibold text-sm">
+                      {isConsolidado
+                        ? `Consolidado · ${consolidadoMeta?.totalCampanhas ?? 0} ${
+                            (consolidadoMeta?.totalCampanhas ?? 0) === 1 ? "campanha" : "campanhas"
+                          }`
+                        : campanhaSel!.nome}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Respostas</p>
-                    <p className="font-semibold text-sm">{campanhaSel.total_respostas ?? 0}</p>
+                    <p className="font-semibold text-sm">
+                      {isConsolidado
+                        ? consolidadoMeta?.totalRespostas ?? 0
+                        : campanhaSel!.total_respostas ?? 0}
+                    </p>
                   </div>
-                  {campanhaSel.ips_score != null && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">IPS</p>
-                      <p className={`font-bold text-lg ${scoreColor(campanhaSel.ips_score)}`}>
-                        {Math.round(campanhaSel.ips_score)}
-                      </p>
-                    </div>
-                  )}
-                  {campanhaSel.ips_classificacao && (
-                    <Badge variant="outline" className="capitalize">
-                      {campanhaSel.ips_classificacao}
-                    </Badge>
+                  {isConsolidado ? (
+                    consolidadoMeta?.ipsMedio != null && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">IPS médio</p>
+                        <p className={`font-bold text-lg ${scoreColor(consolidadoMeta.ipsMedio)}`}>
+                          {Math.round(consolidadoMeta.ipsMedio)}
+                        </p>
+                      </div>
+                    )
+                  ) : (
+                    <>
+                      {campanhaSel!.ips_score != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">IPS</p>
+                          <p className={`font-bold text-lg ${scoreColor(campanhaSel!.ips_score)}`}>
+                            {Math.round(campanhaSel!.ips_score)}
+                          </p>
+                        </div>
+                      )}
+                      {campanhaSel!.ips_classificacao && (
+                        <Badge variant="outline" className="capitalize">
+                          {campanhaSel!.ips_classificacao}
+                        </Badge>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
