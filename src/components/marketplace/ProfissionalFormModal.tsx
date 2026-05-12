@@ -141,6 +141,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
 
       const { data, error } = await supabase.from("marketplace_profissionais").insert({
         user_id: user?.id || null,
+        tenant_id: tenantId,
         nome_completo: form.nome_completo,
         email: form.email,
         telefone: form.telefone || null,
