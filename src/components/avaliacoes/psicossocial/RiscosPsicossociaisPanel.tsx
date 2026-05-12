@@ -444,6 +444,89 @@ export function RiscosPsicossociaisPanel() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!riscoDetalhe} onOpenChange={(o) => !o && setRiscoDetalhe(null)}>
+        <DialogContent className="max-w-2xl">
+          {riscoDetalhe && (() => {
+            const sev = getSeveridadeInfo(riscoDetalhe.severidade);
+            const maps = mapsPorRisco[riscoDetalhe.nome] || [];
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-amber-600" />
+                    {riscoDetalhe.nome}
+                  </DialogTitle>
+                  {riscoDetalhe.descricao && (
+                    <DialogDescription>{riscoDetalhe.descricao}</DialogDescription>
+                  )}
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Severidade atribuída</p>
+                    {sev ? (
+                      <div className={`rounded-lg border p-4 ${sev.badgeClass}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold">{sev.label}</span>
+                          <Badge variant="outline" className={sev.badgeClass}>
+                            Nível {sev.valor} de 5
+                          </Badge>
+                        </div>
+                        <p className="text-xs">{sev.exemplo}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Severidade não definida.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Escala de severidade (referência)</p>
+                    <div className="space-y-1.5">
+                      {SEVERIDADE_ESCALA.map((s) => (
+                        <div
+                          key={s.valor}
+                          className={`flex items-start gap-3 p-2 rounded-md border text-xs ${
+                            sev?.valor === s.valor ? s.badgeClass + " font-medium" : "bg-muted/30"
+                          }`}
+                        >
+                          <span className={`shrink-0 w-6 h-6 rounded-full ${s.bgClass} text-white flex items-center justify-center text-[11px] font-bold`}>
+                            {s.valor}
+                          </span>
+                          <div className="flex-1">
+                            <p className="font-semibold">{s.label}</p>
+                            <p className="text-muted-foreground">{s.exemplo}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {maps.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                        Dimensões mapeadas em instrumentos ({maps.length})
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {maps.map((m) => (
+                          <Badge key={m.id} variant="outline" className={`text-[10px] ${instrColor(m.instrumento)}`}>
+                            {instrLabel(m.instrumento)} · {m.dimensao}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-muted-foreground border-t pt-3">
+                    A severidade compõe a matriz de riscos junto com a probabilidade (calculada a partir do
+                    cruzamento das respostas dos instrumentos com este risco).
+                  </p>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
