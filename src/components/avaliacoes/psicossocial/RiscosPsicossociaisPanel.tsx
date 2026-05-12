@@ -130,15 +130,44 @@ export function RiscosPsicossociaisPanel() {
     [campanhas],
   );
 
+  const isConsolidado = campanhaId === "__all__";
+
   const campanhaSel = useMemo(
-    () => campanhasComResultado.find((c) => c.id === campanhaId),
-    [campanhasComResultado, campanhaId],
+    () => (isConsolidado ? null : campanhasComResultado.find((c) => c.id === campanhaId)),
+    [campanhasComResultado, campanhaId, isConsolidado],
   );
+
+  // Consolidado: média das respostas de TODAS as campanhas com resultado, agrupado por subject
+  const radarConsolidado = useMemo(() => {
+    if (!isConsolidado) return [] as { subject: string; value: number }[];
+    const acc: Record<string, { sum: number; n: number }> = {};
+    campanhasComResultado.forEach((c) => {
+      const radar = (c.radar_data || []) as { subject: string; value: number }[];
+      radar.forEach((rd) => {
+        if (!acc[rd.subject]) acc[rd.subject] = { sum: 0, n: 0 };
+        acc[rd.subject].sum += rd.value;
+        acc[rd.subject].n += 1;
+      });
+    });
+    return Object.entries(acc).map(([subject, { sum, n }]) => ({ subject, value: sum / n }));
+  }, [isConsolidado, campanhasComResultado]);
+
+  const consolidadoMeta = useMemo(() => {
+    if (!isConsolidado) return null;
+    const totalRespostas = campanhasComResultado.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
+    const ipsList = campanhasComResultado.map((c) => c.ips_score).filter((v): v is number => v != null);
+    const ipsMedio = ipsList.length > 0 ? ipsList.reduce((s, v) => s + v, 0) / ipsList.length : null;
+    return { totalCampanhas: campanhasComResultado.length, totalRespostas, ipsMedio };
+  }, [isConsolidado, campanhasComResultado]);
 
   // Para cada risco, casa as dimensões mapeadas com os subjects do radar (substring/normalize)
   const resultadosPorRisco = useMemo(() => {
-    if (!campanhaSel) return {} as Record<string, { subject: string; value: number; instrumento: string }[]>;
-    const radar = (campanhaSel.radar_data || []) as { subject: string; value: number }[];
+    const radar = isConsolidado
+      ? radarConsolidado
+      : campanhaSel
+      ? ((campanhaSel.radar_data || []) as { subject: string; value: number }[])
+      : null;
+    if (!radar) return {} as Record<string, { subject: string; value: number; instrumento: string }[]>;
     const out: Record<string, { subject: string; value: number; instrumento: string }[]> = {};
     riscos.forEach((r) => {
       const maps = mapsPorRisco[r.nome] || [];
@@ -157,7 +186,7 @@ export function RiscosPsicossociaisPanel() {
       if (matches.length > 0) out[r.nome] = matches;
     });
     return out;
-  }, [campanhaSel, riscos, mapsPorRisco]);
+  }, [campanhaSel, isConsolidado, radarConsolidado, riscos, mapsPorRisco]);
 
   return (
     <div className="space-y-4">
@@ -326,14 +355,23 @@ export function RiscosPsicossociaisPanel() {
                       Nenhuma campanha com resultados disponíveis.
                     </div>
                   ) : (
-                    campanhasComResultado.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.nome}
-                        {c.ips_score != null && (
-                          <span className="ml-2 text-xs text-muted-foreground">· IPS {Math.round(c.ips_score)}</span>
-                        )}
+                    <>
+                      <SelectItem value="__all__">
+                        Todas as campanhas (consolidado)
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          · {campanhasComResultado.length}{" "}
+                          {campanhasComResultado.length === 1 ? "campanha" : "campanhas"}
+                        </span>
                       </SelectItem>
-                    ))
+                      {campanhasComResultado.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome}
+                          {c.ips_score != null && (
+                            <span className="ml-2 text-xs text-muted-foreground">· IPS {Math.round(c.ips_score)}</span>
+                          )}
+                        </SelectItem>
+                      ))}
+                    </>
                   )}
                 </SelectContent>
               </Select>
@@ -344,11 +382,11 @@ export function RiscosPsicossociaisPanel() {
             <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando campanhas…
             </div>
-          ) : !campanhaSel ? (
+          ) : !campanhaSel && !isConsolidado ? (
             <Card>
               <CardContent className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
                 <Inbox className="h-8 w-8 opacity-40" />
-                Selecione uma campanha acima para visualizar o cruzamento.
+                Selecione uma campanha acima ou escolha "Todas as campanhas (consolidado)" para visualizar o cruzamento.
               </CardContent>
             </Card>
           ) : (
@@ -356,25 +394,50 @@ export function RiscosPsicossociaisPanel() {
               <Card className="bg-gradient-to-br from-primary/5 to-purple-500/5 border-primary/20">
                 <CardContent className="p-4 flex flex-wrap items-center gap-4">
                   <div className="flex-1 min-w-[200px]">
-                    <p className="text-xs text-muted-foreground">Campanha</p>
-                    <p className="font-semibold text-sm">{campanhaSel.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isConsolidado ? "Visão" : "Campanha"}
+                    </p>
+                    <p className="font-semibold text-sm">
+                      {isConsolidado
+                        ? `Consolidado · ${consolidadoMeta?.totalCampanhas ?? 0} ${
+                            (consolidadoMeta?.totalCampanhas ?? 0) === 1 ? "campanha" : "campanhas"
+                          }`
+                        : campanhaSel!.nome}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Respostas</p>
-                    <p className="font-semibold text-sm">{campanhaSel.total_respostas ?? 0}</p>
+                    <p className="font-semibold text-sm">
+                      {isConsolidado
+                        ? consolidadoMeta?.totalRespostas ?? 0
+                        : campanhaSel!.total_respostas ?? 0}
+                    </p>
                   </div>
-                  {campanhaSel.ips_score != null && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">IPS</p>
-                      <p className={`font-bold text-lg ${scoreColor(campanhaSel.ips_score)}`}>
-                        {Math.round(campanhaSel.ips_score)}
-                      </p>
-                    </div>
-                  )}
-                  {campanhaSel.ips_classificacao && (
-                    <Badge variant="outline" className="capitalize">
-                      {campanhaSel.ips_classificacao}
-                    </Badge>
+                  {isConsolidado ? (
+                    consolidadoMeta?.ipsMedio != null && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">IPS médio</p>
+                        <p className={`font-bold text-lg ${scoreColor(consolidadoMeta.ipsMedio)}`}>
+                          {Math.round(consolidadoMeta.ipsMedio)}
+                        </p>
+                      </div>
+                    )
+                  ) : (
+                    <>
+                      {campanhaSel!.ips_score != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">IPS</p>
+                          <p className={`font-bold text-lg ${scoreColor(campanhaSel!.ips_score)}`}>
+                            {Math.round(campanhaSel!.ips_score)}
+                          </p>
+                        </div>
+                      )}
+                      {campanhaSel!.ips_classificacao && (
+                        <Badge variant="outline" className="capitalize">
+                          {campanhaSel!.ips_classificacao}
+                        </Badge>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
