@@ -78,6 +78,7 @@ const TrilhaTerceiroPublica = lazy(() => import("./pages/TrilhaTerceiroPublica")
 const AssinaturaContrato = lazy(() => import("./pages/AssinaturaContrato"));
 const ExperienciaAssinatura = lazy(() => import("./pages/ExperienciaAssinatura"));
 const OrdemServicoAssinatura = lazy(() => import("./pages/OrdemServicoAssinatura"));
+const ManualFuncaoAssinatura = lazy(() => import("./pages/ManualFuncaoAssinatura"));
 const AceiteDocumento = lazy(() => import("./pages/AceiteDocumento"));
 const OnboardingCliente = lazy(() => import("./pages/OnboardingCliente"));
 const AtivarConta = lazy(() => import("./pages/AtivarConta"));
