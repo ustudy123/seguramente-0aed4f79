@@ -18568,6 +18568,7 @@ export type Database = {
           id: string
           nome: string
           padrao: boolean
+          severidade: number | null
           tenant_id: string
           updated_at: string
         }
@@ -18580,6 +18581,7 @@ export type Database = {
           id?: string
           nome: string
           padrao?: boolean
+          severidade?: number | null
           tenant_id: string
           updated_at?: string
         }
@@ -18592,6 +18594,7 @@ export type Database = {
           id?: string
           nome?: string
           padrao?: boolean
+          severidade?: number | null
           tenant_id?: string
           updated_at?: string
         }
