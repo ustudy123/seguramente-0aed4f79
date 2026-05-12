@@ -53,64 +53,46 @@ interface InventarioPGRProps {
 
 const MINIMO_ANONIMATO = 5;
 
-// Mapeamento: subject do radar → informações normativas
-const DIMENSAO_NORMATIVA: Record<string, { fator: string; norma: string }> = {
-  // SIPRO
-  "Demandas Quantitativas": { fator: "Sobrecarga quantitativa e pressão por tempo", norma: "NR-01 / NR-17 / ISO 45003" },
-  "Demandas Cognitivas": { fator: "Atenção constante e sobrecarga cognitiva", norma: "NR-17 / ISO 45003" },
-  "Demandas Emocionais": { fator: "Desgaste emocional e trabalho emocional", norma: "NR-01 / ISO 45003" },
-  "Autonomia e": { fator: "Baixo controle sobre o trabalho", norma: "NR-17 / ISO 45003" },
-  "Autonomia e Controle": { fator: "Baixo controle sobre o trabalho", norma: "NR-17 / ISO 45003" },
-  "Clareza de": { fator: "Ambiguidade de papéis e responsabilidades", norma: "NR-01" },
-  "Reconhecimento e": { fator: "Injustiça organizacional e falta de reconhecimento", norma: "NR-01 / ISO 45003" },
-  "Relacionamentos e": { fator: "Conflitos interpessoais e clima organizacional", norma: "NR-01 / ISO 45003" },
-  "Sentido do": { fator: "Falta de propósito e monotonia", norma: "NR-17 / ISO 45003" },
-  "Recuperação e": { fator: "Desequilíbrio trabalho-vida e falta de descanso", norma: "NR-01" },
-  "Sinais Precoces": { fator: "Esgotamento, irritabilidade e sinais de burnout", norma: "NR-01 / ISO 45003" },
-  // COPSOQ
-  "Demanda Quantitativa": { fator: "Sobrecarga quantitativa e pressão por tempo", norma: "NR-01 / ISO 45003" },
-  "Demanda Cognitiva": { fator: "Atenção constante e sobrecarga cognitiva", norma: "NR-17 / ISO 45003" },
-  "Demanda Emocional": { fator: "Desgaste emocional no trabalho", norma: "NR-01 / ISO 45003" },
-  "Influência e Controle": { fator: "Baixo controle sobre o trabalho", norma: "NR-17 / ISO 45003" },
-  "Suporte dos Colegas": { fator: "Isolamento e falta de suporte social", norma: "NR-01 / ISO 45003" },
-  "Suporte da Liderança": { fator: "Ausência de suporte da gestão", norma: "NR-01 / ISO 45003" },
-  "Clareza de Papéis": { fator: "Ambiguidade e conflito de papéis", norma: "NR-01" },
-  "Conflito de Papéis": { fator: "Exigências contraditórias no trabalho", norma: "NR-01" },
-  "Reconhecimento": { fator: "Injustiça organizacional e falta de reconhecimento", norma: "NR-01 / ISO 45003" },
-  "Previsibilidade": { fator: "Incerteza e falta de informação", norma: "NR-01 / ISO 45003" },
-  "Sentido do Trabalho": { fator: "Falta de propósito e significado", norma: "NR-17 / ISO 45003" },
-  "Burnout": { fator: "Esgotamento profissional", norma: "NR-01 / ISO 45003" },
-  "Equilíbrio Trabalho-Vida": { fator: "Desequilíbrio vida pessoal-profissional", norma: "NR-01" },
-  // Genérico / outros
-  "Demanda": { fator: "Sobrecarga de demandas ocupacionais", norma: "NR-01 / ISO 45003" },
-  "Controle": { fator: "Baixo controle sobre o trabalho", norma: "NR-17" },
-  "Suporte do Gestor": { fator: "Falta de suporte gerencial", norma: "NR-01 / ISO 45003" },
-  "Suporte dos Pares": { fator: "Isolamento social no trabalho", norma: "NR-01 / ISO 45003" },
-  "Relacionamentos": { fator: "Conflitos interpessoais", norma: "NR-01 / ISO 45003" },
-  "Função": { fator: "Ambiguidade e sobrecarga de função", norma: "NR-01" },
-  "Gestão de Mudanças": { fator: "Insegurança e falta de participação em mudanças", norma: "ISO 45003" },
-  "Justiça Organizacional": { fator: "Injustiça e falta de reconhecimento", norma: "NR-01 / ISO 45003" },
-  "Suporte da": { fator: "Ausência de suporte da liderança", norma: "NR-01 / ISO 45003" },
-  "Suporte Social": { fator: "Isolamento e falta de suporte entre pares", norma: "NR-01 / ISO 45003" },
-  "Qualidade das": { fator: "Qualidade das relações interpessoais", norma: "NR-01 / ISO 45003" },
-  "Segurança Psicológica": { fator: "Medo de punição e silêncio organizacional", norma: "ISO 45003" },
-  "Ritmo Biológico": { fator: "Perturbação do ritmo biológico / trabalho noturno", norma: "NR-17 / NR-01" },
-};
-
-function getNormativaForSubject(subject: string): { fator: string; norma: string } {
-  // Exact match first
-  if (DIMENSAO_NORMATIVA[subject]) return DIMENSAO_NORMATIVA[subject];
-  // Partial match — find longest key that is contained in the subject
-  const found = Object.entries(DIMENSAO_NORMATIVA).find(([key]) =>
-    subject.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(subject.toLowerCase())
-  );
-  return found?.[1] ?? { fator: subject, norma: "NR-01 / ISO 45003" };
+/**
+ * Resolve a normativa e o fator a partir do catálogo unificado.
+ * O catálogo (NR-01 + ISO 45003) substitui o antigo mapa hardcoded.
+ */
+function getNormativaForSubject(subject: string): {
+  fator: string;
+  norma: string;
+  descricao: string;
+  categoria: CategoriaRiscoPsicossocial | null;
+  categoriaLabel: string;
+  manifestacoes: string[];
+} {
+  const fator = resolverFatorPorSubject(subject);
+  if (fator) {
+    return {
+      fator: fator.nome,
+      norma: fator.baseNormativa.join(" / "),
+      descricao: fator.descricao,
+      categoria: fator.categoria,
+      categoriaLabel: CATEGORIA_LABELS[fator.categoria],
+      manifestacoes: fator.manifestacoes,
+    };
+  }
+  return {
+    fator: subject,
+    norma: "NR-01 / ISO 45003",
+    descricao: "Fator psicossocial não catalogado — avaliar enquadramento normativo manualmente.",
+    categoria: null,
+    categoriaLabel: "Não classificado",
+    manifestacoes: [],
+  };
 }
 
 interface InventarioItem {
   dimensao: string;
   fator: string;
   norma: string;
+  descricao: string;
+  categoriaLabel: string;
+  manifestacoes: string[];
   scoreReal: number;
   probabilidadeLabel: string;
   severidadeLabel: string;
