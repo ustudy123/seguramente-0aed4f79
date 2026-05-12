@@ -506,25 +506,34 @@ export function usePsicossocial() {
 
   // Calcular estatísticas de uma campanha
   const calcularEstatisticas = async (campanhaId: string): Promise<EstatisticasCampanha> => {
-    const [convites, respostas] = await Promise.all([
+    const [convites, respostas, participacoesRes] = await Promise.all([
       buscarConvites(campanhaId),
       buscarRespostas(campanhaId),
+      supabase
+        .from("psicossocial_participacoes")
+        .select("id,respondido")
+        .eq("campanha_id", campanhaId),
     ]);
 
-    // Convites individuais (campanhas com distribuição nominal)
+    const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
+
+    // Convites individuais (campanhas com distribuição nominal — modelo legado)
     const totalConvites = convites.length;
     const pendentes = convites.filter(c => c.status === 'pendente').length;
     const iniciados = convites.filter(c => c.status === 'iniciado').length;
     const concluidosConvites = convites.filter(c => c.status === 'concluido').length;
     const expirados = convites.filter(c => c.status === 'expirado').length;
 
-    // Para campanhas anônimas via link público, respostas não têm convite vinculado.
-    // Usamos a contagem de respostas como fonte de verdade para "concluídas".
-    // Se há convites, usamos a contagem de convites concluídos (para mostrar % de adesão).
-    // Se não há convites (campanha anônima por link), usamos a contagem de respostas diretamente.
+    // Participações (modelo atual: Link Geral / link individual via psicossocial_participacoes)
+    const totalParticipacoes = participacoes.length;
+    const respondidosParticipacoes = participacoes.filter(p => p.respondido).length;
+
+    // Fonte de verdade para "concluídas" = respostas reais salvas (cobre Link Geral anônimo)
     const totalRespostas = respostas.length;
-    const concluidos = totalConvites > 0 ? concluidosConvites : totalRespostas;
-    const total = totalConvites > 0 ? totalConvites : totalRespostas;
+    // "Concluídos" = max(respostas reais, marcados como respondidos nas tabelas de elegíveis)
+    const concluidos = Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes);
+    // "Total elegível" = max(elegíveis nominais, respostas) — se ninguém foi nominado, o universo é o que respondeu
+    const total = Math.max(totalConvites, totalParticipacoes, totalRespostas);
 
     const MINIMO_ANONIMATO = 5;
     // Anonimato é garantido pelo número total de respostas recebidas (não de convites)
