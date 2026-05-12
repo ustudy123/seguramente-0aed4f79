@@ -33,20 +33,18 @@ interface EmpresaListProps {
 
 export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
   const { tenantId } = useAuthContext() as any;
-  const { data: counts = [] } = useQuery({
+  const { data: counts = {} } = useQuery({
     queryKey: ['empresa_colaboradores_counts', tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('admissoes')
-        .select('empresa_id')
-        .eq('tenant_id', tenantId!)
-        .eq('status', 'concluido');
+      // Usa RPC agregada — evita o limite default de 1000 linhas do Supabase,
+      // que estava truncando contagens em tenants com muitos colaboradores.
+      const { data, error } = await (supabase as any).rpc('contar_colaboradores_por_empresa', {
+        p_tenant_id: tenantId,
+      });
       if (error) throw error;
       const map: Record<string, number> = {};
-      data.forEach(row => {
-        if (row.empresa_id) {
-          map[row.empresa_id] = (map[row.empresa_id] || 0) + 1;
-        }
+      (data ?? []).forEach((row: { empresa_id: string; total: number }) => {
+        if (row.empresa_id) map[row.empresa_id] = Number(row.total) || 0;
       });
       return map;
     },

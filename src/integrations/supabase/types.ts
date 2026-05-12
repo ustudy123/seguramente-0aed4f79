@@ -20954,6 +20954,13 @@ export type Database = {
         Args: { _admissao_id: string }
         Returns: Json
       }
+      contar_colaboradores_por_empresa: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          empresa_id: string
+          total: number
+        }[]
+      }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
       delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
       epi_atualizar_estoque_local_otimista: {
