@@ -186,7 +186,7 @@ export function RiscosPsicossociaisPanel() {
       if (matches.length > 0) out[r.nome] = matches;
     });
     return out;
-  }, [campanhaSel, riscos, mapsPorRisco]);
+  }, [campanhaSel, isConsolidado, radarConsolidado, riscos, mapsPorRisco]);
 
   return (
     <div className="space-y-4">
