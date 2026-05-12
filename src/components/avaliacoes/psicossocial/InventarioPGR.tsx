@@ -579,6 +579,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
         onClose={() => setRelatorioOpen(false)}
         campanhas={campanhas}
       />
-    </Card>
+      </Card>
+    </div>
   );
 }
