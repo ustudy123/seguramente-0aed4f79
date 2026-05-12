@@ -78,6 +78,10 @@ const checkIsActive = (path: string, pathname: string, search: string) => {
     const tab = params.get("tab");
     return pathname === "/estrategia" && (!tab || (tab !== "organograma" && tab !== "cultura"));
   }
+  if (path === "/psicossocial") {
+    const params = new URLSearchParams(search);
+    return pathname === "/psicossocial" && !params.get("tab");
+  }
   return pathname === path;
 };
 
