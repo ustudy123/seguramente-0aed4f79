@@ -49,7 +49,7 @@ interface MenuItem {
   title: string;
   icon: React.ElementType;
   path?: string;
-  children?: { title: string; path: string }[];
+  children?: { title: string; path: string; color?: string; dot?: string }[];
 }
 
 interface MenuSection {
