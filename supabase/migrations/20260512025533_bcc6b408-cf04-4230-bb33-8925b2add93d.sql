@@ -1,0 +1,1 @@
+UPDATE marketplace_profissionais SET tenant_id='299779a8-1cd2-4ffe-9462-78181426cd1a' WHERE id='285bffcd-a6ff-4395-9593-65fe5006fb88' AND tenant_id IS NULL;
