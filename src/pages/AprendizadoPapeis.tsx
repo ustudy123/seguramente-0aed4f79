@@ -68,6 +68,10 @@ export default function AprendizadoPapeis() {
           )}
         </TabsContent>
 
+        <TabsContent value="assinaturas" className="mt-4">
+          <AssinaturasManualTab />
+        </TabsContent>
+
         <TabsContent value="indicadores" className="mt-4">
           <AprendizadoStats cargos={cargos} />
         </TabsContent>
