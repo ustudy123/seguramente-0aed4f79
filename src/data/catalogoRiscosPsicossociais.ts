@@ -1,12 +1,16 @@
 /**
- * Catálogo de Riscos Psicossociais
+ * Catálogo de Riscos Psicossociais — Fatores Padrão
  * --------------------------------------------------------------------------
- * Referências: NR-01 (GRO/PGR), NR-17 (Ergonomia/Org. do Trabalho),
- * ISO 45003:2021 (Saúde Psicológica no Trabalho), CID-11 (QD85 Burnout),
- * Modelos COPSOQ III, JD-R (Job Demands-Resources), Karasek (Demanda-Controle).
+ * Espelha o catálogo padrão da empresa (tabela `psicossocial_riscos`,
+ * registros com `padrao = true`). Cada fator é um "perigo psicossocial"
+ * (NR-01 item 1.5.4.4.6) com severidade pré-classificada (1 a 5).
  *
- * Cada fator psicossocial é um "perigo" no sentido da NR-01 (item 1.5.4.4.6)
- * que, sob exposição, pode gerar dano à saúde mental e física do trabalhador.
+ * Referências: NR-01 (GRO/PGR), NR-17 (Ergonomia/Org. do Trabalho),
+ * ISO 45003:2021, Lei 14.457/2022, CID-11 (QD85 Burnout),
+ * Modelos COPSOQ III, JD-R, Karasek (Demanda-Controle).
+ *
+ * Aliases mantidos para permitir o mapeamento automático das dimensões
+ * dos instrumentos (SIPRO, COPSOQ III, HSE-MS, ProART) a esses fatores.
  * --------------------------------------------------------------------------
  */
 
@@ -24,6 +28,8 @@ export interface FatorRiscoPsicossocial {
   nome: string;
   /** Categoria do catálogo */
   categoria: CategoriaRiscoPsicossocial;
+  /** Severidade padrão do fator (1=Insignificante … 5=Catastrófico) */
+  severidadePadrao: 1 | 2 | 3 | 4 | 5;
   /** Descrição objetiva do perigo psicossocial */
   descricao: string;
   /** Manifestações típicas observáveis (sinais/sintomas) */
@@ -55,173 +61,141 @@ export const CATEGORIA_DESCRICAO: Record<CategoriaRiscoPsicossocial, string> = {
     'Indicadores precoces de adoecimento — efeitos da exposição prolongada.',
 };
 
+export const SEVERIDADE_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: 'Insignificante',
+  2: 'Menor',
+  3: 'Moderado',
+  4: 'Grave',
+  5: 'Catastrófico',
+};
+
 /**
- * Catálogo principal — base unificada usada pelo Inventário PGR.
+ * Catálogo principal — 13 fatores padrão usados pelo Inventário PGR.
  */
 export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
   // ── DEMANDAS DO TRABALHO ──────────────────────────────────────────────────
   {
-    id: 'demanda-quantitativa',
-    nome: 'Sobrecarga Quantitativa',
+    id: 'excesso-demandas',
+    nome: 'Excesso de demandas (sobrecarga)',
     categoria: 'demandas',
+    severidadePadrao: 4,
     descricao:
-      'Volume de trabalho excessivo em relação ao tempo e recursos disponíveis. Pressão por prazos e ritmo intenso.',
+      'Volume de trabalho, ritmo, complexidade ou carga emocional acima dos recursos disponíveis (tempo, equipe, ferramentas).',
     manifestacoes: [
       'Horas extras recorrentes',
-      'Sensação de "não dar conta"',
-      'Fadiga ao final do expediente',
+      'Erros por desatenção e fadiga',
+      'Esgotamento empático',
     ],
-    baseNormativa: ['NR-01', 'NR-17 (17.6.2)', 'ISO 45003 §6.1.2.2'],
+    baseNormativa: ['NR-01', 'NR-17 (17.6.2 / 17.6.3)', 'ISO 45003 §6.1.2.2'],
     aliases: [
+      'Sobrecarga Quantitativa',
       'Demandas Quantitativas',
       'Demanda Quantitativa',
       'Sobrecarga de Trabalho',
       'Ritmo de Trabalho',
       'Pressão por Tempo',
-    ],
-  },
-  {
-    id: 'demanda-cognitiva',
-    nome: 'Sobrecarga Cognitiva',
-    categoria: 'demandas',
-    descricao:
-      'Exigência elevada de atenção sustentada, memória, tomada de decisão e processamento simultâneo de informações.',
-    manifestacoes: [
-      'Erros por desatenção',
-      'Esquecimentos frequentes',
-      'Dificuldade de concentração após o expediente',
-    ],
-    baseNormativa: ['NR-17 (17.6.3)', 'ISO 45003 §6.1.2.2'],
-    aliases: [
+      'Sobrecarga Cognitiva',
       'Demandas Cognitivas',
       'Demanda Cognitiva',
       'Carga Mental',
       'Atenção Constante',
-    ],
-  },
-  {
-    id: 'demanda-emocional',
-    nome: 'Demanda Emocional',
-    categoria: 'demandas',
-    descricao:
-      'Necessidade de suprimir, modular ou expressar emoções como parte do trabalho. Lidar com sofrimento, conflitos ou clientes hostis.',
-    manifestacoes: [
-      'Esgotamento empático',
-      'Irritabilidade pós-jornada',
-      'Sintomas depressivos',
-    ],
-    baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.2'],
-    aliases: [
-      'Demandas Emocionais',
       'Demanda Emocional',
+      'Demandas Emocionais',
       'Trabalho Emocional',
       'Esgotamento Empático',
     ],
   },
   {
-    id: 'ritmo-biologico',
-    nome: 'Perturbação do Ritmo Biológico',
+    id: 'baixa-demanda',
+    nome: 'Baixa demanda de trabalho (subcarga)',
     categoria: 'demandas',
+    severidadePadrao: 2,
     descricao:
-      'Trabalho noturno, em turnos, escalas alternadas ou jornadas que desorganizam o ciclo circadiano.',
-    manifestacoes: [
-      'Distúrbios de sono',
-      'Problemas gastrointestinais',
-      'Risco cardiovascular elevado',
-    ],
-    baseNormativa: ['NR-17 (17.6.4)', 'NR-01', 'CLT art. 73'],
-    aliases: ['Ritmo Biológico', 'Trabalho Noturno', 'Turnos'],
+      'Tarefas insuficientes, monótonas ou aquém da qualificação, gerando tédio crônico (boreout) e perda de propósito.',
+    manifestacoes: ['Apatia', 'Tédio crônico (boreout)', 'Queda de engajamento'],
+    baseNormativa: ['NR-17', 'ISO 45003 §6.1.2.3'],
+    aliases: ['Subcarga', 'Boreout', 'Monotonia', 'Sentido do Trabalho', 'Propósito'],
   },
 
   // ── ORGANIZAÇÃO E CONTEÚDO DO TRABALHO ────────────────────────────────────
   {
-    id: 'autonomia-controle',
-    nome: 'Baixa Autonomia / Controle',
+    id: 'baixo-controle',
+    nome: 'Baixo controle no trabalho / Falta de autonomia',
     categoria: 'organizacao',
+    severidadePadrao: 3,
     descricao:
-      'Pouca influência sobre como, quando e em que ordem o trabalho é executado. Microgestão e rigidez de métodos.',
+      'Pouca influência sobre como, quando e em que ordem o trabalho é executado. Microgestão e rigidez de métodos (modelo Karasek).',
     manifestacoes: [
       'Sentimento de impotência',
       'Desengajamento',
-      'Adoecimento por estresse (modelo Karasek)',
+      'Adoecimento por estresse crônico',
     ],
     baseNormativa: ['NR-17 (17.6.3)', 'ISO 45003 §6.1.2.3'],
     aliases: [
+      'Baixa Autonomia / Controle',
       'Autonomia e Controle',
       'Autonomia',
       'Influência e Controle',
+      'Influência',
       'Controle',
       'Margem de Decisão',
     ],
   },
   {
-    id: 'clareza-papeis',
-    nome: 'Clareza de Papéis',
+    id: 'baixa-clareza-papel',
+    nome: 'Baixa clareza de papel/função',
     categoria: 'organizacao',
+    severidadePadrao: 3,
     descricao:
-      'Ausência de definição clara de responsabilidades, metas e limites de função. Ambiguidade sobre o que se espera.',
+      'Ausência de definição clara de responsabilidades, metas e limites. Inclui conflito de papéis (exigências contraditórias).',
     manifestacoes: [
       'Retrabalho',
       'Conflitos entre áreas',
       'Insegurança sobre o desempenho',
     ],
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.3'],
-    aliases: ['Clareza de Papéis', 'Clareza de', 'Função', 'Definição de Papéis'],
+    aliases: [
+      'Clareza de Papéis',
+      'Clareza de Função',
+      'Clareza de',
+      'Definição de Papéis',
+      'Função',
+      'Conflito de Papéis',
+      'Exigências Contraditórias',
+      'Ambiguidade de Papéis',
+    ],
   },
   {
-    id: 'conflito-papeis',
-    nome: 'Conflito de Papéis',
+    id: 'ma-gestao-mudancas',
+    nome: 'Má gestão de mudanças organizacionais',
     categoria: 'organizacao',
+    severidadePadrao: 3,
     descricao:
-      'Exigências contraditórias entre superiores, áreas ou tarefas. Demandas incompatíveis simultâneas.',
-    manifestacoes: [
-      'Estresse moral',
-      'Decisões evitadas',
-      'Perda de eficiência',
+      'Mudanças sem comunicação prévia, participação ou previsibilidade — reestruturações, troca de gestão, novas metas impostas.',
+    manifestacoes: ['Ansiedade antecipatória', 'Boatos', 'Resistência a mudanças'],
+    baseNormativa: ['ISO 45003 §6.1.2.3', 'NR-01'],
+    aliases: [
+      'Previsibilidade',
+      'Gestão de Mudanças',
+      'Mudanças Organizacionais',
+      'Insegurança no Trabalho',
+      'Insegurança',
+      'Estabilidade',
     ],
-    baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.3'],
-    aliases: ['Conflito de Papéis', 'Exigências Contraditórias'],
-  },
-  {
-    id: 'previsibilidade',
-    nome: 'Previsibilidade',
-    categoria: 'organizacao',
-    descricao:
-      'Falta de informações antecipadas sobre mudanças, metas ou decisões que afetam o trabalho.',
-    manifestacoes: [
-      'Ansiedade antecipatória',
-      'Boatos',
-      'Resistência a mudanças',
-    ],
-    baseNormativa: ['ISO 45003 §6.1.2.3'],
-    aliases: ['Previsibilidade', 'Gestão de Mudanças'],
-  },
-  {
-    id: 'sentido-trabalho',
-    nome: 'Sentido do Trabalho',
-    categoria: 'organizacao',
-    descricao:
-      'Percepção de propósito, significado e contribuição do que se faz. Monotonia e tarefas sem propósito reduzem este fator.',
-    manifestacoes: [
-      'Apatia',
-      'Cinismo organizacional',
-      'Boreout (tédio crônico)',
-    ],
-    baseNormativa: ['NR-17', 'ISO 45003 §6.1.2.3'],
-    aliases: ['Sentido do Trabalho', 'Sentido do', 'Propósito', 'Significado'],
   },
 
   // ── RELAÇÕES SOCIAIS E LIDERANÇA ──────────────────────────────────────────
   {
-    id: 'suporte-lideranca',
-    nome: 'Suporte da Liderança',
+    id: 'falta-suporte',
+    nome: 'Falta de suporte no trabalho',
     categoria: 'relacoes',
+    severidadePadrao: 3,
     descricao:
-      'Disponibilidade do gestor para orientar, ouvir, dar feedback e remover barreiras.',
+      'Ausência de apoio prático e emocional da liderança e dos pares — feedback, orientação e ajuda em momentos de pico.',
     manifestacoes: [
       'Sensação de abandono',
-      'Baixa confiança',
-      'Pedidos de demissão por gestão',
+      'Isolamento profissional',
+      'Baixa confiança no time',
     ],
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
@@ -229,126 +203,162 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Suporte da',
       'Suporte do Gestor',
       'Liderança',
+      'Suporte dos Pares',
+      'Suporte dos Colegas',
+      'Suporte Social',
+      'Apoio Social',
     ],
   },
   {
-    id: 'suporte-pares',
-    nome: 'Suporte dos Pares',
+    id: 'mas-relacoes',
+    nome: 'Más relações no ambiente de trabalho',
     categoria: 'relacoes',
+    severidadePadrao: 3,
     descricao:
-      'Apoio mútuo entre colegas — colaboração, ajuda em momentos de pico e clima de equipe.',
+      'Conflitos interpessoais frequentes, clima hostil, fofocas, competição nociva e baixa coesão de equipe.',
     manifestacoes: [
-      'Isolamento',
-      'Competição interna nociva',
-      'Ausência de coesão de time',
+      'Conflitos abertos',
+      'Panelas e exclusão',
+      'Pedidos de transferência',
     ],
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
-      'Suporte dos Colegas',
-      'Suporte dos Pares',
-      'Suporte Social',
       'Relacionamentos',
       'Relacionamentos e',
       'Qualidade das',
+      'Qualidade das Relações',
+      'Clima de Equipe',
+      'Conflitos Interpessoais',
     ],
   },
   {
-    id: 'reconhecimento',
-    nome: 'Reconhecimento e Justiça',
+    id: 'baixa-justica',
+    nome: 'Baixa justiça organizacional',
     categoria: 'relacoes',
+    severidadePadrao: 3,
     descricao:
-      'Percepção de que o esforço é justamente reconhecido (financeiro, simbólico e de carreira) e de que decisões são equitativas.',
+      'Percepção de iniquidade nas decisões — distribuição de cargas, oportunidades, promoções e tratamento desigual.',
     manifestacoes: [
-      'Desmotivação',
       'Sentimento de injustiça',
       'Aumento de queixas trabalhistas',
+      'Desmotivação',
+    ],
+    baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
+    aliases: ['Justiça Organizacional', 'Equidade', 'Imparcialidade'],
+  },
+  {
+    id: 'baixas-recompensas',
+    nome: 'Baixas recompensas e reconhecimento',
+    categoria: 'relacoes',
+    severidadePadrao: 3,
+    descricao:
+      'Esforço sustentado sem reconhecimento proporcional — financeiro, simbólico ou de carreira (modelo Esforço-Recompensa).',
+    manifestacoes: [
+      'Desmotivação',
+      'Cinismo organizacional',
+      'Pedidos de demissão',
     ],
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Reconhecimento',
       'Reconhecimento e',
-      'Justiça Organizacional',
+      'Reconhecimento e Justiça',
       'Recompensa',
+      'Esforço-Recompensa',
     ],
   },
   {
-    id: 'seguranca-psicologica',
-    nome: 'Segurança Psicológica',
+    id: 'assedio',
+    nome: 'Assédio de qualquer natureza',
     categoria: 'relacoes',
+    severidadePadrao: 4,
     descricao:
-      'Liberdade para falar, discordar, errar e propor sem medo de retaliação ou humilhação.',
+      'Exposição a comportamentos hostis, humilhantes, discriminatórios — assédio moral, sexual, racial ou organizacional.',
     manifestacoes: [
-      'Silêncio organizacional',
-      'Ocultamento de erros',
-      'Assédio moral velado',
-    ],
-    baseNormativa: ['ISO 45003 §6.1.2.4', 'NR-01'],
-    aliases: ['Segurança Psicológica'],
-  },
-  {
-    id: 'assedio-violencia',
-    nome: 'Assédio e Violência no Trabalho',
-    categoria: 'relacoes',
-    descricao:
-      'Exposição a comportamentos hostis, humilhantes, discriminatórios ou de violência (física, verbal ou simbólica).',
-    manifestacoes: [
-      'TEPT',
       'Afastamentos por transtornos mentais',
       'Denúncias na ouvidoria',
+      'Silenciamento e medo de retaliação',
     ],
     baseNormativa: ['Lei 14.457/2022', 'CLT art. 223-A', 'ISO 45003 §6.1.2.4'],
-    aliases: ['Assédio', 'Violência', 'Hostilidade'],
+    aliases: [
+      'Assédio',
+      'Assédio Moral',
+      'Assédio Sexual',
+      'Hostilidade',
+      'Discriminação',
+      'Segurança Psicológica',
+    ],
   },
 
   // ── INTERFACE TRABALHO-INDIVÍDUO ──────────────────────────────────────────
   {
-    id: 'equilibrio-trabalho-vida',
-    nome: 'Equilíbrio Trabalho-Vida',
+    id: 'trabalho-remoto-isolado',
+    nome: 'Trabalho remoto e isolado',
     categoria: 'interface',
+    severidadePadrao: 3,
     descricao:
-      'Interferência do trabalho no tempo de descanso, família e lazer. Conexão fora do expediente.',
+      'Atividade executada de forma remota, solitária ou geograficamente dispersa, com baixo contato social e supervisão à distância.',
     manifestacoes: [
-      'Conflitos familiares',
-      'Insônia',
-      'Sintomas de estresse crônico',
+      'Solidão profissional',
+      'Hiperconexão fora do expediente',
+      'Conflitos família-trabalho',
     ],
-    baseNormativa: ['NR-01', 'CLT art. 4º (tempo à disposição)'],
+    baseNormativa: ['NR-01', 'CLT art. 75-A a 75-E (teletrabalho)', 'ISO 45003 §6.1.2.5'],
     aliases: [
+      'Trabalho Remoto',
+      'Home Office',
+      'Trabalho Isolado',
+      'Isolamento',
+      'Teletrabalho',
       'Equilíbrio Trabalho-Vida',
-      'Recuperação e',
       'Recuperação e Equilíbrio',
+      'Recuperação e',
       'Conciliação',
     ],
   },
   {
-    id: 'inseguranca-trabalho',
-    nome: 'Insegurança no Trabalho',
+    id: 'dificil-comunicacao',
+    nome: 'Trabalho em condições de difícil comunicação',
     categoria: 'interface',
+    severidadePadrao: 2,
     descricao:
-      'Incerteza sobre permanência no emprego, mudanças contratuais ou continuidade da função.',
+      'Barreiras físicas, tecnológicas ou organizacionais que dificultam a comunicação — ruído, equipes dispersas, idiomas distintos, canais ineficazes.',
     manifestacoes: [
-      'Ansiedade',
-      'Apresentismo',
-      'Redução do engajamento',
+      'Mal-entendidos frequentes',
+      'Decisões mal-informadas',
+      'Frustração e retrabalho',
     ],
-    baseNormativa: ['ISO 45003 §6.1.2.5'],
-    aliases: ['Insegurança', 'Estabilidade'],
+    baseNormativa: ['NR-17 (17.5.2)', 'ISO 45003 §6.1.2.3'],
+    aliases: [
+      'Comunicação Deficiente',
+      'Barreiras de Comunicação',
+      'Comunicação Organizacional',
+    ],
   },
 
   // ── MANIFESTAÇÕES E DESFECHOS ─────────────────────────────────────────────
   {
-    id: 'burnout',
-    nome: 'Burnout (Esgotamento Profissional)',
+    id: 'eventos-violentos',
+    nome: 'Eventos violentos ou traumáticos',
     categoria: 'manifestacoes',
+    severidadePadrao: 5,
     descricao:
-      'Síndrome resultante de estresse crônico no trabalho não gerenciado. Exaustão, distanciamento e baixa eficácia.',
+      'Exposição a assaltos, agressões físicas, acidentes graves, mortes ou ameaças durante o trabalho — pode gerar TEPT.',
     manifestacoes: [
-      'Exaustão emocional',
-      'Despersonalização/cinismo',
-      'Queda de desempenho',
+      'TEPT (Transtorno de Estresse Pós-Traumático)',
+      'Afastamentos prolongados',
+      'Ansiedade e flashbacks',
     ],
-    baseNormativa: ['CID-11 QD85', 'NR-01', 'ISO 45003 §6.1.2'],
-    aliases: ['Burnout', 'Sinais Precoces', 'Esgotamento'],
+    baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4', 'CID-11 6B40'],
+    aliases: [
+      'Violência',
+      'Eventos Traumáticos',
+      'Trauma',
+      'TEPT',
+      'Burnout',
+      'Sinais Precoces',
+      'Esgotamento',
+    ],
   },
 ];
 
