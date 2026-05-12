@@ -49,7 +49,7 @@ interface MenuItem {
   title: string;
   icon: React.ElementType;
   path?: string;
-  children?: { title: string; path: string }[];
+  children?: { title: string; path: string; color?: string; dot?: string }[];
 }
 
 interface MenuSection {
@@ -124,15 +124,15 @@ const menuSections: MenuSection[] = [
         icon: Brain,
         path: "/psicossocial",
         children: [
-          { title: "Visão Geral", path: "/psicossocial" },
-          { title: "GHE", path: "/psicossocial?tab=ghe" },
-          { title: "Campanhas", path: "/psicossocial?tab=campanhas" },
-          { title: "Riscos Psicossociais", path: "/psicossocial?tab=riscos" },
-          { title: "Burnout & Boreout", path: "/psicossocial?tab=burnout-boreout" },
-          { title: "Histórico IPS", path: "/psicossocial?tab=historico" },
-          { title: "Inventário PGR", path: "/psicossocial?tab=pgr" },
-          { title: "Instrumentos", path: "/psicossocial?tab=instrumentos" },
-          { title: "Índices", path: "/psicossocial?tab=indicadores" },
+          { title: "Visão Geral", path: "/psicossocial", color: "text-sky-300", dot: "bg-sky-400" },
+          { title: "GHE", path: "/psicossocial?tab=ghe", color: "text-cyan-300", dot: "bg-cyan-400" },
+          { title: "Campanhas", path: "/psicossocial?tab=campanhas", color: "text-violet-300", dot: "bg-violet-400" },
+          { title: "Riscos Psicossociais", path: "/psicossocial?tab=riscos", color: "text-rose-300", dot: "bg-rose-400" },
+          { title: "Burnout & Boreout", path: "/psicossocial?tab=burnout-boreout", color: "text-orange-300", dot: "bg-orange-400" },
+          { title: "Histórico IPS", path: "/psicossocial?tab=historico", color: "text-amber-300", dot: "bg-amber-400" },
+          { title: "Inventário PGR", path: "/psicossocial?tab=pgr", color: "text-emerald-300", dot: "bg-emerald-400" },
+          { title: "Instrumentos", path: "/psicossocial?tab=instrumentos", color: "text-teal-300", dot: "bg-teal-400" },
+          { title: "Índices", path: "/psicossocial?tab=indicadores", color: "text-fuchsia-300", dot: "bg-fuchsia-400" },
         ],
       },
       { title: "EPIs", icon: Shield, path: "/epis" },
@@ -239,13 +239,19 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
                     key={child.path}
                     to={child.path}
                     className={cn(
-                      "block px-3 py-2 rounded-lg text-[13px] transition-all duration-200",
+                      "flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all duration-200",
                       isActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
-                        : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                        : cn("hover:bg-white/[0.06]", child.color ?? "text-sidebar-foreground/55")
                     )}
                   >
-                    {child.title}
+                    <span
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all",
+                        isActive ? "bg-sidebar-primary-foreground" : (child.dot ?? "bg-sidebar-foreground/40")
+                      )}
+                    />
+                    <span>{child.title}</span>
                   </NavLink>
                 );
               })}
