@@ -81,18 +81,17 @@ export function SSTOrdemServicoTab() {
   const { data: colaboradores = [] } = useQuery({
     queryKey: ["admissoes-os", tenantId, empresaAtivaId],
     queryFn: async () => {
-      if (!tenantId) return [];
-      let q = supabase
+      if (!tenantId || !empresaAtivaId) return [];
+      const { data, error } = await supabase
         .from("admissoes")
         .select("id, nome_completo, cpf, cargo, departamento, status, empresa_id")
         .eq("tenant_id", tenantId)
+        .eq("empresa_id", empresaAtivaId)
         .order("nome_completo");
-      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
-      const { data, error } = await q;
       if (error) throw error;
       return ((data || []) as ColaboradorRow[]).filter(c => c.status !== "desligado");
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId && !!empresaAtivaId,
   });
 
   const filtrados = colaboradores.filter(c => {
