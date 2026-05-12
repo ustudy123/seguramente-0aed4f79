@@ -78,6 +78,10 @@ const checkIsActive = (path: string, pathname: string, search: string) => {
     const tab = params.get("tab");
     return pathname === "/estrategia" && (!tab || (tab !== "organograma" && tab !== "cultura"));
   }
+  if (path === "/psicossocial") {
+    const params = new URLSearchParams(search);
+    return pathname === "/psicossocial" && !params.get("tab");
+  }
   return pathname === path;
 };
 
@@ -115,7 +119,22 @@ const menuSections: MenuSection[] = [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
       { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
-      { title: "Psicossocial NR-01", icon: Brain, path: "/psicossocial" },
+      {
+        title: "Psicossocial NR-01",
+        icon: Brain,
+        path: "/psicossocial",
+        children: [
+          { title: "Visão Geral", path: "/psicossocial" },
+          { title: "GHE", path: "/psicossocial?tab=ghe" },
+          { title: "Campanhas", path: "/psicossocial?tab=campanhas" },
+          { title: "Riscos Psicossociais", path: "/psicossocial?tab=riscos" },
+          { title: "Burnout & Boreout", path: "/psicossocial?tab=burnout-boreout" },
+          { title: "Histórico IPS", path: "/psicossocial?tab=historico" },
+          { title: "Inventário PGR", path: "/psicossocial?tab=pgr" },
+          { title: "Instrumentos", path: "/psicossocial?tab=instrumentos" },
+          { title: "Índices", path: "/psicossocial?tab=indicadores" },
+        ],
+      },
       { title: "EPIs", icon: Shield, path: "/epis" },
     ],
   },
@@ -174,8 +193,11 @@ const menuSections: MenuSection[] = [
 ];
 
 const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: boolean }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const hasActiveChild = item.children?.some((c) =>
+    checkIsActive(c.path, location.pathname, location.search)
+  ) ?? false;
+  const [isOpen, setIsOpen] = useState(hasActiveChild);
 
   return (
     <div>
