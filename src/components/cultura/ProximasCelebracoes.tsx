@@ -121,7 +121,7 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
 
       return items.sort((a, b) => a.diasRestantes - b.diasRestantes);
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId && !!empresaAtivaId,
   });
 
   // Merge ações pendentes as items
