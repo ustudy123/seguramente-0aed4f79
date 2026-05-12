@@ -31,7 +31,7 @@ interface ProfissionalFormModalProps {
 }
 
 export function ProfissionalFormModal({ open, onClose, onSuccess }: ProfissionalFormModalProps) {
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
@@ -141,6 +141,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
 
       const { data, error } = await supabase.from("marketplace_profissionais").insert({
         user_id: user?.id || null,
+        tenant_id: tenantId,
         nome_completo: form.nome_completo,
         email: form.email,
         telefone: form.telefone || null,
