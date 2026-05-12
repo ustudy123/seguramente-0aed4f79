@@ -141,14 +141,13 @@ export function useMarketplace() {
       if (error) throw error;
       return data as MarketplaceServico[];
     },
-    enabled: !!tenantId,
+    enabled: true,
   });
 
   const { data: profissionais = [], isLoading: isLoadingProfissionais } = useQuery({
-    queryKey: ["marketplace-profissionais", tenantId, filters],
+    queryKey: ["marketplace-profissionais", filters],
     queryFn: async () => {
-      if (!tenantId) return [];
-
+      // Vitrine global: profissionais aparecem para todas as empresas, sem filtro de tenant
       // If user location is available, use proximity search
       if (filters.userLat && filters.userLng) {
         const { data, error } = await supabase.rpc("buscar_profissionais_proximos", {
@@ -158,8 +157,6 @@ export function useMarketplace() {
         });
         if (error) throw error;
         let results = (data || []) as unknown as (MarketplaceProfissional & { distancia_km: number })[];
-
-        results = results.filter((p) => p.tenant_id === tenantId);
 
         if (filters.estado) {
           results = results.filter((p) => p.estado === filters.estado);
@@ -175,12 +172,11 @@ export function useMarketplace() {
         return results;
       }
 
-      // Fallback: normal query
+      // Fallback: normal query (sem filtro de tenant — vitrine global)
       let query = supabase
         .from("marketplace_profissionais")
         .select("*")
-        .eq("status", "ativo")
-        .eq("tenant_id", tenantId);
+        .eq("status", "ativo");
 
       if (filters.estado) {
         query = query.eq("estado", filters.estado);
@@ -195,7 +191,7 @@ export function useMarketplace() {
       if (error) throw error;
       return data as MarketplaceProfissional[];
     },
-    enabled: !!tenantId,
+    enabled: true,
   });
 
   const { data: contratacoes = [], isLoading: isLoadingContratacoes } = useQuery({
