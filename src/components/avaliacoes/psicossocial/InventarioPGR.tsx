@@ -327,15 +327,18 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
 
   if (campanhasValidas.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-8 text-center gap-2">
-          <ShieldAlert className="h-8 w-8 text-muted-foreground opacity-40" />
-          <p className="text-sm font-medium">Inventário não disponível</p>
-          <p className="text-xs text-muted-foreground">
-            Necessário ao menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas e dados do radar calculados.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <ExplicacaoPGRGRO />
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-8 text-center gap-2">
+            <ShieldAlert className="h-8 w-8 text-muted-foreground opacity-40" />
+            <p className="text-sm font-medium">Inventário não disponível</p>
+            <p className="text-xs text-muted-foreground">
+              Necessário ao menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas e dados do radar calculados.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
