@@ -40,6 +40,12 @@ import {
   GRO_PROBABILIDADE_LABELS,
   GRO_SEVERIDADE_LABELS,
 } from "@/types/gro";
+import {
+  resolverFatorPorSubject,
+  CATEGORIA_LABELS,
+  type CategoriaRiscoPsicossocial,
+} from "@/data/catalogoRiscosPsicossociais";
+import { ExplicacaoPGRGRO } from "./ExplicacaoPGRGRO";
 
 interface InventarioPGRProps {
   campanhas: CampanhaPsicossocial[];
