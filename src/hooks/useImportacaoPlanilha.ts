@@ -791,25 +791,43 @@ export function useImportacaoPlanilha() {
 
       if (cnpjsUnicos.length > 0) {
         const { data: empresas } = await fromTable("empresa_cadastro")
-          .select("id, cnpj, cpf, tipo_pessoa, razao_social")
-          .eq("tenant_id", tenantId);
+          .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
+          .eq("tenant_id", tenantId)
+          .eq("ativo", true);
 
+        const docDuplicados = new Set<string>();
         (empresas || []).forEach((emp: any) => {
           const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
           if (!doc) return;
           const docLimpo = String(doc).replace(/\D/g, "");
+          if (mapaEmpresas[docLimpo] && mapaEmpresas[docLimpo] !== emp.id) {
+            docDuplicados.add(docLimpo);
+          }
           mapaEmpresas[docLimpo] = emp.id;
           infoEmpresas[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
         });
 
+        // Bloqueia importação quando há mais de uma empresa ATIVA com o mesmo CNPJ/CPF no tenant
+        for (const doc of docDuplicados) {
+          delete mapaEmpresas[doc];
+          const tipo = doc.length === 11 ? "CPF" : "CNPJ";
+          dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
+            resultado.erros.push({
+              linha: d.linha,
+              mensagem: `${tipo} ${formatarDocumento(doc)} está cadastrado em mais de uma empresa ATIVA neste tenant. Desative a duplicata antes de importar.`,
+            });
+          });
+        }
+
         // Validar que todos os documentos existem
         for (const doc of cnpjsUnicos) {
           if (!mapaEmpresas[doc]) {
+            if (docDuplicados.has(doc)) continue; // já reportado acima
             const tipo = doc.length === 11 ? "CPF" : "CNPJ";
             dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
               resultado.erros.push({
                 linha: d.linha,
-                mensagem: `${tipo} ${formatarDocumento(doc)} não encontrado no cadastro de empresas`,
+                mensagem: `${tipo} ${formatarDocumento(doc)} não encontrado entre as empresas ATIVAS do cadastro`,
               });
             });
           }
