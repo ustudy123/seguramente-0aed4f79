@@ -43,15 +43,14 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
   const { data: celebracoesReais = [] } = useQuery({
     queryKey: ["proximas-celebracoes", tenantId, empresaAtivaId],
     queryFn: async (): Promise<CelebracaoItem[]> => {
-      if (!tenantId) return [];
+      if (!tenantId || !empresaAtivaId) return [];
 
-      let query = supabase
+      const { data, error } = await supabase
         .from("admissoes")
         .select("nome_completo, data_nascimento, data_admissao, cargo, empresa_id")
         .eq("tenant_id", tenantId)
+        .eq("empresa_id", empresaAtivaId)
         .eq("status", "concluido");
-      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
-      const { data, error } = await query;
 
       if (error) throw error;
       if (!data || data.length === 0) return [];
