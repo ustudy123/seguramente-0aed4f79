@@ -367,17 +367,12 @@ export function PsicossocialDashboard() {
         {/* Alertas Psicossociais */}
         <AlertasPsicossociaisPanel />
 
-        {/* RN-016: Índice de Confiabilidade — cruza psicossocial com dados reais */}
+        {/* RN-016: Índice de Confiabilidade — calculado sobre a campanha mais recente com IPS */}
         {campanhasComIPS.length > 0 && ipsConsolidado != null && (
-          <div className="grid gap-4 md:grid-cols-2">
-            {campanhasComIPS.slice(0, 2).map((c) => (
-              <IndiceConfiabilidadeCard
-                key={c.id}
-                campanhaId={c.id}
-                ipsScore={c.ips_score || 50}
-              />
-            ))}
-          </div>
+          <IndiceConfiabilidadeCard
+            campanhaId={campanhasComIPS[0].id}
+            ipsScore={campanhasComIPS[0].ips_score || 50}
+          />
         )}
 
             {/* Índices Derivados */}
