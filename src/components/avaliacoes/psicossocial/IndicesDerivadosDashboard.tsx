@@ -427,9 +427,14 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
                     <p className="text-xs text-muted-foreground mt-1">Sem dados</p>
                   )}
 
-                  <p className="text-[11px] text-muted-foreground mt-2 leading-tight">
-                    {item.descricao}
-                  </p>
+                  <div className="mt-2 leading-tight">
+                    <p className={cn("text-xs font-semibold", sem?.text || "text-foreground")}>
+                      {item.nome}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {item.descricao}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
