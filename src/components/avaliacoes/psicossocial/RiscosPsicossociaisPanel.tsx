@@ -130,15 +130,44 @@ export function RiscosPsicossociaisPanel() {
     [campanhas],
   );
 
+  const isConsolidado = campanhaId === "__all__";
+
   const campanhaSel = useMemo(
-    () => campanhasComResultado.find((c) => c.id === campanhaId),
-    [campanhasComResultado, campanhaId],
+    () => (isConsolidado ? null : campanhasComResultado.find((c) => c.id === campanhaId)),
+    [campanhasComResultado, campanhaId, isConsolidado],
   );
+
+  // Consolidado: média das respostas de TODAS as campanhas com resultado, agrupado por subject
+  const radarConsolidado = useMemo(() => {
+    if (!isConsolidado) return [] as { subject: string; value: number }[];
+    const acc: Record<string, { sum: number; n: number }> = {};
+    campanhasComResultado.forEach((c) => {
+      const radar = (c.radar_data || []) as { subject: string; value: number }[];
+      radar.forEach((rd) => {
+        if (!acc[rd.subject]) acc[rd.subject] = { sum: 0, n: 0 };
+        acc[rd.subject].sum += rd.value;
+        acc[rd.subject].n += 1;
+      });
+    });
+    return Object.entries(acc).map(([subject, { sum, n }]) => ({ subject, value: sum / n }));
+  }, [isConsolidado, campanhasComResultado]);
+
+  const consolidadoMeta = useMemo(() => {
+    if (!isConsolidado) return null;
+    const totalRespostas = campanhasComResultado.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
+    const ipsList = campanhasComResultado.map((c) => c.ips_score).filter((v): v is number => v != null);
+    const ipsMedio = ipsList.length > 0 ? ipsList.reduce((s, v) => s + v, 0) / ipsList.length : null;
+    return { totalCampanhas: campanhasComResultado.length, totalRespostas, ipsMedio };
+  }, [isConsolidado, campanhasComResultado]);
 
   // Para cada risco, casa as dimensões mapeadas com os subjects do radar (substring/normalize)
   const resultadosPorRisco = useMemo(() => {
-    if (!campanhaSel) return {} as Record<string, { subject: string; value: number; instrumento: string }[]>;
-    const radar = (campanhaSel.radar_data || []) as { subject: string; value: number }[];
+    const radar = isConsolidado
+      ? radarConsolidado
+      : campanhaSel
+      ? ((campanhaSel.radar_data || []) as { subject: string; value: number }[])
+      : null;
+    if (!radar) return {} as Record<string, { subject: string; value: number; instrumento: string }[]>;
     const out: Record<string, { subject: string; value: number; instrumento: string }[]> = {};
     riscos.forEach((r) => {
       const maps = mapsPorRisco[r.nome] || [];
