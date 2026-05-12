@@ -84,6 +84,14 @@ export function SSTOrdemServicoTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey, pgrResponsavel.nome, pgrResponsavel.registro]);
 
+  // Persiste alterações manuais no localStorage
+  useEffect(() => {
+    if (!tenantId) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ nome: respTecnico, registro: respRegistro }));
+    } catch {/* noop */}
+  }, [respTecnico, respRegistro, storageKey, tenantId]);
+
   const { data: colaboradores = [] } = useQuery({
     queryKey: ["admissoes-os", tenantId, empresaAtivaId],
     queryFn: async () => {
