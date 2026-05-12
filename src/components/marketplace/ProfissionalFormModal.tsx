@@ -103,7 +103,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
   };
 
   const handleSubmit = async () => {
-    if (!form.nome_completo || !form.email || !form.registro_profissional || !form.conselho) {
+    if (!form.nome_completo || !form.email) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
