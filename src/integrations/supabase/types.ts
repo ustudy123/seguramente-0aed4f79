@@ -11401,6 +11401,143 @@ export type Database = {
           },
         ]
       }
+      manual_funcao_assinaturas: {
+        Row: {
+          assinatura_colaborador: Json | null
+          assinatura_gestor: Json | null
+          cargo_id: string
+          cargo_nome: string
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_assinatura_colaborador: string | null
+          data_assinatura_gestor: string | null
+          data_conclusao: string | null
+          data_envio: string
+          documento_arquivado_id: string | null
+          empresa_id: string | null
+          enviado_por: string | null
+          enviado_por_nome: string | null
+          gestor_cpf: string | null
+          gestor_email: string | null
+          gestor_id: string | null
+          gestor_nome: string | null
+          id: string
+          manual_html_snapshot: string
+          manual_titulo: string | null
+          observacoes: string | null
+          pdf_storage_path: string | null
+          status: string
+          tenant_id: string
+          termo_html: string
+          updated_at: string
+        }
+        Insert: {
+          assinatura_colaborador?: Json | null
+          assinatura_gestor?: Json | null
+          cargo_id: string
+          cargo_nome: string
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_assinatura_colaborador?: string | null
+          data_assinatura_gestor?: string | null
+          data_conclusao?: string | null
+          data_envio?: string
+          documento_arquivado_id?: string | null
+          empresa_id?: string | null
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          gestor_cpf?: string | null
+          gestor_email?: string | null
+          gestor_id?: string | null
+          gestor_nome?: string | null
+          id?: string
+          manual_html_snapshot: string
+          manual_titulo?: string | null
+          observacoes?: string | null
+          pdf_storage_path?: string | null
+          status?: string
+          tenant_id: string
+          termo_html: string
+          updated_at?: string
+        }
+        Update: {
+          assinatura_colaborador?: Json | null
+          assinatura_gestor?: Json | null
+          cargo_id?: string
+          cargo_nome?: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_assinatura_colaborador?: string | null
+          data_assinatura_gestor?: string | null
+          data_conclusao?: string | null
+          data_envio?: string
+          documento_arquivado_id?: string | null
+          empresa_id?: string | null
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          gestor_cpf?: string | null
+          gestor_email?: string | null
+          gestor_id?: string | null
+          gestor_nome?: string | null
+          id?: string
+          manual_html_snapshot?: string
+          manual_titulo?: string | null
+          observacoes?: string | null
+          pdf_storage_path?: string | null
+          status?: string
+          tenant_id?: string
+          termo_html?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      manual_funcao_links: {
+        Row: {
+          assinatura_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          tenant_id: string
+          tipo_assinante: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          assinatura_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          tenant_id: string
+          tipo_assinante: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          assinatura_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          tenant_id?: string
+          tipo_assinante?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_funcao_links_assinatura_id_fkey"
+            columns: ["assinatura_id"]
+            isOneToOne: false
+            referencedRelation: "manual_funcao_assinaturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_afiliados_comissoes: {
         Row: {
           created_at: string
@@ -20586,6 +20723,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      assinar_manual_funcao_publica: {
+        Args: {
+          p_cpf: string
+          p_geo: Json
+          p_ip: string
+          p_nome: string
+          p_selfie_url: string
+          p_token: string
+        }
+        Returns: Json
+      }
       assinar_ordem_servico_publica: {
         Args: {
           p_geo: Json
@@ -20860,6 +21008,10 @@ export type Database = {
         Returns: undefined
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      obter_assinatura_manual_publica: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
       proximo_tipo_marcacao_externo: {
         Args: { p_token: string }
