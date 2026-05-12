@@ -193,8 +193,11 @@ const menuSections: MenuSection[] = [
 ];
 
 const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: boolean }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const hasActiveChild = item.children?.some((c) =>
+    checkIsActive(c.path, location.pathname, location.search)
+  ) ?? false;
+  const [isOpen, setIsOpen] = useState(hasActiveChild);
 
   return (
     <div>
