@@ -210,16 +210,27 @@ export function SSTOrdemServicoTab() {
   return (
     <div className="space-y-4">
       {/* Aviso PGR */}
-      {!pgrVigente && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="py-3 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
-            <p className="text-sm">
-              <b>PGR não disponível.</b> Para gerar Ordens de Serviço, importe o PGR vigente da empresa na aba <b>Importação IA</b> e aguarde a análise concluir.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {!pgrVigente && (() => {
+        const pgrsBrutos = documentos.filter(d => d.tipo === "PGR");
+        const pendentes = pgrsBrutos.filter(d => d.analise_ia_status !== "concluida");
+        return (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-3 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
+              <p className="text-sm">
+                <b>PGR não disponível para esta empresa.</b>{" "}
+                {pgrsBrutos.length === 0 ? (
+                  <>Nenhum PGR foi importado para a empresa selecionada. Importe na aba <b>Importação IA</b>.</>
+                ) : pendentes.length > 0 ? (
+                  <>Há {pendentes.length} PGR(s) importado(s), mas a análise da IA ainda não foi concluída (status: {pendentes.map(p => p.analise_ia_status || "pendente").join(", ")}). Aguarde a conclusão ou reprocesse na aba <b>Importação IA</b>.</>
+                ) : (
+                  <>Importe o PGR vigente na aba <b>Importação IA</b>.</>
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
       {pgrVencido && (
         <Card className="border-yellow-500/50 bg-yellow-500/5">
           <CardContent className="py-3 flex items-start gap-2">
