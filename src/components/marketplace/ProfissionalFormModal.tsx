@@ -256,7 +256,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Conselho *</Label>
+                <Label>Conselho</Label>
                 <Select value={form.conselho} onValueChange={(v) => updateField("conselho", v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
