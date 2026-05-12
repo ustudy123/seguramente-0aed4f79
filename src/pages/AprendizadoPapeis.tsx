@@ -40,6 +40,9 @@ export default function AprendizadoPapeis() {
           <TabsTrigger value="funcoes" className="gap-1">
             <Briefcase className="w-4 h-4" /> Funções
           </TabsTrigger>
+          <TabsTrigger value="assinaturas" className="gap-1">
+            <FileSignature className="w-4 h-4" /> Assinaturas
+          </TabsTrigger>
           <TabsTrigger value="indicadores" className="gap-1">
             <BarChart3 className="w-4 h-4" /> Indicadores
           </TabsTrigger>
