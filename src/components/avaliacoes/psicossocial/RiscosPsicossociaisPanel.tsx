@@ -355,14 +355,23 @@ export function RiscosPsicossociaisPanel() {
                       Nenhuma campanha com resultados disponíveis.
                     </div>
                   ) : (
-                    campanhasComResultado.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.nome}
-                        {c.ips_score != null && (
-                          <span className="ml-2 text-xs text-muted-foreground">· IPS {Math.round(c.ips_score)}</span>
-                        )}
+                    <>
+                      <SelectItem value="__all__">
+                        Todas as campanhas (consolidado)
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          · {campanhasComResultado.length}{" "}
+                          {campanhasComResultado.length === 1 ? "campanha" : "campanhas"}
+                        </span>
                       </SelectItem>
-                    ))
+                      {campanhasComResultado.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome}
+                          {c.ips_score != null && (
+                            <span className="ml-2 text-xs text-muted-foreground">· IPS {Math.round(c.ips_score)}</span>
+                          )}
+                        </SelectItem>
+                      ))}
+                    </>
                   )}
                 </SelectContent>
               </Select>
