@@ -73,6 +73,7 @@ export function RiscosPsicossociaisPanel() {
   const qc = useQueryClient();
   const { campanhas, isLoadingCampanhas } = usePsicossocial();
   const [campanhaId, setCampanhaId] = useState<string | undefined>();
+  const [riscoDetalhe, setRiscoDetalhe] = useState<RiscoPsicossocial | null>(null);
 
   const { data: riscos = [], isLoading } = useQuery({
     queryKey: ["psicossocial_riscos", tenantId],
