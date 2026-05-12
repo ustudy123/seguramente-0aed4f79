@@ -195,7 +195,11 @@ export function PsicossocialDashboard() {
           </CardContent>
         </Card>
 
-        {/* Banner de Próxima Ação */}
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="hidden" />
+
+          <TabsContent value="visao" className="mt-0 space-y-6">
+            {/* Banner de Próxima Ação */}
         <ProximaAcaoBanner
           campanhas={campanhas}
           onDistribuir={(c) => setBannerDistribuir(c)}
