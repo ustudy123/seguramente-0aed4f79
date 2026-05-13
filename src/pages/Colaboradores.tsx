@@ -545,7 +545,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatPhone(colab.celular)}</TableCell>
                   <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                    {colab.data_admissao ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") : "-"}
+                    {colab.data_admissao ? formatDateBR(colab.data_admissao) : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 flex-wrap">
