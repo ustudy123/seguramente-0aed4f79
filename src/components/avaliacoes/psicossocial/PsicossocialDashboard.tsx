@@ -125,17 +125,39 @@ export function PsicossocialDashboard() {
   const campanhasEncerradas = campanhas.filter(c => c.status === 'encerrada').length;
   const totalRespostas = campanhas.reduce((sum, c) => sum + (c.total_respostas || 0), 0);
 
-  const campanhasComIPS = campanhas.filter(c => c.ips_score != null && (c.total_respostas || 0) >= MINIMO_ANONIMATO);
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const consolidadoLiberado = empresaAtivaId ? EMPRESAS_CONSOLIDADO_LIBERADO.has(empresaAtivaId) : false;
+
+  // Regra padrão (ISO 45003): só entram no consolidado campanhas que individualmente
+  // atinjam o mínimo de respondentes. Para empresas com liberação pontual,
+  // aceitamos campanhas com qualquer N desde que o TOTAL agregado da empresa ≥ mínimo.
+  const campanhasComIPS = campanhas.filter(c =>
+    c.ips_score != null && (
+      (c.total_respostas || 0) >= MINIMO_ANONIMATO ||
+      consolidadoLiberado
+    )
+  );
+  const totalRespostasConsolidado = campanhasComIPS.reduce((s, c) => s + (c.total_respostas || 0), 0);
+  const consolidadoValido = consolidadoLiberado
+    ? totalRespostasConsolidado >= MINIMO_ANONIMATO
+    : campanhasComIPS.length > 0;
+  const usandoFallbackEmpresa = consolidadoLiberado &&
+    campanhasComIPS.length > 0 &&
+    campanhasComIPS.every(c => (c.total_respostas || 0) < MINIMO_ANONIMATO) &&
+    totalRespostasConsolidado >= MINIMO_ANONIMATO;
+
   // Para campanhas SIPRO, o campo `ips_score` armazena o IRP-S (alto = ruim).
   // Convertemos para a escala IPS (alto = bom) usando 100 - score, mantendo a
   // consistência visual com o ResultadosModal e com o PDF de relatório.
-  const ipsConsolidado = campanhasComIPS.length > 0
+  // Média ponderada por respondentes para refletir o tamanho de cada categoria.
+  const ipsConsolidado = consolidadoValido && totalRespostasConsolidado > 0
     ? Math.round(
         campanhasComIPS.reduce((sum, c) => {
           const raw = c.ips_score ?? 50;
           const valorIPS = c.instrumento === 'sipro' ? 100 - raw : raw;
-          return sum + valorIPS;
-        }, 0) / campanhasComIPS.length
+          const peso = c.total_respostas || 0;
+          return sum + valorIPS * peso;
+        }, 0) / totalRespostasConsolidado
       )
     : null;
   const ipsClassificacao: IPSClassificacao | null = ipsConsolidado != null ? calcularIPSClassificacao(ipsConsolidado) : null;
