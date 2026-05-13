@@ -104,6 +104,15 @@ function formatPhone(phone: string | null | undefined): string {
   return phone;
 }
 
+/** Formata YYYY-MM-DD como DD/MM/YYYY sem aplicar timezone (evita off-by-one). */
+function formatDateBR(value: string | null | undefined): string {
+  if (!value) return "-";
+  const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? "-" : d.toLocaleDateString("pt-BR");
+}
+
 interface ColaboradorExtendido {
   id: string;
   nome_completo: string;
