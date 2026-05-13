@@ -104,6 +104,15 @@ function formatPhone(phone: string | null | undefined): string {
   return phone;
 }
 
+/** Formata YYYY-MM-DD como DD/MM/YYYY sem aplicar timezone (evita off-by-one). */
+function formatDateBR(value: string | null | undefined): string {
+  if (!value) return "-";
+  const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? "-" : d.toLocaleDateString("pt-BR");
+}
+
 interface ColaboradorExtendido {
   id: string;
   nome_completo: string;
@@ -502,7 +511,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 {colab.data_admissao && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    <span>Desde {new Date(colab.data_admissao).toLocaleDateString("pt-BR")}</span>
+                    <span>Desde {formatDateBR(colab.data_admissao)}</span>
                   </div>
                 )}
               </div>
@@ -545,7 +554,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatPhone(colab.celular)}</TableCell>
                   <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                    {colab.data_admissao ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") : "-"}
+                    {colab.data_admissao ? formatDateBR(colab.data_admissao) : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -694,7 +703,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 {selectedColaborador.data_admissao && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> Data de Admissão</p>
-                    <p className="text-sm font-medium">{new Date(selectedColaborador.data_admissao).toLocaleDateString("pt-BR")}</p>
+                    <p className="text-sm font-medium">{formatDateBR(selectedColaborador.data_admissao)}</p>
                   </div>
                 )}
               </div>
