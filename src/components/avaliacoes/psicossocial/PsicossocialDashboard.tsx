@@ -276,7 +276,14 @@ export function PsicossocialDashboard() {
             </CardHeader>
             <CardContent className="flex flex-col items-center py-2">
               {ipsConsolidado != null && ipsClassificacao ? (
-                <IPSGauge score={ipsConsolidado} classificacao={ipsClassificacao} size="md" />
+                <>
+                  <IPSGauge score={ipsConsolidado} classificacao={ipsClassificacao} size="md" />
+                  {usandoFallbackEmpresa && (
+                    <div className="mt-3 w-full rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-1.5 text-[11px] text-amber-900 leading-snug">
+                      <strong>Visão consolidada da empresa</strong> — categorias individuais permanecem ocultas (&lt; {MINIMO_ANONIMATO} respondentes). Total agregado: {totalRespostasConsolidado} respostas.
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center gap-2 py-4">
                   <div className="p-3 rounded-full bg-muted">
