@@ -50,8 +50,15 @@ import { ResultadosModal } from "./ResultadosModal";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 const MINIMO_ANONIMATO = 5;
+// Empresas autorizadas a visualizar IPS consolidado da empresa quando
+// campanhas individuais ficam abaixo do mínimo (ISO 45003) — sem expor
+// os scores por categoria. Caso pontual aprovado pelo cliente.
+const EMPRESAS_CONSOLIDADO_LIBERADO = new Set<string>([
+  "85b3e1db-6564-4fbc-987f-f8dea4f29ff3", // Laboratório Bioanálises / Dalmora
+]);
 
 const INDICES_INFO = [
   { codigo: 'IPS', nome: 'Índice Psicossocial YourEyes', desc: 'Score geral do ambiente organizacional (0-100). É o termômetro principal da saúde psicossocial da empresa.', color: 'bg-purple-100 text-purple-600', destaque: true },
