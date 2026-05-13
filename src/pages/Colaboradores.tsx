@@ -502,7 +502,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 {colab.data_admissao && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    <span>Desde {new Date(colab.data_admissao).toLocaleDateString("pt-BR")}</span>
+                    <span>Desde {formatDateBR(colab.data_admissao)}</span>
                   </div>
                 )}
               </div>
