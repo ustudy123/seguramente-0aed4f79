@@ -59,10 +59,17 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
       const limite = addDays(today, 30);
       const items: CelebracaoItem[] = [];
 
+      // Parser seguro: trata 'YYYY-MM-DD' como data local (evita shift de timezone)
+      const parseLocalDate = (val: string): Date => {
+        const m = String(val).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return new Date(val);
+      };
+
       data.forEach((pessoa) => {
         // Check birthday
         if (pessoa.data_nascimento) {
-          const birth = new Date(pessoa.data_nascimento);
+          const birth = parseLocalDate(pessoa.data_nascimento);
           const thisYearBday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
           if (thisYearBday < today) thisYearBday.setFullYear(today.getFullYear() + 1);
           const dias = differenceInDays(thisYearBday, today);
@@ -79,7 +86,7 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
 
         // Check work anniversary
         if (pessoa.data_admissao) {
-          const adm = new Date(pessoa.data_admissao);
+          const adm = parseLocalDate(pessoa.data_admissao);
           const thisYearAdm = new Date(today.getFullYear(), adm.getMonth(), adm.getDate());
           if (thisYearAdm < today) thisYearAdm.setFullYear(today.getFullYear() + 1);
           const dias = differenceInDays(thisYearAdm, today);
