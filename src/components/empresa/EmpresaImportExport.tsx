@@ -133,7 +133,8 @@ export function EmpresaImportExport() {
 
     setImporting(true);
     setImportResult(null);
-
+    setShowCompletion(false);
+    setProgress({ current: 0, total: 0, etapa: 'Lendo arquivo...' });
     try {
       const buffer = await file.arrayBuffer();
       const wb = XLSX.read(buffer);
