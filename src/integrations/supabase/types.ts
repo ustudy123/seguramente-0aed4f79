@@ -11112,6 +11112,7 @@ export type Database = {
           email: string
           empresa: string | null
           id: string
+          ip_address: string | null
           landing_page_origem: string | null
           nome: string
           num_funcionarios: string | null
@@ -11130,6 +11131,7 @@ export type Database = {
           email: string
           empresa?: string | null
           id?: string
+          ip_address?: string | null
           landing_page_origem?: string | null
           nome: string
           num_funcionarios?: string | null
@@ -11148,6 +11150,7 @@ export type Database = {
           email?: string
           empresa?: string | null
           id?: string
+          ip_address?: string | null
           landing_page_origem?: string | null
           nome?: string
           num_funcionarios?: string | null
@@ -21233,8 +21236,6 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: undefined
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       solicitar_ajuste_ponto_externo: {
         Args: {
           p_anexos?: Json
