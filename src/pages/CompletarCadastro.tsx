@@ -182,13 +182,9 @@ export default function CompletarCadastro() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("admissoes")
-        .update({ 
-          onboarding_status: 'em_analise',
-          status: 'em_analise' as AdmissaoStatus
-        })
-        .eq("id", colaborador.id);
+      const { error } = await supabase.rpc("finalizar_admissao_by_token", {
+        _token: token as string,
+      });
 
       if (error) throw error;
 
