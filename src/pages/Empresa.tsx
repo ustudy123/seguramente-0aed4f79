@@ -308,6 +308,7 @@ export default function Empresa() {
           onNew={handleNew}
           onToggleAtivo={handleToggleAtivo}
           onDelete={handleDeleteEmpresa}
+          onDeleteBatch={handleDeleteBatch}
           grupos={grupos}
           obrigacoes={obrigacoes}
         />
