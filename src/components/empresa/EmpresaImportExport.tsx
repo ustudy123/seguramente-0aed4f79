@@ -155,6 +155,8 @@ export function EmpresaImportExport() {
       const duplicadas: string[] = [];
       let success = 0;
 
+      setProgress({ current: 0, total: data.length, etapa: 'Verificando duplicidades...' });
+
       // Busca CNPJs já existentes no tenant para validar duplicidade
       const { data: existentes } = await supabase
         .from('empresa_cadastro')
