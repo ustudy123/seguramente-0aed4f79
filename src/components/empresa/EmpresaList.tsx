@@ -27,11 +27,12 @@ interface EmpresaListProps {
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
   onDelete?: (id: string, nome: string) => void;
+  onBatchDelete?: (items: { id: string; nome: string }[]) => Promise<{ ok: number; failed: { nome: string; error: string }[] }>;
   grupos?: GrupoEconomico[];
   obrigacoes?: any[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, onBatchDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
   const { tenantId } = useAuthContext() as any;
   const { data: counts = {} } = useQuery({
     queryKey: ['empresa_colaboradores_counts', tenantId],
