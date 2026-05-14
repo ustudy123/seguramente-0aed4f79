@@ -20983,6 +20983,10 @@ export type Database = {
         Args: { _admissao_id: string }
         Returns: Json
       }
+      finalizar_admissao_by_token: {
+        Args: { _token: string }
+        Returns: undefined
+      }
       gerar_estrutura_padrao_pastas: {
         Args: {
           p_empresa_id: string
@@ -20991,6 +20995,122 @@ export type Database = {
           p_user_nome?: string
         }
         Returns: number
+      }
+      get_admissao_by_token: {
+        Args: { _token: string }
+        Returns: {
+          agencia: string | null
+          aviso_previo_cumprido: boolean | null
+          bairro: string | null
+          banco: string | null
+          cargo: string
+          cbo: string | null
+          celular: string | null
+          centro_custo: string | null
+          cep: string | null
+          chave_conectividade: string | null
+          chave_pix: string | null
+          cidade: string | null
+          classificacao_interna: string | null
+          complemento: string | null
+          conta: string | null
+          cpf: string
+          created_at: string
+          criado_por: string | null
+          crm_exame_demissional: string | null
+          data_admissao: string | null
+          data_aviso_previo: string | null
+          data_desligamento: string | null
+          data_exame_demissional: string | null
+          data_homologacao: string | null
+          data_nascimento: string | null
+          departamento: string | null
+          dependentes_irrf: number | null
+          desligado_por: string | null
+          desligado_por_nome: string | null
+          dias_aviso_previo: number | null
+          email: string | null
+          empresa_id: string | null
+          endereco: string | null
+          estado: string | null
+          estado_civil: string | null
+          exame_admissional_clinica: string | null
+          exame_admissional_crm: string | null
+          exame_admissional_data: string | null
+          exame_admissional_medico: string | null
+          exame_admissional_observacoes: string | null
+          exame_admissional_resultado: string | null
+          exame_admissional_validade: string | null
+          filial: string | null
+          foto_url: string | null
+          genero: string | null
+          gestor_imediato: string | null
+          id: string
+          inativado_em: string | null
+          inativado_por: string | null
+          inativo: boolean
+          jornada_trabalho: string | null
+          matricula_esocial: string | null
+          medico_exame_demissional: string | null
+          motivo_desligamento: string | null
+          motivo_inativacao: string | null
+          multa_fgts: boolean | null
+          nacionalidade: string | null
+          naturalidade: string | null
+          nome_completo: string
+          nome_mae: string | null
+          nome_pai: string | null
+          numero: string | null
+          observacoes_desligamento: string | null
+          onboarding_status: string | null
+          onboarding_token: string | null
+          resultado_exame_demissional: string | null
+          rg: string | null
+          salario: number | null
+          seguro_desemprego_elegivel: boolean | null
+          sindicato_homologacao: string | null
+          status: Database["public"]["Enums"]["admissao_status"]
+          telefone: string | null
+          tenant_id: string
+          tipo_aviso_previo: string | null
+          tipo_conta: string | null
+          tipo_contrato: string | null
+          tipo_vinculo: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "admissoes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_admissao_documentos_by_token: {
+        Args: { _token: string }
+        Returns: {
+          admissao_id: string
+          aprovado_por: string | null
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          created_at: string
+          data_aprovacao: string | null
+          data_envio: string | null
+          id: string
+          nome: string
+          obrigatorio: boolean
+          observacao: string | null
+          status: Database["public"]["Enums"]["documento_status"]
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "admissao_documentos"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_auth_user_email: { Args: never; Returns: string }
       get_current_user_tipo: { Args: never; Returns: string }
@@ -21134,6 +21254,22 @@ export type Database = {
       superadmin_usuarios_global: {
         Args: { _limite?: number; _search?: string }
         Returns: Json
+      }
+      update_admissao_documento_by_token: {
+        Args: {
+          _arquivo_nome: string
+          _arquivo_tamanho: number
+          _arquivo_url: string
+          _data_envio: string
+          _documento_id: string
+          _status: string
+          _token: string
+        }
+        Returns: undefined
+      }
+      update_admissao_foto_by_token: {
+        Args: { _foto_url: string; _token: string }
+        Returns: undefined
       }
       user_has_empresa_vinculo: {
         Args: { _empresa_id: string }
