@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, Loader2, PartyPopper } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,6 +76,8 @@ const TEMPLATE_INSTRUCTIONS = [
 export function EmpresaImportExport() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; errors: string[]; duplicadas: string[] } | null>(null);
+  const [progress, setProgress] = useState<{ current: number; total: number; etapa: string; empresaAtual?: string }>({ current: 0, total: 0, etapa: '' });
+  const [showCompletion, setShowCompletion] = useState(false);
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -130,7 +133,8 @@ export function EmpresaImportExport() {
 
     setImporting(true);
     setImportResult(null);
-
+    setShowCompletion(false);
+    setProgress({ current: 0, total: 0, etapa: 'Lendo arquivo...' });
     try {
       const buffer = await file.arrayBuffer();
       const wb = XLSX.read(buffer);
@@ -150,6 +154,8 @@ export function EmpresaImportExport() {
       const errors: string[] = [];
       const duplicadas: string[] = [];
       let success = 0;
+
+      setProgress({ current: 0, total: data.length, etapa: 'Verificando duplicidades...' });
 
       // Busca CNPJs já existentes no tenant para validar duplicidade
       const { data: existentes } = await supabase
@@ -172,6 +178,13 @@ export function EmpresaImportExport() {
         // Pega os valores considerando que podem ou não ter o asterisco
         const rawRazaoSocial = row['Razão Social*'] || row['Razão Social'];
         const rawCnpj = row['CNPJ*'] || row['CNPJ'];
+
+        setProgress({
+          current: i + 1,
+          total: data.length,
+          etapa: `Processando ${i + 1} de ${data.length}`,
+          empresaAtual: rawRazaoSocial?.toString().trim() || rawCnpj?.toString().trim() || `Linha ${i + 2}`,
+        });
 
         // Pula a linha de exemplo se ela estiver presente
         if (rawRazaoSocial?.toString().includes('(EXEMPLO')) {
@@ -269,7 +282,9 @@ export function EmpresaImportExport() {
         success++;
       }
 
+      setProgress({ current: data.length, total: data.length, etapa: 'Concluído' });
       setImportResult({ success, errors, duplicadas });
+      setShowCompletion(true);
 
       if (success > 0) {
         toast.success(`${success} empresa(s) importada(s) com sucesso!`);
@@ -342,7 +357,7 @@ export function EmpresaImportExport() {
               />
               <Button asChild variant="default" disabled={importing}>
                 <span>
-                  <Upload className="w-4 h-4 mr-2" />
+                  {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                   {importing ? 'Processando...' : 'Selecionar Arquivo'}
                 </span>
               </Button>
@@ -350,6 +365,73 @@ export function EmpresaImportExport() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Progresso da importação */}
+      {importing && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <div className="flex-1">
+                <h4 className="font-medium text-sm">{progress.etapa || 'Processando...'}</h4>
+                {progress.empresaAtual && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {progress.empresaAtual}
+                  </p>
+                )}
+              </div>
+              <span className="text-sm font-semibold tabular-nums">
+                {progress.total > 0 ? `${progress.current}/${progress.total}` : '...'}
+              </span>
+            </div>
+            <Progress
+              value={progress.total > 0 ? (progress.current / progress.total) * 100 : 5}
+            />
+            <p className="text-xs text-muted-foreground">
+              Não feche esta janela enquanto a importação estiver em andamento.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Banner de conclusão */}
+      {showCompletion && importResult && !importing && (
+        <Card className="border-emerald-500/40 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 animate-in fade-in slide-in-from-top-2">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-full bg-emerald-500/15">
+                <PartyPopper className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="font-semibold text-lg text-emerald-900 dark:text-emerald-100">
+                  {importResult.success > 0
+                    ? 'Importação concluída com sucesso!'
+                    : 'Importação finalizada'}
+                </h4>
+                <p className="text-sm text-emerald-800/80 dark:text-emerald-200/80">
+                  {importResult.success > 0 && (
+                    <>
+                      <strong>{importResult.success}</strong> empresa(s) cadastrada(s).{' '}
+                    </>
+                  )}
+                  {importResult.duplicadas.length > 0 && (
+                    <>{importResult.duplicadas.length} ignorada(s) por duplicidade. </>
+                  )}
+                  {importResult.errors.length > 0 && (
+                    <>{importResult.errors.length} com erro(s) — veja detalhes abaixo.</>
+                  )}
+                  {importResult.success === 0 && importResult.duplicadas.length === 0 && importResult.errors.length === 0 && (
+                    <>Nenhuma linha válida foi encontrada na planilha.</>
+                  )}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowCompletion(false)}>
+                Fechar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Import Results */}
       {importResult && (
