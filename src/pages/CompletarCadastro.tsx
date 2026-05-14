@@ -149,16 +149,15 @@ export default function CompletarCadastro() {
         await supabase.storage.from("documentos").remove([doc.arquivo_url]);
       }
 
-      const { error } = await supabase
-        .from("admissao_documentos")
-        .update({
-          arquivo_url: null,
-          arquivo_nome: null,
-          arquivo_tamanho: null,
-          status: 'pendente',
-          data_envio: null
-        })
-        .eq("id", documentoId);
+      const { error } = await supabase.rpc("update_admissao_documento_by_token", {
+        _token: token as string,
+        _documento_id: documentoId,
+        _arquivo_url: null as any,
+        _arquivo_nome: null as any,
+        _arquivo_tamanho: null as any,
+        _status: 'pendente',
+        _data_envio: null as any,
+      });
 
       if (error) throw error;
 
