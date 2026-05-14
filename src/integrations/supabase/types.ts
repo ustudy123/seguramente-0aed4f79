@@ -21271,6 +21271,10 @@ export type Database = {
         Args: { _foto_url: string; _token: string }
         Returns: undefined
       }
+      user_can_access_storage_object: {
+        Args: { _bucket: string; _name: string }
+        Returns: boolean
+      }
       user_has_empresa_vinculo: {
         Args: { _empresa_id: string }
         Returns: boolean
