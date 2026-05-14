@@ -34,11 +34,9 @@ export default function CompletarCadastro() {
   const fetchColaborador = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("admissoes")
-        .select("*")
-        .eq("onboarding_token", token)
-        .single();
+      const { data, error } = await supabase.rpc("get_admissao_by_token", {
+        _token: token as string,
+      });
 
       if (error || !data) {
         toast.error("Link inválido ou expirado.");
@@ -47,7 +45,7 @@ export default function CompletarCadastro() {
       }
 
       setColaborador(data);
-      fetchDocumentos(data.id);
+      fetchDocumentos();
     } catch (error) {
       console.error("Erro ao buscar colaborador:", error);
     } finally {
@@ -55,20 +53,19 @@ export default function CompletarCadastro() {
     }
   };
 
-  const fetchDocumentos = async (admissaoId: string) => {
-    const { data, error } = await supabase
-      .from("admissao_documentos")
-      .select("*")
-      .eq("admissao_id", admissaoId);
+  const fetchDocumentos = async () => {
+    const { data, error } = await supabase.rpc("get_admissao_documentos_by_token", {
+      _token: token as string,
+    });
 
     if (error) {
       console.error("Erro ao buscar documentos:", error);
       return;
     }
 
-    setDocumentos(data.map(doc => ({
+    setDocumentos((data || []).map((doc: any) => ({
       ...doc,
-      status: doc.status as DocumentoStatus
+      status: doc.status as DocumentoStatus,
     })));
   };
 
@@ -89,10 +86,10 @@ export default function CompletarCadastro() {
 
       if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("admissoes")
-        .update({ foto_url: filePath })
-        .eq("id", colaborador.id);
+      const { error: updateError } = await supabase.rpc("update_admissao_foto_by_token", {
+        _token: token as string,
+        _foto_url: filePath,
+      });
 
       if (updateError) throw updateError;
 
@@ -121,16 +118,15 @@ export default function CompletarCadastro() {
 
       if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("admissao_documentos")
-        .update({
-          arquivo_url: filePath, // Store path for private access
-          arquivo_nome: file.name,
-          arquivo_tamanho: file.size,
-          status: 'enviado' as DocumentoStatus,
-          data_envio: new Date().toISOString()
-        })
-        .eq("id", documentoId);
+      const { error: updateError } = await supabase.rpc("update_admissao_documento_by_token", {
+        _token: token as string,
+        _documento_id: documentoId,
+        _arquivo_url: filePath,
+        _arquivo_nome: file.name,
+        _arquivo_tamanho: file.size,
+        _status: 'enviado',
+        _data_envio: new Date().toISOString(),
+      });
 
       if (updateError) throw updateError;
 
@@ -153,16 +149,15 @@ export default function CompletarCadastro() {
         await supabase.storage.from("documentos").remove([doc.arquivo_url]);
       }
 
-      const { error } = await supabase
-        .from("admissao_documentos")
-        .update({
-          arquivo_url: null,
-          arquivo_nome: null,
-          arquivo_tamanho: null,
-          status: 'pendente',
-          data_envio: null
-        })
-        .eq("id", documentoId);
+      const { error } = await supabase.rpc("update_admissao_documento_by_token", {
+        _token: token as string,
+        _documento_id: documentoId,
+        _arquivo_url: null as any,
+        _arquivo_nome: null as any,
+        _arquivo_tamanho: null as any,
+        _status: 'pendente',
+        _data_envio: null as any,
+      });
 
       if (error) throw error;
 
@@ -187,13 +182,9 @@ export default function CompletarCadastro() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("admissoes")
-        .update({ 
-          onboarding_status: 'em_analise',
-          status: 'em_analise' as AdmissaoStatus
-        })
-        .eq("id", colaborador.id);
+      const { error } = await supabase.rpc("finalizar_admissao_by_token", {
+        _token: token as string,
+      });
 
       if (error) throw error;
 
