@@ -198,6 +198,7 @@ export default function ResetPassword() {
                     </Button>
                   </div>
                 </FormControl>
+                <PasswordStrength value={field.value || ""} className="mt-2" />
                 <FormMessage />
               </FormItem>
             )}
