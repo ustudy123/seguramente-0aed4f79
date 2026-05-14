@@ -357,7 +357,7 @@ export function EmpresaImportExport() {
               />
               <Button asChild variant="default" disabled={importing}>
                 <span>
-                  <Upload className="w-4 h-4 mr-2" />
+                  {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                   {importing ? 'Processando...' : 'Selecionar Arquivo'}
                 </span>
               </Button>
@@ -365,6 +365,73 @@ export function EmpresaImportExport() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Progresso da importação */}
+      {importing && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <div className="flex-1">
+                <h4 className="font-medium text-sm">{progress.etapa || 'Processando...'}</h4>
+                {progress.empresaAtual && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {progress.empresaAtual}
+                  </p>
+                )}
+              </div>
+              <span className="text-sm font-semibold tabular-nums">
+                {progress.total > 0 ? `${progress.current}/${progress.total}` : '...'}
+              </span>
+            </div>
+            <Progress
+              value={progress.total > 0 ? (progress.current / progress.total) * 100 : 5}
+            />
+            <p className="text-xs text-muted-foreground">
+              Não feche esta janela enquanto a importação estiver em andamento.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Banner de conclusão */}
+      {showCompletion && importResult && !importing && (
+        <Card className="border-emerald-500/40 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 animate-in fade-in slide-in-from-top-2">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-full bg-emerald-500/15">
+                <PartyPopper className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="font-semibold text-lg text-emerald-900 dark:text-emerald-100">
+                  {importResult.success > 0
+                    ? 'Importação concluída com sucesso!'
+                    : 'Importação finalizada'}
+                </h4>
+                <p className="text-sm text-emerald-800/80 dark:text-emerald-200/80">
+                  {importResult.success > 0 && (
+                    <>
+                      <strong>{importResult.success}</strong> empresa(s) cadastrada(s).{' '}
+                    </>
+                  )}
+                  {importResult.duplicadas.length > 0 && (
+                    <>{importResult.duplicadas.length} ignorada(s) por duplicidade. </>
+                  )}
+                  {importResult.errors.length > 0 && (
+                    <>{importResult.errors.length} com erro(s) — veja detalhes abaixo.</>
+                  )}
+                  {importResult.success === 0 && importResult.duplicadas.length === 0 && importResult.errors.length === 0 && (
+                    <>Nenhuma linha válida foi encontrada na planilha.</>
+                  )}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowCompletion(false)}>
+                Fechar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Import Results */}
       {importResult && (
