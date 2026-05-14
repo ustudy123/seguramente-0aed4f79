@@ -44,6 +44,7 @@ export default function Empresa() {
     upsertCadastro,
     toggleAtivoEmpresa,
     deleteEmpresa,
+    deleteBatchEmpresas,
     cliente,
     obrigacoes,
   } = useEmpresaCadastro(viewMode === 'edit' ? selectedEmpresaId : undefined);
