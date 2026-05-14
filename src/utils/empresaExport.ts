@@ -36,7 +36,7 @@ const fmtCnpj = (cnpj: string | null | undefined) => {
   if (!cnpj) return '—';
   const d = cnpj.replace(/\D/g, '');
   if (d.length !== 14) return cnpj;
-  return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3.$4-$5');
+  return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
 };
 
 const fmtCpf = (cpf: string | null | undefined) => {
