@@ -845,31 +845,49 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
         })}
       </div>
 
-      {/* Radares */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RadarPanel
-          tipo="burnout"
-          score={SCORE_BURNOUT}
-          nivel={nivelBurnout}
-          fatores={FATORES_BURNOUT}
-          existingActionsByFator={existingActionsByFator}
-          onCreateAction={handleCreateAction}
-          onGerarAcaoGlobal={handleGerarAcaoGlobal}
-          gerandoGlobal={gerandoBurnout}
-          creatingActionFor={creatingActionFor}
-        />
-        <RadarPanel
-          tipo="boreout"
-          score={SCORE_BOREOUT}
-          nivel={nivelBoreout}
-          fatores={FATORES_BOREOUT}
-          existingActionsByFator={existingActionsByFator}
-          onCreateAction={handleCreateAction}
-          onGerarAcaoGlobal={handleGerarAcaoGlobal}
-          gerandoGlobal={gerandoBoreout}
-          creatingActionFor={creatingActionFor}
-        />
-      </div>
+      {/* Radares — exibidos apenas com dados reais (≥ 5 respostas) */}
+      {temDadosReais ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RadarPanel
+            tipo="burnout"
+            score={SCORE_BURNOUT}
+            nivel={nivelBurnout}
+            fatores={FATORES_BURNOUT}
+            existingActionsByFator={existingActionsByFator}
+            onCreateAction={handleCreateAction}
+            onGerarAcaoGlobal={handleGerarAcaoGlobal}
+            gerandoGlobal={gerandoBurnout}
+            creatingActionFor={creatingActionFor}
+          />
+          <RadarPanel
+            tipo="boreout"
+            score={SCORE_BOREOUT}
+            nivel={nivelBoreout}
+            fatores={FATORES_BOREOUT}
+            existingActionsByFator={existingActionsByFator}
+            onCreateAction={handleCreateAction}
+            onGerarAcaoGlobal={handleGerarAcaoGlobal}
+            gerandoGlobal={gerandoBoreout}
+            creatingActionFor={creatingActionFor}
+          />
+        </div>
+      ) : (
+        <Card className="border-dashed">
+          <CardContent className="py-12 flex flex-col items-center text-center gap-3">
+            <div className="p-3 rounded-full bg-muted">
+              <Brain className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="space-y-1 max-w-md">
+              <p className="font-semibold text-sm">Sem dados para os radares de Burnout & Boreout</p>
+              <p className="text-xs text-muted-foreground">
+                {campanhas.length === 0
+                  ? 'Nenhuma campanha psicossocial criada para esta empresa. Crie uma campanha SIPRO e colete no mínimo 5 respostas para liberar os radares.'
+                  : `Nenhuma campanha desta empresa atingiu o mínimo de ${MINIMO_ANONIMATO} respostas com dimensões SIPRO. Os radares só são calculados com dados reais — não exibimos estimativas para preservar a integridade do diagnóstico.`}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Nota técnica */}
       <Card className="border-muted bg-muted/20">
