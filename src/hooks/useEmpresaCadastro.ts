@@ -191,6 +191,34 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     },
   });
 
+  // Exclusão em lote — reusa a RPC individual para manter validações
+  const deleteBatchEmpresas = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const { data, error } = await (supabase as any).rpc('delete_empresa_segura', {
+              _empresa_id: id,
+            });
+            if (error) return { id, success: false, message: error.message };
+            return { id, success: true, message: data };
+          } catch (e: any) {
+            return { id, success: false, message: e.message || 'Erro desconhecido' };
+          }
+        })
+      );
+      const failed = results.filter(r => !r.success);
+      if (failed.length > 0) {
+        throw new Error(`${failed.length} de ${ids.length} empresas não puderam ser excluídas. Verifique vínculos de colaboradores/terceiros.`);
+      }
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
+    },
+  });
+
   // Obrigações da empresa específica
   const { data: obrigacoes = [], isLoading: obrigacoesLoading } = useQuery({
     queryKey: ['empresa_obrigacoes', tenantId, empresaId],
@@ -319,6 +347,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     upsertCadastro,
     toggleAtivoEmpresa,
     deleteEmpresa,
+    deleteBatchEmpresas,
     obrigacoes,
     obrigacoesLoading,
     createObrigacao,

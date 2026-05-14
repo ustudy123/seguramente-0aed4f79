@@ -27,11 +27,12 @@ interface EmpresaListProps {
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
   onDelete?: (id: string, nome: string) => void;
+  onDeleteBatch?: (ids: string[]) => void;
   grupos?: GrupoEconomico[];
   obrigacoes?: any[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, onDeleteBatch, grupos = [], obrigacoes = [] }: EmpresaListProps) {
   const { tenantId } = useAuthContext() as any;
   const { data: counts = {} } = useQuery({
     queryKey: ['empresa_colaboradores_counts', tenantId],
@@ -384,6 +385,12 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
             <ToggleLeft className="w-4 h-4 mr-1" />
             Inativar
           </Button>
+          {onDeleteBatch && (
+            <Button variant="outline" size="sm" onClick={() => { onDeleteBatch(Array.from(selectedIds)); setSelectedIds(new Set()); }} className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30">
+              <Trash2 className="w-4 h-4 mr-1" />
+              Excluir
+            </Button>
+          )}
         </div>
       )}
 
