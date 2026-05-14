@@ -410,6 +410,12 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
             <ToggleLeft className="w-4 h-4 mr-1" />
             Inativar
           </Button>
+          {onBatchDelete && (
+            <Button variant="outline" size="sm" onClick={handleBatchDelete} className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30">
+              <Trash2 className="w-4 h-4 mr-1" />
+              Excluir
+            </Button>
+          )}
         </div>
       )}
 
