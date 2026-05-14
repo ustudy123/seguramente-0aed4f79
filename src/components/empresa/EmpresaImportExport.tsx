@@ -179,6 +179,13 @@ export function EmpresaImportExport() {
         const rawRazaoSocial = row['Razão Social*'] || row['Razão Social'];
         const rawCnpj = row['CNPJ*'] || row['CNPJ'];
 
+        setProgress({
+          current: i + 1,
+          total: data.length,
+          etapa: `Processando ${i + 1} de ${data.length}`,
+          empresaAtual: rawRazaoSocial?.toString().trim() || rawCnpj?.toString().trim() || `Linha ${i + 2}`,
+        });
+
         // Pula a linha de exemplo se ela estiver presente
         if (rawRazaoSocial?.toString().includes('(EXEMPLO')) {
           continue;
