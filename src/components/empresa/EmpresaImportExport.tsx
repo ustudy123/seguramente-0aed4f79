@@ -282,7 +282,9 @@ export function EmpresaImportExport() {
         success++;
       }
 
+      setProgress({ current: data.length, total: data.length, etapa: 'Concluído' });
       setImportResult({ success, errors, duplicadas });
+      setShowCompletion(true);
 
       if (success > 0) {
         toast.success(`${success} empresa(s) importada(s) com sucesso!`);
