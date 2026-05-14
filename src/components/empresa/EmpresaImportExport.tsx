@@ -255,7 +255,8 @@ export function EmpresaImportExport() {
           cnpj: cnpjFormatado,
           inscricao_estadual: row['Inscrição Estadual']?.toString().trim() || null,
           telefone: row['Telefone']?.toString().trim() || infoApi?.telefone || null,
-          email: row['E-mail']?.toString().trim() || infoApi?.email || null,
+          // Respeita a planilha: se o e-mail foi removido propositalmente, não enriquecer via BrasilAPI
+          email: row['E-mail']?.toString().trim() || null,
           cep: row['CEP']?.toString().trim().replace(/\D/g, '') || infoApi?.cep || null,
           endereco: row['Endereço']?.toString().trim() || infoApi?.logradouro || null,
           numero: row['Número']?.toString().trim() || infoApi?.numero || null,
