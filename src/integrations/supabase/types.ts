@@ -20965,6 +20965,7 @@ export type Database = {
         }[]
       }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
+      current_user_tenant_id: { Args: never; Returns: string }
       delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
       epi_atualizar_estoque_local_otimista: {
         Args: {
