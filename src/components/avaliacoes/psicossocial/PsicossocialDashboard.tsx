@@ -170,8 +170,11 @@ export function PsicossocialDashboard() {
     );
   }
 
-  // Estado vazio — nenhuma campanha criada
-  if (totalCampanhas === 0) {
+  // Estado vazio — nenhuma campanha criada.
+  // Só mostra o onboarding completo na aba "visao". Em outras abas (deep-link
+  // dos submenus do sidebar), seguimos para o render normal para que cada
+  // submenu mostre seu próprio empty state contextualizado.
+  if (totalCampanhas === 0 && activeTab === "visao") {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
