@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { passwordSchema } from "@/lib/passwordPolicy";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
 
 const formatCpf = (value: string): string => {
   const n = value.replace(/\D/g, "");
@@ -56,7 +58,7 @@ const registerSchema = z.object({
   nomeCompleto: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
   whatsapp: z.string().min(10, "WhatsApp inválido").max(15),
-  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(72),
+  senha: passwordSchema,
   confirmarSenha: z.string(),
 }).refine((data) => {
   const clean = data.documento.replace(/\D/g, "");
@@ -484,7 +486,7 @@ export default function Register() {
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="Mínimo 12 caracteres"
                           autoComplete="new-password"
                           {...field}
                         />
@@ -498,6 +500,7 @@ export default function Register() {
                         </button>
                       </div>
                     </FormControl>
+                    <PasswordStrength value={field.value || ""} className="mt-2" />
                     <FormMessage />
                   </FormItem>
                 )}

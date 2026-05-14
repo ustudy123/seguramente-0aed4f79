@@ -18,9 +18,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateError } from "@/lib/translateError";
 
+import { passwordSchema } from "@/lib/passwordPolicy";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
+
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres"),
+    password: passwordSchema,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -195,6 +198,7 @@ export default function ResetPassword() {
                     </Button>
                   </div>
                 </FormControl>
+                <PasswordStrength value={field.value || ""} className="mt-2" />
                 <FormMessage />
               </FormItem>
             )}
