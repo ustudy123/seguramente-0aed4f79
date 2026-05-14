@@ -86,10 +86,10 @@ export default function CompletarCadastro() {
 
       if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("admissoes")
-        .update({ foto_url: filePath })
-        .eq("id", colaborador.id);
+      const { error: updateError } = await supabase.rpc("update_admissao_foto_by_token", {
+        _token: token as string,
+        _foto_url: filePath,
+      });
 
       if (updateError) throw updateError;
 
