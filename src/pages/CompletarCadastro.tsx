@@ -118,16 +118,15 @@ export default function CompletarCadastro() {
 
       if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("admissao_documentos")
-        .update({
-          arquivo_url: filePath, // Store path for private access
-          arquivo_nome: file.name,
-          arquivo_tamanho: file.size,
-          status: 'enviado' as DocumentoStatus,
-          data_envio: new Date().toISOString()
-        })
-        .eq("id", documentoId);
+      const { error: updateError } = await supabase.rpc("update_admissao_documento_by_token", {
+        _token: token as string,
+        _documento_id: documentoId,
+        _arquivo_url: filePath,
+        _arquivo_nome: file.name,
+        _arquivo_tamanho: file.size,
+        _status: 'enviado',
+        _data_envio: new Date().toISOString(),
+      });
 
       if (updateError) throw updateError;
 
