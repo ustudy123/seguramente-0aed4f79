@@ -230,6 +230,26 @@ export default function Empresa() {
     });
   };
 
+  const handleDeleteBatch = async (ids: string[]) => {
+    const nomes = empresas.filter(e => ids.includes(e.id)).map(e => e.razao_social || e.nome_fantasia || 'sem nome');
+    const { confirm } = await import('@/components/ui/confirm-dialog');
+    const ok = await confirm({
+      title: 'Excluir Empresas em Lote?',
+      description: `Tem certeza que deseja excluir ${ids.length} empresa(s)?\n\n${nomes.slice(0, 5).join('\n')}${nomes.length > 5 ? '\n...' : ''}\n\nApenas empresas sem colaboradores/terceiros serão excluídas.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+      variant: 'destructive',
+      requiredWord: 'EXCLUIR',
+    });
+    if (!ok) return;
+    deleteBatchEmpresas.mutate(ids, {
+      onSuccess: () => {
+        toast.success(`${ids.length} empresa(s) processada(s).`);
+      },
+      onError: (err: Error) => toast.error(err.message || 'Não foi possível excluir em lote.'),
+    });
+  };
+
   const handleDescartarRascunho = () => {
     clearDraft();
     setRascunhoRestaurado(false);
