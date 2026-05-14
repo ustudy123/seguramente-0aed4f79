@@ -18,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateError } from "@/lib/translateError";
 
-import { translateError } from "@/lib/translateError";
 import { passwordSchema } from "@/lib/passwordPolicy";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 
