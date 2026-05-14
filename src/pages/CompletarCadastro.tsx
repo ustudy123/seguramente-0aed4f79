@@ -34,11 +34,9 @@ export default function CompletarCadastro() {
   const fetchColaborador = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("admissoes")
-        .select("*")
-        .eq("onboarding_token", token)
-        .single();
+      const { data, error } = await supabase.rpc("get_admissao_by_token", {
+        _token: token as string,
+      });
 
       if (error || !data) {
         toast.error("Link inválido ou expirado.");
@@ -47,7 +45,7 @@ export default function CompletarCadastro() {
       }
 
       setColaborador(data);
-      fetchDocumentos(data.id);
+      fetchDocumentos();
     } catch (error) {
       console.error("Erro ao buscar colaborador:", error);
     } finally {
@@ -55,20 +53,19 @@ export default function CompletarCadastro() {
     }
   };
 
-  const fetchDocumentos = async (admissaoId: string) => {
-    const { data, error } = await supabase
-      .from("admissao_documentos")
-      .select("*")
-      .eq("admissao_id", admissaoId);
+  const fetchDocumentos = async () => {
+    const { data, error } = await supabase.rpc("get_admissao_documentos_by_token", {
+      _token: token as string,
+    });
 
     if (error) {
       console.error("Erro ao buscar documentos:", error);
       return;
     }
 
-    setDocumentos(data.map(doc => ({
+    setDocumentos((data || []).map((doc: any) => ({
       ...doc,
-      status: doc.status as DocumentoStatus
+      status: doc.status as DocumentoStatus,
     })));
   };
 
