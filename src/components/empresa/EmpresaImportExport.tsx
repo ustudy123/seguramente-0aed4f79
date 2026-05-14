@@ -76,6 +76,8 @@ const TEMPLATE_INSTRUCTIONS = [
 export function EmpresaImportExport() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; errors: string[]; duplicadas: string[] } | null>(null);
+  const [progress, setProgress] = useState<{ current: number; total: number; etapa: string; empresaAtual?: string }>({ current: 0, total: 0, etapa: '' });
+  const [showCompletion, setShowCompletion] = useState(false);
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const queryClient = useQueryClient();
