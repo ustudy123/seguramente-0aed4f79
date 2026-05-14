@@ -486,7 +486,7 @@ export default function Register() {
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="Mínimo 12 caracteres"
                           autoComplete="new-password"
                           {...field}
                         />
@@ -500,6 +500,7 @@ export default function Register() {
                         </button>
                       </div>
                     </FormControl>
+                    <PasswordStrength value={field.value || ""} className="mt-2" />
                     <FormMessage />
                   </FormItem>
                 )}
