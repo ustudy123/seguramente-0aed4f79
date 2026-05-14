@@ -287,6 +287,19 @@ export default function Empresa() {
           onNew={handleNew}
           onToggleAtivo={handleToggleAtivo}
           onDelete={handleDeleteEmpresa}
+          onBatchDelete={async (items) => {
+            const failed: { nome: string; error: string }[] = [];
+            let ok = 0;
+            for (const it of items) {
+              try {
+                await deleteEmpresa.mutateAsync(it.id);
+                ok++;
+              } catch (e: any) {
+                failed.push({ nome: it.nome, error: e?.message || 'Erro desconhecido' });
+              }
+            }
+            return { ok, failed };
+          }}
           grupos={grupos}
           obrigacoes={obrigacoes}
         />
