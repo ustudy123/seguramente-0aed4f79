@@ -142,6 +142,31 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
     toast.success(`${selectedIds.size} empresa(s) ${ativo ? 'ativada(s)' : 'inativada(s)'}`);
   };
 
+  const handleBatchDelete = async () => {
+    if (!onBatchDelete || selectedIds.size === 0) return;
+    const items = filtered
+      .filter(e => selectedIds.has(e.id))
+      .map(e => ({ id: e.id, nome: e.razao_social || e.nome_fantasia || 'sem nome' }));
+    const { confirm } = await import('@/components/ui/confirm-dialog');
+    const ok = await confirm({
+      title: `Excluir ${items.length} empresa(s)?`,
+      description: `Esta ação é irreversível. Empresas com colaboradores ou terceiros vinculados NÃO serão excluídas (a validação de segurança do banco bloqueará).\n\nDigite "EXCLUIR" para confirmar.`,
+      confirmLabel: 'Excluir selecionadas',
+      cancelLabel: 'Cancelar',
+      variant: 'destructive',
+      requiredWord: 'EXCLUIR',
+    });
+    if (!ok) return;
+    const result = await onBatchDelete(items);
+    setSelectedIds(new Set());
+    if (result.ok > 0) toast.success(`${result.ok} empresa(s) excluída(s).`);
+    if (result.failed.length > 0) {
+      const lista = result.failed.slice(0, 5).map(f => `• ${f.nome}: ${f.error}`).join('\n');
+      const extra = result.failed.length > 5 ? `\n…e mais ${result.failed.length - 5}.` : '';
+      toast.warning(`${result.failed.length} não excluída(s) (vínculos ativos):\n${lista}${extra}`, { duration: 8000 });
+    }
+  };
+
   // Export — completo (todas as etapas do cadastro), em XLSX ou PDF
   const handleExportXlsx = () => {
     if (filtered.length === 0) {
