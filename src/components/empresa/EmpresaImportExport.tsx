@@ -16,6 +16,7 @@ const TEMPLATE_COLUMNS = [
   'Razão Social*',
   'Nome Fantasia',
   'CNPJ*',
+  'Tipo de Unidade (Matriz/Filial)',
   'Inscrição Estadual',
   'Telefone',
   'E-mail',
@@ -36,6 +37,7 @@ const EXAMPLE_ROW = [
   'Empresa Exemplo Ltda (EXEMPLO - PODE APAGAR)',
   'Exemplo',
   '00.000.000/0000-00',
+  'Matriz',
   '123456789',
   '(11) 99999-9999',
   'exemplo@empresa.com',
@@ -57,6 +59,7 @@ const TEMPLATE_INSTRUCTIONS = [
   ['Razão Social*', 'Sim', 'Texto', 'Empresa ABC Ltda'],
   ['Nome Fantasia', 'Não', 'Texto', 'ABC'],
   ['CNPJ*', 'Sim', '00.000.000/0000-00', '12.345.678/0001-90'],
+  ['Tipo de Unidade (Matriz/Filial)', 'Não', 'Matriz ou Filial', 'Matriz'],
   ['Inscrição Estadual', 'Não', 'Texto', '123456789'],
   ['Telefone', 'Não', '(00) 0000-0000', '(11) 3000-0000'],
   ['E-mail', 'Não', 'E-mail válido', 'contato@empresa.com'],
@@ -247,12 +250,17 @@ export function EmpresaImportExport() {
         const totalColabRaw = row['Total Colaboradores']?.toString().trim();
         const totalColab = totalColabRaw ? parseInt(totalColabRaw, 10) : null;
 
+        // Determina tipo de unidade: padrão 'filial' se não informado
+        const tipoUnidadeRaw = row['Tipo de Unidade (Matriz/Filial)']?.toString().trim().toLowerCase();
+        const tipoUnidade: 'matriz' | 'filial' = tipoUnidadeRaw === 'matriz' ? 'matriz' : 'filial';
+
         const payload: Record<string, unknown> = {
           tenant_id: tenantId,
           tipo_pessoa: 'pj',
           razao_social: razaoSocial,
           nome_fantasia: nomeFantasia,
           cnpj: cnpjFormatado,
+          tipo_unidade: tipoUnidade,
           inscricao_estadual: row['Inscrição Estadual']?.toString().trim() || null,
           telefone: row['Telefone']?.toString().trim() || infoApi?.telefone || null,
           // Respeita a planilha: se o e-mail foi removido propositalmente, não enriquecer via BrasilAPI
