@@ -250,12 +250,17 @@ export function EmpresaImportExport() {
         const totalColabRaw = row['Total Colaboradores']?.toString().trim();
         const totalColab = totalColabRaw ? parseInt(totalColabRaw, 10) : null;
 
+        // Determina tipo de unidade: padrão 'filial' se não informado
+        const tipoUnidadeRaw = row['Tipo de Unidade (Matriz/Filial)']?.toString().trim().toLowerCase();
+        const tipoUnidade: 'matriz' | 'filial' = tipoUnidadeRaw === 'matriz' ? 'matriz' : 'filial';
+
         const payload: Record<string, unknown> = {
           tenant_id: tenantId,
           tipo_pessoa: 'pj',
           razao_social: razaoSocial,
           nome_fantasia: nomeFantasia,
           cnpj: cnpjFormatado,
+          tipo_unidade: tipoUnidade,
           inscricao_estadual: row['Inscrição Estadual']?.toString().trim() || null,
           telefone: row['Telefone']?.toString().trim() || infoApi?.telefone || null,
           // Respeita a planilha: se o e-mail foi removido propositalmente, não enriquecer via BrasilAPI
