@@ -288,6 +288,101 @@ export function LandingLeadsTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!viewing} onOpenChange={(o) => { if (!o) setViewing(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              Diagnóstico — {viewing?.nome}
+            </DialogTitle>
+            <DialogDescription>
+              {viewing?.empresa || "—"} · {viewing?.setor || "—"} · {viewing?.num_funcionarios || "—"} func.
+            </DialogDescription>
+          </DialogHeader>
+          {viewing && (() => {
+            const diag = viewing.diagnostico_resultado || {};
+            const dims = diag.dimensoes || {};
+            const resp = diag.respostas || {};
+            const score = viewing.pontuacao_diagnostico ?? diag.score;
+            const perfil = viewing.perfil_diagnostico || diag.perfil;
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="border rounded-lg p-3 text-center">
+                    <div className="text-xs text-muted-foreground">Score</div>
+                    <div className="text-2xl font-bold">{score ?? "—"}</div>
+                  </div>
+                  <div className="border rounded-lg p-3 text-center">
+                    <div className="text-xs text-muted-foreground">Perfil</div>
+                    <div className="text-sm font-semibold mt-1 capitalize">{perfil || "—"}</div>
+                  </div>
+                  <div className="border rounded-lg p-3 text-center">
+                    <div className="text-xs text-muted-foreground">Urgência</div>
+                    <div className="text-sm font-semibold mt-1">{viewing.urgencia || "—"}</div>
+                  </div>
+                </div>
+
+                {Object.keys(dims).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Dimensões</h4>
+                    <div className="space-y-2">
+                      {Object.entries(dims).map(([k, v]: [string, any]) => {
+                        const pct = v.max ? Math.round((v.soma / v.max) * 100) : 0;
+                        return (
+                          <div key={k}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="capitalize">{k}</span>
+                              <span className="font-mono text-muted-foreground">{v.soma}/{v.max} ({pct}%)</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${pct >= 70 ? "bg-success" : pct >= 40 ? "bg-warning" : "bg-destructive"}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {Object.keys(resp).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Respostas</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {Object.entries(resp).map(([k, v]: [string, any]) => (
+                        <div key={k} className="flex justify-between border rounded px-2 py-1">
+                          <span className="text-muted-foreground">{k.replace(/^q_/, "")}</span>
+                          <Badge
+                            variant="outline"
+                            className={
+                              v === "sim" ? "bg-success/10 text-success border-success/20"
+                              : v === "nao" ? "bg-destructive/10 text-destructive border-destructive/20"
+                              : "bg-warning/10 text-warning border-warning/20"
+                            }
+                          >
+                            {String(v)}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground border-t pt-2">
+                  Capturado em: {diag.capturado_em ? format(new Date(diag.capturado_em), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—"}
+                  {diag.origem_landing && <> · Origem: {diag.origem_landing}</>}
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewing(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
