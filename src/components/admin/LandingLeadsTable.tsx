@@ -201,6 +201,16 @@ export function LandingLeadsTable() {
                         <Button
                           size="icon"
                           variant="ghost"
+                          className="h-7 w-7 text-primary hover:bg-primary/10"
+                          title="Ver diagnóstico"
+                          onClick={() => setViewing(lead)}
+                          disabled={!lead.diagnostico_resultado && lead.pontuacao_diagnostico == null}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
                           className="h-7 w-7"
                           title="Editar"
                           onClick={() => openEdit(lead)}
