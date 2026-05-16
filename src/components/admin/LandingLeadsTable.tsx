@@ -34,6 +34,7 @@ export function LandingLeadsTable() {
   const { isSuperAdmin } = useSuperAdmin();
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<LeadEditForm | null>(null);
+  const [viewing, setViewing] = useState<any | null>(null);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["landing-leads"],
