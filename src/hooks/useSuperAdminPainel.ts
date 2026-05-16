@@ -126,8 +126,11 @@ export function useLeads() {
 
   const deleteLead = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("leads").delete().eq("id", id);
+      const { error, data } = await supabase.from("leads").delete().eq("id", id).select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Sem permissão para excluir (apenas Super Admin pode excluir leads).");
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["superadmin", "leads"] });
