@@ -120,7 +120,7 @@ export function LeadsCRMKanban() {
                               title: "Excluir lead",
                               description: `Tem certeza que deseja excluir o lead "${lead.nome}"? Esta ação não pode ser desfeita.`,
                               variant: "destructive",
-                              confirmText: "Excluir",
+                              confirmLabel: "Excluir",
                             });
                             if (ok) deleteLead.mutate(lead.id);
                           }} title="Excluir">
