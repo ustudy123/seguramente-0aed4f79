@@ -6,7 +6,8 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Globe, Mail, User, Brain, AlertTriangle, CheckCircle, Clock, Edit, Trash2, Eye } from "lucide-react";
+import { Globe, Mail, User, Brain, AlertTriangle, CheckCircle, Clock, Edit, Trash2, Eye, Phone, Copy, Flame, Target, TrendingUp, ShieldAlert, Lightbulb, MessageCircle, DollarSign, Zap } from "lucide-react";
+import { computeLeadIntel, formatBRL, whatsappLink, mailtoLink } from "./leadIntelligence";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -290,14 +291,14 @@ export function LandingLeadsTable() {
       </Dialog>
 
       <Dialog open={!!viewing} onOpenChange={(o) => { if (!o) setViewing(null); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Brain className="w-5 h-5 text-primary" />
-              Diagnóstico — {viewing?.nome}
+              Inteligência Comercial — {viewing?.nome}
             </DialogTitle>
             <DialogDescription>
-              {viewing?.empresa || "—"} · {viewing?.setor || "—"} · {viewing?.num_funcionarios || "—"} func.
+              {viewing?.empresa || "—"} · {viewing?.cargo || "—"} · {viewing?.setor || "—"} · {viewing?.num_funcionarios || "—"} func.
             </DialogDescription>
           </DialogHeader>
           {viewing && (() => {
@@ -305,34 +306,189 @@ export function LandingLeadsTable() {
             const dims = diag.dimensoes || {};
             const resp = diag.respostas || {};
             const score = viewing.pontuacao_diagnostico ?? diag.score;
-            const perfil = viewing.perfil_diagnostico || diag.perfil;
+            const intel = computeLeadIntel(viewing);
+
+            const copyToClipboard = (text: string, label: string) => {
+              navigator.clipboard.writeText(text);
+              toast.success(`${label} copiado!`);
+            };
+
+            const icpClass = {
+              ideal: "bg-success/10 text-success border-success/20",
+              bom: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+              fora: "bg-destructive/10 text-destructive border-destructive/20",
+              indefinido: "bg-muted text-muted-foreground",
+            }[intel.icp];
+
+            const wppLink = whatsappLink(viewing.telefone, intel.ganchoAbordagem);
+            const mailLink = mailtoLink(
+              viewing.email,
+              `${viewing.empresa || ""} — Diagnóstico SST Seguramente`,
+              intel.ganchoAbordagem
+            );
+
             return (
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="border rounded-lg p-3 text-center">
-                    <div className="text-xs text-muted-foreground">Score</div>
-                    <div className="text-2xl font-bold">{score ?? "—"}</div>
+                {/* HERO: Temperatura + ICP + Ticket */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className={`border-2 rounded-lg p-3 ${intel.temperaturaClass}`}>
+                    <div className="flex items-center gap-1 text-xs font-medium">
+                      <Flame className="w-3 h-3" /> Temperatura
+                    </div>
+                    <div className="text-2xl font-bold mt-1">{intel.temperatura}</div>
+                    <div className="text-xs font-semibold">{intel.temperaturaLabel}</div>
                   </div>
-                  <div className="border rounded-lg p-3 text-center">
-                    <div className="text-xs text-muted-foreground">Perfil</div>
-                    <div className="text-sm font-semibold mt-1 capitalize">{perfil || "—"}</div>
+                  <div className={`border-2 rounded-lg p-3 ${icpClass}`}>
+                    <div className="flex items-center gap-1 text-xs font-medium">
+                      <Target className="w-3 h-3" /> ICP
+                    </div>
+                    <div className="text-sm font-bold mt-1">{intel.icpLabel}</div>
+                    <div className="text-[10px] mt-0.5 opacity-80">{intel.icpReason}</div>
                   </div>
-                  <div className="border rounded-lg p-3 text-center">
-                    <div className="text-xs text-muted-foreground">Urgência</div>
-                    <div className="text-sm font-semibold mt-1">{viewing.urgencia || "—"}</div>
+                  <div className="border rounded-lg p-3 bg-primary/5">
+                    <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                      <DollarSign className="w-3 h-3" /> Ticket estimado/mês
+                    </div>
+                    <div className="text-sm font-bold mt-1">
+                      {formatBRL(intel.ticketMin)} – {formatBRL(intel.ticketMax)}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      ARR potencial: {formatBRL(intel.arrPotencial)}
+                    </div>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                      <TrendingUp className="w-3 h-3" /> Score / Perfil
+                    </div>
+                    <div className="text-2xl font-bold mt-1">{score ?? "—"}</div>
+                    <div className="text-xs capitalize text-muted-foreground">
+                      {viewing.perfil_diagnostico || diag.perfil || "—"} · {viewing.urgencia || "sem urgência"}
+                    </div>
                   </div>
                 </div>
 
+                {/* PRÓXIMA AÇÃO */}
+                <div className="border-l-4 border-primary bg-primary/5 rounded p-3 flex items-start gap-2">
+                  <Zap className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-primary uppercase tracking-wide">
+                      Próxima ação recomendada
+                    </div>
+                    <div className="text-sm font-medium mt-0.5">{intel.proximaAcao}</div>
+                  </div>
+                </div>
+
+                {/* AÇÕES RÁPIDAS */}
+                <div className="flex flex-wrap gap-2">
+                  {wppLink && (
+                    <Button size="sm" variant="outline" asChild className="bg-success/10 hover:bg-success/20 border-success/20 text-success">
+                      <a href={wppLink} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="w-3.5 h-3.5 mr-1" /> WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={mailLink}>
+                      <Mail className="w-3.5 h-3.5 mr-1" /> E-mail
+                    </a>
+                  </Button>
+                  {viewing.telefone && (
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={`tel:${viewing.telefone}`}>
+                        <Phone className="w-3.5 h-3.5 mr-1" /> Ligar
+                      </a>
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => copyToClipboard(viewing.email, "E-mail")}>
+                    <Copy className="w-3.5 h-3.5 mr-1" /> Copiar e-mail
+                  </Button>
+                  {viewing.telefone && (
+                    <Button size="sm" variant="outline" onClick={() => copyToClipboard(viewing.telefone, "Telefone")}>
+                      <Copy className="w-3.5 h-3.5 mr-1" /> Copiar telefone
+                    </Button>
+                  )}
+                </div>
+
+                {/* GANCHO DE ABORDAGEM */}
+                <div className="border rounded-lg p-3 bg-muted/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase">
+                      <Lightbulb className="w-3 h-3" /> Script de abordagem (pronto p/ enviar)
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-7" onClick={() => copyToClipboard(intel.ganchoAbordagem, "Script")}>
+                      <Copy className="w-3 h-3 mr-1" /> Copiar
+                    </Button>
+                  </div>
+                  <p className="text-sm italic text-foreground/90 leading-relaxed">"{intel.ganchoAbordagem}"</p>
+                </div>
+
+                {/* MÓDULOS RECOMENDADOS + RISCOS (grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {intel.modulosRecomendados.length > 0 && (
+                    <div className="border rounded-lg p-3">
+                      <div className="flex items-center gap-1 text-xs font-semibold mb-2 text-primary uppercase">
+                        <Target className="w-3 h-3" /> Módulos a ofertar
+                      </div>
+                      <ol className="space-y-2">
+                        {intel.modulosRecomendados.map((m) => (
+                          <li key={m.nome} className="flex items-start gap-2">
+                            <Badge variant="outline" className="bg-primary/10 text-primary text-[10px] mt-0.5">
+                              #{m.prioridade}
+                            </Badge>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{m.nome}</div>
+                              <div className="text-[11px] text-muted-foreground">{m.motivo}</div>
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {intel.riscoTrabalhista.length > 0 && (
+                    <div className="border border-destructive/30 rounded-lg p-3 bg-destructive/5">
+                      <div className="flex items-center gap-1 text-xs font-semibold mb-2 text-destructive uppercase">
+                        <ShieldAlert className="w-3 h-3" /> Riscos trabalhistas detectados
+                      </div>
+                      <ul className="space-y-1">
+                        {intel.riscoTrabalhista.map((r, i) => (
+                          <li key={i} className="text-xs flex items-start gap-1">
+                            <AlertTriangle className="w-3 h-3 text-destructive mt-0.5 flex-shrink-0" />
+                            <span>{r}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* PONTOS FORTES (negociação) */}
+                {intel.pontosFortes.length > 0 && (
+                  <div className="border rounded-lg p-3 bg-success/5">
+                    <div className="flex items-center gap-1 text-xs font-semibold mb-2 text-success uppercase">
+                      <CheckCircle className="w-3 h-3" /> Pontos fortes (use como elogio)
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {intel.pontosFortes.map((p) => (
+                        <Badge key={p.dim} className="bg-success/10 text-success border-success/20 capitalize">
+                          {p.dim}: {p.pct}%
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* DIMENSÕES */}
                 {Object.keys(dims).length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">Dimensões</h4>
-                    <div className="space-y-2">
+                  <details className="border rounded-lg p-3" open>
+                    <summary className="text-sm font-semibold cursor-pointer">Dimensões do diagnóstico</summary>
+                    <div className="space-y-2 mt-3">
                       {Object.entries(dims).map(([k, v]: [string, any]) => {
                         const pct = v.max ? Math.round((v.soma / v.max) * 100) : 0;
                         return (
                           <div key={k}>
                             <div className="flex justify-between text-xs mb-1">
-                              <span className="capitalize">{k}</span>
+                              <span className="capitalize font-medium">{k}</span>
                               <span className="font-mono text-muted-foreground">{v.soma}/{v.max} ({pct}%)</span>
                             </div>
                             <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -345,13 +501,14 @@ export function LandingLeadsTable() {
                         );
                       })}
                     </div>
-                  </div>
+                  </details>
                 )}
 
+                {/* RESPOSTAS */}
                 {Object.keys(resp).length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">Respostas</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                  <details className="border rounded-lg p-3">
+                    <summary className="text-sm font-semibold cursor-pointer">Respostas brutas do questionário ({Object.keys(resp).length})</summary>
+                    <div className="grid grid-cols-2 gap-2 text-xs mt-3">
                       {Object.entries(resp).map(([k, v]: [string, any]) => (
                         <div key={k} className="flex justify-between border rounded px-2 py-1">
                           <span className="text-muted-foreground">{k.replace(/^q_/, "")}</span>
@@ -368,7 +525,7 @@ export function LandingLeadsTable() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 <div className="text-xs text-muted-foreground border-t pt-2">
