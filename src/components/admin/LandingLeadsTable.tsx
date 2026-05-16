@@ -1,15 +1,40 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { confirm } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Globe, Mail, User, Brain, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Globe, Mail, User, Brain, AlertTriangle, CheckCircle, Clock, Edit, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 
+interface LeadEditForm {
+  nome: string;
+  email: string;
+  telefone: string | null;
+  empresa: string | null;
+  cargo: string | null;
+  setor: string | null;
+  num_funcionarios: string | null;
+}
+
 export function LandingLeadsTable() {
+  const queryClient = useQueryClient();
+  const { isSuperAdmin } = useSuperAdmin();
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState<LeadEditForm | null>(null);
+
   const { data: leads, isLoading } = useQuery({
     queryKey: ["landing-leads"],
     queryFn: async () => {
@@ -21,6 +46,55 @@ export function LandingLeadsTable() {
       return data;
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: LeadEditForm }) => {
+      const { error } = await supabase.from("landing_leads").update(data).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lead atualizado");
+      queryClient.invalidateQueries({ queryKey: ["landing-leads"] });
+      setEditing(null);
+      setForm(null);
+    },
+    onError: (e: any) => toast.error(e.message || "Erro ao atualizar"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("landing_leads").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lead excluído");
+      queryClient.invalidateQueries({ queryKey: ["landing-leads"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Erro ao excluir"),
+  });
+
+  const openEdit = (lead: any) => {
+    setEditing(lead);
+    setForm({
+      nome: lead.nome || "",
+      email: lead.email || "",
+      telefone: lead.telefone || "",
+      empresa: lead.empresa || "",
+      cargo: lead.cargo || "",
+      setor: lead.setor || "",
+      num_funcionarios: lead.num_funcionarios || "",
+    });
+  };
+
+  const handleDelete = async (lead: any) => {
+    const ok = await confirm({
+      title: "Excluir lead",
+      description: `Excluir permanentemente o lead "${lead.nome}"?\nEsta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (ok) deleteMutation.mutate(lead.id);
+  };
 
   const total = leads?.length || 0;
   const comDiagnostico = leads?.filter((l: any) => l.pontuacao_diagnostico != null).length || 0;
@@ -60,6 +134,7 @@ export function LandingLeadsTable() {
                 <TableHead>Urgência</TableHead>
                 <TableHead>Contato</TableHead>
                 <TableHead>Data</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -120,6 +195,31 @@ export function LandingLeadsTable() {
                     <TableCell className="text-muted-foreground text-xs">
                       {format(new Date(lead.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          title="Editar"
+                          onClick={() => openEdit(lead)}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        {isSuperAdmin && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Excluir (Super Admin)"
+                            onClick={() => handleDelete(lead)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -127,6 +227,56 @@ export function LandingLeadsTable() {
           </Table>
         )}
       </CardContent>
+
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setForm(null); } }}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Editar Lead</DialogTitle>
+            <DialogDescription>Atualize os dados de contato deste lead.</DialogDescription>
+          </DialogHeader>
+          {form && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label>Nome*</Label>
+                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <Label>E-mail*</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input value={form.telefone || ""} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+              </div>
+              <div>
+                <Label>Cargo</Label>
+                <Input value={form.cargo || ""} onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
+              </div>
+              <div>
+                <Label>Empresa</Label>
+                <Input value={form.empresa || ""} onChange={(e) => setForm({ ...form, empresa: e.target.value })} />
+              </div>
+              <div>
+                <Label>Setor</Label>
+                <Input value={form.setor || ""} onChange={(e) => setForm({ ...form, setor: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <Label>Nº de funcionários</Label>
+                <Input value={form.num_funcionarios || ""} onChange={(e) => setForm({ ...form, num_funcionarios: e.target.value })} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditing(null); setForm(null); }}>Cancelar</Button>
+            <Button
+              onClick={() => editing && form && updateMutation.mutate({ id: editing.id, data: form })}
+              disabled={!form?.nome || !form?.email || updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
