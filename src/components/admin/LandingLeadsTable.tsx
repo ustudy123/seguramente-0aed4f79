@@ -6,7 +6,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Globe, Mail, User, Brain, AlertTriangle, CheckCircle, Clock, Edit, Trash2 } from "lucide-react";
+import { Globe, Mail, User, Brain, AlertTriangle, CheckCircle, Clock, Edit, Trash2, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
