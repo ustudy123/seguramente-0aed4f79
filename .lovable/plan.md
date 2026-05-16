@@ -1,30 +1,43 @@
 ## Objetivo
-Apagar as 13 empresas cadastradas pelo usuário `renata_sophia_cortereal@cafefrossard.com` (tenant `b344b6ba-7457-4786-ad00-0bbf84666959`) para que ele possa reimportar a planilha do zero.
+Adicionar ações de **Editar** e **Excluir** em cada linha da tabela "Leads da Landing Page" no painel `/admin` (aba Landing).
 
-## Empresas que serão apagadas (13)
-- Alpha Comércio LTDA
-- Atlas Alimentos LTDA
-- Aurora Alimentos LTDA
-- Aurora Daiane Lima
-- ELEICOES 2004 - JOAQUIM LOPES DE SOUZA - PREFEITO
-- Fort Alimentos LTDA
-- Global Consultoria LTDA
-- Nexus Consultoria LTDA
-- Nova Comércio LTDA
-- Prime Financeira LTDA
-- Sigma Comércio LTDA
-- teste 2
-- Vision Transportes LTDA
+## Escopo
+- Arquivo principal: `src/components/admin/LandingLeadsTable.tsx`
+- Tabela `landing_leads` no Supabase
+- Exclusão restrita a Super Admin (`useSuperAdmin`)
 
-Verificado: nenhuma terceiros vinculada. Sem tabela de colaboradores no schema. Limpo para deletar.
+## O que será feito
 
-## Execução
-1. Migration única apagando todos os registros dependentes (FKs em `empresa_obrigacoes`, `documentos`, `documento_pastas`, `gro_riscos`, `plano_acoes`, `usuario_vinculos`, etc.) filtrando por `tenant_id` da Renata e `empresa_id IN (...)`.
-2. Em seguida `DELETE FROM empresa_cadastro WHERE tenant_id = 'b344b6ba-...'`.
-3. Estratégia: usar um bloco `DO $$` que itera as tabelas com coluna `empresa_id` e executa `DELETE` filtrando pelo tenant — evita listar 60+ tabelas manualmente e respeita FKs (a maioria tem `ON DELETE CASCADE`, mas garantimos limpeza).
+**1. Nova coluna "Ações" na tabela**
+- Botão **Editar** (ícone `Edit`) — visível para qualquer admin que já acessa `/admin`
+- Botão **Excluir** (ícone `Trash2`, vermelho) — visível apenas se `isSuperAdmin === true`
 
-## Atenção
-- A operação é destrutiva e irreversível.
-- Mantém o tenant, profile, usuário e estrutura de pastas auto-geradas (serão recriadas no próximo cadastro).
+**2. Modal de edição (campos básicos de contato)**
+Dialog do shadcn com os campos:
+- Nome, E-mail, Telefone
+- Empresa, Cargo, Setor, Nº de funcionários
 
-Confirma que posso executar?
+Salvar dispara `UPDATE landing_leads SET ... WHERE id = ?` e invalida a query `landing-leads` do React Query.
+
+**3. Exclusão com confirmação**
+- Usa o `ConfirmDialog` global (padrão do projeto, conforme memória)
+- Texto: "Excluir permanentemente o lead {nome}? Esta ação não pode ser desfeita."
+- Dispara `DELETE FROM landing_leads WHERE id = ?` e invalida a query
+
+**4. Segurança (RLS)**
+Verificar/garantir políticas em `landing_leads`:
+- `UPDATE`: permitido para usuários com role `admin` ou `owner`
+- `DELETE`: permitido **apenas** para Super Admin (via `has_role(auth.uid(), 'super_admin')` ou função equivalente já existente)
+
+Se as policies atuais não cobrirem isso, adicionar via migration.
+
+## Detalhes técnicos
+- Reaproveitar `useSuperAdmin()` para mostrar/esconder o botão de excluir no frontend (defesa em profundidade — RLS é a barreira real)
+- Mutations com `useMutation` + `queryClient.invalidateQueries(['landing-leads'])`
+- Toasts de sucesso/erro via `sonner`
+- Sem mexer em outras abas (Empresas, Usuários, CRM Kanban)
+
+## Fora do escopo
+- Edição de campos de diagnóstico (perfil, score, urgência, respostas IA)
+- Soft delete / arquivamento
+- Bulk actions
