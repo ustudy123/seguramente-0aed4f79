@@ -1,0 +1,1 @@
+CREATE POLICY "Superadmins can delete leads" ON public.landing_leads FOR DELETE TO authenticated USING (is_superadmin(auth.uid()));
