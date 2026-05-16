@@ -115,7 +115,15 @@ export function LeadsCRMKanban() {
                           <Edit className="w-3 h-3" />
                         </Button>
                         <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive"
-                          onClick={() => deleteLead.mutate(lead.id)} title="Excluir">
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: "Excluir lead",
+                              description: `Tem certeza que deseja excluir o lead "${lead.nome}"? Esta ação não pode ser desfeita.`,
+                              variant: "destructive",
+                              confirmText: "Excluir",
+                            });
+                            if (ok) deleteLead.mutate(lead.id);
+                          }} title="Excluir">
                           <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
