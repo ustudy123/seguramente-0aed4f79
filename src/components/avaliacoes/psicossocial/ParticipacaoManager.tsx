@@ -400,6 +400,42 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
         </Card>
       )}
 
+      {/* Detalhamento do mínimo de respostas por GHE */}
+      {temGHE && minConfigurado && gheBreakdown.length > 0 && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Mínimo de respostas exigido (por GHE)
+              </p>
+              <Badge variant="secondary" className="font-mono">
+                Total: {MINIMO}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {gheBreakdown.map((g) => (
+                <div key={g.ghe_id} className="text-xs rounded-md border bg-background p-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">
+                      <span className="font-mono text-[10px] text-muted-foreground mr-1">{g.codigo}</span>
+                      {g.nome}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {g.elegiveis} elegíveis − {g.ausencias} ausências · {g.percentual}%
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="shrink-0 font-mono text-[10px]">{g.min}</Badge>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Regra: max({MIN_RESPOSTAS_ABS}, ⌈(elegíveis − ausências) × %⌉) somado por GHE.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Alerta de respostas fora do GHE */}
       {temGHE && respNaoElegiveis > 0 && (
         <Card className="border-orange-200 bg-orange-50/50">
