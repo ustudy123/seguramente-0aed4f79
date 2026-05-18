@@ -32,6 +32,7 @@ interface GHE {
   descricao: string | null;
   ativo: boolean;
   created_at: string;
+  updated_at: string | null;
 }
 
 interface GHECargo {
@@ -374,14 +375,9 @@ export function GHEPanel() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-destructive disabled:opacity-40"
-                          disabled={emUso}
-                          title={emUso ? "GHE em uso — apenas arquivar" : "Excluir GHE"}
+                          className="h-7 w-7 text-destructive"
+                          title={emUso ? "GHE em uso — desassocie antes de excluir" : "Excluir GHE"}
                           onClick={() => {
-                            if (emUso) {
-                              toast.warning("Este GHE está em uso. Apenas arquivamento é permitido.");
-                              return;
-                            }
                             setDeleteText("");
                             setDeleteTarget(g);
                           }}
@@ -425,6 +421,13 @@ export function GHEPanel() {
                           <Badge variant="secondary" className="text-[10px]">+{assoc.length - 4}</Badge>
                         )}
                       </div>
+                    </div>
+
+                    <div className="mt-auto pt-2 border-t border-border/60 text-[10px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span>Criado em {new Date(g.created_at).toLocaleDateString("pt-BR")}</span>
+                      {g.updated_at && g.updated_at !== g.created_at && (
+                        <span>Alterado em {new Date(g.updated_at).toLocaleDateString("pt-BR")}</span>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -727,38 +730,73 @@ export function GHEPanel() {
 
       <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) { setDeleteTarget(null); setDeleteText(""); } }}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" /> Excluir GHE definitivamente
-            </DialogTitle>
-            <DialogDescription>
-              Esta ação é irreversível. O grupo <strong>{deleteTarget?.codigo} — {deleteTarget?.nome}</strong> será removido permanentemente.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label className="text-xs">
-              Para confirmar, digite <strong>EXCLUIR</strong> abaixo:
-            </Label>
-            <Input
-              value={deleteText}
-              onChange={(e) => setDeleteText(e.target.value)}
-              placeholder="EXCLUIR"
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteText(""); }}>
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={deleteText.trim() !== "EXCLUIR" || del.isPending}
-              onClick={() => deleteTarget && del.mutate(deleteTarget.id)}
-            >
-              {del.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Excluir definitivamente
-            </Button>
-          </DialogFooter>
+          {(() => {
+            const assocCount = deleteTarget ? associacoes.filter((a) => a.ghe_id === deleteTarget.id).length : 0;
+            const bloqueado = assocCount > 0;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-5 w-5" />
+                    {bloqueado ? "Não é possível excluir" : "Excluir GHE definitivamente"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {bloqueado ? (
+                      <>
+                        O grupo <strong>{deleteTarget?.codigo} — {deleteTarget?.nome}</strong> está associado a{" "}
+                        <strong>{assocCount} função(ões)/departamento(s)</strong>.
+                        <br />
+                        Desassocie todas as funções e departamentos vinculados (editando o GHE) antes de excluir.
+                        Como alternativa, você pode <strong>arquivar</strong> o GHE.
+                      </>
+                    ) : (
+                      <>
+                        Esta ação é irreversível. O grupo <strong>{deleteTarget?.codigo} — {deleteTarget?.nome}</strong> será removido permanentemente.
+                      </>
+                    )}
+                  </DialogDescription>
+                </DialogHeader>
+                {!bloqueado && (
+                  <div className="space-y-2">
+                    <Label className="text-xs">
+                      Para confirmar, digite <strong>EXCLUIR</strong> abaixo:
+                    </Label>
+                    <Input
+                      value={deleteText}
+                      onChange={(e) => setDeleteText(e.target.value)}
+                      placeholder="EXCLUIR"
+                      autoFocus
+                    />
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteText(""); }}>
+                    {bloqueado ? "Entendi" : "Cancelar"}
+                  </Button>
+                  {bloqueado ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        if (deleteTarget) handleEditar(deleteTarget);
+                        setDeleteTarget(null);
+                      }}
+                    >
+                      Editar GHE
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      disabled={deleteText.trim() !== "EXCLUIR" || del.isPending}
+                      onClick={() => deleteTarget && del.mutate(deleteTarget.id)}
+                    >
+                      {del.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Excluir definitivamente
+                    </Button>
+                  )}
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
