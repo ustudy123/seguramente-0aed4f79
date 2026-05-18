@@ -171,7 +171,21 @@ export function RiscosPsicossociaisPanel() {
     return { totalCampanhas: campanhasComResultado.length, totalRespostas, ipsMedio };
   }, [isConsolidado, campanhasComResultado]);
 
-  // Para cada risco, casa as dimensões mapeadas com os subjects do radar (substring/normalize)
+  // Mapeia o código do instrumento da campanha → chave usada em psicossocial_instrumento_dimensao.
+  const campanhaInstrumentoKey = useMemo(() => {
+    if (!campanhaSel) return null;
+    const raw = String((campanhaSel as any).instrumento || "").toLowerCase();
+    if (raw === "sipro") return "SIPRO";
+    if (raw === "copsoq" || raw === "copsoq_iii" || raw === "copsoq3") return "COPSOQ_III";
+    if (raw === "jcq" || raw === "karasek") return "JCQ";
+    if (raw === "eri" || raw === "siegrist") return "ERI";
+    if (raw === "hse" || raw === "hse_ms" || raw === "hsems") return "HSE_MS";
+    return null;
+  }, [campanhaSel]);
+
+  // Para cada risco, casa as dimensões mapeadas com os subjects do radar (substring/normalize).
+  // Quando a campanha tem instrumento conhecido, prioriza mapeamentos do MESMO instrumento
+  // para não rotular um fator com selo de outro questionário (ex.: HSE-MS num COPSOQ).
   const resultadosPorRisco = useMemo(() => {
     const radar = isConsolidado
       ? radarConsolidado
@@ -180,24 +194,30 @@ export function RiscosPsicossociaisPanel() {
       : null;
     if (!radar) return {} as Record<string, { subject: string; value: number; instrumento: string }[]>;
     const out: Record<string, { subject: string; value: number; instrumento: string }[]> = {};
+    const dimensaoMatchSubject = (dim: string, subj: string) => {
+      const tokens = dim.split(" ").filter((t) => t.length >= 4);
+      if (tokens.length === 0) return subj.includes(dim) || dim.includes(subj);
+      return tokens.some((t) => subj.includes(t));
+    };
     riscos.forEach((r) => {
       const maps = mapsPorRisco[r.nome] || [];
       const matches: { subject: string; value: number; instrumento: string }[] = [];
       radar.forEach((rd) => {
         const subj = norm(rd.subject);
-        const m = maps.find((mp) => {
-          const dim = norm(mp.dimensao);
-          // tokens de pelo menos 4 chars devem aparecer
-          const tokens = dim.split(" ").filter((t) => t.length >= 4);
-          if (tokens.length === 0) return subj.includes(dim) || dim.includes(subj);
-          return tokens.some((t) => subj.includes(t));
-        });
+        // 1) tenta no instrumento da campanha; 2) cai para qualquer instrumento mapeado
+        const candidatos = campanhaInstrumentoKey && !isConsolidado
+          ? [
+              ...maps.filter((mp) => mp.instrumento === campanhaInstrumentoKey),
+              ...maps.filter((mp) => mp.instrumento !== campanhaInstrumentoKey),
+            ]
+          : maps;
+        const m = candidatos.find((mp) => dimensaoMatchSubject(norm(mp.dimensao), subj));
         if (m) matches.push({ subject: rd.subject, value: rd.value, instrumento: m.instrumento });
       });
       if (matches.length > 0) out[r.nome] = matches;
     });
     return out;
-  }, [campanhaSel, isConsolidado, radarConsolidado, riscos, mapsPorRisco]);
+  }, [campanhaSel, isConsolidado, radarConsolidado, riscos, mapsPorRisco, campanhaInstrumentoKey]);
 
   return (
     <div className="space-y-4">
