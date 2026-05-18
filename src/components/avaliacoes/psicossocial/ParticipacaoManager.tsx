@@ -297,7 +297,7 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
   const baseTaxa = temGHE ? elegiveisGHE : total;
   const numTaxa = temGHE ? respElegiveis : responderam;
   const taxa = baseTaxa > 0 ? Math.round((numTaxa / baseTaxa) * 100) : 0;
-  const MINIMO = 5;
+  const { minRespostas: MINIMO, porGhe: gheBreakdown, configurado: minConfigurado } = useMinRespostasCampanha(campanha);
 
   const participacoesFiltradas = participacoes.filter(p => {
     if (!busca) return true;
