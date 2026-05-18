@@ -379,6 +379,7 @@ export function usePsicossocial() {
           politica_uso_dados: dados.politica_uso_dados,
           departamentos_ids: dados.departamentos_ids,
           cargos_ids: dados.cargos_ids,
+          ghe_ids: dados.ghe_ids,
           blocos_dinamicos: dados.blocos_dinamicos,
           situacoes_trabalho: dados.situacoes_trabalho as any,
           motivo_extraordinaria: dados.motivo_extraordinaria,
