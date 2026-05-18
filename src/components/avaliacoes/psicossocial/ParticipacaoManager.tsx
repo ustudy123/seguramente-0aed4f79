@@ -399,6 +399,27 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
         </Card>
       )}
 
+      {/* Alerta de respostas fora do GHE */}
+      {temGHE && respNaoElegiveis > 0 && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardContent className="pt-4">
+            <div className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800">
+                  {respNaoElegiveis} resposta(s) fora do GHE
+                </p>
+                <p className="text-xs text-orange-700 mt-0.5 leading-relaxed">
+                  Há CPFs da empresa que responderam mas cuja <strong>lotação (cargo + setor)</strong> não corresponde aos GHEs vinculados a esta campanha. Verifique se há erro de cadastro de lotação no colaborador ou se o GHE precisa incluir esse cargo/setor.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
+
       {/* Aviso de anonimato */}
       <Card className="border-blue-200 bg-blue-50/40">
         <CardContent className="pt-4">
