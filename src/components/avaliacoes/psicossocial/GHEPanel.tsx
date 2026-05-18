@@ -375,14 +375,9 @@ export function GHEPanel() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-destructive disabled:opacity-40"
-                          disabled={emUso}
-                          title={emUso ? "GHE em uso — apenas arquivar" : "Excluir GHE"}
+                          className="h-7 w-7 text-destructive"
+                          title={emUso ? "GHE em uso — desassocie antes de excluir" : "Excluir GHE"}
                           onClick={() => {
-                            if (emUso) {
-                              toast.warning("Este GHE está em uso. Apenas arquivamento é permitido.");
-                              return;
-                            }
                             setDeleteText("");
                             setDeleteTarget(g);
                           }}
