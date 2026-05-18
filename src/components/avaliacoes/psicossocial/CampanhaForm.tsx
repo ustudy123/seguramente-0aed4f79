@@ -58,6 +58,8 @@ import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type Situaca
 import { format, addDays } from "date-fns";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useQuery } from "@tanstack/react-query";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuthContext } from "@/contexts/AuthContext";
 
@@ -103,6 +105,7 @@ const formSchema = z.object({
   data_fim: z.string().min(1, "Data de término é obrigatória"),
   politica_uso_dados: z.string().optional(),
   blocos_dinamicos: z.array(z.string()).default([]),
+  ghe_ids: z.array(z.string()).default([]),
   motivo_extraordinaria: z.string().optional(),
   evento_gatilho_tipo: z.enum(['acidente', 'denuncia', 'reestruturacao', 'conflito', 'ia_sugestao', 'solicitacao_colaborador']).optional(),
   campanha_anterior_id: z.string().optional(),
@@ -158,7 +161,25 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
       data_fim: "",
       politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
       blocos_dinamicos: [],
+      ghe_ids: [],
     },
+  });
+
+  // GHEs ativos disponíveis para vínculo com a campanha
+  const { data: ghesDisponiveis = [] } = useQuery({
+    queryKey: ["psicossocial_ghe_campanha_form", empresaAtivaId],
+    queryFn: async () => {
+      const tenantId = user
+        ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id
+        : null;
+      if (!tenantId) return [];
+      let q = fromTable("psicossocial_ghe").select("id, codigo, nome, ativo").eq("tenant_id", tenantId).eq("ativo", true).order("codigo");
+      if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as { id: string; codigo: string; nome: string; ativo: boolean }[];
+    },
+    enabled: open && !!user,
   });
 
   // Atualizar valores quando entrar em modo edição ou reaplicação
@@ -177,6 +198,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
         form.setValue("data_fim", campanhaParaEditar.data_fim);
         form.setValue("politica_uso_dados", campanhaParaEditar.politica_uso_dados || POLITICA_USO_DADOS_PADRAO);
         form.setValue("blocos_dinamicos", campanhaParaEditar.blocos_dinamicos || []);
+        form.setValue("ghe_ids", (campanhaParaEditar as any).ghe_ids || []);
         
         setSituacoes(campanhaParaEditar.situacoes_trabalho ?? []);
       } else if (isReaplicacao && campanhaAnterior) {
@@ -190,6 +212,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
           data_fim: "",
           politica_uso_dados: campanhaAnterior.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
           blocos_dinamicos: campanhaAnterior.blocos_dinamicos || [],
+          ghe_ids: (campanhaAnterior as any).ghe_ids || [],
           campanha_anterior_id: campanhaAnterior.id,
         });
         setSituacoes(campanhaAnterior.situacoes_trabalho ?? []);
@@ -204,6 +227,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
           data_fim: "",
           politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
           blocos_dinamicos: [],
+          ghe_ids: [],
         });
         setSituacoes([]);
       }
@@ -337,6 +361,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
           data_fim: data.data_fim,
           politica_uso_dados: data.politica_uso_dados,
           blocos_dinamicos: data.blocos_dinamicos,
+          ghe_ids: data.ghe_ids,
           situacoes_trabalho: situacoes,
           motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
           evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
@@ -356,6 +381,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
         mensagem_institucional: undefined,
         politica_uso_dados: data.politica_uso_dados,
         blocos_dinamicos: data.blocos_dinamicos,
+        ghe_ids: data.ghe_ids,
         situacoes_trabalho: situacoes,
         motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
         evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
@@ -862,6 +888,63 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                 </FormItem>
               )}
             />
+
+            {/* GHEs vinculados — para estratificação por cargo/setor via CPF */}
+            <FormField
+              control={form.control}
+              name="ghe_ids"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-purple-600" />
+                    GHEs vinculados à campanha
+                  </FormLabel>
+                  <FormDescription>
+                    Selecione os Grupos Homogêneos de Exposição que serão analisados. A estratificação dos resultados por cargo/setor é feita automaticamente pelo CPF do respondente.
+                  </FormDescription>
+                  {ghesDisponiveis.length === 0 ? (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
+                      <span>Nenhum GHE ativo cadastrado para esta empresa. Crie os GHEs na aba <strong>Grupos Homogêneos</strong> antes de vinculá-los a uma campanha.</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto rounded-lg border p-2">
+                      {ghesDisponiveis.map((ghe) => {
+                        const checked = field.value?.includes(ghe.id);
+                        return (
+                          <label
+                            key={ghe.id}
+                            className={cn(
+                              "flex items-start gap-2 rounded-md border p-2 cursor-pointer transition-colors",
+                              checked ? "bg-purple-50 border-purple-300" : "hover:bg-muted/40"
+                            )}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                if (c) field.onChange([...(field.value || []), ghe.id]);
+                                else field.onChange((field.value || []).filter((id: string) => id !== ghe.id));
+                              }}
+                            />
+                            <div className="grid gap-0.5 leading-tight">
+                              <span className="text-xs font-semibold">{ghe.codigo}</span>
+                              <span className="text-xs text-muted-foreground">{ghe.nome}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {field.value && field.value.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {field.value.length} GHE(s) vinculado(s).
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
 
             {/* Segmentação automática por CPF — não requer cadastro manual de Setor+Função */}
             <div className="rounded-lg border border-purple-200 bg-purple-50/40 p-3 flex items-start gap-2">
