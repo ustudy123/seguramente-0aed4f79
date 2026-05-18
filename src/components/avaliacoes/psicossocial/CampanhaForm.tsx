@@ -361,6 +361,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
           data_fim: data.data_fim,
           politica_uso_dados: data.politica_uso_dados,
           blocos_dinamicos: data.blocos_dinamicos,
+          ghe_ids: data.ghe_ids,
           situacoes_trabalho: situacoes,
           motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
           evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
