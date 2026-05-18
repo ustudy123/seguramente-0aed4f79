@@ -18198,6 +18198,7 @@ export type Database = {
       psicossocial_ghe: {
         Row: {
           ativo: boolean
+          ausencias_justificadas: number
           codigo: string
           created_at: string
           created_by: string | null
@@ -18205,11 +18206,13 @@ export type Database = {
           empresa_id: string | null
           id: string
           nome: string
+          percentual_minimo: number
           tenant_id: string
           updated_at: string
         }
         Insert: {
           ativo?: boolean
+          ausencias_justificadas?: number
           codigo: string
           created_at?: string
           created_by?: string | null
@@ -18217,11 +18220,13 @@ export type Database = {
           empresa_id?: string | null
           id?: string
           nome: string
+          percentual_minimo?: number
           tenant_id: string
           updated_at?: string
         }
         Update: {
           ativo?: boolean
+          ausencias_justificadas?: number
           codigo?: string
           created_at?: string
           created_by?: string | null
@@ -18229,6 +18234,7 @@ export type Database = {
           empresa_id?: string | null
           id?: string
           nome?: string
+          percentual_minimo?: number
           tenant_id?: string
           updated_at?: string
         }

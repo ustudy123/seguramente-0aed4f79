@@ -18,10 +18,22 @@ import {
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { fromTable } from "@/integrations/supabase/untypedClient";
+import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
 import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
+
+/** Mínimo absoluto de respostas para liberar resultados (ISO 45003 / COPSOQ III) */
+const MIN_RESPOSTAS_ABS = 5;
+
+/** Calcula o nº de respostas exigido para liberar resultados deste GHE */
+function calcMinRespostas(elegiveis: number, ausencias: number, pct: number): number {
+  const base = Math.max(0, elegiveis - Math.max(0, ausencias));
+  const pctVal = Math.max(0, Math.min(100, pct || 0));
+  const calc = Math.ceil((base * pctVal) / 100);
+  return Math.max(MIN_RESPOSTAS_ABS, calc);
+}
 
 interface GHE {
   id: string;
@@ -31,6 +43,8 @@ interface GHE {
   nome: string;
   descricao: string | null;
   ativo: boolean;
+  ausencias_justificadas: number;
+  percentual_minimo: number;
   created_at: string;
   updated_at: string | null;
 }
@@ -56,9 +70,18 @@ interface FormState {
   nome: string;
   descricao: string;
   pairs: PairKey[];
+  ausenciasJustificadas: number;
+  percentualMinimo: number;
 }
 
-const emptyForm: FormState = { codigo: "", nome: "", descricao: "", pairs: [] };
+const emptyForm: FormState = {
+  codigo: "",
+  nome: "",
+  descricao: "",
+  pairs: [],
+  ausenciasJustificadas: 0,
+  percentualMinimo: 0,
+};
 
 export function GHEPanel() {
   const { tenantId } = useTenant();
@@ -128,6 +151,45 @@ export function GHEPanel() {
     return map;
   }, [associacoes, form.id]);
 
+  // Admissões ativas da empresa — para calcular elegíveis ao GHE em edição
+  const { data: admissoesEmpresa = [] } = useQuery({
+    queryKey: ["admissoes-empresa-ghe-form", tenantId, empresaAtivaId],
+    enabled: !!tenantId && open && step === "form",
+    queryFn: async () => {
+      let q = supabase
+        .from("admissoes")
+        .select("cargo, departamento, status")
+        .eq("tenant_id", tenantId!);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as { cargo: string | null; departamento: string | null; status: string | null }[];
+    },
+  });
+
+  // Elegíveis do GHE em edição (admissões cujo cargo+departamento estão nos pairs selecionados)
+  const elegiveisForm = useMemo(() => {
+    if (form.pairs.length === 0) return 0;
+    const keys = new Set(
+      form.pairs.map((k) => {
+        const { cargoId, deptId } = parseKey(k);
+        const cargoNome = (cargosById[cargoId]?.nome || "").trim().toLowerCase();
+        const deptNome = deptId ? (deptById[deptId]?.nome || "").trim().toLowerCase() : "";
+        return `${cargoNome}|${deptNome}`;
+      }),
+    );
+    return admissoesEmpresa.filter((a) => {
+      const status = (a.status || "").toLowerCase();
+      // Considera elegível quem não está claramente inativo/desligado
+      if (status && ["desligado", "demitido", "inativo"].includes(status)) return false;
+      const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+      return keys.has(key);
+    }).length;
+  }, [form.pairs, admissoesEmpresa, cargosById, deptById]);
+
+  const baseRespondentesForm = Math.max(0, elegiveisForm - Math.max(0, form.ausenciasJustificadas));
+  const minRespostasForm = calcMinRespostas(elegiveisForm, form.ausenciasJustificadas, form.percentualMinimo);
+
   const upsert = useMutation({
     mutationFn: async (f: FormState) => {
       if (!f.codigo.trim() || !f.nome.trim()) throw new Error("Código e Nome são obrigatórios");
@@ -135,11 +197,27 @@ export function GHEPanel() {
       if (conflitos.length > 0) {
         throw new Error(`${conflitos.length} cargo/departamento já pertence(m) a outro GHE.`);
       }
+      // Regra: GHE precisa ter ao menos 5 elegíveis (após ausências justificadas)
+      if (elegiveisForm < MIN_RESPOSTAS_ABS) {
+        throw new Error(
+          `Este GHE possui apenas ${elegiveisForm} colaborador(es) elegível(is). O mínimo permitido é ${MIN_RESPOSTAS_ABS} para garantir o anonimato (ISO 45003).`,
+        );
+      }
+      if (baseRespondentesForm < MIN_RESPOSTAS_ABS) {
+        throw new Error(
+          `Após descontar ${f.ausenciasJustificadas} ausência(s) justificada(s), restam apenas ${baseRespondentesForm} elegível(is). Mínimo: ${MIN_RESPOSTAS_ABS}.`,
+        );
+      }
+      const payloadBase = {
+        codigo: f.codigo.trim(),
+        nome: f.nome.trim(),
+        descricao: f.descricao.trim() || null,
+        ausencias_justificadas: Math.max(0, Math.floor(f.ausenciasJustificadas || 0)),
+        percentual_minimo: Math.max(0, Math.min(100, Number(f.percentualMinimo) || 0)),
+      };
       let gheId = f.id;
       if (gheId) {
-        const { error } = await fromTable("psicossocial_ghe")
-          .update({ codigo: f.codigo.trim(), nome: f.nome.trim(), descricao: f.descricao.trim() || null })
-          .eq("id", gheId);
+        const { error } = await fromTable("psicossocial_ghe").update(payloadBase).eq("id", gheId);
         if (error) throw error;
         await fromTable("psicossocial_ghe_cargos").delete().eq("ghe_id", gheId);
       } else {
@@ -147,9 +225,7 @@ export function GHEPanel() {
           .insert({
             tenant_id: tenantId!,
             empresa_id: empresaAtivaId || null,
-            codigo: f.codigo.trim(),
-            nome: f.nome.trim(),
-            descricao: f.descricao.trim() || null,
+            ...payloadBase,
           })
           .select("id")
           .single();
@@ -227,7 +303,15 @@ export function GHEPanel() {
     const pairs = associacoes
       .filter((a) => a.ghe_id === g.id)
       .map((a) => makeKey(a.cargo_id, a.departamento_id));
-    setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", pairs });
+    setForm({
+      id: g.id,
+      codigo: g.codigo,
+      nome: g.nome,
+      descricao: g.descricao || "",
+      pairs,
+      ausenciasJustificadas: g.ausencias_justificadas ?? 0,
+      percentualMinimo: Number(g.percentual_minimo ?? 0),
+    });
     setCategoria(null);
     setRefPadrao(null);
     setStep("form");
@@ -560,6 +644,112 @@ export function GHEPanel() {
                 rows={2}
               />
             </div>
+
+            {/* Regras de liberação de resultados */}
+            <div className="space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Regra de liberação de resultados
+                </Label>
+                <Badge
+                  variant={elegiveisForm >= MIN_RESPOSTAS_ABS ? "secondary" : "outline"}
+                  className={
+                    elegiveisForm < MIN_RESPOSTAS_ABS
+                      ? "border-destructive text-destructive"
+                      : "bg-primary/10 text-primary border-primary/20"
+                  }
+                >
+                  {elegiveisForm} elegível(is)
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ausencias" className="text-xs">
+                    Ausências justificadas (afastamentos, férias, etc.)
+                  </Label>
+                  <Input
+                    id="ausencias"
+                    type="number"
+                    min={0}
+                    value={form.ausenciasJustificadas}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, ausenciasJustificadas: Math.max(0, parseInt(e.target.value || "0", 10) || 0) }))
+                    }
+                    placeholder="0"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Subtraído do total elegível para calcular a base de respondentes.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pct-min" className="text-xs">
+                    % mínimo de respostas para liberar
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="pct-min"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={form.percentualMinimo}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          percentualMinimo: Math.max(0, Math.min(100, Number(e.target.value || 0))),
+                        }))
+                      }
+                      placeholder="0"
+                      className="pr-7"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Sempre arredondado para cima — nunca menor que {MIN_RESPOSTAS_ABS} respostas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-md bg-background border p-2.5 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Elegíveis (cargo + departamento)</span>
+                  <span className="font-semibold">{elegiveisForm}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">− Ausências justificadas</span>
+                  <span className="font-semibold">{form.ausenciasJustificadas}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-1">
+                  <span className="text-muted-foreground">= Base de respondentes</span>
+                  <span className="font-semibold">{baseRespondentesForm}</span>
+                </div>
+                <div className="flex items-center justify-between text-primary font-semibold pt-1 border-t">
+                  <span>Mínimo de respostas para liberar resultados</span>
+                  <span>{minRespostasForm}</span>
+                </div>
+              </div>
+
+              {elegiveisForm > 0 && elegiveisForm < MIN_RESPOSTAS_ABS && (
+                <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Um GHE precisa ter pelo menos <strong>{MIN_RESPOSTAS_ABS} colaboradores elegíveis</strong> para preservar o anonimato. Inclua mais cargos/departamentos.
+                  </span>
+                </div>
+              )}
+              {elegiveisForm >= MIN_RESPOSTAS_ABS && baseRespondentesForm < MIN_RESPOSTAS_ABS && (
+                <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Após descontar as ausências, restam menos de {MIN_RESPOSTAS_ABS} elegíveis. Reduza o número de ausências justificadas.
+                  </span>
+                </div>
+              )}
+            </div>
+
+
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
