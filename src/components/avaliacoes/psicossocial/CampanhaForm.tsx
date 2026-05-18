@@ -198,6 +198,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
         form.setValue("data_fim", campanhaParaEditar.data_fim);
         form.setValue("politica_uso_dados", campanhaParaEditar.politica_uso_dados || POLITICA_USO_DADOS_PADRAO);
         form.setValue("blocos_dinamicos", campanhaParaEditar.blocos_dinamicos || []);
+        form.setValue("ghe_ids", (campanhaParaEditar as any).ghe_ids || []);
         
         setSituacoes(campanhaParaEditar.situacoes_trabalho ?? []);
       } else if (isReaplicacao && campanhaAnterior) {
@@ -211,6 +212,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
           data_fim: "",
           politica_uso_dados: campanhaAnterior.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
           blocos_dinamicos: campanhaAnterior.blocos_dinamicos || [],
+          ghe_ids: (campanhaAnterior as any).ghe_ids || [],
           campanha_anterior_id: campanhaAnterior.id,
         });
         setSituacoes(campanhaAnterior.situacoes_trabalho ?? []);
@@ -225,6 +227,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
           data_fim: "",
           politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
           blocos_dinamicos: [],
+          ghe_ids: [],
         });
         setSituacoes([]);
       }
