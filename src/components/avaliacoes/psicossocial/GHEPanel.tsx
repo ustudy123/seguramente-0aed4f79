@@ -250,7 +250,15 @@ export function GHEPanel() {
     const pairs = associacoes
       .filter((a) => a.ghe_id === g.id)
       .map((a) => makeKey(a.cargo_id, a.departamento_id));
-    setForm({ id: g.id, codigo: g.codigo, nome: g.nome, descricao: g.descricao || "", pairs });
+    setForm({
+      id: g.id,
+      codigo: g.codigo,
+      nome: g.nome,
+      descricao: g.descricao || "",
+      pairs,
+      ausenciasJustificadas: g.ausencias_justificadas ?? 0,
+      percentualMinimo: Number(g.percentual_minimo ?? 0),
+    });
     setCategoria(null);
     setRefPadrao(null);
     setStep("form");
