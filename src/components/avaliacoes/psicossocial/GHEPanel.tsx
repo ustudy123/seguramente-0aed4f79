@@ -151,6 +151,45 @@ export function GHEPanel() {
     return map;
   }, [associacoes, form.id]);
 
+  // Admissões ativas da empresa — para calcular elegíveis ao GHE em edição
+  const { data: admissoesEmpresa = [] } = useQuery({
+    queryKey: ["admissoes-empresa-ghe-form", tenantId, empresaAtivaId],
+    enabled: !!tenantId && open && step === "form",
+    queryFn: async () => {
+      let q = supabase
+        .from("admissoes")
+        .select("cargo, departamento, status")
+        .eq("tenant_id", tenantId!);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as { cargo: string | null; departamento: string | null; status: string | null }[];
+    },
+  });
+
+  // Elegíveis do GHE em edição (admissões cujo cargo+departamento estão nos pairs selecionados)
+  const elegiveisForm = useMemo(() => {
+    if (form.pairs.length === 0) return 0;
+    const keys = new Set(
+      form.pairs.map((k) => {
+        const { cargoId, deptId } = parseKey(k);
+        const cargoNome = (cargosById[cargoId]?.nome || "").trim().toLowerCase();
+        const deptNome = deptId ? (deptById[deptId]?.nome || "").trim().toLowerCase() : "";
+        return `${cargoNome}|${deptNome}`;
+      }),
+    );
+    return admissoesEmpresa.filter((a) => {
+      const status = (a.status || "").toLowerCase();
+      // Considera elegível quem não está claramente inativo/desligado
+      if (status && ["desligado", "demitido", "inativo"].includes(status)) return false;
+      const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+      return keys.has(key);
+    }).length;
+  }, [form.pairs, admissoesEmpresa, cargosById, deptById]);
+
+  const baseRespondentesForm = Math.max(0, elegiveisForm - Math.max(0, form.ausenciasJustificadas));
+  const minRespostasForm = calcMinRespostas(elegiveisForm, form.ausenciasJustificadas, form.percentualMinimo);
+
   const upsert = useMutation({
     mutationFn: async (f: FormState) => {
       if (!f.codigo.trim() || !f.nome.trim()) throw new Error("Código e Nome são obrigatórios");
@@ -158,11 +197,27 @@ export function GHEPanel() {
       if (conflitos.length > 0) {
         throw new Error(`${conflitos.length} cargo/departamento já pertence(m) a outro GHE.`);
       }
+      // Regra: GHE precisa ter ao menos 5 elegíveis (após ausências justificadas)
+      if (elegiveisForm < MIN_RESPOSTAS_ABS) {
+        throw new Error(
+          `Este GHE possui apenas ${elegiveisForm} colaborador(es) elegível(is). O mínimo permitido é ${MIN_RESPOSTAS_ABS} para garantir o anonimato (ISO 45003).`,
+        );
+      }
+      if (baseRespondentesForm < MIN_RESPOSTAS_ABS) {
+        throw new Error(
+          `Após descontar ${f.ausenciasJustificadas} ausência(s) justificada(s), restam apenas ${baseRespondentesForm} elegível(is). Mínimo: ${MIN_RESPOSTAS_ABS}.`,
+        );
+      }
+      const payloadBase = {
+        codigo: f.codigo.trim(),
+        nome: f.nome.trim(),
+        descricao: f.descricao.trim() || null,
+        ausencias_justificadas: Math.max(0, Math.floor(f.ausenciasJustificadas || 0)),
+        percentual_minimo: Math.max(0, Math.min(100, Number(f.percentualMinimo) || 0)),
+      };
       let gheId = f.id;
       if (gheId) {
-        const { error } = await fromTable("psicossocial_ghe")
-          .update({ codigo: f.codigo.trim(), nome: f.nome.trim(), descricao: f.descricao.trim() || null })
-          .eq("id", gheId);
+        const { error } = await fromTable("psicossocial_ghe").update(payloadBase).eq("id", gheId);
         if (error) throw error;
         await fromTable("psicossocial_ghe_cargos").delete().eq("ghe_id", gheId);
       } else {
@@ -170,9 +225,7 @@ export function GHEPanel() {
           .insert({
             tenant_id: tenantId!,
             empresa_id: empresaAtivaId || null,
-            codigo: f.codigo.trim(),
-            nome: f.nome.trim(),
-            descricao: f.descricao.trim() || null,
+            ...payloadBase,
           })
           .select("id")
           .single();
