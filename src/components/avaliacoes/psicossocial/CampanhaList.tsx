@@ -448,7 +448,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {(campanha.status === 'rascunho' || (campanha.status === 'ativa' && (campanha.total_respostas || 0) === 0)) && (
+            {campanha.status !== 'encerrada' && (
               <DropdownMenuItem id={`menu-editar-campanha-${campanha.id}`} onClick={onEditar}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Editar Campanha
