@@ -74,7 +74,7 @@ export function useMinRespostasCampanha(
         .select("ghe_id, cargo_id, departamento_id")
         .in("ghe_id", gheIds);
       if (error) throw error;
-      return (data || []) as { ghe_id: string; cargo_id: string | null; departamento_id: string | null }[];
+      return (data || []) as unknown as { ghe_id: string; cargo_id: string | null; departamento_id: string | null }[];
     },
   });
 
