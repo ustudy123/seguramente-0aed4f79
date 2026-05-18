@@ -105,6 +105,7 @@ const formSchema = z.object({
   data_fim: z.string().min(1, "Data de término é obrigatória"),
   politica_uso_dados: z.string().optional(),
   blocos_dinamicos: z.array(z.string()).default([]),
+  ghe_ids: z.array(z.string()).default([]),
   motivo_extraordinaria: z.string().optional(),
   evento_gatilho_tipo: z.enum(['acidente', 'denuncia', 'reestruturacao', 'conflito', 'ia_sugestao', 'solicitacao_colaborador']).optional(),
   campanha_anterior_id: z.string().optional(),
