@@ -227,6 +227,7 @@ export interface CampanhaPsicossocial {
   politica_uso_dados?: string;
   departamentos_ids?: string[];
   cargos_ids?: string[];
+  ghe_ids?: string[];
   blocos_dinamicos?: string[];
   motivo_extraordinaria?: string;
   evento_gatilho_tipo?: EventoGatilhoTipo;
