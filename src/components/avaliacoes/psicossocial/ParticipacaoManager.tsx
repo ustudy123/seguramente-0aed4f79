@@ -113,85 +113,120 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     },
   });
 
-  // Adicionar participante elegível
-  const adicionarParticipante = useMutation({
-    mutationFn: async (dados: typeof form) => {
-      const { data: tenantData } = await supabase
-        .from("profiles")
-        .select("tenant_id")
-        .eq("user_id", profile?.user_id)
-        .single();
+  // === ELEGIBILIDADE VIA GHE ===
+  const gheIds = campanha.ghe_ids || [];
+  const temGHE = gheIds.length > 0;
 
-      const { error } = await supabase.from("psicossocial_participacoes").insert({
-        tenant_id: tenantData?.tenant_id,
-        campanha_id: campanha.id,
-        colaborador_nome: dados.colaborador_nome || null,
-        colaborador_cpf: dados.colaborador_cpf || null,
-        setor: dados.setor || null,
-        cargo: dados.cargo || null,
-        unidade: dados.unidade || null,
-        turno: dados.turno || null,
-        enviado_via: "link",
-        enviado_em: new Date().toISOString(),
+  // Pares (cargo_id, departamento_id) dos GHEs vinculados
+  const { data: ghePairs = [] } = useQuery({
+    queryKey: ["psicossocial-ghe-pairs", campanha.id, gheIds],
+    enabled: temGHE,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("psicossocial_ghe_cargos")
+        .select("cargo_id, departamento_id")
+        .in("ghe_id", gheIds);
+      if (error) throw error;
+      return (data || []) as { cargo_id: string | null; departamento_id: string | null }[];
+    },
+  });
+
+  // Resolver nomes (case-insensitive) de cargos e departamentos
+  const cargoIds = Array.from(new Set(ghePairs.map(p => p.cargo_id).filter(Boolean) as string[]));
+  const deptoIds = Array.from(new Set(ghePairs.map(p => p.departamento_id).filter(Boolean) as string[]));
+
+  const { data: cargosMap = {} } = useQuery({
+    queryKey: ["cargos-map", cargoIds],
+    enabled: cargoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("cargos").select("id, nome").in("id", cargoIds);
+      if (error) throw error;
+      return Object.fromEntries((data || []).map(c => [c.id, (c.nome || "").trim().toLowerCase()]));
+    },
+  });
+
+  const { data: deptosMap = {} } = useQuery({
+    queryKey: ["deptos-map", deptoIds],
+    enabled: deptoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("departamentos").select("id, nome").in("id", deptoIds);
+      if (error) throw error;
+      return Object.fromEntries((data || []).map(d => [d.id, (d.nome || "").trim().toLowerCase()]));
+    },
+  });
+
+  // Conjunto de pares "cargo|depto" normalizado para matching
+  const pairsKey = new Set(
+    ghePairs.map(p => {
+      const c = p.cargo_id ? (cargosMap as Record<string, string>)[p.cargo_id] || "" : "";
+      const d = p.departamento_id ? (deptosMap as Record<string, string>)[p.departamento_id] || "" : "";
+      return `${c}|${d}`;
+    }).filter(k => k !== "|")
+  );
+
+  // Admissões da empresa (potenciais elegíveis)
+  const { data: admissoesEmpresa = [] } = useQuery({
+    queryKey: ["admissoes-empresa-ghe", campanha.empresa_id, campanha.tenant_id],
+    enabled: temGHE && !!campanha.empresa_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admissoes")
+        .select("cargo, departamento, status")
+        .eq("empresa_id", campanha.empresa_id!)
+        .eq("tenant_id", campanha.tenant_id);
+      if (error) throw error;
+      return (data || []) as { cargo: string | null; departamento: string | null; status: string | null }[];
+    },
+  });
+
+  const elegiveisGHE = temGHE
+    ? admissoesEmpresa.filter(a => {
+        if (a.status && !["ativo", "ativa", "active"].includes((a.status || "").toLowerCase())) {
+          // se houver convenção de status; caso contrário inclui tudo
+        }
+        const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+        return pairsKey.has(key);
+      }).length
+    : 0;
+
+  // Bucketing das respostas: elegível vs não elegível
+  const { data: respostasBucket } = useQuery({
+    queryKey: ["psicossocial-respostas-bucket", campanha.id, Array.from(pairsKey).join(";")],
+    enabled: temGHE && pairsKey.size > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("questionario_psicossocial_respostas")
+        .select("cargo_snapshot, setor_snapshot, ghe_id_snapshot")
+        .eq("campanha_id", campanha.id);
+      if (error) throw error;
+      let elig = 0, naoElig = 0;
+      (data || []).forEach((r: any) => {
+        if (r.ghe_id_snapshot && gheIds.includes(r.ghe_id_snapshot)) { elig++; return; }
+        const key = `${(r.cargo_snapshot || "").trim().toLowerCase()}|${(r.setor_snapshot || "").trim().toLowerCase()}`;
+        if (pairsKey.has(key)) elig++; else naoElig++;
       });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["psicossocial-participacoes", campanha.id] });
-      toast.success("Participante adicionado com sucesso");
-      setForm({ colaborador_nome: "", colaborador_cpf: "", setor: "", cargo: "", unidade: "", turno: "" });
-      setShowAddDialog(false);
-    },
-    onError: (err: Error) => {
-      toast.error(`Erro ao adicionar: ${err.message}`);
+      return { elig, naoElig };
     },
   });
-
-  // Remover participante (somente se não respondeu)
-  const removerParticipante = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("psicossocial_participacoes")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["psicossocial-participacoes", campanha.id] });
-      toast.success("Participante removido");
-    },
-  });
-
-  const copiarLink = (token: string) => {
-    navigator.clipboard.writeText(getLinkParticipacao(token));
-    toast.success("Link individual copiado!");
-  };
-
-  const exportarLinks = () => {
-    const linhas = [
-      "Nome,Setor,Cargo,Link Individual,Status",
-      ...participacoes.map(p =>
-        `"${p.colaborador_nome || 'Sem nome'}","${p.setor || ''}","${p.cargo || ''}","${getLinkParticipacao(p.token)}","${p.respondido ? 'Respondido' : 'Pendente'}"`
-      ),
-    ];
-    const blob = new Blob([linhas.join("\n")], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `participantes_${campanha.nome.replace(/ /g, "_")}.csv`;
-    a.click();
-  };
 
   // Estatísticas — combina elegíveis individuais + respostas anônimas (Link Geral)
-  // Quando a campanha é anônima (sem elegíveis nominais), usamos o total de respostas
-  // como fonte de verdade — espelhando a lógica do modal de Resultados.
   const elegiveisNominais = participacoes.length;
   const respondidosIndividuais = participacoes.filter(p => p.respondido).length;
   const responderam = Math.max(respondidosIndividuais, totalRespostasReais);
-  const elegiveis = elegiveisNominais > 0 ? elegiveisNominais : responderam;
+
+  const respElegiveis = respostasBucket?.elig ?? 0;
+  const respNaoElegiveis = respostasBucket?.naoElig ?? 0;
+
+  const elegiveis = temGHE
+    ? elegiveisGHE
+    : (elegiveisNominais > 0 ? elegiveisNominais : responderam);
   const total = Math.max(elegiveis, responderam);
-  const pendentes = Math.max(0, elegiveisNominais - respondidosIndividuais);
-  const taxa = total > 0 ? Math.round((responderam / total) * 100) : 0;
+  const pendentes = temGHE
+    ? Math.max(0, elegiveisGHE - respElegiveis)
+    : Math.max(0, elegiveisNominais - respondidosIndividuais);
+  const baseTaxa = temGHE ? elegiveisGHE : total;
+  const numTaxa = temGHE ? respElegiveis : responderam;
+  const taxa = baseTaxa > 0 ? Math.round((numTaxa / baseTaxa) * 100) : 0;
   const MINIMO = 5;
 
   const participacoesFiltradas = participacoes.filter(p => {
