@@ -54,8 +54,7 @@ import {
   type IRPSClassificacao,
 } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
-
-const MINIMO_ANONIMATO = 5;
+import { useMinRespostasCampanha } from "@/hooks/usePsicossocialMinRespostas";
 
 interface ResultadosModalProps {
   open: boolean;
@@ -66,6 +65,7 @@ interface ResultadosModalProps {
 export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModalProps) {
   const { useEstatisticasCampanha, useRespostasCampanha } = usePsicossocial();
   const { data: stats, isLoading: loadingStats } = useEstatisticasCampanha(campanha.id);
+  const { minRespostas: MINIMO_ANONIMATO, configurado: minConfigurado } = useMinRespostasCampanha(campanha);
   // Removemos a busca manual de respostas aqui pois as estatísticas já trazem o IPS e radar agregados,
   // e as respostas individuais são sensíveis ao anonimato. Se precisarmos de detalhes por dimensão,
   // eles devem vir de 'stats'.
