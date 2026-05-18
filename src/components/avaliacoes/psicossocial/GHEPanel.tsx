@@ -43,6 +43,8 @@ interface GHE {
   nome: string;
   descricao: string | null;
   ativo: boolean;
+  ausencias_justificadas: number;
+  percentual_minimo: number;
   created_at: string;
   updated_at: string | null;
 }
@@ -68,9 +70,18 @@ interface FormState {
   nome: string;
   descricao: string;
   pairs: PairKey[];
+  ausenciasJustificadas: number;
+  percentualMinimo: number;
 }
 
-const emptyForm: FormState = { codigo: "", nome: "", descricao: "", pairs: [] };
+const emptyForm: FormState = {
+  codigo: "",
+  nome: "",
+  descricao: "",
+  pairs: [],
+  ausenciasJustificadas: 0,
+  percentualMinimo: 0,
+};
 
 export function GHEPanel() {
   const { tenantId } = useTenant();
