@@ -18,10 +18,22 @@ import {
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { fromTable } from "@/integrations/supabase/untypedClient";
+import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
 import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
+
+/** Mínimo absoluto de respostas para liberar resultados (ISO 45003 / COPSOQ III) */
+const MIN_RESPOSTAS_ABS = 5;
+
+/** Calcula o nº de respostas exigido para liberar resultados deste GHE */
+function calcMinRespostas(elegiveis: number, ausencias: number, pct: number): number {
+  const base = Math.max(0, elegiveis - Math.max(0, ausencias));
+  const pctVal = Math.max(0, Math.min(100, pct || 0));
+  const calc = Math.ceil((base * pctVal) / 100);
+  return Math.max(MIN_RESPOSTAS_ABS, calc);
+}
 
 interface GHE {
   id: string;
