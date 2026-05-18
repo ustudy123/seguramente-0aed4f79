@@ -422,6 +422,13 @@ export function GHEPanel() {
                         )}
                       </div>
                     </div>
+
+                    <div className="mt-auto pt-2 border-t border-border/60 text-[10px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span>Criado em {new Date(g.created_at).toLocaleDateString("pt-BR")}</span>
+                      {g.updated_at && g.updated_at !== g.created_at && (
+                        <span>Alterado em {new Date(g.updated_at).toLocaleDateString("pt-BR")}</span>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
