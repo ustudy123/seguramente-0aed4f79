@@ -889,6 +889,63 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
               )}
             />
 
+            {/* GHEs vinculados — para estratificação por cargo/setor via CPF */}
+            <FormField
+              control={form.control}
+              name="ghe_ids"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-purple-600" />
+                    GHEs vinculados à campanha
+                  </FormLabel>
+                  <FormDescription>
+                    Selecione os Grupos Homogêneos de Exposição que serão analisados. A estratificação dos resultados por cargo/setor é feita automaticamente pelo CPF do respondente.
+                  </FormDescription>
+                  {ghesDisponiveis.length === 0 ? (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
+                      <span>Nenhum GHE ativo cadastrado para esta empresa. Crie os GHEs na aba <strong>Grupos Homogêneos</strong> antes de vinculá-los a uma campanha.</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto rounded-lg border p-2">
+                      {ghesDisponiveis.map((ghe) => {
+                        const checked = field.value?.includes(ghe.id);
+                        return (
+                          <label
+                            key={ghe.id}
+                            className={cn(
+                              "flex items-start gap-2 rounded-md border p-2 cursor-pointer transition-colors",
+                              checked ? "bg-purple-50 border-purple-300" : "hover:bg-muted/40"
+                            )}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                if (c) field.onChange([...(field.value || []), ghe.id]);
+                                else field.onChange((field.value || []).filter((id: string) => id !== ghe.id));
+                              }}
+                            />
+                            <div className="grid gap-0.5 leading-tight">
+                              <span className="text-xs font-semibold">{ghe.codigo}</span>
+                              <span className="text-xs text-muted-foreground">{ghe.nome}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {field.value && field.value.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {field.value.length} GHE(s) vinculado(s).
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+
             {/* Segmentação automática por CPF — não requer cadastro manual de Setor+Função */}
             <div className="rounded-lg border border-purple-200 bg-purple-50/40 p-3 flex items-start gap-2">
               <Info className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
