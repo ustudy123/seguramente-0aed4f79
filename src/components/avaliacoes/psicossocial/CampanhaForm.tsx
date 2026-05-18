@@ -161,7 +161,25 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
       data_fim: "",
       politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
       blocos_dinamicos: [],
+      ghe_ids: [],
     },
+  });
+
+  // GHEs ativos disponíveis para vínculo com a campanha
+  const { data: ghesDisponiveis = [] } = useQuery({
+    queryKey: ["psicossocial_ghe_campanha_form", empresaAtivaId],
+    queryFn: async () => {
+      const tenantId = user
+        ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id
+        : null;
+      if (!tenantId) return [];
+      let q = fromTable("psicossocial_ghe").select("id, codigo, nome, ativo").eq("tenant_id", tenantId).eq("ativo", true).order("codigo");
+      if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as { id: string; codigo: string; nome: string; ativo: boolean }[];
+    },
+    enabled: open && !!user,
   });
 
   // Atualizar valores quando entrar em modo edição ou reaplicação
