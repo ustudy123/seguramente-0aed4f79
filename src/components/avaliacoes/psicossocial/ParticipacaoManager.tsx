@@ -147,7 +147,6 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     },
   });
 
-  // Remover participante (somente se não respondeu)
   const removerParticipante = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -182,16 +181,121 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     a.click();
   };
 
+
+  // === ELEGIBILIDADE VIA GHE ===
+  const gheIds = campanha.ghe_ids || [];
+  const temGHE = gheIds.length > 0;
+
+  // Pares (cargo_id, departamento_id) dos GHEs vinculados
+  const { data: ghePairs = [] } = useQuery({
+    queryKey: ["psicossocial-ghe-pairs", campanha.id, gheIds],
+    enabled: temGHE,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("psicossocial_ghe_cargos")
+        .select("cargo_id, departamento_id")
+        .in("ghe_id", gheIds);
+      if (error) throw error;
+      return (data || []) as { cargo_id: string | null; departamento_id: string | null }[];
+    },
+  });
+
+  // Resolver nomes (case-insensitive) de cargos e departamentos
+  const cargoIds = Array.from(new Set(ghePairs.map(p => p.cargo_id).filter(Boolean) as string[]));
+  const deptoIds = Array.from(new Set(ghePairs.map(p => p.departamento_id).filter(Boolean) as string[]));
+
+  const { data: cargosMap = {} } = useQuery({
+    queryKey: ["cargos-map", cargoIds],
+    enabled: cargoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("cargos").select("id, nome").in("id", cargoIds);
+      if (error) throw error;
+      return Object.fromEntries((data || []).map(c => [c.id, (c.nome || "").trim().toLowerCase()]));
+    },
+  });
+
+  const { data: deptosMap = {} } = useQuery({
+    queryKey: ["deptos-map", deptoIds],
+    enabled: deptoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("departamentos").select("id, nome").in("id", deptoIds);
+      if (error) throw error;
+      return Object.fromEntries((data || []).map(d => [d.id, (d.nome || "").trim().toLowerCase()]));
+    },
+  });
+
+  // Conjunto de pares "cargo|depto" normalizado para matching
+  const pairsKey = new Set(
+    ghePairs.map(p => {
+      const c = p.cargo_id ? (cargosMap as Record<string, string>)[p.cargo_id] || "" : "";
+      const d = p.departamento_id ? (deptosMap as Record<string, string>)[p.departamento_id] || "" : "";
+      return `${c}|${d}`;
+    }).filter(k => k !== "|")
+  );
+
+  // Admissões da empresa (potenciais elegíveis)
+  const { data: admissoesEmpresa = [] } = useQuery({
+    queryKey: ["admissoes-empresa-ghe", campanha.empresa_id, campanha.tenant_id],
+    enabled: temGHE && !!campanha.empresa_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admissoes")
+        .select("cargo, departamento, status")
+        .eq("empresa_id", campanha.empresa_id!)
+        .eq("tenant_id", campanha.tenant_id);
+      if (error) throw error;
+      return (data || []) as { cargo: string | null; departamento: string | null; status: string | null }[];
+    },
+  });
+
+  const elegiveisGHE = temGHE
+    ? admissoesEmpresa.filter(a => {
+        if (a.status && !["ativo", "ativa", "active"].includes((a.status || "").toLowerCase())) {
+          // se houver convenção de status; caso contrário inclui tudo
+        }
+        const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+        return pairsKey.has(key);
+      }).length
+    : 0;
+
+  // Bucketing das respostas: elegível vs não elegível
+  const { data: respostasBucket } = useQuery({
+    queryKey: ["psicossocial-respostas-bucket", campanha.id, Array.from(pairsKey).join(";")],
+    enabled: temGHE && pairsKey.size > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("questionario_psicossocial_respostas")
+        .select("cargo_snapshot, setor_snapshot, ghe_id_snapshot")
+        .eq("campanha_id", campanha.id);
+      if (error) throw error;
+      let elig = 0, naoElig = 0;
+      (data || []).forEach((r: any) => {
+        if (r.ghe_id_snapshot && gheIds.includes(r.ghe_id_snapshot)) { elig++; return; }
+        const key = `${(r.cargo_snapshot || "").trim().toLowerCase()}|${(r.setor_snapshot || "").trim().toLowerCase()}`;
+        if (pairsKey.has(key)) elig++; else naoElig++;
+      });
+      return { elig, naoElig };
+    },
+  });
+
   // Estatísticas — combina elegíveis individuais + respostas anônimas (Link Geral)
-  // Quando a campanha é anônima (sem elegíveis nominais), usamos o total de respostas
-  // como fonte de verdade — espelhando a lógica do modal de Resultados.
   const elegiveisNominais = participacoes.length;
   const respondidosIndividuais = participacoes.filter(p => p.respondido).length;
   const responderam = Math.max(respondidosIndividuais, totalRespostasReais);
-  const elegiveis = elegiveisNominais > 0 ? elegiveisNominais : responderam;
+
+  const respElegiveis = respostasBucket?.elig ?? 0;
+  const respNaoElegiveis = respostasBucket?.naoElig ?? 0;
+
+  const elegiveis = temGHE
+    ? elegiveisGHE
+    : (elegiveisNominais > 0 ? elegiveisNominais : responderam);
   const total = Math.max(elegiveis, responderam);
-  const pendentes = Math.max(0, elegiveisNominais - respondidosIndividuais);
-  const taxa = total > 0 ? Math.round((responderam / total) * 100) : 0;
+  const pendentes = temGHE
+    ? Math.max(0, elegiveisGHE - respElegiveis)
+    : Math.max(0, elegiveisNominais - respondidosIndividuais);
+  const baseTaxa = temGHE ? elegiveisGHE : total;
+  const numTaxa = temGHE ? respElegiveis : responderam;
+  const taxa = baseTaxa > 0 ? Math.round((numTaxa / baseTaxa) * 100) : 0;
   const MINIMO = 5;
 
   const participacoesFiltradas = participacoes.filter(p => {
@@ -215,7 +319,11 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <span className="text-xs text-muted-foreground">Elegíveis</span>
             </div>
             <p className="text-2xl font-bold mt-1">{elegiveis}</p>
-            {elegiveisNominais === 0 && totalRespostasReais > 0 ? (
+            {temGHE ? (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Calculado a partir do GHE (cargo + setor)
+              </p>
+            ) : elegiveisNominais === 0 && totalRespostasReais > 0 ? (
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 Campanha anônima — respostas via Link Geral
               </p>
@@ -233,6 +341,11 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <span className="text-xs text-muted-foreground">Responderam</span>
             </div>
             <p className="text-2xl font-bold mt-1 text-emerald-600">{responderam}</p>
+            {temGHE && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                <span className="text-emerald-600 font-semibold">{respElegiveis}</span> elegíveis · <span className="text-orange-600 font-semibold">{respNaoElegiveis}</span> fora do GHE
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -285,6 +398,27 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Alerta de respostas fora do GHE */}
+      {temGHE && respNaoElegiveis > 0 && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardContent className="pt-4">
+            <div className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800">
+                  {respNaoElegiveis} resposta(s) fora do GHE
+                </p>
+                <p className="text-xs text-orange-700 mt-0.5 leading-relaxed">
+                  Há CPFs da empresa que responderam mas cuja <strong>lotação (cargo + setor)</strong> não corresponde aos GHEs vinculados a esta campanha. Verifique se há erro de cadastro de lotação no colaborador ou se o GHE precisa incluir esse cargo/setor.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {/* Aviso de anonimato */}
       <Card className="border-blue-200 bg-blue-50/40">

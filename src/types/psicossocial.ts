@@ -208,6 +208,7 @@ export interface SituacaoTrabalhoCampanha {
 export interface CampanhaPsicossocial {
   id: string;
   tenant_id: string;
+  empresa_id?: string | null;
   nome: string;
   descricao?: string;
   status: CampanhaPsicossocialStatus;
