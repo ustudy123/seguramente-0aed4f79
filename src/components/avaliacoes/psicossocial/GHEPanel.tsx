@@ -133,7 +133,7 @@ export function GHEPanel() {
       if (!f.codigo.trim() || !f.nome.trim()) throw new Error("Código e Nome são obrigatórios");
       const conflitos = f.pairs.filter((k) => occupiedByOtherGhe.has(k));
       if (conflitos.length > 0) {
-        throw new Error(`${conflitos.length} função/departamento já pertence(m) a outro GHE.`);
+        throw new Error(`${conflitos.length} cargo/departamento já pertence(m) a outro GHE.`);
       }
       let gheId = f.id;
       if (gheId) {
@@ -310,7 +310,7 @@ export function GHEPanel() {
             Grupo Homogêneo de Exposição (GHE)
           </h2>
           <p className="text-sm text-muted-foreground">
-            Agrupe departamentos e funções com exposição a riscos psicossociais semelhantes.
+            Agrupe departamentos e cargos com exposição a riscos psicossociais semelhantes.
           </p>
         </div>
         <Button onClick={handleNovo} className="gap-2">
@@ -408,7 +408,7 @@ export function GHEPanel() {
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
                         <Briefcase className="h-3.5 w-3.5" />
                         <span>
-                          {assoc.length === 1 ? "1 função" : `${assoc.length} funções`}
+                          {assoc.length === 1 ? "1 cargo" : `${assoc.length} cargos`}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -453,7 +453,7 @@ export function GHEPanel() {
             <DialogDescription>
               {step === "categoria" && "Selecione a macro-categoria que melhor descreve o grupo de exposição."}
               {step === "template" && "Escolha um modelo padrão (você poderá ajustar nome e descrição em seguida)."}
-              {step === "form" && "Defina o código, nome e selecione as funções (com seus departamentos) que compõem este grupo."}
+              {step === "form" && "Defina o código, nome e selecione os cargos (com seus departamentos) que compõem este grupo."}
             </DialogDescription>
           </DialogHeader>
 
@@ -565,7 +565,7 @@ export function GHEPanel() {
               <div className="flex items-center justify-between gap-2">
                 <Label className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  Funções do GHE
+                  Cargos do GHE
                   <Badge variant="secondary" className="font-mono">
                     {form.pairs.length}
                   </Badge>
@@ -619,7 +619,7 @@ export function GHEPanel() {
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar função ou departamento…"
+                  placeholder="Buscar cargo ou departamento…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8 h-9"
@@ -744,9 +744,9 @@ export function GHEPanel() {
                     {bloqueado ? (
                       <>
                         O grupo <strong>{deleteTarget?.codigo} — {deleteTarget?.nome}</strong> está associado a{" "}
-                        <strong>{assocCount} função(ões)/departamento(s)</strong>.
+                        <strong>{assocCount} cargo(s)/departamento(s)</strong>.
                         <br />
-                        Desassocie todas as funções e departamentos vinculados (editando o GHE) antes de excluir.
+                        Desassocie todos os cargos e departamentos vinculados (editando o GHE) antes de excluir.
                         Como alternativa, você pode <strong>arquivar</strong> o GHE.
                       </>
                     ) : (
