@@ -204,14 +204,16 @@ export function PsicossocialDashboard() {
     <TooltipProvider>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-          <div className="flex items-center gap-2">
-            <Button id="btn-nova-campanha" onClick={handleNovaCampanha} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
-              <Plus className="h-4 w-4" />
-              Nova Campanha
-            </Button>
+        {activeTab === "campanhas" && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
+            <div className="flex items-center gap-2">
+              <Button id="btn-nova-campanha" onClick={handleNovaCampanha} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+                <Plus className="h-4 w-4" />
+                Nova Campanha
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         <Card>
           <CardContent className="pt-4">
