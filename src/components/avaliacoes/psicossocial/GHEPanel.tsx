@@ -645,6 +645,112 @@ export function GHEPanel() {
               />
             </div>
 
+            {/* Regras de liberação de resultados */}
+            <div className="space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Regra de liberação de resultados
+                </Label>
+                <Badge
+                  variant={elegiveisForm >= MIN_RESPOSTAS_ABS ? "secondary" : "outline"}
+                  className={
+                    elegiveisForm < MIN_RESPOSTAS_ABS
+                      ? "border-destructive text-destructive"
+                      : "bg-primary/10 text-primary border-primary/20"
+                  }
+                >
+                  {elegiveisForm} elegível(is)
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ausencias" className="text-xs">
+                    Ausências justificadas (afastamentos, férias, etc.)
+                  </Label>
+                  <Input
+                    id="ausencias"
+                    type="number"
+                    min={0}
+                    value={form.ausenciasJustificadas}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, ausenciasJustificadas: Math.max(0, parseInt(e.target.value || "0", 10) || 0) }))
+                    }
+                    placeholder="0"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Subtraído do total elegível para calcular a base de respondentes.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pct-min" className="text-xs">
+                    % mínimo de respostas para liberar
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="pct-min"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={form.percentualMinimo}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          percentualMinimo: Math.max(0, Math.min(100, Number(e.target.value || 0))),
+                        }))
+                      }
+                      placeholder="0"
+                      className="pr-7"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Sempre arredondado para cima — nunca menor que {MIN_RESPOSTAS_ABS} respostas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-md bg-background border p-2.5 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Elegíveis (cargo + departamento)</span>
+                  <span className="font-semibold">{elegiveisForm}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">− Ausências justificadas</span>
+                  <span className="font-semibold">{form.ausenciasJustificadas}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-1">
+                  <span className="text-muted-foreground">= Base de respondentes</span>
+                  <span className="font-semibold">{baseRespondentesForm}</span>
+                </div>
+                <div className="flex items-center justify-between text-primary font-semibold pt-1 border-t">
+                  <span>Mínimo de respostas para liberar resultados</span>
+                  <span>{minRespostasForm}</span>
+                </div>
+              </div>
+
+              {elegiveisForm > 0 && elegiveisForm < MIN_RESPOSTAS_ABS && (
+                <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Um GHE precisa ter pelo menos <strong>{MIN_RESPOSTAS_ABS} colaboradores elegíveis</strong> para preservar o anonimato. Inclua mais cargos/departamentos.
+                  </span>
+                </div>
+              )}
+              {elegiveisForm >= MIN_RESPOSTAS_ABS && baseRespondentesForm < MIN_RESPOSTAS_ABS && (
+                <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Após descontar as ausências, restam menos de {MIN_RESPOSTAS_ABS} elegíveis. Reduza o número de ausências justificadas.
+                  </span>
+                </div>
+              )}
+            </div>
+
+
+
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <Label className="flex items-center gap-2">
