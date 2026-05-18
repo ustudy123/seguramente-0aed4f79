@@ -113,6 +113,75 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     },
   });
 
+  // Adicionar participante elegível
+  const adicionarParticipante = useMutation({
+    mutationFn: async (dados: typeof form) => {
+      const { data: tenantData } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", profile?.user_id)
+        .single();
+
+      const { error } = await supabase.from("psicossocial_participacoes").insert({
+        tenant_id: tenantData?.tenant_id,
+        campanha_id: campanha.id,
+        colaborador_nome: dados.colaborador_nome || null,
+        colaborador_cpf: dados.colaborador_cpf || null,
+        setor: dados.setor || null,
+        cargo: dados.cargo || null,
+        unidade: dados.unidade || null,
+        turno: dados.turno || null,
+        enviado_via: "link",
+        enviado_em: new Date().toISOString(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["psicossocial-participacoes", campanha.id] });
+      toast.success("Participante adicionado com sucesso");
+      setForm({ colaborador_nome: "", colaborador_cpf: "", setor: "", cargo: "", unidade: "", turno: "" });
+      setShowAddDialog(false);
+    },
+    onError: (err: Error) => {
+      toast.error(`Erro ao adicionar: ${err.message}`);
+    },
+  });
+
+  const removerParticipante = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("psicossocial_participacoes")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["psicossocial-participacoes", campanha.id] });
+      toast.success("Participante removido");
+    },
+  });
+
+  const copiarLink = (token: string) => {
+    navigator.clipboard.writeText(getLinkParticipacao(token));
+    toast.success("Link individual copiado!");
+  };
+
+  const exportarLinks = () => {
+    const linhas = [
+      "Nome,Setor,Cargo,Link Individual,Status",
+      ...participacoes.map(p =>
+        `"${p.colaborador_nome || 'Sem nome'}","${p.setor || ''}","${p.cargo || ''}","${getLinkParticipacao(p.token)}","${p.respondido ? 'Respondido' : 'Pendente'}"`
+      ),
+    ];
+    const blob = new Blob([linhas.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `participantes_${campanha.nome.replace(/ /g, "_")}.csv`;
+    a.click();
+  };
+
+
   // === ELEGIBILIDADE VIA GHE ===
   const gheIds = campanha.ghe_ids || [];
   const temGHE = gheIds.length > 0;
