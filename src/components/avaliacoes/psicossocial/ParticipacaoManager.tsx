@@ -319,7 +319,11 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <span className="text-xs text-muted-foreground">Elegíveis</span>
             </div>
             <p className="text-2xl font-bold mt-1">{elegiveis}</p>
-            {elegiveisNominais === 0 && totalRespostasReais > 0 ? (
+            {temGHE ? (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Calculado a partir do GHE (cargo + setor)
+              </p>
+            ) : elegiveisNominais === 0 && totalRespostasReais > 0 ? (
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 Campanha anônima — respostas via Link Geral
               </p>
@@ -337,6 +341,11 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <span className="text-xs text-muted-foreground">Responderam</span>
             </div>
             <p className="text-2xl font-bold mt-1 text-emerald-600">{responderam}</p>
+            {temGHE && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                <span className="text-emerald-600 font-semibold">{respElegiveis}</span> elegíveis · <span className="text-orange-600 font-semibold">{respNaoElegiveis}</span> fora do GHE
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
