@@ -357,6 +357,7 @@ export interface NovaCampanha {
   politica_uso_dados?: string;
   departamentos_ids?: string[];
   cargos_ids?: string[];
+  ghe_ids?: string[];
   blocos_dinamicos?: string[];
   // Situações de trabalho (pares Setor+Função — NR-17, obrigatório para exportação GRO)
   situacoes_trabalho?: SituacaoTrabalhoCampanha[];
