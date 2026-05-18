@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 import { formatCpf, cleanCpf, validateCpf } from "@/lib/cpf";
+import { useMinRespostasCampanha, MIN_RESPOSTAS_ABS } from "@/hooks/usePsicossocialMinRespostas";
 
 interface Participacao {
   id: string;
