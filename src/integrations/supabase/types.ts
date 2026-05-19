@@ -21142,6 +21142,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_tenant_access: { Args: { _tenant_id: string }; Returns: boolean }
       haversine_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
