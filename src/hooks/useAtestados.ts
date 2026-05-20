@@ -271,6 +271,7 @@ export function useAtestados() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       queryClient.invalidateQueries({ queryKey: ["documentos"] });
       toast.success("Atestado cadastrado com sucesso!");
@@ -444,6 +445,7 @@ export function useAtestados() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       toast.success("Atestado excluído com sucesso!");
     },
@@ -498,6 +500,7 @@ export function useAtestados() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       toast.success("Afastamento excluído com sucesso!");
