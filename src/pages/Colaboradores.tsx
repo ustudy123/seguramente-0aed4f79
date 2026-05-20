@@ -176,6 +176,7 @@ const statusLabels: Record<string, string> = {
 function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShowImport: (v: boolean) => void }) {
   const navigate = useNavigate();
   const { tenantId } = useAuth();
+  const { temPermissao, isOwner } = usePerfilPermissions();
   const queryClient = useQueryClient();
   const { empresaAtivaId } = useEmpresaAtiva();
   const { getAfastamento } = useAfastamentosAtivos();
@@ -196,6 +197,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [excluirVinculos, setExcluirVinculos] = useState<{ tem: boolean; detalhes: any } | null>(null);
   const [excluirChecking, setExcluirChecking] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const canEditColaborador = isOwner || temPermissao("colaboradores", "editar");
 
   const checkVinculosEAbrirExcluir = async (colab: ColaboradorExtendido) => {
     setExcluirColab(colab);
@@ -286,6 +288,11 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   };
 
   const handleEditColaborador = async (colab: ColaboradorExtendido) => {
+    if (!canEditColaborador) {
+      toast.error("Você não tem permissão para editar colaboradores.");
+      return;
+    }
+
     // Busca o registro completo para evitar perder campos não carregados na listagem
     // (centro_custo, gestor_imediato, matricula_esocial, cbo, etc.)
     const { data: full, error: fullErr } = await supabase
