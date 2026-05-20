@@ -285,21 +285,37 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
     });
   };
 
-  const handleEditColaborador = (colab: ColaboradorExtendido) => {
+  const handleEditColaborador = async (colab: ColaboradorExtendido) => {
+    // Busca o registro completo para evitar perder campos não carregados na listagem
+    // (centro_custo, gestor_imediato, matricula_esocial, cbo, etc.)
+    const { data: full, error: fullErr } = await supabase
+      .from("admissoes")
+      .select("id, nome_completo, cpf, email, celular, tipo_contrato, cargo, departamento, filial, centro_custo, gestor_imediato, data_admissao, matricula_esocial, cbo, foto_url")
+      .eq("id", colab.id)
+      .maybeSingle();
+
+    if (fullErr) {
+      toast.error("Não foi possível carregar os dados completos do colaborador.");
+      return;
+    }
+
+    const src: any = full || colab;
     setEditingColaborador({
       id: colab.id,
-      nome_completo: colab.nome_completo,
-      cpf: colab.cpf,
-      email: colab.email,
-      celular: colab.celular,
-      tipo_contrato: colab.tipo_contrato,
-      cargo: colab.cargo,
-      departamento: colab.departamento,
-      filial: colab.filial,
-      centro_custo: (colab as any).centro_custo || null,
-      gestor_imediato: (colab as any).gestor_imediato || null,
-      data_admissao: colab.data_admissao,
-      foto_url: colab.foto_url,
+      nome_completo: src.nome_completo ?? colab.nome_completo,
+      cpf: src.cpf ?? colab.cpf,
+      email: src.email ?? colab.email,
+      celular: src.celular ?? colab.celular,
+      tipo_contrato: src.tipo_contrato ?? colab.tipo_contrato,
+      cargo: src.cargo ?? colab.cargo,
+      departamento: src.departamento ?? colab.departamento,
+      filial: src.filial ?? colab.filial,
+      centro_custo: src.centro_custo ?? null,
+      gestor_imediato: src.gestor_imediato ?? null,
+      data_admissao: src.data_admissao ?? colab.data_admissao,
+      matricula_esocial: src.matricula_esocial ?? null,
+      cbo: src.cbo ?? null,
+      foto_url: src.foto_url ?? colab.foto_url,
     });
     setShowForm(true);
   };
