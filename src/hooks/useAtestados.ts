@@ -499,6 +499,7 @@ export function useAtestados() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       toast.success("Afastamento excluído com sucesso!");
