@@ -213,26 +213,30 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
     setIsSubmitting(true);
     try {
       if (isEditMode && colaborador) {
-        const { error } = await supabase
+        const payload = {
+          nome_completo: data.nome_completo,
+          cpf: cleanCpf(data.cpf),
+          email: data.email?.trim() || null,
+          celular: data.celular || null,
+          tipo_contrato: data.tipo_contrato,
+          cargo: data.cargo,
+          departamento: data.departamento || null,
+          filial: data.estabelecimento || null,
+          centro_custo: data.centro_custo || null,
+          gestor_imediato: data.gestor_imediato || null,
+          data_admissao: data.data_admissao,
+          matricula_esocial: data.matricula_esocial || null,
+          cbo: normalizeCBO(data.cbo) || null,
+          foto_url: data.foto_url || null,
+        };
+
+        const { data: updatedRow, error } = await supabase
           .from("admissoes")
-          .update({
-            nome_completo: data.nome_completo,
-            cpf: cleanCpf(data.cpf),
-            email: data.email?.trim() || null,
-            celular: data.celular || null,
-            tipo_contrato: data.tipo_contrato,
-            cargo: data.cargo,
-            departamento: data.departamento || null,
-            filial: data.estabelecimento || null,
-            centro_custo: data.centro_custo || null,
-            gestor_imediato: data.gestor_imediato || null,
-            data_admissao: data.data_admissao,
-            matricula_esocial: data.matricula_esocial || null,
-            cbo: normalizeCBO(data.cbo) || null,
-            foto_url: data.foto_url || null,
-          })
+          .update(payload)
           .eq("id", colaborador.id)
-          .eq("tenant_id", tenantId);
+          .eq("tenant_id", tenantId)
+          .select("id, centro_custo, gestor_imediato, matricula_esocial, cbo")
+          .maybeSingle();
 
         if (error) {
           if (error.code === "23505") {
@@ -242,6 +246,21 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           }
           return;
         }
+
+        if (!updatedRow) {
+          throw new Error("Seu perfil não conseguiu confirmar a atualização deste colaborador. Verifique a permissão de edição e tente novamente.");
+        }
+
+        const persistedCbo = normalizeCBO(updatedRow.cbo);
+        if (
+          (updatedRow.centro_custo ?? null) !== (payload.centro_custo ?? null) ||
+          (updatedRow.gestor_imediato ?? null) !== (payload.gestor_imediato ?? null) ||
+          (updatedRow.matricula_esocial ?? null) !== (payload.matricula_esocial ?? null) ||
+          persistedCbo !== normalizeCBO(payload.cbo)
+        ) {
+          throw new Error("Os dados não foram persistidos corretamente. Tente salvar novamente.");
+        }
+
         toast.success("Colaborador atualizado com sucesso!");
       } else {
         const { data: insertData, error } = await supabase.from("admissoes").insert({
