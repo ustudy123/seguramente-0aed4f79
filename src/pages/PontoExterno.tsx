@@ -68,6 +68,27 @@ const PontoExterno = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+
+    if (token || !standalone) return;
+
+    try {
+      const savedPath = window.localStorage.getItem("ponto-pwa-path");
+      const savedToken = window.localStorage.getItem("ponto-pwa-token");
+      const fallbackPath = savedToken ? `/ponto-externo/${savedToken}` : null;
+      const targetPath = savedPath || fallbackPath;
+
+      if (targetPath && targetPath !== window.location.pathname) {
+        window.location.replace(targetPath);
+      }
+    } catch {
+      // Se não conseguir ler o storage, mantém o fluxo normal da página.
+    }
+  }, [token]);
+
   // Load collaborator data
   useEffect(() => {
     if (!token) return;
