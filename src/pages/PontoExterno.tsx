@@ -9,6 +9,7 @@ import { supabasePublic } from "@/lib/supabasePublic";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
 import { SolicitarAjusteModal } from "@/components/ponto/SolicitarAjusteModal";
+import { PontoPWASetup } from "@/components/ponto/PontoPWASetup";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
