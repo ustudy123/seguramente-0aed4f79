@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { AlertTriangle, Sparkles, Loader2, Lock, BookOpen, Layers, BarChart3, Inbox, ShieldAlert } from "lucide-react";
@@ -75,6 +76,15 @@ export function RiscosPsicossociaisPanel() {
   const { campanhas, isLoadingCampanhas, useEstatisticasCampanha } = usePsicossocial();
   const [campanhaId, setCampanhaId] = useState<string | undefined>();
   const [riscoDetalhe, setRiscoDetalhe] = useState<RiscoPsicossocial | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const activeTab = viewParam === "resultados" || viewParam === "instrumentos" ? viewParam : "catalogo";
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === "catalogo") next.delete("view");
+    else next.set("view", value);
+    setSearchParams(next, { replace: true });
+  };
 
   const { data: riscos = [], isLoading } = useQuery({
     queryKey: ["psicossocial_riscos", tenantId],
@@ -248,7 +258,7 @@ export function RiscosPsicossociaisPanel() {
         </p>
       </div>
 
-      <Tabs defaultValue="catalogo" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList>
           <TabsTrigger value="catalogo" className="gap-1.5">
             <Layers className="h-4 w-4" /> Catálogo
