@@ -9,6 +9,7 @@ import { supabasePublic } from "@/lib/supabasePublic";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
 import { SolicitarAjusteModal } from "@/components/ponto/SolicitarAjusteModal";
+import { PontoPWASetup } from "@/components/ponto/PontoPWASetup";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -270,6 +271,9 @@ const PontoExterno = () => {
             >
               <FileEdit className="w-4 h-4 mr-2" /> Solicitar Ajuste de Ponto
             </Button>
+
+            {/* Instalar como app (PWA) - só fora do preview/iframe */}
+            <PontoPWASetup />
           </CardContent>
         </Card>
       </motion.div>
