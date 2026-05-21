@@ -73,7 +73,7 @@ const PontoExterno = () => {
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
 
-    if (token || !standalone) return;
+    if (token) return;
 
     try {
       const savedPath = window.localStorage.getItem("ponto-pwa-path");
@@ -83,9 +83,15 @@ const PontoExterno = () => {
 
       if (targetPath && targetPath !== window.location.pathname) {
         window.location.replace(targetPath);
+        return;
       }
     } catch {
       // Se não conseguir ler o storage, mantém o fluxo normal da página.
+    }
+
+    if (standalone) {
+      setError("Abra novamente o link original de ponto para atualizar o atalho deste colaborador.");
+      setLoading(false);
     }
   }, [token]);
 
