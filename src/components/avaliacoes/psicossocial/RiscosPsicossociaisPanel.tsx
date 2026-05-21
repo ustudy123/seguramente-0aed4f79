@@ -567,8 +567,10 @@ export function RiscosPsicossociaisPanel() {
                   );
                 })}
               </div>
+              )}
             </>
           )}
+
         </TabsContent>
       </Tabs>
 
