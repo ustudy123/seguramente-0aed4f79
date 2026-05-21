@@ -149,17 +149,6 @@ export function RiscosPsicossociaisPanel() {
     [campanhasComResultado, campanhaId, isConsolidado],
   );
 
-  // Mínimo de respostas para liberar resultados (ISO 45003 / COPSOQ III).
-  // Usa a configuração de GHEs da campanha selecionada; quando não houver, cai no absoluto (5).
-  const { minRespostas } = useMinRespostasCampanha(
-    campanhaSel ?? { id: "__none__", tenant_id: tenantId ?? "", empresa_id: null, ghe_ids: [] } as any,
-  );
-  const respostasCampanha = campanhaSel?.total_respostas ?? 0;
-  const respostasConsolidado = consolidadoMeta?.totalRespostas ?? 0;
-  const bloqueadoPorAnonimato = isConsolidado
-    ? respostasConsolidado < MIN_RESPOSTAS_ABS
-    : !!campanhaSel && respostasCampanha < minRespostas;
-
   // Consolidado: média das respostas de TODAS as campanhas com resultado, agrupado por subject
   const radarConsolidado = useMemo(() => {
     if (!isConsolidado) return [] as { subject: string; value: number }[];
