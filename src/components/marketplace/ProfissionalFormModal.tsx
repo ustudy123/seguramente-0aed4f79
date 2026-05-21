@@ -163,7 +163,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
         aceite_codigo_etica: true,
         aceite_codigo_etica_data: new Date().toISOString(),
         tem_atestado_capacidade: documents.some((d) => d.categoria === "atestado_capacidade_tecnica"),
-        status: "pendente" as const,
+        status: "ativo" as const,
       }).select("id").single();
       if (error) throw error;
 
