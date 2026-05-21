@@ -151,7 +151,46 @@ export function GHEPanel() {
     return map;
   }, [associacoes, form.id]);
 
-  // Admissões ativas da empresa — para calcular elegíveis ao GHE em edição
+  // Admissões ativas — sempre carregadas para mostrar elegíveis nos cards de GHE
+  const { data: admissoesList = [] } = useQuery({
+    queryKey: ["admissoes-empresa-ghe-list", tenantId, empresaAtivaId],
+    enabled: !!tenantId,
+    queryFn: async () => {
+      let q = supabase
+        .from("admissoes")
+        .select("cargo, departamento, status")
+        .eq("tenant_id", tenantId!);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as { cargo: string | null; departamento: string | null; status: string | null }[];
+    },
+  });
+
+  // Elegíveis por GHE (cargo+departamento → contagem de admissões ativas)
+  const elegiveisByGhe = useMemo(() => {
+    const ativos = admissoesList.filter((a) => {
+      const s = (a.status || "").toLowerCase();
+      return !s || !["desligado", "demitido", "inativo"].includes(s);
+    });
+    const result: Record<string, number> = {};
+    ghes.forEach((g) => {
+      const assoc = associacoes.filter((a) => a.ghe_id === g.id);
+      const keys = new Set(
+        assoc.map((a) => {
+          const cargoNome = (cargosById[a.cargo_id]?.nome || "").trim().toLowerCase();
+          const deptNome = a.departamento_id ? (deptById[a.departamento_id]?.nome || "").trim().toLowerCase() : "";
+          return `${cargoNome}|${deptNome}`;
+        }),
+      );
+      result[g.id] = ativos.filter((a) => {
+        const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+        return keys.has(key);
+      }).length;
+    });
+    return result;
+  }, [admissoesList, ghes, associacoes, cargosById, deptById]);
+
   const { data: admissoesEmpresa = [] } = useQuery({
     queryKey: ["admissoes-empresa-ghe-form", tenantId, empresaAtivaId],
     enabled: !!tenantId && open && step === "form",
@@ -505,7 +544,35 @@ export function GHEPanel() {
                           <Badge variant="secondary" className="text-[10px]">+{assoc.length - 4}</Badge>
                         )}
                       </div>
+
+                      {(() => {
+                        const eleg = elegiveisByGhe[g.id] ?? 0;
+                        const insuficiente = eleg < MIN_RESPOSTAS_ABS;
+                        return (
+                          <div
+                            className={`flex items-center gap-1.5 text-xs pt-1 ${
+                              insuficiente ? "text-amber-700" : "text-muted-foreground"
+                            }`}
+                            title={
+                              insuficiente
+                                ? `Mínimo de ${MIN_RESPOSTAS_ABS} elegíveis para garantir anonimato (ISO 45003)`
+                                : undefined
+                            }
+                          >
+                            <Users className="h-3.5 w-3.5" />
+                            <span>
+                              {eleg} pessoa{eleg !== 1 ? "s" : ""} elegíve{eleg !== 1 ? "is" : "l"}
+                            </span>
+                            {insuficiente && eleg > 0 && (
+                              <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700">
+                                abaixo do mínimo
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
+
 
                     <div className="mt-auto pt-2 border-t border-border/60 text-[10px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                       <span>Criado em {new Date(g.created_at).toLocaleDateString("pt-BR")}</span>
