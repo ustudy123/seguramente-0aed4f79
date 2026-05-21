@@ -172,6 +172,17 @@ export function RiscosPsicossociaisPanel() {
     return { totalCampanhas: campanhasComResultado.length, totalRespostas, ipsMedio };
   }, [isConsolidado, campanhasComResultado]);
 
+  // Mínimo de respostas para liberar resultados (ISO 45003 / COPSOQ III).
+  // Usa a configuração de GHEs da campanha selecionada; quando não houver, cai no absoluto (5).
+  const { minRespostas } = useMinRespostasCampanha(
+    (campanhaSel ?? { id: "__none__", tenant_id: tenantId ?? "", empresa_id: null, ghe_ids: [] }) as any,
+  );
+  const respostasCampanha = campanhaSel?.total_respostas ?? 0;
+  const respostasConsolidado = consolidadoMeta?.totalRespostas ?? 0;
+  const bloqueadoPorAnonimato = isConsolidado
+    ? respostasConsolidado < MIN_RESPOSTAS_ABS
+    : !!campanhaSel && respostasCampanha < minRespostas;
+
   // Mapeia o código do instrumento da campanha → chave usada em psicossocial_instrumento_dimensao.
   const campanhaInstrumentoKey = useMemo(() => {
     if (!campanhaSel) return null;
