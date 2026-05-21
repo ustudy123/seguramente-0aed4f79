@@ -273,7 +273,7 @@ const PontoExterno = () => {
             </Button>
 
             {/* Instalar como app (PWA) - só fora do preview/iframe */}
-            <PontoPWASetup />
+            <PontoPWASetup token={token} />
           </CardContent>
         </Card>
       </motion.div>

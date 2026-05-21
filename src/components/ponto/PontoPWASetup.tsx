@@ -8,7 +8,6 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const HEAD_TAGS: Array<{ tag: "link" | "meta"; attrs: Record<string, string>; key: string }> = [
-  { tag: "link", attrs: { rel: "manifest", href: "/ponto-manifest.webmanifest" }, key: "ponto-pwa-manifest" },
   { tag: "meta", attrs: { name: "theme-color", content: "#7c3aed" }, key: "ponto-pwa-theme" },
   { tag: "meta", attrs: { name: "apple-mobile-web-app-capable", content: "yes" }, key: "ponto-pwa-apple-cap" },
   { tag: "meta", attrs: { name: "apple-mobile-web-app-status-bar-style", content: "default" }, key: "ponto-pwa-apple-bar" },
@@ -18,12 +17,17 @@ const HEAD_TAGS: Array<{ tag: "link" | "meta"; attrs: Record<string, string>; ke
 
 const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent) && !(window as any).MSStream;
 
-export const PontoPWASetup = () => {
+interface PontoPWASetupProps {
+  token?: string;
+}
+
+export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showIOSHint, setShowIOSHint] = useState(false);
 
   useEffect(() => {
+    if (!token) return;
     // Guardas: iframe, preview do Lovable, SW indisponível
     let inIframe = false;
     try {
@@ -35,7 +39,7 @@ export const PontoPWASetup = () => {
     const isPreview = host.includes("id-preview--") || host.includes("lovableproject.com");
     if (inIframe || isPreview || !("serviceWorker" in navigator)) return;
 
-    // Injeta tags no <head>
+    // Injeta tags fixas no <head>
     const nodes: HTMLElement[] = [];
     HEAD_TAGS.forEach(({ tag, attrs, key }) => {
       if (document.querySelector(`[data-ponto-pwa="${key}"]`)) return;
@@ -45,6 +49,32 @@ export const PontoPWASetup = () => {
       document.head.appendChild(el);
       nodes.push(el);
     });
+
+    // Manifest dinâmico com o token do colaborador (start_url e scope)
+    const tokenPath = `/ponto-externo/${token}`;
+    const manifest = {
+      name: "Meu Ponto",
+      short_name: "Meu Ponto",
+      description: "Registro de ponto eletrônico",
+      scope: tokenPath,
+      start_url: tokenPath,
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#ffffff",
+      theme_color: "#7c3aed",
+      icons: [
+        { src: "/icons/ponto-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "/icons/ponto-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "/icons/ponto-512-mask.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      ],
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    const manifestUrl = URL.createObjectURL(blob);
+    const manifestLink = document.createElement("link");
+    manifestLink.rel = "manifest";
+    manifestLink.href = manifestUrl;
+    manifestLink.setAttribute("data-ponto-pwa", "ponto-pwa-manifest");
+    document.head.appendChild(manifestLink);
 
     // Registra SW
     navigator.serviceWorker
@@ -73,8 +103,10 @@ export const PontoPWASetup = () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
       nodes.forEach((n) => n.parentNode?.removeChild(n));
+      manifestLink.parentNode?.removeChild(manifestLink);
+      URL.revokeObjectURL(manifestUrl);
     };
-  }, []);
+  }, [token]);
 
   const handleInstall = useCallback(async () => {
     if (!installEvent) return;
