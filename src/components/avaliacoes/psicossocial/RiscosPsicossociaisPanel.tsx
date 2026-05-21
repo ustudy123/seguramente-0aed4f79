@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { SEVERIDADE_ESCALA, getSeveridadeInfo } from "@/lib/psicossocial-severidade";
+import { useMinRespostasCampanha, MIN_RESPOSTAS_ABS } from "@/hooks/usePsicossocialMinRespostas";
 
 interface RiscoPsicossocial {
   id: string;
