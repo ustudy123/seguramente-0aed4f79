@@ -249,27 +249,38 @@ export function RiscosPsicossociaisPanel() {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-600" />
-          Riscos Psicossociais
+          {activeTab === "resultados" ? (
+            <>
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Resultados Psicossociais
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              Riscos Psicossociais
+            </>
+          )}
         </h2>
         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5" />
-          Catálogo padrão do sistema — {total} riscos (somente leitura). Clique em um risco para ver a severidade.
+          {activeTab === "resultados"
+            ? "Análise consolidada por campanha — exige o mínimo de 5 respondentes para garantir anonimato."
+            : `Catálogo padrão do sistema — ${total} riscos (somente leitura). Clique em um risco para ver a severidade.`}
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="catalogo" className="gap-1.5">
-            <Layers className="h-4 w-4" /> Catálogo
-          </TabsTrigger>
-          <TabsTrigger value="instrumentos" className="gap-1.5">
-            <BookOpen className="h-4 w-4" /> Instrumentos
-          </TabsTrigger>
-          <TabsTrigger value="resultados" className="gap-1.5">
-            <BarChart3 className="h-4 w-4" /> Resultados
-          </TabsTrigger>
-        </TabsList>
+        {activeTab === "resultados" ? null : (
+          <TabsList>
+            <TabsTrigger value="catalogo" className="gap-1.5">
+              <Layers className="h-4 w-4" /> Catálogo
+            </TabsTrigger>
+            <TabsTrigger value="instrumentos" className="gap-1.5">
+              <BookOpen className="h-4 w-4" /> Instrumentos
+            </TabsTrigger>
+          </TabsList>
+        )}
+
 
         <TabsContent value="catalogo" className="space-y-3">
           {isLoading ? (
