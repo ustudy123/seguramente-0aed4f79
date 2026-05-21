@@ -128,6 +128,7 @@ const menuSections: MenuSection[] = [
           { title: "GHE", path: "/psicossocial?tab=ghe", color: "text-cyan-300", dot: "bg-cyan-400" },
           { title: "Campanhas", path: "/psicossocial?tab=campanhas", color: "text-violet-300", dot: "bg-violet-400" },
           { title: "Riscos Psicossociais", path: "/psicossocial?tab=riscos", color: "text-rose-300", dot: "bg-rose-400" },
+          { title: "Resultados Psicossociais", path: "/psicossocial?tab=riscos&view=resultados", color: "text-pink-300", dot: "bg-pink-400" },
           { title: "Burnout & Boreout", path: "/psicossocial?tab=burnout-boreout", color: "text-orange-300", dot: "bg-orange-400" },
           { title: "Histórico IPS", path: "/psicossocial?tab=historico", color: "text-amber-300", dot: "bg-amber-400" },
           { title: "Inventário PGR", path: "/psicossocial?tab=pgr", color: "text-emerald-300", dot: "bg-emerald-400" },
