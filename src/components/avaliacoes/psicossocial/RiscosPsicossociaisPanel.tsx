@@ -76,6 +76,15 @@ export function RiscosPsicossociaisPanel() {
   const { campanhas, isLoadingCampanhas, useEstatisticasCampanha } = usePsicossocial();
   const [campanhaId, setCampanhaId] = useState<string | undefined>();
   const [riscoDetalhe, setRiscoDetalhe] = useState<RiscoPsicossocial | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const activeTab = viewParam === "resultados" || viewParam === "instrumentos" ? viewParam : "catalogo";
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === "catalogo") next.delete("view");
+    else next.set("view", value);
+    setSearchParams(next, { replace: true });
+  };
 
   const { data: riscos = [], isLoading } = useQuery({
     queryKey: ["psicossocial_riscos", tenantId],
