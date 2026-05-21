@@ -258,7 +258,7 @@ export function RiscosPsicossociaisPanel() {
         </p>
       </div>
 
-      <Tabs defaultValue="catalogo" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList>
           <TabsTrigger value="catalogo" className="gap-1.5">
             <Layers className="h-4 w-4" /> Catálogo
