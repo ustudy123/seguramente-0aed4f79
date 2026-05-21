@@ -253,34 +253,23 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         toast.info("Usuário já existente no sistema — vinculando às empresas selecionadas.");
       }
 
-      // Se já existia no tenant, buscar o registro do usuário na tabela usuarios
+      // auth_user_id é UNIQUE globalmente em usuarios_base — buscar sem filtro de tenant
+      // para evitar violação de unique constraint em retries ou usuários cross-tenant.
+      const { data: usuarioExistenteGlobal } = await fromTable("usuarios_base")
+        .select("*")
+        .eq("auth_user_id", authUserId)
+        .maybeSingle();
+
       let usuario: any;
-      if (jaExistia) {
-        const { data: usuarioExistente } = await fromTable("usuarios")
-          .select("*")
-          .eq("auth_user_id", authUserId)
-          .eq("tenant_id", tenantId)
-          .maybeSingle();
-        if (usuarioExistente) {
-          usuario = usuarioExistente;
-        } else {
-          // Não existe na tabela usuarios ainda, criar
-          usuario = await createUsuario.mutateAsync({
-            nome_completo: data.nome_completo,
-            nome_social: data.nome_social || undefined,
-            email_principal: data.email_principal,
-            cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
-            telefone_principal: data.telefone_principal,
-            cargo_funcao: data.cargo_funcao,
-            matricula: data.matricula || undefined,
-            data_nascimento: data.data_nascimento || undefined,
-            tipo_usuario: data.tipo_usuario as UsuarioTipo,
-            observacoes: data.observacoes,
-            auth_user_id: authUserId,
-            status: "ativo",
-            qualidade_score: "incompleto",
-            qualidade_pct: 0,
-          });
+      if (usuarioExistenteGlobal) {
+        if (usuarioExistenteGlobal.tenant_id !== tenantId) {
+          throw new Error(
+            "Este e-mail já está vinculado a outra organização no sistema. Use um e-mail diferente ou contate o suporte."
+          );
+        }
+        usuario = usuarioExistenteGlobal;
+        if (jaExistia) {
+          toast.info("Usuário já existente — vinculando às empresas selecionadas.");
         }
       } else {
         usuario = await createUsuario.mutateAsync({
@@ -295,8 +284,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           tipo_usuario: data.tipo_usuario as UsuarioTipo,
           observacoes: data.observacoes,
           auth_user_id: authUserId,
-          status: "convite_enviado",
-          convite_enviado_em: new Date().toISOString(),
+          status: jaExistia ? "ativo" : "convite_enviado",
+          convite_enviado_em: jaExistia ? undefined : new Date().toISOString(),
           qualidade_score: "incompleto",
           qualidade_pct: 0,
         });
