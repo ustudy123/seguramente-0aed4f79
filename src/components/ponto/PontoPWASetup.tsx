@@ -28,6 +28,14 @@ export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
 
   useEffect(() => {
     if (!token) return;
+
+    try {
+      window.localStorage.setItem("ponto-pwa-token", token);
+      window.localStorage.setItem("ponto-pwa-path", `/ponto-externo/${token}`);
+    } catch {
+      // Ignora falhas de storage e segue com a instalação normal.
+    }
+
     // Guardas: iframe, preview do Lovable, SW indisponível
     let inIframe = false;
     try {

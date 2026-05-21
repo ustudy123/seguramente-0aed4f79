@@ -68,6 +68,33 @@ const PontoExterno = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+
+    if (token) return;
+
+    try {
+      const savedPath = window.localStorage.getItem("ponto-pwa-path");
+      const savedToken = window.localStorage.getItem("ponto-pwa-token");
+      const fallbackPath = savedToken ? `/ponto-externo/${savedToken}` : null;
+      const targetPath = savedPath || fallbackPath;
+
+      if (targetPath && targetPath !== window.location.pathname) {
+        window.location.replace(targetPath);
+        return;
+      }
+    } catch {
+      // Se não conseguir ler o storage, mantém o fluxo normal da página.
+    }
+
+    if (standalone) {
+      setError("Abra novamente o link original de ponto para atualizar o atalho deste colaborador.");
+      setLoading(false);
+    }
+  }, [token]);
+
   // Load collaborator data
   useEffect(() => {
     if (!token) return;
