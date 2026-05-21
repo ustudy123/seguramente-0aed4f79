@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   useHumorDiario,
   HUMOR_OPTIONS,
@@ -67,6 +68,10 @@ export function HumorCheckInPopup() {
   return (
     <Dialog open onOpenChange={() => handleSkip()}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-0 bg-transparent shadow-none">
+        <VisuallyHidden>
+          <DialogTitle>{isAtualizacao ? "Como está agora?" : "Como você está hoje?"}</DialogTitle>
+          <DialogDescription>Registro pessoal e confidencial de humor</DialogDescription>
+        </VisuallyHidden>
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
