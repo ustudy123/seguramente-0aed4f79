@@ -72,7 +72,7 @@ const scoreBar = (v: number): string => {
 export function RiscosPsicossociaisPanel() {
   const { tenantId } = useTenant();
   const qc = useQueryClient();
-  const { campanhas, isLoadingCampanhas } = usePsicossocial();
+  const { campanhas, isLoadingCampanhas, useEstatisticasCampanha } = usePsicossocial();
   const [campanhaId, setCampanhaId] = useState<string | undefined>();
   const [riscoDetalhe, setRiscoDetalhe] = useState<RiscoPsicossocial | null>(null);
 
@@ -149,6 +149,8 @@ export function RiscosPsicossociaisPanel() {
     [campanhasComResultado, campanhaId, isConsolidado],
   );
 
+  const { data: campanhaStats, isLoading: isLoadingCampanhaStats } = useEstatisticasCampanha(campanhaSel?.id);
+
   // Consolidado: média das respostas de TODAS as campanhas com resultado, agrupado por subject
   const radarConsolidado = useMemo(() => {
     if (!isConsolidado) return [] as { subject: string; value: number }[];
@@ -174,14 +176,17 @@ export function RiscosPsicossociaisPanel() {
 
   // Mínimo de respostas para liberar resultados (ISO 45003 / COPSOQ III).
   // Usa a configuração de GHEs da campanha selecionada; quando não houver, cai no absoluto (5).
-  const { minRespostas } = useMinRespostasCampanha(
+  const { minRespostas, isLoading: isLoadingMinRespostas } = useMinRespostasCampanha(
     (campanhaSel ?? { id: "__none__", tenant_id: tenantId ?? "", empresa_id: null, ghe_ids: [] }) as any,
   );
-  const respostasCampanha = campanhaSel?.total_respostas ?? 0;
+  const respostasCampanha = campanhaStats?.concluidos ?? campanhaSel?.total_respostas ?? 0;
   const respostasConsolidado = consolidadoMeta?.totalRespostas ?? 0;
+  const carregandoResultadoCampanha = !!campanhaSel && !isConsolidado && (isLoadingCampanhaStats || isLoadingMinRespostas);
   const bloqueadoPorAnonimato = isConsolidado
     ? respostasConsolidado < MIN_RESPOSTAS_ABS
-    : !!campanhaSel && respostasCampanha < minRespostas;
+    : !!campanhaSel && (campanhaStats?.anonimato_garantido != null
+        ? !campanhaStats.anonimato_garantido
+        : respostasCampanha < minRespostas);
 
   // Mapeia o código do instrumento da campanha → chave usada em psicossocial_instrumento_dimensao.
   const campanhaInstrumentoKey = useMemo(() => {
@@ -420,9 +425,9 @@ export function RiscosPsicossociaisPanel() {
             </CardContent>
           </Card>
 
-          {isLoadingCampanhas ? (
+          {isLoadingCampanhas || carregandoResultadoCampanha ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando campanhas…
+              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando resultados…
             </div>
           ) : !campanhaSel && !isConsolidado ? (
             <Card>
@@ -452,7 +457,7 @@ export function RiscosPsicossociaisPanel() {
                     <p className="font-semibold text-sm">
                       {isConsolidado
                         ? consolidadoMeta?.totalRespostas ?? 0
-                        : campanhaSel!.total_respostas ?? 0}
+                        : respostasCampanha}
                     </p>
                   </div>
                   {isConsolidado ? (
