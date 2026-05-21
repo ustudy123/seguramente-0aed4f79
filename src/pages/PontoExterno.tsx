@@ -140,10 +140,6 @@ const PontoExterno = () => {
 
   const handleRegistrar = useCallback(async () => {
     if (!token || !colaborador) return;
-    if (!selfieFile) {
-      setError("Capture a selfie de verificação antes de registrar o ponto.");
-      return;
-    }
     setError(null);
     setRegistrando(true);
     try {
@@ -280,8 +276,7 @@ const PontoExterno = () => {
               return (
                 <Button
                   className={`${cfg.color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
-                  disabled={registrando || !selfieFile}
-                  title={!selfieFile ? "Capture a selfie antes de registrar" : undefined}
+                  disabled={registrando}
                   onClick={handleRegistrar}
                 >
                   {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : cfg.icon}
