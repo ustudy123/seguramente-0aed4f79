@@ -484,6 +484,28 @@ export function RiscosPsicossociaisPanel() {
                 </CardContent>
               </Card>
 
+              {bloqueadoPorAnonimato ? (
+                <Card className="border-amber-300 bg-amber-50/60">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <Lock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-amber-800 text-sm">
+                        Número insuficiente de respostas para garantir anonimato estatístico
+                      </p>
+                      <p className="text-xs text-amber-700">
+                        Mínimo necessário:{" "}
+                        {isConsolidado ? MIN_RESPOSTAS_ABS : minRespostas} respostas. Atual:{" "}
+                        {isConsolidado ? respostasConsolidado : respostasCampanha}.
+                      </p>
+                      <p className="text-[11px] text-amber-700/80">
+                        Conformidade: ISO 45003 / COPSOQ III — resultados só são liberados quando há volume suficiente para preservar a confidencialidade dos respondentes.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+
+
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {riscos.map((r) => {
                   const matches = resultadosPorRisco[r.nome] || [];
