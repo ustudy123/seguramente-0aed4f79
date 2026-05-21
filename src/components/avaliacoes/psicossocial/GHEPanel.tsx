@@ -544,7 +544,35 @@ export function GHEPanel() {
                           <Badge variant="secondary" className="text-[10px]">+{assoc.length - 4}</Badge>
                         )}
                       </div>
+
+                      {(() => {
+                        const eleg = elegiveisByGhe[g.id] ?? 0;
+                        const insuficiente = eleg < MIN_RESPOSTAS_ABS;
+                        return (
+                          <div
+                            className={`flex items-center gap-1.5 text-xs pt-1 ${
+                              insuficiente ? "text-amber-700" : "text-muted-foreground"
+                            }`}
+                            title={
+                              insuficiente
+                                ? `Mínimo de ${MIN_RESPOSTAS_ABS} elegíveis para garantir anonimato (ISO 45003)`
+                                : undefined
+                            }
+                          >
+                            <Users className="h-3.5 w-3.5" />
+                            <span>
+                              {eleg} pessoa{eleg !== 1 ? "s" : ""} elegíve{eleg !== 1 ? "is" : "l"}
+                            </span>
+                            {insuficiente && eleg > 0 && (
+                              <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700">
+                                abaixo do mínimo
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
+
 
                     <div className="mt-auto pt-2 border-t border-border/60 text-[10px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                       <span>Criado em {new Date(g.created_at).toLocaleDateString("pt-BR")}</span>
