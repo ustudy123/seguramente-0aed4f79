@@ -271,6 +271,9 @@ const PontoExterno = () => {
             >
               <FileEdit className="w-4 h-4 mr-2" /> Solicitar Ajuste de Ponto
             </Button>
+
+            {/* Instalar como app (PWA) - só fora do preview/iframe */}
+            <PontoPWASetup />
           </CardContent>
         </Card>
       </motion.div>
