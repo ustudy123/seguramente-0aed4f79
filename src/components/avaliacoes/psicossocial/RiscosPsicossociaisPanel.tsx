@@ -205,12 +205,11 @@ export function RiscosPsicossociaisPanel() {
       const matches: { subject: string; value: number; instrumento: string }[] = [];
       radar.forEach((rd) => {
         const subj = norm(rd.subject);
-        // 1) tenta no instrumento da campanha; 2) cai para qualquer instrumento mapeado
+        // Quando a campanha tem instrumento conhecido (não consolidado), restringe
+        // estritamente aos mapeamentos do MESMO instrumento — evita rotular dimensões
+        // de SIPRO com selo HSE-MS / COPSOQ etc. apenas porque o nome do subject coincide.
         const candidatos = campanhaInstrumentoKey && !isConsolidado
-          ? [
-              ...maps.filter((mp) => mp.instrumento === campanhaInstrumentoKey),
-              ...maps.filter((mp) => mp.instrumento !== campanhaInstrumentoKey),
-            ]
+          ? maps.filter((mp) => mp.instrumento === campanhaInstrumentoKey)
           : maps;
         const m = candidatos.find((mp) => dimensaoMatchSubject(norm(mp.dimensao), subj));
         if (m) matches.push({ subject: rd.subject, value: rd.value, instrumento: m.instrumento });
