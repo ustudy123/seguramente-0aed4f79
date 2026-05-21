@@ -68,7 +68,10 @@ export function HumorCheckInPopup() {
   return (
     <Dialog open onOpenChange={() => handleSkip()}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-0 bg-transparent shadow-none">
-        <motion.div
+        <VisuallyHidden>
+          <DialogTitle>{isAtualizacao ? "Como está agora?" : "Como você está hoje?"}</DialogTitle>
+          <DialogDescription>Registro pessoal e confidencial de humor</DialogDescription>
+        </VisuallyHidden>
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: "spring", duration: 0.5 }}
