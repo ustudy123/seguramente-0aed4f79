@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { SEVERIDADE_ESCALA, getSeveridadeInfo } from "@/lib/psicossocial-severidade";
+import { useMinRespostasCampanha, MIN_RESPOSTAS_ABS } from "@/hooks/usePsicossocialMinRespostas";
 
 interface RiscoPsicossocial {
   id: string;
@@ -171,6 +172,17 @@ export function RiscosPsicossociaisPanel() {
     return { totalCampanhas: campanhasComResultado.length, totalRespostas, ipsMedio };
   }, [isConsolidado, campanhasComResultado]);
 
+  // Mínimo de respostas para liberar resultados (ISO 45003 / COPSOQ III).
+  // Usa a configuração de GHEs da campanha selecionada; quando não houver, cai no absoluto (5).
+  const { minRespostas } = useMinRespostasCampanha(
+    (campanhaSel ?? { id: "__none__", tenant_id: tenantId ?? "", empresa_id: null, ghe_ids: [] }) as any,
+  );
+  const respostasCampanha = campanhaSel?.total_respostas ?? 0;
+  const respostasConsolidado = consolidadoMeta?.totalRespostas ?? 0;
+  const bloqueadoPorAnonimato = isConsolidado
+    ? respostasConsolidado < MIN_RESPOSTAS_ABS
+    : !!campanhaSel && respostasCampanha < minRespostas;
+
   // Mapeia o código do instrumento da campanha → chave usada em psicossocial_instrumento_dimensao.
   const campanhaInstrumentoKey = useMemo(() => {
     if (!campanhaSel) return null;
@@ -204,12 +216,11 @@ export function RiscosPsicossociaisPanel() {
       const matches: { subject: string; value: number; instrumento: string }[] = [];
       radar.forEach((rd) => {
         const subj = norm(rd.subject);
-        // 1) tenta no instrumento da campanha; 2) cai para qualquer instrumento mapeado
+        // Quando a campanha tem instrumento conhecido (não consolidado), restringe
+        // estritamente aos mapeamentos do MESMO instrumento — evita rotular dimensões
+        // de SIPRO com selo HSE-MS / COPSOQ etc. apenas porque o nome do subject coincide.
         const candidatos = campanhaInstrumentoKey && !isConsolidado
-          ? [
-              ...maps.filter((mp) => mp.instrumento === campanhaInstrumentoKey),
-              ...maps.filter((mp) => mp.instrumento !== campanhaInstrumentoKey),
-            ]
+          ? maps.filter((mp) => mp.instrumento === campanhaInstrumentoKey)
           : maps;
         const m = candidatos.find((mp) => dimensaoMatchSubject(norm(mp.dimensao), subj));
         if (m) matches.push({ subject: rd.subject, value: rd.value, instrumento: m.instrumento });
@@ -473,6 +484,28 @@ export function RiscosPsicossociaisPanel() {
                 </CardContent>
               </Card>
 
+              {bloqueadoPorAnonimato ? (
+                <Card className="border-amber-300 bg-amber-50/60">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <Lock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-amber-800 text-sm">
+                        Número insuficiente de respostas para garantir anonimato estatístico
+                      </p>
+                      <p className="text-xs text-amber-700">
+                        Mínimo necessário:{" "}
+                        {isConsolidado ? MIN_RESPOSTAS_ABS : minRespostas} respostas. Atual:{" "}
+                        {isConsolidado ? respostasConsolidado : respostasCampanha}.
+                      </p>
+                      <p className="text-[11px] text-amber-700/80">
+                        Conformidade: ISO 45003 / COPSOQ III — resultados só são liberados quando há volume suficiente para preservar a confidencialidade dos respondentes.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+
+
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {riscos.map((r) => {
                   const matches = resultadosPorRisco[r.nome] || [];
@@ -534,8 +567,10 @@ export function RiscosPsicossociaisPanel() {
                   );
                 })}
               </div>
+              )}
             </>
           )}
+
         </TabsContent>
       </Tabs>
 
