@@ -151,6 +151,7 @@ const App = () => (
               <Route path="/admin/manual" element={<SuperAdminRoute><ManualSistema /></SuperAdminRoute>} />
               <Route path="/admin/qa" element={<SuperAdminRoute><QADashboard /></SuperAdminRoute>} />
               <Route path="/admin/blog" element={<SuperAdminRoute><BlogAdmin /></SuperAdminRoute>} />
+              <Route path="/admin/contratos" element={<SuperAdminRoute><ContratosAceite /></SuperAdminRoute>} />
 
               {/* Protected Onboarding Route */}
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingProtegido /></ProtectedRoute>} />
