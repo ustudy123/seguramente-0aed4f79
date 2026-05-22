@@ -92,6 +92,8 @@ const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
+const ContratosAceite = lazy(() => import("./pages/admin/ContratosAceite"));
+const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
