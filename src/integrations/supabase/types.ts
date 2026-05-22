@@ -2522,6 +2522,158 @@ export type Database = {
           },
         ]
       }
+      contratos_aceite: {
+        Row: {
+          ativo: boolean
+          categoria: Database["public"]["Enums"]["contrato_categoria"]
+          corpo_html: string
+          created_at: string
+          created_by: string | null
+          descricao_publica: string | null
+          id: string
+          limite_assinaturas: number | null
+          requer_cpf: boolean
+          requer_endereco: boolean
+          requer_geolocalizacao: boolean
+          requer_rg: boolean
+          requer_selfie: boolean
+          requer_telefone: boolean
+          titulo: string
+          updated_at: string
+          validade_dias: number | null
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["contrato_categoria"]
+          corpo_html: string
+          created_at?: string
+          created_by?: string | null
+          descricao_publica?: string | null
+          id?: string
+          limite_assinaturas?: number | null
+          requer_cpf?: boolean
+          requer_endereco?: boolean
+          requer_geolocalizacao?: boolean
+          requer_rg?: boolean
+          requer_selfie?: boolean
+          requer_telefone?: boolean
+          titulo: string
+          updated_at?: string
+          validade_dias?: number | null
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["contrato_categoria"]
+          corpo_html?: string
+          created_at?: string
+          created_by?: string | null
+          descricao_publica?: string | null
+          id?: string
+          limite_assinaturas?: number | null
+          requer_cpf?: boolean
+          requer_endereco?: boolean
+          requer_geolocalizacao?: boolean
+          requer_rg?: boolean
+          requer_selfie?: boolean
+          requer_telefone?: boolean
+          titulo?: string
+          updated_at?: string
+          validade_dias?: number | null
+          versao?: number
+        }
+        Relationships: []
+      }
+      contratos_assinaturas: {
+        Row: {
+          assinado_em: string | null
+          assinatura_imagem: string | null
+          contrato_id: string
+          created_at: string
+          expira_em: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          hash_documento: string | null
+          id: string
+          ip_address: string | null
+          link_enviado_em: string | null
+          link_enviado_para: string | null
+          observacoes: string | null
+          selfie_imagem: string | null
+          signatario_cpf: string | null
+          signatario_email: string | null
+          signatario_endereco: string | null
+          signatario_nome: string | null
+          signatario_rg: string | null
+          signatario_telefone: string | null
+          status: Database["public"]["Enums"]["contrato_assinatura_status"]
+          token: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          assinado_em?: string | null
+          assinatura_imagem?: string | null
+          contrato_id: string
+          created_at?: string
+          expira_em?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          hash_documento?: string | null
+          id?: string
+          ip_address?: string | null
+          link_enviado_em?: string | null
+          link_enviado_para?: string | null
+          observacoes?: string | null
+          selfie_imagem?: string | null
+          signatario_cpf?: string | null
+          signatario_email?: string | null
+          signatario_endereco?: string | null
+          signatario_nome?: string | null
+          signatario_rg?: string | null
+          signatario_telefone?: string | null
+          status?: Database["public"]["Enums"]["contrato_assinatura_status"]
+          token?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          assinado_em?: string | null
+          assinatura_imagem?: string | null
+          contrato_id?: string
+          created_at?: string
+          expira_em?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          hash_documento?: string | null
+          id?: string
+          ip_address?: string | null
+          link_enviado_em?: string | null
+          link_enviado_para?: string | null
+          observacoes?: string | null
+          selfie_imagem?: string | null
+          signatario_cpf?: string | null
+          signatario_email?: string | null
+          signatario_endereco?: string | null
+          signatario_nome?: string | null
+          signatario_rg?: string | null
+          signatario_telefone?: string | null
+          status?: Database["public"]["Enums"]["contrato_assinatura_status"]
+          token?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_assinaturas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos_aceite"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contratos_experiencia: {
         Row: {
           admissao_id: string | null
@@ -21156,6 +21308,7 @@ export type Database = {
         Args: { p_token: string }
         Returns: Json
       }
+      obter_contrato_publico: { Args: { _token: string }; Returns: Json }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
       proximo_tipo_marcacao_externo: {
         Args: { p_token: string }
@@ -21176,6 +21329,25 @@ export type Database = {
           out_pastas_criadas: number
           out_razao_social: string
         }[]
+      }
+      registrar_assinatura_contrato: {
+        Args: {
+          _assinatura_imagem: string
+          _cpf: string
+          _email: string
+          _endereco: string
+          _geo_lat: number
+          _geo_lng: number
+          _hash: string
+          _ip: string
+          _nome: string
+          _rg: string
+          _selfie_imagem: string
+          _telefone: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: Json
       }
       registrar_ponto_externo: {
         Args: {
@@ -21356,6 +21528,19 @@ export type Database = {
         | "EFETIVO"
         | "OUTROS"
       complexidade_atividade: "baixa" | "media" | "alta"
+      contrato_assinatura_status:
+        | "pendente"
+        | "assinado"
+        | "expirado"
+        | "revogado"
+      contrato_categoria:
+        | "live"
+        | "aula"
+        | "uso_sistema"
+        | "parceria"
+        | "nda"
+        | "evento"
+        | "outro"
       convite_enviado_via: "link" | "qrcode" | "whatsapp" | "email"
       convite_psicossocial_status:
         | "pendente"
@@ -21924,6 +22109,21 @@ export const Constants = {
         "OUTROS",
       ],
       complexidade_atividade: ["baixa", "media", "alta"],
+      contrato_assinatura_status: [
+        "pendente",
+        "assinado",
+        "expirado",
+        "revogado",
+      ],
+      contrato_categoria: [
+        "live",
+        "aula",
+        "uso_sistema",
+        "parceria",
+        "nda",
+        "evento",
+        "outro",
+      ],
       convite_enviado_via: ["link", "qrcode", "whatsapp", "email"],
       convite_psicossocial_status: [
         "pendente",
