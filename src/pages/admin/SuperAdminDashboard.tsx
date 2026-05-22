@@ -79,6 +79,9 @@ export default function SuperAdminDashboard() {
             <Button variant="outline" size="sm" onClick={() => navigate('/admin/blog')}>
               <FileText className="w-4 h-4 mr-2" />Blog
             </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/contratos')}>
+              <FileSignature className="w-4 h-4 mr-2" />Contratos
+            </Button>
             <Button onClick={() => setShowTenantForm(true)} size="sm">
               <Plus className="w-4 h-4 mr-2" />Nova Empresa
             </Button>
