@@ -68,7 +68,7 @@ function emptyContrato(): Partial<ContratoAceite> {
 export default function ContratosAceite() {
   const navigate = useNavigate();
   const { data: contratos, isLoading, createContrato, updateContrato, deleteContrato } = useContratosAceite();
-  const { confirm } = useConfirmDialog();
+
 
   const [search, setSearch] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
