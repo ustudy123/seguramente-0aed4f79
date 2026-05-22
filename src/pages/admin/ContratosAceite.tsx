@@ -94,14 +94,14 @@ export default function ContratosAceite() {
     setEditing(null);
   };
 
-  const handleDelete = (c: ContratoAceite) => {
-    confirm({
+  const handleDelete = async (c: ContratoAceite) => {
+    const ok = await confirm({
       title: "Excluir contrato?",
       description: `O contrato "${c.titulo}" e todas as assinaturas associadas serão removidos.`,
-      confirmText: "Excluir",
+      confirmLabel: "Excluir",
       variant: "destructive",
-      onConfirm: () => deleteContrato.mutate(c.id),
     });
+    if (ok) deleteContrato.mutate(c.id);
   };
 
   return (
