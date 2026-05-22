@@ -92,6 +92,8 @@ const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
+const ContratosAceite = lazy(() => import("./pages/admin/ContratosAceite"));
+const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +140,7 @@ const App = () => (
               <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
               <Route path="/completar-cadastro/:token" element={<CompletarCadastro />} />
               <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
+              <Route path="/assinar-contrato/:token" element={<AssinarContrato />} />
               <Route path="/ativar-conta" element={<AtivarConta />} />
               <Route path="/lp" element={<LandingPage />} />
               <Route path="/termos-de-uso" element={<TermosDeUso />} />
@@ -148,6 +151,7 @@ const App = () => (
               <Route path="/admin/manual" element={<SuperAdminRoute><ManualSistema /></SuperAdminRoute>} />
               <Route path="/admin/qa" element={<SuperAdminRoute><QADashboard /></SuperAdminRoute>} />
               <Route path="/admin/blog" element={<SuperAdminRoute><BlogAdmin /></SuperAdminRoute>} />
+              <Route path="/admin/contratos" element={<SuperAdminRoute><ContratosAceite /></SuperAdminRoute>} />
 
               {/* Protected Onboarding Route */}
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingProtegido /></ProtectedRoute>} />

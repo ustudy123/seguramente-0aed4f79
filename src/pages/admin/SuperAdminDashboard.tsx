@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare, Brain,
+  Activity, MessageSquare, Brain, FileSignature,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +78,9 @@ export default function SuperAdminDashboard() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate('/admin/blog')}>
               <FileText className="w-4 h-4 mr-2" />Blog
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/contratos')}>
+              <FileSignature className="w-4 h-4 mr-2" />Contratos
             </Button>
             <Button onClick={() => setShowTenantForm(true)} size="sm">
               <Plus className="w-4 h-4 mr-2" />Nova Empresa
