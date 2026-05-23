@@ -273,10 +273,19 @@ export function SolicitarAjusteFolhaInterno({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Folha de Ponto · Ajustes</DialogTitle>
-              <DialogDescription>
-                Edite ou inclua os horários direto na folha mensal. Para cada dia alterado, selecione uma justificativa. Todos os pedidos são enviados ao gestor de uma única vez.
-              </DialogDescription>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <DialogTitle>Folha de Ponto · Ajustes</DialogTitle>
+                  <DialogDescription>
+                    A folha já vem com os horários registrados. Edite ou inclua os horários que faltam, escolha a justificativa (com horas de abono configuradas pelo RH) e envie tudo de uma vez ao gestor.
+                  </DialogDescription>
+                </div>
+                {podeGerenciar && (
+                  <Button variant="outline" size="sm" onClick={() => setShowConfigJust(true)} className="shrink-0">
+                    <Settings2 className="w-4 h-4 mr-1" /> Justificativas
+                  </Button>
+                )}
+              </div>
             </DialogHeader>
 
             {/* Colaborador + Mês */}
