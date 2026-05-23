@@ -267,16 +267,19 @@ const Ponto = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
-            <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Controle de Ponto
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-2 border-b">
+        <div className="space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary/80">
+            Gestão de Jornada · CLT
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2.5">
+            <Clock className="w-7 h-7 text-primary" /> Controle de Ponto Eletrônico
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Registro fiel e auditável da jornada
+            <Shield className="w-3.5 h-3.5" /> Registro fiel e auditável da jornada · Portaria 671 MTP
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:justify-end">
@@ -290,11 +293,17 @@ const Ponto = () => {
             <HelpCircle className="h-4 w-4" />
             Guia Rápido
           </Button>
-          <Button id="btn-solicitar-ajuste" size="sm" onClick={() => setShowAjusteModal(true)}>
+          <Button
+            id="btn-solicitar-ajuste"
+            size="sm"
+            onClick={() => setShowAjusteModal(true)}
+            className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md shadow-primary/20"
+          >
             <FileText className="h-4 w-4 mr-2" /> Solicitar Ajuste
           </Button>
         </div>
       </motion.div>
+
 
       {/* Main Tabs — 7 grupos funcionais */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
