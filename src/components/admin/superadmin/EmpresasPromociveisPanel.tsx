@@ -125,6 +125,11 @@ export function EmpresasPromociveisPanel() {
           </div>
         </CardHeader>
         <CardContent>
+          {maeSelecionada && (
+            <div className="mb-4 p-3 rounded-md border bg-muted/40 text-sm">
+              Exibindo derivadas de <strong>{maeSelecionada.razao_social}</strong> · tenant <code className="text-xs">{maeSelecionada.tenant_nome}</code>
+            </div>
+          )}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando...</div>
           ) : filtered.length === 0 ? (
