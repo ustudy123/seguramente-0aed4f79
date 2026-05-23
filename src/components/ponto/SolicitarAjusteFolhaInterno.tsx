@@ -129,14 +129,13 @@ export function SolicitarAjusteFolhaInterno({
     const last = new Date(y, m, 0).getDate();
     const arr: string[] = [];
     for (let d = 1; d <= last; d++) {
-      const iso = `${y}-${pad(m)}-${pad(d)}`;
-      if (iso <= today) arr.push(iso);
+      arr.push(`${y}-${pad(m)}-${pad(d)}`);
     }
     return arr.reverse();
-  }, [mesAtivo, today]);
+  }, [mesAtivo]);
 
   const editDia = (data: string): DiaEdit =>
-    edits[data] || { horarios: {}, justificativaPreset: "", justificativaOutro: "" };
+    edits[data] || { horarios: {}, justificativaId: "", outroTexto: "" };
 
   const setHorario = (data: string, tipo: TipoMarc, valor: string) => {
     setEdits((prev) => {
@@ -144,30 +143,36 @@ export function SolicitarAjusteFolhaInterno({
       return { ...prev, [data]: { ...cur, horarios: { ...cur.horarios, [tipo]: valor } } };
     });
   };
-  const setJustificativaPreset = (data: string, v: string) => {
-    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaPreset: v } }));
+  const setJustificativaId = (data: string, v: string) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaId: v } }));
   };
-  const setJustificativaOutro = (data: string, v: string) => {
-    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaOutro: v } }));
+  const setOutroTexto = (data: string, v: string) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), outroTexto: v } }));
+  };
+
+  const resolverMotivo = (ed: DiaEdit): { motivo: string; justId: string | null; horas: number; requerAnexo: boolean } => {
+    if (ed.justificativaId === OUTRO_VALUE) {
+      return { motivo: ed.outroTexto.trim(), justId: null, horas: 0, requerAnexo: false };
+    }
+    const j = justAtivas.find((x) => x.id === ed.justificativaId);
+    if (!j) return { motivo: "", justId: null, horas: 0, requerAnexo: false };
+    return { motivo: j.nome, justId: j.id, horas: Number(j.horas_abono) || 0, requerAnexo: !!j.requer_anexo };
   };
 
   const itensAlterados = useMemo(() => {
-    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; motivo: string }[] = [];
+    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; motivo: string; justId: string | null; horas: number }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       const original = marcsPorDia[data] || {};
-      const motivoFinal =
-        ed.justificativaPreset === "Outro (descrever)"
-          ? ed.justificativaOutro.trim()
-          : ed.justificativaPreset.trim();
+      const { motivo, justId, horas } = resolverMotivo(ed);
       ORDEM_TIPOS.forEach((t) => {
         const novo = (ed.horarios[t] || "").trim();
         if (!novo) return;
         if (novo === original[t]) return;
-        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "", motivo: motivoFinal });
+        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "", motivo, justId, horas });
       });
     });
     return out;
-  }, [edits, marcsPorDia]);
+  }, [edits, marcsPorDia, justAtivas]);
 
   const totalAlteracoes = itensAlterados.length;
 
@@ -189,11 +194,9 @@ export function SolicitarAjusteFolhaInterno({
     const diasComItens = new Set(itensAlterados.map((i) => i.data));
     for (const data of diasComItens) {
       const ed = editDia(data);
-      const motivo =
-        ed.justificativaPreset === "Outro (descrever)"
-          ? ed.justificativaOutro.trim()
-          : ed.justificativaPreset.trim();
-      if (!motivo || motivo.length < 5) return `Selecione uma justificativa para ${isoToBR(data)}.`;
+      const { motivo, requerAnexo } = resolverMotivo(ed);
+      if (!motivo || motivo.length < 3) return `Selecione uma justificativa para ${isoToBR(data)}.`;
+      if (requerAnexo && files.length === 0) return `A justificativa de ${isoToBR(data)} exige anexo (atestado, comprovante, etc.).`;
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";
@@ -226,6 +229,8 @@ export function SolicitarAjusteFolhaInterno({
           horaOriginal: it.horaOriginal ? `${it.horaOriginal}:00` : undefined,
           horaSolicitada: `${it.hora}:00`,
           motivo: it.motivo,
+          justificativaId: it.justId || undefined,
+          horasAbonadas: it.horas,
           anexos: i === 0 ? files : undefined, // anexa só no primeiro para não duplicar
         });
       }
@@ -235,6 +240,7 @@ export function SolicitarAjusteFolhaInterno({
     }
     setEnviando(false);
   };
+
 
   const navegarMes = (delta: number) => {
     const [y, m] = mesAtivo.split("-").map(Number);
