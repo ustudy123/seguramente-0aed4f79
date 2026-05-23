@@ -89,3 +89,7 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = false
   [functions.esocial-transmissao]
     verify_jwt = false
+  [functions.provisionar-gestor]
+    verify_jwt = true
+  [functions.reset-senha-gestor]
+    verify_jwt = true
