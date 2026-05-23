@@ -501,27 +501,54 @@ const Ponto = () => {
         </TabsContent>
 
         {/* Ajustes */}
-        <TabsContent value="ajustes" className="space-y-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between flex-wrap gap-2">
+        <TabsContent value="ajustes" className="space-y-5">
+          {(() => {
+            const total = ajustesPendentes.length;
+            const pend = ajustesPendentes.filter(a => a.status === "pendente").length;
+            const apr = ajustesPendentes.filter(a => a.status === "aprovado").length;
+            const rej = ajustesPendentes.filter(a => a.status === "rejeitado").length;
+            return (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-card border rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Solicitações Totais</p>
+                    <p className="text-2xl font-bold tracking-tight">{total}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-amber-500">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1">Pendentes</p>
+                      <p className="text-2xl font-bold tracking-tight">{pend}</p>
+                    </div>
+                    {pend > 0 && <span className="bg-amber-500/10 text-amber-600 text-[10px] px-2 py-0.5 rounded font-semibold">Prioritário</span>}
+                  </div>
+                </div>
+                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-emerald-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mb-1">Aprovadas</p>
+                  <p className="text-2xl font-bold tracking-tight">{apr}</p>
+                </div>
+                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-rose-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejeitadas</p>
+                  <p className="text-2xl font-bold tracking-tight">{rej}</p>
+                </div>
+              </motion.div>
+            );
+          })()}
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl border overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b bg-muted/30 flex items-center justify-between flex-wrap gap-2">
               <div>
-                <h3 className="text-sm font-semibold">Solicitações de Ajuste</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="text-base font-bold tracking-tight">Solicitações de Ajuste</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Histórico dos últimos 90 dias — pendentes, aprovadas e rejeitadas para conferência.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                  Pendentes: {ajustesPendentes.filter(a => a.status === "pendente").length}
-                </Badge>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Aprovadas: {ajustesPendentes.filter(a => a.status === "aprovado").length}
-                </Badge>
-                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                  Rejeitadas: {ajustesPendentes.filter(a => a.status === "rejeitado").length}
-                </Badge>
-              </div>
             </div>
+
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
