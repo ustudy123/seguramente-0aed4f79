@@ -24,6 +24,7 @@ interface EmpresaRow {
   tenant_slug: string;
   total_empresas_tenant: number;
   is_principal: boolean;
+  tenant_owner_email: string | null;
 }
 
 export function EmpresasPromociveisPanel() {
