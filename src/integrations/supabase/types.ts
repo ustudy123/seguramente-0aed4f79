@@ -21573,9 +21573,22 @@ export type Database = {
         Args: { p_empresa_id: string }
         Returns: Json
       }
+      superadmin_spinoff_dry_run_multi: {
+        Args: { p_empresa_ids: string[] }
+        Returns: Json
+      }
       superadmin_spinoff_execute: {
         Args: {
           p_empresa_id: string
+          p_novo_tenant_id: string
+          p_owner_email: string
+          p_owner_user_id: string
+        }
+        Returns: Json
+      }
+      superadmin_spinoff_execute_multi: {
+        Args: {
+          p_empresa_ids: string[]
           p_novo_tenant_id: string
           p_owner_email: string
           p_owner_user_id: string

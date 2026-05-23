@@ -1,7 +1,7 @@
 // Edge Function: tenant-spinoff
-// Promove uma empresa cliente (gerida por uma consultoria/tenant raiz) a uma
-// nova conta-raiz independente. Migração DEFINITIVA — o tenant de origem perde
-// acesso total à empresa migrada.
+// Promove uma OU várias empresas cliente (geridas por uma consultoria/tenant raiz)
+// a uma nova conta-raiz independente com UM dono único.
+// Migração DEFINITIVA — o tenant de origem perde acesso total às empresas migradas.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -20,7 +20,9 @@ type Mode = "dry_run" | "execute";
 
 type Payload = {
   mode: Mode;
-  empresaId: string;
+  // Aceita 1 (retrocompatível) ou N empresas
+  empresaId?: string;
+  empresaIds?: string[];
   // execute apenas:
   novoTenant?: { nome: string; slug: string; plano?: string };
   owner?: {
@@ -45,7 +47,6 @@ serve(async (req) => {
     const jwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (!jwt) return json({ error: "Missing Authorization" }, 401);
 
-    // Cliente impersonando o caller (para validação de superadmin e auditoria via auth.uid())
     const callerClient = createClient(SUPABASE_URL, SERVICE_ROLE, {
       global: { headers: { Authorization: `Bearer ${jwt}` } },
       auth: { persistSession: false, autoRefreshToken: false },
@@ -63,12 +64,20 @@ serve(async (req) => {
     if (!isSuper) return json({ error: "Acesso negado (super admin necessário)" }, 403);
 
     const payload = (await req.json()) as Payload;
-    if (!payload?.empresaId) return json({ error: "empresaId obrigatório" }, 400);
+
+    // Normaliza para sempre operar como array (retrocompatível com empresaId único)
+    const empresaIds: string[] = payload.empresaIds && payload.empresaIds.length > 0
+      ? payload.empresaIds
+      : (payload.empresaId ? [payload.empresaId] : []);
+
+    if (empresaIds.length === 0) {
+      return json({ error: "Informe empresaId ou empresaIds" }, 400);
+    }
 
     // ---------- DRY RUN ----------
     if (payload.mode === "dry_run") {
-      const { data, error } = await callerClient.rpc("superadmin_spinoff_dry_run", {
-        p_empresa_id: payload.empresaId,
+      const { data, error } = await callerClient.rpc("superadmin_spinoff_dry_run_multi", {
+        p_empresa_ids: empresaIds,
       });
       if (error) return json({ error: error.message }, 400);
       return json({ dryRun: data });
@@ -137,7 +146,7 @@ serve(async (req) => {
         ownerInfo.userId = created.user.id;
       }
 
-      // 3) Profile (upsert por user_id, força tenant_id = novo)
+      // 3) Profile
       const { error: profErr } = await admin
         .from("profiles")
         .upsert(
@@ -160,9 +169,7 @@ serve(async (req) => {
         );
       if (roleErr) throw new Error(`Erro em user_roles: ${roleErr.message}`);
 
-      // 5) usuarios_base (Proprietário do novo tenant)
-      // auth_user_id é UNIQUE globalmente — se o usuário já tinha uma usuarios_base
-      // em outro tenant, reaproveitamos o registro e movemos para o novo tenant.
+      // 5) usuarios_base
       const { data: existingBase } = await admin
         .from("usuarios_base")
         .select("id, tenant_id")
@@ -201,11 +208,11 @@ serve(async (req) => {
         uBaseId = uBase.id as string;
       }
 
-      // 6) Executa a migração de dados via RPC (roda como super admin)
+      // 6) Migração de dados (UMA transação para todas as empresas)
       const { data: rpcResult, error: rpcErr } = await callerClient.rpc(
-        "superadmin_spinoff_execute",
+        "superadmin_spinoff_execute_multi",
         {
-          p_empresa_id: payload.empresaId,
+          p_empresa_ids: empresaIds,
           p_novo_tenant_id: novoTenantId,
           p_owner_email: email,
           p_owner_user_id: ownerInfo.userId,
@@ -213,24 +220,25 @@ serve(async (req) => {
       );
       if (rpcErr) throw new Error(`Erro na migração de dados: ${rpcErr.message}`);
 
-      // 7) Vínculo do owner com a empresa migrada
-      await admin.from("usuario_vinculos").insert({
+      // 7) Vínculos do owner com TODAS as empresas migradas
+      const vinculosPayload = empresaIds.map((empId) => ({
         tenant_id: novoTenantId,
         usuario_id: uBaseId,
-        empresa_id: payload.empresaId,
+        empresa_id: empId,
         tipo_vinculo: "administrador",
         status: "ativo",
         data_inicio: new Date().toISOString().split("T")[0],
-      });
+      }));
+      await admin.from("usuario_vinculos").insert(vinculosPayload);
 
       return json({
         ok: true,
         novoTenantId,
         owner: ownerInfo,
+        empresasMigradas: empresaIds.length,
         migracao: rpcResult,
       });
     } catch (innerErr: any) {
-      // Cleanup do tenant criado em caso de falha
       console.error("Spinoff falhou, fazendo rollback do tenant:", innerErr);
       await admin.from("tenants").delete().eq("id", novoTenantId);
       return json({ error: innerErr.message || "Falha na promoção" }, 500);
