@@ -21489,6 +21489,7 @@ export type Database = {
           razao_social: string
           tenant_id: string
           tenant_nome: string
+          tenant_owner_email: string
           tenant_slug: string
           total_empresas_tenant: number
         }[]
