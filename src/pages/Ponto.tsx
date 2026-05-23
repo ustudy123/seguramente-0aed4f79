@@ -52,6 +52,8 @@ import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
 import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 import { AjustesAprovacaoPlanilha } from "@/components/ponto/AjustesAprovacaoPlanilha";
+import { SolicitarAjusteFolhaInterno } from "@/components/ponto/SolicitarAjusteFolhaInterno";
+
 
 
 const Ponto = () => {
