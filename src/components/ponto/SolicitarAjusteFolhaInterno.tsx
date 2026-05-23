@@ -50,8 +50,8 @@ function diaSemana(iso: string) {
 
 interface DiaEdit {
   horarios: Partial<Record<TipoMarc, string>>;
-  justificativaPreset: string;
-  justificativaOutro: string;
+  justificativaId: string; // id da justificativa OU OUTRO_VALUE
+  outroTexto: string;
 }
 
 export function SolicitarAjusteFolhaInterno({
@@ -60,6 +60,8 @@ export function SolicitarAjusteFolhaInterno({
   const today = new Date().toISOString().slice(0, 10);
   const hojeDate = new Date();
   const { solicitarAjuste } = usePonto();
+  const { justificativas, podeGerenciar } = usePontoJustificativas();
+  const justAtivas = useMemo(() => justificativas.filter((j) => j.ativo), [justificativas]);
 
   const [colaboradorId, setColaboradorId] = useState<string>(colaboradorIdInicial || "");
   const [loading, setLoading] = useState(false);
@@ -70,6 +72,7 @@ export function SolicitarAjusteFolhaInterno({
   const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
+  const [showConfigJust, setShowConfigJust] = useState(false);
 
   const colaborador = useMemo(
     () => colaboradores.find((c) => c.id === colaboradorId) || null,
