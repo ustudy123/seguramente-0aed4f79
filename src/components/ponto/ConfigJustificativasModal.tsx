@@ -77,13 +77,7 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
                 <Label className="text-xs">Nome *</Label>
                 <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Atestado médico" />
               </div>
-              <div className="md:col-span-2">
-                <Label className="text-xs">Abono (h)</Label>
-                <Input type="number" step="0.5" min="0" max="24"
-                  value={form.horas_abono}
-                  onChange={(e) => setForm({ ...form, horas_abono: Number(e.target.value) })} />
-              </div>
-              <div className="md:col-span-5">
+              <div className="md:col-span-7">
                 <Label className="text-xs">Descrição (opcional)</Label>
                 <Input value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Quando usar este motivo" />
               </div>
