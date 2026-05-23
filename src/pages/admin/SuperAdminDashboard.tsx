@@ -38,6 +38,8 @@ export default function SuperAdminDashboard() {
   const [showTenantForm, setShowTenantForm] = useState(false);
   const [showOwnerForm, setShowOwnerForm] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<TenantWithStats | null>(null);
+  const [showSpinoff, setShowSpinoff] = useState(false);
+  const [spinoffTenant, setSpinoffTenant] = useState<TenantWithStats | null>(null);
 
   const filteredTenants = tenants.filter(t =>
     t.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
