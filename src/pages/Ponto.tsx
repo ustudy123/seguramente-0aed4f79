@@ -52,6 +52,8 @@ import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
 import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 import { AjustesAprovacaoPlanilha } from "@/components/ponto/AjustesAprovacaoPlanilha";
+import { SolicitarAjusteFolhaInterno } from "@/components/ponto/SolicitarAjusteFolhaInterno";
+
 
 
 const Ponto = () => {
@@ -717,110 +719,16 @@ const Ponto = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Solicitar Ajuste */}
-      <Dialog open={showAjusteModal} onOpenChange={handleCloseAjusteModal}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Solicitar Ajuste de Ponto</DialogTitle>
-            <DialogDescription>
-              Use este formulário quando não conseguir registrar o ponto (sem internet, app indisponível, esquecimento, atendimento médico etc.). A justificativa é obrigatória e você pode anexar comprovantes.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Colaborador *</Label>
-              <Select value={ajusteColaborador} onValueChange={setAjusteColaborador}>
-                <SelectTrigger><SelectValue placeholder="Selecione o colaborador" /></SelectTrigger>
-                <SelectContent>
-                  {colaboradores.map((colab) => <SelectItem key={colab.id} value={colab.id}>{colab.nome_completo}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Data de Referência *</Label>
-                <Input
-                  type="date"
-                  value={ajusteData}
-                  max={format(new Date(), "yyyy-MM-dd")}
-                  onChange={(e) => setAjusteData(e.target.value)}
-                />
-                {ajusteData && (() => {
-                  const [y, m, d] = ajusteData.split("-");
-                  if (!y || !m || !d) return null;
-                  const dt = new Date(Number(y), Number(m) - 1, Number(d));
-                  return (
-                    <p className="text-[11px] text-muted-foreground">
-                      📅 {format(dt, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </p>
-                  );
-                })()}
-              </div>
-              <div className="space-y-2">
-                <Label>Tipo de Ajuste *</Label>
-                <Select value={ajusteTipo} onValueChange={(v) => setAjusteTipo(v as typeof ajusteTipo)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inclusao">Inclusão (não registrei)</SelectItem>
-                    <SelectItem value="correcao">Correção (registrei errado)</SelectItem>
-                    <SelectItem value="justificativa">Justificativa (atestado/falta)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {ajusteTipo !== "justificativa" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Marcação *</Label>
-                  <Select value={ajusteMarcacao} onValueChange={(v) => setAjusteMarcacao(v as typeof ajusteMarcacao)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="entrada">Entrada</SelectItem>
-                      <SelectItem value="saida">Saída</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Hora Correta *</Label>
-                  <Input type="time" value={ajusteHora} onChange={(e) => setAjusteHora(e.target.value)} />
-                </div>
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Justificativa * <span className="text-xs text-muted-foreground font-normal">(obrigatória)</span></Label>
-              <Textarea
-                placeholder="Ex.: Esqueci de bater o ponto na saída; estava sem sinal de internet; precisei sair para atendimento médico..."
-                value={ajusteMotivo}
-                onChange={(e) => setAjusteMotivo(e.target.value)}
-                rows={4}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Anexos <span className="text-xs text-muted-foreground font-normal">(opcional — atestado, comprovante etc.)</span></Label>
-              <AnexoUpload
-                anexos={ajusteAnexos}
-                onAnexosChange={setAjusteAnexos}
-                maxFiles={3}
-                maxSize={10 * 1024 * 1024}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleCloseAjusteModal(false)}>Cancelar</Button>
-            <Button
-              onClick={handleSolicitarAjuste}
-              disabled={
-                !ajusteColaborador ||
-                !ajusteMotivo.trim() ||
-                (ajusteTipo !== "justificativa" && !ajusteHora) ||
-                solicitandoAjuste
-              }
-            >
-              {solicitandoAjuste ? "Enviando..." : "Enviar Solicitação"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Modal: Solicitar Ajuste (Folha Mensal) */}
+      <SolicitarAjusteFolhaInterno
+        open={showAjusteModal}
+        onOpenChange={handleCloseAjusteModal}
+        colaboradores={colaboradores}
+        tenantId={tenantIdAtivo}
+        empresaAtivaId={empresaAtivaId}
+        colaboradorIdInicial={ajusteColaborador}
+      />
+
 
       <GuiaRapidoPonto open={showGuia} onOpenChange={setShowGuia} />
       <AnexosAjusteModal ajuste={anexosModalAjuste} onOpenChange={(o) => !o && setAnexosModalAjuste(null)} />
