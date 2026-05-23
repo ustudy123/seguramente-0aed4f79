@@ -539,129 +539,13 @@ const Ponto = () => {
             );
           })()}
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl border overflow-hidden shadow-sm">
-            <div className="px-5 py-4 border-b bg-muted/30 flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <h3 className="text-base font-bold tracking-tight">Solicitações de Ajuste</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Histórico dos últimos 90 dias — pendentes, aprovadas e rejeitadas para conferência.
-                </p>
-              </div>
-            </div>
+          <AjustesAprovacaoPlanilha
+            ajustes={ajustesPendentes}
+            processarAjuste={async (args) => { await processarAjuste(args); }}
+            processando={processandoAjuste}
+            onOpenAnexos={(a) => setAnexosModalAjuste(a)}
+          />
 
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b">
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Colaborador</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Data</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Tipo</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Marcação</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Hora</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Motivo</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-center">Anexos</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Solicitante</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-center">Status</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-right pr-5">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {ajustesPendentes.length === 0 ? (
-                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhuma solicitação de ajuste registrada.</TableCell></TableRow>
-                ) : ajustesPendentes.map((ajuste) => {
-                  const qtdAnexos = ajuste.anexos?.length ?? 0;
-                  const isPendente = ajuste.status === "pendente";
-                  const isAprovado = ajuste.status === "aprovado";
-                  const isRejeitado = ajuste.status === "rejeitado";
-                  return (
-                  <TableRow key={ajuste.id} className={!isPendente ? "opacity-80" : ""}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {ajuste.colaborador_nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{ajuste.colaborador_nome}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{(() => {
-                      const raw = (ajuste.data_referencia || "").toString().slice(0, 10);
-                      const [y, m, d] = raw.split("-");
-                      return d && m && y ? `${d}/${m}/${y}` : (ajuste.data_referencia || "-");
-                    })()}</TableCell>
-                    <TableCell><Badge variant="outline">{ajuste.tipo_ajuste}</Badge></TableCell>
-                    <TableCell>{ajuste.tipo_marcacao ? TIPO_MARCACAO_LABELS[ajuste.tipo_marcacao] : "-"}</TableCell>
-                    <TableCell className="font-mono">{ajuste.hora_solicitada || "-"}</TableCell>
-                    <TableCell className="max-w-[260px] align-top">
-                      <p className="text-sm whitespace-pre-wrap break-words leading-snug">
-                        {ajuste.motivo}
-                      </p>
-                      {ajuste.observacao_aprovador && (
-                        <p className="mt-1 text-[11px] text-muted-foreground italic border-l-2 border-muted-foreground/30 pl-2">
-                          Resposta: {ajuste.observacao_aprovador}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {qtdAnexos > 0 ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setAnexosModalAjuste(ajuste)}
-                          className="gap-1"
-                        >
-                          <Paperclip className="w-3.5 h-3.5" />
-                          <span className="text-xs">{qtdAnexos}</span>
-                          <Eye className="w-3.5 h-3.5 ml-0.5" />
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{ajuste.created_by_nome}</TableCell>
-                    <TableCell className="text-center">
-                      {isPendente && <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Pendente</Badge>}
-                      {isAprovado && <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aprovado</Badge>}
-                      {isRejeitado && <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rejeitado</Badge>}
-                      {!isPendente && ajuste.aprovado_por_nome && (
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          por {ajuste.aprovado_por_nome}
-                        </p>
-                      )}
-                      {!isPendente && ajuste.data_aprovacao && (
-                        <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(ajuste.data_aprovacao), "dd/MM/yyyy HH:mm")}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isPendente ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Button id={`btn-aprovar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-green-600 hover:text-green-600 hover:bg-green-50"
-                            onClick={() => handleProcessarAjuste(ajuste.id, true)} disabled={processandoAjuste}>
-                            <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
-                          </Button>
-                          <Button id={`btn-rejeitar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleProcessarAjuste(ajuste.id, false)} disabled={processandoAjuste}>
-                            <XCircle className="w-4 h-4 mr-1" /> Rejeitar
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground flex items-center justify-center">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </motion.div>
-
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-wider">
-            <Shield className="w-3.5 h-3.5" />
-            Logs de auditoria em conformidade com Portaria 671 MTP
-          </div>
         </TabsContent>
 
 
