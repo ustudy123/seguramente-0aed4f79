@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabasePublic } from "@/lib/supabasePublic";
-import { Loader2, Paperclip, X, CheckCircle2, Plus, Calendar as CalendarIcon, Trash2 } from "lucide-react";
+import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -18,15 +18,14 @@ interface Props {
   colaboradorNome: string;
 }
 
-type TipoMarc = "entrada" | "saida" | "saida_almoco" | "retorno_almoco";
+type TipoMarc = "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
 
 interface Marcacao { id: string; data: string; hora: string; tipo: TipoMarc; }
 interface AjustePend { id: string; data: string; hora: string; tipo: TipoMarc; status: string; }
-interface ItemAjuste { id: string; data: string; hora: string; tipo: TipoMarc; }
 
 const MAX_FILE_MB = 5;
 const MAX_FILES = 3;
-const MAX_ITENS = 20;
+const MAX_ITENS = 40;
 
 const TIPO_LABEL: Record<TipoMarc, string> = {
   entrada: "Entrada",
@@ -37,38 +36,54 @@ const TIPO_LABEL: Record<TipoMarc, string> = {
 
 const ORDEM_TIPOS: TipoMarc[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
 
-function fmtData(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+const JUSTIFICATIVAS_PRESET = [
+  "Esqueci de registrar o ponto",
+  "Falha no equipamento / aplicativo",
+  "Sem sinal de internet no momento",
+  "Atraso por trânsito / transporte público",
+  "Saída antecipada autorizada pelo gestor",
+  "Reunião externa / atendimento em cliente",
+  "Atestado médico / consulta",
+  "Erro ao registrar (horário incorreto)",
+  "Outro (descrever)",
+];
+
+function fmtHora(h: string) { return (h || "").slice(0, 5); }
+function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
+function isoToBR(iso: string) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+function diaSemana(iso: string) {
+  const ds = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  return ds[new Date(iso + "T12:00:00").getDay()];
 }
-function fmtHora(h: string) {
-  return (h || "").slice(0, 5);
-}
-function novoId() {
-  return Math.random().toString(36).slice(2, 9);
+
+// edited[tipo] = "" significa "limpar/sem alteração ainda";  string com hora = ajuste
+interface DiaEdit {
+  horarios: Partial<Record<TipoMarc, string>>; // novos horários propostos
+  justificativaPreset: string;
+  justificativaOutro: string;
 }
 
 export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   const today = new Date().toISOString().slice(0, 10);
+  const hojeDate = new Date();
+
   const [loading, setLoading] = useState(false);
   const [marcacoes, setMarcacoes] = useState<Marcacao[]>([]);
   const [ajustesPend, setAjustesPend] = useState<AjustePend[]>([]);
-
-  const [itens, setItens] = useState<ItemAjuste[]>([]);
-  const [motivo, setMotivo] = useState("");
+  const [mesAtivo, setMesAtivo] = useState(() => `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`);
+  const [edits, setEdits] = useState<Record<string, DiaEdit>>({}); // por data
   const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
 
-  const reset = () => {
-    setItens([]); setMotivo(""); setFiles([]); setDone(false);
-  };
+  const reset = () => { setEdits({}); setFiles([]); setDone(false); };
 
   useEffect(() => {
     if (!open) return;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabasePublic.rpc("listar_ponto_externo", { p_token: token, p_dias: 14 });
+      // Pede 45 dias para cobrir mês atual + anterior
+      const { data, error } = await supabasePublic.rpc("listar_ponto_externo", { p_token: token, p_dias: 45 });
       if (error) { toast.error(error.message); setLoading(false); return; }
       const r = data as any;
       if (r?.error) { toast.error(r.error); setLoading(false); return; }
@@ -78,28 +93,77 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     })();
   }, [open, token]);
 
-  // Agrupa marcações + ajustes pendentes por data (últimos 14 dias)
-  const dias = useMemo(() => {
-    const map = new Map<string, { marcs: Marcacao[]; ajustes: AjustePend[] }>();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      map.set(d.toISOString().slice(0, 10), { marcs: [], ajustes: [] });
+  // Gera lista de dias do mês ativo (limitado ao hoje)
+  const diasMes = useMemo(() => {
+    const [y, m] = mesAtivo.split("-").map(Number);
+    const last = new Date(y, m, 0).getDate();
+    const arr: string[] = [];
+    for (let d = 1; d <= last; d++) {
+      const iso = `${y}-${pad(m)}-${pad(d)}`;
+      if (iso <= today) arr.push(iso);
     }
-    marcacoes.forEach((m) => { if (map.has(m.data)) map.get(m.data)!.marcs.push(m); });
-    ajustesPend.forEach((a) => { if (map.has(a.data)) map.get(a.data)!.ajustes.push(a); });
-    return Array.from(map.entries()).map(([data, v]) => ({ data, ...v }));
-  }, [marcacoes, ajustesPend]);
+    return arr.reverse(); // mais recentes no topo
+  }, [mesAtivo, today]);
 
-  const adicionarItem = (data?: string, tipo?: TipoMarc) => {
-    if (itens.length >= MAX_ITENS) { toast.error(`Máximo de ${MAX_ITENS} ajustes por solicitação.`); return; }
-    setItens((prev) => [...prev, { id: novoId(), data: data || today, hora: "", tipo: tipo || "entrada" }]);
+  const marcsPorDia = useMemo(() => {
+    const map: Record<string, Partial<Record<TipoMarc, string>>> = {};
+    marcacoes.forEach((m) => {
+      if (!map[m.data]) map[m.data] = {};
+      // mantém a primeira hora vista por tipo (ordenado desc na RPC, então a mais recente vence — ajustar para primeira)
+      if (!map[m.data][m.tipo]) map[m.data][m.tipo] = fmtHora(m.hora);
+    });
+    return map;
+  }, [marcacoes]);
+
+  const pendentesPorDia = useMemo(() => {
+    const map: Record<string, AjustePend[]> = {};
+    ajustesPend.forEach((a) => {
+      if (a.status !== "pendente") return;
+      if (!map[a.data]) map[a.data] = [];
+      map[a.data].push(a);
+    });
+    return map;
+  }, [ajustesPend]);
+
+  // Helpers de edição
+  const editDia = (data: string): DiaEdit =>
+    edits[data] || { horarios: {}, justificativaPreset: "", justificativaOutro: "" };
+
+  const setHorario = (data: string, tipo: TipoMarc, valor: string) => {
+    setEdits((prev) => {
+      const cur = editDia(data);
+      const novosHorarios = { ...cur.horarios, [tipo]: valor };
+      return { ...prev, [data]: { ...cur, horarios: novosHorarios } };
+    });
   };
 
-  const atualizarItem = (id: string, patch: Partial<ItemAjuste>) => {
-    setItens((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+  const setJustificativaPreset = (data: string, v: string) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaPreset: v } }));
   };
-  const removerItem = (id: string) => setItens((prev) => prev.filter((it) => it.id !== id));
+  const setJustificativaOutro = (data: string, v: string) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaOutro: v } }));
+  };
+
+  // Itens efetivamente alterados (vs marcações originais)
+  const itensAlterados = useMemo(() => {
+    const out: { data: string; tipo: TipoMarc; hora: string; motivo: string }[] = [];
+    Object.entries(edits).forEach(([data, ed]) => {
+      const original = marcsPorDia[data] || {};
+      const motivoFinal =
+        ed.justificativaPreset === "Outro (descrever)"
+          ? ed.justificativaOutro.trim()
+          : ed.justificativaPreset.trim();
+      ORDEM_TIPOS.forEach((t) => {
+        const novo = (ed.horarios[t] || "").trim();
+        if (!novo) return;
+        if (novo === original[t]) return; // sem alteração
+        out.push({ data, tipo: t, hora: novo, motivo: motivoFinal });
+      });
+    });
+    return out;
+  }, [edits, marcsPorDia]);
+
+  const totalAlteracoes = itensAlterados.length;
 
   const handleFiles = (list: FileList | null) => {
     if (!list) return;
@@ -112,16 +176,25 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   };
 
   const validar = (): string | null => {
-    if (itens.length === 0) return "Adicione ao menos uma marcação para ajuste.";
-    if (motivo.trim().length < 5) return "Justificativa precisa ter ao menos 5 caracteres.";
+    if (totalAlteracoes === 0) return "Altere ou inclua ao menos um horário na folha.";
+    if (totalAlteracoes > MAX_ITENS) return `Máximo de ${MAX_ITENS} ajustes por envio.`;
     const now = new Date();
-    for (const it of itens) {
-      if (!it.data || !it.hora) return "Preencha data e hora em todos os ajustes.";
-      if (it.data > today) return "Não é permitido solicitar ajuste para data futura.";
+    // valida justificativa por dia
+    const diasComItens = new Set(itensAlterados.map((i) => i.data));
+    for (const data of diasComItens) {
+      const ed = editDia(data);
+      const motivo =
+        ed.justificativaPreset === "Outro (descrever)"
+          ? ed.justificativaOutro.trim()
+          : ed.justificativaPreset.trim();
+      if (!motivo || motivo.length < 5) return `Selecione uma justificativa para ${isoToBR(data)}.`;
+    }
+    for (const it of itensAlterados) {
+      if (it.data > today) return "Não é permitido ajustar data futura.";
       if (it.data === today) {
         const [hh, mm] = it.hora.split(":").map(Number);
         if (hh > now.getHours() || (hh === now.getHours() && mm > now.getMinutes())) {
-          return "Não é permitido solicitar ajuste para horário futuro.";
+          return "Não é permitido ajustar horário futuro.";
         }
       }
     }
@@ -141,16 +214,17 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
         anexos.push({ path, nome: f.name, tamanho: f.size });
       }
 
-      const payload = itens.map((it) => ({
+      const payload = itensAlterados.map((it) => ({
         data: it.data,
         hora: `${it.hora}:00`,
         tipo: it.tipo,
+        motivo: it.motivo,
       }));
 
       const { data: resp, error } = await supabasePublic.rpc("solicitar_ajustes_ponto_externo_batch", {
         p_token: token,
         p_itens: payload as any,
-        p_motivo: motivo.trim(),
+        p_motivo: "Ajustes da folha de ponto",
         p_anexos: anexos as any,
       });
       if (error) { toast.error(error.message); setEnviando(false); return; }
@@ -163,201 +237,209 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     setEnviando(false);
   };
 
+  // Navegação de mês
+  const navegarMes = (delta: number) => {
+    const [y, m] = mesAtivo.split("-").map(Number);
+    const nd = new Date(y, m - 1 + delta, 1);
+    const novo = `${nd.getFullYear()}-${pad(nd.getMonth()+1)}`;
+    // limita a hoje (não permite mês futuro) e ao mês mínimo coberto pela RPC (~45d atrás)
+    if (novo > `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`) return;
+    setMesAtivo(novo);
+  };
+
+  const mesLabel = useMemo(() => {
+    const [y, m] = mesAtivo.split("-").map(Number);
+    const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    return `${nomes[m-1]} ${y}`;
+  }, [mesAtivo]);
+
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[92vh] flex flex-col">
         {done ? (
-          <div className="text-center space-y-3 py-4">
+          <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
             <DialogTitle>Solicitação enviada!</DialogTitle>
             <DialogDescription>
-              {itens.length === 1
-                ? "Seu pedido de ajuste foi registrado e ficará pendente para aprovação do gestor."
-                : `Seus ${itens.length} pedidos de ajuste foram registrados e ficarão pendentes para aprovação do gestor.`}
+              {totalAlteracoes === 1
+                ? "Seu ajuste foi registrado e ficará pendente para aprovação do gestor."
+                : `Seus ${totalAlteracoes} ajustes foram registrados e ficarão pendentes para aprovação do gestor.`}
             </DialogDescription>
             <Button onClick={() => { onOpenChange(false); reset(); }} className="w-full">Fechar</Button>
           </div>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Solicitar Ajuste de Ponto</DialogTitle>
+              <DialogTitle>Folha de Ponto · Ajustes</DialogTitle>
               <DialogDescription>
-                Veja seu registro dos últimos 14 dias e adicione um ou vários ajustes de uma só vez. O gestor aprovará tudo em conjunto.
+                Edite ou inclua os horários direto na folha. Para cada dia alterado, escolha uma justificativa. Todos os pedidos são enviados ao gestor de uma única vez.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Coluna 1: Espelho do ponto */}
-              <div className="flex flex-col min-h-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="text-sm font-semibold">Seu Registro Recente</h4>
-                </div>
-                <ScrollArea className="flex-1 border rounded-md p-2 bg-muted/20">
-                  {loading ? (
-                    <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-                  ) : (
-                    <div className="space-y-2">
-                      {dias.map((d) => {
-                        const tiposPresentes = new Set(d.marcs.map((m) => m.tipo));
-                        const tiposFaltantes = ORDEM_TIPOS.filter((t) => !tiposPresentes.has(t));
-                        return (
-                          <div key={d.data} className="border rounded-md p-2 bg-background text-xs">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium">{fmtData(d.data)}</span>
-                              {d.ajustes.length > 0 && (
-                                <Badge variant="outline" className="text-[10px] h-5">
-                                  {d.ajustes.length} pendente(s)
-                                </Badge>
-                              )}
-                            </div>
-                            {d.marcs.length === 0 && d.ajustes.length === 0 ? (
-                              <p className="text-muted-foreground italic text-[11px]">Sem marcações</p>
-                            ) : (
-                              <div className="flex flex-wrap gap-1">
-                                {d.marcs.map((m) => (
-                                  <Badge key={m.id} variant="secondary" className="text-[10px] font-mono">
-                                    {TIPO_LABEL[m.tipo]} {fmtHora(m.hora)}
-                                  </Badge>
-                                ))}
-                                {d.ajustes.map((a) => (
-                                  <Badge key={a.id} variant="outline" className="text-[10px] font-mono border-amber-500 text-amber-700 dark:text-amber-400">
-                                    {TIPO_LABEL[a.tipo]} {fmtHora(a.hora)} • {a.status}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                            {tiposFaltantes.length > 0 && d.data <= today && (
-                              <div className="flex flex-wrap gap-1 mt-1.5 pt-1.5 border-t">
-                                <span className="text-[10px] text-muted-foreground">Adicionar:</span>
-                                {tiposFaltantes.map((t) => (
-                                  <button
-                                    key={t}
-                                    type="button"
-                                    onClick={() => adicionarItem(d.data, t)}
-                                    className="text-[10px] px-1.5 py-0.5 rounded border border-dashed hover:bg-primary hover:text-primary-foreground transition"
-                                  >
-                                    + {TIPO_LABEL[t]}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
-
-              {/* Coluna 2: Ajustes solicitados */}
-              <div className="flex flex-col min-h-0">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold">Ajustes a Solicitar ({itens.length})</h4>
-                  <Button size="sm" variant="outline" onClick={() => adicionarItem()} className="h-7 text-xs">
-                    <Plus className="w-3 h-3 mr-1" /> Adicionar
-                  </Button>
-                </div>
-                <ScrollArea className="flex-1 border rounded-md p-2">
-                  {itens.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-6">
-                      Clique nos botões "+ Entrada/Saída" do espelho ao lado ou em "Adicionar" para criar pedidos.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {itens.map((it) => (
-                        <div key={it.id} className="border rounded-md p-2 space-y-2 bg-muted/20">
-                          <div className="grid grid-cols-[1fr_auto_1fr_auto] gap-2 items-end">
-                            <div>
-                              <Label className="text-[10px]">Data</Label>
-                              <Input
-                                type="date"
-                                value={it.data}
-                                max={today}
-                                onChange={(e) => atualizarItem(it.id, { data: e.target.value })}
-                                className="h-8 text-xs"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-[10px]">Hora</Label>
-                              <Input
-                                type="time"
-                                value={it.hora}
-                                onChange={(e) => atualizarItem(it.id, { hora: e.target.value })}
-                                className="h-8 text-xs w-[100px]"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-[10px]">Tipo</Label>
-                              <Select value={it.tipo} onValueChange={(v: TipoMarc) => atualizarItem(it.id, { tipo: v })}>
-                                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {ORDEM_TIPOS.map((t) => (
-                                    <SelectItem key={t} value={t}>{TIPO_LABEL[t]}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removerItem(it.id)}
-                              className="h-8 w-8 text-destructive"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
+            {/* Navegação de mês */}
+            <div className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2">
+              <Button variant="ghost" size="sm" onClick={() => navegarMes(-1)} className="h-8">
+                <ChevronLeft className="w-4 h-4 mr-1" /> Mês anterior
+              </Button>
+              <span className="text-sm font-semibold capitalize">{mesLabel}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navegarMes(1)}
+                className="h-8"
+                disabled={mesAtivo >= `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`}
+              >
+                Próximo mês <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
             </div>
 
-            <div className="space-y-3 pt-3 border-t">
-              <div>
-                <Label className="text-xs">Justificativa (aplicada a todos os ajustes) *</Label>
-                <Textarea
-                  rows={2}
-                  placeholder="Ex.: Sem sinal de internet no momento das marcações."
-                  value={motivo}
-                  onChange={(e) => setMotivo(e.target.value)}
-                  maxLength={500}
-                />
-                <p className="text-[10px] text-muted-foreground mt-0.5">{motivo.length}/500</p>
-              </div>
+            {/* Folha */}
+            <ScrollArea className="flex-1 border rounded-md">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : diasMes.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
+              ) : (
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/50 sticky top-0 z-10">
+                    <tr className="text-left">
+                      <th className="px-2 py-2 font-medium w-[110px]">Dia</th>
+                      {ORDEM_TIPOS.map((t) => (
+                        <th key={t} className="px-2 py-2 font-medium">{TIPO_LABEL[t]}</th>
+                      ))}
+                      <th className="px-2 py-2 font-medium w-[260px]">Justificativa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {diasMes.map((data) => {
+                      const original = marcsPorDia[data] || {};
+                      const pendentes = pendentesPorDia[data] || [];
+                      const ed = editDia(data);
+                      const temAlteracao = ORDEM_TIPOS.some((t) => {
+                        const v = ed.horarios[t];
+                        return v && v !== original[t];
+                      });
+                      const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
+                      return (
+                        <tr
+                          key={data}
+                          className={`border-t ${temAlteracao ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""}`}
+                        >
+                          <td className="px-2 py-1.5 align-top">
+                            <div className="font-mono font-semibold">{isoToBR(data).slice(0,5)}</div>
+                            <div className="text-[10px] text-muted-foreground">{diaSemana(data)}</div>
+                            {pendentes.length > 0 && (
+                              <Badge variant="outline" className="text-[9px] mt-1 border-amber-500 text-amber-700 dark:text-amber-400">
+                                {pendentes.length} pend.
+                              </Badge>
+                            )}
+                          </td>
+                          {ORDEM_TIPOS.map((t) => {
+                            const orig = original[t] || "";
+                            const valor = ed.horarios[t] ?? orig;
+                            const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
+                            const incluido = alterado && !orig;
+                            return (
+                              <td key={t} className="px-2 py-1.5 align-top">
+                                <Input
+                                  type="time"
+                                  value={valor}
+                                  onChange={(e) => setHorario(data, t, e.target.value)}
+                                  className={`h-8 text-xs font-mono ${
+                                    incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                    : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                    : ""
+                                  }`}
+                                />
+                                {orig && alterado && (
+                                  <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="px-2 py-1.5 align-top">
+                            {temAlteracao ? (
+                              <div className="space-y-1">
+                                <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Selecione…" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {JUSTIFICATIVAS_PRESET.map((j) => (
+                                      <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {ed.justificativaPreset === "Outro (descrever)" && (
+                                  <Input
+                                    value={ed.justificativaOutro}
+                                    onChange={(e) => setJustificativaOutro(data, e.target.value)}
+                                    placeholder="Descreva o motivo"
+                                    className="h-8 text-xs"
+                                    maxLength={300}
+                                  />
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground italic">— altere um horário para justificar</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </ScrollArea>
 
-              <div>
-                <Label className="text-xs flex items-center gap-1">
-                  <Paperclip className="w-3 h-3" /> Anexos (opcional, até {MAX_FILES} de {MAX_FILE_MB}MB)
-                </Label>
-                <Input
-                  type="file"
-                  multiple
-                  accept="image/*,application/pdf"
-                  onChange={(e) => handleFiles(e.target.files)}
-                  disabled={files.length >= MAX_FILES}
-                  className="h-9"
-                />
-                {files.length > 0 && (
-                  <ul className="mt-1 space-y-1">
-                    {files.map((f, i) => (
-                      <li key={i} className="flex items-center justify-between text-xs bg-muted/50 px-2 py-1 rounded">
-                        <span className="truncate max-w-[300px]">{f.name}</span>
-                        <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="text-destructive">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+            {/* Rodapé com anexos + envio */}
+            <div className="space-y-3 pt-3 border-t">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex-1 min-w-[220px]">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Paperclip className="w-3 h-3" /> Anexos (opcional, até {MAX_FILES} de {MAX_FILE_MB}MB)
+                  </Label>
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf"
+                    onChange={(e) => handleFiles(e.target.files)}
+                    disabled={files.length >= MAX_FILES}
+                    className="h-9 mt-1"
+                  />
+                  {files.length > 0 && (
+                    <ul className="mt-1 space-y-1">
+                      {files.map((f, i) => (
+                        <li key={i} className="flex items-center justify-between text-xs bg-muted/50 px-2 py-1 rounded">
+                          <span className="truncate max-w-[300px]">{f.name}</span>
+                          <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))} className="text-destructive">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="text-right space-y-1">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
+                    {totalAlteracoes > 0 ? (
+                      <Badge variant="secondary" className="text-xs">
+                        {totalAlteracoes} alteração{totalAlteracoes !== 1 ? "ões" : ""} pendente{totalAlteracoes !== 1 ? "s" : ""}
+                      </Badge>
+                    ) : (
+                      <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Nenhuma alteração ainda</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="flex-1" onClick={handleSubmit} disabled={enviando || itens.length === 0}>
-                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar ${itens.length || ""} Solicitação${itens.length !== 1 ? "ões" : ""}`}
+                <Button className="flex-1" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
+                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar ${totalAlteracoes || ""} Ajuste${totalAlteracoes !== 1 ? "s" : ""}`}
                 </Button>
               </div>
             </div>
