@@ -28,7 +28,7 @@ interface EmpresaRow {
 
 export function EmpresasPromociveisPanel() {
   const [search, setSearch] = useState("");
-  const [onlyDerivadas, setOnlyDerivadas] = useState(true);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("__all__");
   const [target, setTarget] = useState<EmpresaRow | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -41,10 +41,30 @@ export function EmpresasPromociveisPanel() {
     },
   });
 
+  // Lista de empresas-mãe (principais) para o seletor
+  const maes = useMemo(() => {
+    const map = new Map<string, { tenant_id: string; tenant_nome: string; razao_social: string; total: number }>();
+    for (const e of data) {
+      if (e.is_principal) {
+        map.set(e.tenant_id, {
+          tenant_id: e.tenant_id,
+          tenant_nome: e.tenant_nome,
+          razao_social: e.razao_social,
+          total: e.total_empresas_tenant - 1, // derivadas
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.razao_social.localeCompare(b.razao_social));
+  }, [data]);
+
   const filtered = useMemo(() => {
     const s = search.toLowerCase().trim();
     return data.filter((e) => {
-      if (onlyDerivadas && e.is_principal) return false;
+      // Quando uma mãe é selecionada, mostra só as derivadas dela
+      if (selectedTenantId !== "__all__") {
+        if (e.tenant_id !== selectedTenantId) return false;
+        if (e.is_principal) return false;
+      }
       if (!s) return true;
       return (
         e.razao_social?.toLowerCase().includes(s) ||
@@ -52,7 +72,12 @@ export function EmpresasPromociveisPanel() {
         e.tenant_nome?.toLowerCase().includes(s)
       );
     });
-  }, [data, search, onlyDerivadas]);
+  }, [data, search, selectedTenantId]);
+
+  const maeSelecionada = useMemo(
+    () => maes.find((m) => m.tenant_id === selectedTenantId) || null,
+    [maes, selectedTenantId]
+  );
 
   return (
     <>
