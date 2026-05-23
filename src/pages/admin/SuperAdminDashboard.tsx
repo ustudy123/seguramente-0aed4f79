@@ -160,6 +160,9 @@ export default function SuperAdminDashboard() {
                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowOwnerForm(true); }}>
                                   <UserPlus className="w-4 h-4 mr-2" />Criar usuário owner
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSpinoffTenant(tenant); setShowSpinoff(true); }}>
+                                  <Rocket className="w-4 h-4 mr-2" />Promover empresa a Conta-Raiz
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleToggleTenant(tenant)}>
                                   <Power className="w-4 h-4 mr-2" />{tenant.ativo ? 'Desativar' : 'Ativar'}
                                 </DropdownMenuItem>
