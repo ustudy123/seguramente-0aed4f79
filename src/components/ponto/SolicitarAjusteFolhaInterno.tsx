@@ -360,15 +360,18 @@ export function SolicitarAjusteFolhaInterno({
                             const valor = ed.horarios[t] ?? orig;
                             const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
                             const incluido = alterado && !orig;
+                            const futuro = data > today;
                             return (
                               <td key={t} className="px-2 py-1.5 align-top">
                                 <Input
                                   type="time"
                                   value={valor}
+                                  disabled={futuro}
                                   onChange={(e) => setHorario(data, t, e.target.value)}
                                   className={`h-8 text-xs font-mono ${
                                     incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
                                     : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                    : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
                                     : ""
                                   }`}
                                 />
@@ -381,21 +384,29 @@ export function SolicitarAjusteFolhaInterno({
                           <td className="px-2 py-1.5 align-top">
                             {temAlteracao ? (
                               <div className="space-y-1">
-                                <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
+                                <Select value={ed.justificativaId} onValueChange={(v) => setJustificativaId(data, v)}>
                                   <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Selecione…" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {JUSTIFICATIVAS_PRESET.map((j) => (
-                                      <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
+                                    {justAtivas.length === 0 && (
+                                      <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
+                                        Nenhuma justificativa cadastrada. Peça ao RH para configurar.
+                                      </div>
+                                    )}
+                                    {justAtivas.map((j) => (
+                                      <SelectItem key={j.id} value={j.id} className="text-xs">
+                                        {j.nome} · {Number(j.horas_abono).toFixed(1)}h abono
+                                      </SelectItem>
                                     ))}
+                                    <SelectItem value={OUTRO_VALUE} className="text-xs">Outro (descrever)</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                {ed.justificativaPreset === "Outro (descrever)" && (
+                                {ed.justificativaId === OUTRO_VALUE && (
                                   <Input
-                                    value={ed.justificativaOutro}
-                                    onChange={(e) => setJustificativaOutro(data, e.target.value)}
-                                    placeholder="Descreva o motivo"
+                                    value={ed.outroTexto}
+                                    onChange={(e) => setOutroTexto(data, e.target.value)}
+                                    placeholder="Descreva o motivo (sem abono automático)"
                                     className="h-8 text-xs"
                                     maxLength={300}
                                   />
