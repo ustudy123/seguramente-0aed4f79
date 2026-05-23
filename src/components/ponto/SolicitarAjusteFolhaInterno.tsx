@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { fromTable } from "@/integrations/supabase/untypedClient";
-import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePonto } from "@/hooks/usePonto";
+import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
+import { ConfigJustificativasModal } from "@/components/ponto/ConfigJustificativasModal";
 import type { Colaborador } from "@/hooks/useColaboradores";
 
 interface Props {
@@ -36,17 +38,7 @@ const TIPO_LABEL: Record<TipoMarc, string> = {
 
 const ORDEM_TIPOS: TipoMarc[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
 
-const JUSTIFICATIVAS_PRESET = [
-  "Esqueci de registrar o ponto",
-  "Falha no equipamento / aplicativo",
-  "Sem sinal de internet no momento",
-  "Atraso por trânsito / transporte público",
-  "Saída antecipada autorizada pelo gestor",
-  "Reunião externa / atendimento em cliente",
-  "Atestado médico / consulta",
-  "Erro ao registrar (horário incorreto)",
-  "Outro (descrever)",
-];
+const OUTRO_VALUE = "__outro__";
 
 function fmtHora(h: string) { return (h || "").slice(0, 5); }
 function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
