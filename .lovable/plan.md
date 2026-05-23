@@ -1,115 +1,68 @@
-## Módulo de Contratos & Termos de Aceite (Super Admin)
+## Promoção de Empresa a Conta-Raiz (Spin-off de Tenant)
 
-Criar um sistema flexível para o Super Admin cadastrar contratos/termos (LIVEs, aulas, uso do sistema, parcerias, NDAs, etc.), gerar link público de assinatura e gerenciar todos os aceites com validade jurídica conforme **Lei 14.063/2020** e **MP 2.200-2/2001**.
-
----
-
-### 1. Estrutura de dados (Supabase)
-
-**`contratos_aceite`** (modelos de contrato criados pelo admin)
-- `titulo`, `categoria` (live | aula | uso_sistema | parceria | nda | outro)
-- `descricao_publica` (o que o signatário vê antes de assinar)
-- `corpo_html` (texto completo do contrato, editor rich text)
-- `requer_cpf`, `requer_rg`, `requer_endereco`, `requer_selfie` (flags configuráveis)
-- `validade_dias` (link expira em N dias; null = sem expiração)
-- `limite_assinaturas` (null = ilimitado; ex: 50 para uma live)
-- `ativo`, `versao` (versionamento — contratos já assinados ficam imutáveis)
-- `created_by` (super admin)
-
-**`contratos_assinaturas`** (cada aceite registrado)
-- `contrato_id`, `token` (UUID público único por signatário OU compartilhado)
-- `signatario_nome`, `signatario_cpf`, `signatario_email`, `signatario_telefone`
-- `signatario_rg`, `signatario_endereco` (opcionais conforme contrato)
-- `assinatura_imagem_base64` (canvas), `selfie_base64` (opcional)
-- `ip_address`, `user_agent`, `geolocalizacao` (lat/lng)
-- `hash_documento` (SHA-256 do `corpo_html` + dados do signatário no momento)
-- `assinado_em`, `link_enviado_em`
-- `status` (pendente | assinado | expirado | revogado)
-
-**RLS:**
-- `contratos_aceite`: apenas super admin (CRUD completo)
-- `contratos_assinaturas`: super admin lê tudo; inserção via RPC `SECURITY DEFINER` a partir do token público (sem login)
+Função no Super Admin que pega uma `empresa_cadastro` dentro de um Tenant A (consultoria) e a promove a um novo Tenant B independente, transferindo todos os dados operacionais e o ownership. Migração **definitiva**, sem rollback. Tenant A perde acesso completo após a operação.
 
 ---
 
-### 2. Fluxo do Super Admin
+### Fluxo do usuário (Super Admin)
 
-**Nova aba no `/admin` chamada "Contratos"** com:
+1. Em `/admin` → aba **Empresas**, no menu de ações de cada empresa-tenant, novo item: **"Promover empresa a Conta-Raiz"**.
+2. Wizard `PromoverContaRaizModal` em 4 passos:
+   - **Passo 1 — Empresa a promover**: lista as `empresa_cadastro` do Tenant A selecionado. Mostra contadores (colaboradores, documentos, OS) que serão transferidos.
+   - **Passo 2 — Dono do novo Tenant**: e-mail + nome completo + slug do novo tenant + plano. Sistema verifica se o e-mail já tem `auth.users`:
+     - Se **não existe**: cria via `onboarding-signup` (invite ou senha definida pelo admin).
+     - Se **já existe**: reaproveita o `auth.users.id`, cria novo `profiles`/`usuarios_base` vinculado ao novo tenant (sem travar). Avisa visualmente "Este e-mail já tem conta em outro tenant — será criado vínculo adicional".
+   - **Passo 3 — Dry-run / Pré-visualização**: edge function retorna contagem de registros que serão migrados por tabela. Sem efeito colateral.
+   - **Passo 4 — Confirmação**: digitar nome da empresa para confirmar + checkbox "Entendo que esta operação é definitiva e o tenant de origem perderá acesso".
 
-1. **Lista de contratos** (card grid): título, categoria, total de assinaturas, status, ações (editar, duplicar, desativar, ver assinaturas).
-2. **Editor de contrato** (modal/drawer):
-   - Campos básicos (título, categoria, descrição)
-   - Editor rich text para corpo do contrato (já temos pattern em outros módulos)
-   - Configurações (validade, limite, dados exigidos do signatário)
-3. **Geração de link de assinatura:**
-   - Botão "Gerar link" → cria token, copia URL `https://www.youreyes.com.br/assinar-contrato/{token}` para clipboard
-   - Botão "Enviar por e-mail" → captura e-mail e dispara via `send-email-resend` com template novo
-   - Botão "Enviar por WhatsApp" → reusa `superadmin-whatsapp-send` com link
-4. **Painel de assinaturas do contrato:** tabela com signatário, data, IP, status, ação de baixar PDF com carimbo.
+3. Execução chama edge function `tenant-spinoff` que faz tudo em uma transação. Sucesso → toast + invalidação das queries.
 
 ---
 
-### 3. Página pública de assinatura
+### Edge function `tenant-spinoff`
 
-**Rota `/assinar-contrato/:token`** (sem login, padrão `supabasePublic` já existente):
+Recebe `{ empresaId, tenantOrigemId, novoTenant: { nome, slug, plano }, owner: { email, nome, password?, inviteMode } }`. Valida que o caller é super admin. Em transação única:
 
-1. Valida token via RPC `obter_contrato_publico(token)` (`SECURITY DEFINER`).
-2. Mostra:
-   - Cabeçalho com logo Você Olhos
-   - Título e descrição pública do contrato
-   - Corpo completo do contrato (HTML renderizado, scrollável)
-   - Formulário: nome, CPF, e-mail, telefone (+ campos opcionais)
-   - Checkbox: "Li e concordo com os termos acima"
-   - `SignatureCapture` (canvas — reusa componente existente)
-   - Captura automática de **selfie + geolocalização** se exigido (já temos pattern em OS NR-1)
-3. Submissão chama edge function `contrato-assinar` que:
-   - Valida token, limite, expiração
-   - Calcula SHA-256 do documento + dados
-   - Captura IP do header
-   - Salva em `contratos_assinaturas`
-   - Gera PDF com carimbo de auditoria e envia por e-mail ao signatário (cópia ao admin)
-4. Tela de sucesso com download do PDF assinado.
+1. **Cria novo tenant** (`tenants` insert).
+2. **Cria/reaproveita usuário owner**:
+   - Se e-mail novo → `admin.createUser` (ou `inviteUserByEmail`).
+   - Se e-mail existente → busca `auth.users.id` e segue.
+   - Cria `profiles` (tenant_id = B), `usuarios_base` (tipo `proprietario`), `user_roles` (admin), vínculo total.
+3. **Migra todos os registros operacionais** com `empresa_id = X` para `tenant_id = B`:
+   - Lista enumerada de ~60 tabelas operacionais (colaboradores, terceiros, gro_riscos, plano_acoes, documentos, atestados, ordens_servico, contratos_aceite, epi_*, ponto_*, ferias_*, pdi_*, avaliacoes_*, incidentes_*, psicossocial_*, ouvidoria_*, feedback_*, metas_*, hub_contabil_*, financeiro_*, trilhas_*, etc.). Script gera a lista a partir do schema (todas as tabelas que têm tanto `tenant_id` quanto `empresa_id`).
+   - `UPDATE <tabela> SET tenant_id = B WHERE tenant_id = A AND empresa_id = X`.
+4. **Migra a própria `empresa_cadastro`** (`tenant_id` → B, limpa `grupo_economico_id` herdado de A).
+5. **Migra arquivos no Storage**: lista objetos em buckets com prefixo `{tenantA}/{empresaX}/...` e move para `{tenantB}/{empresaX}/...` (ou registra no log para job assíncrono se >500 arquivos).
+6. **Remove acesso do Tenant A**:
+   - Deleta `usuario_vinculos` de usuários de A apontando para `empresa_id = X`.
+   - **Não** cria vínculo de consultor (conforme decisão do usuário — acesso futuro só se nova conta-raiz conceder).
+7. **Registra auditoria** em nova tabela `tenant_spinoffs` (origem, destino, empresa, executor, contadores migrados, timestamp). Apenas registro histórico, sem snapshot para rollback.
 
----
-
-### 4. Validade jurídica (carimbo de auditoria)
-
-Cada PDF gerado inclui ao final um **carimbo de auditoria** (mesmo padrão usado em OS NR-1, PDI, Férias) com:
-- Nome completo + CPF do signatário
-- Data/hora UTC + horário de Brasília
-- IP de origem e User-Agent
-- Geolocalização (se capturada)
-- Selfie (se capturada)
-- Hash SHA-256 do documento
-- Token de assinatura
-- Citação legal: "Lei 14.063/2020 e MP 2.200-2/2001 — Assinatura eletrônica avançada"
-
-Isso garante validade jurídica equivalente às assinaturas já existentes no sistema (EPI, OS, PDI, Férias, Contrato Programa Validador).
+Retorna `{ novoTenantId, ownerUserId, inviteSent, contadores }`.
 
 ---
 
-### 5. Detalhes técnicos
+### Mudanças técnicas
 
-- **Tabelas novas:** `contratos_aceite`, `contratos_assinaturas` com RLS
-- **RPCs `SECURITY DEFINER`:** `obter_contrato_publico(_token)`, `registrar_assinatura_contrato(...)`
-- **Edge function nova:** `contrato-assinar` (gera hash, captura IP, envia e-mail com PDF)
-- **Template de e-mail novo:** `contrato-assinatura-enviado` (Resend, padrão já existente)
-- **Componentes novos:**
-  - `src/pages/admin/contratos/ContratosAdmin.tsx` (lista + CRUD)
-  - `src/pages/admin/contratos/ContratoEditor.tsx` (editor)
-  - `src/pages/admin/contratos/ContratoAssinaturas.tsx` (painel de assinaturas)
-  - `src/pages/AssinarContrato.tsx` (página pública)
-  - `src/hooks/useContratosAceite.ts`
-- **Aba nova** no `SuperAdminDashboard.tsx`: "Contratos" (ícone `FileSignature`)
-- **Reuso:** `SignatureCapture`, `supabasePublic`, `useEmpresaLogo`, `pdfExport`, `sendEmail`
+**Migração de schema:**
+- Nova tabela `tenant_spinoffs` (tenant_origem_id, tenant_destino_id, empresa_id, executado_por, contadores jsonb, status, created_at). RLS: só super admin lê.
+- Função SQL `superadmin_spinoff_dry_run(empresa_id uuid)` retorna contagem por tabela.
+- Função SQL `superadmin_spinoff_execute(...)` faz os UPDATEs em massa, chamada pela edge function via service role.
+
+**Frontend:**
+- `src/components/admin/PromoverContaRaizModal.tsx` — wizard de 4 passos.
+- `src/hooks/useSuperAdmin.ts` — adicionar `promoverContaRaiz` mutation + `spinoffDryRun` query.
+- `src/pages/admin/SuperAdminDashboard.tsx` — adicionar item no DropdownMenu da aba Empresas (lista de tenants já existe, mas a promoção é por empresa-cadastro dentro do tenant; precisa subview ou novo botão "Ver empresas" no tenant). Mais simples: novo card `PromoverEmpresaPanel` que lista todas as `empresa_cadastro` cross-tenant com filtro por tenant.
+
+**Backend:**
+- `supabase/functions/tenant-spinoff/index.ts` — orquestra tudo, valida super admin, chama RPC.
 
 ---
 
-### 6. Evoluções futuras (não incluídas agora)
+### Pontos de atenção
 
-- Integração Gov.br (assinatura governamental gratuita)
-- Múltiplos signatários no mesmo documento
-- Workflow de aprovação interna antes do envio
-- Integração ICP-Brasil (e-CPF/e-CNPJ via PAdES)
-
-Posso começar pela criação das tabelas e a estrutura básica do módulo. Confirma?
+- **Idempotência**: se a edge function falhar no meio, o registro `tenant_spinoffs.status` fica `em_andamento` e impede nova tentativa duplicada. Recuperação manual.
+- **E-mail já existente em outro tenant**: criamos um segundo `profiles` para o mesmo `auth.users.id`. O login direciona pelo tenant ativo (já é assim hoje para usuários multi-tenant).
+- **Arquivos no Storage**: se a empresa tem muitos atestados/documentos, o move pode demorar. Fazemos síncrono se <500, senão enfileiramos em background e marcamos `migracao_storage_pendente`.
+- **`grupos_economicos`**: não migra. A empresa sai do grupo do Tenant A. Se a nova conta-raiz quiser criar seu próprio grupo, faz no fluxo normal.
+- **`auth.users`**: não duplicamos. Sempre 1 user = 1 e-mail global. Vínculo com tenant é via `profiles`/`usuarios_base`.
