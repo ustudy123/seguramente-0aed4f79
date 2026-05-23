@@ -165,7 +165,7 @@ serve(async (req) => {
           auth_user_id: ownerInfo.userId,
           nome_completo: payload.owner.nome,
           email_principal: email,
-          tipo_usuario: "proprietario",
+          tipo_usuario: "administrador",
           status: "ativo",
           origem_cadastro: "tenant_spinoff",
         })
@@ -190,7 +190,7 @@ serve(async (req) => {
         tenant_id: novoTenantId,
         usuario_id: uBase.id,
         empresa_id: payload.empresaId,
-        tipo_vinculo: "proprietario",
+        tipo_vinculo: "administrador",
         status: "ativo",
         data_inicio: new Date().toISOString().split("T")[0],
       });
