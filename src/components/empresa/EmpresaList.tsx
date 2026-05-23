@@ -454,9 +454,13 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                       onCheckedChange={() => toggleOne(emp.id)}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    className="cursor-pointer group"
+                    onClick={() => onEdit(emp.id)}
+                    title="Clique para editar"
+                  >
                     <div>
-                      <p className="font-medium text-sm">{emp.razao_social || '(sem razão social)'}</p>
+                      <p className="font-medium text-sm text-primary group-hover:underline">{emp.razao_social || '(sem razão social)'}</p>
                       {emp.nome_fantasia && (
                         <p className="text-xs text-muted-foreground">{emp.nome_fantasia}</p>
                       )}
