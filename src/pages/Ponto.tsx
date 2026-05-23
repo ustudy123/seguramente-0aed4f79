@@ -267,16 +267,19 @@ const Ponto = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
-            <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Controle de Ponto
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-2 border-b">
+        <div className="space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary/80">
+            Gestão de Jornada · CLT
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2.5">
+            <Clock className="w-7 h-7 text-primary" /> Controle de Ponto Eletrônico
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Registro fiel e auditável da jornada
+            <Shield className="w-3.5 h-3.5" /> Registro fiel e auditável da jornada · Portaria 671 MTP
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:justify-end">
@@ -290,45 +293,52 @@ const Ponto = () => {
             <HelpCircle className="h-4 w-4" />
             Guia Rápido
           </Button>
-          <Button id="btn-solicitar-ajuste" size="sm" onClick={() => setShowAjusteModal(true)}>
+          <Button
+            id="btn-solicitar-ajuste"
+            size="sm"
+            onClick={() => setShowAjusteModal(true)}
+            className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md shadow-primary/20"
+          >
             <FileText className="h-4 w-4 mr-2" /> Solicitar Ajuste
           </Button>
         </div>
       </motion.div>
 
+
       {/* Main Tabs — 7 grupos funcionais */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <ScrollArea className="w-full">
-          <TabsList className="inline-flex w-max min-w-full h-auto gap-0.5 p-1">
-            <TabsTrigger id="tab-ponto-visao-geral" value="visao_geral" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+          <TabsList className="inline-flex w-max min-w-full h-auto gap-1 p-0 bg-transparent border-b border-border rounded-none">
+            <TabsTrigger id="tab-ponto-visao-geral" value="visao_geral" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <BarChart3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Visão Geral</span><span className="sm:hidden">Visão</span>
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-espelho" value="espelho" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-espelho" value="espelho" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Clock className="h-3.5 w-3.5" /> Espelho
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Calendar className="h-3.5 w-3.5" /> Escalas
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-apuracao" value="apuracao" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-apuracao" value="apuracao" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Wallet className="h-3.5 w-3.5" /> Apuração
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <FileText className="h-3.5 w-3.5" /> Ajustes
               {ajustesPendentes.filter(a => a.status === "pendente").length > 0 && (
-                <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                <Badge variant="destructive" className="ml-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px]">
                   {ajustesPendentes.filter(a => a.status === "pendente").length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-compliance" value="compliance" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-compliance" value="compliance" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Shield className="h-3.5 w-3.5" /> Compliance
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-configuracoes" value="configuracoes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-configuracoes" value="configuracoes" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Configurações</span><span className="sm:hidden">Config</span>
             </TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
+
 
         {/* Visão Geral */}
         <TabsContent value="visao_geral"><PontoDashboardTab /></TabsContent>
@@ -491,42 +501,70 @@ const Ponto = () => {
         </TabsContent>
 
         {/* Ajustes */}
-        <TabsContent value="ajustes" className="space-y-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between flex-wrap gap-2">
+        <TabsContent value="ajustes" className="space-y-5">
+          {(() => {
+            const total = ajustesPendentes.length;
+            const pend = ajustesPendentes.filter(a => a.status === "pendente").length;
+            const apr = ajustesPendentes.filter(a => a.status === "aprovado").length;
+            const rej = ajustesPendentes.filter(a => a.status === "rejeitado").length;
+            return (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-card border rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Solicitações Totais</p>
+                    <p className="text-2xl font-bold tracking-tight">{total}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-amber-500">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1">Pendentes</p>
+                      <p className="text-2xl font-bold tracking-tight">{pend}</p>
+                    </div>
+                    {pend > 0 && <span className="bg-amber-500/10 text-amber-600 text-[10px] px-2 py-0.5 rounded font-semibold">Prioritário</span>}
+                  </div>
+                </div>
+                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-emerald-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mb-1">Aprovadas</p>
+                  <p className="text-2xl font-bold tracking-tight">{apr}</p>
+                </div>
+                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-rose-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejeitadas</p>
+                  <p className="text-2xl font-bold tracking-tight">{rej}</p>
+                </div>
+              </motion.div>
+            );
+          })()}
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl border overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b bg-muted/30 flex items-center justify-between flex-wrap gap-2">
               <div>
-                <h3 className="text-sm font-semibold">Solicitações de Ajuste</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="text-base font-bold tracking-tight">Solicitações de Ajuste</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Histórico dos últimos 90 dias — pendentes, aprovadas e rejeitadas para conferência.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                  Pendentes: {ajustesPendentes.filter(a => a.status === "pendente").length}
-                </Badge>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Aprovadas: {ajustesPendentes.filter(a => a.status === "aprovado").length}
-                </Badge>
-                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                  Rejeitadas: {ajustesPendentes.filter(a => a.status === "rejeitado").length}
-                </Badge>
-              </div>
             </div>
+
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>Colaborador</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Marcação</TableHead>
-                  <TableHead>Hora</TableHead>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead className="text-center">Anexos</TableHead>
-                  <TableHead>Solicitante</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Colaborador</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Data</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Tipo</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Marcação</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Hora</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Motivo</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-center">Anexos</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Solicitante</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-center">Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-right pr-5">Ações</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {ajustesPendentes.length === 0 ? (
                   <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhuma solicitação de ajuste registrada.</TableCell></TableRow>
@@ -619,7 +657,13 @@ const Ponto = () => {
               </TableBody>
             </Table>
           </motion.div>
+
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-wider">
+            <Shield className="w-3.5 h-3.5" />
+            Logs de auditoria em conformidade com Portaria 671 MTP
+          </div>
         </TabsContent>
+
 
         {/* Escalas */}
         <TabsContent value="escalas"><PontoEscalasTab /></TabsContent>
