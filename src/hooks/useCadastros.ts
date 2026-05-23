@@ -85,7 +85,7 @@ export function useDepartamentos() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Departamento[];
+      return (data as unknown) as Departamento[];
     },
     enabled: !!tenantId,
   });
