@@ -161,20 +161,45 @@ serve(async (req) => {
       if (roleErr) throw new Error(`Erro em user_roles: ${roleErr.message}`);
 
       // 5) usuarios_base (Proprietário do novo tenant)
-      const { data: uBase, error: ubErr } = await admin
+      // auth_user_id é UNIQUE globalmente — se o usuário já tinha uma usuarios_base
+      // em outro tenant, reaproveitamos o registro e movemos para o novo tenant.
+      const { data: existingBase } = await admin
         .from("usuarios_base")
-        .insert({
-          tenant_id: novoTenantId,
-          auth_user_id: ownerInfo.userId,
-          nome_completo: payload.owner.nome,
-          email_principal: email,
-          tipo_usuario: "administrador",
-          status: "ativo",
-          origem_cadastro: "tenant_spinoff",
-        })
-        .select("id")
-        .single();
-      if (ubErr) throw new Error(`Erro em usuarios_base: ${ubErr.message}`);
+        .select("id, tenant_id")
+        .eq("auth_user_id", ownerInfo.userId)
+        .maybeSingle();
+
+      let uBaseId: string;
+      if (existingBase) {
+        const { error: updErr } = await admin
+          .from("usuarios_base")
+          .update({
+            tenant_id: novoTenantId,
+            nome_completo: payload.owner.nome,
+            email_principal: email,
+            tipo_usuario: "administrador",
+            status: "ativo",
+          })
+          .eq("id", existingBase.id);
+        if (updErr) throw new Error(`Erro ao atualizar usuarios_base: ${updErr.message}`);
+        uBaseId = existingBase.id as string;
+      } else {
+        const { data: uBase, error: ubErr } = await admin
+          .from("usuarios_base")
+          .insert({
+            tenant_id: novoTenantId,
+            auth_user_id: ownerInfo.userId,
+            nome_completo: payload.owner.nome,
+            email_principal: email,
+            tipo_usuario: "administrador",
+            status: "ativo",
+            origem_cadastro: "tenant_spinoff",
+          })
+          .select("id")
+          .single();
+        if (ubErr) throw new Error(`Erro em usuarios_base: ${ubErr.message}`);
+        uBaseId = uBase.id as string;
+      }
 
       // 6) Executa a migração de dados via RPC (roda como super admin)
       const { data: rpcResult, error: rpcErr } = await callerClient.rpc(
