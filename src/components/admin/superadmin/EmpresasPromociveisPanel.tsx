@@ -94,13 +94,24 @@ export function EmpresasPromociveisPanel() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                variant={onlyDerivadas ? "default" : "outline"}
-                size="sm"
-                onClick={() => setOnlyDerivadas((v) => !v)}
-              >
-                {onlyDerivadas ? "Mostrando: só derivadas" : "Mostrando: todas"}
-              </Button>
+              <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                <SelectTrigger className="w-[280px]">
+                  <SelectValue placeholder="Filtrar por empresa-mãe..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-[400px]">
+                  <SelectItem value="__all__">Todas as empresas (todos os tenants)</SelectItem>
+                  {maes.map((m) => (
+                    <SelectItem key={m.tenant_id} value={m.tenant_id}>
+                      {m.razao_social} {m.total > 0 ? `(${m.total} derivada${m.total > 1 ? "s" : ""})` : "(sem derivadas)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedTenantId !== "__all__" && (
+                <Button variant="ghost" size="sm" onClick={() => setSelectedTenantId("__all__")}>
+                  Limpar
+                </Button>
+              )}
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
