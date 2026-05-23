@@ -223,6 +223,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                     <SelectItem value="starter">Starter</SelectItem>
                     <SelectItem value="professional">Professional</SelectItem>
                     <SelectItem value="enterprise">Enterprise</SelectItem>
+                    <SelectItem value="early_adopter">Early Adopter (Gratuito)</SelectItem>
+                    <SelectItem value="tester">Tester (Interno)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
