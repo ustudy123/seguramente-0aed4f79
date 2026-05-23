@@ -12,6 +12,9 @@ export interface Departamento {
   descricao: string | null;
   responsavel_id: string | null;
   filial_id: string | null;
+  gestor_admissao_id: string | null;
+  gestor_substituto_admissao_id: string | null;
+  substituto_ativo: boolean;
   ativo: boolean;
   created_at: string;
   updated_at: string;
@@ -82,7 +85,7 @@ export function useDepartamentos() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Departamento[];
+      return (data as unknown) as Departamento[];
     },
     enabled: !!tenantId,
   });
