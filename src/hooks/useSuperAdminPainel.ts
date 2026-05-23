@@ -91,6 +91,7 @@ export function useLeads() {
       const { data, error } = await supabase
         .from("leads")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []) as Lead[];
