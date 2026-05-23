@@ -26,8 +26,7 @@ interface Props {
 type TipoMarc = "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
 
 const MAX_FILE_MB = 5;
-const MAX_FILES = 3;
-const MAX_ITENS = 40;
+const MAX_ITENS = 60;
 
 const TIPO_LABEL: Record<TipoMarc, string> = {
   entrada: "Entrada",
@@ -47,12 +46,29 @@ function diaSemana(iso: string) {
   const ds = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   return ds[new Date(iso + "T12:00:00").getDay()];
 }
+function toMin(s?: string): number | null {
+  if (!s || !/^\d{2}:\d{2}/.test(s)) return null;
+  return Number(s.slice(0,2)) * 60 + Number(s.slice(3,5));
+}
+/** Horas trabalhadas (em horas decimais) a partir das 4 marcações. */
+function horasTrabalhadasDia(h: Partial<Record<TipoMarc, string>>): number {
+  const e = toMin(h.entrada), sa = toMin(h.saida_almoco), ra = toMin(h.retorno_almoco), s = toMin(h.saida);
+  let total = 0;
+  if (e != null && sa != null && sa > e) total += sa - e;
+  if (ra != null && s != null && s > ra) total += s - ra;
+  if (total === 0 && e != null && s != null && s > e) total = s - e;
+  return Math.max(0, total / 60);
+}
 
 interface DiaEdit {
   horarios: Partial<Record<TipoMarc, string>>;
-  justificativaId: string; // id da justificativa OU OUTRO_VALUE
+  justificativaId: string;
   outroTexto: string;
+  horasAbono: string;     // string para input livre; convertido em number ao enviar
+  anexo: File | null;
 }
+
+const EMPTY_EDIT: DiaEdit = { horarios: {}, justificativaId: "", outroTexto: "", horasAbono: "", anexo: null };
 
 export function SolicitarAjusteFolhaInterno({
   open, onOpenChange, colaboradores, tenantId, empresaAtivaId, colaboradorIdInicial,
@@ -69,7 +85,6 @@ export function SolicitarAjusteFolhaInterno({
   const [pendentesPorDia, setPendentesPorDia] = useState<Record<string, number>>({});
   const [mesAtivo, setMesAtivo] = useState(() => `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`);
   const [edits, setEdits] = useState<Record<string, DiaEdit>>({});
-  const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
   const [showConfigJust, setShowConfigJust] = useState(false);
@@ -79,30 +94,33 @@ export function SolicitarAjusteFolhaInterno({
     [colaboradores, colaboradorId]
   );
 
-  const reset = () => { setEdits({}); setFiles([]); setDone(false); };
+  const reset = () => { setEdits({}); setDone(false); };
 
-  // Carrega marcações + ajustes pendentes do colaborador (últimos 60 dias)
   useEffect(() => {
     if (!open || !colaboradorId || !tenantId) return;
     (async () => {
       setLoading(true);
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - 60);
-      const dataIniIso = dataInicio.toISOString().slice(0, 10);
+      // Busca mês inteiro do mês ativo (e 30 dias antes para ter contexto)
+      const [y, m] = mesAtivo.split("-").map(Number);
+      const ini = `${y}-${pad(m)}-01`;
+      const last = new Date(y, m, 0).getDate();
+      const fim = `${y}-${pad(m)}-${pad(last)}`;
 
       const [marcRes, ajRes] = await Promise.all([
         fromTable("ponto_marcacoes")
           .select("data_marcacao, hora_marcacao, tipo_marcacao")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", colaboradorId)
-          .gte("data_marcacao", dataIniIso)
+          .gte("data_marcacao", ini)
+          .lte("data_marcacao", fim)
           .order("hora_marcacao", { ascending: true }),
         fromTable("ponto_ajustes")
           .select("data_referencia, status")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", colaboradorId)
           .eq("status", "pendente")
-          .gte("data_referencia", dataIniIso),
+          .gte("data_referencia", ini)
+          .lte("data_referencia", fim),
       ]);
 
       const map: Record<string, Partial<Record<TipoMarc, string>>> = {};
@@ -122,81 +140,95 @@ export function SolicitarAjusteFolhaInterno({
 
       setLoading(false);
     })();
-  }, [open, colaboradorId, tenantId]);
+  }, [open, colaboradorId, tenantId, mesAtivo]);
 
+  // Dias do mês ativo — do dia 01 em diante (ascendente)
   const diasMes = useMemo(() => {
     const [y, m] = mesAtivo.split("-").map(Number);
     const last = new Date(y, m, 0).getDate();
     const arr: string[] = [];
-    for (let d = 1; d <= last; d++) {
-      arr.push(`${y}-${pad(m)}-${pad(d)}`);
-    }
-    return arr.reverse();
+    for (let d = 1; d <= last; d++) arr.push(`${y}-${pad(m)}-${pad(d)}`);
+    return arr;
   }, [mesAtivo]);
 
-  const editDia = (data: string): DiaEdit =>
-    edits[data] || { horarios: {}, justificativaId: "", outroTexto: "" };
+  const editDia = (data: string): DiaEdit => edits[data] || EMPTY_EDIT;
+
+  const patchDia = (data: string, patch: Partial<DiaEdit>) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), ...patch } }));
+  };
 
   const setHorario = (data: string, tipo: TipoMarc, valor: string) => {
-    setEdits((prev) => {
-      const cur = editDia(data);
-      return { ...prev, [data]: { ...cur, horarios: { ...cur.horarios, [tipo]: valor } } };
-    });
-  };
-  const setJustificativaId = (data: string, v: string) => {
-    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaId: v } }));
-  };
-  const setOutroTexto = (data: string, v: string) => {
-    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), outroTexto: v } }));
+    const cur = editDia(data);
+    patchDia(data, { horarios: { ...cur.horarios, [tipo]: valor } });
   };
 
-  const resolverMotivo = (ed: DiaEdit): { motivo: string; justId: string | null; horas: number; requerAnexo: boolean } => {
-    if (ed.justificativaId === OUTRO_VALUE) {
-      return { motivo: ed.outroTexto.trim(), justId: null, horas: 0, requerAnexo: false };
-    }
+  const resolverMotivo = (ed: DiaEdit): { motivo: string; justId: string | null } => {
+    if (ed.justificativaId === OUTRO_VALUE) return { motivo: ed.outroTexto.trim(), justId: null };
     const j = justAtivas.find((x) => x.id === ed.justificativaId);
-    if (!j) return { motivo: "", justId: null, horas: 0, requerAnexo: false };
-    return { motivo: j.nome, justId: j.id, horas: Number(j.horas_abono) || 0, requerAnexo: !!j.requer_anexo };
+    if (!j) return { motivo: "", justId: null };
+    return { motivo: j.nome, justId: j.id };
   };
 
+  /** Horários efetivos do dia = marcação original mesclada com edição. */
+  const horariosEfetivos = (data: string): Partial<Record<TipoMarc, string>> => {
+    const orig = marcsPorDia[data] || {};
+    const ed = editDia(data);
+    return { ...orig, ...ed.horarios };
+  };
+
+  // Lista de alterações de horários
   const itensAlterados = useMemo(() => {
-    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; motivo: string; justId: string | null; horas: number }[] = [];
+    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       const original = marcsPorDia[data] || {};
-      const { motivo, justId, horas } = resolverMotivo(ed);
       ORDEM_TIPOS.forEach((t) => {
         const novo = (ed.horarios[t] || "").trim();
         if (!novo) return;
         if (novo === original[t]) return;
-        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "", motivo, justId, horas });
+        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "" });
       });
     });
     return out;
-  }, [edits, marcsPorDia, justAtivas]);
+  }, [edits, marcsPorDia]);
 
-  const totalAlteracoes = itensAlterados.length;
+  // Dias com alguma intervenção (horário ou abono > 0)
+  const diasComAlteracao = useMemo(() => {
+    const set = new Set<string>();
+    itensAlterados.forEach((i) => set.add(i.data));
+    Object.entries(edits).forEach(([data, ed]) => {
+      if ((Number(ed.horasAbono) || 0) > 0) set.add(data);
+    });
+    return Array.from(set);
+  }, [itensAlterados, edits]);
 
-  const handleFiles = (list: FileList | null) => {
-    if (!list) return;
-    const validos: File[] = [];
-    for (const f of Array.from(list)) {
-      if (f.size > MAX_FILE_MB * 1024 * 1024) { toast.error(`${f.name}: ultrapassa ${MAX_FILE_MB}MB.`); continue; }
-      validos.push(f);
+  const totalAlteracoes = diasComAlteracao.length;
+
+  const handleAnexoDia = (data: string, file: File | null) => {
+    if (!file) { patchDia(data, { anexo: null }); return; }
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      toast.error(`${file.name}: ultrapassa ${MAX_FILE_MB}MB.`);
+      return;
     }
-    setFiles([...files, ...validos].slice(0, MAX_FILES));
+    patchDia(data, { anexo: file });
   };
 
   const validar = (): string | null => {
     if (!colaborador) return "Selecione o colaborador.";
-    if (totalAlteracoes === 0) return "Altere ou inclua ao menos um horário na folha.";
-    if (totalAlteracoes > MAX_ITENS) return `Máximo de ${MAX_ITENS} ajustes por envio.`;
+    if (totalAlteracoes === 0) return "Altere um horário ou informe horas de abono em ao menos um dia.";
+    if (itensAlterados.length > MAX_ITENS) return `Máximo de ${MAX_ITENS} ajustes de horário por envio.`;
     const now = new Date();
-    const diasComItens = new Set(itensAlterados.map((i) => i.data));
-    for (const data of diasComItens) {
+    for (const data of diasComAlteracao) {
       const ed = editDia(data);
-      const { motivo, requerAnexo } = resolverMotivo(ed);
+      const { motivo } = resolverMotivo(ed);
       if (!motivo || motivo.length < 3) return `Selecione uma justificativa para ${isoToBR(data)}.`;
-      if (requerAnexo && files.length === 0) return `A justificativa de ${isoToBR(data)} exige anexo (atestado, comprovante, etc.).`;
+      const abono = Number(ed.horasAbono) || 0;
+      if (abono < 0 || abono > 24) return `Horas de abono inválidas em ${isoToBR(data)} (0 a 24).`;
+      if (abono > 0) {
+        const horas = horasTrabalhadasDia(horariosEfetivos(data));
+        if (abono > horas + 0.001) {
+          return `Em ${isoToBR(data)}: o abono (${abono.toFixed(1)}h) é maior que as horas registradas/ajustadas no dia (${horas.toFixed(1)}h). Ajuste os horários do dia ou reduza o abono.`;
+        }
+      }
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";
@@ -216,23 +248,46 @@ export function SolicitarAjusteFolhaInterno({
     if (!colaborador) return;
     setEnviando(true);
     try {
-      for (let i = 0; i < itensAlterados.length; i++) {
-        const it = itensAlterados[i];
-        const tipoAjuste = it.horaOriginal ? "correcao" : "inclusao";
-        await solicitarAjuste({
-          colaboradorId: colaborador.id,
-          colaboradorNome: colaborador.nome_completo,
-          colaboradorCpf: (colaborador as any).cpf || "",
-          dataReferencia: it.data,
-          tipoAjuste,
-          tipoMarcacao: it.tipo,
-          horaOriginal: it.horaOriginal ? `${it.horaOriginal}:00` : undefined,
-          horaSolicitada: `${it.hora}:00`,
-          motivo: it.motivo,
-          justificativaId: it.justId || undefined,
-          horasAbonadas: it.horas,
-          anexos: i === 0 ? files : undefined, // anexa só no primeiro para não duplicar
-        });
+      for (const data of diasComAlteracao) {
+        const ed = editDia(data);
+        const { motivo, justId } = resolverMotivo(ed);
+        const abono = Number(ed.horasAbono) || 0;
+        const itensDia = itensAlterados.filter((i) => i.data === data);
+        const anexos = ed.anexo ? [ed.anexo] : undefined;
+
+        if (itensDia.length === 0) {
+          // dia só com abono (sem alteração de horário) — registra como justificativa pura
+          await solicitarAjuste({
+            colaboradorId: colaborador.id,
+            colaboradorNome: colaborador.nome_completo,
+            colaboradorCpf: (colaborador as any).cpf || "",
+            dataReferencia: data,
+            tipoAjuste: "justificativa",
+            motivo,
+            justificativaId: justId || undefined,
+            horasAbonadas: abono,
+            anexos,
+          });
+        } else {
+          for (let i = 0; i < itensDia.length; i++) {
+            const it = itensDia[i];
+            await solicitarAjuste({
+              colaboradorId: colaborador.id,
+              colaboradorNome: colaborador.nome_completo,
+              colaboradorCpf: (colaborador as any).cpf || "",
+              dataReferencia: it.data,
+              tipoAjuste: it.horaOriginal ? "correcao" : "inclusao",
+              tipoMarcacao: it.tipo,
+              horaOriginal: it.horaOriginal ? `${it.horaOriginal}:00` : undefined,
+              horaSolicitada: `${it.hora}:00`,
+              motivo,
+              justificativaId: justId || undefined,
+              // abono e anexo só no primeiro item do dia
+              horasAbonadas: i === 0 ? abono : 0,
+              anexos: i === 0 ? anexos : undefined,
+            });
+          }
+        }
       }
       setDone(true);
     } catch (e: any) {
@@ -240,7 +295,6 @@ export function SolicitarAjusteFolhaInterno({
     }
     setEnviando(false);
   };
-
 
   const navegarMes = (delta: number) => {
     const [y, m] = mesAtivo.split("-").map(Number);
@@ -258,7 +312,7 @@ export function SolicitarAjusteFolhaInterno({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="max-w-5xl max-h-[92vh] flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] flex flex-col">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -266,7 +320,7 @@ export function SolicitarAjusteFolhaInterno({
             <DialogDescription>
               {totalAlteracoes === 1
                 ? "Seu ajuste foi registrado e ficará pendente para aprovação do gestor."
-                : `Seus ${totalAlteracoes} ajustes foram registrados e ficarão pendentes para aprovação do gestor.`}
+                : `Seus ajustes de ${totalAlteracoes} dias foram registrados e ficarão pendentes para aprovação do gestor.`}
             </DialogDescription>
             <Button onClick={() => { onOpenChange(false); reset(); }} className="w-full">Fechar</Button>
           </div>
@@ -277,7 +331,7 @@ export function SolicitarAjusteFolhaInterno({
                 <div className="flex-1">
                   <DialogTitle>Folha de Ponto · Ajustes</DialogTitle>
                   <DialogDescription>
-                    A folha já vem com os horários registrados. Edite ou inclua os horários que faltam, escolha a justificativa (com horas de abono configuradas pelo RH) e envie tudo de uma vez ao gestor.
+                    A folha mostra todo o mês (a partir do dia 01). Edite horários, informe a justificativa, as horas de abono e — se houver — anexe um comprovante para cada dia.
                   </DialogDescription>
                 </div>
                 {podeGerenciar && (
@@ -288,7 +342,6 @@ export function SolicitarAjusteFolhaInterno({
               </div>
             </DialogHeader>
 
-            {/* Colaborador + Mês */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Colaborador</Label>
@@ -317,7 +370,6 @@ export function SolicitarAjusteFolhaInterno({
               </div>
             </div>
 
-            {/* Folha */}
             <ScrollArea className="flex-1 border rounded-md min-h-[300px]">
               {!colaboradorId ? (
                 <p className="text-center text-sm text-muted-foreground py-12">
@@ -327,17 +379,17 @@ export function SolicitarAjusteFolhaInterno({
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : diasMes.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
               ) : (
                 <table className="w-full text-xs">
                   <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr className="text-left">
-                      <th className="px-2 py-2 font-medium w-[110px]">Dia</th>
+                      <th className="px-2 py-2 font-medium w-[90px]">Dia</th>
                       {ORDEM_TIPOS.map((t) => (
                         <th key={t} className="px-2 py-2 font-medium">{TIPO_LABEL[t]}</th>
                       ))}
-                      <th className="px-2 py-2 font-medium w-[260px]">Justificativa</th>
+                      <th className="px-2 py-2 font-medium w-[200px]">Justificativa</th>
+                      <th className="px-2 py-2 font-medium w-[90px]">Abono (h)</th>
+                      <th className="px-2 py-2 font-medium w-[150px]">Anexo</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -345,15 +397,19 @@ export function SolicitarAjusteFolhaInterno({
                       const original = marcsPorDia[data] || {};
                       const pendentes = pendentesPorDia[data] || 0;
                       const ed = editDia(data);
-                      const temAlteracao = ORDEM_TIPOS.some((t) => {
+                      const temAlteracaoHora = ORDEM_TIPOS.some((t) => {
                         const v = ed.horarios[t];
-                        return v && v !== original[t];
+                        return v !== undefined && v !== original[t];
                       });
+                      const temAbono = (Number(ed.horasAbono) || 0) > 0;
+                      const ativo = temAlteracaoHora || temAbono;
                       const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
+                      const futuro = data > today;
+                      const horasEfetiv = horasTrabalhadasDia(horariosEfetivos(data));
                       return (
                         <tr
                           key={data}
-                          className={`border-t ${temAlteracao ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""}`}
+                          className={`border-t ${ativo ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""} ${futuro ? "opacity-50" : ""}`}
                         >
                           <td className="px-2 py-1.5 align-top">
                             <div className="font-mono font-semibold">{isoToBR(data).slice(0,5)}</div>
@@ -369,7 +425,6 @@ export function SolicitarAjusteFolhaInterno({
                             const valor = ed.horarios[t] ?? orig;
                             const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
                             const incluido = alterado && !orig;
-                            const futuro = data > today;
                             return (
                               <td key={t} className="px-2 py-1.5 align-top">
                                 <Input
@@ -391,9 +446,9 @@ export function SolicitarAjusteFolhaInterno({
                             );
                           })}
                           <td className="px-2 py-1.5 align-top">
-                            {temAlteracao ? (
+                            {ativo ? (
                               <div className="space-y-1">
-                                <Select value={ed.justificativaId} onValueChange={(v) => setJustificativaId(data, v)}>
+                                <Select value={ed.justificativaId} onValueChange={(v) => patchDia(data, { justificativaId: v })}>
                                   <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Selecione…" />
                                   </SelectTrigger>
@@ -405,7 +460,7 @@ export function SolicitarAjusteFolhaInterno({
                                     )}
                                     {justAtivas.map((j) => (
                                       <SelectItem key={j.id} value={j.id} className="text-xs">
-                                        {j.nome} · {Number(j.horas_abono).toFixed(1)}h abono
+                                        {j.nome}
                                       </SelectItem>
                                     ))}
                                     <SelectItem value={OUTRO_VALUE} className="text-xs">Outro (descrever)</SelectItem>
@@ -414,15 +469,55 @@ export function SolicitarAjusteFolhaInterno({
                                 {ed.justificativaId === OUTRO_VALUE && (
                                   <Input
                                     value={ed.outroTexto}
-                                    onChange={(e) => setOutroTexto(data, e.target.value)}
-                                    placeholder="Descreva o motivo (sem abono automático)"
+                                    onChange={(e) => patchDia(data, { outroTexto: e.target.value })}
+                                    placeholder="Descreva o motivo"
                                     className="h-8 text-xs"
                                     maxLength={300}
                                   />
                                 )}
                               </div>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground italic">— altere um horário para justificar</span>
+                              <span className="text-[10px] text-muted-foreground italic">— altere horário ou informe abono</span>
+                            )}
+                          </td>
+                          <td className="px-2 py-1.5 align-top">
+                            <Input
+                              type="number"
+                              step="0.5" min="0" max="24"
+                              disabled={futuro}
+                              value={ed.horasAbono}
+                              onChange={(e) => patchDia(data, { horasAbono: e.target.value })}
+                              placeholder="0"
+                              className="h-8 text-xs font-mono"
+                            />
+                            {ativo && (Number(ed.horasAbono) || 0) > 0 && (
+                              <div className={`text-[9px] mt-0.5 ${
+                                (Number(ed.horasAbono) || 0) > horasEfetiv + 0.001
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                              }`}>
+                                dia: {horasEfetiv.toFixed(1)}h
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-2 py-1.5 align-top">
+                            {ed.anexo ? (
+                              <div className="flex items-center justify-between gap-1 text-[10px] bg-muted/60 rounded px-1.5 py-1">
+                                <span className="truncate max-w-[100px]" title={ed.anexo.name}>{ed.anexo.name}</span>
+                                <button type="button" onClick={() => handleAnexoDia(data, null)} className="text-destructive shrink-0">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className={`flex items-center gap-1 text-[10px] cursor-pointer text-muted-foreground hover:text-foreground ${futuro ? "pointer-events-none opacity-50" : ""}`}>
+                                <Paperclip className="w-3 h-3" />
+                                <span>Anexar</span>
+                                <input
+                                  type="file" className="hidden"
+                                  accept="image/*,application/pdf"
+                                  onChange={(e) => handleAnexoDia(data, e.target.files?.[0] || null)}
+                                />
+                              </label>
                             )}
                           </td>
                         </tr>
@@ -433,49 +528,26 @@ export function SolicitarAjusteFolhaInterno({
               )}
             </ScrollArea>
 
-            {/* Rodapé */}
             <div className="space-y-3 pt-3 border-t">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="flex-1 min-w-[220px]">
-                  <Label className="text-xs flex items-center gap-1">
-                    <Paperclip className="w-3 h-3" /> Anexos (opcional, até {MAX_FILES} de {MAX_FILE_MB}MB)
-                  </Label>
-                  <Input
-                    type="file" multiple accept="image/*,application/pdf"
-                    onChange={(e) => handleFiles(e.target.files)}
-                    disabled={files.length >= MAX_FILES}
-                    className="h-9 mt-1"
-                  />
-                  {files.length > 0 && (
-                    <ul className="mt-1 space-y-1">
-                      {files.map((f, i) => (
-                        <li key={i} className="flex items-center justify-between text-xs bg-muted/50 px-2 py-1 rounded">
-                          <span className="truncate max-w-[300px]">{f.name}</span>
-                          <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))} className="text-destructive">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-3">
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-sky-50 dark:bg-sky-950/20 border border-sky-300 inline-block" /> registrado</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-500 inline-block" /> alterado</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500 inline-block" /> incluído</span>
                 </div>
-                <div className="text-right space-y-1">
-                  <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                    {totalAlteracoes > 0 ? (
-                      <Badge variant="secondary" className="text-xs">
-                        {totalAlteracoes} alteração{totalAlteracoes !== 1 ? "ões" : ""} pendente{totalAlteracoes !== 1 ? "s" : ""}
-                      </Badge>
-                    ) : (
-                      <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Nenhuma alteração ainda</span>
-                    )}
-                  </div>
-                </div>
+                {totalAlteracoes > 0 ? (
+                  <Badge variant="secondary" className="text-xs">
+                    {totalAlteracoes} dia{totalAlteracoes !== 1 ? "s" : ""} com ajuste
+                  </Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Nenhum ajuste ainda</span>
+                )}
               </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
                 <Button className="flex-1" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || !colaboradorId}>
-                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar ${totalAlteracoes || ""} Ajuste${totalAlteracoes !== 1 ? "s" : ""}`}
+                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes${totalAlteracoes ? ` (${totalAlteracoes} dia${totalAlteracoes !== 1 ? "s" : ""})` : ""}`}
                 </Button>
               </div>
             </div>
