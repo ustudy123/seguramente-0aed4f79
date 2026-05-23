@@ -21901,7 +21901,13 @@ export type Database = {
       swot_impacto: "baixo" | "medio" | "alto"
       swot_tipo: "forca" | "fraqueza" | "oportunidade" | "ameaca"
       tarefa_status: "nao_iniciada" | "em_andamento" | "bloqueada" | "concluida"
-      tenant_plan: "free" | "starter" | "professional" | "enterprise"
+      tenant_plan:
+        | "free"
+        | "starter"
+        | "professional"
+        | "enterprise"
+        | "early_adopter"
+        | "tester"
       terceiro_acesso: "eventual" | "recorrente" | "continuo"
       terceiro_doc_status: "valido" | "a_vencer" | "vencido" | "pendente"
       terceiro_status: "liberado" | "restrito" | "bloqueado"
@@ -22516,7 +22522,14 @@ export const Constants = {
       swot_impacto: ["baixo", "medio", "alto"],
       swot_tipo: ["forca", "fraqueza", "oportunidade", "ameaca"],
       tarefa_status: ["nao_iniciada", "em_andamento", "bloqueada", "concluida"],
-      tenant_plan: ["free", "starter", "professional", "enterprise"],
+      tenant_plan: [
+        "free",
+        "starter",
+        "professional",
+        "enterprise",
+        "early_adopter",
+        "tester",
+      ],
       terceiro_acesso: ["eventual", "recorrente", "continuo"],
       terceiro_doc_status: ["valido", "a_vencer", "vencido", "pendente"],
       terceiro_status: ["liberado", "restrito", "bloqueado"],
