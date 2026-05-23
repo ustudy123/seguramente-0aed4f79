@@ -245,7 +245,9 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
+              <Button variant="outline" onClick={() => preselectedEmpresaId ? handleClose(false) : setStep(1)}>
+                {preselectedEmpresaId ? "Cancelar" : "Voltar"}
+              </Button>
               <Button
                 disabled={!novoTenant.nome || !novoTenant.slug || !owner.email || !owner.nome || (!owner.inviteMode && !owner.password)}
                 onClick={carregarDryRun}
