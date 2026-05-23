@@ -216,7 +216,7 @@ serve(async (req) => {
       // 7) Vínculo do owner com a empresa migrada
       await admin.from("usuario_vinculos").insert({
         tenant_id: novoTenantId,
-        usuario_id: uBase.id,
+        usuario_id: uBaseId,
         empresa_id: payload.empresaId,
         tipo_vinculo: "administrador",
         status: "ativo",
