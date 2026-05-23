@@ -21477,6 +21477,22 @@ export type Database = {
       }
       superadmin_global_stats: { Args: never; Returns: Json }
       superadmin_growth_series: { Args: { _dias?: number }; Returns: Json }
+      superadmin_list_all_empresas: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          cnpj: string
+          empresa_created_at: string
+          empresa_id: string
+          is_principal: boolean
+          nome_fantasia: string
+          razao_social: string
+          tenant_id: string
+          tenant_nome: string
+          tenant_slug: string
+          total_empresas_tenant: number
+        }[]
+      }
       superadmin_psicossocial_overview: { Args: never; Returns: Json }
       superadmin_spinoff_dry_run: {
         Args: { p_empresa_id: string }
