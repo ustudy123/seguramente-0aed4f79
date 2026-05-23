@@ -274,6 +274,9 @@ export function usePonto() {
         }
         // Parse trigger exceptions for friendly messages
         const msg = error.message || "";
+        if (msg.includes("Aguarde pelo menos 10 minutos")) {
+          throw new Error("Aguarde pelo menos 10 minutos entre registros de ponto para evitar duplicidade.");
+        }
         if (msg.includes("Não é possível registrar")) {
           throw new Error(msg.replace(/^.*?Não é possível/, "Não é possível"));
         }
