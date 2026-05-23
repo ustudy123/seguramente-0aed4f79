@@ -308,6 +308,7 @@ function AssinaturasPainel({ contrato }: { contrato: ContratoAceite }) {
   const gerarLink = useGerarLinkAssinatura();
   const [novoEmail, setNovoEmail] = useState("");
   const [novoNome, setNovoNome] = useState("");
+  const [detalhe, setDetalhe] = useState<ContratoAssinatura | null>(null);
 
   const copyLink = (token: string) => {
     const url = `${PUBLIC_BASE}/assinar-contrato/${token}`;
@@ -413,11 +414,18 @@ function AssinaturasPainel({ contrato }: { contrato: ContratoAceite }) {
                     </TableCell>
                     <TableCell className="text-xs">{a.ip_address || "—"}</TableCell>
                     <TableCell className="text-right">
-                      {a.status === "pendente" && (
-                        <Button size="sm" variant="ghost" onClick={() => copyLink(a.token)}>
-                          <Copy className="w-3 h-3 mr-1" />Copiar link
-                        </Button>
-                      )}
+                      <div className="flex gap-1 justify-end">
+                        {a.status === "assinado" && (
+                          <Button size="sm" variant="ghost" onClick={() => setDetalhe(a)} title="Ver assinatura">
+                            <Eye className="w-3 h-3 mr-1" />Ver
+                          </Button>
+                        )}
+                        {a.status === "pendente" && (
+                          <Button size="sm" variant="ghost" onClick={() => copyLink(a.token)}>
+                            <Copy className="w-3 h-3 mr-1" />Copiar link
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -426,6 +434,192 @@ function AssinaturasPainel({ contrato }: { contrato: ContratoAceite }) {
           )}
         </TabsContent>
       </Tabs>
+
+      <DetalheAssinaturaModal
+        contrato={contrato}
+        assinatura={detalhe}
+        onClose={() => setDetalhe(null)}
+      />
     </div>
   );
 }
+
+function DetalheAssinaturaModal({
+  contrato,
+  assinatura,
+  onClose,
+}: {
+  contrato: ContratoAceite;
+  assinatura: ContratoAssinatura | null;
+  onClose: () => void;
+}) {
+  const open = !!assinatura;
+
+  const imprimir = () => {
+    if (!assinatura) return;
+    const w = window.open("", "_blank", "width=900,height=900");
+    if (!w) { toast.error("Permita pop-ups para imprimir"); return; }
+    const dataAss = assinatura.assinado_em
+      ? format(new Date(assinatura.assinado_em), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })
+      : "—";
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${contrato.titulo}</title>
+      <style>
+        body{font-family:system-ui,-apple-system,sans-serif;max-width:780px;margin:24px auto;padding:0 24px;color:#111;}
+        h1{font-size:20px;border-bottom:2px solid #0a0a0a;padding-bottom:8px;margin-bottom:16px;}
+        h2{font-size:14px;text-transform:uppercase;letter-spacing:0.05em;color:#444;margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:4px;}
+        .row{display:flex;gap:24px;margin:6px 0;font-size:13px;}
+        .row b{min-width:140px;color:#555;font-weight:600;}
+        .corpo{font-size:13px;line-height:1.6;border:1px solid #eee;padding:16px;border-radius:6px;background:#fafafa;}
+        .sig-box{display:flex;gap:24px;margin-top:24px;flex-wrap:wrap;}
+        .sig-box > div{flex:1;min-width:240px;}
+        .sig-box img{max-width:100%;border:1px solid #ccc;background:#fff;border-radius:4px;}
+        .hash{font-family:ui-monospace,monospace;font-size:10px;word-break:break-all;background:#f3f3f3;padding:6px;border-radius:4px;}
+        .legal{margin-top:24px;font-size:11px;color:#666;border-top:1px solid #ddd;padding-top:12px;}
+      </style></head><body>
+      <h1>${contrato.titulo}</h1>
+      <h2>Conteúdo do contrato (versão ${contrato.versao})</h2>
+      <div class="corpo">${contrato.corpo_html}</div>
+      <h2>Dados do signatário</h2>
+      <div class="row"><b>Nome:</b> ${assinatura.signatario_nome || "—"}</div>
+      <div class="row"><b>CPF:</b> ${assinatura.signatario_cpf || "—"}</div>
+      <div class="row"><b>RG:</b> ${assinatura.signatario_rg || "—"}</div>
+      <div class="row"><b>E-mail:</b> ${assinatura.signatario_email || "—"}</div>
+      <div class="row"><b>Telefone:</b> ${assinatura.signatario_telefone || "—"}</div>
+      <div class="row"><b>Endereço:</b> ${assinatura.signatario_endereco || "—"}</div>
+      <h2>Evidências de autoria</h2>
+      <div class="row"><b>Assinado em:</b> ${dataAss}</div>
+      <div class="row"><b>IP:</b> ${assinatura.ip_address || "—"}</div>
+      <div class="row"><b>Geolocalização:</b> ${assinatura.geo_lat ? `${assinatura.geo_lat}, ${assinatura.geo_lng}` : "—"}</div>
+      <div class="row"><b>Dispositivo:</b> <span style="font-size:11px">${assinatura.user_agent || "—"}</span></div>
+      <div class="row"><b>Hash SHA-256:</b></div>
+      <div class="hash">${assinatura.hash_documento || "—"}</div>
+      <div class="sig-box">
+        ${assinatura.assinatura_imagem ? `<div><b>Assinatura</b><br/><img src="${assinatura.assinatura_imagem}"/></div>` : ""}
+        ${assinatura.selfie_imagem ? `<div><b>Selfie de verificação</b><br/><img src="${assinatura.selfie_imagem}"/></div>` : ""}
+      </div>
+      <div class="legal">
+        Documento assinado eletronicamente conforme <b>Lei 14.063/2020</b> (assinatura eletrônica avançada)
+        e <b>MP 2.200-2/2001</b>, art. 10, §2º. Autoria e integridade comprovadas pelo hash criptográfico,
+        IP, dispositivo, data/hora e dados pessoais do signatário registrados neste documento.
+      </div>
+      <script>window.onload=()=>setTimeout(()=>window.print(),300);</script>
+      </body></html>`);
+    w.document.close();
+  };
+
+  if (!assinatura) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-emerald-600" />
+            Contrato Assinado
+          </DialogTitle>
+          <DialogDescription>{contrato.titulo}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Dados do signatário</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <Campo label="Nome" value={assinatura.signatario_nome} />
+              <Campo label="CPF" value={assinatura.signatario_cpf} />
+              <Campo label="RG" value={assinatura.signatario_rg} />
+              <Campo label="E-mail" value={assinatura.signatario_email} />
+              <Campo label="Telefone" value={assinatura.signatario_telefone} />
+              <Campo label="Endereço" value={assinatura.signatario_endereco} className="md:col-span-2" />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Evidências de autoria</CardTitle></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <Campo
+                label="Assinado em"
+                value={assinatura.assinado_em ? format(new Date(assinatura.assinado_em), "dd/MM/yyyy HH:mm:ss", { locale: ptBR }) : null}
+              />
+              <Campo label="IP" value={assinatura.ip_address} icon={<MapPin className="w-3 h-3" />} />
+              <Campo
+                label="Geolocalização"
+                value={assinatura.geo_lat ? `${assinatura.geo_lat}, ${assinatura.geo_lng}` : null}
+                icon={<MapPin className="w-3 h-3" />}
+              />
+              <Campo
+                label="Dispositivo"
+                value={assinatura.user_agent}
+                icon={<Smartphone className="w-3 h-3" />}
+                small
+              />
+              <div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                  <Hash className="w-3 h-3" /> Hash SHA-256
+                </div>
+                <code className="block text-[10px] bg-muted p-2 rounded font-mono break-all">
+                  {assinatura.hash_documento || "—"}
+                </code>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {assinatura.assinatura_imagem && (
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Assinatura</CardTitle></CardHeader>
+                <CardContent>
+                  <img
+                    src={assinatura.assinatura_imagem}
+                    alt="Assinatura"
+                    className="w-full border rounded bg-white"
+                  />
+                </CardContent>
+              </Card>
+            )}
+            {assinatura.selfie_imagem && (
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Selfie de verificação</CardTitle></CardHeader>
+                <CardContent>
+                  <img
+                    src={assinatura.selfie_imagem}
+                    alt="Selfie"
+                    className="w-full rounded border object-cover"
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Conteúdo do contrato (v{contrato.versao})</CardTitle></CardHeader>
+            <CardContent>
+              <div
+                className="prose prose-sm max-w-none max-h-[300px] overflow-y-auto border rounded p-3 bg-muted/30"
+                dangerouslySetInnerHTML={{ __html: contrato.corpo_html }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fechar</Button>
+          <Button onClick={imprimir}>
+            <Printer className="w-4 h-4 mr-2" />Imprimir / Salvar PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Campo({
+  label, value, icon, small, className,
+}: { label: string; value: string | null; icon?: React.ReactNode; small?: boolean; className?: string }) {
+  return (
+    <div className={className}>
+      <div className="text-xs text-muted-foreground flex items-center gap-1">{icon}{label}</div>
+      <div className={small ? "text-xs break-all" : "text-sm font-medium"}>{value || "—"}</div>
+    </div>
+  );
+}
+
