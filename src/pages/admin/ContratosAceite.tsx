@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Plus, FileSignature, Copy, Eye, Edit, Trash2, Link as LinkIcon,
-  Mail, MessageCircle, Power, Search, Shield,
+  Power, Search, Shield, Download, MapPin, Hash, Smartphone, Printer,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
