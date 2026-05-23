@@ -83,6 +83,22 @@ export function PontoSelfieCapture({ selfieFile, selfiePreview, onChange }: Pont
     setIsCameraOpen(false);
   }, [stream]);
 
+  // Auto-abre a câmera ao montar (se ainda não há selfie capturada)
+  useEffect(() => {
+    if (!selfieFile && !isCameraOpen && !stream) {
+      startCamera();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Cleanup ao desmontar
+  useEffect(() => {
+    return () => {
+      stream?.getTracks().forEach(t => t.stop());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
