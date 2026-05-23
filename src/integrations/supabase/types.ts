@@ -19434,6 +19434,51 @@ export type Database = {
           },
         ]
       }
+      tenant_spinoffs: {
+        Row: {
+          contadores: Json
+          created_at: string
+          empresa_id: string
+          executado_por: string
+          id: string
+          mensagem_erro: string | null
+          owner_email: string
+          owner_user_id: string | null
+          status: string
+          tenant_destino_id: string
+          tenant_origem_id: string
+          updated_at: string
+        }
+        Insert: {
+          contadores?: Json
+          created_at?: string
+          empresa_id: string
+          executado_por: string
+          id?: string
+          mensagem_erro?: string | null
+          owner_email: string
+          owner_user_id?: string | null
+          status?: string
+          tenant_destino_id: string
+          tenant_origem_id: string
+          updated_at?: string
+        }
+        Update: {
+          contadores?: Json
+          created_at?: string
+          empresa_id?: string
+          executado_por?: string
+          id?: string
+          mensagem_erro?: string | null
+          owner_email?: string
+          owner_user_id?: string | null
+          status?: string
+          tenant_destino_id?: string
+          tenant_origem_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           ativo: boolean
@@ -21433,6 +21478,19 @@ export type Database = {
       superadmin_global_stats: { Args: never; Returns: Json }
       superadmin_growth_series: { Args: { _dias?: number }; Returns: Json }
       superadmin_psicossocial_overview: { Args: never; Returns: Json }
+      superadmin_spinoff_dry_run: {
+        Args: { p_empresa_id: string }
+        Returns: Json
+      }
+      superadmin_spinoff_execute: {
+        Args: {
+          p_empresa_id: string
+          p_novo_tenant_id: string
+          p_owner_email: string
+          p_owner_user_id: string
+        }
+        Returns: Json
+      }
       superadmin_tenants_list: { Args: never; Returns: Json }
       superadmin_tenants_status: { Args: never; Returns: Json }
       superadmin_usuarios_global: {
