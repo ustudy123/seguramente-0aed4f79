@@ -657,7 +657,13 @@ const Ponto = () => {
               </TableBody>
             </Table>
           </motion.div>
+
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-wider">
+            <Shield className="w-3.5 h-3.5" />
+            Logs de auditoria em conformidade com Portaria 671 MTP
+          </div>
         </TabsContent>
+
 
         {/* Escalas */}
         <TabsContent value="escalas"><PontoEscalasTab /></TabsContent>
