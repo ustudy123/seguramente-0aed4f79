@@ -111,14 +111,25 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
           empresaId,
           novoTenant,
           owner: {
-            email: owner.email,
-            nome: owner.nome,
+            email: owner.email.trim(),
+            nome: owner.nome.trim(),
             password: owner.inviteMode ? undefined : owner.password,
             inviteMode: owner.inviteMode,
           },
         },
       });
-      if (error) throw error;
+      // Tenta extrair a mensagem real do corpo de erro do edge function
+      if (error) {
+        let realMsg = error.message;
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx?.json) {
+            const body = await ctx.json();
+            if (body?.error) realMsg = body.error;
+          }
+        } catch { /* ignore */ }
+        throw new Error(realMsg);
+      }
       if (data?.error) throw new Error(data.error);
       toast.success(
         data?.owner?.inviteSent
