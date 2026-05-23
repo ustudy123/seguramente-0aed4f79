@@ -482,6 +482,7 @@ export function SolicitarAjusteFolhaInterno({
           </>
         )}
       </DialogContent>
+      <ConfigJustificativasModal open={showConfigJust} onOpenChange={setShowConfigJust} />
     </Dialog>
   );
 }
