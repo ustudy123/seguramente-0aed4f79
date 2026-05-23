@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, AlertCircle, FileSignature, Shield, MapPin } from "lucide-react";
-import { SignatureCapture } from "@/components/epi/entrega/SignatureCapture";
+import { Loader2, CheckCircle2, AlertCircle, Shield, MapPin, Camera, RefreshCw, Eraser } from "lucide-react";
+import SignatureCanvas from "react-signature-canvas";
 import { toast } from "sonner";
+import logoImage from "@/assets/logo-youreyes.svg";
 
 interface ContratoInfo {
   id: string;
@@ -39,7 +40,6 @@ export default function AssinarContrato() {
   const [erro, setErro] = useState<string | null>(null);
   const [signatarioEmail, setSignatarioEmail] = useState<string>("");
 
-  // Form
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
@@ -47,14 +47,22 @@ export default function AssinarContrato() {
   const [rg, setRg] = useState("");
   const [endereco, setEndereco] = useState("");
   const [aceito, setAceito] = useState(false);
-  const [assinatura, setAssinatura] = useState<string | null>(null);
   const [selfie, setSelfie] = useState<string | null>(null);
   const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
 
+  // Signature
+  const sigRef = useRef<SignatureCanvas>(null);
+  const sigBoxRef = useRef<HTMLDivElement>(null);
+  const [sigWidth, setSigWidth] = useState(600);
+  const [hasSig, setHasSig] = useState(false);
+
+  // Camera
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [streamAtivo, setStreamAtivo] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [camOpen, setCamOpen] = useState(false);
+  const [camError, setCamError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -82,32 +90,86 @@ export default function AssinarContrato() {
     })();
   }, [token]);
 
+  // Responsive signature width
+  useEffect(() => {
+    const update = () => {
+      if (sigBoxRef.current) setSigWidth(sigBoxRef.current.clientWidth);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [contrato]);
+
+  // Attach stream when video mounts
+  useEffect(() => {
+    if (camOpen && stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [camOpen, stream]);
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => { stream?.getTracks().forEach(t => t.stop()); };
+  }, [stream]);
+
   const capturarGeo = () => {
     if (!navigator.geolocation) { toast.error("Geolocalização indisponível"); return; }
     navigator.geolocation.getCurrentPosition(
       p => { setGeo({ lat: p.coords.latitude, lng: p.coords.longitude }); toast.success("Localização capturada"); },
-      () => toast.error("Não foi possível capturar localização")
+      () => toast.error("Não foi possível capturar localização"),
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  const iniciarCamera = async () => {
+  const iniciarCamera = useCallback(async () => {
+    setCamError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCamError("Câmera não disponível neste navegador. Em iPhone use Safari e em Android use Chrome.");
+      return;
+    }
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      setCamError("Câmera requer conexão segura (HTTPS).");
+      return;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-      if (videoRef.current) { videoRef.current.srcObject = stream; setStreamAtivo(true); }
-    } catch { toast.error("Não foi possível acessar a câmera"); }
-  };
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false,
+      });
+      setStream(s);
+      setCamOpen(true);
+    } catch (e: any) {
+      const msg = e?.name === "NotAllowedError"
+        ? "Permissão negada. Autorize o uso da câmera nas configurações do navegador."
+        : e?.name === "NotFoundError"
+        ? "Nenhuma câmera encontrada no dispositivo."
+        : "Não foi possível acessar a câmera.";
+      setCamError(msg);
+    }
+  }, []);
 
-  const capturarSelfie = () => {
-    if (!videoRef.current) return;
+  const pararCamera = useCallback(() => {
+    stream?.getTracks().forEach(t => t.stop());
+    setStream(null);
+    setCamOpen(false);
+  }, [stream]);
+
+  const capturarSelfie = useCallback(() => {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) return;
     const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    canvas.getContext("2d")?.drawImage(videoRef.current, 0, 0);
-    setSelfie(canvas.toDataURL("image/jpeg", 0.7));
-    (videoRef.current.srcObject as MediaStream)?.getTracks().forEach(t => t.stop());
-    setStreamAtivo(false);
+    canvas.width = v.videoWidth;
+    canvas.height = v.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(v, 0, 0);
+    setSelfie(canvas.toDataURL("image/jpeg", 0.8));
+    pararCamera();
     toast.success("Selfie capturada");
-  };
+  }, [pararCamera]);
+
+  const limparAssinatura = () => { sigRef.current?.clear(); setHasSig(false); };
 
   const handleEnviar = async () => {
     if (!contrato || !token) return;
@@ -119,7 +181,9 @@ export default function AssinarContrato() {
     if (contrato.requer_endereco && !endereco.trim()) { toast.error("Endereço obrigatório"); return; }
     if (contrato.requer_selfie && !selfie) { toast.error("Selfie obrigatória"); return; }
     if (contrato.requer_geolocalizacao && !geo) { toast.error("Capture sua localização"); return; }
-    if (!assinatura) { toast.error("Assine no campo abaixo"); return; }
+    if (!sigRef.current || sigRef.current.isEmpty()) { toast.error("Assine no campo abaixo"); return; }
+
+    const assinatura = sigRef.current.toDataURL("image/png");
 
     setEnviando(true);
     try {
@@ -176,6 +240,7 @@ export default function AssinarContrato() {
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-4">
+            <img src={logoImage} alt="YourEyes" className="h-10 mx-auto" />
             <AlertCircle className="w-16 h-16 mx-auto text-destructive" />
             <h1 className="text-xl font-semibold">Não foi possível abrir o contrato</h1>
             <p className="text-muted-foreground">{erro}</p>
@@ -190,6 +255,7 @@ export default function AssinarContrato() {
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-4">
+            <img src={logoImage} alt="YourEyes" className="h-10 mx-auto" />
             <CheckCircle2 className="w-16 h-16 mx-auto text-emerald-500" />
             <h1 className="text-2xl font-semibold">Contrato assinado!</h1>
             <p className="text-muted-foreground">
@@ -205,62 +271,60 @@ export default function AssinarContrato() {
   if (!contrato) return null;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3">
-            <FileSignature className="w-7 h-7 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold">{contrato.titulo}</h1>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-6 px-4">
+      <div className="max-w-3xl mx-auto space-y-5">
+        <div className="text-center pt-2 pb-4">
+          <img src={logoImage} alt="YourEyes" className="h-12 mx-auto mb-4" />
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground break-words">{contrato.titulo}</h1>
           {contrato.descricao_publica && (
-            <p className="text-muted-foreground mt-2">{contrato.descricao_publica}</p>
+            <p className="text-muted-foreground mt-2 text-sm md:text-base">{contrato.descricao_publica}</p>
           )}
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Termos do contrato</CardTitle>
           </CardHeader>
           <CardContent>
             <div
-              className="prose prose-sm max-w-none max-h-[400px] overflow-y-auto border rounded p-4 bg-muted/30"
+              className="prose prose-sm max-w-none max-h-[50vh] overflow-y-auto border rounded-md p-4 bg-card"
               dangerouslySetInnerHTML={{ __html: contrato.corpo_html }}
             />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Seus dados</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardHeader className="pb-3"><CardTitle className="text-base">Seus dados</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-3">
-              <div>
+              <div className="space-y-1.5">
                 <Label>Nome completo *</Label>
                 <Input value={nome} onChange={e => setNome(e.target.value)} />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label>E-mail</Label>
                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={!!signatarioEmail} />
               </div>
               {contrato.requer_cpf && (
-                <div>
+                <div className="space-y-1.5">
                   <Label>CPF *</Label>
-                  <Input value={cpf} onChange={e => setCpf(e.target.value)} />
+                  <Input value={cpf} onChange={e => setCpf(e.target.value)} inputMode="numeric" />
                 </div>
               )}
               {contrato.requer_telefone && (
-                <div>
+                <div className="space-y-1.5">
                   <Label>Telefone *</Label>
-                  <Input value={telefone} onChange={e => setTelefone(e.target.value)} />
+                  <Input value={telefone} onChange={e => setTelefone(e.target.value)} inputMode="tel" />
                 </div>
               )}
               {contrato.requer_rg && (
-                <div>
+                <div className="space-y-1.5">
                   <Label>RG *</Label>
                   <Input value={rg} onChange={e => setRg(e.target.value)} />
                 </div>
               )}
               {contrato.requer_endereco && (
-                <div className="md:col-span-2">
+                <div className="space-y-1.5 md:col-span-2">
                   <Label>Endereço completo *</Label>
                   <Input value={endereco} onChange={e => setEndereco(e.target.value)} />
                 </div>
@@ -268,29 +332,58 @@ export default function AssinarContrato() {
             </div>
 
             {contrato.requer_geolocalizacao && (
-              <div>
-                <Button type="button" variant="outline" size="sm" onClick={capturarGeo}>
-                  <MapPin className="w-4 h-4 mr-2" />
-                  {geo ? `Localização: ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}` : "Capturar localização *"}
-                </Button>
-              </div>
+              <Button type="button" variant="outline" size="sm" onClick={capturarGeo}>
+                <MapPin className="w-4 h-4 mr-2" />
+                {geo ? `Localização: ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}` : "Capturar localização *"}
+              </Button>
             )}
 
             {contrato.requer_selfie && (
-              <div className="border rounded-lg p-4 space-y-3">
-                <Label>Selfie ao vivo *</Label>
+              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                <Label className="flex items-center gap-2">
+                  <Camera className="w-4 h-4" /> Selfie ao vivo *
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Sua selfie é usada apenas para confirmar sua identidade na assinatura deste contrato.
+                </p>
+
+                {camError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">{camError}</AlertDescription>
+                  </Alert>
+                )}
+
                 {selfie ? (
                   <div className="space-y-2">
-                    <img src={selfie} alt="selfie" className="max-w-xs rounded border" />
-                    <Button size="sm" variant="outline" onClick={() => { setSelfie(null); iniciarCamera(); }}>Refazer</Button>
+                    <img src={selfie} alt="selfie" className="w-full max-w-xs rounded-md border" />
+                    <Button size="sm" variant="outline" onClick={() => { setSelfie(null); iniciarCamera(); }}>
+                      <RefreshCw className="w-4 h-4 mr-2" /> Tirar novamente
+                    </Button>
                   </div>
-                ) : streamAtivo ? (
+                ) : camOpen ? (
                   <div className="space-y-2">
-                    <video ref={videoRef} autoPlay playsInline className="max-w-xs rounded border" />
-                    <Button size="sm" onClick={capturarSelfie}>Capturar</Button>
+                    <div className="relative rounded-md overflow-hidden border bg-black w-full max-w-sm">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-auto"
+                        style={{ transform: "scaleX(-1)" }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={capturarSelfie}>
+                        <Camera className="w-4 h-4 mr-2" /> Capturar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={pararCamera}>Cancelar</Button>
+                    </div>
                   </div>
                 ) : (
-                  <Button size="sm" variant="outline" onClick={iniciarCamera}>Iniciar câmera</Button>
+                  <Button size="sm" variant="outline" onClick={iniciarCamera}>
+                    <Camera className="w-4 h-4 mr-2" /> Abrir câmera
+                  </Button>
                 )}
               </div>
             )}
@@ -298,24 +391,41 @@ export default function AssinarContrato() {
         </Card>
 
         <Card>
-          <CardContent className="pt-6 space-y-4">
+          <CardHeader className="pb-3"><CardTitle className="text-base">Assinatura</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
             <div className="flex items-start gap-2">
-              <Checkbox id="aceito" checked={aceito} onCheckedChange={v => setAceito(!!v)} />
+              <Checkbox id="aceito" checked={aceito} onCheckedChange={v => setAceito(!!v)} className="mt-0.5" />
               <Label htmlFor="aceito" className="text-sm leading-relaxed cursor-pointer">
                 Li e concordo com todos os termos do contrato acima. Declaro que as informações
                 fornecidas são verdadeiras e autorizo o registro desta assinatura eletrônica.
               </Label>
             </div>
 
-            {!assinatura ? (
-              <SignatureCapture onCapture={setAssinatura} colaboradorNome={nome || "Signatário"} />
-            ) : (
-              <div className="space-y-2">
-                <Label>Sua assinatura</Label>
-                <img src={assinatura} alt="assinatura" className="max-w-xs border rounded bg-white" />
-                <Button size="sm" variant="outline" onClick={() => setAssinatura(null)}>Refazer assinatura</Button>
+            <div className="space-y-2">
+              <Label>Assine abaixo usando o dedo (mobile) ou mouse</Label>
+              <div ref={sigBoxRef} className="border-2 border-dashed rounded-md bg-white overflow-hidden">
+                <SignatureCanvas
+                  ref={sigRef}
+                  canvasProps={{
+                    width: sigWidth,
+                    height: 220,
+                    className: "touch-none block",
+                    style: { width: "100%", height: 220 },
+                  }}
+                  backgroundColor="white"
+                  penColor="#0a0a0a"
+                  minWidth={1.2}
+                  maxWidth={2.8}
+                  onEnd={() => setHasSig(true)}
+                />
               </div>
-            )}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Assinatura do(a) {nome || "signatário(a)"}</p>
+                <Button type="button" size="sm" variant="ghost" onClick={limparAssinatura} disabled={!hasSig}>
+                  <Eraser className="w-4 h-4 mr-1" /> Limpar
+                </Button>
+              </div>
+            </div>
 
             <Alert>
               <Shield className="h-4 w-4" />
@@ -326,7 +436,7 @@ export default function AssinarContrato() {
               </AlertDescription>
             </Alert>
 
-            <Button onClick={handleEnviar} disabled={enviando || !aceito || !assinatura} className="w-full" size="lg">
+            <Button onClick={handleEnviar} disabled={enviando || !aceito} className="w-full" size="lg">
               {enviando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Registrando...</> : "Assinar contrato"}
             </Button>
           </CardContent>
