@@ -70,7 +70,8 @@ export function EmpresasPromociveisPanel() {
       return (
         e.razao_social?.toLowerCase().includes(s) ||
         e.cnpj?.toLowerCase().includes(s) ||
-        e.tenant_nome?.toLowerCase().includes(s)
+        e.tenant_nome?.toLowerCase().includes(s) ||
+        e.tenant_owner_email?.toLowerCase().includes(s)
       );
     });
   }, [data, search, selectedTenantId]);
