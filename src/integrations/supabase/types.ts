@@ -11385,6 +11385,7 @@ export type Database = {
           cargo: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           email: string | null
           empresa: string | null
           id: string
@@ -11407,6 +11408,7 @@ export type Database = {
           cargo?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           email?: string | null
           empresa?: string | null
           id?: string
@@ -11429,6 +11431,7 @@ export type Database = {
           cargo?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           email?: string | null
           empresa?: string | null
           id?: string
