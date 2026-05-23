@@ -165,6 +165,9 @@ export function EmpresasPromociveisPanel() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">{e.total_empresas_tenant}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {e.tenant_owner_email || "—"}
+                    </TableCell>
                     <TableCell>
                       {e.is_principal ? (
                         <Badge className="bg-primary/10 text-primary border-primary/20">
