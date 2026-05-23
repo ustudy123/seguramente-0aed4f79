@@ -226,6 +226,15 @@ export default function SuperAdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {spinoffTenant && (
+        <PromoverContaRaizModal
+          open={showSpinoff}
+          onOpenChange={(v) => { setShowSpinoff(v); if (!v) setSpinoffTenant(null); }}
+          tenantId={spinoffTenant.id}
+          tenantNome={spinoffTenant.nome}
+        />
+      )}
     </div>
   );
 }
