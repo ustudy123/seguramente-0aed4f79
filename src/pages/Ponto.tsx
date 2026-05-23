@@ -551,19 +551,20 @@ const Ponto = () => {
 
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>Colaborador</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Marcação</TableHead>
-                  <TableHead>Hora</TableHead>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead className="text-center">Anexos</TableHead>
-                  <TableHead>Solicitante</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Colaborador</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Data</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Tipo</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Marcação</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Hora</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Motivo</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-center">Anexos</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3">Solicitante</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-center">Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 text-right pr-5">Ações</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {ajustesPendentes.length === 0 ? (
                   <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhuma solicitação de ajuste registrada.</TableCell></TableRow>
