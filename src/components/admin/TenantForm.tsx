@@ -122,9 +122,11 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
              <SelectValue placeholder="Selecione o plano" />
            </SelectTrigger>
            <SelectContent>
-             <SelectItem value="starter">Starter</SelectItem>
+            <SelectItem value="starter">Starter</SelectItem>
              <SelectItem value="professional">Professional</SelectItem>
              <SelectItem value="enterprise">Enterprise</SelectItem>
+             <SelectItem value="early_adopter">Early Adopter (Gratuito)</SelectItem>
+             <SelectItem value="tester">Tester (Interno)</SelectItem>
            </SelectContent>
          </Select>
        </div>
