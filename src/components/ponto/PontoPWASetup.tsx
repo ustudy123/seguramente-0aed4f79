@@ -21,6 +21,8 @@ interface PontoPWASetupProps {
   token?: string;
 }
 
+const PONTO_SW_URL = "/ponto-sw.js";
+
 export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
@@ -86,8 +88,32 @@ export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
 
     // Registra SW
     navigator.serviceWorker
-      .register("/ponto-sw.js", { scope: "/ponto-externo/" })
+      .register(PONTO_SW_URL, { scope: "/ponto-externo/", updateViaCache: "none" })
+      .then(async (registration) => {
+        await registration.update().catch(() => undefined);
+
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+
+        registration.addEventListener("updatefound", () => {
+          const worker = registration.installing;
+          if (!worker) return;
+
+          worker.addEventListener("statechange", () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+              worker.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        });
+      })
       .catch((err) => console.warn("[PontoPWA] SW register falhou:", err));
+
+    const onControllerChange = () => {
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
     // beforeinstallprompt (Android/Chrome)
     const onBeforeInstall = (e: Event) => {
@@ -110,6 +136,7 @@ export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
       nodes.forEach((n) => n.parentNode?.removeChild(n));
       manifestLink.parentNode?.removeChild(manifestLink);
       URL.revokeObjectURL(manifestUrl);
