@@ -32,6 +32,7 @@ import {
   useAssinaturasContrato,
   useGerarLinkAssinatura,
   type ContratoAceite,
+  type ContratoAssinatura,
   type ContratoCategoria,
 } from "@/hooks/useContratosAceite";
 
