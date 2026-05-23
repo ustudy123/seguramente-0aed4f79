@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Rocket, Building2, ShieldCheck } from "lucide-react";
 import { PromoverContaRaizModal } from "@/components/admin/PromoverContaRaizModal";
 import { format } from "date-fns";
@@ -27,7 +28,7 @@ interface EmpresaRow {
 
 export function EmpresasPromociveisPanel() {
   const [search, setSearch] = useState("");
-  const [onlyDerivadas, setOnlyDerivadas] = useState(true);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("__all__");
   const [target, setTarget] = useState<EmpresaRow | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -40,10 +41,30 @@ export function EmpresasPromociveisPanel() {
     },
   });
 
+  // Lista de empresas-mãe (principais) para o seletor
+  const maes = useMemo(() => {
+    const map = new Map<string, { tenant_id: string; tenant_nome: string; razao_social: string; total: number }>();
+    for (const e of data) {
+      if (e.is_principal) {
+        map.set(e.tenant_id, {
+          tenant_id: e.tenant_id,
+          tenant_nome: e.tenant_nome,
+          razao_social: e.razao_social,
+          total: e.total_empresas_tenant - 1, // derivadas
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.razao_social.localeCompare(b.razao_social));
+  }, [data]);
+
   const filtered = useMemo(() => {
     const s = search.toLowerCase().trim();
     return data.filter((e) => {
-      if (onlyDerivadas && e.is_principal) return false;
+      // Quando uma mãe é selecionada, mostra só as derivadas dela
+      if (selectedTenantId !== "__all__") {
+        if (e.tenant_id !== selectedTenantId) return false;
+        if (e.is_principal) return false;
+      }
       if (!s) return true;
       return (
         e.razao_social?.toLowerCase().includes(s) ||
@@ -51,7 +72,12 @@ export function EmpresasPromociveisPanel() {
         e.tenant_nome?.toLowerCase().includes(s)
       );
     });
-  }, [data, search, onlyDerivadas]);
+  }, [data, search, selectedTenantId]);
+
+  const maeSelecionada = useMemo(
+    () => maes.find((m) => m.tenant_id === selectedTenantId) || null,
+    [maes, selectedTenantId]
+  );
 
   return (
     <>
@@ -68,13 +94,24 @@ export function EmpresasPromociveisPanel() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                variant={onlyDerivadas ? "default" : "outline"}
-                size="sm"
-                onClick={() => setOnlyDerivadas((v) => !v)}
-              >
-                {onlyDerivadas ? "Mostrando: só derivadas" : "Mostrando: todas"}
-              </Button>
+              <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                <SelectTrigger className="w-[280px]">
+                  <SelectValue placeholder="Filtrar por empresa-mãe..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-[400px]">
+                  <SelectItem value="__all__">Todas as empresas (todos os tenants)</SelectItem>
+                  {maes.map((m) => (
+                    <SelectItem key={m.tenant_id} value={m.tenant_id}>
+                      {m.razao_social} {m.total > 0 ? `(${m.total} derivada${m.total > 1 ? "s" : ""})` : "(sem derivadas)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedTenantId !== "__all__" && (
+                <Button variant="ghost" size="sm" onClick={() => setSelectedTenantId("__all__")}>
+                  Limpar
+                </Button>
+              )}
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -88,6 +125,11 @@ export function EmpresasPromociveisPanel() {
           </div>
         </CardHeader>
         <CardContent>
+          {maeSelecionada && (
+            <div className="mb-4 p-3 rounded-md border bg-muted/40 text-sm">
+              Exibindo derivadas de <strong>{maeSelecionada.razao_social}</strong> · tenant <code className="text-xs">{maeSelecionada.tenant_nome}</code>
+            </div>
+          )}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando...</div>
           ) : filtered.length === 0 ? (
