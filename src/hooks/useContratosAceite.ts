@@ -44,6 +44,12 @@ export interface ContratoAssinatura {
   expira_em: string | null;
   assinado_em: string | null;
   status: ContratoStatus;
+  signatario_rg: string | null;
+  signatario_endereco: string | null;
+  assinatura_imagem: string | null;
+  selfie_imagem: string | null;
+  user_agent: string | null;
+  observacoes: string | null;
   created_at: string;
 }
 
