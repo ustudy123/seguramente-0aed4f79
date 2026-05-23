@@ -308,36 +308,37 @@ const Ponto = () => {
       {/* Main Tabs — 7 grupos funcionais */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <ScrollArea className="w-full">
-          <TabsList className="inline-flex w-max min-w-full h-auto gap-0.5 p-1">
-            <TabsTrigger id="tab-ponto-visao-geral" value="visao_geral" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+          <TabsList className="inline-flex w-max min-w-full h-auto gap-1 p-0 bg-transparent border-b border-border rounded-none">
+            <TabsTrigger id="tab-ponto-visao-geral" value="visao_geral" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <BarChart3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Visão Geral</span><span className="sm:hidden">Visão</span>
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-espelho" value="espelho" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-espelho" value="espelho" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Clock className="h-3.5 w-3.5" /> Espelho
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Calendar className="h-3.5 w-3.5" /> Escalas
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-apuracao" value="apuracao" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-apuracao" value="apuracao" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Wallet className="h-3.5 w-3.5" /> Apuração
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <FileText className="h-3.5 w-3.5" /> Ajustes
               {ajustesPendentes.filter(a => a.status === "pendente").length > 0 && (
-                <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                <Badge variant="destructive" className="ml-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px]">
                   {ajustesPendentes.filter(a => a.status === "pendente").length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-compliance" value="compliance" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-compliance" value="compliance" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Shield className="h-3.5 w-3.5" /> Compliance
             </TabsTrigger>
-            <TabsTrigger id="tab-ponto-configuracoes" value="configuracoes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-configuracoes" value="configuracoes" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Configurações</span><span className="sm:hidden">Config</span>
             </TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
+
 
         {/* Visão Geral */}
         <TabsContent value="visao_geral"><PontoDashboardTab /></TabsContent>
