@@ -24,6 +24,7 @@ interface EmpresaRow {
   tenant_slug: string;
   total_empresas_tenant: number;
   is_principal: boolean;
+  tenant_owner_email: string | null;
 }
 
 export function EmpresasPromociveisPanel() {
@@ -69,7 +70,8 @@ export function EmpresasPromociveisPanel() {
       return (
         e.razao_social?.toLowerCase().includes(s) ||
         e.cnpj?.toLowerCase().includes(s) ||
-        e.tenant_nome?.toLowerCase().includes(s)
+        e.tenant_nome?.toLowerCase().includes(s) ||
+        e.tenant_owner_email?.toLowerCase().includes(s)
       );
     });
   }, [data, search, selectedTenantId]);
@@ -115,7 +117,7 @@ export function EmpresasPromociveisPanel() {
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar empresa, CNPJ ou tenant..."
+                  placeholder="Buscar empresa, CNPJ, tenant ou email..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -142,6 +144,7 @@ export function EmpresasPromociveisPanel() {
                   <TableHead>CNPJ</TableHead>
                   <TableHead>Tenant atual</TableHead>
                   <TableHead className="text-center">Empresas no tenant</TableHead>
+                  <TableHead>Proprietário</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Criada</TableHead>
                   <TableHead className="w-32"></TableHead>
@@ -162,6 +165,9 @@ export function EmpresasPromociveisPanel() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">{e.total_empresas_tenant}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {e.tenant_owner_email || "—"}
+                    </TableCell>
                     <TableCell>
                       {e.is_principal ? (
                         <Badge className="bg-primary/10 text-primary border-primary/20">
