@@ -20,6 +20,7 @@ import {
 import { useSuperAdmin, TenantWithStats } from '@/hooks/useSuperAdmin';
 import { TenantForm } from '@/components/admin/TenantForm';
 import { TenantOwnerForm } from '@/components/admin/TenantOwnerForm';
+import { PromoverContaRaizModal } from '@/components/admin/PromoverContaRaizModal';
 import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
 import { SuperAdminOverview } from '@/components/admin/superadmin/SuperAdminOverview';
 import { LeadsCRMKanban } from '@/components/admin/superadmin/LeadsCRMKanban';
