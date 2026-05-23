@@ -320,6 +320,8 @@ export function usePonto() {
       horaSolicitada,
       motivo,
       anexos,
+      justificativaId,
+      horasAbonadas,
     }: {
       colaboradorId: string;
       colaboradorNome: string;
@@ -331,6 +333,8 @@ export function usePonto() {
       horaSolicitada?: string;
       motivo: string;
       anexos?: File[];
+      justificativaId?: string;
+      horasAbonadas?: number;
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
@@ -360,11 +364,14 @@ export function usePonto() {
           hora_solicitada: horaSolicitada,
           motivo,
           anexos: anexosUploaded,
+          justificativa_id: justificativaId || null,
+          horas_abonadas: horasAbonadas ?? 0,
           created_by: user.id,
           created_by_nome: profile?.nome_completo,
         } as any)
         .select()
         .single();
+
 
       if (error) throw error;
       return data as PontoAjuste;

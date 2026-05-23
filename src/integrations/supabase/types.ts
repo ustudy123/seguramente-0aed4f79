@@ -16060,7 +16060,9 @@ export type Database = {
           data_referencia: string
           hora_original: string | null
           hora_solicitada: string | null
+          horas_abonadas: number
           id: string
+          justificativa_id: string | null
           motivo: string
           observacao_aprovador: string | null
           ponto_diario_id: string | null
@@ -16083,7 +16085,9 @@ export type Database = {
           data_referencia: string
           hora_original?: string | null
           hora_solicitada?: string | null
+          horas_abonadas?: number
           id?: string
+          justificativa_id?: string | null
           motivo: string
           observacao_aprovador?: string | null
           ponto_diario_id?: string | null
@@ -16106,7 +16110,9 @@ export type Database = {
           data_referencia?: string
           hora_original?: string | null
           hora_solicitada?: string | null
+          horas_abonadas?: number
           id?: string
+          justificativa_id?: string | null
           motivo?: string
           observacao_aprovador?: string | null
           ponto_diario_id?: string | null
@@ -16116,6 +16122,13 @@ export type Database = {
           tipo_marcacao?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_ajustes_justificativa_id_fkey"
+            columns: ["justificativa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_justificativas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ponto_ajustes_ponto_diario_id_fkey"
             columns: ["ponto_diario_id"]
@@ -17420,6 +17433,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_justificativas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          empresa_id: string | null
+          horas_abono: number
+          id: string
+          nome: string
+          ordem: number
+          requer_anexo: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          horas_abono?: number
+          id?: string
+          nome: string
+          ordem?: number
+          requer_anexo?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          horas_abono?: number
+          id?: string
+          nome?: string
+          ordem?: number
+          requer_anexo?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       ponto_links: {
         Row: {

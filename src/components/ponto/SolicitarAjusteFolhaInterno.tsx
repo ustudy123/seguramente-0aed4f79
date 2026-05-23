@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { fromTable } from "@/integrations/supabase/untypedClient";
-import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePonto } from "@/hooks/usePonto";
+import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
+import { ConfigJustificativasModal } from "@/components/ponto/ConfigJustificativasModal";
 import type { Colaborador } from "@/hooks/useColaboradores";
 
 interface Props {
@@ -36,17 +38,7 @@ const TIPO_LABEL: Record<TipoMarc, string> = {
 
 const ORDEM_TIPOS: TipoMarc[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
 
-const JUSTIFICATIVAS_PRESET = [
-  "Esqueci de registrar o ponto",
-  "Falha no equipamento / aplicativo",
-  "Sem sinal de internet no momento",
-  "Atraso por trânsito / transporte público",
-  "Saída antecipada autorizada pelo gestor",
-  "Reunião externa / atendimento em cliente",
-  "Atestado médico / consulta",
-  "Erro ao registrar (horário incorreto)",
-  "Outro (descrever)",
-];
+const OUTRO_VALUE = "__outro__";
 
 function fmtHora(h: string) { return (h || "").slice(0, 5); }
 function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
@@ -58,8 +50,8 @@ function diaSemana(iso: string) {
 
 interface DiaEdit {
   horarios: Partial<Record<TipoMarc, string>>;
-  justificativaPreset: string;
-  justificativaOutro: string;
+  justificativaId: string; // id da justificativa OU OUTRO_VALUE
+  outroTexto: string;
 }
 
 export function SolicitarAjusteFolhaInterno({
@@ -68,6 +60,8 @@ export function SolicitarAjusteFolhaInterno({
   const today = new Date().toISOString().slice(0, 10);
   const hojeDate = new Date();
   const { solicitarAjuste } = usePonto();
+  const { justificativas, podeGerenciar } = usePontoJustificativas();
+  const justAtivas = useMemo(() => justificativas.filter((j) => j.ativo), [justificativas]);
 
   const [colaboradorId, setColaboradorId] = useState<string>(colaboradorIdInicial || "");
   const [loading, setLoading] = useState(false);
@@ -78,6 +72,7 @@ export function SolicitarAjusteFolhaInterno({
   const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
+  const [showConfigJust, setShowConfigJust] = useState(false);
 
   const colaborador = useMemo(
     () => colaboradores.find((c) => c.id === colaboradorId) || null,
@@ -134,14 +129,13 @@ export function SolicitarAjusteFolhaInterno({
     const last = new Date(y, m, 0).getDate();
     const arr: string[] = [];
     for (let d = 1; d <= last; d++) {
-      const iso = `${y}-${pad(m)}-${pad(d)}`;
-      if (iso <= today) arr.push(iso);
+      arr.push(`${y}-${pad(m)}-${pad(d)}`);
     }
     return arr.reverse();
-  }, [mesAtivo, today]);
+  }, [mesAtivo]);
 
   const editDia = (data: string): DiaEdit =>
-    edits[data] || { horarios: {}, justificativaPreset: "", justificativaOutro: "" };
+    edits[data] || { horarios: {}, justificativaId: "", outroTexto: "" };
 
   const setHorario = (data: string, tipo: TipoMarc, valor: string) => {
     setEdits((prev) => {
@@ -149,30 +143,36 @@ export function SolicitarAjusteFolhaInterno({
       return { ...prev, [data]: { ...cur, horarios: { ...cur.horarios, [tipo]: valor } } };
     });
   };
-  const setJustificativaPreset = (data: string, v: string) => {
-    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaPreset: v } }));
+  const setJustificativaId = (data: string, v: string) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaId: v } }));
   };
-  const setJustificativaOutro = (data: string, v: string) => {
-    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaOutro: v } }));
+  const setOutroTexto = (data: string, v: string) => {
+    setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), outroTexto: v } }));
+  };
+
+  const resolverMotivo = (ed: DiaEdit): { motivo: string; justId: string | null; horas: number; requerAnexo: boolean } => {
+    if (ed.justificativaId === OUTRO_VALUE) {
+      return { motivo: ed.outroTexto.trim(), justId: null, horas: 0, requerAnexo: false };
+    }
+    const j = justAtivas.find((x) => x.id === ed.justificativaId);
+    if (!j) return { motivo: "", justId: null, horas: 0, requerAnexo: false };
+    return { motivo: j.nome, justId: j.id, horas: Number(j.horas_abono) || 0, requerAnexo: !!j.requer_anexo };
   };
 
   const itensAlterados = useMemo(() => {
-    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; motivo: string }[] = [];
+    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; motivo: string; justId: string | null; horas: number }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       const original = marcsPorDia[data] || {};
-      const motivoFinal =
-        ed.justificativaPreset === "Outro (descrever)"
-          ? ed.justificativaOutro.trim()
-          : ed.justificativaPreset.trim();
+      const { motivo, justId, horas } = resolverMotivo(ed);
       ORDEM_TIPOS.forEach((t) => {
         const novo = (ed.horarios[t] || "").trim();
         if (!novo) return;
         if (novo === original[t]) return;
-        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "", motivo: motivoFinal });
+        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "", motivo, justId, horas });
       });
     });
     return out;
-  }, [edits, marcsPorDia]);
+  }, [edits, marcsPorDia, justAtivas]);
 
   const totalAlteracoes = itensAlterados.length;
 
@@ -194,11 +194,9 @@ export function SolicitarAjusteFolhaInterno({
     const diasComItens = new Set(itensAlterados.map((i) => i.data));
     for (const data of diasComItens) {
       const ed = editDia(data);
-      const motivo =
-        ed.justificativaPreset === "Outro (descrever)"
-          ? ed.justificativaOutro.trim()
-          : ed.justificativaPreset.trim();
-      if (!motivo || motivo.length < 5) return `Selecione uma justificativa para ${isoToBR(data)}.`;
+      const { motivo, requerAnexo } = resolverMotivo(ed);
+      if (!motivo || motivo.length < 3) return `Selecione uma justificativa para ${isoToBR(data)}.`;
+      if (requerAnexo && files.length === 0) return `A justificativa de ${isoToBR(data)} exige anexo (atestado, comprovante, etc.).`;
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";
@@ -231,6 +229,8 @@ export function SolicitarAjusteFolhaInterno({
           horaOriginal: it.horaOriginal ? `${it.horaOriginal}:00` : undefined,
           horaSolicitada: `${it.hora}:00`,
           motivo: it.motivo,
+          justificativaId: it.justId || undefined,
+          horasAbonadas: it.horas,
           anexos: i === 0 ? files : undefined, // anexa só no primeiro para não duplicar
         });
       }
@@ -240,6 +240,7 @@ export function SolicitarAjusteFolhaInterno({
     }
     setEnviando(false);
   };
+
 
   const navegarMes = (delta: number) => {
     const [y, m] = mesAtivo.split("-").map(Number);
@@ -272,10 +273,19 @@ export function SolicitarAjusteFolhaInterno({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Folha de Ponto · Ajustes</DialogTitle>
-              <DialogDescription>
-                Edite ou inclua os horários direto na folha mensal. Para cada dia alterado, selecione uma justificativa. Todos os pedidos são enviados ao gestor de uma única vez.
-              </DialogDescription>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <DialogTitle>Folha de Ponto · Ajustes</DialogTitle>
+                  <DialogDescription>
+                    A folha já vem com os horários registrados. Edite ou inclua os horários que faltam, escolha a justificativa (com horas de abono configuradas pelo RH) e envie tudo de uma vez ao gestor.
+                  </DialogDescription>
+                </div>
+                {podeGerenciar && (
+                  <Button variant="outline" size="sm" onClick={() => setShowConfigJust(true)} className="shrink-0">
+                    <Settings2 className="w-4 h-4 mr-1" /> Justificativas
+                  </Button>
+                )}
+              </div>
             </DialogHeader>
 
             {/* Colaborador + Mês */}
@@ -359,15 +369,18 @@ export function SolicitarAjusteFolhaInterno({
                             const valor = ed.horarios[t] ?? orig;
                             const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
                             const incluido = alterado && !orig;
+                            const futuro = data > today;
                             return (
                               <td key={t} className="px-2 py-1.5 align-top">
                                 <Input
                                   type="time"
                                   value={valor}
+                                  disabled={futuro}
                                   onChange={(e) => setHorario(data, t, e.target.value)}
                                   className={`h-8 text-xs font-mono ${
                                     incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
                                     : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                    : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
                                     : ""
                                   }`}
                                 />
@@ -380,21 +393,29 @@ export function SolicitarAjusteFolhaInterno({
                           <td className="px-2 py-1.5 align-top">
                             {temAlteracao ? (
                               <div className="space-y-1">
-                                <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
+                                <Select value={ed.justificativaId} onValueChange={(v) => setJustificativaId(data, v)}>
                                   <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Selecione…" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {JUSTIFICATIVAS_PRESET.map((j) => (
-                                      <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
+                                    {justAtivas.length === 0 && (
+                                      <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
+                                        Nenhuma justificativa cadastrada. Peça ao RH para configurar.
+                                      </div>
+                                    )}
+                                    {justAtivas.map((j) => (
+                                      <SelectItem key={j.id} value={j.id} className="text-xs">
+                                        {j.nome} · {Number(j.horas_abono).toFixed(1)}h abono
+                                      </SelectItem>
                                     ))}
+                                    <SelectItem value={OUTRO_VALUE} className="text-xs">Outro (descrever)</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                {ed.justificativaPreset === "Outro (descrever)" && (
+                                {ed.justificativaId === OUTRO_VALUE && (
                                   <Input
-                                    value={ed.justificativaOutro}
-                                    onChange={(e) => setJustificativaOutro(data, e.target.value)}
-                                    placeholder="Descreva o motivo"
+                                    value={ed.outroTexto}
+                                    onChange={(e) => setOutroTexto(data, e.target.value)}
+                                    placeholder="Descreva o motivo (sem abono automático)"
                                     className="h-8 text-xs"
                                     maxLength={300}
                                   />
@@ -461,6 +482,7 @@ export function SolicitarAjusteFolhaInterno({
           </>
         )}
       </DialogContent>
+      <ConfigJustificativasModal open={showConfigJust} onOpenChange={setShowConfigJust} />
     </Dialog>
   );
 }
