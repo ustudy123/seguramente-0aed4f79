@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare, Brain, FileSignature,
+  Activity, MessageSquare, Brain, FileSignature, Rocket,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
 import { useSuperAdmin, TenantWithStats } from '@/hooks/useSuperAdmin';
 import { TenantForm } from '@/components/admin/TenantForm';
 import { TenantOwnerForm } from '@/components/admin/TenantOwnerForm';
+import { PromoverContaRaizModal } from '@/components/admin/PromoverContaRaizModal';
 import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
 import { SuperAdminOverview } from '@/components/admin/superadmin/SuperAdminOverview';
 import { LeadsCRMKanban } from '@/components/admin/superadmin/LeadsCRMKanban';
@@ -37,6 +38,8 @@ export default function SuperAdminDashboard() {
   const [showTenantForm, setShowTenantForm] = useState(false);
   const [showOwnerForm, setShowOwnerForm] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<TenantWithStats | null>(null);
+  const [showSpinoff, setShowSpinoff] = useState(false);
+  const [spinoffTenant, setSpinoffTenant] = useState<TenantWithStats | null>(null);
 
   const filteredTenants = tenants.filter(t =>
     t.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -157,6 +160,9 @@ export default function SuperAdminDashboard() {
                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowOwnerForm(true); }}>
                                   <UserPlus className="w-4 h-4 mr-2" />Criar usuário owner
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSpinoffTenant(tenant); setShowSpinoff(true); }}>
+                                  <Rocket className="w-4 h-4 mr-2" />Promover empresa a Conta-Raiz
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleToggleTenant(tenant)}>
                                   <Power className="w-4 h-4 mr-2" />{tenant.ativo ? 'Desativar' : 'Ativar'}
                                 </DropdownMenuItem>
@@ -220,6 +226,15 @@ export default function SuperAdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {spinoffTenant && (
+        <PromoverContaRaizModal
+          open={showSpinoff}
+          onOpenChange={(v) => { setShowSpinoff(v); if (!v) setSpinoffTenant(null); }}
+          tenantId={spinoffTenant.id}
+          tenantNome={spinoffTenant.nome}
+        />
+      )}
     </div>
   );
 }
