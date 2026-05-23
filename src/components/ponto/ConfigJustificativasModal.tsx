@@ -115,8 +115,7 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
               <thead className="bg-muted/50 sticky top-0">
                 <tr className="text-left">
                   <th className="px-3 py-2 font-medium">Nome</th>
-                  <th className="px-3 py-2 font-medium w-24">Abono</th>
-                  <th className="px-3 py-2 font-medium w-24">Anexo</th>
+                  <th className="px-3 py-2 font-medium w-32">Anexo</th>
                   <th className="px-3 py-2 font-medium w-24">Status</th>
                   {podeGerenciar && <th className="px-3 py-2 w-24"></th>}
                 </tr>
@@ -128,12 +127,7 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
                       <div className="font-medium">{j.nome}</div>
                       {j.descricao && <div className="text-xs text-muted-foreground">{j.descricao}</div>}
                     </td>
-                    <td className="px-3 py-2 font-mono">
-                      <Badge variant={Number(j.horas_abono) > 0 ? "default" : "secondary"}>
-                        {Number(j.horas_abono).toFixed(1)}h
-                      </Badge>
-                    </td>
-                    <td className="px-3 py-2 text-xs">{j.requer_anexo ? "Obrigatório" : "Opcional"}</td>
+                    <td className="px-3 py-2 text-xs">{j.requer_anexo ? "Sugerido" : "Opcional"}</td>
                     <td className="px-3 py-2">
                       <Badge variant={j.ativo ? "outline" : "secondary"} className={j.ativo ? "border-emerald-500 text-emerald-700 dark:text-emerald-400" : ""}>
                         {j.ativo ? "Ativa" : "Inativa"}
