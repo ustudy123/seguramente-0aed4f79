@@ -177,6 +177,10 @@ export default function SuperAdminDashboard() {
                 )}
               </CardContent>
             </Card>
+
+            <div className="mt-6">
+              <EmpresasPromociveisPanel />
+            </div>
           </TabsContent>
 
           <TabsContent value="usuarios"><UsuariosGlobalPanel /></TabsContent>
