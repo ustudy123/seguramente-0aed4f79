@@ -82,6 +82,9 @@ serve(async (req) => {
       return json({ error: "owner.email e owner.nome obrigatórios" }, 400);
 
     const email = payload.owner.email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email))
+      return json({ error: `E-mail inválido: "${email}". Use o formato nome@dominio.com` }, 400);
 
     // 1) Cria novo tenant
     const { data: novoTenant, error: tErr } = await admin
