@@ -51,6 +51,16 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, colaboradorNom
   const handleSubmit = async () => {
     if (motivo.trim().length < 5) { toast.error("Justificativa precisa ter ao menos 5 caracteres."); return; }
     if (!hora) { toast.error("Informe a hora aproximada da marcação."); return; }
+    if (data > today) { toast.error("Não é permitido solicitar ajuste para data futura."); return; }
+    // Bloquear horário futuro quando a data for hoje
+    if (data === today) {
+      const now = new Date();
+      const [hh, mm] = hora.split(":").map(Number);
+      if (hh > now.getHours() || (hh === now.getHours() && mm > now.getMinutes())) {
+        toast.error("Não é permitido solicitar ajuste para horário futuro.");
+        return;
+      }
+    }
     setEnviando(true);
     try {
       // Upload anexos
