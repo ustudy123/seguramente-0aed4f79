@@ -144,6 +144,7 @@ export function EmpresasPromociveisPanel() {
                   <TableHead>CNPJ</TableHead>
                   <TableHead>Tenant atual</TableHead>
                   <TableHead className="text-center">Empresas no tenant</TableHead>
+                  <TableHead>Proprietário</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Criada</TableHead>
                   <TableHead className="w-32"></TableHead>
