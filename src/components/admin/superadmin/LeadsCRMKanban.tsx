@@ -161,10 +161,10 @@ function LeadFormDialog({ open, lead, onClose, onSubmit }: {
   const [form, setForm] = useState<Partial<Lead>>({});
   const isEdit = !!lead;
 
-  // reset on open
-  useState(() => {
-    if (open) setForm(lead || { status: "novo", origem: "prospect_manual" });
-  });
+  // reset on open / quando o lead muda
+  useEffect(() => {
+    if (open) setForm(lead ? { ...lead } : { status: "novo", origem: "prospect_manual" });
+  }, [open, lead]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
