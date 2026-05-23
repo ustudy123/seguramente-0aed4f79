@@ -55,11 +55,10 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5" /> Justificativas e Abono de Horas
+            <Clock className="w-5 h-5" /> Justificativas de Ponto
           </DialogTitle>
           <DialogDescription>
-            Configure os motivos que o colaborador pode escolher ao pedir ajuste de ponto e quantas horas cada motivo abona.
-            Use <strong>0h</strong> para motivos que não geram abono (ex.: esquecimento).
+            Cadastre os motivos que o colaborador pode escolher ao pedir ajuste de ponto. As horas de abono são informadas pelo próprio colaborador em cada dia, conforme o caso (atestado, feriado, etc.).
           </DialogDescription>
         </DialogHeader>
 
