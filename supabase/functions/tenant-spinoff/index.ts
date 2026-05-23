@@ -165,7 +165,7 @@ serve(async (req) => {
           auth_user_id: ownerInfo.userId,
           nome_completo: payload.owner.nome,
           email_principal: email,
-          tipo_usuario: "proprietario",
+          tipo_usuario: "administrador",
           status: "ativo",
           origem_cadastro: "tenant_spinoff",
         })
