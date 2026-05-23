@@ -25,15 +25,24 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   tenantId: string;
   tenantNome: string;
+  /** Quando informado, pula o passo 1 de seleção */
+  preselectedEmpresaId?: string;
+  preselectedEmpresaNome?: string;
   onSuccess?: () => void;
 }
 
 type Step = 1 | 2 | 3 | 4;
 
-export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNome, onSuccess }: Props) {
-  const [step, setStep] = useState<Step>(1);
-  const [empresaId, setEmpresaId] = useState<string>("");
-  const [novoTenant, setNovoTenant] = useState({ nome: "", slug: "", plano: "starter" });
+export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNome, preselectedEmpresaId, preselectedEmpresaNome, onSuccess }: Props) {
+  const [step, setStep] = useState<Step>(preselectedEmpresaId ? 2 : 1);
+  const [empresaId, setEmpresaId] = useState<string>(preselectedEmpresaId || "");
+  const [novoTenant, setNovoTenant] = useState({
+    nome: preselectedEmpresaNome || "",
+    slug: preselectedEmpresaNome
+      ? preselectedEmpresaNome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)
+      : "",
+    plano: "starter",
+  });
   const [owner, setOwner] = useState({ email: "", nome: "", password: "", inviteMode: true });
   const [confirmText, setConfirmText] = useState("");
   const [confirmCheck, setConfirmCheck] = useState(false);
@@ -41,7 +50,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
 
-  // Empresas do tenant
+  // Empresas do tenant (só carrega quando precisar do seletor)
   const { data: empresas = [] } = useQuery({
     queryKey: ["spinoff-empresas", tenantId],
     queryFn: async () => {
@@ -52,10 +61,12 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
       if (error) throw error;
       return data || [];
     },
-    enabled: open && !!tenantId,
+    enabled: open && !!tenantId && !preselectedEmpresaId,
   });
 
-  const empresaSelecionada = empresas.find((e) => e.id === empresaId);
+  const empresaSelecionada: Empresa | undefined = preselectedEmpresaId
+    ? { id: preselectedEmpresaId, razao_social: preselectedEmpresaNome || "Empresa", nome_fantasia: preselectedEmpresaNome, cnpj: null }
+    : empresas.find((e) => e.id === empresaId);
 
   const reset = () => {
     setStep(1);
@@ -234,7 +245,9 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
+              <Button variant="outline" onClick={() => preselectedEmpresaId ? handleClose(false) : setStep(1)}>
+                {preselectedEmpresaId ? "Cancelar" : "Voltar"}
+              </Button>
               <Button
                 disabled={!novoTenant.nome || !novoTenant.slug || !owner.email || !owner.nome || (!owner.inviteMode && !owner.password)}
                 onClick={carregarDryRun}

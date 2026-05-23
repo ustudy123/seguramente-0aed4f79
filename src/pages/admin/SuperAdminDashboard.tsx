@@ -25,6 +25,7 @@ import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
 import { SuperAdminOverview } from '@/components/admin/superadmin/SuperAdminOverview';
 import { LeadsCRMKanban } from '@/components/admin/superadmin/LeadsCRMKanban';
 import { TenantsStatusPanel, UsuariosGlobalPanel } from '@/components/admin/superadmin/PanelTenantsUsuarios';
+import { EmpresasPromociveisPanel } from '@/components/admin/superadmin/EmpresasPromociveisPanel';
 import { PsicossocialSuperAdminPanel } from '@/components/admin/superadmin/PsicossocialSuperAdminPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -176,6 +177,10 @@ export default function SuperAdminDashboard() {
                 )}
               </CardContent>
             </Card>
+
+            <div className="mt-6">
+              <EmpresasPromociveisPanel />
+            </div>
           </TabsContent>
 
           <TabsContent value="usuarios"><UsuariosGlobalPanel /></TabsContent>
