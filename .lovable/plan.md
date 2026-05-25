@@ -1,86 +1,59 @@
-## Escopo
+## Causa raiz
 
-Adicionar gestor titular e substituto ao cadastro de departamento, e usar esse vínculo como fonte única para organograma, aprovação de ajustes de ponto e provisionamento de login.
+A validação de CNPJ duplicado no cadastro **falhou por diferença de formatação**, não por ausência de checagem.
 
-## 1. Banco de dados
+No banco, as duas empresas estão salvas assim:
+- Empresa 1 (criada em 10/03/2026): `cnpj = "38.872.035/0001-93"` (com máscara)
+- Empresa 2 (criada em 21/05/2026, pela Kymberly): `cnpj = "38872035000193"` (só números)
 
-Migração na tabela `departamentos`:
-- `gestor_colaborador_id uuid` → FK lógica para `colaboradores.id`
-- `gestor_substituto_colaborador_id uuid` (opcional)
-- `substituto_ativo boolean default false` (toggle manual do RH)
+A edge function `onboarding-signup` faz a checagem com:
+```ts
+.from("empresa_cadastro").select("id").eq("cnpj", documento)
+```
+Isso é **comparação exata de string**. Como o segundo cadastro enviou o CNPJ sem máscara, o `eq` não bateu com o registro antigo (que tinha pontos e barra) e a duplicata passou.
 
-Migração na tabela `colaboradores`:
-- `login_interno text unique` (ex: `joao.silva@youreyes.com.br`)
-- `senha_resetada_em timestamptz` (controle do fluxo de reset)
-- `precisa_redefinir_senha boolean default true`
+Além disso, **não existe índice único nem constraint no banco** para impedir CNPJs duplicados a nível de dados — a única barreira é a checagem na edge function.
 
-Migração na tabela `ponto_ajustes`:
-- `aprovado_por_gestor_id uuid` (auditoria do gestor que aprovou)
-- `aprovado_por_substituto boolean default false`
+## Plano de correção
 
-Função SQL `gerar_login_interno(p_colaborador_id uuid)`:
-- Lê `nome_completo`, monta `primeiro.ultimo@youreyes.com.br`
-- Se duplicado, tenta `primeiro.meio.ultimo`
-- Se ainda duplicado, retorna erro pedindo ajuste manual
+### 1. Normalizar o CNPJ/CPF antes de comparar e antes de gravar (edge function)
+Arquivo: `supabase/functions/onboarding-signup/index.ts`
 
-Função `is_gestor_departamento(_colaborador_id uuid, _departamento_id uuid)`:
-- Retorna true se o auth user é gestor titular OU (gestor substituto E `substituto_ativo = true`)
-- SECURITY DEFINER, base para RLS de aprovação
+- Criar helper `onlyDigits(s)` e aplicar no `documento` recebido logo no início.
+- Trocar a checagem de duplicidade por uma consulta que normalize o lado do banco também, usando RPC nova (ver passo 2) ou um filtro com `regexp_replace`. Como PostgREST não suporta `regexp_replace` em `.eq`, usaremos uma RPC.
+- Gravar `cnpj` (e `cpf`) **sempre sem máscara** em `empresa_cadastro.cnpj` no insert da linha 451.
 
-Atualizar RLS de `ponto_ajustes`:
-- UPDATE permitido a Owner/RH (como hoje) OU gestor do departamento do colaborador alvo
+### 2. RPC de checagem normalizada
+Nova função SQL `public.empresa_existe_por_documento(p_doc text, p_tipo text)`:
+- Recebe documento já em dígitos.
+- Retorna `id` da empresa existente (ou null) comparando `regexp_replace(cnpj,'[^0-9]','','g') = p_doc` (idem cpf).
+- `SECURITY DEFINER`, `search_path = public`.
 
-## 2. UI — Cadastro de Departamentos (`src/pages/cadastros/Departamentos.tsx`)
+A edge function passa a chamar essa RPC em vez do `.eq` cru.
 
-No modal adicionar dois `Combobox` puxando de `colaboradores` ativos da empresa:
-- "Gestor responsável" (obrigatório quando ativo)
-- "Substituto do gestor" (opcional)
-- Toggle "Substituto está atuando agora" (visível só se substituto definido)
+### 3. Backfill dos registros existentes
+Migration única:
+- `UPDATE empresa_cadastro SET cnpj = regexp_replace(cnpj,'[^0-9]','','g') WHERE cnpj ~ '[^0-9]';`
+- Mesmo para `cpf`.
+- Antes, identificar e listar duplicatas que aparecerem após a normalização (ex.: o caso da Voe Mídia) para o super admin resolver manualmente — **não vou mesclar nem apagar nada automaticamente**; apenas reportar via `SELECT` no resumo da migration.
 
-Na tabela, nova coluna "Gestor" mostrando nome do titular (+ chip "Substituto ativo" quando aplicável).
+### 4. Índice único parcial (defesa em profundidade)
+Após o backfill:
+```sql
+CREATE UNIQUE INDEX empresa_cadastro_cnpj_unique
+  ON public.empresa_cadastro (cnpj)
+  WHERE cnpj IS NOT NULL AND cnpj <> '';
+```
+Assim, mesmo que uma futura edge function esqueça a normalização, o banco rejeita.
 
-## 3. Organograma
+> Observação: se o backfill detectar a duplicata já existente da Voe Mídia, o índice único vai falhar. Nesse caso a migration será dividida em duas etapas e a criação do índice ficará pendente até o super admin escolher qual registro manter (via fluxo de migração de empresas já existente ou exclusão manual). Vou avisar no chat com a lista de duplicatas encontradas.
 
-Atualizar `useEstrategia` / `OrganogramaSection` para ler `departamentos.gestor_colaborador_id` em vez de qualquer fonte ad-hoc. Sem mudança visual — apenas trocar a query.
+### 5. Frontend (opcional, mas recomendado)
+No formulário de signup (`src/pages/Signup*` / componentes do onboarding):
+- Já enviar `cnpj.replace(/\D/g,'')` no payload para a edge function.
+- Manter a máscara só na exibição.
 
-## 4. Aprovação de ajustes de ponto
-
-Hook `usePonto.ts`:
-- `useAjustesParaAprovar()` retorna ajustes onde o usuário logado é gestor (titular ou substituto ativo) do departamento do colaborador
-- Owner/RH continuam vendo tudo (auditoria), mas a aprovação principal vira do gestor
-
-Tela `Ponto.tsx` aba "Aprovações" passa a usar esse hook; mostra badge "Aguardando gestor" para o RH.
-
-## 5. Provisionamento de login do gestor
-
-Quando um colaborador é marcado como gestor pela primeira vez (trigger AFTER UPDATE em `departamentos`):
-- Se `colaboradores.login_interno` é null, chama edge function `provisionar-gestor`
-- Edge function:
-  - Gera login com `gerar_login_interno`
-  - Cria auth user com `supabase.auth.admin.createUser({ email: login, password: cpf_limpo, email_confirm: true })`
-  - Salva `login_interno`, `precisa_redefinir_senha = true`
-  - Vincula ao perfil "Gestor" (cria se não existir) via `usuario_perfil_vinculos`
-- Tela de Departamentos mostra toast com o login gerado
-
-## 6. Reset de senha pelo RH
-
-Botão "Resetar senha" no card do gestor dentro de Departamentos (visível só para Owner/RH):
-- Chama edge function `reset-senha-gestor` que:
-  - `supabase.auth.admin.generateLink({ type: 'recovery', email: login })`
-  - Envia via Resend usando template existente
-  - Marca `precisa_redefinir_senha = true`
-- No primeiro login após reset, o `AuthContext` redireciona para `/redefinir-senha` enquanto `precisa_redefinir_senha = true`
-
-## 7. Perfil "Gestor de Departamento"
-
-Seed (migração) cria perfil padrão `gestor_departamento` com permissões:
-- `ponto:aprovar` (escopo `departamento`)
-- `colaboradores:visualizar` (escopo `departamento`)
-- `ferias:aprovar` (escopo `departamento`)
-- `feedback:gerenciar` (escopo `departamento`)
-
-## Fora de escopo (não vou fazer agora)
-
-- Email funcional real em @youreyes.com.br (só login interno — já confirmado)
-- Notificação push para o gestor quando há ajuste pendente (pode vir depois)
-- Hierarquia gestor-do-gestor (mantemos só 1 nível depto→gestor)
+## Resultado esperado
+- Tentativa futura de cadastrar CNPJ `38872035000193` em qualquer formato (`388.720.350/0001-93`, `38872035000193`, etc.) retorna `409 CNPJ já cadastrado`.
+- Banco passa a ter garantia física de unicidade.
+- O caso atual (2 empresas com mesmo CNPJ) é reportado para resolução manual via o módulo de migração de empresas, sem perda de dados.
