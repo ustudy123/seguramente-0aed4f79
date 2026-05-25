@@ -110,7 +110,8 @@ serve(async (req) => {
   const inviteMode = payload.inviteMode === true;
   const plano = (payload.plano ?? "starter").trim();
   const tipoPessoa = (payload.tipoPessoa ?? "").trim();
-  const documento = (payload.documento ?? "").trim();
+  // Normalize document to digits-only so format differences (with/without mask) can't bypass duplicate check
+  const documento = (payload.documento ?? "").trim().replace(/\D/g, "");
   const telefone = (payload.telefone ?? "").trim();
   const endereco = (payload.endereco ?? "").trim();
   const numero = (payload.numero ?? "").trim();
@@ -260,16 +261,18 @@ serve(async (req) => {
     return json({ error: "Invalid tenantSlug" }, 400);
   }
 
-  // Check if CPF/CNPJ already exists in empresa_cadastro
+  // Check if CPF/CNPJ already exists in empresa_cadastro (digits-only comparison via RPC)
   if (documento) {
-    const docField = tipoPessoa === "pf" ? "cpf" : "cnpj";
-    const { data: existingDoc } = await admin
-      .from("empresa_cadastro")
-      .select("id")
-      .eq(docField, documento)
-      .maybeSingle();
+    const { data: existingId, error: existingErr } = await admin.rpc(
+      "empresa_existe_por_documento",
+      { p_doc: documento, p_tipo: tipoPessoa === "pf" ? "pf" : "pj" }
+    );
 
-    if (existingDoc) {
+    if (existingErr) {
+      console.error("empresa_existe_por_documento error:", existingErr.message);
+    }
+
+    if (existingId) {
       // Cleanup: delete the auth user since registration can't proceed
       await admin.auth.admin.deleteUser(userId);
       const docLabel = tipoPessoa === "pf" ? "CPF" : "CNPJ";
