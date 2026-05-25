@@ -134,9 +134,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   const watchedValues = watch();
 
   function verificarDuplicidade(email: string, cpf?: string) {
+    const emailLower = (email || "").toLowerCase();
+    const cpfClean = cpf ? cleanCpf(cpf) : "";
     const duplicado = usuarios.find(u =>
-      u.email_principal.toLowerCase() === email.toLowerCase() ||
-      (cpf && u.cpf && cleanCpf(u.cpf) === cleanCpf(cpf))
+      (!!emailLower && (u.email_principal || "").toLowerCase() === emailLower) ||
+      (!!cpfClean && u.cpf && cleanCpf(u.cpf) === cpfClean)
     );
     if (duplicado) {
       setAlertaDuplicidade(`Possível duplicidade: "${duplicado.nome_completo}" já cadastrado com este e-mail/CPF.`);
