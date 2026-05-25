@@ -351,7 +351,14 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       setNovoUsuarioId(usuario.id);
       setEtapa(3);
     } catch (e: any) {
-      toast.error("Erro ao cadastrar: " + (e?.message || "falha inesperada"));
+      const msg = e?.message || "falha inesperada";
+      if (msg.includes("usuarios_base_auth_user_id_key") || msg.includes("duplicate key") && msg.includes("auth_user_id")) {
+        toast.error("Este e-mail já está vinculado a outra organização no sistema. Use um e-mail diferente ou contate o suporte.");
+      } else if (msg.includes("usuarios_base") && msg.includes("email")) {
+        toast.error("Já existe um usuário com este e-mail nesta organização.");
+      } else {
+        toast.error("Erro ao cadastrar: " + msg);
+      }
     }
   }
 
