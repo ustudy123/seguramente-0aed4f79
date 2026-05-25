@@ -110,7 +110,8 @@ serve(async (req) => {
   const inviteMode = payload.inviteMode === true;
   const plano = (payload.plano ?? "starter").trim();
   const tipoPessoa = (payload.tipoPessoa ?? "").trim();
-  const documento = (payload.documento ?? "").trim();
+  // Normalize document to digits-only so format differences (with/without mask) can't bypass duplicate check
+  const documento = (payload.documento ?? "").trim().replace(/\D/g, "");
   const telefone = (payload.telefone ?? "").trim();
   const endereco = (payload.endereco ?? "").trim();
   const numero = (payload.numero ?? "").trim();
