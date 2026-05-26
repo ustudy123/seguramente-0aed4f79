@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Building2, Check, LogOut } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Building2, Check, LogOut, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
