@@ -107,6 +107,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [exportando, setExportando] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
   const [filtroCampanha, setFiltroCampanha] = useState<string>(campanhas.length === 1 ? campanhas[0].id : "todos");
+  const [filtroGHE, setFiltroGHE] = useState<string>("todos");
 
   useEffect(() => {
     if (campanhas.length === 1) {
