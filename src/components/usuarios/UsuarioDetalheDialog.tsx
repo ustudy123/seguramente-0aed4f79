@@ -263,6 +263,8 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [novaEmpresaId, setNovaEmpresaId] = useState("");
   const [novoTipo, setNovoTipo] = useState("gestor");
   const [novoContexto, setNovoContexto] = useState("");
+  const [buscaVinculo, setBuscaVinculo] = useState("");
+
 
   // Fetch vinculos reactively so they update after mutations
   const { data: vinculosFresh = [], isFetched: vinculosFetched } = useQuery({
