@@ -426,6 +426,32 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
               </Select>
             </div>
 
+            <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md border border-cyan-100">
+              <Users className="h-3 w-3 text-cyan-600/60" />
+              <Select value={filtroGHE} onValueChange={setFiltroGHE} disabled={isLoadingGHE}>
+                <SelectTrigger className="w-[200px] h-7 text-[10px] border-none bg-transparent focus:ring-0">
+                  <SelectValue placeholder={isLoadingGHE ? "Carregando GHEs..." : "Filtrar GHE"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os GHEs</SelectItem>
+                  {ghesDisponiveis.length === 0 ? (
+                    <div className="px-2 py-1.5 text-[10px] text-muted-foreground">
+                      Nenhuma resposta com GHE vinculada
+                    </div>
+                  ) : (
+                    ghesDisponiveis.map(g => (
+                      <SelectItem key={g.ghe_id!} value={g.ghe_id!}>
+                        {g.ghe_nome}
+                        <span className="ml-2 text-[10px] text-muted-foreground">
+                          · {g.count} resp.
+                        </span>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
             {criticos > 0 && (
               <Badge className="bg-red-600 text-white gap-1">
                 <AlertTriangle className="h-3 w-3" />
