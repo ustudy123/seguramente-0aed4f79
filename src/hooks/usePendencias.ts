@@ -30,7 +30,7 @@ export function usePendencias() {
 
       const empresaFilter = empresaAtivaId ? { empresa_id: empresaAtivaId } : {};
 
-      const [feriasRes, docRes, ajustesRes, avalRes, desligRes] = await Promise.all([
+      const [feriasRes, docRes, ajustesRes, avalRes, desligRes, impEmpRes] = await Promise.all([
         // Férias pendentes de aprovação
         supabase
           .from("ferias_solicitacoes")
@@ -75,6 +75,15 @@ export function usePendencias() {
           .eq("status", "desligado")
           .match(empresaFilter)
           .order("updated_at", { ascending: false })
+          .limit(50),
+
+        // Pendências de importação de empresas (duplicidades de CNPJ)
+        (supabase as any)
+          .from("empresa_import_pendencias")
+          .select("id, cnpj, razao_social_planilha, razao_social_existente, linha_planilha, arquivo_nome, motivo")
+          .eq("tenant_id", tenantId)
+          .eq("status", "pendente")
+          .order("created_at", { ascending: false })
           .limit(50),
       ]);
 
