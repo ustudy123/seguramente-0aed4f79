@@ -33,6 +33,18 @@ export function EmpresaSelecaoObrigatoria() {
   const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading } = useEmpresaAtiva();
   const { loading: authLoading, user } = useAuth();
   const [selected, setSelected] = useState<EmpresaCadastro | null>(null);
+  const [busca, setBusca] = useState("");
+
+  const empresasFiltradas = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return empresas;
+    const qDigits = q.replace(/\D/g, "");
+    return empresas.filter((e) => {
+      const nome = `${e.razao_social ?? ""} ${e.nome_fantasia ?? ""}`.toLowerCase();
+      const cnpjDigits = (e.cnpj ?? "").replace(/\D/g, "");
+      return nome.includes(q) || (qDigits && cnpjDigits.includes(qDigits));
+    });
+  }, [empresas, busca]);
 
   // Debounce do "semVinculos" para evitar flash da tela de Acesso Restrito
   // enquanto auth/usuario_base/empresas ainda estão sincronizando após login.
