@@ -5,8 +5,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Users, Plus, Search, User, Building2, Link2,
-  Clock, Sparkles, AlertTriangle, RefreshCw,
+  Clock, Sparkles, AlertTriangle, RefreshCw, Check, ChevronsUpDown,
 } from "lucide-react";
 import { useUsuarios, TIPO_USUARIO_LABELS, STATUS_LABELS, UsuarioStatus, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
 import { UsuarioStatusBadge } from "@/components/usuarios/UsuarioStatusBadge";
