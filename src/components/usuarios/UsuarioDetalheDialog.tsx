@@ -462,6 +462,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   }
 
   async function handleVincularTodas() {
+    if (!tenantId) { toast.error("Tenant não identificado"); return; }
     const idsExistentes = new Set(
       vinculos.filter(v => v.status === "ativo").map((v: any) => v.empresa_id)
     );
@@ -471,27 +472,37 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
       return;
     }
     const hoje = new Date().toISOString().split("T")[0];
+    const toastId = toast.loading(`Vinculando ${pendentes.length} empresa(s)…`);
+    const CHUNK = 500;
     let ok = 0;
-    for (const emp of pendentes) {
-      try {
-        await createVinculo.mutateAsync({
+    try {
+      for (let i = 0; i < pendentes.length; i += CHUNK) {
+        const slice = pendentes.slice(i, i + CHUNK).map((emp: any) => ({
+          tenant_id: tenantId,
           usuario_id: usuario.id,
           empresa_id: emp.id,
           tipo_vinculo: novoTipo as any,
           contexto_operacional: novoContexto,
           status: "ativo",
           data_inicio: hoje,
-        });
-        ok++;
-      } catch (e) {
-        console.error("Falha ao vincular empresa", emp.id, e);
+        }));
+        const { error, data } = await (supabase as any)
+          .from("usuario_vinculos")
+          .insert(slice)
+          .select("id");
+        if (error) throw error;
+        ok += (data || slice).length;
       }
+      queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      toast.success(`${ok} empresa(s) vinculada(s) com sucesso.`, { id: toastId });
+    } catch (e: any) {
+      toast.error(`Falha ao vincular: ${e?.message || e}`, { id: toastId });
     }
-    queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
-    toast.success(`${ok} empresa(s) vinculada(s) com sucesso.`);
     setAddingVinculo(false);
     setNovaEmpresaId(""); setNovoTipo("gestor"); setNovoContexto("");
   }
+
 
   const isBloqueado = usuario.status === "bloqueado" || usuario.status === "suspenso";
 
