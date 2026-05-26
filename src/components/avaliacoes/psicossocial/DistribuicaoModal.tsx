@@ -208,6 +208,26 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
               Abrir link
             </Button>
           </div>
+
+          {/* Gerar documento para a empresa */}
+          <Button
+            variant="default"
+            className="w-full"
+            onClick={handleGerarRelatorio}
+            disabled={!linkGeral || gerandoRelatorio || campanha.status !== "ativa"}
+          >
+            {gerandoRelatorio ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Gerando documento...
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4 mr-2" />
+                Gerar Documento da Empresa (PDF)
+              </>
+            )}
+          </Button>
         </div>
 
         {/* QR Code */}
