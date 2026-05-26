@@ -4105,6 +4105,71 @@ export type Database = {
           },
         ]
       }
+      empresa_import_pendencias: {
+        Row: {
+          arquivo_nome: string | null
+          cnpj: string
+          created_at: string
+          empresa_existente_id: string | null
+          id: string
+          importado_por: string | null
+          importado_por_nome: string | null
+          linha_planilha: number | null
+          motivo: string
+          razao_social_existente: string | null
+          razao_social_planilha: string | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          cnpj: string
+          created_at?: string
+          empresa_existente_id?: string | null
+          id?: string
+          importado_por?: string | null
+          importado_por_nome?: string | null
+          linha_planilha?: number | null
+          motivo?: string
+          razao_social_existente?: string | null
+          razao_social_planilha?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          cnpj?: string
+          created_at?: string
+          empresa_existente_id?: string | null
+          id?: string
+          importado_por?: string | null
+          importado_por_nome?: string | null
+          linha_planilha?: number | null
+          motivo?: string
+          razao_social_existente?: string | null
+          razao_social_planilha?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_import_pendencias_empresa_existente_id_fkey"
+            columns: ["empresa_existente_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresa_obrigacoes: {
         Row: {
           acao_gerada_id: string | null
