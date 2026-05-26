@@ -29,16 +29,27 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { data: todasEmpresas = [], isLoading: loadingEmpresas } = useQuery({
     queryKey: ["empresa_cadastro_list_ativa", tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("empresa_cadastro")
-        .select("*")
-        .eq("tenant_id", tenantId!)
-        .eq("ativo", true)
-        .order("razao_social")
-        .limit(10000);
-      if (error) throw error;
-      return (data || []) as unknown as EmpresaCadastro[];
+      // Paginação manual para contornar o limite max-rows=1000 do PostgREST
+      const PAGE = 1000;
+      let from = 0;
+      const acc: any[] = [];
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await supabase
+          .from("empresa_cadastro")
+          .select("*")
+          .eq("tenant_id", tenantId!)
+          .eq("ativo", true)
+          .order("razao_social")
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const chunk = data || [];
+        acc.push(...chunk);
+        if (chunk.length < PAGE) break;
+        from += PAGE;
+      }
+      return acc as unknown as EmpresaCadastro[];
     },
+
     enabled: !!tenantId,
   });
 
