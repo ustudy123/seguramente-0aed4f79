@@ -584,19 +584,25 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/35" />
             <input
+              ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar módulo..."
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white/[0.07] border border-white/[0.08] text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/60 focus:bg-white/[0.1] focus:border-sidebar-primary/30 transition-all"
+              placeholder="Buscar módulos, páginas... (Ctrl+K)"
+              className="w-full pl-9 pr-16 py-2.5 rounded-xl bg-white/[0.07] border border-white/[0.08] text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/60 focus:bg-white/[0.1] focus:border-sidebar-primary/30 transition-all"
             />
-            {isSearching && (
+            {isSearching ? (
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sidebar-foreground/35 hover:text-sidebar-foreground transition-colors"
+                aria-label="Limpar busca"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
+            ) : (
+              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-sidebar-foreground/40 border border-white/10 rounded px-1.5 py-0.5 pointer-events-none">
+                ⌘K
+              </kbd>
             )}
           </div>
         </div>
