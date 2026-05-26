@@ -415,21 +415,10 @@ export async function gerarRelatorioCampanhaPsicossocial(
 
   // Fechamento
   y += 4;
-  ensureSpace(20);
+  ensureSpace(12);
   writeJustified(
     "Permanecemos a disposicao para esclarecer quaisquer duvidas. Contamos com voce para construirmos juntos ambientes de trabalho cada vez mais saudaveis e em conformidade com a legislacao vigente."
   );
-  y += 4;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("Atenciosamente,", marginX, y);
-  y += 5;
-  doc.text("Equipe Tecnica YourEyes", marginX, y);
-  y += 4.5;
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text("Medicina e Seguranca do Trabalho", marginX, y);
 
   // Footer com paginação em todas as páginas
   const total = (doc as any).internal.getNumberOfPages();
