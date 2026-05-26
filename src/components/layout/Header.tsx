@@ -15,7 +15,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
-import { GlobalSearch } from "@/components/layout/GlobalSearch";
+
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppRole } from "@/types/database";
@@ -65,19 +65,14 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
     <header className="h-16 border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30" style={{ background: 'linear-gradient(135deg, hsl(215 65% 12%) 0%, hsl(207 90% 39%) 50%, hsl(152 66% 39%) 100%)' }}>
       <div className="flex items-center gap-2">
         {isMobile && (
-          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="mr-1">
+          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="mr-1 text-white hover:bg-white/15">
             <Menu className="w-5 h-5" />
           </Button>
         )}
-        <GlobalSearch />
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Logged in as */}
-        <span className="hidden md:inline text-xs text-white/80">
-          Logado como <strong className="text-white">{user?.email}</strong>
-        </span>
         {/* Super Admin indicator */}
         {isSuperAdmin && (
           <Button

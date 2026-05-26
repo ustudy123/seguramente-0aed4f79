@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
 import { getModuloForPath, ALWAYS_ALLOWED_PATHS, isAdminPath } from "@/lib/moduleAccess";
@@ -66,6 +66,47 @@ const normalizeSearchText = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+
+// Sinônimos / palavras-chave por rota para enriquecer a busca da sidebar
+const SEARCH_KEYWORDS: Record<string, string[]> = {
+  "/": ["inicio", "home", "painel", "dashboard"],
+  "/estrategia": ["estrategia", "governanca", "pilares", "swot"],
+  "/compliance-sst": ["compliance", "sst", "seguranca", "normas", "pgr", "pcmso", "ltcat"],
+  "/incidentes-acidentes": ["incidente", "acidente", "cat", "ocorrencia"],
+  "/ergonomia": ["ergonomia", "nr17", "aep", "aet", "postura"],
+  "/psicossocial": ["psicossocial", "nr01", "saude mental", "burnout"],
+  "/epis": ["epi", "equipamento", "protecao", "entrega", "estoque"],
+  "/plano-acao": ["plano", "acao", "5w2h"],
+  "/avaliacoes": ["avaliacao", "desempenho", "ciclo", "9box"],
+  "/pdi": ["pdi", "desenvolvimento", "individual", "metas"],
+  "/colaboradores": ["colaborador", "funcionario", "admissao", "pessoa"],
+  "/contratos-experiencia": ["contrato", "experiencia", "periodo"],
+  "/onboarding-rh": ["onboarding", "integracao", "novo colaborador"],
+  "/ferias": ["ferias", "periodo aquisitivo", "programacao"],
+  "/atestados": ["atestado", "medico", "afastamento", "saude"],
+  "/felicidade": ["bem-estar", "felicidade", "humor", "gratidao"],
+  "/feedback-ocorrencias": ["feedback", "ocorrencia", "advertencia"],
+  "/ouvidoria": ["ouvidoria", "denuncia", "canal", "etica"],
+  "/aprendizado-papeis": ["aprendizado", "papeis", "academia", "curso"],
+  "/trilhas": ["trilha", "capacitacao", "treinamento"],
+  "/cultura-celebracoes": ["cultura", "celebracao", "aniversario", "reconhecimento"],
+  "/feed": ["mural", "feed", "comunicacao", "noticia"],
+  "/ponto": ["ponto", "marcacao", "relogio", "jornada"],
+  "/analise-jornada": ["jornada", "analise", "horas extras", "banco"],
+  "/empresa": ["empresa", "cnpj", "dados"],
+  "/cadastros/departamentos": ["departamento", "setor", "area"],
+  "/cadastros/cargos": ["cargo", "cbo"],
+  "/cadastros/filiais": ["filial", "obra", "estabelecimento", "unidade"],
+  "/marketplace": ["marketplace", "parceiro", "profissional", "rede"],
+  "/terceiros": ["terceiro", "terceirizado", "prestador"],
+  "/documentos": ["documento", "arquivo", "pasta", "upload"],
+  "/financeiro": ["financeiro", "guia", "pagamento", "certidao"],
+  "/financeiro/beneficios": ["beneficio", "vale", "plano saude"],
+  "/hub-contabil": ["contabil", "hub", "competencia", "folha"],
+  "/configuracoes": ["configuracao", "usuario", "perfil", "acesso", "auditoria"],
+  "/suporte": ["suporte", "ticket", "ajuda", "bug"],
+  "/meu-perfil": ["meu perfil", "conta", "avatar", "senha", "email"],
+};
 
 const checkIsActive = (path: string, pathname: string, search: string) => {
   if (!path) return false;
@@ -425,6 +466,21 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === "Escape" && document.activeElement === searchInputRef.current) {
+        setSearchQuery("");
+        searchInputRef.current?.blur();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
   const { isSuperAdmin } = useAuthContext();
   const { temAcessoModulo, temAcessoModuloAdmin, perfilVinculado, isOwner } = usePerfilPermissions();
 
@@ -491,7 +547,12 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     return allItems.filter((item) => {
       const normalizedTitle = normalizeSearchText(item.title);
       const normalizedSection = normalizeSearchText(item.sectionLabel);
-      return normalizedTitle.includes(normalizedQuery) || normalizedSection.includes(normalizedQuery);
+      const keywords = SEARCH_KEYWORDS[item.path] || [];
+      return (
+        normalizedTitle.includes(normalizedQuery) ||
+        normalizedSection.includes(normalizedQuery) ||
+        keywords.some((k) => normalizeSearchText(k).includes(normalizedQuery))
+      );
     });
   }, [normalizedQuery, allItems]);
 
@@ -538,19 +599,25 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/35" />
             <input
+              ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar módulo..."
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white/[0.07] border border-white/[0.08] text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/60 focus:bg-white/[0.1] focus:border-sidebar-primary/30 transition-all"
+              placeholder="Buscar módulos, páginas... (Ctrl+K)"
+              className="w-full pl-9 pr-16 py-2.5 rounded-xl bg-white/[0.07] border border-white/[0.08] text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/60 focus:bg-white/[0.1] focus:border-sidebar-primary/30 transition-all"
             />
-            {isSearching && (
+            {isSearching ? (
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sidebar-foreground/35 hover:text-sidebar-foreground transition-colors"
+                aria-label="Limpar busca"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
+            ) : (
+              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-sidebar-foreground/40 border border-white/10 rounded px-1.5 py-0.5 pointer-events-none">
+                ⌘K
+              </kbd>
             )}
           </div>
         </div>
