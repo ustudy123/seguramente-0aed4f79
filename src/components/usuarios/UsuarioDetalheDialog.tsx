@@ -902,12 +902,25 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
             {/* ── Tab: Vínculos ── */}
             {tab === "vinculos" && (
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
                   <p className="text-sm font-medium">Empresas vinculadas</p>
                   <Button size="sm" variant="outline" onClick={() => setAddingVinculo(true)}>
                     <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar vínculo
                   </Button>
                 </div>
+
+                {vinculos.length > 0 && (
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={buscaVinculo}
+                      onChange={e => setBuscaVinculo(e.target.value)}
+                      placeholder="Buscar empresa vinculada por nome ou CNPJ…"
+                      className="h-8 pl-8 text-sm"
+                    />
+                  </div>
+                )}
+
 
                 {addingVinculo && (
                   <div className="p-3 border rounded-lg bg-muted/30 space-y-3">
