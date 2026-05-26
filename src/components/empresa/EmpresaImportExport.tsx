@@ -614,6 +614,7 @@ export function EmpresaImportExport() {
 
       {/* Import Results */}
       {importResult && (
+        <Card>
           <CardContent className="p-6 space-y-4">
             <div className="space-y-1">
               <h4 className="font-medium text-lg">Resultado da Importação</h4>
