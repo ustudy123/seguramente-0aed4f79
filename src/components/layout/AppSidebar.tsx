@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
 import { getModuloForPath, ALWAYS_ALLOWED_PATHS, isAdminPath } from "@/lib/moduleAccess";
