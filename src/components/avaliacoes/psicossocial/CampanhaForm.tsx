@@ -431,7 +431,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
   const campanhasAnteriores = campanhas.filter(c => c.status === 'encerrada');
 
   // Instrumentos que suportam blocos CET (SIPRO é o único por ora)
-  const instrumentoSuportaCET = instrumento === 'sipro' || instrumento === 'customizado';
+  const instrumentoSuportaCET = tipoInstrumento === 'questionario' && (instrumento === 'sipro' || instrumento === 'customizado');
 
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
