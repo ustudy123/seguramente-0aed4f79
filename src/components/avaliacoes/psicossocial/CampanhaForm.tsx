@@ -100,6 +100,7 @@ const formSchema = z.object({
   descricao: z.string().optional(),
   tipo: z.enum(['regular', 'extraordinaria']).default('regular'),
   instrumento: z.enum(['copsoq', 'hse', 'proart', 'sipro', 'customizado']).default('sipro'),
+  tipo_instrumento: z.enum(['questionario', 'entrevista_guiada']).default('questionario'),
   periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().min(1, "Data de término é obrigatória"),
