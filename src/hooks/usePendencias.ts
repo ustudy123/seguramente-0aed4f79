@@ -167,6 +167,21 @@ export function usePendencias() {
             acao: "Concluir processo de desligamento",
           })),
         },
+        {
+          key: "importacao_empresas",
+          title: "Importação de empresas (duplicidades)",
+          count: impEmps.length,
+          path: "/empresa?tab=importar",
+          priority: "medium" as const,
+          items: impEmps.map((p: any) => ({
+            id: p.id,
+            label: `CNPJ ${p.cnpj} — ${p.razao_social_planilha || "sem razão social"}`,
+            sublabel: p.motivo === 'cnpj_repetido_planilha'
+              ? `Repetido na planilha${p.arquivo_nome ? ` • ${p.arquivo_nome}` : ''}${p.linha_planilha ? ` • linha ${p.linha_planilha}` : ''}`
+              : `Já cadastrado como "${p.razao_social_existente || '—'}"${p.arquivo_nome ? ` • ${p.arquivo_nome}` : ''}${p.linha_planilha ? ` • linha ${p.linha_planilha}` : ''}`,
+            acao: "Revisar duplicidade na importação de empresas",
+          })),
+        },
       ];
     },
     enabled: !!tenantId,
