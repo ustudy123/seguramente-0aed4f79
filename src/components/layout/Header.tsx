@@ -15,7 +15,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
-import { GlobalSearch } from "@/components/layout/GlobalSearch";
+
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppRole } from "@/types/database";
