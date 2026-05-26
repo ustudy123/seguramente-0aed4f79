@@ -7,8 +7,12 @@ import {
   CheckCircle2,
   ExternalLink,
   Shield,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Loader2
 } from "lucide-react";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { gerarRelatorioCampanhaPsicossocial } from "@/utils/gerarRelatorioCampanhaPsicossocial";
 import {
   Dialog,
   DialogContent,
@@ -37,10 +41,38 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
   const [tokenPublico, setTokenPublico] = useState<string | null>(null);
   const [loadingToken, setLoadingToken] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
+  const { empresaAtiva } = useEmpresaAtiva();
 
   // Usa a URL do ambiente ou a URL publicada (preferencialmente o novo domínio)
   const baseUrl = window.location.origin;
   const linkGeral = tokenPublico ? `${baseUrl}/questionario/${tokenPublico}` : null;
+
+  const handleGerarRelatorio = async () => {
+    if (!linkGeral || !empresaAtiva) {
+      toast.error("Aguarde o link carregar");
+      return;
+    }
+    setGerandoRelatorio(true);
+    try {
+      await gerarRelatorioCampanhaPsicossocial({
+        empresaNome:
+          (empresaAtiva as any).razao_social ||
+          (empresaAtiva as any).nome_fantasia ||
+          "Empresa",
+        empresaCnpj: (empresaAtiva as any).cnpj || "",
+        campanhaNome: campanha.nome,
+        linkPublico: linkGeral,
+        instrumento: campanha.instrumento || "SIPRO",
+      });
+      toast.success("Documento gerado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar documento. Tente novamente.");
+    } finally {
+      setGerandoRelatorio(false);
+    }
+  };
 
   // Busca ou gera o token público da campanha
   const carregarToken = async () => {
@@ -176,6 +208,26 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
               Abrir link
             </Button>
           </div>
+
+          {/* Gerar documento para a empresa */}
+          <Button
+            variant="default"
+            className="w-full"
+            onClick={handleGerarRelatorio}
+            disabled={!linkGeral || gerandoRelatorio || campanha.status !== "ativa"}
+          >
+            {gerandoRelatorio ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Gerando documento...
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4 mr-2" />
+                Gerar Documento da Empresa (PDF)
+              </>
+            )}
+          </Button>
         </div>
 
         {/* QR Code */}
