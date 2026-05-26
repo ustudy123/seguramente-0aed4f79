@@ -114,13 +114,30 @@ export function EmpresaSelecaoObrigatoria() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou CNPJ..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {empresasFiltradas.length} de {empresas.length} empresas
+            </p>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {empresas.map((empresa, i) => (
+              {empresasFiltradas.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  Nenhuma empresa encontrada para "{busca}"
+                </p>
+              ) : empresasFiltradas.map((empresa, i) => (
                 <motion.div
                   key={empresa.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: Math.min(i, 10) * 0.03 }}
                 >
                   <button
                     onClick={() => setSelected(empresa)}
