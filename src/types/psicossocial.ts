@@ -350,6 +350,7 @@ export interface NovaCampanha {
   descricao?: string;
   tipo?: CampanhaPsicossocialTipo;
   instrumento?: InstrumentoPsicossocial;
+  tipo_instrumento?: 'questionario' | 'entrevista_guiada';
   periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;
