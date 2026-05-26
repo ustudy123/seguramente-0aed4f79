@@ -52,6 +52,7 @@ export default function Usuarios() {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterTipo, setFilterTipo] = useState("todos");
   const [filterEmpresa, setFilterEmpresa] = useState("todos");
+  const [openEmpresa, setOpenEmpresa] = useState(false);
   const [showNovo, setShowNovo] = useState(false);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const selecionado = selecionadoId ? usuarios.find(u => u.id === selecionadoId) || null : null;
