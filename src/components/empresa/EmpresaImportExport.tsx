@@ -16,7 +16,7 @@ import { formatCpf, validateCpf, cleanCpf } from '@/lib/cpf';
 const TEMPLATE_COLUMNS = [
   'Razão Social*',
   'Nome Fantasia',
-  'CNPJ*',
+  'CNPJ ou CPF*',
   'Tipo de Unidade (Matriz/Filial)',
   'Inscrição Estadual',
   'Telefone',
