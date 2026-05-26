@@ -129,6 +129,7 @@ const App = () => (
               {/* Rota Pública - Questionário Psicossocial */}
               <Route path="/questionario/:token" element={<QuestionarioPsicossocial />} />
               <Route path="/p/:token" element={<QuestionarioPsicossocial tokenTipo="participacao" />} />
+              <Route path="/entrevista/:token" element={<Suspense fallback={<PageLoader />}><EntrevistaGuiada /></Suspense>} />
               <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
               <Route path="/ferias-assinatura/:token" element={<FeriasAssinatura />} />
               <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
