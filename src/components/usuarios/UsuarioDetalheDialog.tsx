@@ -265,7 +265,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [novoContexto, setNovoContexto] = useState("");
 
   // Fetch vinculos reactively so they update after mutations
-  const { data: vinculosFresh = [] } = useQuery({
+  const { data: vinculosFresh = [], isFetched: vinculosFetched } = useQuery({
     queryKey: ['usuario-vinculos', usuario.id],
     queryFn: async () => {
       const PAGE = 1000;
@@ -294,7 +294,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     enabled: open && !!usuario.id,
   });
 
-  const vinculos = vinculosFresh.length > 0 ? vinculosFresh : ((usuario as any).vinculos || []) as UsuarioVinculo[];
+  const vinculos = vinculosFetched
+    ? vinculosFresh
+    : (((usuario as any).vinculos || []) as UsuarioVinculo[]);
   const vinculosAtivos = vinculos.filter(v => v.status === "ativo");
   const { score, pct } = calcularQualidade(usuario, vinculos);
 
