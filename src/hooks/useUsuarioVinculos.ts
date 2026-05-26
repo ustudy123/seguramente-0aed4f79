@@ -17,14 +17,14 @@ const TIPOS_PROFISSIONAIS = [
 
 /**
  * Tipos com acesso amplo a todas as empresas do tenant (não filtrados por vínculo).
- * Inclui owners, admins e papéis de gestão central.
+ * Apenas papéis de propriedade/administração global. Qualquer outro tipo
+ * (gestor, rh_dp, liderança, etc.) DEVE ser filtrado pelos vínculos cadastrados.
  */
 const TIPOS_ACESSO_GLOBAL = [
   "proprietario",
   "owner",
   "admin",
   "administrador",
-  "gestor",
 ] as const;
 
 export interface UsuarioVinculo {
