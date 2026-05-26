@@ -179,17 +179,62 @@ export default function Usuarios() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            
-            {empresas.map((e: any) => (
-              <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={openEmpresa} onOpenChange={setOpenEmpresa}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={openEmpresa}
+              className="w-52 justify-between font-normal"
+            >
+              <span className="truncate">
+                {filterEmpresa === "todos"
+                  ? "Todas as empresas"
+                  : empresas.find((e: any) => e.id === filterEmpresa)?.nome_fantasia ||
+                    empresas.find((e: any) => e.id === filterEmpresa)?.razao_social ||
+                    "Selecionar empresa"}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-52 p-0">
+            <Command>
+              <CommandInput placeholder="Buscar empresa..." />
+              <CommandList>
+                <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="todos"
+                    onSelect={() => {
+                      setFilterEmpresa("todos");
+                      setOpenEmpresa(false);
+                    }}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 shrink-0 ${filterEmpresa === "todos" ? "opacity-100" : "opacity-0"}`}
+                    />
+                    Todas as empresas
+                  </CommandItem>
+                  {empresas.map((e: any) => (
+                    <CommandItem
+                      key={e.id}
+                      value={e.razao_social || e.nome_fantasia || e.id}
+                      onSelect={() => {
+                        setFilterEmpresa(e.id);
+                        setOpenEmpresa(false);
+                      }}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 shrink-0 ${filterEmpresa === e.id ? "opacity-100" : "opacity-0"}`}
+                      />
+                      {e.nome_fantasia || e.razao_social}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-44">
             <SelectValue />
