@@ -227,12 +227,39 @@ export function EmpresaImportExport() {
 
         // Valida duplicidade: já existe no banco
         if (cnpjsExistentes.has(cnpjLimpo)) {
+          const existente = mapaExistentes.get(cnpjLimpo);
           duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} já cadastrado no sistema`);
+          pendenciasParaRegistrar.push({
+            tenant_id: tenantId,
+            cnpj: cnpjFormatado,
+            razao_social_planilha: razaoSocialInput || null,
+            razao_social_existente: existente?.razao_social || null,
+            empresa_existente_id: existente?.id || null,
+            linha_planilha: i + 2,
+            arquivo_nome: file.name,
+            motivo: 'cnpj_duplicado',
+            status: 'pendente',
+            importado_por: user?.id || null,
+            importado_por_nome: user?.email || null,
+          });
           continue;
         }
         // Valida duplicidade: aparece duas vezes na mesma planilha
         if (cnpjsNaPlanilha.has(cnpjLimpo)) {
           duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} duplicado na planilha`);
+          pendenciasParaRegistrar.push({
+            tenant_id: tenantId,
+            cnpj: cnpjFormatado,
+            razao_social_planilha: razaoSocialInput || null,
+            razao_social_existente: null,
+            empresa_existente_id: null,
+            linha_planilha: i + 2,
+            arquivo_nome: file.name,
+            motivo: 'cnpj_repetido_planilha',
+            status: 'pendente',
+            importado_por: user?.id || null,
+            importado_por_nome: user?.email || null,
+          });
           continue;
         }
         cnpjsNaPlanilha.add(cnpjLimpo);
