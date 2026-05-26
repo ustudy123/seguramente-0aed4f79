@@ -322,6 +322,15 @@ export function EmpresaImportExport() {
         success++;
       }
 
+      // Persiste pendências de duplicidade (para aparecerem no dashboard de pendências)
+      if (pendenciasParaRegistrar.length > 0) {
+        const { error: pendErr } = await (supabase as any)
+          .from('empresa_import_pendencias')
+          .insert(pendenciasParaRegistrar);
+        if (pendErr) console.error('Erro ao registrar pendências de importação:', pendErr);
+        else queryClient.invalidateQueries({ queryKey: ['pendencias-dashboard'] });
+      }
+
       setProgress({ current: data.length, total: data.length, etapa: 'Concluído' });
       setImportResult({ success, errors, duplicadas });
       setShowCompletion(true);
