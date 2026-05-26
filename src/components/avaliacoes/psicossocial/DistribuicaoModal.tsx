@@ -44,8 +44,9 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
   const { empresaAtiva } = useEmpresaAtiva();
 
-  // Usa a URL do ambiente ou a URL publicada (preferencialmente o novo domínio)
-  const baseUrl = window.location.origin;
+  // Sempre usa o domínio público de produção (preview do Lovable bloqueia rotas públicas com login)
+  const PROD_URL = "https://www.youreyes.com.br";
+  const baseUrl = PROD_URL;
   const linkGeral = tokenPublico ? `${baseUrl}/questionario/${tokenPublico}` : null;
 
   const handleGerarRelatorio = async () => {
