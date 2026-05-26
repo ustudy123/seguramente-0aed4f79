@@ -220,7 +220,7 @@ export default function EntrevistaGuiada() {
       {/* Input area */}
       <footer className="bg-white/90 backdrop-blur border-t border-purple-100 px-4 py-3">
         <div className="max-w-3xl mx-auto space-y-2">
-          {prontaParaFechar && meta.status !== "concluida" && (
+          {prontaParaFechar && (meta.status as string) !== "concluida" && (
             <Button
               disabled={finalizing}
               onClick={async () => {
