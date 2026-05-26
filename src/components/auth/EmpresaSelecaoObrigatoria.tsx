@@ -175,7 +175,7 @@ export function EmpresaSelecaoObrigatoria() {
                     </div>
                   </button>
                 </motion.div>
-              )))
+                ))
               )}
             </div>
 
