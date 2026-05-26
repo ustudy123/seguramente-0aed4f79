@@ -263,6 +263,8 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [novaEmpresaId, setNovaEmpresaId] = useState("");
   const [novoTipo, setNovoTipo] = useState("gestor");
   const [novoContexto, setNovoContexto] = useState("");
+  const [buscaVinculo, setBuscaVinculo] = useState("");
+
 
   // Fetch vinculos reactively so they update after mutations
   const { data: vinculosFresh = [], isFetched: vinculosFetched } = useQuery({
@@ -462,6 +464,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   }
 
   async function handleVincularTodas() {
+    if (!tenantId) { toast.error("Tenant não identificado"); return; }
     const idsExistentes = new Set(
       vinculos.filter(v => v.status === "ativo").map((v: any) => v.empresa_id)
     );
@@ -471,27 +474,37 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
       return;
     }
     const hoje = new Date().toISOString().split("T")[0];
+    const toastId = toast.loading(`Vinculando ${pendentes.length} empresa(s)…`);
+    const CHUNK = 500;
     let ok = 0;
-    for (const emp of pendentes) {
-      try {
-        await createVinculo.mutateAsync({
+    try {
+      for (let i = 0; i < pendentes.length; i += CHUNK) {
+        const slice = pendentes.slice(i, i + CHUNK).map((emp: any) => ({
+          tenant_id: tenantId,
           usuario_id: usuario.id,
           empresa_id: emp.id,
           tipo_vinculo: novoTipo as any,
           contexto_operacional: novoContexto,
           status: "ativo",
           data_inicio: hoje,
-        });
-        ok++;
-      } catch (e) {
-        console.error("Falha ao vincular empresa", emp.id, e);
+        }));
+        const { error, data } = await (supabase as any)
+          .from("usuario_vinculos")
+          .insert(slice)
+          .select("id");
+        if (error) throw error;
+        ok += (data || slice).length;
       }
+      queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      toast.success(`${ok} empresa(s) vinculada(s) com sucesso.`, { id: toastId });
+    } catch (e: any) {
+      toast.error(`Falha ao vincular: ${e?.message || e}`, { id: toastId });
     }
-    queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
-    toast.success(`${ok} empresa(s) vinculada(s) com sucesso.`);
     setAddingVinculo(false);
     setNovaEmpresaId(""); setNovoTipo("gestor"); setNovoContexto("");
   }
+
 
   const isBloqueado = usuario.status === "bloqueado" || usuario.status === "suspenso";
 
@@ -889,12 +902,25 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
             {/* ── Tab: Vínculos ── */}
             {tab === "vinculos" && (
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
                   <p className="text-sm font-medium">Empresas vinculadas</p>
                   <Button size="sm" variant="outline" onClick={() => setAddingVinculo(true)}>
                     <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar vínculo
                   </Button>
                 </div>
+
+                {vinculos.length > 0 && (
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={buscaVinculo}
+                      onChange={e => setBuscaVinculo(e.target.value)}
+                      placeholder="Buscar empresa vinculada por nome ou CNPJ…"
+                      className="h-8 pl-8 text-sm"
+                    />
+                  </div>
+                )}
+
 
                 {addingVinculo && (
                   <div className="p-3 border rounded-lg bg-muted/30 space-y-3">
@@ -950,9 +976,21 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                   <p className="text-sm text-muted-foreground text-center py-8">Nenhum vínculo cadastrado</p>
                 ) : (
                   <>
-                    {/* Ativos primeiro, depois encerrados */}
-                    {["ativo", "pendente", "suspenso", "revogado", "encerrado", "expirado"].map(statusGrupo => {
-                      const grupo = vinculos.filter(v => v.status === statusGrupo);
+                    {(() => {
+                      const q = buscaVinculo.trim().toLowerCase();
+                      const qDigits = q.replace(/\D/g, "");
+                      const filtrados = !q ? vinculos : vinculos.filter((v: any) => {
+                        const emp = v.empresa || {};
+                        const nome = `${emp.razao_social || ""} ${emp.nome_fantasia || ""}`.toLowerCase();
+                        const cnpj = (emp.cnpj || "").replace(/\D/g, "");
+                        return nome.includes(q) || (qDigits && cnpj.includes(qDigits));
+                      });
+                      if (filtrados.length === 0) {
+                        return <p className="text-sm text-muted-foreground text-center py-8">Nenhum vínculo encontrado para "{buscaVinculo}"</p>;
+                      }
+                      return ["ativo", "pendente", "suspenso", "revogado", "encerrado", "expirado"].map(statusGrupo => {
+                        const grupo = filtrados.filter(v => v.status === statusGrupo);
+
                       if (grupo.length === 0) return null;
                       return (
                         <div key={statusGrupo}>
@@ -1008,8 +1046,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                           })}
                         </div>
                       );
-                    })}
+                    })})()}
                   </>
+
                 )}
               </div>
             )}
