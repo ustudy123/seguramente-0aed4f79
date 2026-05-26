@@ -265,21 +265,38 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [novoContexto, setNovoContexto] = useState("");
 
   // Fetch vinculos reactively so they update after mutations
-  const { data: vinculosFresh = [] } = useQuery({
+  const { data: vinculosFresh = [], isFetched: vinculosFetched } = useQuery({
     queryKey: ['usuario-vinculos', usuario.id],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('usuario_vinculos')
-        .select('*, empresa:empresa_id(razao_social, nome_fantasia, cnpj)')
-        .eq('usuario_id', usuario.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as UsuarioVinculo[];
+      const PAGE = 1000;
+      let from = 0;
+      const acc: UsuarioVinculo[] = [];
+
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await (supabase as any)
+          .from('usuario_vinculos')
+          .select('*, empresa:empresa_id(razao_social, nome_fantasia, cnpj)')
+          .eq('usuario_id', usuario.id)
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE - 1);
+
+        if (error) throw error;
+
+        const chunk = (data || []) as UsuarioVinculo[];
+        acc.push(...chunk);
+
+        if (chunk.length < PAGE) break;
+        from += PAGE;
+      }
+
+      return acc;
     },
     enabled: open && !!usuario.id,
   });
 
-  const vinculos = vinculosFresh.length > 0 ? vinculosFresh : ((usuario as any).vinculos || []) as UsuarioVinculo[];
+  const vinculos = vinculosFetched
+    ? vinculosFresh
+    : (((usuario as any).vinculos || []) as UsuarioVinculo[]);
   const vinculosAtivos = vinculos.filter(v => v.status === "ativo");
   const { score, pct } = calcularQualidade(usuario, vinculos);
 

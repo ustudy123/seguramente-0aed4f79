@@ -138,13 +138,61 @@ export function useUsuarios() {
     queryKey: ['usuarios', tenantId],
     queryFn: async (): Promise<UsuarioBase[]> => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from('usuarios_base')
-        .select(`*, vinculos:usuario_vinculos(*, empresa:empresa_id(razao_social, nome_fantasia))`)
-        .eq('tenant_id', tenantId)
-        .order('nome_completo');
-      if (error) throw error;
-      return (data || []) as UsuarioBase[];
+
+      const PAGE = 1000;
+
+      const usuariosAcc: UsuarioBase[] = [];
+      let fromUsuarios = 0;
+
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await (supabase as any)
+          .from('usuarios_base')
+          .select('*')
+          .eq('tenant_id', tenantId)
+          .order('nome_completo')
+          .range(fromUsuarios, fromUsuarios + PAGE - 1);
+
+        if (error) throw error;
+
+        const chunk = (data || []) as UsuarioBase[];
+        usuariosAcc.push(...chunk);
+
+        if (chunk.length < PAGE) break;
+        fromUsuarios += PAGE;
+      }
+
+      const vinculosAcc: UsuarioVinculo[] = [];
+      let fromVinculos = 0;
+
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await (supabase as any)
+          .from('usuario_vinculos')
+          .select('*, empresa:empresa_id(razao_social, nome_fantasia)')
+          .eq('tenant_id', tenantId)
+          .order('created_at', { ascending: false })
+          .range(fromVinculos, fromVinculos + PAGE - 1);
+
+        if (error) throw error;
+
+        const chunk = (data || []) as UsuarioVinculo[];
+        vinculosAcc.push(...chunk);
+
+        if (chunk.length < PAGE) break;
+        fromVinculos += PAGE;
+      }
+
+      const vinculosPorUsuario = new Map<string, UsuarioVinculo[]>();
+
+      for (const vinculo of vinculosAcc) {
+        const lista = vinculosPorUsuario.get(vinculo.usuario_id) || [];
+        lista.push(vinculo);
+        vinculosPorUsuario.set(vinculo.usuario_id, lista);
+      }
+
+      return usuariosAcc.map((usuario) => ({
+        ...usuario,
+        vinculos: vinculosPorUsuario.get(usuario.id) || [],
+      }));
     },
     enabled: !!tenantId,
   });
