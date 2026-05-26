@@ -82,9 +82,78 @@ export function EmpresaImportExport() {
   const [importResult, setImportResult] = useState<{ success: number; errors: string[]; duplicadas: string[] } | null>(null);
   const [progress, setProgress] = useState<{ current: number; total: number; etapa: string; empresaAtual?: string }>({ current: 0, total: 0, etapa: '' });
   const [showCompletion, setShowCompletion] = useState(false);
+  const [enriching, setEnriching] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState<{ current: number; total: number; nome?: string }>({ current: 0, total: 0 });
+  const [enrichResult, setEnrichResult] = useState<{ atualizadas: number; semDados: number; erros: number } | null>(null);
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const handleEnriquecerBrasilAPI = useCallback(async () => {
+    if (!tenantId) return;
+    setEnriching(true);
+    setEnrichResult(null);
+    try {
+      const { data: empresas, error } = await supabase
+        .from('empresa_cadastro')
+        .select('id, razao_social, cnpj, nome_fantasia, telefone, cep, endereco, numero, bairro, cidade, estado, cnae_principal, cnae_descricao')
+        .eq('tenant_id', tenantId)
+        .eq('tipo_pessoa', 'pj')
+        .not('cnpj', 'is', null);
+      if (error) throw error;
+
+      const incompletas = (empresas || []).filter((e: any) =>
+        !e.cidade || !e.endereco || !e.cep || !e.cnae_principal || !e.bairro || !e.estado
+      );
+
+      setEnrichProgress({ current: 0, total: incompletas.length });
+      let atualizadas = 0; let semDados = 0; let erros = 0;
+
+      for (let i = 0; i < incompletas.length; i++) {
+        const emp: any = incompletas[i];
+        setEnrichProgress({ current: i, total: incompletas.length, nome: emp.razao_social });
+        try {
+          const info = await buscarCnpj(emp.cnpj);
+          if (!info) { semDados++; continue; }
+          const patch: Record<string, unknown> = {
+            nome_fantasia: emp.nome_fantasia || info.nome_fantasia || null,
+            telefone: emp.telefone || info.telefone || null,
+            cep: emp.cep || info.cep || null,
+            endereco: emp.endereco || info.logradouro || null,
+            numero: emp.numero || info.numero || null,
+            bairro: emp.bairro || info.bairro || null,
+            cidade: emp.cidade || info.municipio || null,
+            estado: emp.estado || info.uf || null,
+            cnae_principal: emp.cnae_principal || (info.cnae_fiscal ? String(info.cnae_fiscal) : null),
+            cnae_descricao: emp.cnae_descricao || info.cnae_fiscal_descricao || null,
+            atualizado_por: user?.email || null,
+          };
+          const { error: upErr } = await supabase
+            .from('empresa_cadastro')
+            .update(patch as any)
+            .eq('id', emp.id);
+          if (upErr) erros++; else atualizadas++;
+        } catch (e) {
+          console.error('Erro ao enriquecer', emp.cnpj, e);
+          erros++;
+        }
+        await new Promise(r => setTimeout(r, 150));
+      }
+
+      setEnrichProgress({ current: incompletas.length, total: incompletas.length });
+      setEnrichResult({ atualizadas, semDados, erros });
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list_ativa'] });
+      if (atualizadas > 0) toast.success(`${atualizadas} empresa(s) enriquecida(s) via BrasilAPI`);
+      else if (incompletas.length === 0) toast.info('Nenhuma empresa incompleta encontrada.');
+      else toast.warning('Nenhuma atualização aplicada.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Erro ao enriquecer empresas: ' + (err?.message || ''));
+    } finally {
+      setEnriching(false);
+    }
+  }, [tenantId, user?.email, queryClient]);
   const handleDownloadTemplate = () => {
     const wb = XLSX.utils.book_new();
 
@@ -505,6 +574,43 @@ export function EmpresaImportExport() {
           </CardContent>
         </Card>
       )}
+
+      {/* Enriquecer empresas já cadastradas via BrasilAPI */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-lg bg-blue-500/10">
+              <Download className="w-8 h-8 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-medium">Enriquecer empresas via BrasilAPI</h4>
+              <p className="text-sm text-muted-foreground">
+                Busca dados públicos (endereço, CNAE, telefone) na Receita para empresas PJ já cadastradas com campos vazios.
+              </p>
+            </div>
+            <Button onClick={handleEnriquecerBrasilAPI} variant="outline" disabled={enriching}>
+              {enriching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              {enriching ? 'Buscando...' : 'Enriquecer agora'}
+            </Button>
+          </div>
+          {enriching && enrichProgress.total > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span className="truncate">{enrichProgress.nome || '...'}</span>
+                <span className="tabular-nums">{enrichProgress.current}/{enrichProgress.total}</span>
+              </div>
+              <Progress value={(enrichProgress.current / enrichProgress.total) * 100} />
+            </div>
+          )}
+          {enrichResult && !enriching && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              <strong className="text-foreground">{enrichResult.atualizadas}</strong> atualizada(s)
+              {enrichResult.semDados > 0 && <> · {enrichResult.semDados} sem dados na BrasilAPI</>}
+              {enrichResult.erros > 0 && <> · {enrichResult.erros} erro(s)</>}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Import Results */}
       {importResult && (
