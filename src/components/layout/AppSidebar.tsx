@@ -466,6 +466,21 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === "Escape" && document.activeElement === searchInputRef.current) {
+        setSearchQuery("");
+        searchInputRef.current?.blur();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
   const { isSuperAdmin } = useAuthContext();
   const { temAcessoModulo, temAcessoModuloAdmin, perfilVinculado, isOwner } = usePerfilPermissions();
 
