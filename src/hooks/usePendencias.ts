@@ -92,6 +92,7 @@ export function usePendencias() {
       const ajustes = ajustesRes.data || [];
       const avals = avalRes.data || [];
       const desligs = desligRes.data || [];
+      const impEmps = (impEmpRes as any).data || [];
 
       const tipoAvaliadorLabel: Record<string, string> = {
         gestor: "Avaliação do Gestor",
