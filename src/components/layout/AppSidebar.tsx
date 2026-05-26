@@ -67,6 +67,47 @@ const normalizeSearchText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// Sinônimos / palavras-chave por rota para enriquecer a busca da sidebar
+const SEARCH_KEYWORDS: Record<string, string[]> = {
+  "/": ["inicio", "home", "painel", "dashboard"],
+  "/estrategia": ["estrategia", "governanca", "pilares", "swot"],
+  "/compliance-sst": ["compliance", "sst", "seguranca", "normas", "pgr", "pcmso", "ltcat"],
+  "/incidentes-acidentes": ["incidente", "acidente", "cat", "ocorrencia"],
+  "/ergonomia": ["ergonomia", "nr17", "aep", "aet", "postura"],
+  "/psicossocial": ["psicossocial", "nr01", "saude mental", "burnout"],
+  "/epis": ["epi", "equipamento", "protecao", "entrega", "estoque"],
+  "/plano-acao": ["plano", "acao", "5w2h"],
+  "/avaliacoes": ["avaliacao", "desempenho", "ciclo", "9box"],
+  "/pdi": ["pdi", "desenvolvimento", "individual", "metas"],
+  "/colaboradores": ["colaborador", "funcionario", "admissao", "pessoa"],
+  "/contratos-experiencia": ["contrato", "experiencia", "periodo"],
+  "/onboarding-rh": ["onboarding", "integracao", "novo colaborador"],
+  "/ferias": ["ferias", "periodo aquisitivo", "programacao"],
+  "/atestados": ["atestado", "medico", "afastamento", "saude"],
+  "/felicidade": ["bem-estar", "felicidade", "humor", "gratidao"],
+  "/feedback-ocorrencias": ["feedback", "ocorrencia", "advertencia"],
+  "/ouvidoria": ["ouvidoria", "denuncia", "canal", "etica"],
+  "/aprendizado-papeis": ["aprendizado", "papeis", "academia", "curso"],
+  "/trilhas": ["trilha", "capacitacao", "treinamento"],
+  "/cultura-celebracoes": ["cultura", "celebracao", "aniversario", "reconhecimento"],
+  "/feed": ["mural", "feed", "comunicacao", "noticia"],
+  "/ponto": ["ponto", "marcacao", "relogio", "jornada"],
+  "/analise-jornada": ["jornada", "analise", "horas extras", "banco"],
+  "/empresa": ["empresa", "cnpj", "dados"],
+  "/cadastros/departamentos": ["departamento", "setor", "area"],
+  "/cadastros/cargos": ["cargo", "cbo"],
+  "/cadastros/filiais": ["filial", "obra", "estabelecimento", "unidade"],
+  "/marketplace": ["marketplace", "parceiro", "profissional", "rede"],
+  "/terceiros": ["terceiro", "terceirizado", "prestador"],
+  "/documentos": ["documento", "arquivo", "pasta", "upload"],
+  "/financeiro": ["financeiro", "guia", "pagamento", "certidao"],
+  "/financeiro/beneficios": ["beneficio", "vale", "plano saude"],
+  "/hub-contabil": ["contabil", "hub", "competencia", "folha"],
+  "/configuracoes": ["configuracao", "usuario", "perfil", "acesso", "auditoria"],
+  "/suporte": ["suporte", "ticket", "ajuda", "bug"],
+  "/meu-perfil": ["meu perfil", "conta", "avatar", "senha", "email"],
+};
+
 const checkIsActive = (path: string, pathname: string, search: string) => {
   if (!path) return false;
   const fullPath = pathname + search;
