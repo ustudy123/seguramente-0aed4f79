@@ -91,6 +91,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
         subject,
         value: Math.round(soma / n),
+        fullMark: 100,
       })),
       ipsMedio: g.ipsList.length > 0
         ? Math.round(g.ipsList.reduce((a, b) => a + b, 0) / g.ipsList.length)
