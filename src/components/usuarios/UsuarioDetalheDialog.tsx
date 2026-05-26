@@ -976,9 +976,21 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                   <p className="text-sm text-muted-foreground text-center py-8">Nenhum vínculo cadastrado</p>
                 ) : (
                   <>
-                    {/* Ativos primeiro, depois encerrados */}
-                    {["ativo", "pendente", "suspenso", "revogado", "encerrado", "expirado"].map(statusGrupo => {
-                      const grupo = vinculos.filter(v => v.status === statusGrupo);
+                    {(() => {
+                      const q = buscaVinculo.trim().toLowerCase();
+                      const qDigits = q.replace(/\D/g, "");
+                      const filtrados = !q ? vinculos : vinculos.filter((v: any) => {
+                        const emp = v.empresa || {};
+                        const nome = `${emp.razao_social || ""} ${emp.nome_fantasia || ""}`.toLowerCase();
+                        const cnpj = (emp.cnpj || "").replace(/\D/g, "");
+                        return nome.includes(q) || (qDigits && cnpj.includes(qDigits));
+                      });
+                      if (filtrados.length === 0) {
+                        return <p className="text-sm text-muted-foreground text-center py-8">Nenhum vínculo encontrado para "{buscaVinculo}"</p>;
+                      }
+                      return ["ativo", "pendente", "suspenso", "revogado", "encerrado", "expirado"].map(statusGrupo => {
+                        const grupo = filtrados.filter(v => v.status === statusGrupo);
+
                       if (grupo.length === 0) return null;
                       return (
                         <div key={statusGrupo}>
