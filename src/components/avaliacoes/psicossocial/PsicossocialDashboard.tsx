@@ -38,6 +38,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { RiscosPsicossociaisPanel } from "./RiscosPsicossociaisPanel";
 import { GHEPanel } from "./GHEPanel";
+import { ResultadosPorGHEPanel } from "./ResultadosPorGHEPanel";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
@@ -428,6 +429,11 @@ export function PsicossocialDashboard() {
           {/* Tab: GHE */}
           <TabsContent value="ghe" className="mt-4">
             <GHEPanel />
+          </TabsContent>
+
+          {/* Tab: Resultados por GHE */}
+          <TabsContent value="resultados-ghe" className="mt-4">
+            <ResultadosPorGHEPanel />
           </TabsContent>
 
           {/* Tab: Campanhas */}
