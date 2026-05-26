@@ -59,7 +59,7 @@ const TEMPLATE_INSTRUCTIONS = [
   ['Campo', 'Obrigatório', 'Formato', 'Exemplo'],
   ['Razão Social*', 'Sim', 'Texto', 'Empresa ABC Ltda'],
   ['Nome Fantasia', 'Não', 'Texto', 'ABC'],
-  ['CNPJ*', 'Sim', '00.000.000/0000-00', '12.345.678/0001-90'],
+  ['CNPJ ou CPF*', 'Sim', 'CNPJ (14 dígitos) ou CPF (11 dígitos)', '12.345.678/0001-90 ou 123.456.789-09'],
   ['Tipo de Unidade (Matriz/Filial)', 'Não', 'Matriz ou Filial', 'Matriz'],
   ['Inscrição Estadual', 'Não', 'Texto', '123456789'],
   ['Telefone', 'Não', '(00) 0000-0000', '(11) 3000-0000'],
