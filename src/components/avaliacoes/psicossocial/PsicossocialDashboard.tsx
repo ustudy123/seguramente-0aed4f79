@@ -431,6 +431,11 @@ export function PsicossocialDashboard() {
             <GHEPanel />
           </TabsContent>
 
+          {/* Tab: Resultados por GHE */}
+          <TabsContent value="resultados-ghe" className="mt-4">
+            <ResultadosPorGHEPanel />
+          </TabsContent>
+
           {/* Tab: Campanhas */}
           <TabsContent value="campanhas" className="mt-4">
             <CampanhaList 
