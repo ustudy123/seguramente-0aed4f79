@@ -163,14 +163,18 @@ export function EmpresaImportExport() {
       // Busca CNPJs já existentes no tenant para validar duplicidade
       const { data: existentes } = await supabase
         .from('empresa_cadastro')
-        .select('cnpj, razao_social')
+        .select('id, cnpj, razao_social')
         .eq('tenant_id', tenantId);
 
-      const cnpjsExistentes = new Set(
-        (existentes || [])
-          .map((e: any) => (e.cnpj || '').replace(/\D/g, ''))
-          .filter((c: string) => c.length === 14)
-      );
+      const mapaExistentes = new Map<string, { id: string; razao_social: string }>();
+      (existentes || []).forEach((e: any) => {
+        const c = (e.cnpj || '').replace(/\D/g, '');
+        if (c.length === 14) mapaExistentes.set(c, { id: e.id, razao_social: e.razao_social });
+      });
+      const cnpjsExistentes = new Set(mapaExistentes.keys());
+
+      // Pendências a registrar (duplicados detectados)
+      const pendenciasParaRegistrar: any[] = [];
 
       // Set para rastrear CNPJs duplicados dentro da própria planilha
       const cnpjsNaPlanilha = new Set<string>();
