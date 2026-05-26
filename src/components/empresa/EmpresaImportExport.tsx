@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { buscarCnpj } from '@/lib/brasilapi';
 import { formatCnpj, validateCnpj, cleanCnpj } from '@/lib/cnpj';
+import { formatCpf, validateCpf, cleanCpf } from '@/lib/cpf';
 
 const TEMPLATE_COLUMNS = [
   'Razão Social*',
