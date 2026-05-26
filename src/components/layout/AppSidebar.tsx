@@ -532,7 +532,12 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     return allItems.filter((item) => {
       const normalizedTitle = normalizeSearchText(item.title);
       const normalizedSection = normalizeSearchText(item.sectionLabel);
-      return normalizedTitle.includes(normalizedQuery) || normalizedSection.includes(normalizedQuery);
+      const keywords = SEARCH_KEYWORDS[item.path] || [];
+      return (
+        normalizedTitle.includes(normalizedQuery) ||
+        normalizedSection.includes(normalizedQuery) ||
+        keywords.some((k) => normalizeSearchText(k).includes(normalizedQuery))
+      );
     });
   }, [normalizedQuery, allItems]);
 
