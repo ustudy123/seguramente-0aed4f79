@@ -18417,6 +18417,191 @@ export type Database = {
         }
         Relationships: []
       }
+      psicossocial_entrevistas: {
+        Row: {
+          campanha_id: string
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          concluida_em: string | null
+          consentimento_lgpd_em: string | null
+          created_at: string
+          empresa_id: string | null
+          fase_atual: number
+          ghe_id_snapshot: string | null
+          id: string
+          iniciada_em: string | null
+          modalidade: string
+          resumo_ia: Json | null
+          riscos_cobertos: number
+          status: string
+          tenant_id: string
+          token: string
+          total_riscos: number
+          updated_at: string
+        }
+        Insert: {
+          campanha_id: string
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          concluida_em?: string | null
+          consentimento_lgpd_em?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          fase_atual?: number
+          ghe_id_snapshot?: string | null
+          id?: string
+          iniciada_em?: string | null
+          modalidade?: string
+          resumo_ia?: Json | null
+          riscos_cobertos?: number
+          status?: string
+          tenant_id: string
+          token?: string
+          total_riscos?: number
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          concluida_em?: string | null
+          consentimento_lgpd_em?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          fase_atual?: number
+          ghe_id_snapshot?: string | null
+          id?: string
+          iniciada_em?: string | null
+          modalidade?: string
+          resumo_ia?: Json | null
+          riscos_cobertos?: number
+          status?: string
+          tenant_id?: string
+          token?: string
+          total_riscos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_entrevistas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psicossocial_entrevistas_evidencias: {
+        Row: {
+          campanha_id: string
+          created_at: string
+          empresa_id: string | null
+          entrevista_id: string
+          id: string
+          justificativa: string | null
+          nivel_risco: string | null
+          presente: boolean
+          probabilidade: number | null
+          risco_catalogo_id: string | null
+          risco_nome: string
+          severidade: number | null
+          tenant_id: string
+          trechos_anonimizados: string[] | null
+        }
+        Insert: {
+          campanha_id: string
+          created_at?: string
+          empresa_id?: string | null
+          entrevista_id: string
+          id?: string
+          justificativa?: string | null
+          nivel_risco?: string | null
+          presente?: boolean
+          probabilidade?: number | null
+          risco_catalogo_id?: string | null
+          risco_nome: string
+          severidade?: number | null
+          tenant_id: string
+          trechos_anonimizados?: string[] | null
+        }
+        Update: {
+          campanha_id?: string
+          created_at?: string
+          empresa_id?: string | null
+          entrevista_id?: string
+          id?: string
+          justificativa?: string | null
+          nivel_risco?: string | null
+          presente?: boolean
+          probabilidade?: number | null
+          risco_catalogo_id?: string | null
+          risco_nome?: string
+          severidade?: number | null
+          tenant_id?: string
+          trechos_anonimizados?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_entrevistas_evidencias_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psicossocial_entrevistas_evidencias_entrevista_id_fkey"
+            columns: ["entrevista_id"]
+            isOneToOne: false
+            referencedRelation: "psicossocial_entrevistas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psicossocial_entrevistas_evidencias_risco_catalogo_id_fkey"
+            columns: ["risco_catalogo_id"]
+            isOneToOne: false
+            referencedRelation: "psicossocial_riscos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psicossocial_entrevistas_mensagens: {
+        Row: {
+          content: string
+          created_at: string
+          entrevista_id: string
+          fase: number | null
+          id: string
+          origem: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          entrevista_id: string
+          fase?: number | null
+          id?: string
+          origem?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          entrevista_id?: string
+          fase?: number | null
+          id?: string
+          origem?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_entrevistas_mensagens_entrevista_id_fkey"
+            columns: ["entrevista_id"]
+            isOneToOne: false
+            referencedRelation: "psicossocial_entrevistas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psicossocial_evidencias: {
         Row: {
           campanha_id: string | null
@@ -18959,6 +19144,7 @@ export type Database = {
           status: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo: string
+          tipo_instrumento: string
           token_publico: string | null
           total_respostas: number | null
           updated_at: string
@@ -19005,6 +19191,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo?: string
+          tipo_instrumento?: string
           token_publico?: string | null
           total_respostas?: number | null
           updated_at?: string
@@ -19051,6 +19238,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id?: string
           tipo?: string
+          tipo_instrumento?: string
           token_publico?: string | null
           total_respostas?: number | null
           updated_at?: string
@@ -21051,6 +21239,10 @@ export type Database = {
       }
     }
     Functions: {
+      aceitar_consentimento_entrevista: {
+        Args: { p_modalidade: string; p_token: string }
+        Returns: string
+      }
       assinar_contrato_por_token: {
         Args: {
           p_assinante_ip: string
@@ -21454,6 +21646,23 @@ export type Database = {
       }
       get_auth_user_email: { Args: never; Returns: string }
       get_current_user_tipo: { Args: never; Returns: string }
+      get_entrevista_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          campanha_id: string
+          campanha_nome: string
+          concluida_em: string
+          consentimento_lgpd_em: string
+          empresa_nome: string
+          fase_atual: number
+          id: string
+          iniciada_em: string
+          modalidade: string
+          riscos_cobertos: number
+          status: string
+          total_riscos: number
+        }[]
+      }
       get_user_tenant_id: { Args: never; Returns: string }
       has_minimum_role: {
         Args: {
@@ -21479,6 +21688,17 @@ export type Database = {
         Returns: undefined
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      list_entrevista_mensagens_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          content: string
+          created_at: string
+          fase: number
+          id: string
+          origem: string
+          role: string
+        }[]
+      }
       listar_ponto_externo: {
         Args: { p_dias?: number; p_token: string }
         Returns: Json
