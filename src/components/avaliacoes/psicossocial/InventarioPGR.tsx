@@ -499,6 +499,36 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {/* Banner do escopo (GHE selecionado) */}
+        {gheSelecionado && (
+          <div className={cn(
+            "flex items-start gap-2 p-3 rounded-lg border text-xs",
+            bloqueadoPorAnonimatoGHE
+              ? "bg-amber-50/60 border-amber-200 text-amber-800"
+              : "bg-cyan-50/60 border-cyan-200 text-cyan-800",
+          )}>
+            <Users className="h-4 w-4 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold">
+                Escopo: GHE <strong>{gheSelecionado.ghe_nome}</strong>
+                <span className="ml-2 font-normal opacity-80">
+                  · {gheSelecionado.count} respondente(s) · {gheSelecionado.campanhas} campanha(s)
+                </span>
+              </p>
+              {bloqueadoPorAnonimatoGHE ? (
+                <p className="mt-0.5">
+                  Mínimo de {MINIMO_ANONIMATO} respondentes por GHE não atingido — inventário bloqueado
+                  para preservar anonimato (ISO 45003). Aguarde mais respostas ou volte para "Todos os GHEs".
+                </p>
+              ) : (
+                <p className="mt-0.5 opacity-80">
+                  Os scores abaixo refletem apenas as respostas deste Grupo Homogêneo de Exposição.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Matriz resumida */}
         <div className="grid grid-cols-4 gap-2">
           {[
