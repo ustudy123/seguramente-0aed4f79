@@ -64,8 +64,8 @@ interface ParticipacaoManagerProps {
   campanha: CampanhaPsicossocial;
 }
 
-// Usa a URL atual do navegador para garantir que o domínio correto seja utilizado
-const BASE_URL = typeof window !== 'undefined' ? window.location.origin : "https://youreyes.com.br";
+// Sempre usar domínio de produção para evitar redirecionamento ao login do preview do Lovable
+const BASE_URL = "https://www.youreyes.com.br";
 
 function getLinkParticipacao(token: string) {
   return `${BASE_URL}/p/${token}`;
