@@ -132,7 +132,8 @@ export function EmpresaSelecaoObrigatoria() {
                 <p className="text-sm text-muted-foreground text-center py-6">
                   Nenhuma empresa encontrada para "{busca}"
                 </p>
-              ) : empresasFiltradas.map((empresa, i) => (
+              ) : (
+                empresasFiltradas.map((empresa, i) => (
                 <motion.div
                   key={empresa.id}
                   initial={{ opacity: 0, y: 10 }}
