@@ -237,6 +237,38 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
 
   const tipo = form.watch("tipo");
   const instrumento = form.watch("instrumento");
+  const tipoInstrumento = form.watch("tipo_instrumento");
+
+  // Contagem ativa de colaboradores para travar modalidade
+  const { data: totalColaboradoresAtivos = 0 } = useQuery({
+    queryKey: ["psicossocial_total_colab_form", empresaAtivaId],
+    queryFn: async () => {
+      const tenantId = user
+        ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id
+        : null;
+      if (!tenantId) return 0;
+      let q = supabase.from('admissoes').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).not('status', 'eq', 'desligado');
+      if (empresaAtivaId) q = q.eq('empresa_id', empresaAtivaId);
+      const { count } = await q;
+      return count || 0;
+    },
+    enabled: open && !!user,
+  });
+
+  // Travas por faixa de funcionários: <5 → só entrevista; >10 → só questionário; 5-10 → escolha
+  const modalidadeBloqueada = totalColaboradoresAtivos < 5
+    ? 'entrevista_guiada' as const
+    : totalColaboradoresAtivos > 10
+      ? 'questionario' as const
+      : null;
+
+  useEffect(() => {
+    if (!open) return;
+    if (modalidadeBloqueada && tipoInstrumento !== modalidadeBloqueada) {
+      form.setValue('tipo_instrumento', modalidadeBloqueada);
+    }
+  }, [open, modalidadeBloqueada, tipoInstrumento, form]);
+
 
   // Sincronizar departamentos/cargos ao abrir
   useEffect(() => {
