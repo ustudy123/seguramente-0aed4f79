@@ -286,18 +286,19 @@ export function EmpresaImportExport() {
         }
         documentosNaPlanilha.add(documentoLimpo);
 
-        // Tenta buscar informações extras do CNPJ para enriquecer ou preencher vazios
-        let infoApi = null;
-        try {
-          // Busca apenas se faltar informações básicas ou para validar
-          infoApi = await buscarCnpj(cnpjLimpo);
-        } catch (e) {
-          console.error(`Erro ao buscar CNPJ ${cnpjLimpo}:`, e);
+        // Tenta buscar informações extras do CNPJ (somente para PJ) para enriquecer ou preencher vazios
+        let infoApi: any = null;
+        if (tipoPessoa === 'pj') {
+          try {
+            infoApi = await buscarCnpj(documentoLimpo);
+          } catch (e) {
+            console.error(`Erro ao buscar CNPJ ${documentoLimpo}:`, e);
+          }
         }
 
-        const razaoSocial = razaoSocialInput || infoApi?.razao_social || 'Empresa sem Razão Social';
+        const razaoSocial = razaoSocialInput || infoApi?.razao_social || (tipoPessoa === 'pf' ? 'Pessoa Física sem nome' : 'Empresa sem Razão Social');
         const nomeFantasia = row['Nome Fantasia']?.toString().trim() || infoApi?.nome_fantasia || null;
-        
+
         const grauRiscoRaw = row['Grau de Risco (1-4)']?.toString().trim();
         const grauRisco = grauRiscoRaw ? parseInt(grauRiscoRaw, 10) : null;
         const totalColabRaw = row['Total Colaboradores']?.toString().trim();
@@ -309,10 +310,11 @@ export function EmpresaImportExport() {
 
         const payload: Record<string, unknown> = {
           tenant_id: tenantId,
-          tipo_pessoa: 'pj',
+          tipo_pessoa: tipoPessoa,
           razao_social: razaoSocial,
           nome_fantasia: nomeFantasia,
-          cnpj: cnpjFormatado,
+          cnpj: tipoPessoa === 'pj' ? documentoFormatado : null,
+          cpf: tipoPessoa === 'pf' ? documentoFormatado : null,
           tipo_unidade: tipoUnidade,
           inscricao_estadual: row['Inscrição Estadual']?.toString().trim() || null,
           telefone: row['Telefone']?.toString().trim() || infoApi?.telefone || null,
