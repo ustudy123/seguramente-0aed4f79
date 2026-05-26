@@ -13,6 +13,7 @@ import {
   BookOpen,
   RefreshCw,
   Filter,
+  Users,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RelatorioModal } from "./RelatorioModal";
