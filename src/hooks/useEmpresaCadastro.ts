@@ -36,16 +36,28 @@ export function useEmpresaCadastro(empresaId?: string | null) {
   const { data: empresas = [], isLoading: isLoadingList } = useQuery({
     queryKey: ['empresa_cadastro_list', tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('empresa_cadastro')
-        .select('*')
-        .eq('tenant_id', tenantId!)
-        .order('razao_social')
-        .limit(10000);
-
-      if (error) throw error;
-      return (data || []) as unknown as (EmpresaCadastro & { ativo: boolean })[];
+      // Paginação manual para contornar o limite do PostgREST (max-rows = 1000)
+      const PAGE = 1000;
+      let from = 0;
+      const acc: any[] = [];
+      // loop até receber menos que PAGE
+      // (cap de segurança em 50 páginas = 50k registros)
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await supabase
+          .from('empresa_cadastro')
+          .select('*')
+          .eq('tenant_id', tenantId!)
+          .order('razao_social')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const chunk = data || [];
+        acc.push(...chunk);
+        if (chunk.length < PAGE) break;
+        from += PAGE;
+      }
+      return acc as unknown as (EmpresaCadastro & { ativo: boolean })[];
     },
+
     enabled: !!tenantId,
   });
 
