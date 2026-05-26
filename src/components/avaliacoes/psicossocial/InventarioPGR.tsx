@@ -148,36 +148,68 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     return aplicarRegrasPrivacidade(situacoes, contagem, totalRespondentes);
   }, [campanhaAtual]);
 
+  // Agregação por GHE (respostas com ghe_id_snapshot). Permite filtrar o inventário
+  // por um único Grupo Homogêneo de Exposição (NR-17 / ISO 45003).
+  const campanhasIdsParaGHE = useMemo(
+    () => (filtroCampanha === "todos" ? campanhasValidas.map(c => c.id) : [filtroCampanha]),
+    [campanhasValidas, filtroCampanha],
+  );
+  const { resultadosPorGHE, isLoading: isLoadingGHE } = usePsicossocialResultadosGHE(campanhasIdsParaGHE);
+
+  const ghesDisponiveis = useMemo(
+    () => resultadosPorGHE.filter(r => r.ghe_id && r.count > 0),
+    [resultadosPorGHE],
+  );
+
+  // Reseta filtro de GHE se não fizer mais sentido
+  useEffect(() => {
+    if (filtroGHE !== "todos" && !ghesDisponiveis.some(g => g.ghe_id === filtroGHE)) {
+      setFiltroGHE("todos");
+    }
+  }, [ghesDisponiveis, filtroGHE]);
+
+  const gheSelecionado = filtroGHE === "todos"
+    ? null
+    : ghesDisponiveis.find(g => g.ghe_id === filtroGHE) ?? null;
+  const bloqueadoPorAnonimatoGHE = !!gheSelecionado && gheSelecionado.count < MINIMO_ANONIMATO;
+
   /**
    * Agregação real das dimensões.
-   * Para cada subject único no radar_data de todas as campanhas válidas,
-   * calcula a média ponderada pelo total_respostas de cada campanha.
+   * - Sem filtro de GHE: usa radar_data já calculado das campanhas válidas (média ponderada por respondentes).
+   * - Com filtro de GHE: usa radar reconstruído das respostas individuais do GHE selecionado.
    */
   const inventario = useMemo((): InventarioItem[] => {
     if (campanhasValidas.length === 0) return [];
 
-    const campanhasParaProcessar = filtroCampanha === "todos" 
-      ? campanhasValidas 
-      : campanhasValidas.filter(c => c.id === filtroCampanha);
+    let agregado: Record<string, { somaScore: number; pesoTotal: number; campanhas: number }> = {};
 
-    if (campanhasParaProcessar.length === 0) return [];
-
-    // Agregar por subject — média ponderada pelo total_respostas
-    const agregado: Record<string, { somaScore: number; pesoTotal: number; campanhas: number }> = {};
-
-    campanhasParaProcessar.forEach(campanha => {
-      const peso = campanha.total_respostas ?? 1;
-      const radar = campanha.radar_data as RadarDimensao[];
-
-      radar.forEach(dim => {
-        if (!agregado[dim.subject]) {
-          agregado[dim.subject] = { somaScore: 0, pesoTotal: 0, campanhas: 0 };
-        }
-        agregado[dim.subject].somaScore += dim.value * peso;
-        agregado[dim.subject].pesoTotal += peso;
-        agregado[dim.subject].campanhas += 1;
+    if (gheSelecionado) {
+      // Reaproveita radar já calculado por GHE (média simples já aplicada no hook)
+      if (bloqueadoPorAnonimatoGHE) return [];
+      gheSelecionado.radar.forEach(dim => {
+        agregado[dim.subject] = { somaScore: dim.value, pesoTotal: 1, campanhas: 1 };
       });
-    });
+    } else {
+      const campanhasParaProcessar = filtroCampanha === "todos"
+        ? campanhasValidas
+        : campanhasValidas.filter(c => c.id === filtroCampanha);
+
+      if (campanhasParaProcessar.length === 0) return [];
+
+      campanhasParaProcessar.forEach(campanha => {
+        const peso = campanha.total_respostas ?? 1;
+        const radar = campanha.radar_data as RadarDimensao[];
+
+        radar.forEach(dim => {
+          if (!agregado[dim.subject]) {
+            agregado[dim.subject] = { somaScore: 0, pesoTotal: 0, campanhas: 0 };
+          }
+          agregado[dim.subject].somaScore += dim.value * peso;
+          agregado[dim.subject].pesoTotal += peso;
+          agregado[dim.subject].campanhas += 1;
+        });
+      });
+    }
 
     const items: InventarioItem[] = Object.entries(agregado).map(([subject, agg]) => {
       const scoreReal = Math.round(agg.somaScore / agg.pesoTotal);
@@ -205,7 +237,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     // Ordenar por gravidade (crítico → alto → médio → baixo)
     const ordem: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
     return items.sort((a, b) => (ordem[a.nivelKey] ?? 4) - (ordem[b.nivelKey] ?? 4));
-  }, [campanhasValidas, isSipro, filtroCampanha]);
+  }, [campanhasValidas, isSipro, filtroCampanha, gheSelecionado, bloqueadoPorAnonimatoGHE]);
 
   const criticos = inventario.filter(i => i.nivelKey === 'critico').length;
   const altos = inventario.filter(i => i.nivelKey === 'alto').length;
