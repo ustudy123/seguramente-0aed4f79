@@ -1046,8 +1046,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                           })}
                         </div>
                       );
-                    })}
+                    })})()}
                   </>
+
                 )}
               </div>
             )}
