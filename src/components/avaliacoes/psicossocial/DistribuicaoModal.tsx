@@ -41,10 +41,38 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
   const [tokenPublico, setTokenPublico] = useState<string | null>(null);
   const [loadingToken, setLoadingToken] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
+  const { empresaAtiva } = useEmpresaAtiva();
 
   // Usa a URL do ambiente ou a URL publicada (preferencialmente o novo domínio)
   const baseUrl = window.location.origin;
   const linkGeral = tokenPublico ? `${baseUrl}/questionario/${tokenPublico}` : null;
+
+  const handleGerarRelatorio = async () => {
+    if (!linkGeral || !empresaAtiva) {
+      toast.error("Aguarde o link carregar");
+      return;
+    }
+    setGerandoRelatorio(true);
+    try {
+      await gerarRelatorioCampanhaPsicossocial({
+        empresaNome:
+          (empresaAtiva as any).razao_social ||
+          (empresaAtiva as any).nome_fantasia ||
+          "Empresa",
+        empresaCnpj: (empresaAtiva as any).cnpj || "",
+        campanhaNome: campanha.nome,
+        linkPublico: linkGeral,
+        instrumento: campanha.instrumento || "SIPRO",
+      });
+      toast.success("Documento gerado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar documento. Tente novamente.");
+    } finally {
+      setGerandoRelatorio(false);
+    }
+  };
 
   // Busca ou gera o token público da campanha
   const carregarToken = async () => {
