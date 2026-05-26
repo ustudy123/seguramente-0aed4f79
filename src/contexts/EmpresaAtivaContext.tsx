@@ -34,7 +34,8 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .select("*")
         .eq("tenant_id", tenantId!)
         .eq("ativo", true)
-        .order("razao_social");
+        .order("razao_social")
+        .limit(10000);
       if (error) throw error;
       return (data || []) as unknown as EmpresaCadastro[];
     },
