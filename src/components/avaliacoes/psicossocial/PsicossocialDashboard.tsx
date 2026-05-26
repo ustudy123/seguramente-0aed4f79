@@ -38,6 +38,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { RiscosPsicossociaisPanel } from "./RiscosPsicossociaisPanel";
 import { GHEPanel } from "./GHEPanel";
+import { ResultadosPorGHEPanel } from "./ResultadosPorGHEPanel";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
