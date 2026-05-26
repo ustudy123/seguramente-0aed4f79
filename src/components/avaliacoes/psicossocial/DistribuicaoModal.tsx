@@ -7,8 +7,12 @@ import {
   CheckCircle2,
   ExternalLink,
   Shield,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Loader2
 } from "lucide-react";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { gerarRelatorioCampanhaPsicossocial } from "@/utils/gerarRelatorioCampanhaPsicossocial";
 import {
   Dialog,
   DialogContent,
