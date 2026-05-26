@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Building2, Check, LogOut } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Building2, Check, LogOut, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,18 @@ export function EmpresaSelecaoObrigatoria() {
   const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading } = useEmpresaAtiva();
   const { loading: authLoading, user } = useAuth();
   const [selected, setSelected] = useState<EmpresaCadastro | null>(null);
+  const [busca, setBusca] = useState("");
+
+  const empresasFiltradas = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return empresas;
+    const qDigits = q.replace(/\D/g, "");
+    return empresas.filter((e) => {
+      const nome = `${e.razao_social ?? ""} ${e.nome_fantasia ?? ""}`.toLowerCase();
+      const cnpjDigits = (e.cnpj ?? "").replace(/\D/g, "");
+      return nome.includes(q) || (qDigits && cnpjDigits.includes(qDigits));
+    });
+  }, [empresas, busca]);
 
   // Debounce do "semVinculos" para evitar flash da tela de Acesso Restrito
   // enquanto auth/usuario_base/empresas ainda estão sincronizando após login.
@@ -101,13 +114,31 @@ export function EmpresaSelecaoObrigatoria() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou CNPJ..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {empresasFiltradas.length} de {empresas.length} empresas
+            </p>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {empresas.map((empresa, i) => (
+              {empresasFiltradas.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  Nenhuma empresa encontrada para "{busca}"
+                </p>
+              ) : (
+                empresasFiltradas.map((empresa, i) => (
                 <motion.div
                   key={empresa.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: Math.min(i, 10) * 0.03 }}
                 >
                   <button
                     onClick={() => setSelected(empresa)}
@@ -144,7 +175,8 @@ export function EmpresaSelecaoObrigatoria() {
                     </div>
                   </button>
                 </motion.div>
-              ))}
+                ))
+              )}
             </div>
 
             <Button
