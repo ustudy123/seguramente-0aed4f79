@@ -102,12 +102,23 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     queryKey: ["empresas-lista-grupo", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj, grupo_economico_id")
-        .eq("tenant_id", tenantId)
-        .order("razao_social");
-      return data || [];
+      const PAGE = 1000;
+      let from = 0;
+      const acc: any[] = [];
+      for (let i = 0; i < 50; i++) {
+        const { data } = await fromTable("empresa_cadastro")
+          .select("id, razao_social, nome_fantasia, cnpj, grupo_economico_id")
+          .eq("tenant_id", tenantId)
+          .order("razao_social")
+          .range(from, from + PAGE - 1);
+        const chunk = data || [];
+        acc.push(...chunk);
+        if (chunk.length < PAGE) break;
+        from += PAGE;
+      }
+      return acc;
     },
+
     enabled: !!tenantId,
   });
 
