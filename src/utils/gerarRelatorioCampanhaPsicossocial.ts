@@ -96,15 +96,28 @@ export async function gerarRelatorioCampanhaPsicossocial(
     const lines = doc.splitTextToSize(s(text), contentW) as string[];
     lines.forEach((line, idx) => {
       ensureSpace(lineHeight);
-      // Última linha de parágrafo não é justificada
       const isLast = idx === lines.length - 1;
-      if (isLast || line.length < 30) {
+      const words = line.split(/\s+/).filter(Boolean);
+      // Última linha ou linhas curtas/com poucas palavras não são justificadas
+      if (isLast || words.length < 2) {
         doc.text(line, marginX, y);
       } else {
-        doc.text(line, marginX, y, {
-          align: "justify",
-          maxWidth: contentW,
-        });
+        const wordsWidth = words.reduce(
+          (acc, w) => acc + doc.getTextWidth(w),
+          0
+        );
+        const totalGap = contentW - wordsWidth;
+        const gap = totalGap / (words.length - 1);
+        // Se o gap ficaria absurdamente grande (linha pequena), alinha à esquerda
+        if (gap > 6) {
+          doc.text(line, marginX, y);
+        } else {
+          let cx = marginX;
+          words.forEach((w, i) => {
+            doc.text(w, cx, y);
+            cx += doc.getTextWidth(w) + gap;
+          });
+        }
       }
       y += lineHeight;
     });
