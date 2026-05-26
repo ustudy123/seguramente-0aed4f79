@@ -71,6 +71,7 @@ const Register = lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const QuestionarioPsicossocial = lazy(() => import("./pages/QuestionarioPsicossocial"));
+const EntrevistaGuiada = lazy(() => import("./pages/EntrevistaGuiada"));
 const PdiAssinatura = lazy(() => import("./pages/PdiAssinatura"));
 const PontoExterno = lazy(() => import("./pages/PontoExterno"));
 const FeriasAssinatura = lazy(() => import("./pages/FeriasAssinatura"));
