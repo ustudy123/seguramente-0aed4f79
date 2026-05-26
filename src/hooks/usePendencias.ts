@@ -30,7 +30,7 @@ export function usePendencias() {
 
       const empresaFilter = empresaAtivaId ? { empresa_id: empresaAtivaId } : {};
 
-      const [feriasRes, docRes, ajustesRes, avalRes, desligRes] = await Promise.all([
+      const [feriasRes, docRes, ajustesRes, avalRes, desligRes, impEmpRes] = await Promise.all([
         // Férias pendentes de aprovação
         supabase
           .from("ferias_solicitacoes")
@@ -76,6 +76,15 @@ export function usePendencias() {
           .match(empresaFilter)
           .order("updated_at", { ascending: false })
           .limit(50),
+
+        // Pendências de importação de empresas (duplicidades de CNPJ)
+        (supabase as any)
+          .from("empresa_import_pendencias")
+          .select("id, cnpj, razao_social_planilha, razao_social_existente, linha_planilha, arquivo_nome, motivo")
+          .eq("tenant_id", tenantId)
+          .eq("status", "pendente")
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
 
       const ferias = feriasRes.data || [];
@@ -83,6 +92,7 @@ export function usePendencias() {
       const ajustes = ajustesRes.data || [];
       const avals = avalRes.data || [];
       const desligs = desligRes.data || [];
+      const impEmps = (impEmpRes as any).data || [];
 
       const tipoAvaliadorLabel: Record<string, string> = {
         gestor: "Avaliação do Gestor",
@@ -155,6 +165,21 @@ export function usePendencias() {
             label: d.nome_completo,
             sublabel: `${d.cargo || "—"} • ${d.motivo_desligamento || "Sem motivo informado"}`,
             acao: "Concluir processo de desligamento",
+          })),
+        },
+        {
+          key: "importacao_empresas",
+          title: "Importação de empresas (duplicidades)",
+          count: impEmps.length,
+          path: "/empresa?tab=importar",
+          priority: "medium" as const,
+          items: impEmps.map((p: any) => ({
+            id: p.id,
+            label: `CNPJ ${p.cnpj} — ${p.razao_social_planilha || "sem razão social"}`,
+            sublabel: p.motivo === 'cnpj_repetido_planilha'
+              ? `Repetido na planilha${p.arquivo_nome ? ` • ${p.arquivo_nome}` : ''}${p.linha_planilha ? ` • linha ${p.linha_planilha}` : ''}`
+              : `Já cadastrado como "${p.razao_social_existente || '—'}"${p.arquivo_nome ? ` • ${p.arquivo_nome}` : ''}${p.linha_planilha ? ` • linha ${p.linha_planilha}` : ''}`,
+            acao: "Revisar duplicidade na importação de empresas",
           })),
         },
       ];

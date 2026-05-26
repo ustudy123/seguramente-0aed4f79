@@ -163,14 +163,18 @@ export function EmpresaImportExport() {
       // Busca CNPJs já existentes no tenant para validar duplicidade
       const { data: existentes } = await supabase
         .from('empresa_cadastro')
-        .select('cnpj, razao_social')
+        .select('id, cnpj, razao_social')
         .eq('tenant_id', tenantId);
 
-      const cnpjsExistentes = new Set(
-        (existentes || [])
-          .map((e: any) => (e.cnpj || '').replace(/\D/g, ''))
-          .filter((c: string) => c.length === 14)
-      );
+      const mapaExistentes = new Map<string, { id: string; razao_social: string }>();
+      (existentes || []).forEach((e: any) => {
+        const c = (e.cnpj || '').replace(/\D/g, '');
+        if (c.length === 14) mapaExistentes.set(c, { id: e.id, razao_social: e.razao_social });
+      });
+      const cnpjsExistentes = new Set(mapaExistentes.keys());
+
+      // Pendências a registrar (duplicados detectados)
+      const pendenciasParaRegistrar: any[] = [];
 
       // Set para rastrear CNPJs duplicados dentro da própria planilha
       const cnpjsNaPlanilha = new Set<string>();
@@ -223,12 +227,39 @@ export function EmpresaImportExport() {
 
         // Valida duplicidade: já existe no banco
         if (cnpjsExistentes.has(cnpjLimpo)) {
+          const existente = mapaExistentes.get(cnpjLimpo);
           duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} já cadastrado no sistema`);
+          pendenciasParaRegistrar.push({
+            tenant_id: tenantId,
+            cnpj: cnpjFormatado,
+            razao_social_planilha: razaoSocialInput || null,
+            razao_social_existente: existente?.razao_social || null,
+            empresa_existente_id: existente?.id || null,
+            linha_planilha: i + 2,
+            arquivo_nome: file.name,
+            motivo: 'cnpj_duplicado',
+            status: 'pendente',
+            importado_por: user?.id || null,
+            importado_por_nome: user?.email || null,
+          });
           continue;
         }
         // Valida duplicidade: aparece duas vezes na mesma planilha
         if (cnpjsNaPlanilha.has(cnpjLimpo)) {
           duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} duplicado na planilha`);
+          pendenciasParaRegistrar.push({
+            tenant_id: tenantId,
+            cnpj: cnpjFormatado,
+            razao_social_planilha: razaoSocialInput || null,
+            razao_social_existente: null,
+            empresa_existente_id: null,
+            linha_planilha: i + 2,
+            arquivo_nome: file.name,
+            motivo: 'cnpj_repetido_planilha',
+            status: 'pendente',
+            importado_por: user?.id || null,
+            importado_por_nome: user?.email || null,
+          });
           continue;
         }
         cnpjsNaPlanilha.add(cnpjLimpo);
@@ -289,6 +320,15 @@ export function EmpresaImportExport() {
         }
 
         success++;
+      }
+
+      // Persiste pendências de duplicidade (para aparecerem no dashboard de pendências)
+      if (pendenciasParaRegistrar.length > 0) {
+        const { error: pendErr } = await (supabase as any)
+          .from('empresa_import_pendencias')
+          .insert(pendenciasParaRegistrar);
+        if (pendErr) console.error('Erro ao registrar pendências de importação:', pendErr);
+        else queryClient.invalidateQueries({ queryKey: ['pendencias-dashboard'] });
       }
 
       setProgress({ current: data.length, total: data.length, etapa: 'Concluído' });
