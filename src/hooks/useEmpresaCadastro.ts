@@ -40,7 +40,8 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         .from('empresa_cadastro')
         .select('*')
         .eq('tenant_id', tenantId!)
-        .order('razao_social');
+        .order('razao_social')
+        .limit(10000);
 
       if (error) throw error;
       return (data || []) as unknown as (EmpresaCadastro & { ativo: boolean })[];
