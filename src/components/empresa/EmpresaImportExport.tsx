@@ -161,37 +161,39 @@ export function EmpresaImportExport() {
 
       setProgress({ current: 0, total: data.length, etapa: 'Verificando duplicidades...' });
 
-      // Busca CNPJs já existentes no tenant para validar duplicidade
+      // Busca CNPJs/CPFs já existentes no tenant para validar duplicidade
       const { data: existentes } = await supabase
         .from('empresa_cadastro')
-        .select('id, cnpj, razao_social')
+        .select('id, cnpj, cpf, razao_social')
         .eq('tenant_id', tenantId);
 
       const mapaExistentes = new Map<string, { id: string; razao_social: string }>();
       (existentes || []).forEach((e: any) => {
         const c = (e.cnpj || '').replace(/\D/g, '');
         if (c.length === 14) mapaExistentes.set(c, { id: e.id, razao_social: e.razao_social });
+        const p = (e.cpf || '').replace(/\D/g, '');
+        if (p.length === 11) mapaExistentes.set(p, { id: e.id, razao_social: e.razao_social });
       });
-      const cnpjsExistentes = new Set(mapaExistentes.keys());
+      const documentosExistentes = new Set(mapaExistentes.keys());
 
       // Pendências a registrar (duplicados detectados)
       const pendenciasParaRegistrar: any[] = [];
 
-      // Set para rastrear CNPJs duplicados dentro da própria planilha
-      const cnpjsNaPlanilha = new Set<string>();
+      // Set para rastrear documentos duplicados dentro da própria planilha
+      const documentosNaPlanilha = new Set<string>();
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
 
         // Pega os valores considerando que podem ou não ter o asterisco
         const rawRazaoSocial = row['Razão Social*'] || row['Razão Social'];
-        const rawCnpj = row['CNPJ*'] || row['CNPJ'];
+        const rawDocumento = row['CNPJ ou CPF*'] || row['CNPJ ou CPF'] || row['CNPJ*'] || row['CNPJ'] || row['CPF*'] || row['CPF'];
 
         setProgress({
           current: i + 1,
           total: data.length,
           etapa: `Processando ${i + 1} de ${data.length}`,
-          empresaAtual: rawRazaoSocial?.toString().trim() || rawCnpj?.toString().trim() || `Linha ${i + 2}`,
+          empresaAtual: rawRazaoSocial?.toString().trim() || rawDocumento?.toString().trim() || `Linha ${i + 2}`,
         });
 
         // Pula a linha de exemplo se ela estiver presente
@@ -211,34 +213,53 @@ export function EmpresaImportExport() {
         }
 
         const razaoSocialInput = rawRazaoSocial?.toString().trim();
-        const cnpjInput = rawCnpj?.toString().trim();
+        const documentoInput = rawDocumento?.toString().trim();
 
-        if (!cnpjInput) {
-          errors.push(`Linha ${i + 2}: CNPJ é obrigatório`);
+        if (!documentoInput) {
+          errors.push(`Linha ${i + 2}: CNPJ ou CPF é obrigatório`);
           continue;
         }
 
-        const cnpjLimpo = cleanCnpj(cnpjInput);
-        if (!validateCnpj(cnpjLimpo)) {
-          errors.push(`Linha ${i + 2}: CNPJ inválido (${cnpjInput})`);
+        // Detecta tipo de pessoa pela quantidade de dígitos numéricos
+        const digitos = documentoInput.replace(/\D/g, '');
+        let tipoPessoa: 'pj' | 'pf';
+        let documentoLimpo: string;
+        let documentoFormatado: string;
+
+        if (digitos.length === 14) {
+          if (!validateCnpj(digitos)) {
+            errors.push(`Linha ${i + 2}: CNPJ inválido (${documentoInput})`);
+            continue;
+          }
+          tipoPessoa = 'pj';
+          documentoLimpo = digitos;
+          documentoFormatado = formatCnpj(digitos);
+        } else if (digitos.length === 11) {
+          if (!validateCpf(digitos)) {
+            errors.push(`Linha ${i + 2}: CPF inválido (${documentoInput})`);
+            continue;
+          }
+          tipoPessoa = 'pf';
+          documentoLimpo = digitos;
+          documentoFormatado = formatCpf(digitos);
+        } else {
+          errors.push(`Linha ${i + 2}: documento deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ) — recebido: ${documentoInput}`);
           continue;
         }
-
-        const cnpjFormatado = formatCnpj(cnpjLimpo);
 
         // Valida duplicidade: já existe no banco
-        if (cnpjsExistentes.has(cnpjLimpo)) {
-          const existente = mapaExistentes.get(cnpjLimpo);
-          duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} já cadastrado no sistema`);
+        if (documentosExistentes.has(documentoLimpo)) {
+          const existente = mapaExistentes.get(documentoLimpo);
+          duplicadas.push(`Linha ${i + 2}: ${tipoPessoa === 'pj' ? 'CNPJ' : 'CPF'} ${documentoFormatado} já cadastrado no sistema`);
           pendenciasParaRegistrar.push({
             tenant_id: tenantId,
-            cnpj: cnpjFormatado,
+            cnpj: documentoFormatado,
             razao_social_planilha: razaoSocialInput || null,
             razao_social_existente: existente?.razao_social || null,
             empresa_existente_id: existente?.id || null,
             linha_planilha: i + 2,
             arquivo_nome: file.name,
-            motivo: 'cnpj_duplicado',
+            motivo: tipoPessoa === 'pj' ? 'cnpj_duplicado' : 'cpf_duplicado',
             status: 'pendente',
             importado_por: user?.id || null,
             importado_por_nome: user?.email || null,
@@ -246,24 +267,24 @@ export function EmpresaImportExport() {
           continue;
         }
         // Valida duplicidade: aparece duas vezes na mesma planilha
-        if (cnpjsNaPlanilha.has(cnpjLimpo)) {
-          duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} duplicado na planilha`);
+        if (documentosNaPlanilha.has(documentoLimpo)) {
+          duplicadas.push(`Linha ${i + 2}: ${tipoPessoa === 'pj' ? 'CNPJ' : 'CPF'} ${documentoFormatado} duplicado na planilha`);
           pendenciasParaRegistrar.push({
             tenant_id: tenantId,
-            cnpj: cnpjFormatado,
+            cnpj: documentoFormatado,
             razao_social_planilha: razaoSocialInput || null,
             razao_social_existente: null,
             empresa_existente_id: null,
             linha_planilha: i + 2,
             arquivo_nome: file.name,
-            motivo: 'cnpj_repetido_planilha',
+            motivo: tipoPessoa === 'pj' ? 'cnpj_repetido_planilha' : 'cpf_repetido_planilha',
             status: 'pendente',
             importado_por: user?.id || null,
             importado_por_nome: user?.email || null,
           });
           continue;
         }
-        cnpjsNaPlanilha.add(cnpjLimpo);
+        documentosNaPlanilha.add(documentoLimpo);
 
         // Tenta buscar informações extras do CNPJ para enriquecer ou preencher vazios
         let infoApi = null;
