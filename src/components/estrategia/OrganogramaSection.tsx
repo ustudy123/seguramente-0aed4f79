@@ -220,6 +220,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       setShowNew(false);
       setForm(INITIAL_FORM);
       setOcupanteSearch("");
+      setInsertingBetweenId(null);
     };
 
     let remaining = ocupantes.length;
