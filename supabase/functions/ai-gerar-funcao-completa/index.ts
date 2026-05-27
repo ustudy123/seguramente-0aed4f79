@@ -171,7 +171,8 @@ IMPORTANTE: Integre o contexto da empresa (Cultura, Setor, CNAE) para que as ati
       const cargoUpdate: Record<string, unknown> = {};
       const fields = ['descricao', 'responsabilidade', 'subordinacao', 'interfaces_cargo', 
         'objetivo_funcao', 'escopo_geral', 'padroes_execucao', 'cultura_esperada', 
-        'erros_riscos', 'criterios_sucesso', 'ferramentas_cargo'];
+        'erros_riscos', 'criterios_sucesso', 'ferramentas_cargo', 'requisitos_formacao', 'requisitos_experiencia'];
+
       
       for (const f of fields) {
         if (parsed[f]) cargoUpdate[f] = parsed[f];
