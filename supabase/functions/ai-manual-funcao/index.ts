@@ -14,21 +14,28 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing authorization header");
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized");
+
+    const token = authHeader.replace("Bearer ", "");
+    let userId: string;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      if (!payload.sub || (payload.exp && payload.exp * 1000 < Date.now())) {
+        throw new Error("Invalid token");
+      }
+      userId = payload.sub;
+    } catch {
+      throw new Error("Unauthorized");
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("tenant_id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
     if (!profile?.tenant_id) throw new Error("Tenant not found");
 
