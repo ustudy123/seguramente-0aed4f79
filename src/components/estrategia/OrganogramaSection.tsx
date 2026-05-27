@@ -566,7 +566,10 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           </CardContent>
         </Card>
       ) : (
-        <OrgCanvas>
+        <OrgCanvas onDropBackground={(draggedId) => {
+          updateOrgNode.mutate({ id: draggedId, parent_id: null });
+          toast.success("Posição movida para a raiz");
+        }}>
           <OrgTree
             roots={tree}
             onDelete={(id) => deleteOrgNode.mutate(id)}

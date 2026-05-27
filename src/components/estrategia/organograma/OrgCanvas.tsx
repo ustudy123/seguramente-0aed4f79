@@ -10,9 +10,10 @@ import { cn } from "@/lib/utils";
 interface OrgCanvasProps {
   children: ReactNode;
   className?: string;
+  onDropBackground?: (draggedId: string) => void;
 }
 
-export function OrgCanvas({ children, className }: OrgCanvasProps) {
+export function OrgCanvas({ children, className, onDropBackground }: OrgCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
@@ -184,6 +185,16 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        }}
+        onDrop={(e) => {
+          const draggedId = e.dataTransfer.getData("text/plain");
+          if (draggedId && onDropBackground) {
+            onDropBackground(draggedId);
+          }
+        }}
         data-canvas="true"
       >
         <div
