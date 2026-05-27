@@ -2194,6 +2194,8 @@ export type Database = {
           periculosidade: boolean
           periculosidade_tipo: string | null
           periodicidade_exame_meses: number | null
+          requisitos_experiencia: string | null
+          requisitos_formacao: string | null
           responsabilidade: string | null
           subordinacao: string | null
           tenant_id: string
@@ -2227,6 +2229,8 @@ export type Database = {
           periculosidade?: boolean
           periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
+          requisitos_experiencia?: string | null
+          requisitos_formacao?: string | null
           responsabilidade?: string | null
           subordinacao?: string | null
           tenant_id: string
@@ -2260,6 +2264,8 @@ export type Database = {
           periculosidade?: boolean
           periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
+          requisitos_experiencia?: string | null
+          requisitos_formacao?: string | null
           responsabilidade?: string | null
           subordinacao?: string | null
           tenant_id?: string
