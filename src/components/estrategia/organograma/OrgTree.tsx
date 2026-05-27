@@ -24,6 +24,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onInsertBetween, 
         onDelete={onDelete}
         onAddChild={onAddChild}
         onAddSibling={onAddSibling}
+        onInsertBetween={onInsertBetween}
         onMove={onMove}
         onEdit={onEdit}
       />
@@ -48,6 +49,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onInsertBetween, 
                   onDelete={onDelete}
                   onAddChild={onAddChild}
                   onAddSibling={onAddSibling}
+                  onInsertBetween={onInsertBetween}
                   onMove={onMove}
                   onEdit={onEdit}
                 />
@@ -65,11 +67,12 @@ interface OrgTreeProps {
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
+  onInsertBetween?: (childId: string) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
   onEdit?: (id: string, updates: Partial<EstrategiaOrganograma>) => void;
 }
 
-export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgTreeProps) {
+export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onInsertBetween, onMove, onEdit }: OrgTreeProps) {
   return (
     <div className="flex gap-8 justify-center flex-wrap py-6 px-4" data-canvas="true">
       {roots.map((root) => (
@@ -79,6 +82,7 @@ export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove, onE
           onDelete={onDelete}
           onAddChild={onAddChild}
           onAddSibling={onAddSibling}
+          onInsertBetween={onInsertBetween}
           onMove={onMove}
           onEdit={onEdit}
           isRoot
