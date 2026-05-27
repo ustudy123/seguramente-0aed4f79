@@ -789,9 +789,10 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
                         <SelectValue placeholder="Filtrar por Campanha" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="recente">Mais Recente</SelectItem>
                         {campanhasValidas.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.id === campanhaMaisRecenteId ? `${c.nome} (mais recente)` : c.nome}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
