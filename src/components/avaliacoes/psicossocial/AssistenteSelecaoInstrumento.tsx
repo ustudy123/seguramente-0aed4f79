@@ -432,7 +432,19 @@ export function AssistenteSelecaoInstrumento({
         insalubridade: false, periculosidade: false, aposentadoriaEspecial: false, cnae: null,
       });
     }
-    setStep('checklist');
+    // Faixa <5 colaboradores → entrevista guiada por IA (anonimato + representatividade)
+    setStep((prev) => {
+      // recupera contagem mais recente
+      // sysData ainda não foi atualizado neste tick; usamos o state setado abaixo via setTimeout async
+      return prev;
+    });
+    // Decidir próximo passo com base no totalColaboradores recém-calculado
+    const totalParaDecisao = (totalColabCount > 0 ? totalColabCount : (empresa?.total_colaboradores ?? 0));
+    if (totalParaDecisao > 0 && totalParaDecisao < 5) {
+      setStep('entrevista-recomendada');
+    } else {
+      setStep('checklist');
+    }
   };
 
   const isChecklistComplete =
