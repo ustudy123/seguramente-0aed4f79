@@ -89,7 +89,8 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
               <p className="text-sm text-muted-foreground">
                 Descreva a função em linguagem natural. A IA irá gerar automaticamente:
-                atividades, competências, indicadores (KPIs), responsabilidades, escopo e muito mais.
+                atividades, competências, indicadores (KPIs), responsabilidades, requisitos de formação e experiência, escopo e muito mais.
+
               </p>
               <p className="text-xs text-muted-foreground mt-2">
                 💡 Quanto mais detalhes você fornecer, melhor será o resultado. 

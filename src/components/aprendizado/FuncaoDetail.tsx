@@ -30,6 +30,9 @@ interface Cargo {
   erros_riscos?: string | null;
   criterios_sucesso?: string | null;
   ferramentas_cargo?: string | null;
+  requisitos_formacao?: string | null;
+  requisitos_experiencia?: string | null;
+
   departamento?: { id: string; nome: string } | null;
 }
 
@@ -138,6 +141,38 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           )}
         </div>
       )}
+
+      {/* Requisitos Section */}
+      {(cargo.requisitos_formacao || cargo.requisitos_experiencia) && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-start gap-4">
+              <div className="bg-primary/10 rounded-full p-2 mt-1 shrink-0">
+                <ClipboardList className="w-5 h-5 text-primary" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                {cargo.requisitos_formacao && (
+                  <div>
+                    <p className="text-xs font-bold text-primary uppercase tracking-wider">Formação Acadêmica</p>
+                    <p className="text-sm text-foreground mt-1 whitespace-pre-line leading-relaxed">
+                      {cargo.requisitos_formacao}
+                    </p>
+                  </div>
+                )}
+                {cargo.requisitos_experiencia && (
+                  <div>
+                    <p className="text-xs font-bold text-primary uppercase tracking-wider">Experiência Profissional</p>
+                    <p className="text-sm text-foreground mt-1 whitespace-pre-line leading-relaxed">
+                      {cargo.requisitos_experiencia}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Additional enriched fields */}
       {(cargo.padroes_execucao || cargo.erros_riscos || cargo.criterios_sucesso || cargo.cultura_esperada) && (

@@ -32,6 +32,18 @@ export interface Cargo {
   faixa_salarial_max: number | null;
   periodicidade_exame_meses: number | null;
   exames_obrigatorios: string[] | null;
+  requisitos_formacao?: string | null;
+  requisitos_experiencia?: string | null;
+  interfaces_cargo?: string | null;
+  objetivo_funcao?: string | null;
+  escopo_geral?: string | null;
+  padroes_execucao?: string | null;
+  cultura_esperada?: string | null;
+  erros_riscos?: string | null;
+  criterios_sucesso?: string | null;
+  ferramentas_cargo?: string | null;
+  subordinacao?: string | null;
+
   // SST - Condições Especiais
   insalubridade: boolean;
   insalubridade_grau: string | null;
