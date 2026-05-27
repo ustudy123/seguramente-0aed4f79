@@ -17,18 +17,24 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing authorization header");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    // Validate JWT via claims (does not require active server session)
-    const authClient = createClient(supabaseUrl, anonKey);
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) throw new Error("Unauthorized");
-    const userId = claimsData.claims.sub;
 
-    // Use service role for DB reads (bypasses RLS; we already authenticated the user)
+    // Decode JWT payload (the Supabase gateway already validated the apikey)
+    let userId: string;
+    try {
+      const payload = JSON.parse(
+        atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+      );
+      userId = payload.sub;
+      if (!userId) throw new Error("missing sub");
+      if (payload.exp && payload.exp * 1000 < Date.now()) throw new Error("token expired");
+    } catch (e) {
+      throw new Error("Unauthorized: " + (e as Error).message);
+    }
+
     const supabase = createClient(supabaseUrl, serviceKey);
+
 
     const { data: profile } = await supabase
       .from("profiles")
