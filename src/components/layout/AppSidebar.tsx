@@ -84,20 +84,20 @@ const SEARCH_KEYWORDS: Record<string, string[]> = {
   "/onboarding-rh": ["onboarding", "integracao", "novo colaborador"],
   "/ferias": ["ferias", "periodo aquisitivo", "programacao"],
   "/atestados": ["atestado", "medico", "afastamento", "saude"],
-  "/felicidade": ["bem-estar", "felicidade", "humor", "gratidao"],
-  "/feedback-ocorrencias": ["feedback", "ocorrencia", "advertencia"],
+  "/felicidade": ["bem-estar", "felicidade", "humor", "gratidao", "meu bem-estar"],
+  "/feedback-ocorrencias": ["feedback", "desenvolvimento", "ocorrencia", "advertencia"],
   "/ouvidoria": ["ouvidoria", "denuncia", "canal", "etica"],
-  "/aprendizado-papeis": ["aprendizado", "papeis", "academia", "curso"],
+  "/aprendizado-papeis": ["aprendizado", "competencias", "papeis", "academia", "curso"],
   "/trilhas": ["trilha", "capacitacao", "treinamento"],
   "/cultura-celebracoes": ["cultura", "celebracao", "aniversario", "reconhecimento"],
-  "/feed": ["mural", "feed", "comunicacao", "noticia"],
+  "/feed": ["mural", "feed", "comunicacao", "noticia", "mural interno"],
   "/ponto": ["ponto", "marcacao", "relogio", "jornada"],
   "/analise-jornada": ["jornada", "analise", "horas extras", "banco"],
   "/empresa": ["empresa", "cnpj", "dados"],
   "/cadastros/departamentos": ["departamento", "setor", "area"],
   "/cadastros/cargos": ["cargo", "cbo"],
   "/cadastros/filiais": ["filial", "obra", "estabelecimento", "unidade"],
-  "/marketplace": ["marketplace", "parceiro", "profissional", "rede"],
+  "/marketplace": ["marketplace", "parceiro", "profissional", "rede", "rede de parceiros"],
   "/terceiros": ["terceiro", "terceirizado", "prestador"],
   "/documentos": ["documento", "arquivo", "pasta", "upload"],
   "/financeiro": ["financeiro", "guia", "pagamento", "certidao"],
@@ -133,23 +133,60 @@ const menuSections: MenuSection[] = [
     sectionIcon: Building2,
     items: [
       { title: "Empresa", icon: Building2, path: "/empresa" },
-      { title: "Estabelecimento ou Obra", icon: Building2, path: "/cadastros/filiais" },
+      { title: "Estabelecimentos / Obras", icon: Building2, path: "/cadastros/filiais" },
       { title: "Departamentos", icon: Building2, path: "/cadastros/departamentos" },
       { title: "Cargos", icon: Users, path: "/cadastros/cargos" },
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Prestadores de Serviços", icon: HardHat, path: "/terceiros" },
+      { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
     ],
   },
   {
-    label: "Planejamento e Cultura",
+    label: "Planejamento & Gestão",
     color: "text-emerald-400",
     sectionIcon: Compass,
     items: [
       { title: "Identidade Estratégica", icon: Heart, path: "/estrategia?tab=cultura" },
-      { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
       { title: "Planejamento Estratégico", icon: Compass, path: "/estrategia" },
       { title: "Metas", icon: Target, path: "/metas" },
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
+    ],
+  },
+  {
+    label: "Pessoas & Cultura",
+    color: "text-violet-400",
+    sectionIcon: Users,
+    items: [
+      { title: "Onboarding", icon: UserPlus, path: "/onboarding-rh" },
+      { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
+      { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
+      { title: "Mural Interno", icon: Newspaper, path: "/feed" },
+      { title: "Meu Bem-Estar", icon: Heart, path: "/felicidade" },
+      { title: "Feedback & Desenvolvimento", icon: MessageCircle, path: "/feedback-ocorrencias" },
+      { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
+    ],
+  },
+  {
+    label: "Desenvolvimento & Performance",
+    color: "text-emerald-400",
+    sectionIcon: Target,
+    items: [
+      { title: "Aprendizado & Competências", icon: BookOpen, path: "/aprendizado-papeis" },
+      { title: "Trilhas", icon: Route, path: "/trilhas" },
+      { title: "Avaliações", icon: Star, path: "/avaliacoes" },
+      { title: "PDI", icon: Target, path: "/pdi" },
+    ],
+  },
+  {
+    label: "Jornada & Rotina",
+    color: "text-amber-400",
+    sectionIcon: Clock,
+    items: [
+      { title: "Ponto", icon: Clock, path: "/ponto" },
+      { title: "Análise de Jornada", icon: BarChart3, path: "/analise-jornada" },
+      { title: "Férias", icon: Calendar, path: "/ferias" },
+      { title: "Atestados", icon: Stethoscope, path: "/atestados" },
+      { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
     ],
   },
   {
@@ -158,8 +195,6 @@ const menuSections: MenuSection[] = [
     sectionIcon: HeartPulse,
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
-      { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
-      { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
       {
         title: "Psicossocial NR-01",
         icon: Brain,
@@ -169,8 +204,8 @@ const menuSections: MenuSection[] = [
           { title: "GHE", path: "/psicossocial?tab=ghe", color: "text-cyan-300", dot: "bg-cyan-400" },
           { title: "Campanhas", path: "/psicossocial?tab=campanhas", color: "text-violet-300", dot: "bg-violet-400" },
           { title: "Riscos Psicossociais", path: "/psicossocial?tab=riscos", color: "text-rose-300", dot: "bg-rose-400" },
-         { title: "Resultados Psicossociais", path: "/psicossocial?tab=riscos&view=resultados", color: "text-pink-300", dot: "bg-pink-400" },
-         { title: "Resultados por GHE", path: "/psicossocial?tab=resultados-ghe", color: "text-cyan-300", dot: "bg-cyan-400" },
+          { title: "Resultados Psicossociais", path: "/psicossocial?tab=riscos&view=resultados", color: "text-pink-300", dot: "bg-pink-400" },
+          { title: "Resultados por GHE", path: "/psicossocial?tab=resultados-ghe", color: "text-cyan-300", dot: "bg-cyan-400" },
           { title: "Burnout & Boreout", path: "/psicossocial?tab=burnout-boreout", color: "text-orange-300", dot: "bg-orange-400" },
           { title: "Histórico IPS", path: "/psicossocial?tab=historico", color: "text-amber-300", dot: "bg-amber-400" },
           { title: "Inventário PGR", path: "/psicossocial?tab=pgr", color: "text-emerald-300", dot: "bg-emerald-400" },
@@ -178,43 +213,19 @@ const menuSections: MenuSection[] = [
           { title: "Índices", path: "/psicossocial?tab=indicadores", color: "text-fuchsia-300", dot: "bg-fuchsia-400" },
         ],
       },
+      { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
       { title: "EPIs", icon: Shield, path: "/epis" },
+      { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
     ],
   },
   {
-    label: "Avaliações e Desenvolvimento",
-    color: "text-emerald-400",
-    sectionIcon: Target,
-    items: [
-      { title: "Avaliações", icon: Star, path: "/avaliacoes" },
-      { title: "PDI", icon: Target, path: "/pdi" },
-    ],
-  },
-  {
-    label: "Pessoas",
-    color: "text-violet-400",
-    sectionIcon: Users,
-    items: [
-      { title: "Cultura e Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
-      { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
-      { title: "Onboarding", icon: UserPlus, path: "/onboarding-rh" },
-      { title: "Férias", icon: Calendar, path: "/ferias" },
-      { title: "Atestados", icon: Stethoscope, path: "/atestados" },
-      { title: "Meu Bem-Estar", icon: Heart, path: "/felicidade" },
-      { title: "Feedback & Ocorrências", icon: MessageCircle, path: "/feedback-ocorrencias" },
-      { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
-      { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
-      { title: "Trilhas", icon: Route, path: "/trilhas" },
-      { title: "Mural Interno", icon: Newspaper, path: "/feed" },
-      { title: "Ponto", icon: Clock, path: "/ponto" },
-      { title: "Análise de Jornada", icon: BarChart3, path: "/analise-jornada" },
-    ],
-  },
-  {
-    label: "Documentos & Registros",
+    label: "Documentos & Governança",
     color: "text-rose-400",
     sectionIcon: FileText,
-    items: [{ title: "Documentos", icon: FileText, path: "/documentos" }],
+    items: [
+      { title: "Documentos", icon: FileText, path: "/documentos" },
+      { title: "Hub Contábil", icon: FileText, path: "/hub-contabil" },
+    ],
   },
   {
     label: "Financeiro",
@@ -222,9 +233,14 @@ const menuSections: MenuSection[] = [
     sectionIcon: DollarSign,
     items: [
       { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
+    ],
+  },
+  {
+    label: "Rede de Parceiros",
+    color: "text-orange-400",
+    sectionIcon: Store,
+    items: [
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
-      { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
-      { title: "Hub Contábil", icon: FileText, path: "/hub-contabil" },
     ],
   },
   {
@@ -232,6 +248,15 @@ const menuSections: MenuSection[] = [
     color: "text-indigo-400",
     sectionIcon: BookOpen,
     items: [{ title: "Academia", icon: BookOpen, path: "/academia" }],
+  },
+  {
+    label: "Sistema",
+    color: "text-slate-400",
+    sectionIcon: Settings,
+    items: [
+      { title: "Suporte", icon: LifeBuoy, path: "/suporte" },
+      { title: "Configurações", icon: Settings, path: "/configuracoes" },
+    ],
   },
 ];
 
@@ -536,8 +561,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       });
       // Pendências removed from sidebar search as it's now only on dashboard
     });
-    items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
-    items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
     return items;
   }, [filteredSections]);
 
@@ -711,39 +734,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
         )}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-white/[0.08] space-y-0.5">
-        <NavLink
-          to="/suporte"
-          onClick={isMobile ? onClose : undefined}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              isActive
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-            )
-          }
-        >
-          <LifeBuoy className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[13px]">Suporte</span>}
-        </NavLink>
-        <NavLink
-          to="/configuracoes"
-          onClick={isMobile ? onClose : undefined}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              isActive
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-            )
-          }
-        >
-          <Settings className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[13px]">Configurações</span>}
-        </NavLink>
-      </div>
     </motion.aside>
   );
 };
