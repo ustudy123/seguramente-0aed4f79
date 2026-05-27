@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Users, Flame, BarChart3 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LineChart, Users, Flame, BarChart3, MessagesSquare } from "lucide-react";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { ResultadosPorGHEPanel } from "./ResultadosPorGHEPanel";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
+import { useEntrevistasGuiadasAggregates } from "@/hooks/useEntrevistasGuiadasAggregates";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 
 interface Props {
@@ -23,15 +25,47 @@ export function ResultadosPsicossociaisHub({ campanhas }: Props) {
   const [tab, setTab] = useState<string>("geral");
   const current = SUB_TABS.find((t) => t.value === tab) ?? SUB_TABS[0];
 
+  // Mescla agregados das entrevistas guiadas (resumo_ia) nas campanhas correspondentes,
+  // promovendo ips_score / radar_data / total_respostas para que apareçam nos mesmos
+  // filtros e gráficos dos questionários.
+  const campanhasEntrevistaIds = useMemo(
+    () => campanhas.filter(c => (c as any).tipo_instrumento === "entrevista_guiada").map(c => c.id),
+    [campanhas]
+  );
+  const { agregadosPorCampanha } = useEntrevistasGuiadasAggregates(campanhasEntrevistaIds);
+
+  const campanhasEnriquecidas = useMemo<CampanhaPsicossocial[]>(() => {
+    if (agregadosPorCampanha.size === 0) return campanhas;
+    return campanhas.map((c) => {
+      const agg = agregadosPorCampanha.get(c.id);
+      if (!agg) return c;
+      return {
+        ...c,
+        ips_score: agg.ips_score ?? c.ips_score,
+        radar_data: agg.radar_data.length > 0 ? agg.radar_data : c.radar_data,
+        total_respostas: agg.total_concluidas || c.total_respostas,
+      } as CampanhaPsicossocial;
+    });
+  }, [campanhas, agregadosPorCampanha]);
+
+  const totalEntrevistas = agregadosPorCampanha.size;
+
   return (
     <div className="space-y-4">
       <Card className="border-purple-200/60 bg-gradient-to-r from-purple-50/60 to-fuchsia-50/40">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-purple-900">
+          <CardTitle className="text-base font-semibold text-purple-900 flex items-center gap-2 flex-wrap">
             📊 Resultados Psicossociais
+            {totalEntrevistas > 0 && (
+              <Badge variant="outline" className="text-[10px] bg-white/70 border-purple-200 text-purple-700 gap-1">
+                <MessagesSquare className="h-3 w-3" />
+                {totalEntrevistas} entrevista{totalEntrevistas > 1 ? "s" : ""} guiada{totalEntrevistas > 1 ? "s" : ""} incluída{totalEntrevistas > 1 ? "s" : ""}
+              </Badge>
+            )}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Tudo o que o gestor tático precisa para enxergar o clima psicossocial em um só lugar.
+            Questionários e entrevistas guiadas aparecem no mesmo filtro.
           </p>
         </CardHeader>
       </Card>
@@ -56,7 +90,7 @@ export function ResultadosPsicossociaisHub({ campanhas }: Props) {
         <p className="text-xs text-muted-foreground mt-2 px-1">{current.desc}</p>
 
         <TabsContent value="geral" className="mt-4">
-          <IndicesDerivadosDashboard campanhas={campanhas} />
+          <IndicesDerivadosDashboard campanhas={campanhasEnriquecidas} />
         </TabsContent>
 
         <TabsContent value="ghe" className="mt-4">
@@ -64,11 +98,11 @@ export function ResultadosPsicossociaisHub({ campanhas }: Props) {
         </TabsContent>
 
         <TabsContent value="burnout" className="mt-4">
-          <RadaresPsicossocialSection campanhas={campanhas} />
+          <RadaresPsicossocialSection campanhas={campanhasEnriquecidas} />
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <IPSHistoricoChart campanhas={campanhas} />
+          <IPSHistoricoChart campanhas={campanhasEnriquecidas} />
         </TabsContent>
       </Tabs>
     </div>

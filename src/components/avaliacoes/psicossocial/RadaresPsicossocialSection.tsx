@@ -789,11 +789,15 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
                         <SelectValue placeholder="Filtrar por Campanha" />
                       </SelectTrigger>
                       <SelectContent>
-                        {campanhasValidas.map(c => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.id === campanhaMaisRecenteId ? `${c.nome} (mais recente)` : c.nome}
-                          </SelectItem>
-                        ))}
+                        {campanhasValidas.map(c => {
+                          const isEntrevista = (c as any).tipo_instrumento === "entrevista_guiada";
+                          const sufixo = c.id === campanhaMaisRecenteId ? " (mais recente)" : "";
+                          return (
+                            <SelectItem key={c.id} value={c.id}>
+                              {isEntrevista ? "🎙️ " : ""}{c.nome}{sufixo}{isEntrevista ? " — Entrevista" : ""}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
