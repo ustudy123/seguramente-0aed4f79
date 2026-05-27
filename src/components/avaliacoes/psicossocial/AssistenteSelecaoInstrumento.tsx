@@ -423,6 +423,13 @@ export function AssistenteSelecaoInstrumento({
         aposentadoriaEspecial: !!empresa?.aposentadoria_especial,
         cnae: empresa?.cnae_principal ?? null,
       });
+
+      // Faixa <5 colaboradores → entrevista guiada por IA (anonimato + representatividade)
+      if (totalColaboradores > 0 && totalColaboradores < 5) {
+        setStep('entrevista-recomendada');
+      } else {
+        setStep('checklist');
+      }
     } catch {
       setSysData({
         totalColaboradores: 0, totalSetores: 0, temTurnoNoturno: false,
@@ -431,18 +438,6 @@ export function AssistenteSelecaoInstrumento({
         possuiTerceiroTurno: false, trabalhoAltura: false, espacoConfinado: false,
         insalubridade: false, periculosidade: false, aposentadoriaEspecial: false, cnae: null,
       });
-    }
-    // Faixa <5 colaboradores → entrevista guiada por IA (anonimato + representatividade)
-    setStep((prev) => {
-      // recupera contagem mais recente
-      // sysData ainda não foi atualizado neste tick; usamos o state setado abaixo via setTimeout async
-      return prev;
-    });
-    // Decidir próximo passo com base no totalColaboradores recém-calculado
-    const totalParaDecisao = (totalColabCount > 0 ? totalColabCount : (empresa?.total_colaboradores ?? 0));
-    if (totalParaDecisao > 0 && totalParaDecisao < 5) {
-      setStep('entrevista-recomendada');
-    } else {
       setStep('checklist');
     }
   };
