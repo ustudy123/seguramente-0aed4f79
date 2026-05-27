@@ -14,25 +14,31 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing authorization header");
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing authorization header");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+    // Validate JWT via claims (does not require active server session)
+    const authClient = createClient(supabaseUrl, anonKey);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) throw new Error("Unauthorized");
+    const userId = claimsData.claims.sub;
+
+    // Use service role for DB reads (bypasses RLS; we already authenticated the user)
+    const supabase = createClient(supabaseUrl, serviceKey);
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("tenant_id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
     if (!profile?.tenant_id) throw new Error("Tenant not found");
 
     const tenantId = profile.tenant_id;
+
     const { descricao_livre, cargo_id } = await req.json();
 
     if (!descricao_livre || descricao_livre.trim().length < 3) {
