@@ -320,11 +320,11 @@ export default function EntrevistaGuiada() {
               </Button>
               <Button
                 size="sm"
-                onClick={handleStopAndSend}
+                onClick={handleStopAndTranscribe}
                 disabled={recorder.duration < 1}
                 className="bg-gradient-to-br from-red-600 to-rose-600 gap-1"
               >
-                <Square className="w-4 h-4" /> Parar e enviar
+                <Square className="w-4 h-4" /> Parar e transcrever
               </Button>
             </div>
           ) : transcribing ? (
