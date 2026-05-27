@@ -9,8 +9,10 @@ import {
   Shield,
   CheckCircle2,
   Mic,
+  Square,
   AlertTriangle,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +22,10 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useEntrevistaIA } from "@/hooks/useEntrevistaIA";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+
+const TRANSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-transcribe-audio`;
+const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export default function EntrevistaGuiada() {
   const { token } = useParams<{ token: string }>();
@@ -38,7 +44,47 @@ export default function EntrevistaGuiada() {
   const [consent, setConsent] = useState(false);
   const [draft, setDraft] = useState("");
   const [finalizing, setFinalizing] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const recorder = useAudioRecorder({ maxDuration: 180 });
+
+  const handleStartRecording = async () => {
+    await recorder.startRecording();
+  };
+
+  const handleStopAndSend = async () => {
+    recorder.stopRecording();
+    // Aguarda o onstop populá-lo
+    await new Promise((r) => setTimeout(r, 300));
+    setTranscribing(true);
+    try {
+      const base64 = await recorder.getBase64();
+      if (!base64) throw new Error("Áudio vazio");
+      const res = await fetch(TRANSCRIBE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${ANON}` },
+        body: JSON.stringify({ audioBase64: base64 }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Falha na transcrição" }));
+        throw new Error(err.error || "Erro ao transcrever");
+      }
+      const { text } = await res.json();
+      if (!text?.trim()) throw new Error("Não consegui entender o áudio. Tente novamente.");
+      recorder.clearRecording();
+      await sendMessage(text.trim(), "voz_transcrita");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao processar áudio");
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
+  const handleCancelRecording = () => {
+    recorder.stopRecording();
+    setTimeout(() => recorder.clearRecording(), 200);
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -240,36 +286,83 @@ export default function EntrevistaGuiada() {
               Finalizar entrevista
             </Button>
           )}
-          <div className="flex items-end gap-2">
-            <Textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Escreva sua resposta..."
-              rows={2}
-              disabled={streaming || finalizing}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (draft.trim()) {
-                    sendMessage(draft.trim());
-                    setDraft("");
+          {recorder.isRecording ? (
+            <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600"></span>
+              </span>
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-red-900">Gravando áudio…</p>
+                <p className="text-[11px] text-red-700/80 tabular-nums">
+                  {recorder.formattedDuration} / 03:00
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCancelRecording}
+                className="text-red-700 hover:bg-red-100 gap-1"
+              >
+                <Trash2 className="w-4 h-4" /> Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleStopAndSend}
+                disabled={recorder.duration < 1}
+                className="bg-gradient-to-br from-red-600 to-rose-600 gap-1"
+              >
+                <Square className="w-4 h-4" /> Parar e enviar
+              </Button>
+            </div>
+          ) : transcribing ? (
+            <div className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-3 py-3">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+              <p className="text-xs text-purple-900">Transcrevendo seu áudio…</p>
+            </div>
+          ) : (
+            <div className="flex items-end gap-2">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Escreva sua resposta ou use o microfone..."
+                rows={2}
+                disabled={streaming || finalizing}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (draft.trim()) {
+                      sendMessage(draft.trim());
+                      setDraft("");
+                    }
                   }
-                }
-              }}
-              className="resize-none text-sm"
-            />
-            <Button
-              size="icon"
-              disabled={!draft.trim() || streaming || finalizing}
-              onClick={() => {
-                sendMessage(draft.trim());
-                setDraft("");
-              }}
-              className="bg-gradient-to-br from-purple-600 to-indigo-600"
-            >
-              {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-          </div>
+                }}
+                className="resize-none text-sm"
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={streaming || finalizing || !!draft.trim()}
+                onClick={handleStartRecording}
+                title="Gravar áudio"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50"
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                disabled={!draft.trim() || streaming || finalizing}
+                onClick={() => {
+                  sendMessage(draft.trim());
+                  setDraft("");
+                }}
+                className="bg-gradient-to-br from-purple-600 to-indigo-600"
+              >
+                {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </div>
+          )}
+          {recorder.error && <p className="text-xs text-destructive">{recorder.error}</p>}
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
       </footer>
