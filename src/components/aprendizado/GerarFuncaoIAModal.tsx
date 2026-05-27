@@ -176,6 +176,7 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
             </div>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
