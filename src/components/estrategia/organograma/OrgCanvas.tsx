@@ -1,10 +1,11 @@
 import { useRef, useState, useCallback, useEffect, type ReactNode, type MouseEvent } from "react";
-import { ZoomIn, ZoomOut, Maximize2, FileImage, FileText, Download, Loader2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, FileImage, FileText, Download, Loader2, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface OrgCanvasProps {
   children: ReactNode;
@@ -18,6 +19,7 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [isExporting, setIsExporting] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Attach wheel listener as non-passive so preventDefault works
