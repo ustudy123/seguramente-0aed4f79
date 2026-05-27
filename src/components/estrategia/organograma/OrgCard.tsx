@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from "react";
-import { Plus, Trash2, User, Briefcase, ArrowRight, GripVertical, Pencil } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, ArrowRight, GripVertical, Pencil, ArrowUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
