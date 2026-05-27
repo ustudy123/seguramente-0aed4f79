@@ -53,7 +53,7 @@ export default function EntrevistaGuiada() {
     await recorder.startRecording();
   };
 
-  const handleStopAndSend = async () => {
+  const handleStopAndTranscribe = async () => {
     recorder.stopRecording();
     // Aguarda o onstop populá-lo
     await new Promise((r) => setTimeout(r, 300));
@@ -73,12 +73,23 @@ export default function EntrevistaGuiada() {
       const { text } = await res.json();
       if (!text?.trim()) throw new Error("Não consegui entender o áudio. Tente novamente.");
       recorder.clearRecording();
-      await sendMessage(text.trim(), "voz_transcrita");
+      // Anexa a transcrição ao rascunho para edição antes de enviar
+      setDraft((prev) => (prev ? `${prev.trim()} ${text.trim()}` : text.trim()));
+      setVoiceUsed(true);
+      toast.success("Áudio transcrito. Revise e envie quando quiser.");
     } catch (e: any) {
       toast.error(e.message || "Erro ao processar áudio");
     } finally {
       setTranscribing(false);
     }
+  };
+
+  const sendDraft = () => {
+    const text = draft.trim();
+    if (!text) return;
+    sendMessage(text, voiceUsed ? "voz_transcrita" : "texto");
+    setDraft("");
+    setVoiceUsed(false);
   };
 
   const handleCancelRecording = () => {
