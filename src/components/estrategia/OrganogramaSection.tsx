@@ -118,6 +118,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [ocupanteSearch, setOcupanteSearch] = useState("");
   const [showSugestao, setShowSugestao] = useState(false);
   const [isSugerindo, setIsSugerindo] = useState(false);
+  const [insertingBetweenId, setInsertingBetweenId] = useState<string | null>(null);
 
   const tree = buildTree(organograma);
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
