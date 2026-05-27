@@ -107,6 +107,18 @@ export function normalizeManualHtml(html: string) {
   `;
   documentNode.head.appendChild(baseStyle);
 
+  // Fix double numbering: if <li> text already starts with "N." or "N)",
+  // remove the auto-numbering from the parent <ol>.
+  const orderedLists = documentNode.body.querySelectorAll("ol");
+  orderedLists.forEach((ol) => {
+    const items = Array.from(ol.children).filter((c) => c.tagName === "LI");
+    if (!items.length) return;
+    const allPrefixed = items.every((li) => /^\s*\d+\s*[.)]/.test(li.textContent || ""));
+    if (allPrefixed) {
+      appendInlineStyle(ol as HTMLElement, "list-style: none !important; padding-left: 0 !important;");
+    }
+  });
+
   const textElements = documentNode.body.querySelectorAll("p, li, td, blockquote");
   const headingElements = documentNode.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
   const visualContainers = documentNode.body.querySelectorAll("div, section, article, header");
