@@ -222,6 +222,7 @@ export function usePsicossocial() {
           descricao: dados.descricao,
           tipo: dados.tipo || 'regular',
           instrumento: dados.instrumento || 'copsoq',
+          tipo_instrumento: dados.tipo_instrumento || 'questionario',
           periodicidade: dados.periodicidade,
           data_inicio: dados.data_inicio,
           data_fim: dados.data_fim,

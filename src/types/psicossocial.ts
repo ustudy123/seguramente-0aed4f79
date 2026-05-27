@@ -214,6 +214,7 @@ export interface CampanhaPsicossocial {
   status: CampanhaPsicossocialStatus;
   tipo: CampanhaPsicossocialTipo;
   instrumento?: InstrumentoPsicossocial;
+  tipo_instrumento?: 'questionario' | 'entrevista_guiada';
   escopo?: EscopoCampanha;
   escopo_valores?: string[];
   // Situações de trabalho vinculadas (pares Setor+Função — NR-17)
@@ -349,6 +350,7 @@ export interface NovaCampanha {
   descricao?: string;
   tipo?: CampanhaPsicossocialTipo;
   instrumento?: InstrumentoPsicossocial;
+  tipo_instrumento?: 'questionario' | 'entrevista_guiada';
   periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;

@@ -16,7 +16,9 @@ import {
   Search,
   Filter,
   X,
+  MessageSquare,
 } from "lucide-react";
+import { useGerarEntrevista } from "@/hooks/useGerarEntrevista";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -340,6 +342,8 @@ interface CampanhaCardProps {
 function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
+  const gerarEntrevista = useGerarEntrevista();
+  const isEntrevista = (campanha as any).tipo_instrumento === 'entrevista_guiada';
 
   const getStatusBadge = (status: CampanhaPsicossocial['status']) => {
     switch (status) {
@@ -360,6 +364,12 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
           {getStatusBadge(campanha.status)}
           {campanha.anonimo && (
             <Badge variant="outline" className="text-xs">Anônimo</Badge>
+          )}
+          {isEntrevista && (
+            <Badge variant="outline" className="text-xs gap-1 text-purple-700 border-purple-300 bg-purple-50">
+              <MessageSquare className="h-3 w-3" />
+              Entrevista guiada por IA
+            </Badge>
           )}
           {/* GAP 1: Badge indicando que riscos já foram exportados ao GRO */}
           {campanha.gro_exportado_em && (
@@ -417,10 +427,23 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
               <UserPlus className="h-4 w-4 mr-1" />
               Participação
             </Button>
-            <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
-              <LinkIcon className="h-4 w-4 mr-1" />
-              Link Geral
-            </Button>
+            {isEntrevista ? (
+              <Button
+                id={`btn-gerar-entrevista-${campanha.id}`}
+                variant="outline"
+                size="sm"
+                disabled={gerarEntrevista.isPending}
+                onClick={() => gerarEntrevista.mutate({ campanhaId: campanha.id })}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                {gerarEntrevista.isPending ? "Gerando..." : "Gerar Entrevista"}
+              </Button>
+            ) : (
+              <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
+                <LinkIcon className="h-4 w-4 mr-1" />
+                Link Geral
+              </Button>
+            )}
             <Button id={`btn-resultados-${campanha.id}`} variant="outline" size="sm" onClick={onVerResultados}>
               <BarChart3 className="h-4 w-4 mr-1" />
               Resultados

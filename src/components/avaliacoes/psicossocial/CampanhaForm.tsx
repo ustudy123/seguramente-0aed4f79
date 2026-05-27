@@ -100,6 +100,7 @@ const formSchema = z.object({
   descricao: z.string().optional(),
   tipo: z.enum(['regular', 'extraordinaria']).default('regular'),
   instrumento: z.enum(['copsoq', 'hse', 'proart', 'sipro', 'customizado']).default('sipro'),
+  tipo_instrumento: z.enum(['questionario', 'entrevista_guiada']).default('questionario'),
   periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().min(1, "Data de término é obrigatória"),
@@ -236,6 +237,38 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
 
   const tipo = form.watch("tipo");
   const instrumento = form.watch("instrumento");
+  const tipoInstrumento = form.watch("tipo_instrumento");
+
+  // Contagem ativa de colaboradores para travar modalidade
+  const { data: totalColaboradoresAtivos = 0 } = useQuery({
+    queryKey: ["psicossocial_total_colab_form", empresaAtivaId],
+    queryFn: async () => {
+      const tenantId = user
+        ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id
+        : null;
+      if (!tenantId) return 0;
+      let q = supabase.from('admissoes').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).not('status', 'eq', 'desligado');
+      if (empresaAtivaId) q = q.eq('empresa_id', empresaAtivaId);
+      const { count } = await q;
+      return count || 0;
+    },
+    enabled: open && !!user,
+  });
+
+  // Travas por faixa de funcionários: <5 → só entrevista; >10 → só questionário; 5-10 → escolha
+  const modalidadeBloqueada = totalColaboradoresAtivos < 5
+    ? 'entrevista_guiada' as const
+    : totalColaboradoresAtivos > 10
+      ? 'questionario' as const
+      : null;
+
+  useEffect(() => {
+    if (!open) return;
+    if (modalidadeBloqueada && tipoInstrumento !== modalidadeBloqueada) {
+      form.setValue('tipo_instrumento', modalidadeBloqueada);
+    }
+  }, [open, modalidadeBloqueada, tipoInstrumento, form]);
+
 
   // Sincronizar departamentos/cargos ao abrir
   useEffect(() => {
@@ -372,7 +405,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
         nome: data.nome,
         descricao: data.descricao,
         tipo: data.tipo,
-        instrumento: data.instrumento,
+        instrumento: data.tipo_instrumento === 'entrevista_guiada' ? 'sipro' : data.instrumento,
+        tipo_instrumento: data.tipo_instrumento,
         periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
         data_inicio: data.data_inicio,
         data_fim: data.data_fim,
@@ -397,7 +431,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
   const campanhasAnteriores = campanhas.filter(c => c.status === 'encerrada');
 
   // Instrumentos que suportam blocos CET (SIPRO é o único por ora)
-  const instrumentoSuportaCET = instrumento === 'sipro' || instrumento === 'customizado';
+  const instrumentoSuportaCET = tipoInstrumento === 'questionario' && (instrumento === 'sipro' || instrumento === 'customizado');
 
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -645,40 +679,102 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
               </>
             )}
 
-            {/* Instrumento */}
+            {/* Modalidade de coleta — questionário x entrevista guiada por IA */}
             <FormField
               control={form.control}
-              name="instrumento"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Brain className="h-4 w-4 text-purple-600" />
-                    Instrumento de Avaliação *
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o instrumento" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {INSTRUMENTOS.map(inst => (
-                        <SelectItem key={inst.id} value={inst.id}>
-                          <div>
-                            <span className="font-medium">{inst.nome}</span>
-                            <span className="text-muted-foreground text-xs ml-2">— {inst.totalPerguntas} questões</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    {INSTRUMENTOS.find(i => i.id === field.value)?.uso || 'Selecione o instrumento adequado ao objetivo da campanha'}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="tipo_instrumento"
+              render={({ field }) => {
+                const lockQuest = modalidadeBloqueada === 'entrevista_guiada';
+                const lockEntrev = modalidadeBloqueada === 'questionario';
+                return (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                      Modalidade de Coleta *
+                    </FormLabel>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        disabled={lockQuest}
+                        onClick={() => !lockQuest && field.onChange('questionario')}
+                        className={cn(
+                          "text-left rounded-lg border p-3 transition",
+                          field.value === 'questionario' ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200" : "border-border hover:border-purple-300",
+                          lockQuest && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="h-4 w-4 text-purple-600" />
+                          <span className="font-semibold text-sm">Questionário (COPSOQ, SIPRO…)</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Coleta quantitativa via link público. Requer 5+ respondentes para anonimato.</p>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={lockEntrev}
+                        onClick={() => !lockEntrev && field.onChange('entrevista_guiada')}
+                        className={cn(
+                          "text-left rounded-lg border p-3 transition",
+                          field.value === 'entrevista_guiada' ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200" : "border-border hover:border-purple-300",
+                          lockEntrev && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Brain className="h-4 w-4 text-purple-600" />
+                          <span className="font-semibold text-sm">Entrevista guiada por IA</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Conversa estruturada (texto ou voz). Saída qualitativa anonimizada com P/S por risco.</p>
+                      </button>
+                    </div>
+                    <FormDescription>
+                      Detectados <strong>{totalColaboradoresAtivos}</strong> colaboradores ativos.{' '}
+                      {modalidadeBloqueada === 'entrevista_guiada' && '< 5 colaboradores → apenas entrevista guiada (preserva anonimato).'}
+                      {modalidadeBloqueada === 'questionario' && '> 10 colaboradores → apenas questionário (cobertura estatística).'}
+                      {!modalidadeBloqueada && '5–10 colaboradores → escolha exclusiva por campanha.'}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
+
+            {/* Instrumento (apenas para modalidade questionário) */}
+            {tipoInstrumento === 'questionario' && (
+              <FormField
+                control={form.control}
+                name="instrumento"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Brain className="h-4 w-4 text-purple-600" />
+                      Instrumento de Avaliação *
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o instrumento" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {INSTRUMENTOS.map(inst => (
+                          <SelectItem key={inst.id} value={inst.id}>
+                            <div>
+                              <span className="font-medium">{inst.nome}</span>
+                              <span className="text-muted-foreground text-xs ml-2">— {inst.totalPerguntas} questões</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {INSTRUMENTOS.find(i => i.id === field.value)?.uso || 'Selecione o instrumento adequado ao objetivo da campanha'}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
 
             {/* Nome */}
             <FormField
