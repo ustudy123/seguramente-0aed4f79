@@ -118,6 +118,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [ocupanteSearch, setOcupanteSearch] = useState("");
   const [showSugestao, setShowSugestao] = useState(false);
   const [isSugerindo, setIsSugerindo] = useState(false);
+  const [insertingBetweenId, setInsertingBetweenId] = useState<string | null>(null);
 
   const tree = buildTree(organograma);
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
@@ -156,6 +157,14 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       selectedOcupantes: node.colaborador_id ? [{ id: node.colaborador_id, nome: node.nome_ocupante || "" }] : []
     });
     setOcupanteSearch("");
+    setShowNew(true);
+  };
+
+  const openDialogForInsertion = (childId: string) => {
+    const childNode = organograma.find(n => n.id === childId);
+    setEditingNode(null);
+    setInsertingBetweenId(childId);
+    setForm({ ...INITIAL_FORM, parent_id: childNode?.parent_id || "" });
     setShowNew(true);
   };
 
@@ -211,6 +220,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       setShowNew(false);
       setForm(INITIAL_FORM);
       setOcupanteSearch("");
+      setInsertingBetweenId(null);
     };
 
     let remaining = ocupantes.length;
@@ -223,7 +233,17 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           parent_id: parentId, 
           tipo: "funcao" 
         },
-        { onSuccess: () => { remaining--; if (remaining === 0) resetForm(); } },
+        { 
+          onSuccess: (createdNode: any) => { 
+            if (insertingBetweenId && createdNode?.id) {
+              updateOrgNode.mutate({ id: insertingBetweenId, parent_id: createdNode.id });
+              setInsertingBetweenId(null);
+              toast.info("Posição inserida na hierarquia");
+            }
+            remaining--; 
+            if (remaining === 0) resetForm(); 
+          } 
+        },
       );
     });
   };
@@ -552,6 +572,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             onDelete={(id) => deleteOrgNode.mutate(id)}
             onAddChild={openDialogForParent}
             onAddSibling={(parentId) => openDialogForParent(parentId || "")}
+            onInsertBetween={openDialogForInsertion}
             onEdit={(id) => {
               const node = organograma.find(n => n.id === id);
               if (node) openDialogForEdit(node);
