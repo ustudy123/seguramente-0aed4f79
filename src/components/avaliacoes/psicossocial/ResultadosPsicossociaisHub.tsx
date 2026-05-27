@@ -6,7 +6,7 @@ import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { ResultadosPorGHEPanel } from "./ResultadosPorGHEPanel";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
-import type { CampanhaPsicossocial } from "@/hooks/usePsicossocial";
+import type { CampanhaPsicossocial } from "@/types/psicossocial";
 
 interface Props {
   campanhas: CampanhaPsicossocial[];
