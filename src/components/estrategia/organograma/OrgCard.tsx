@@ -221,7 +221,7 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onInsertBetw
               onInsertBetween?.(node.id);
             }}
           >
-            <Plus className="w-3.5 h-3.5" />
+            <ArrowUp className="w-3.5 h-3.5" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs">Inserir entre (acima)</TooltipContent>
