@@ -90,7 +90,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   const handleExportarPDF = async () => {
-    if (!campanha) return;
+    if (!podeExportar || !campanha) return;
     setExportando(true);
     try {
       const doc = new jsPDF({ orientation: "portrait", format: "a4" });
