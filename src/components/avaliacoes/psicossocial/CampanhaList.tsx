@@ -44,6 +44,7 @@ import { useGRORiscos } from "@/hooks/useGRORiscos";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
 import { ParticipacaoManager } from "./ParticipacaoManager";
+import { EntrevistasManagerModal } from "./EntrevistasManagerModal";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
   const [selectedCampanha, setSelectedCampanha] = useState<CampanhaPsicossocial | null>(null);
   const [showDistribuicao, setShowDistribuicao] = useState(false);
   const [showResultados, setShowResultados] = useState(false);
+  const [showEntrevistas, setShowEntrevistas] = useState(false);
   const [expandedCampanha, setExpandedCampanha] = useState<string | null>(null);
   const [exportandoGRO, setExportandoGRO] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -279,6 +281,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
                 onDistribuir={() => handleDistribuir(campanha)}
                 onVerResultados={() => handleVerResultados(campanha)}
                 onGerenciarParticipacao={() => handleGerenciarParticipacao(campanha)}
+                onGerenciarLinks={() => { setSelectedCampanha(campanha); setShowEntrevistas(true); }}
                 onEditar={() => handleEditar(campanha)}
                 isExpanded={expandedCampanha === campanha.id}
                 isExportandoGRO={exportandoGRO === campanha.id}
@@ -323,6 +326,14 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
           campanha={selectedCampanha}
         />
       )}
+
+      {/* Modal de Gestão de Links de Entrevista */}
+      <EntrevistasManagerModal
+        open={showEntrevistas}
+        onOpenChange={setShowEntrevistas}
+        campanhaId={selectedCampanha?.id ?? null}
+        campanhaNome={selectedCampanha?.nome}
+      />
     </>
   );
 }
@@ -334,12 +345,13 @@ interface CampanhaCardProps {
   onDistribuir: () => void;
   onVerResultados: () => void;
   onGerenciarParticipacao: () => void;
+  onGerenciarLinks: () => void;
   onEditar: () => void;
   isExpanded: boolean;
   isExportandoGRO?: boolean;
 }
 
-function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
+function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onGerenciarLinks, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
   const gerarEntrevista = useGerarEntrevista();
@@ -428,16 +440,27 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
               Participação
             </Button>
             {isEntrevista ? (
-              <Button
-                id={`btn-gerar-entrevista-${campanha.id}`}
-                variant="outline"
-                size="sm"
-                disabled={gerarEntrevista.isPending}
-                onClick={() => gerarEntrevista.mutate({ campanhaId: campanha.id })}
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                {gerarEntrevista.isPending ? "Gerando..." : "Gerar Entrevista"}
-              </Button>
+              <>
+                <Button
+                  id={`btn-gerar-entrevista-${campanha.id}`}
+                  variant="outline"
+                  size="sm"
+                  disabled={gerarEntrevista.isPending}
+                  onClick={() => gerarEntrevista.mutate({ campanhaId: campanha.id })}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  {gerarEntrevista.isPending ? "Gerando..." : "Novo Link"}
+                </Button>
+                <Button
+                  id={`btn-gerenciar-links-${campanha.id}`}
+                  variant="outline"
+                  size="sm"
+                  onClick={onGerenciarLinks}
+                >
+                  <LinkIcon className="h-4 w-4 mr-1" />
+                  Gerenciar Links
+                </Button>
+              </>
             ) : (
               <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
                 <LinkIcon className="h-4 w-4 mr-1" />
