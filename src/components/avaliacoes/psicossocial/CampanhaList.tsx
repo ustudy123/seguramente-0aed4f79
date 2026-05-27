@@ -64,6 +64,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
   const [selectedCampanha, setSelectedCampanha] = useState<CampanhaPsicossocial | null>(null);
   const [showDistribuicao, setShowDistribuicao] = useState(false);
   const [showResultados, setShowResultados] = useState(false);
+  const [showEntrevistas, setShowEntrevistas] = useState(false);
   const [expandedCampanha, setExpandedCampanha] = useState<string | null>(null);
   const [exportandoGRO, setExportandoGRO] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
