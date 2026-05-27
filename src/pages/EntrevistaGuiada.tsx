@@ -337,16 +337,13 @@ export default function EntrevistaGuiada() {
               <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Escreva sua resposta ou use o microfone..."
+                placeholder="Escreva sua resposta ou use o microfone para ditar..."
                 rows={2}
                 disabled={streaming || finalizing}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    if (draft.trim()) {
-                      sendMessage(draft.trim());
-                      setDraft("");
-                    }
+                    sendDraft();
                   }
                 }}
                 className="resize-none text-sm"
@@ -354,9 +351,9 @@ export default function EntrevistaGuiada() {
               <Button
                 size="icon"
                 variant="outline"
-                disabled={streaming || finalizing || !!draft.trim()}
+                disabled={streaming || finalizing}
                 onClick={handleStartRecording}
-                title="Gravar áudio"
+                title="Ditar por áudio (você poderá editar antes de enviar)"
                 className="border-purple-200 text-purple-700 hover:bg-purple-50"
               >
                 <Mic className="w-4 h-4" />
@@ -364,10 +361,7 @@ export default function EntrevistaGuiada() {
               <Button
                 size="icon"
                 disabled={!draft.trim() || streaming || finalizing}
-                onClick={() => {
-                  sendMessage(draft.trim());
-                  setDraft("");
-                }}
+                onClick={sendDraft}
                 className="bg-gradient-to-br from-purple-600 to-indigo-600"
               >
                 {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
