@@ -392,10 +392,11 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     baixo: "bg-emerald-50 text-emerald-700 border-emerald-200",
   };
 
-  // IDs de campanhas com modalidade entrevista guiada (para exibir evidências qualitativas)
-  const campanhasEntrevistaIds = (filtroCampanha === "todos" ? campanhasValidas : campanhasValidas.filter(c => c.id === filtroCampanha))
+  // IDs de campanhas com modalidade entrevista guiada (evidências qualitativas, fora do critério de radar)
+  const campanhasEntrevistaIds = (filtroCampanha === "todos" ? campanhas : campanhas.filter(c => c.id === filtroCampanha))
     .filter((c: any) => c.tipo_instrumento === 'entrevista_guiada')
     .map(c => c.id);
+
 
   return (
     <div className="space-y-4">
