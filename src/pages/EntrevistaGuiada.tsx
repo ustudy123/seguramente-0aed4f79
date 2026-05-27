@@ -45,6 +45,7 @@ export default function EntrevistaGuiada() {
   const [draft, setDraft] = useState("");
   const [finalizing, setFinalizing] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [voiceUsed, setVoiceUsed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const recorder = useAudioRecorder({ maxDuration: 180 });
@@ -53,7 +54,7 @@ export default function EntrevistaGuiada() {
     await recorder.startRecording();
   };
 
-  const handleStopAndSend = async () => {
+  const handleStopAndTranscribe = async () => {
     recorder.stopRecording();
     // Aguarda o onstop populá-lo
     await new Promise((r) => setTimeout(r, 300));
@@ -73,12 +74,23 @@ export default function EntrevistaGuiada() {
       const { text } = await res.json();
       if (!text?.trim()) throw new Error("Não consegui entender o áudio. Tente novamente.");
       recorder.clearRecording();
-      await sendMessage(text.trim(), "voz_transcrita");
+      // Anexa a transcrição ao rascunho para edição antes de enviar
+      setDraft((prev) => (prev ? `${prev.trim()} ${text.trim()}` : text.trim()));
+      setVoiceUsed(true);
+      toast.success("Áudio transcrito. Revise e envie quando quiser.");
     } catch (e: any) {
       toast.error(e.message || "Erro ao processar áudio");
     } finally {
       setTranscribing(false);
     }
+  };
+
+  const sendDraft = () => {
+    const text = draft.trim();
+    if (!text) return;
+    sendMessage(text, voiceUsed ? "voz_transcrita" : "texto");
+    setDraft("");
+    setVoiceUsed(false);
   };
 
   const handleCancelRecording = () => {
@@ -308,11 +320,11 @@ export default function EntrevistaGuiada() {
               </Button>
               <Button
                 size="sm"
-                onClick={handleStopAndSend}
+                onClick={handleStopAndTranscribe}
                 disabled={recorder.duration < 1}
                 className="bg-gradient-to-br from-red-600 to-rose-600 gap-1"
               >
-                <Square className="w-4 h-4" /> Parar e enviar
+                <Square className="w-4 h-4" /> Parar e transcrever
               </Button>
             </div>
           ) : transcribing ? (
@@ -325,16 +337,13 @@ export default function EntrevistaGuiada() {
               <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Escreva sua resposta ou use o microfone..."
+                placeholder="Escreva sua resposta ou use o microfone para ditar..."
                 rows={2}
                 disabled={streaming || finalizing}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    if (draft.trim()) {
-                      sendMessage(draft.trim());
-                      setDraft("");
-                    }
+                    sendDraft();
                   }
                 }}
                 className="resize-none text-sm"
@@ -342,9 +351,9 @@ export default function EntrevistaGuiada() {
               <Button
                 size="icon"
                 variant="outline"
-                disabled={streaming || finalizing || !!draft.trim()}
+                disabled={streaming || finalizing}
                 onClick={handleStartRecording}
-                title="Gravar áudio"
+                title="Ditar por áudio (você poderá editar antes de enviar)"
                 className="border-purple-200 text-purple-700 hover:bg-purple-50"
               >
                 <Mic className="w-4 h-4" />
@@ -352,10 +361,7 @@ export default function EntrevistaGuiada() {
               <Button
                 size="icon"
                 disabled={!draft.trim() || streaming || finalizing}
-                onClick={() => {
-                  sendMessage(draft.trim());
-                  setDraft("");
-                }}
+                onClick={sendDraft}
                 className="bg-gradient-to-br from-purple-600 to-indigo-600"
               >
                 {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
