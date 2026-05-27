@@ -139,61 +139,63 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
       y = (doc as any).lastAutoTable.finalY + 10;
 
       // ── 2. Síntese Executiva ───────────────────────────────────────────
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("2. SÍNTESE EXECUTIVA", 14, y);
-      y += 5;
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      const sintese = [
-        [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
-        [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
-        [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
-        [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
-      ];
-      autoTable(doc, {
-        startY: y,
-        body: sintese,
-        headStyles: { fillColor: [88, 28, 135], fontSize: 8 },
-        bodyStyles: { fontSize: 8 },
-        didParseCell: (data) => {
-          const text = String(data.cell.raw);
-          if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
-          else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
-          else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
-          else data.cell.styles.textColor = [5, 122, 85];
-        },
-      });
-      y = (doc as any).lastAutoTable.finalY + 10;
-
-      // ── 3. Inventário de Riscos ────────────────────────────────────────
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
-      y += 5;
-      autoTable(doc, {
-        startY: y,
-        head: [["Dimensão", "Score Risco", "Nível GRO", "Base Normativa"]],
-        body: dimensoesAvaliadas.map(d => [
-          d.subject,
-          `${d.risco}%`,
-          GRO_NIVEL_RISCO_LABELS[d.nivel],
-          "NR-01 / NR-17 / ISO 45003",
-        ]),
-        headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-        bodyStyles: { fontSize: 8 },
-        alternateRowStyles: { fillColor: [248, 245, 255] },
-        didParseCell: (data) => {
-          if (data.section === "body" && data.column.index === 2) {
-            const v = String(data.cell.raw);
-            if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
-            else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-            else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+      if (!isEntrevistaOnly) {
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("2. SÍNTESE EXECUTIVA", 14, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        const sintese = [
+          [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
+          [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
+          [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
+          [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
+        ];
+        autoTable(doc, {
+          startY: y,
+          body: sintese,
+          headStyles: { fillColor: [88, 28, 135], fontSize: 8 },
+          bodyStyles: { fontSize: 8 },
+          didParseCell: (data) => {
+            const text = String(data.cell.raw);
+            if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
+            else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
+            else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
             else data.cell.styles.textColor = [5, 122, 85];
-          }
-        },
-      });
-      y = (doc as any).lastAutoTable.finalY + 10;
+          },
+        });
+        y = (doc as any).lastAutoTable.finalY + 10;
+
+        // ── 3. Inventário de Riscos ────────────────────────────────────────
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
+        y += 5;
+        autoTable(doc, {
+          startY: y,
+          head: [["Dimensão", "Score Risco", "Nível GRO", "Base Normativa"]],
+          body: dimensoesAvaliadas.map(d => [
+            d.subject,
+            `${d.risco}%`,
+            GRO_NIVEL_RISCO_LABELS[d.nivel],
+            "NR-01 / NR-17 / ISO 45003",
+          ]),
+          headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
+          bodyStyles: { fontSize: 8 },
+          alternateRowStyles: { fillColor: [248, 245, 255] },
+          didParseCell: (data) => {
+            if (data.section === "body" && data.column.index === 2) {
+              const v = String(data.cell.raw);
+              if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
+              else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
+              else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+              else data.cell.styles.textColor = [5, 122, 85];
+            }
+          },
+        });
+        y = (doc as any).lastAutoTable.finalY + 10;
+      }
 
       // ── 4. Metodologia ────────────────────────────────────────────────
       doc.addPage();
