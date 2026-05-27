@@ -271,6 +271,75 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
 
+      // ── 6. Evidências Qualitativas (Entrevistas Guiadas IA) ──────────
+      if (temEvidenciasQualitativas) {
+        doc.addPage();
+        y = 20;
+        doc.setFontSize(13);
+        doc.setFont("helvetica", "bold");
+        doc.text("6. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS POR IA", 14, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "italic");
+        const introQual = doc.splitTextToSize(
+          "Resultados qualitativos extraídos automaticamente por IA a partir de entrevistas individuais guiadas (SIPRO conversacional). Trechos anonimizados — nomes, locais e identificadores removidos para preservar o anonimato (LGPD + ISO 45003).",
+          pageW - 28,
+        );
+        doc.text(introQual, 14, y);
+        y += introQual.length * 4 + 4;
+
+        autoTable(doc, {
+          startY: y,
+          head: [["Fator de Risco", "Menções", "P", "S", "Nível"]],
+          body: evidenciasQualitativas.map((ev) => [
+            ev.risco_nome,
+            String(ev.count),
+            String(ev.p_max),
+            String(ev.s_max),
+            GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel,
+          ]),
+          headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
+          bodyStyles: { fontSize: 8 },
+          alternateRowStyles: { fillColor: [248, 245, 255] },
+          didParseCell: (data) => {
+            if (data.section === "body" && data.column.index === 4) {
+              const v = String(data.cell.raw);
+              if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
+              else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
+              else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+              else data.cell.styles.textColor = [5, 122, 85];
+            }
+          },
+        });
+        y = (doc as any).lastAutoTable.finalY + 8;
+
+        // Trechos anonimizados por fator (até 3 por risco)
+        for (const ev of evidenciasQualitativas) {
+          const trechos: string[] = [];
+          for (const e of ev.evidencias) {
+            for (const t of e.trechos_anonimizados ?? []) {
+              if (t && trechos.length < 3) trechos.push(t);
+            }
+            if (trechos.length >= 3) break;
+          }
+          if (!trechos.length) continue;
+          if (y > 255) { doc.addPage(); y = 20; }
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "bold");
+          doc.text(`• ${ev.risco_nome}`, 14, y);
+          y += 4;
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(8);
+          for (const t of trechos) {
+            const linhas = doc.splitTextToSize(`"${t}"`, pageW - 32);
+            if (y + linhas.length * 4 > 280) { doc.addPage(); y = 20; }
+            doc.text(linhas, 18, y);
+            y += linhas.length * 4 + 2;
+          }
+          y += 3;
+        }
+      }
+
       const pdfFileName = `Relatorio_Psicossocial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
       doc.save(pdfFileName);
 
