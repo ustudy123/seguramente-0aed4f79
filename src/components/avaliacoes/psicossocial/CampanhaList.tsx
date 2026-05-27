@@ -16,7 +16,9 @@ import {
   Search,
   Filter,
   X,
+  MessageSquare,
 } from "lucide-react";
+import { useGerarEntrevista } from "@/hooks/useGerarEntrevista";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
