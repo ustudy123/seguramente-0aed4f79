@@ -342,6 +342,8 @@ interface CampanhaCardProps {
 function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
+  const gerarEntrevista = useGerarEntrevista();
+  const isEntrevista = (campanha as any).tipo_instrumento === 'entrevista_guiada';
 
   const getStatusBadge = (status: CampanhaPsicossocial['status']) => {
     switch (status) {
