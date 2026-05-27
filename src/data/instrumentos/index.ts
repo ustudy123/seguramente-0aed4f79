@@ -1,9 +1,11 @@
 export * from './copsoq';
+export * from './copsoq2br';
 export * from './hse';
 export * from './proart';
 export * from './sipro';
 
 import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS } from './copsoq';
+import { COPSOQ2BR_DIMENSOES, COPSOQ2BR_TOTAL_PERGUNTAS } from './copsoq2br';
 import { HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS } from './hse';
 import { PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS } from './proart';
 import { SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from './sipro';
