@@ -48,6 +48,7 @@ import {
   type CategoriaRiscoPsicossocial,
 } from "@/data/catalogoRiscosPsicossociais";
 import { ExplicacaoPGRGRO } from "./ExplicacaoPGRGRO";
+import { EvidenciasEntrevistaPanel } from "./EvidenciasEntrevistaPanel";
 
 interface InventarioPGRProps {
   campanhas: CampanhaPsicossocial[];
