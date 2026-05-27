@@ -3,8 +3,8 @@
  * Gera relatório psicossocial completo + seção de metodologia exportável (PDF)
  * Conformidade: NR-01, NR-17, ISO 45003, COPSOQ III
  */
-import { useState } from "react";
-import { FileText, Download, Loader2, X, Shield, BookOpen, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { useState, useMemo } from "react";
+import { FileText, Download, Loader2, X, Shield, BookOpen, AlertTriangle, CheckCircle2, Info, Quote } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RI
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
+import { useEvidenciasEntrevista } from "@/hooks/useEvidenciasEntrevista";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
