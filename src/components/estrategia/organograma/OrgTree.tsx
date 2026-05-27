@@ -16,7 +16,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit, i
 
   return (
     <div className="flex flex-col items-center">
-      {!isRoot && <div className="w-0.5 h-6 bg-border" />}
+      {!isRoot && <div className="w-0.5 h-[34px] bg-border" />}
 
       <OrgCard
         node={node}
@@ -29,7 +29,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit, i
 
       {hasChildren && (
         <>
-          <div className="w-0.5 h-6 bg-border" />
+          <div className="w-0.5 h-[34px] bg-border" />
 
           <div className="flex">
             {node.children!.map((child, idx) => (

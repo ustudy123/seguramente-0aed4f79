@@ -114,6 +114,19 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
     <div className={`relative ${className || ""}`}>
       {/* Zoom and Export controls */}
       <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-background/90 backdrop-blur-sm border rounded-lg p-1 shadow-sm">
+        <Button
+          variant={showGrid ? "secondary" : "ghost"}
+          size="sm"
+          className={cn("h-7 px-2 gap-1.5 text-xs", showGrid && "text-primary")}
+          onClick={() => setShowGrid(!showGrid)}
+          title={showGrid ? "Ocultar linhas de nível" : "Mostrar linhas de nível"}
+        >
+          <Grid3X3 className="w-3.5 h-3.5" />
+          Níveis
+        </Button>
+
+        <div className="w-px h-5 bg-border mx-0.5" />
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs" disabled={isExporting}>
@@ -172,7 +185,7 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
         data-canvas="true"
       >
         <div
-          className="inline-flex min-w-full min-h-full items-start justify-center pt-8"
+          className="inline-flex min-w-full min-h-full items-start justify-center pt-8 relative"
           style={{
             transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
             transformOrigin: "top center",
@@ -181,6 +194,24 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
           data-canvas="true"
           ref={contentRef}
         >
+          {showGrid && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ top: '2rem' }}>
+              {[...Array(20)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="absolute left-0 right-0 border-b border-border/40 flex items-end px-4 py-1"
+                  style={{ 
+                    top: `${(i * 180)}px`, 
+                    height: '180px'
+                  }}
+                >
+                  <span className="text-[10px] text-muted-foreground/40 font-medium uppercase tracking-wider">
+                    Nível {i + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           {children}
         </div>
       </div>

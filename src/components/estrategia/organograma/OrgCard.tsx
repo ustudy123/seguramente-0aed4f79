@@ -82,7 +82,7 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEd
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] text-center transition-all hover:shadow-lg cursor-grab active:cursor-grabbing",
+        "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] h-[112px] flex flex-col justify-center text-center transition-all hover:shadow-lg cursor-grab active:cursor-grabbing",
         CARD_STYLE.gradient,
         CARD_STYLE.border,
         dropPosition === "child" && "ring-2 ring-primary ring-offset-2 border-primary/50",
