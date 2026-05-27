@@ -34,6 +34,7 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onInsertBetw
   const fotoUrl = useStorageImageUrl(node.colaborador?.foto_url);
   const ocupanteNome = node.colaborador?.nome_completo || node.nome_ocupante;
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
+  const [isOver, setIsOver] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editTitulo, setEditTitulo] = useState(node.titulo);
   const [editOcupante, setEditOcupante] = useState(node.nome_ocupante || "");
@@ -41,34 +42,52 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onInsertBetw
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer.setData("text/plain", node.id);
     e.dataTransfer.effectAllowed = "move";
+    // Add a ghost image or just let browser handle it
+    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+    dragImage.style.opacity = "0.5";
+    dragImage.style.position = "absolute";
+    dragImage.style.top = "-1000px";
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 100, 50);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const draggedId = e.dataTransfer.types.includes("text/plain") ? true : false;
-    if (!draggedId) return;
-
+    
+    setIsOver(true);
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    const threshold = rect.height * 0.6;
-
-    setDropPosition(y > threshold ? "child" : "sibling");
+    
+    // Divide into 3 zones: top 25% (sibling above), middle 50% (child), bottom 25% (sibling below)
+    if (y < rect.height * 0.25) {
+      setDropPosition("sibling");
+    } else if (y > rect.height * 0.75) {
+      setDropPosition("sibling"); // We'll treat both as sibling for simplicity in this UI
+    } else {
+      setDropPosition("child");
+    }
+    
     e.dataTransfer.dropEffect = "move";
   };
 
   const handleDragLeave = () => {
     setDropPosition(null);
+    setIsOver(false);
   };
 
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsOver(false);
+    
     const draggedId = e.dataTransfer.getData("text/plain");
     if (!draggedId || draggedId === node.id) {
       setDropPosition(null);
       return;
     }
+
     if (onMove && dropPosition) {
       onMove(draggedId, node.id, dropPosition);
     }
@@ -86,18 +105,24 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onInsertBetw
         "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] h-[112px] flex flex-col justify-center text-center transition-all hover:shadow-lg cursor-grab active:cursor-grabbing",
         CARD_STYLE.gradient,
         CARD_STYLE.border,
-        dropPosition === "child" && "ring-2 ring-primary ring-offset-2 border-primary/50",
-        dropPosition === "sibling" && "ring-2 ring-secondary ring-offset-2 border-secondary/50",
+        isOver && "scale-105",
+        dropPosition === "child" && "ring-4 ring-primary ring-offset-2 border-primary bg-primary/5",
+        dropPosition === "sibling" && "ring-4 ring-secondary ring-offset-2 border-secondary bg-secondary/5",
       )}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      {/* Drop indicator */}
-      {dropPosition && (
+      {/* Drop indicator overlay */}
+      {isOver && dropPosition && (
         <div className={cn(
-          "absolute inset-x-0 text-[10px] font-medium pointer-events-none z-10",
-          dropPosition === "child" ? "-bottom-5 text-primary" : "-top-5 text-secondary-foreground"
+          "absolute inset-0 flex items-center justify-center rounded-xl bg-background/40 backdrop-blur-[1px] z-20 pointer-events-none border-2 dashed",
+          dropPosition === "child" ? "border-primary" : "border-secondary"
         )}>
-          {dropPosition === "child" ? "↓ Mover como subordinado" : "→ Mover ao lado"}
+          <div className={cn(
+            "px-3 py-1 rounded-full text-xs font-bold shadow-sm",
+            dropPosition === "child" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+          )}>
+            {dropPosition === "child" ? "Vincular como Subordinado" : "Mover para este Nível"}
+          </div>
         </div>
       )}
 
