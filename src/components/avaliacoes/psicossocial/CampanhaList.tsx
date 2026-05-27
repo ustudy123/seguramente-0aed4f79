@@ -281,6 +281,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
                 onDistribuir={() => handleDistribuir(campanha)}
                 onVerResultados={() => handleVerResultados(campanha)}
                 onGerenciarParticipacao={() => handleGerenciarParticipacao(campanha)}
+                onGerenciarLinks={() => { setSelectedCampanha(campanha); setShowEntrevistas(true); }}
                 onEditar={() => handleEditar(campanha)}
                 isExpanded={expandedCampanha === campanha.id}
                 isExportandoGRO={exportandoGRO === campanha.id}
@@ -325,6 +326,14 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
           campanha={selectedCampanha}
         />
       )}
+
+      {/* Modal de Gestão de Links de Entrevista */}
+      <EntrevistasManagerModal
+        open={showEntrevistas}
+        onOpenChange={setShowEntrevistas}
+        campanhaId={selectedCampanha?.id ?? null}
+        campanhaNome={selectedCampanha?.nome}
+      />
     </>
   );
 }
@@ -336,12 +345,13 @@ interface CampanhaCardProps {
   onDistribuir: () => void;
   onVerResultados: () => void;
   onGerenciarParticipacao: () => void;
+  onGerenciarLinks: () => void;
   onEditar: () => void;
   isExpanded: boolean;
   isExportandoGRO?: boolean;
 }
 
-function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
+function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onGerenciarLinks, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
   const gerarEntrevista = useGerarEntrevista();
