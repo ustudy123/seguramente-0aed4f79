@@ -4,7 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Copy, ExternalLink, Plus, Search, Trash2, Ban, Loader2, MessageSquare, Mic } from "lucide-react";
+import {
+  Copy,
+  ExternalLink,
+  Plus,
+  Search,
+  Trash2,
+  Ban,
+  Loader2,
+  MessageSquare,
+  Mic,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,6 +26,12 @@ import {
   useExcluirEntrevista,
 } from "@/hooks/useEntrevistasCampanha";
 import { useGerarEntrevista } from "@/hooks/useGerarEntrevista";
+import { useColaboradores } from "@/hooks/useColaboradores";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useQueryClient } from "@tanstack/react-query";
+import { gerarLinksEntrevistaColaboradores } from "@/utils/gerarLinksEntrevistaColaboradores";
 
 interface Props {
   open: boolean;
@@ -35,8 +52,16 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
   const gerar = useGerarEntrevista();
   const cancelar = useCancelarEntrevista();
   const excluir = useExcluirEntrevista();
+  const { colaboradores } = useColaboradores();
+  const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
+  const { user } = useAuthContext();
+  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [gerandoDoc, setGerandoDoc] = useState(false);
+
+  const PROD_URL = "https://www.youreyes.com.br";
+  const linkOf = (token: string) => `${PROD_URL}/entrevista/${token}`;
 
   const filtradas = useMemo(() => {
     return entrevistas.filter((e) => {
@@ -50,14 +75,92 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
     });
   }, [entrevistas, busca, filtroStatus]);
 
-  const linkOf = (token: string) => `${window.location.origin}/entrevista/${token}`;
-
   const copiar = async (token: string) => {
     try {
       await navigator.clipboard.writeText(linkOf(token));
       toast.success("Link copiado");
     } catch {
       toast.error("Não foi possível copiar");
+    }
+  };
+
+  const handleGerarDocumentoColaboradores = async () => {
+    if (!campanhaId) return;
+    if (!user) {
+      toast.error("Não autenticado");
+      return;
+    }
+    if (!colaboradores || colaboradores.length === 0) {
+      toast.error("Nenhum colaborador encontrado para a empresa ativa");
+      return;
+    }
+
+    setGerandoDoc(true);
+    try {
+      const tenantRes = await fromTable("profiles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
+      const tenantId = (tenantRes.data as any)?.tenant_id;
+      if (!tenantId) throw new Error("Tenant não encontrado");
+
+      // Mapa de entrevistas pendentes já existentes por colaborador
+      const pendentePorColab = new Map<string, string>();
+      for (const e of entrevistas) {
+        if (e.status === "pendente" && (e as any).colaborador_id) {
+          pendentePorColab.set((e as any).colaborador_id, e.token);
+        }
+      }
+
+      const itens: Array<{ nome: string; cpf?: string | null; cargo?: string | null; link: string }> = [];
+      const novas: any[] = [];
+
+      for (const c of colaboradores) {
+        const existente = pendentePorColab.get(c.id);
+        if (existente) {
+          itens.push({ nome: c.nome_completo, cpf: c.cpf, cargo: c.cargo, link: linkOf(existente) });
+          continue;
+        }
+        const token = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        novas.push({
+          tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
+          campanha_id: campanhaId,
+          token,
+          modalidade: "texto",
+          status: "pendente",
+          colaborador_id: c.id,
+          colaborador_nome: c.nome_completo,
+        });
+        itens.push({ nome: c.nome_completo, cpf: c.cpf, cargo: c.cargo, link: linkOf(token) });
+      }
+
+      if (novas.length > 0) {
+        const { error } = await fromTable("psicossocial_entrevistas").insert(novas as any);
+        if (error) throw error;
+      }
+
+      await gerarLinksEntrevistaColaboradores({
+        empresaNome:
+          (empresaAtiva as any)?.razao_social ||
+          (empresaAtiva as any)?.nome_fantasia ||
+          "Empresa",
+        empresaCnpj: (empresaAtiva as any)?.cnpj || "",
+        campanhaNome: campanhaNome || "Campanha",
+        itens,
+      });
+
+      qc.invalidateQueries({ queryKey: ["psicossocial-entrevistas", campanhaId] });
+      toast.success(
+        `Documento gerado com ${itens.length} link(s) — ${novas.length} novo(s) criado(s).`
+      );
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Falha ao gerar documento");
+    } finally {
+      setGerandoDoc(false);
     }
   };
 
@@ -108,6 +211,30 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
             Novo link
           </Button>
         </div>
+
+        <Button
+          variant="default"
+          className="w-full"
+          disabled={!campanhaId || gerandoDoc || !empresaAtivaId}
+          onClick={handleGerarDocumentoColaboradores}
+        >
+          {gerandoDoc ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Gerando documento...
+            </>
+          ) : (
+            <>
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar Documento da Empresa (PDF) — 1 link por colaborador
+            </>
+          )}
+        </Button>
+        {!empresaAtivaId && (
+          <p className="text-xs text-muted-foreground -mt-1">
+            Selecione uma empresa ativa no topo para habilitar a geração em massa.
+          </p>
+        )}
 
         <div className="flex-1 overflow-y-auto border rounded-md">
           {isLoading ? (
