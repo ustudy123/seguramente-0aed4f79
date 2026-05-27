@@ -101,7 +101,21 @@ export function ResultadosPorGHEPanel() {
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
   const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
-  const { resultadosPorGHE, isLoading } = usePsicossocialResultadosGHE(campanhaIds);
+  const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
+
+  if (typeof window !== "undefined") {
+    // Diagnóstico em runtime para entender por que o painel pode aparecer vazio
+    // (mostra contagem de campanhas válidas, respostas agregadas e eventuais erros).
+    // eslint-disable-next-line no-console
+    console.debug("[ResultadosPorGHEPanel]", {
+      totalCampanhas: campanhas.length,
+      campanhasValidas: campanhasValidas.length,
+      campanhaIds,
+      resultadosPorGHE: resultadosPorGHE.length,
+      gruposDetalhe: resultadosPorGHE.map(r => ({ ghe: r.ghe_nome, count: r.count, campanhas: r.campanhas })),
+      error,
+    });
+  }
 
   const ghesAvaliados: GHEAvaliado[] = useMemo(() => {
     return resultadosPorGHE
@@ -159,9 +173,17 @@ export function ResultadosPorGHEPanel() {
           <Users className="h-8 w-8 text-muted-foreground opacity-40" />
           <p className="text-sm font-medium">Nenhum GHE com respostas vinculadas</p>
           <p className="text-xs text-muted-foreground max-w-md">
-            As respostas precisam ter o GHE registrado (via participação por token). Configure os GHEs
-            na aba <strong>GHE</strong> e distribua as campanhas com pares Setor + Função para liberar a análise.
+            Encontramos <strong>{campanhasValidas.length} campanha(s) válida(s)</strong>, mas
+            nenhuma resposta carrega o <code>ghe_id_snapshot</code> e as campanhas correspondentes
+            não têm GHEs (<code>ghe_ids</code>) configurados.
           </p>
+          <p className="text-xs text-muted-foreground max-w-md">
+            Para liberar a análise: edite a campanha e vincule um ou mais GHEs, ou colete novas
+            respostas via link público com GHE definido por par Setor + Função.
+          </p>
+          {error && (
+            <p className="text-xs text-red-600 mt-2">Erro ao carregar: {String(error)}</p>
+          )}
         </CardContent>
       </Card>
     );
