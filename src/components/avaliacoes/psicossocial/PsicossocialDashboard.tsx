@@ -433,9 +433,20 @@ export function PsicossocialDashboard() {
             <GHEPanel />
           </TabsContent>
 
-          {/* Tab: Resultados por GHE */}
+          {/* Tab: Resultados Psicossociais (unificado: Geral + GHE + Burnout/Boreout + Histórico IPS) */}
+          <TabsContent value="resultados" className="mt-4">
+            <ResultadosPsicossociaisHub campanhas={campanhas} />
+          </TabsContent>
+
+          {/* Retrocompat: rotas antigas redirecionam para a Hub */}
           <TabsContent value="resultados-ghe" className="mt-4">
-            <ResultadosPorGHEPanel />
+            <ResultadosPsicossociaisHub campanhas={campanhas} />
+          </TabsContent>
+          <TabsContent value="burnout-boreout" className="mt-4">
+            <ResultadosPsicossociaisHub campanhas={campanhas} />
+          </TabsContent>
+          <TabsContent value="historico" className="mt-4 space-y-4">
+            <ResultadosPsicossociaisHub campanhas={campanhas} />
           </TabsContent>
 
           {/* Tab: Campanhas */}
@@ -447,15 +458,6 @@ export function PsicossocialDashboard() {
             />
           </TabsContent>
 
-          {/* Tab: Burnout & Boreout */}
-          <TabsContent value="burnout-boreout" className="mt-4">
-            <RadaresPsicossocialSection campanhas={campanhas} />
-          </TabsContent>
-
-          {/* Tab: Histórico IPS */}
-          <TabsContent value="historico" className="mt-4 space-y-4">
-            <IPSHistoricoChart campanhas={campanhas} />
-          </TabsContent>
 
           {/* Tab: Inventário PGR */}
           <TabsContent value="pgr" className="mt-4 space-y-4">
