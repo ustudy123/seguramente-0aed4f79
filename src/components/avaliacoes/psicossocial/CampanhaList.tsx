@@ -365,6 +365,12 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
           {campanha.anonimo && (
             <Badge variant="outline" className="text-xs">Anônimo</Badge>
           )}
+          {isEntrevista && (
+            <Badge variant="outline" className="text-xs gap-1 text-purple-700 border-purple-300 bg-purple-50">
+              <MessageSquare className="h-3 w-3" />
+              Entrevista guiada por IA
+            </Badge>
+          )}
           {/* GAP 1: Badge indicando que riscos já foram exportados ao GRO */}
           {campanha.gro_exportado_em && (
             <Badge variant="outline" className="text-xs gap-1 text-emerald-700 border-emerald-300 bg-emerald-50">
