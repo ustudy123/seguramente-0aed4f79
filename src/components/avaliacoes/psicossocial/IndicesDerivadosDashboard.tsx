@@ -261,7 +261,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
           <Activity className="h-5 w-5 text-purple-600" />
           <h3 className="font-semibold text-base">Índices Derivados SIPRO</h3>
           <Badge variant="outline" className="text-xs">
-            {filtroCampanha === "recente" ? "Última campanha analisada" : "Campanha selecionada"}
+            {filtroCampanha === campanhaMaisRecenteId ? "Última campanha analisada" : "Campanha selecionada"}
           </Badge>
           <Popover>
             <PopoverTrigger asChild>
