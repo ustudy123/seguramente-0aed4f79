@@ -378,12 +378,13 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
           </DialogDescription>
         </DialogHeader>
 
-        {campanhasValidas.length === 0 ? (
+        {!podeExportar ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
             <AlertTriangle className="h-10 w-10 text-amber-500" />
             <p className="font-medium">Sem dados suficientes</p>
             <p className="text-sm text-muted-foreground">
-              Necessário ao menos uma campanha encerrada com ≥{MINIMO_ANONIMATO} respondentes.
+              Necessário ao menos uma campanha encerrada com ≥{MINIMO_ANONIMATO} respondentes,
+              ou entrevistas guiadas por IA concluídas com evidências.
             </p>
           </div>
         ) : (
