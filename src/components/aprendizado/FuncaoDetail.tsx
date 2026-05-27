@@ -30,6 +30,9 @@ interface Cargo {
   erros_riscos?: string | null;
   criterios_sucesso?: string | null;
   ferramentas_cargo?: string | null;
+  requisitos_formacao?: string | null;
+  requisitos_experiencia?: string | null;
+
   departamento?: { id: string; nome: string } | null;
 }
 
