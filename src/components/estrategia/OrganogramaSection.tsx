@@ -233,7 +233,17 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           parent_id: parentId, 
           tipo: "funcao" 
         },
-        { onSuccess: () => { remaining--; if (remaining === 0) resetForm(); } },
+        { 
+          onSuccess: (createdNode: any) => { 
+            if (insertingBetweenId && createdNode?.id) {
+              updateOrgNode.mutate({ id: insertingBetweenId, parent_id: createdNode.id });
+              setInsertingBetweenId(null);
+              toast.info("Posição inserida na hierarquia");
+            }
+            remaining--; 
+            if (remaining === 0) resetForm(); 
+          } 
+        },
       );
     });
   };
