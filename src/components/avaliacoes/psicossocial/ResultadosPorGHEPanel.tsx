@@ -105,7 +105,6 @@ export function ResultadosPorGHEPanel() {
 
   const ghesAvaliados: GHEAvaliado[] = useMemo(() => {
     return resultadosPorGHE
-      .filter(g => g.ghe_id)
       .map(g => {
         const fatores = avaliarFatores(g.radar, isSipro);
         fatores.sort((a, b) => (ordemNivel[a.nivelKey] ?? 4) - (ordemNivel[b.nivelKey] ?? 4));
@@ -121,8 +120,9 @@ export function ResultadosPorGHEPanel() {
         };
       })
       .sort((a, b) => {
+        // GHEs reais primeiro, "sem GHE" por último
+        if (!!a.ghe_id !== !!b.ghe_id) return a.ghe_id ? -1 : 1;
         if (a.bloqueado !== b.bloqueado) return a.bloqueado ? 1 : -1;
-        // mais críticos primeiro, depois altos, depois pelo IPS menor
         if (b.criticos !== a.criticos) return b.criticos - a.criticos;
         if (b.altos !== a.altos) return b.altos - a.altos;
         return (a.ipsMedio ?? 100) - (b.ipsMedio ?? 100);
