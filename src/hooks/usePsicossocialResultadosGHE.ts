@@ -36,11 +36,12 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     queryKey: ["psicossocial-respostas-por-ghe", tenantId, idsKey],
     queryFn: async (): Promise<RespostaRow[]> => {
       if (!tenantId || !campanhaIds || campanhaIds.length === 0) return [];
+      // Aceita respostas com indicadores calculados (concluido_em pode estar null em dados antigos/seed)
       const { data, error } = await fromTable("questionario_psicossocial_respostas")
         .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, indicadores")
         .eq("tenant_id", tenantId)
         .in("campanha_id", campanhaIds)
-        .not("concluido_em", "is", null);
+        .not("indicadores", "is", null);
       if (error) throw error;
       return (data ?? []) as unknown as RespostaRow[];
     },
