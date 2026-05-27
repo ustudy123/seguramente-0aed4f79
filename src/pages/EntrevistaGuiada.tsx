@@ -45,6 +45,7 @@ export default function EntrevistaGuiada() {
   const [draft, setDraft] = useState("");
   const [finalizing, setFinalizing] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [voiceUsed, setVoiceUsed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const recorder = useAudioRecorder({ maxDuration: 180 });
