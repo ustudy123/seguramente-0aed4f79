@@ -3,8 +3,8 @@
  * Gera relatório psicossocial completo + seção de metodologia exportável (PDF)
  * Conformidade: NR-01, NR-17, ISO 45003, COPSOQ III
  */
-import { useState } from "react";
-import { FileText, Download, Loader2, X, Shield, BookOpen, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { useState, useMemo } from "react";
+import { FileText, Download, Loader2, X, Shield, BookOpen, AlertTriangle, CheckCircle2, Info, Quote } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RI
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
+import { useEvidenciasEntrevista } from "@/hooks/useEvidenciasEntrevista";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -44,18 +45,30 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const { tenantId, user, profile } = useAuthContext();
   const { empresaAtivaId } = useEmpresaAtiva();
 
+  // Campanhas de entrevista guiada (qualitativas) — todas elegíveis
+  const campanhasEntrevista = useMemo(
+    () => campanhas.filter((c: any) => c.tipo_instrumento === "entrevista_guiada"),
+    [campanhas],
+  );
+  const campanhaEntrevistaIds = useMemo(
+    () => campanhasEntrevista.map((c) => c.id),
+    [campanhasEntrevista],
+  );
+  const { data: evidenciasQualitativas = [] } = useEvidenciasEntrevista(campanhaEntrevistaIds);
+
   const campanhasValidas = campanhas.filter(c =>
     c.ips_score != null &&
     (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
     Array.isArray(c.radar_data) && c.radar_data.length > 0
   );
 
-  const campanha = campanhasValidas[0];
+  const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
+  const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
+
+  const campanha = campanhasValidas[0] ?? campanhasEntrevista[0];
   const isSipro = campanha?.instrumento === 'sipro';
+  const isEntrevistaOnly = !campanhasValidas.length && temEvidenciasQualitativas;
   const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
-  // SIPRO grava `ips_score` em escala IRP-S (alto = ruim). Convertemos para
-  // a escala IPS (alto = bom) para manter o relatório PDF consistente com o
-  // termômetro do dashboard e o ResultadosModal.
   const rawScore = campanha?.ips_score ?? 0;
   const ipsScore = isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
@@ -77,7 +90,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   const handleExportarPDF = async () => {
-    if (!campanha) return;
+    if (!podeExportar || !campanha) return;
     setExportando(true);
     try {
       const doc = new jsPDF({ orientation: "portrait", format: "a4" });
@@ -106,15 +119,25 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
       y += 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      const identificacao = [
-        ["Campanha", campanha.nome],
-        ["Instrumento", isSipro ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
-        ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
-        ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
-        ["Empresas Avaliadas", empresaNome ?? "N/D"],
-        ["Data de Emissão", dataGeracao],
-        ["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`],
-      ];
+      const identificacao = isEntrevistaOnly
+        ? [
+            ["Campanha", campanha.nome],
+            ["Modalidade", "Entrevista Guiada por IA (qualitativa)"],
+            ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Entrevistas com evidências", String(evidenciasQualitativas.reduce((s, e) => s + e.count, 0))],
+            ["Fatores identificados", String(evidenciasQualitativas.length)],
+            ["Empresas Avaliadas", empresaNome ?? "N/D"],
+            ["Data de Emissão", dataGeracao],
+          ]
+        : [
+            ["Campanha", campanha.nome],
+            ["Instrumento", isSipro ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
+            ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
+            ["Empresas Avaliadas", empresaNome ?? "N/D"],
+            ["Data de Emissão", dataGeracao],
+            ["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`],
+          ];
       autoTable(doc, {
         startY: y,
         head: [["Campo", "Informação"]],
@@ -126,61 +149,63 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
       y = (doc as any).lastAutoTable.finalY + 10;
 
       // ── 2. Síntese Executiva ───────────────────────────────────────────
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("2. SÍNTESE EXECUTIVA", 14, y);
-      y += 5;
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      const sintese = [
-        [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
-        [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
-        [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
-        [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
-      ];
-      autoTable(doc, {
-        startY: y,
-        body: sintese,
-        headStyles: { fillColor: [88, 28, 135], fontSize: 8 },
-        bodyStyles: { fontSize: 8 },
-        didParseCell: (data) => {
-          const text = String(data.cell.raw);
-          if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
-          else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
-          else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
-          else data.cell.styles.textColor = [5, 122, 85];
-        },
-      });
-      y = (doc as any).lastAutoTable.finalY + 10;
-
-      // ── 3. Inventário de Riscos ────────────────────────────────────────
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
-      y += 5;
-      autoTable(doc, {
-        startY: y,
-        head: [["Dimensão", "Score Risco", "Nível GRO", "Base Normativa"]],
-        body: dimensoesAvaliadas.map(d => [
-          d.subject,
-          `${d.risco}%`,
-          GRO_NIVEL_RISCO_LABELS[d.nivel],
-          "NR-01 / NR-17 / ISO 45003",
-        ]),
-        headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-        bodyStyles: { fontSize: 8 },
-        alternateRowStyles: { fillColor: [248, 245, 255] },
-        didParseCell: (data) => {
-          if (data.section === "body" && data.column.index === 2) {
-            const v = String(data.cell.raw);
-            if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
-            else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-            else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+      if (!isEntrevistaOnly) {
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("2. SÍNTESE EXECUTIVA", 14, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        const sintese = [
+          [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
+          [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
+          [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
+          [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
+        ];
+        autoTable(doc, {
+          startY: y,
+          body: sintese,
+          headStyles: { fillColor: [88, 28, 135], fontSize: 8 },
+          bodyStyles: { fontSize: 8 },
+          didParseCell: (data) => {
+            const text = String(data.cell.raw);
+            if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
+            else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
+            else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
             else data.cell.styles.textColor = [5, 122, 85];
-          }
-        },
-      });
-      y = (doc as any).lastAutoTable.finalY + 10;
+          },
+        });
+        y = (doc as any).lastAutoTable.finalY + 10;
+
+        // ── 3. Inventário de Riscos ────────────────────────────────────────
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
+        y += 5;
+        autoTable(doc, {
+          startY: y,
+          head: [["Dimensão", "Score Risco", "Nível GRO", "Base Normativa"]],
+          body: dimensoesAvaliadas.map(d => [
+            d.subject,
+            `${d.risco}%`,
+            GRO_NIVEL_RISCO_LABELS[d.nivel],
+            "NR-01 / NR-17 / ISO 45003",
+          ]),
+          headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
+          bodyStyles: { fontSize: 8 },
+          alternateRowStyles: { fillColor: [248, 245, 255] },
+          didParseCell: (data) => {
+            if (data.section === "body" && data.column.index === 2) {
+              const v = String(data.cell.raw);
+              if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
+              else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
+              else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+              else data.cell.styles.textColor = [5, 122, 85];
+            }
+          },
+        });
+        y = (doc as any).lastAutoTable.finalY + 10;
+      }
 
       // ── 4. Metodologia ────────────────────────────────────────────────
       doc.addPage();
@@ -258,6 +283,75 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
 
+      // ── 6. Evidências Qualitativas (Entrevistas Guiadas IA) ──────────
+      if (temEvidenciasQualitativas) {
+        doc.addPage();
+        y = 20;
+        doc.setFontSize(13);
+        doc.setFont("helvetica", "bold");
+        doc.text("6. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS POR IA", 14, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "italic");
+        const introQual = doc.splitTextToSize(
+          "Resultados qualitativos extraídos automaticamente por IA a partir de entrevistas individuais guiadas (SIPRO conversacional). Trechos anonimizados — nomes, locais e identificadores removidos para preservar o anonimato (LGPD + ISO 45003).",
+          pageW - 28,
+        );
+        doc.text(introQual, 14, y);
+        y += introQual.length * 4 + 4;
+
+        autoTable(doc, {
+          startY: y,
+          head: [["Fator de Risco", "Menções", "P", "S", "Nível"]],
+          body: evidenciasQualitativas.map((ev) => [
+            ev.risco_nome,
+            String(ev.count),
+            String(ev.p_max),
+            String(ev.s_max),
+            GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel,
+          ]),
+          headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
+          bodyStyles: { fontSize: 8 },
+          alternateRowStyles: { fillColor: [248, 245, 255] },
+          didParseCell: (data) => {
+            if (data.section === "body" && data.column.index === 4) {
+              const v = String(data.cell.raw);
+              if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
+              else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
+              else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+              else data.cell.styles.textColor = [5, 122, 85];
+            }
+          },
+        });
+        y = (doc as any).lastAutoTable.finalY + 8;
+
+        // Trechos anonimizados por fator (até 3 por risco)
+        for (const ev of evidenciasQualitativas) {
+          const trechos: string[] = [];
+          for (const e of ev.evidencias) {
+            for (const t of e.trechos_anonimizados ?? []) {
+              if (t && trechos.length < 3) trechos.push(t);
+            }
+            if (trechos.length >= 3) break;
+          }
+          if (!trechos.length) continue;
+          if (y > 255) { doc.addPage(); y = 20; }
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "bold");
+          doc.text(`• ${ev.risco_nome}`, 14, y);
+          y += 4;
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(8);
+          for (const t of trechos) {
+            const linhas = doc.splitTextToSize(`"${t}"`, pageW - 32);
+            if (y + linhas.length * 4 > 280) { doc.addPage(); y = 20; }
+            doc.text(linhas, 18, y);
+            y += linhas.length * 4 + 2;
+          }
+          y += 3;
+        }
+      }
+
       const pdfFileName = `Relatorio_Psicossocial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
       doc.save(pdfFileName);
 
@@ -296,12 +390,13 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
           </DialogDescription>
         </DialogHeader>
 
-        {campanhasValidas.length === 0 ? (
+        {!podeExportar ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
             <AlertTriangle className="h-10 w-10 text-amber-500" />
             <p className="font-medium">Sem dados suficientes</p>
             <p className="text-sm text-muted-foreground">
-              Necessário ao menos uma campanha encerrada com ≥{MINIMO_ANONIMATO} respondentes.
+              Necessário ao menos uma campanha encerrada com ≥{MINIMO_ANONIMATO} respondentes,
+              ou entrevistas guiadas por IA concluídas com evidências.
             </p>
           </div>
         ) : (
@@ -321,46 +416,92 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Identificação</p>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
                       <span className="text-muted-foreground">Campanha:</span><span className="font-medium">{campanha.nome}</span>
-                      <span className="text-muted-foreground">Instrumento:</span><span className="font-medium">{isSipro ? "SIPRO" : campanha.instrumento?.toUpperCase()}</span>
-                      <span className="text-muted-foreground">Respondentes:</span><span className="font-medium">{totalRespondentes}</span>
-                      <span className="text-muted-foreground">Emitido em:</span><span className="font-medium">{dataGeracao}</span>
-                      <span className="text-muted-foreground">IPS Global:</span>
-                      <span className={cn("font-bold", ipsClass === 'critico' ? "text-red-600" : ipsClass === 'risco' ? "text-orange-600" : ipsClass === 'atencao' ? "text-amber-600" : "text-emerald-600")}>
-                        {ipsScore}/100 — {getIPSLabel(ipsClass)}
+                      <span className="text-muted-foreground">Modalidade:</span>
+                      <span className="font-medium">
+                        {isEntrevistaOnly ? "Entrevista Guiada por IA (qualitativa)" : (isSipro ? "SIPRO (quantitativa)" : campanha.instrumento?.toUpperCase())}
                       </span>
+                      {!isEntrevistaOnly && (
+                        <>
+                          <span className="text-muted-foreground">Respondentes:</span><span className="font-medium">{totalRespondentes}</span>
+                        </>
+                      )}
+                      <span className="text-muted-foreground">Emitido em:</span><span className="font-medium">{dataGeracao}</span>
+                      {!isEntrevistaOnly && (
+                        <>
+                          <span className="text-muted-foreground">IPS Global:</span>
+                          <span className={cn("font-bold", ipsClass === 'critico' ? "text-red-600" : ipsClass === 'risco' ? "text-orange-600" : ipsClass === 'atencao' ? "text-amber-600" : "text-emerald-600")}>
+                            {ipsScore}/100 — {getIPSLabel(ipsClass)}
+                          </span>
+                        </>
+                      )}
+                      {temEvidenciasQualitativas && (
+                        <>
+                          <span className="text-muted-foreground">Entrevistas com evidências:</span>
+                          <span className="font-medium">{evidenciasQualitativas.reduce((s, e) => s + e.count, 0)} menção(ões) em {evidenciasQualitativas.length} fator(es)</span>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Síntese */}
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { label: "Crítico", count: criticos.length, cls: "bg-red-50 border-red-200 text-red-700" },
-                      { label: "Alto", count: altos.length, cls: "bg-orange-50 border-orange-200 text-orange-700" },
-                      { label: "Médio", count: medios.length, cls: "bg-amber-50 border-amber-200 text-amber-700" },
-                      { label: "Baixo", count: baixos.length, cls: "bg-emerald-50 border-emerald-200 text-emerald-700" },
-                    ].map(({ label, count, cls }) => (
-                      <div key={label} className={cn("rounded-lg border p-3 text-center", cls)}>
-                        <p className="text-2xl font-bold">{count}</p>
-                        <p className="text-xs font-medium">{label}</p>
+                  {!isEntrevistaOnly && (
+                    <>
+                      {/* Síntese */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Crítico", count: criticos.length, cls: "bg-red-50 border-red-200 text-red-700" },
+                          { label: "Alto", count: altos.length, cls: "bg-orange-50 border-orange-200 text-orange-700" },
+                          { label: "Médio", count: medios.length, cls: "bg-amber-50 border-amber-200 text-amber-700" },
+                          { label: "Baixo", count: baixos.length, cls: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+                        ].map(({ label, count, cls }) => (
+                          <div key={label} className={cn("rounded-lg border p-3 text-center", cls)}>
+                            <p className="text-2xl font-bold">{count}</p>
+                            <p className="text-xs font-medium">{label}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Inventário de dimensões */}
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dimensões avaliadas ({dimensoesAvaliadas.length})</p>
-                    {dimensoesAvaliadas.map(d => (
-                      <div key={d.subject} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
-                        <span className="font-medium">{d.subject}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{d.risco}%</span>
-                          <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
-                            {GRO_NIVEL_RISCO_LABELS[d.nivel]}
-                          </Badge>
-                        </div>
+                      {/* Inventário de dimensões */}
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dimensões avaliadas ({dimensoesAvaliadas.length})</p>
+                        {dimensoesAvaliadas.map(d => (
+                          <div key={d.subject} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
+                            <span className="font-medium">{d.subject}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">{d.risco}%</span>
+                              <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
+                                {GRO_NIVEL_RISCO_LABELS[d.nivel]}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  )}
+
+                  {/* Evidências qualitativas (entrevistas IA) */}
+                  {temEvidenciasQualitativas && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                        <Quote className="h-3.5 w-3.5" /> Evidências qualitativas — entrevistas guiadas por IA
+                      </p>
+                      {evidenciasQualitativas.map((ev) => (
+                        <div key={ev.risco_nome} className="rounded-lg border p-3 space-y-2 bg-purple-50/30">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-sm">{ev.risco_nome}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">P{ev.p_max} × S{ev.s_max} · {ev.count} menção(ões)</span>
+                              <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[ev.nivel])}>
+                                {GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel}
+                              </Badge>
+                            </div>
+                          </div>
+                          {ev.evidencias.slice(0, 2).flatMap((e) => (e.trechos_anonimizados ?? []).slice(0, 2)).slice(0, 3).map((t, i) => (
+                            <p key={i} className="text-xs italic text-muted-foreground border-l-2 border-purple-300 pl-2">"{t}"</p>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* ── Metodologia ───────────────────────────────────── */}
