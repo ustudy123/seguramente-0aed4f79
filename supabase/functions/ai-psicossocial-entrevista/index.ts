@@ -282,7 +282,7 @@ async function handleStart(req: Request, supabase: any) {
   let firstMessage: string | null = null;
   if (historico.length === 0) {
     firstMessage =
-      `Olá! Sou uma assistente especializada em ergonomia e saúde no trabalho. Vou te fazer algumas perguntas sobre seu dia a dia para entender como você se sente no trabalho. ` +
+      `Olá! Sou uma assistente de IA e vou te fazer algumas perguntas sobre seu dia a dia no trabalho. ` +
       `Tudo o que você disser é **anônimo** — ninguém da empresa vai saber que veio de você.\n\n` +
       `Vamos começar do começo: **me conta como foi seu último dia de trabalho, do momento que você chegou até o momento que saiu?**`;
     await persistMensagem(supabase, entrevista.id, "assistant", firstMessage, "texto", 1);
