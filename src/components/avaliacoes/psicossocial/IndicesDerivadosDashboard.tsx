@@ -309,9 +309,10 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
                 <SelectValue placeholder="Escolher Campanha" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recente">Mais Recente</SelectItem>
                 {validas.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.id === campanhaMaisRecenteId ? `${c.nome} (mais recente)` : c.nome}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
