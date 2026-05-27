@@ -44,7 +44,47 @@ export default function EntrevistaGuiada() {
   const [consent, setConsent] = useState(false);
   const [draft, setDraft] = useState("");
   const [finalizing, setFinalizing] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const recorder = useAudioRecorder({ maxDuration: 180 });
+
+  const handleStartRecording = async () => {
+    await recorder.startRecording();
+  };
+
+  const handleStopAndSend = async () => {
+    recorder.stopRecording();
+    // Aguarda o onstop populá-lo
+    await new Promise((r) => setTimeout(r, 300));
+    setTranscribing(true);
+    try {
+      const base64 = await recorder.getBase64();
+      if (!base64) throw new Error("Áudio vazio");
+      const res = await fetch(TRANSCRIBE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${ANON}` },
+        body: JSON.stringify({ audioBase64: base64 }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Falha na transcrição" }));
+        throw new Error(err.error || "Erro ao transcrever");
+      }
+      const { text } = await res.json();
+      if (!text?.trim()) throw new Error("Não consegui entender o áudio. Tente novamente.");
+      recorder.clearRecording();
+      await sendMessage(text.trim(), "voz_transcrita");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao processar áudio");
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
+  const handleCancelRecording = () => {
+    recorder.stopRecording();
+    setTimeout(() => recorder.clearRecording(), 200);
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
