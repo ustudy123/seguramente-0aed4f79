@@ -583,10 +583,10 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                 <AlertDialogCancel onClick={() => setShowCargoConfirm(false)}>Cancelar</AlertDialogCancel>
                 <div className="flex flex-1 gap-2 justify-end">
                   <Button variant="outline" onClick={() => { setShowCargoConfirm(false); executeFinalCreation(false); }}>
-                    Apenas Adicionar
+                    {editingNode ? "Apenas Salvar" : "Apenas Adicionar"}
                   </Button>
                   <Button onClick={() => { setShowCargoConfirm(false); executeFinalCreation(true); }}>
-                    Cadastrar e Adicionar
+                    {editingNode ? "Cadastrar e Salvar" : "Cadastrar e Adicionar"}
                   </Button>
                 </div>
               </AlertDialogFooter>
