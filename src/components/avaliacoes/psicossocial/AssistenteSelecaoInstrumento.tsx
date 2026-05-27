@@ -17,7 +17,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Step = 'choice' | 'auto-loading' | 'checklist' | 'result';
+type Step = 'choice' | 'auto-loading' | 'checklist' | 'result' | 'entrevista-recomendada';
 
 interface SystemData {
   totalColaboradores: number;
