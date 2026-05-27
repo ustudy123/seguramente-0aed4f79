@@ -427,10 +427,23 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
               <UserPlus className="h-4 w-4 mr-1" />
               Participação
             </Button>
-            <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
-              <LinkIcon className="h-4 w-4 mr-1" />
-              Link Geral
-            </Button>
+            {isEntrevista ? (
+              <Button
+                id={`btn-gerar-entrevista-${campanha.id}`}
+                variant="outline"
+                size="sm"
+                disabled={gerarEntrevista.isPending}
+                onClick={() => gerarEntrevista.mutate({ campanhaId: campanha.id })}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                {gerarEntrevista.isPending ? "Gerando..." : "Gerar Entrevista"}
+              </Button>
+            ) : (
+              <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
+                <LinkIcon className="h-4 w-4 mr-1" />
+                Link Geral
+              </Button>
+            )}
             <Button id={`btn-resultados-${campanha.id}`} variant="outline" size="sm" onClick={onVerResultados}>
               <BarChart3 className="h-4 w-4 mr-1" />
               Resultados
