@@ -17,7 +17,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Step = 'choice' | 'auto-loading' | 'checklist' | 'result';
+type Step = 'choice' | 'auto-loading' | 'checklist' | 'result' | 'entrevista-recomendada';
 
 interface SystemData {
   totalColaboradores: number;
@@ -423,6 +423,13 @@ export function AssistenteSelecaoInstrumento({
         aposentadoriaEspecial: !!empresa?.aposentadoria_especial,
         cnae: empresa?.cnae_principal ?? null,
       });
+
+      // Faixa <5 colaboradores → entrevista guiada por IA (anonimato + representatividade)
+      if (totalColaboradores > 0 && totalColaboradores < 5) {
+        setStep('entrevista-recomendada');
+      } else {
+        setStep('checklist');
+      }
     } catch {
       setSysData({
         totalColaboradores: 0, totalSetores: 0, temTurnoNoturno: false,
@@ -431,8 +438,8 @@ export function AssistenteSelecaoInstrumento({
         possuiTerceiroTurno: false, trabalhoAltura: false, espacoConfinado: false,
         insalubridade: false, periculosidade: false, aposentadoriaEspecial: false, cnae: null,
       });
+      setStep('checklist');
     }
-    setStep('checklist');
   };
 
   const isChecklistComplete =
@@ -730,6 +737,72 @@ export function AssistenteSelecaoInstrumento({
           )}
 
           {/* ── RESULT ── */}
+          {/* ── ENTREVISTA RECOMENDADA (<5 colaboradores) ── */}
+          {step === 'entrevista-recomendada' && sysData && (
+            <motion.div key="entrevista-rec" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
+              <DialogHeader className="mb-5">
+                <div className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-purple-600" />
+                  <DialogTitle>Entrevista Guiada por IA</DialogTitle>
+                </div>
+                <DialogDescription>
+                  Recomendação baseada no porte da empresa
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="rounded-xl border-2 border-purple-200 bg-purple-50 p-5 mb-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-2xl">🎙️</span>
+                  <div>
+                    <h3 className="font-bold text-lg text-purple-700">Entrevista Guiada por IA (SIPRO conversacional)</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Coleta qualitativa individual, anonimizada por IA, com geração de evidências para o PGR.
+                    </p>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Motivos:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      Empresa com {sysData.totalColaboradores} colaboradores — abaixo do mínimo de 5 respondentes para anonimato em questionário (ISO 45003).
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      Entrevista guiada preserva o anonimato via trechos anonimizados pela IA.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      Gera evidências qualitativas válidas para o PGR e atende NR-01.
+                    </li>
+                  </ul>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-3 border-t border-black/10">
+                  {['NR-01', 'ISO 45003', 'LGPD'].map(n => (
+                    <Badge key={n} variant="outline" className="text-xs">{n}</Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button className="flex-1 bg-purple-600 hover:bg-purple-700 gap-2"
+                  onClick={() => handleConfirm('sipro', false)}>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Iniciar Entrevista Guiada
+                </Button>
+                <Button variant="outline" size="sm"
+                  onClick={() => setStep('checklist')}
+                  className="gap-1.5 text-xs">
+                  <Brain className="h-3.5 w-3.5" /> Ver análise completa mesmo assim
+                </Button>
+              </div>
+
+              <p className="text-center text-xs text-muted-foreground mt-3">
+                A modalidade será travada como "Entrevista guiada" no formulário da campanha.
+              </p>
+            </motion.div>
+          )}
+
           {step === 'result' && scores.length > 0 && (
             <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               <DialogHeader className="mb-5">
@@ -741,6 +814,22 @@ export function AssistenteSelecaoInstrumento({
                   Baseada na análise organizacional realizada pelo Assistente YourEyes
                 </DialogDescription>
               </DialogHeader>
+
+              {/* Banner faixa 5-10 → ambas modalidades viáveis */}
+              {sysData && sysData.totalColaboradores >= 5 && sysData.totalColaboradores <= 10 && (
+                <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                  <p className="font-semibold mb-1 flex items-center gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Empresa com {sysData.totalColaboradores} colaboradores — faixa de transição (5 a 10).
+                  </p>
+                  <p>
+                    Tanto o <strong>questionário</strong> quanto a <strong>entrevista guiada por IA</strong> são viáveis.
+                    A entrevista preserva melhor o anonimato em grupos pequenos; o questionário traz indicadores quantitativos comparáveis.
+                    A modalidade poderá ser escolhida no formulário da campanha.
+                  </p>
+                </div>
+              )}
+
 
               {/* Principal */}
               <div className={cn("rounded-xl border-2 p-5 mb-4", scores[0].bgCor)}>
