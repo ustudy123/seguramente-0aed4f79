@@ -52,7 +52,6 @@ export function GerarTrilhaIAModal({ open, onOpenChange, onSuccess }: GerarTrilh
       }
       
       const { data, error } = await query.order("nome");
-        .order("nome");
       if (error) throw error;
       return data || [];
     },
