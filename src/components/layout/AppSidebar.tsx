@@ -734,39 +734,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
         )}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-white/[0.08] space-y-0.5">
-        <NavLink
-          to="/suporte"
-          onClick={isMobile ? onClose : undefined}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              isActive
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-            )
-          }
-        >
-          <LifeBuoy className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[13px]">Suporte</span>}
-        </NavLink>
-        <NavLink
-          to="/configuracoes"
-          onClick={isMobile ? onClose : undefined}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              isActive
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-            )
-          }
-        >
-          <Settings className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[13px]">Configurações</span>}
-        </NavLink>
-      </div>
     </motion.aside>
   );
 };
