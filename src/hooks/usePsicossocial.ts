@@ -509,16 +509,21 @@ export function usePsicossocial() {
 
   // Calcular estatísticas de uma campanha
   const calcularEstatisticas = async (campanhaId: string): Promise<EstatisticasCampanha> => {
-    const [convites, respostas, participacoesRes] = await Promise.all([
+    const [convites, respostas, participacoesRes, entrevistasRes] = await Promise.all([
       buscarConvites(campanhaId),
       buscarRespostas(campanhaId),
       supabase
         .from("psicossocial_participacoes")
         .select("id,respondido")
         .eq("campanha_id", campanhaId),
+      supabase
+        .from("psicossocial_entrevistas")
+        .select("id,status")
+        .eq("campanha_id", campanhaId),
     ]);
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
+    const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null }>;
 
     // Convites individuais (campanhas com distribuição nominal — modelo legado)
     const totalConvites = convites.length;
@@ -531,12 +536,16 @@ export function usePsicossocial() {
     const totalParticipacoes = participacoes.length;
     const respondidosParticipacoes = participacoes.filter(p => p.respondido).length;
 
+    // Entrevistas guiadas por IA (modelo qualitativo)
+    const totalEntrevistas = entrevistas.length;
+    const entrevistasConcluidas = entrevistas.filter(e => e.status === 'concluida').length;
+
     // Fonte de verdade para "concluídas" = respostas reais salvas (cobre Link Geral anônimo)
     const totalRespostas = respostas.length;
-    // "Concluídos" = max(respostas reais, marcados como respondidos nas tabelas de elegíveis)
-    const concluidos = Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes);
-    // "Total elegível" = max(elegíveis nominais, respostas) — se ninguém foi nominado, o universo é o que respondeu
-    const total = Math.max(totalConvites, totalParticipacoes, totalRespostas);
+    // "Concluídos" = max(respostas reais, marcados como respondidos, entrevistas concluídas)
+    const concluidos = Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes, entrevistasConcluidas);
+    // "Total elegível" = max(elegíveis nominais, respostas, entrevistas geradas)
+    const total = Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas);
 
     const MINIMO_ANONIMATO = 5;
     // Anonimato é garantido pelo número total de respostas recebidas (não de convites)
