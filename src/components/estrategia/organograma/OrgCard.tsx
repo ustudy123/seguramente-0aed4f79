@@ -209,6 +209,24 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onInsertBetw
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Insert between (above) */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-amber-500 text-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-amber-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              onInsertBetween?.(node.id);
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs">Inserir entre (acima)</TooltipContent>
+      </Tooltip>
+
       {/* Add child (below) */}
       <Tooltip>
         <TooltipTrigger asChild>
