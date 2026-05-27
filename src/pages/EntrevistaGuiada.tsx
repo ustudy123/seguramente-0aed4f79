@@ -286,36 +286,83 @@ export default function EntrevistaGuiada() {
               Finalizar entrevista
             </Button>
           )}
-          <div className="flex items-end gap-2">
-            <Textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Escreva sua resposta..."
-              rows={2}
-              disabled={streaming || finalizing}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (draft.trim()) {
-                    sendMessage(draft.trim());
-                    setDraft("");
+          {recorder.isRecording ? (
+            <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600"></span>
+              </span>
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-red-900">Gravando áudio…</p>
+                <p className="text-[11px] text-red-700/80 tabular-nums">
+                  {recorder.formattedDuration} / 03:00
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCancelRecording}
+                className="text-red-700 hover:bg-red-100 gap-1"
+              >
+                <Trash2 className="w-4 h-4" /> Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleStopAndSend}
+                disabled={recorder.duration < 1}
+                className="bg-gradient-to-br from-red-600 to-rose-600 gap-1"
+              >
+                <Square className="w-4 h-4" /> Parar e enviar
+              </Button>
+            </div>
+          ) : transcribing ? (
+            <div className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-3 py-3">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+              <p className="text-xs text-purple-900">Transcrevendo seu áudio…</p>
+            </div>
+          ) : (
+            <div className="flex items-end gap-2">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Escreva sua resposta ou use o microfone..."
+                rows={2}
+                disabled={streaming || finalizing}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (draft.trim()) {
+                      sendMessage(draft.trim());
+                      setDraft("");
+                    }
                   }
-                }
-              }}
-              className="resize-none text-sm"
-            />
-            <Button
-              size="icon"
-              disabled={!draft.trim() || streaming || finalizing}
-              onClick={() => {
-                sendMessage(draft.trim());
-                setDraft("");
-              }}
-              className="bg-gradient-to-br from-purple-600 to-indigo-600"
-            >
-              {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-          </div>
+                }}
+                className="resize-none text-sm"
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={streaming || finalizing || !!draft.trim()}
+                onClick={handleStartRecording}
+                title="Gravar áudio"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50"
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                disabled={!draft.trim() || streaming || finalizing}
+                onClick={() => {
+                  sendMessage(draft.trim());
+                  setDraft("");
+                }}
+                className="bg-gradient-to-br from-purple-600 to-indigo-600"
+              >
+                {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </div>
+          )}
+          {recorder.error && <p className="text-xs text-destructive">{recorder.error}</p>}
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
       </footer>
