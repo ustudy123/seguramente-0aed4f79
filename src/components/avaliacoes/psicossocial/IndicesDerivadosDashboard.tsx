@@ -309,11 +309,15 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
                 <SelectValue placeholder="Escolher Campanha" />
               </SelectTrigger>
               <SelectContent>
-                {validas.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.id === campanhaMaisRecenteId ? `${c.nome} (mais recente)` : c.nome}
-                  </SelectItem>
-                ))}
+                {validas.map(c => {
+                  const isEntrevista = (c as any).tipo_instrumento === "entrevista_guiada";
+                  const sufixo = c.id === campanhaMaisRecenteId ? " (mais recente)" : "";
+                  return (
+                    <SelectItem key={c.id} value={c.id}>
+                      {isEntrevista ? "🎙️ " : ""}{c.nome}{sufixo}{isEntrevista ? " — Entrevista" : ""}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
