@@ -160,17 +160,16 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() =>
-                              confirm({
+                            onClick={async () => {
+                              const ok = await confirm({
                                 title: "Cancelar link?",
                                 description:
                                   "O link deixará de funcionar. Esta ação não pode ser desfeita.",
-                                confirmText: "Cancelar link",
+                                confirmLabel: "Cancelar link",
                                 variant: "destructive",
-                                onConfirm: () =>
-                                  cancelar.mutate({ id: e.id, campanhaId: campanhaId! }),
-                              })
-                            }
+                              });
+                              if (ok) cancelar.mutate({ id: e.id, campanhaId: campanhaId! });
+                            }}
                           >
                             <Ban className="h-4 w-4 mr-1" /> Cancelar
                           </Button>
@@ -180,17 +179,16 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                             size="sm"
                             variant="ghost"
                             className="text-destructive hover:text-destructive"
-                            onClick={() =>
-                              confirm({
+                            onClick={async () => {
+                              const ok = await confirm({
                                 title: "Excluir link?",
                                 description:
                                   "O link e todas as suas mensagens serão removidos permanentemente.",
-                                confirmText: "Excluir",
+                                confirmLabel: "Excluir",
                                 variant: "destructive",
-                                onConfirm: () =>
-                                  excluir.mutate({ id: e.id, campanhaId: campanhaId! }),
-                              })
-                            }
+                              });
+                              if (ok) excluir.mutate({ id: e.id, campanhaId: campanhaId! });
+                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
