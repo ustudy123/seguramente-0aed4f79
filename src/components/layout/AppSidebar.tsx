@@ -561,8 +561,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       });
       // Pendências removed from sidebar search as it's now only on dashboard
     });
-    items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
-    items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
     return items;
   }, [filteredSections]);
 
