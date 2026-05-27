@@ -212,6 +212,30 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
           </Button>
         </div>
 
+        <Button
+          variant="default"
+          className="w-full"
+          disabled={!campanhaId || gerandoDoc || !empresaAtivaId}
+          onClick={handleGerarDocumentoColaboradores}
+        >
+          {gerandoDoc ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Gerando documento...
+            </>
+          ) : (
+            <>
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar Documento da Empresa (PDF) — 1 link por colaborador
+            </>
+          )}
+        </Button>
+        {!empresaAtivaId && (
+          <p className="text-xs text-muted-foreground -mt-1">
+            Selecione uma empresa ativa no topo para habilitar a geração em massa.
+          </p>
+        )}
+
         <div className="flex-1 overflow-y-auto border rounded-md">
           {isLoading ? (
             <div className="p-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
