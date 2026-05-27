@@ -52,8 +52,16 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
   const gerar = useGerarEntrevista();
   const cancelar = useCancelarEntrevista();
   const excluir = useExcluirEntrevista();
+  const { colaboradores } = useColaboradores();
+  const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
+  const { user } = useAuthContext();
+  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [gerandoDoc, setGerandoDoc] = useState(false);
+
+  const PROD_URL = "https://www.youreyes.com.br";
+  const linkOf = (token: string) => `${PROD_URL}/entrevista/${token}`;
 
   const filtradas = useMemo(() => {
     return entrevistas.filter((e) => {
