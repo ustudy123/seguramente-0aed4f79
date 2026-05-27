@@ -8,7 +8,7 @@ import { Copy, ExternalLink, Plus, Search, Trash2, Ban, Loader2, MessageSquare, 
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import { confirm } from "@/components/ui/confirm-dialog";
 import {
   useEntrevistasCampanha,
   useCancelarEntrevista,
@@ -35,7 +35,6 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
   const gerar = useGerarEntrevista();
   const cancelar = useCancelarEntrevista();
   const excluir = useExcluirEntrevista();
-  const { confirm } = useConfirmDialog();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
 
