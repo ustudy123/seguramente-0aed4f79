@@ -12,48 +12,89 @@ interface RespostaRow {
   indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
 }
 
+interface CampanhaGheRow {
+  id: string;
+  ghe_ids: string[] | null;
+}
+
+interface GheRow {
+  id: string;
+  nome: string;
+}
+
 export interface ResultadoGHE {
   ghe_id: string | null;
   ghe_nome: string;
   count: number;
-  radar: RadarDimensao[]; // média por subject
+  radar: RadarDimensao[];
   ipsMedio: number | null;
-  campanhas: number; // quantas campanhas contribuíram
+  campanhas: number;
 }
 
 /**
- * Agrega respostas psicossociais por GHE (ghe_id_snapshot).
- * Calcula radar médio (subject → média de value) para cada GHE.
- *
- * Quando `campanhaIds` é vazio/undefined, retorna sem dados.
- * O mínimo de 5 respondentes deve ser aplicado no consumidor.
+ * Agrega respostas psicossociais por GHE.
+ * Prioriza `ghe_id_snapshot` da resposta; quando ausente, usa o `ghe_ids`
+ * da campanha (atribui a resposta a cada GHE vinculado à campanha).
  */
 export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) {
   const { tenantId } = useTenant();
   const idsKey = (campanhaIds ?? []).slice().sort().join(",");
 
   const query = useQuery({
-    queryKey: ["psicossocial-respostas-por-ghe", tenantId, idsKey],
-    queryFn: async (): Promise<RespostaRow[]> => {
-      if (!tenantId || !campanhaIds || campanhaIds.length === 0) return [];
-      // Aceita respostas com indicadores calculados (concluido_em pode estar null em dados antigos/seed)
-      const { data, error } = await fromTable("questionario_psicossocial_respostas")
-        .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, indicadores")
-        .eq("tenant_id", tenantId)
-        .in("campanha_id", campanhaIds)
-        .not("indicadores", "is", null);
-      if (error) throw error;
-      return (data ?? []) as unknown as RespostaRow[];
+    queryKey: ["psicossocial-respostas-por-ghe-v2", tenantId, idsKey],
+    queryFn: async () => {
+      if (!tenantId || !campanhaIds || campanhaIds.length === 0) {
+        return { respostas: [] as RespostaRow[], campanhasGhe: [] as CampanhaGheRow[], ghes: [] as GheRow[] };
+      }
+
+      const [respRes, campRes] = await Promise.all([
+        fromTable("questionario_psicossocial_respostas")
+          .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, indicadores")
+          .eq("tenant_id", tenantId)
+          .in("campanha_id", campanhaIds)
+          .not("indicadores", "is", null),
+        fromTable("questionario_psicossocial_campanhas")
+          .select("id, ghe_ids")
+          .eq("tenant_id", tenantId)
+          .in("id", campanhaIds),
+      ]);
+
+      if (respRes.error) throw respRes.error;
+      if (campRes.error) throw campRes.error;
+
+      const campanhasGhe = (campRes.data ?? []) as unknown as CampanhaGheRow[];
+      const allGheIds = Array.from(
+        new Set(campanhasGhe.flatMap((c) => c.ghe_ids ?? []).filter(Boolean))
+      );
+
+      let ghes: GheRow[] = [];
+      if (allGheIds.length > 0) {
+        const { data: ghesData, error: ghesErr } = await fromTable("ghe")
+          .select("id, nome")
+          .in("id", allGheIds);
+        if (ghesErr) throw ghesErr;
+        ghes = (ghesData ?? []) as unknown as GheRow[];
+      }
+
+      return {
+        respostas: (respRes.data ?? []) as unknown as RespostaRow[],
+        campanhasGhe,
+        ghes,
+      };
     },
     enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
     staleTime: 60_000,
   });
 
   const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
-    const rows = query.data ?? [];
-    if (rows.length === 0) return [];
+    const { respostas = [], campanhasGhe = [], ghes = [] } = query.data ?? {};
+    if (respostas.length === 0) return [];
 
-    // Agrupa por ghe_id_snapshot
+    const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
+    const campanhaGheMap = new Map(
+      campanhasGhe.map((c) => [c.id, (c.ghe_ids ?? []).filter(Boolean)])
+    );
+
     const grupos = new Map<string, {
       nome: string;
       count: number;
@@ -62,9 +103,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       campanhas: Set<string>;
     }>();
 
-    for (const r of rows) {
-      const key = r.ghe_id_snapshot ?? "__sem_ghe__";
-      const nome = r.ghe_nome_snapshot ?? "Sem GHE definido";
+    const addToGrupo = (key: string, nome: string, r: RespostaRow) => {
       if (!grupos.has(key)) {
         grupos.set(key, { nome, count: 0, radarAcc: new Map(), ipsList: [], campanhas: new Set() });
       }
@@ -83,6 +122,26 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       }
       const ips = Number(r.indicadores?.IPS);
       if (Number.isFinite(ips)) g.ipsList.push(ips);
+    };
+
+    for (const r of respostas) {
+      if (r.ghe_id_snapshot) {
+        addToGrupo(
+          r.ghe_id_snapshot,
+          r.ghe_nome_snapshot ?? gheNomeMap.get(r.ghe_id_snapshot) ?? "GHE",
+          r
+        );
+        continue;
+      }
+      // Fallback: usa ghe_ids da campanha
+      const ids = campanhaGheMap.get(r.campanha_id) ?? [];
+      if (ids.length > 0) {
+        for (const id of ids) {
+          addToGrupo(id, gheNomeMap.get(id) ?? "GHE", r);
+        }
+      } else {
+        addToGrupo("__sem_ghe__", "Sem GHE definido", r);
+      }
     }
 
     return Array.from(grupos.entries()).map(([id, g]) => ({
