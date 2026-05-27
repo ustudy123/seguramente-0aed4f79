@@ -25,11 +25,12 @@ interface OrgCardProps {
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
+  onInsertBetween?: (childId: string) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
   onEdit?: (id: string, updates: Partial<EstrategiaOrganograma>) => void;
 }
 
-export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgCardProps) {
+export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onInsertBetween, onMove, onEdit }: OrgCardProps) {
   const fotoUrl = useStorageImageUrl(node.colaborador?.foto_url);
   const ocupanteNome = node.colaborador?.nome_completo || node.nome_ocupante;
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
