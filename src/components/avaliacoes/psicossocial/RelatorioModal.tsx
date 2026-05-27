@@ -45,18 +45,30 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const { tenantId, user, profile } = useAuthContext();
   const { empresaAtivaId } = useEmpresaAtiva();
 
+  // Campanhas de entrevista guiada (qualitativas) — todas elegíveis
+  const campanhasEntrevista = useMemo(
+    () => campanhas.filter((c: any) => c.tipo_instrumento === "entrevista_guiada"),
+    [campanhas],
+  );
+  const campanhaEntrevistaIds = useMemo(
+    () => campanhasEntrevista.map((c) => c.id),
+    [campanhasEntrevista],
+  );
+  const { data: evidenciasQualitativas = [] } = useEvidenciasEntrevista(campanhaEntrevistaIds);
+
   const campanhasValidas = campanhas.filter(c =>
     c.ips_score != null &&
     (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
     Array.isArray(c.radar_data) && c.radar_data.length > 0
   );
 
-  const campanha = campanhasValidas[0];
+  const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
+  const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
+
+  const campanha = campanhasValidas[0] ?? campanhasEntrevista[0];
   const isSipro = campanha?.instrumento === 'sipro';
+  const isEntrevistaOnly = !campanhasValidas.length && temEvidenciasQualitativas;
   const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
-  // SIPRO grava `ips_score` em escala IRP-S (alto = ruim). Convertemos para
-  // a escala IPS (alto = bom) para manter o relatório PDF consistente com o
-  // termômetro do dashboard e o ResultadosModal.
   const rawScore = campanha?.ips_score ?? 0;
   const ipsScore = isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
