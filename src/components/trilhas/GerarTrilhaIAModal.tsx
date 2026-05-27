@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTrilhas } from "@/hooks/useTrilhas";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface GerarTrilhaIAModalProps {
   open: boolean;
@@ -31,18 +32,26 @@ interface GerarTrilhaIAModalProps {
 
 export function GerarTrilhaIAModal({ open, onOpenChange, onSuccess }: GerarTrilhaIAModalProps) {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const { criarTrilha } = useTrilhas();
   const [cargoId, setCargoId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: cargos = [], isLoading: isLoadingCargos } = useQuery({
-    queryKey: ["cargos-simples", tenantId],
+    queryKey: ["cargos-simples", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await fromTable("cargos")
+      
+      let query = fromTable("cargos")
         .select("id, nome")
         .eq("tenant_id", tenantId)
-        .eq("ativo", true)
+        .eq("ativo", true);
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+      
+      const { data, error } = await query.order("nome");
         .order("nome");
       if (error) throw error;
       return data || [];
