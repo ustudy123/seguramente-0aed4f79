@@ -206,7 +206,7 @@ export function ResultadosPorGHEPanel() {
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {ghesAvaliados.map((g) => (
               <motion.div
-                key={g.ghe_id!}
+                key={g.ghe_id ?? `sem-ghe-${g.ghe_nome}`}
                 whileHover={{ y: -3 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
