@@ -119,15 +119,25 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
       y += 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      const identificacao = [
-        ["Campanha", campanha.nome],
-        ["Instrumento", isSipro ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
-        ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
-        ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
-        ["Empresas Avaliadas", empresaNome ?? "N/D"],
-        ["Data de Emissão", dataGeracao],
-        ["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`],
-      ];
+      const identificacao = isEntrevistaOnly
+        ? [
+            ["Campanha", campanha.nome],
+            ["Modalidade", "Entrevista Guiada por IA (qualitativa)"],
+            ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Entrevistas com evidências", String(evidenciasQualitativas.reduce((s, e) => s + e.count, 0))],
+            ["Fatores identificados", String(evidenciasQualitativas.length)],
+            ["Empresas Avaliadas", empresaNome ?? "N/D"],
+            ["Data de Emissão", dataGeracao],
+          ]
+        : [
+            ["Campanha", campanha.nome],
+            ["Instrumento", isSipro ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
+            ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
+            ["Empresas Avaliadas", empresaNome ?? "N/D"],
+            ["Data de Emissão", dataGeracao],
+            ["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`],
+          ];
       autoTable(doc, {
         startY: y,
         head: [["Campo", "Informação"]],
