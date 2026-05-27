@@ -572,6 +572,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             onDelete={(id) => deleteOrgNode.mutate(id)}
             onAddChild={openDialogForParent}
             onAddSibling={(parentId) => openDialogForParent(parentId || "")}
+            onInsertBetween={openDialogForInsertion}
             onEdit={(id) => {
               const node = organograma.find(n => n.id === id);
               if (node) openDialogForEdit(node);
