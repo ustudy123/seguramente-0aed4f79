@@ -4,7 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Copy, ExternalLink, Plus, Search, Trash2, Ban, Loader2, MessageSquare, Mic } from "lucide-react";
+import {
+  Copy,
+  ExternalLink,
+  Plus,
+  Search,
+  Trash2,
+  Ban,
+  Loader2,
+  MessageSquare,
+  Mic,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,6 +26,12 @@ import {
   useExcluirEntrevista,
 } from "@/hooks/useEntrevistasCampanha";
 import { useGerarEntrevista } from "@/hooks/useGerarEntrevista";
+import { useColaboradores } from "@/hooks/useColaboradores";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useQueryClient } from "@tanstack/react-query";
+import { gerarLinksEntrevistaColaboradores } from "@/utils/gerarLinksEntrevistaColaboradores";
 
 interface Props {
   open: boolean;
