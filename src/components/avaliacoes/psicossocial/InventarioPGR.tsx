@@ -48,6 +48,7 @@ import {
   type CategoriaRiscoPsicossocial,
 } from "@/data/catalogoRiscosPsicossociais";
 import { ExplicacaoPGRGRO } from "./ExplicacaoPGRGRO";
+import { EvidenciasEntrevistaPanel } from "./EvidenciasEntrevistaPanel";
 
 interface InventarioPGRProps {
   campanhas: CampanhaPsicossocial[];
@@ -360,22 +361,28 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     }
   };
 
+  const idsEntrevistaFallback = campanhas.filter((c: any) => c.tipo_instrumento === 'entrevista_guiada').map(c => c.id);
+
   if (campanhasValidas.length === 0) {
     return (
       <div className="space-y-4">
         <ExplicacaoPGRGRO />
+        {idsEntrevistaFallback.length > 0 && (
+          <EvidenciasEntrevistaPanel campanhaIds={idsEntrevistaFallback} />
+        )}
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-8 text-center gap-2">
             <ShieldAlert className="h-8 w-8 text-muted-foreground opacity-40" />
-            <p className="text-sm font-medium">Inventário não disponível</p>
+            <p className="text-sm font-medium">Inventário quantitativo não disponível</p>
             <p className="text-xs text-muted-foreground">
-              Necessário ao menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas e dados do radar calculados.
+              Necessário ao menos uma campanha por questionário com mín. {MINIMO_ANONIMATO} respostas. As evidências de entrevistas guiadas aparecem acima quando existirem.
             </p>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   const nivelColors: Record<string, string> = {
     critico: "border-l-red-500",
@@ -391,9 +398,19 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     baixo: "bg-emerald-50 text-emerald-700 border-emerald-200",
   };
 
+  // IDs de campanhas com modalidade entrevista guiada (evidências qualitativas, fora do critério de radar)
+  const campanhasEntrevistaIds = (filtroCampanha === "todos" ? campanhas : campanhas.filter(c => c.id === filtroCampanha))
+    .filter((c: any) => c.tipo_instrumento === 'entrevista_guiada')
+    .map(c => c.id);
+
+
   return (
     <div className="space-y-4">
       <ExplicacaoPGRGRO />
+      {campanhasEntrevistaIds.length > 0 && (
+        <EvidenciasEntrevistaPanel campanhaIds={campanhasEntrevistaIds} />
+      )}
+
       <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
