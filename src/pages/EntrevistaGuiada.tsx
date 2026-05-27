@@ -9,8 +9,10 @@ import {
   Shield,
   CheckCircle2,
   Mic,
+  Square,
   AlertTriangle,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +22,10 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useEntrevistaIA } from "@/hooks/useEntrevistaIA";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+
+const TRANSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-transcribe-audio`;
+const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export default function EntrevistaGuiada() {
   const { token } = useParams<{ token: string }>();
