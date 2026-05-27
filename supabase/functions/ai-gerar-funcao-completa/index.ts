@@ -44,72 +44,81 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `Você é um consultor sênior de RH, Gestão de Pessoas e SST (Segurança e Saúde do Trabalho).
-Sua tarefa é gerar uma estrutura COMPLETA de função/cargo a partir de uma descrição livre.
+    const systemPrompt = `Você é um consultor sênior de RH e especialista em Desenvolvimento Humano Organizacional (DHO).
+Sua tarefa é gerar uma descrição de cargo EXTREMAMENTE DETALHADA e PROFISSIONAL, adequada para manuais de cargos de empresas de alta performance.
 
 ${companyContext}
+
+Instruções Adicionais de Contexto:
+- Use uma linguagem corporativa polida, técnica e assertiva.
+- Evite generalismos. Se a empresa é do setor industrial, as atividades devem refletir o ambiente fabril. Se é tecnologia, devem refletir metodologias ágeis, etc.
+- A "Missão do Cargo" deve ser inspiradora e estratégica.
+- As "Atividades" devem ser descritas com o método: O QUE FAZ + COMO FAZ + PARA QUE FAZ.
 
 Retorne APENAS um JSON válido (sem markdown, sem code blocks, sem explicações) com a seguinte estrutura:
 
 {
   "nome": "Nome do Cargo",
   "nivel": "operacional|tatico|estrategico",
-  "descricao": "Descrição geral do cargo (1-2 parágrafos)",
-  "responsabilidade": "Responsabilidade e escopo da função (2-3 parágrafos detalhados)",
-  "subordinacao": "A quem se reporta",
-  "interfaces_cargo": "Áreas/cargos com os quais interage",
-  "objetivo_funcao": "Objetivo principal da função (1 parágrafo)",
-  "escopo_geral": "Lista resumida do escopo de atuação",
-  "padroes_execucao": "Padrões e regras de execução da função",
-  "cultura_esperada": "Comportamentos e valores esperados",
-  "erros_riscos": "Principais erros, riscos e consequências",
-  "criterios_sucesso": "Critérios para avaliar sucesso na função",
-  "ferramentas_cargo": "Ferramentas, sistemas e equipamentos utilizados",
+  "descricao": "Descrição sumária detalhada (mínimo 3 parágrafos)",
+  "responsabilidade": "Responsabilidades e escopo detalhado de autoridade e decisão (mínimo 2 parágrafos)",
+  "requisitos_formacao": "Escolaridade e cursos técnicos/superiores exigidos",
+  "requisitos_experiencia": "Tempo de experiência e vivências anteriores necessárias",
+  "subordinacao": "Estrutura de reporte (ex: Reporta-se ao Diretor de Operações)",
+  "interfaces_cargo": "Principais stakeholders internos e externos com quem interage",
+  "objetivo_funcao": "Missão/Objetivo estratégico principal do cargo",
+  "escopo_geral": "Áreas de influência e limites de atuação",
+  "padroes_execucao": "Normas, metodologias e padrões de qualidade a serem seguidos",
+  "cultura_esperada": "Fit cultural e comportamentos exemplares esperados",
+  "erros_riscos": "Análise de riscos do cargo e impactos de falhas operacionais ou estratégicas",
+  "criterios_sucesso": "Indicadores qualitativos de que o ocupante está performando bem",
+  "ferramentas_cargo": "Sistemas (ERP/CRM), ferramentas físicas e softwares específicos",
   "atividades": [
     {
-      "nome": "Nome da atividade",
-      "descricao": "O que faz e por quê",
-      "como": "Como a atividade é executada",
-      "resultado_esperado": "Resultado esperado",
-      "processo": "Grupo/processo (ex: Contas a Pagar)",
+      "nome": "Nome da atividade (verbo no infinitivo)",
+      "descricao": "Descrição detalhada do O QUE e PARA QUE",
+      "como": "Passo a passo ou método de execução (COMO)",
+      "resultado_esperado": "Entregável ou evidência de conclusão",
+      "processo": "Macroprocesso ao qual pertence (ex: Gestão de Talentos)",
       "frequencia": "diaria|semanal|mensal|eventual",
       "complexidade": "baixa|media|alta",
       "classificacao": "rotineira|critica|excepcional",
-      "responsavel_direto": "Quem executa",
-      "interfaces": "Com quem interage nesta atividade",
-      "consequencia_erro": "O que acontece se errar"
+      "responsavel_direto": "Nível de autonomia na execução",
+      "interfaces": "Quem apoia ou é consultado nesta tarefa",
+      "consequencia_erro": "Impacto imediato de falha nesta atividade"
     }
   ],
   "competencias": [
     {
       "nome": "Nome da competência",
       "tipo": "tecnica|comportamental|cognitiva",
-      "descricao": "Descrição breve da competência"
+      "descricao": "Definição clara do comportamento ou conhecimento esperado"
     }
   ],
   "indicadores": [
     {
-      "nome": "Nome do KPI",
-      "descricao": "O que mede",
-      "meta": "Meta esperada (ex: >95%)",
+      "nome": "KPI (Nome claro)",
+      "descricao": "O que mede e por que é importante",
+      "meta": "Exemplo de meta aceitável (ex: Redução de 10% no turnover)",
       "periodicidade": "diaria|semanal|mensal|trimestral|anual"
     }
   ]
 }
 
-REGRAS:
-- Gere entre 5-10 atividades relevantes, agrupadas por processo
-- Gere entre 6-12 competências (mix de técnicas, comportamentais e cognitivas)
-- Gere entre 3-6 indicadores de desempenho mensuráveis
-- Use a descrição do setor/CNAE da empresa para contextualizar
-- Seja específico e profissional, evite genéricos
-- Todos os textos devem ser em português brasileiro`;
+REGRAS CRÍTICAS:
+- Mínimo de 8 atividades detalhadas.
+- Mínimo de 10 competências (divididas entre Soft e Hard skills).
+- Mínimo de 5 indicadores de performance (KPIs) realistas e mensuráveis.
+- Use a descrição do setor/CNAE da empresa para contextualizar profundamente.
+- Tudo em Português (Brasil).
+- Respeite rigorosamente o CONTEXTO DA EMPRESA fornecido.`;
 
     const userPrompt = `Gere a estrutura completa da seguinte função:
 
 "${descricao_livre}"
 
-Considere o contexto da empresa para personalizar atividades, competências e indicadores.`;
+IMPORTANTE: Integre o contexto da empresa (Cultura, Setor, CNAE) para que as atividades e competências não sejam genéricas, mas sim específicas para esta organização.`;
+
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
