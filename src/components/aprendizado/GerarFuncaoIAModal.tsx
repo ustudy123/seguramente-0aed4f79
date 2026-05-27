@@ -76,13 +76,15 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-primary" />
             Gerar Função Completa com IA
           </DialogTitle>
         </DialogHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+
 
         {!resultado ? (
           <div className="space-y-4">
