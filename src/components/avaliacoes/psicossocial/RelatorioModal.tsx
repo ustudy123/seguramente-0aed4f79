@@ -404,46 +404,92 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Identificação</p>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
                       <span className="text-muted-foreground">Campanha:</span><span className="font-medium">{campanha.nome}</span>
-                      <span className="text-muted-foreground">Instrumento:</span><span className="font-medium">{isSipro ? "SIPRO" : campanha.instrumento?.toUpperCase()}</span>
-                      <span className="text-muted-foreground">Respondentes:</span><span className="font-medium">{totalRespondentes}</span>
-                      <span className="text-muted-foreground">Emitido em:</span><span className="font-medium">{dataGeracao}</span>
-                      <span className="text-muted-foreground">IPS Global:</span>
-                      <span className={cn("font-bold", ipsClass === 'critico' ? "text-red-600" : ipsClass === 'risco' ? "text-orange-600" : ipsClass === 'atencao' ? "text-amber-600" : "text-emerald-600")}>
-                        {ipsScore}/100 — {getIPSLabel(ipsClass)}
+                      <span className="text-muted-foreground">Modalidade:</span>
+                      <span className="font-medium">
+                        {isEntrevistaOnly ? "Entrevista Guiada por IA (qualitativa)" : (isSipro ? "SIPRO (quantitativa)" : campanha.instrumento?.toUpperCase())}
                       </span>
+                      {!isEntrevistaOnly && (
+                        <>
+                          <span className="text-muted-foreground">Respondentes:</span><span className="font-medium">{totalRespondentes}</span>
+                        </>
+                      )}
+                      <span className="text-muted-foreground">Emitido em:</span><span className="font-medium">{dataGeracao}</span>
+                      {!isEntrevistaOnly && (
+                        <>
+                          <span className="text-muted-foreground">IPS Global:</span>
+                          <span className={cn("font-bold", ipsClass === 'critico' ? "text-red-600" : ipsClass === 'risco' ? "text-orange-600" : ipsClass === 'atencao' ? "text-amber-600" : "text-emerald-600")}>
+                            {ipsScore}/100 — {getIPSLabel(ipsClass)}
+                          </span>
+                        </>
+                      )}
+                      {temEvidenciasQualitativas && (
+                        <>
+                          <span className="text-muted-foreground">Entrevistas com evidências:</span>
+                          <span className="font-medium">{evidenciasQualitativas.reduce((s, e) => s + e.count, 0)} menção(ões) em {evidenciasQualitativas.length} fator(es)</span>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Síntese */}
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { label: "Crítico", count: criticos.length, cls: "bg-red-50 border-red-200 text-red-700" },
-                      { label: "Alto", count: altos.length, cls: "bg-orange-50 border-orange-200 text-orange-700" },
-                      { label: "Médio", count: medios.length, cls: "bg-amber-50 border-amber-200 text-amber-700" },
-                      { label: "Baixo", count: baixos.length, cls: "bg-emerald-50 border-emerald-200 text-emerald-700" },
-                    ].map(({ label, count, cls }) => (
-                      <div key={label} className={cn("rounded-lg border p-3 text-center", cls)}>
-                        <p className="text-2xl font-bold">{count}</p>
-                        <p className="text-xs font-medium">{label}</p>
+                  {!isEntrevistaOnly && (
+                    <>
+                      {/* Síntese */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Crítico", count: criticos.length, cls: "bg-red-50 border-red-200 text-red-700" },
+                          { label: "Alto", count: altos.length, cls: "bg-orange-50 border-orange-200 text-orange-700" },
+                          { label: "Médio", count: medios.length, cls: "bg-amber-50 border-amber-200 text-amber-700" },
+                          { label: "Baixo", count: baixos.length, cls: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+                        ].map(({ label, count, cls }) => (
+                          <div key={label} className={cn("rounded-lg border p-3 text-center", cls)}>
+                            <p className="text-2xl font-bold">{count}</p>
+                            <p className="text-xs font-medium">{label}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Inventário de dimensões */}
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dimensões avaliadas ({dimensoesAvaliadas.length})</p>
-                    {dimensoesAvaliadas.map(d => (
-                      <div key={d.subject} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
-                        <span className="font-medium">{d.subject}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{d.risco}%</span>
-                          <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
-                            {GRO_NIVEL_RISCO_LABELS[d.nivel]}
-                          </Badge>
-                        </div>
+                      {/* Inventário de dimensões */}
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dimensões avaliadas ({dimensoesAvaliadas.length})</p>
+                        {dimensoesAvaliadas.map(d => (
+                          <div key={d.subject} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
+                            <span className="font-medium">{d.subject}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">{d.risco}%</span>
+                              <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
+                                {GRO_NIVEL_RISCO_LABELS[d.nivel]}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  )}
+
+                  {/* Evidências qualitativas (entrevistas IA) */}
+                  {temEvidenciasQualitativas && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                        <Quote className="h-3.5 w-3.5" /> Evidências qualitativas — entrevistas guiadas por IA
+                      </p>
+                      {evidenciasQualitativas.map((ev) => (
+                        <div key={ev.risco_nome} className="rounded-lg border p-3 space-y-2 bg-purple-50/30">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-sm">{ev.risco_nome}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">P{ev.p_max} × S{ev.s_max} · {ev.count} menção(ões)</span>
+                              <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[ev.nivel])}>
+                                {GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel}
+                              </Badge>
+                            </div>
+                          </div>
+                          {ev.evidencias.slice(0, 2).flatMap((e) => (e.trechos_anonimizados ?? []).slice(0, 2)).slice(0, 3).map((t, i) => (
+                            <p key={i} className="text-xs italic text-muted-foreground border-l-2 border-purple-300 pl-2">"{t}"</p>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* ── Metodologia ───────────────────────────────────── */}
