@@ -440,16 +440,27 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
               Participação
             </Button>
             {isEntrevista ? (
-              <Button
-                id={`btn-gerar-entrevista-${campanha.id}`}
-                variant="outline"
-                size="sm"
-                disabled={gerarEntrevista.isPending}
-                onClick={() => gerarEntrevista.mutate({ campanhaId: campanha.id })}
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                {gerarEntrevista.isPending ? "Gerando..." : "Gerar Entrevista"}
-              </Button>
+              <>
+                <Button
+                  id={`btn-gerar-entrevista-${campanha.id}`}
+                  variant="outline"
+                  size="sm"
+                  disabled={gerarEntrevista.isPending}
+                  onClick={() => gerarEntrevista.mutate({ campanhaId: campanha.id })}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  {gerarEntrevista.isPending ? "Gerando..." : "Novo Link"}
+                </Button>
+                <Button
+                  id={`btn-gerenciar-links-${campanha.id}`}
+                  variant="outline"
+                  size="sm"
+                  onClick={onGerenciarLinks}
+                >
+                  <LinkIcon className="h-4 w-4 mr-1" />
+                  Gerenciar Links
+                </Button>
+              </>
             ) : (
               <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
                 <LinkIcon className="h-4 w-4 mr-1" />
