@@ -6,12 +6,13 @@ interface OrgBranchProps {
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
+  onInsertBetween?: (childId: string) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
   onEdit?: (id: string, updates: Partial<EstrategiaOrganograma>) => void;
   isRoot?: boolean;
 }
 
-function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit, isRoot }: OrgBranchProps) {
+function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onInsertBetween, onMove, onEdit, isRoot }: OrgBranchProps) {
   const hasChildren = node.children && node.children.length > 0;
 
   return (
