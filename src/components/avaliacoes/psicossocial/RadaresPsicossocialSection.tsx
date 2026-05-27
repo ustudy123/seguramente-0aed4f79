@@ -577,20 +577,8 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const [creatingActionFor, setCreatingActionFor] = useState<string | null>(null);
   
   // Se houver apenas uma campanha filtrada, usamos ela como filtro automático
-  const campaignIdFromProps = useMemo(() => {
-    return campanhas.length === 1 ? campanhas[0].id : "recente";
-  }, [campanhas]);
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("");
 
-  const [filtroCampanha, setFiltroCampanha] = useState<string>(campaignIdFromProps);
-
-  // Sincronizar filtro quando as campanhas filtradas mudarem no pai
-  useEffect(() => {
-    if (campanhas.length === 1) {
-      setFiltroCampanha(campanhas[0].id);
-    } else if (filtroCampanha !== "recente" && !campanhas.some(c => c.id === filtroCampanha)) {
-      setFiltroCampanha("recente");
-    }
-  }, [campanhas, filtroCampanha]);
   const [existingActionsByFator, setExistingActionsByFator] = useState<
     Record<string, { titulo: string; status: string }[]>
   >({});
@@ -603,15 +591,22 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
     ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
 
+  const campanhaMaisRecenteId = useMemo(
+    () => campanhasValidas[0]?.id ?? "",
+    [campanhasValidas]
+  );
+
+  // Sincronizar filtro quando as campanhas filtradas mudarem no pai
+  useEffect(() => {
+    if (!filtroCampanha || !campanhasValidas.some(c => c.id === filtroCampanha)) {
+      setFiltroCampanha(campanhaMaisRecenteId);
+    }
+  }, [campanhasValidas, campanhaMaisRecenteId, filtroCampanha]);
+
   // Agregar radar_data das campanhas com dados suficientes
   const radarAgregado = useMemo<RadarDimensao[] | undefined>(() => {
     if (campanhasValidas.length === 0) return undefined;
-
-    if (filtroCampanha === "recente") {
-      return campanhasValidas[0].radar_data as RadarDimensao[];
-    }
-
-    const selecionada = campanhasValidas.find(c => c.id === filtroCampanha);
+    const selecionada = campanhasValidas.find(c => c.id === filtroCampanha) ?? campanhasValidas[0];
     return selecionada?.radar_data as RadarDimensao[] | undefined;
   }, [campanhasValidas, filtroCampanha]);
 
