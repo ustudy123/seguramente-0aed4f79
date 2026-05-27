@@ -101,7 +101,21 @@ export function ResultadosPorGHEPanel() {
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
   const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
-  const { resultadosPorGHE, isLoading } = usePsicossocialResultadosGHE(campanhaIds);
+  const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
+
+  if (typeof window !== "undefined") {
+    // Diagnóstico em runtime para entender por que o painel pode aparecer vazio
+    // (mostra contagem de campanhas válidas, respostas agregadas e eventuais erros).
+    // eslint-disable-next-line no-console
+    console.debug("[ResultadosPorGHEPanel]", {
+      totalCampanhas: campanhas.length,
+      campanhasValidas: campanhasValidas.length,
+      campanhaIds,
+      resultadosPorGHE: resultadosPorGHE.length,
+      gruposDetalhe: resultadosPorGHE.map(r => ({ ghe: r.ghe_nome, count: r.count, campanhas: r.campanhas })),
+      error,
+    });
+  }
 
   const ghesAvaliados: GHEAvaliado[] = useMemo(() => {
     return resultadosPorGHE
