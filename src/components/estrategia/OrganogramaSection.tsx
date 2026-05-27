@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown, Sparkles, AlertTriangle } from "lucide-react";
+import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown, Sparkles, AlertTriangle, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -119,6 +120,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [showSugestao, setShowSugestao] = useState(false);
   const [isSugerindo, setIsSugerindo] = useState(false);
   const [insertingBetweenId, setInsertingBetweenId] = useState<string | null>(null);
+  const [showCargoConfirm, setShowCargoConfirm] = useState(false);
 
   const tree = buildTree(organograma);
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
@@ -168,12 +170,24 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     setShowNew(true);
   };
 
-  const handleCreateOrUpdate = async () => {
-    if (!form.titulo.trim()) {
-      toast.error("Preencha o nome da função");
-      return;
-    }
+  const executeFinalCreation = async (createInSystem: boolean) => {
     const titulo = form.titulo.trim();
+
+    if (createInSystem && !form.cargo_id) {
+      try {
+        await createCargo.mutateAsync({
+          nome: titulo, ativo: true, descricao: null, departamento_id: null,
+          nivel: null, faixa_salarial_min: null, faixa_salarial_max: null,
+          periodicidade_exame_meses: null, exames_obrigatorios: null,
+          insalubridade: false, insalubridade_grau: null, insalubridade_agente_nocivo: null,
+          periculosidade: false, periculosidade_tipo: null,
+          aposentadoria_especial: false, aposentadoria_especial_anos: null,
+        });
+        toast.success(`Função "${titulo}" cadastrada no sistema`);
+      } catch (error) {
+        console.error("Erro ao criar cargo:", error);
+      }
+    }
 
     if (editingNode) {
       updateOrgNode.mutate({
@@ -192,23 +206,6 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         onError: () => toast.error("Erro ao atualizar posição")
       });
       return;
-    }
-
-    if (!form.cargo_id) {
-      const exists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
-      if (!exists) {
-        try {
-          await createCargo.mutateAsync({
-            nome: titulo, ativo: true, descricao: null, departamento_id: null,
-            nivel: null, faixa_salarial_min: null, faixa_salarial_max: null,
-            periodicidade_exame_meses: null, exames_obrigatorios: null,
-            insalubridade: false, insalubridade_grau: null, insalubridade_agente_nocivo: null,
-            periculosidade: false, periculosidade_tipo: null,
-            aposentadoria_especial: false, aposentadoria_especial_anos: null,
-          });
-          toast.info(`Função "${titulo}" cadastrada automaticamente no módulo de Cadastros`);
-        } catch { /* handled */ }
-      }
     }
 
     const ocupantes = form.selectedOcupantes.length > 0
@@ -246,6 +243,23 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         },
       );
     });
+  };
+
+  const handleCreateOrUpdate = async () => {
+    if (!form.titulo.trim()) {
+      toast.error("Preencha o nome da função");
+      return;
+    }
+
+    const titulo = form.titulo.trim();
+    const cargoExists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
+
+    if (!form.cargo_id && !cargoExists) {
+      setShowCargoConfirm(true);
+      return;
+    }
+
+    executeFinalCreation(false);
   };
 
   const isCreating = createOrgNode.isPending || createCargo.isPending;
@@ -451,8 +465,8 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   />
                   {!form.cargo_id && form.titulo.trim() && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <Info className="w-3 h-3" />
-                      Será cadastrado automaticamente no módulo de Cadastros
+                      <HelpCircle className="w-3 h-3" />
+                      O sistema perguntará se deseja cadastrar esta função nos registros gerais.
                     </p>
                   )}
                 </div>
@@ -552,6 +566,32 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
               </div>
             </DialogContent>
           </Dialog>
+
+          <AlertDialog open={showCargoConfirm} onOpenChange={setShowCargoConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-primary" />
+                  Nova Função Detectada
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  A função <strong>"{form.titulo}"</strong> não está cadastrada no sistema. 
+                  Deseja cadastrá-la no módulo de funções para uso futuro ou apenas adicioná-la a este organograma?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                <AlertDialogCancel onClick={() => setShowCargoConfirm(false)}>Cancelar</AlertDialogCancel>
+                <div className="flex flex-1 gap-2 justify-end">
+                  <Button variant="outline" onClick={() => { setShowCargoConfirm(false); executeFinalCreation(false); }}>
+                    {editingNode ? "Apenas Salvar" : "Apenas Adicionar"}
+                  </Button>
+                  <Button onClick={() => { setShowCargoConfirm(false); executeFinalCreation(true); }}>
+                    {editingNode ? "Cadastrar e Salvar" : "Cadastrar e Adicionar"}
+                  </Button>
+                </div>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
