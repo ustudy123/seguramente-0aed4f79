@@ -160,6 +160,14 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     setShowNew(true);
   };
 
+  const openDialogForInsertion = (childId: string) => {
+    const childNode = organograma.find(n => n.id === childId);
+    setEditingNode(null);
+    setInsertingBetweenId(childId);
+    setForm({ ...INITIAL_FORM, parent_id: childNode?.parent_id || "" });
+    setShowNew(true);
+  };
+
   const handleCreateOrUpdate = async () => {
     if (!form.titulo.trim()) {
       toast.error("Preencha o nome da função");
