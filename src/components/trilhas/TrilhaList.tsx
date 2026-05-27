@@ -14,6 +14,8 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Wand2,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useTrilhas } from "@/hooks/useTrilhas";
+import { GerarTrilhaIAModal } from "./GerarTrilhaIAModal";
 import type { Trilha, TrilhaStatus, TrilhaTipo, TrilhaPrioridade } from "@/types/trilha";
 import { TRILHA_TIPO_LABELS, TRILHA_PRIORIDADE_LABELS, TRILHA_STATUS_LABELS } from "@/types/trilha";
 
@@ -75,6 +78,7 @@ export function TrilhaList({ onSelect, onEdit, onNew }: TrilhaListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showGerarIA, setShowGerarIA] = useState(false);
 
   const filtered = trilhas.filter((t) => {
     const matchSearch =
@@ -157,12 +161,26 @@ export function TrilhaList({ onSelect, onEdit, onNew }: TrilhaListProps) {
               </button>
             ))}
           </div>
+          
+          <Button variant="outline" className="border-primary/20 hover:bg-primary/5 text-primary gap-2" onClick={() => setShowGerarIA(true)}>
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden sm:inline">Gerar por IA</span>
+          </Button>
+
           <Button className="gradient-primary shadow-glow" onClick={onNew}>
             <Plus className="w-4 h-4 mr-2" />
             Nova Trilha
           </Button>
         </div>
       </div>
+
+      <GerarTrilhaIAModal 
+        open={showGerarIA} 
+        onOpenChange={setShowGerarIA} 
+        onSuccess={() => {
+          // useTrilhas already handles invalidation, but we can ensure here
+        }}
+      />
 
       {/* List */}
       {isLoading ? (
