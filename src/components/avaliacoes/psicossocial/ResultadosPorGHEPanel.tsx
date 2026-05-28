@@ -19,9 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { usePsicossocialResultadosGHE, type ResultadoGHE } from "@/hooks/usePsicossocialResultadosGHE";
+import { usePsicossocialResultadosGHE, type ResultadoGHE, type EstratoGHE } from "@/hooks/usePsicossocialResultadosGHE";
+
 import {
   GRO_NIVEL_RISCO_LABELS,
   GRO_NIVEL_RISCO_COLORS,
