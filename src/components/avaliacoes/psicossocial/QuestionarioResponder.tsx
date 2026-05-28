@@ -287,7 +287,7 @@ export function QuestionarioResponder({
                       </p>
                       <div className="pl-7">
                         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-                          {(pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => {
+                          {(ESCALAS_CUSTOMIZADAS[pergunta.id] ?? (pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO)).map(op => {
                             const ativo = respostaAtual === op.valor;
                             const estilo = ESTILO_INTENSIDADE[op.intensidade];
                             return (
