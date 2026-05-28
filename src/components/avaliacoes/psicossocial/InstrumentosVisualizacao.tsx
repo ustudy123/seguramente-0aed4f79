@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS, SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from "@/data/instrumentos";
+import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, COPSOQ2BR_DIMENSOES, COPSOQ2BR_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS, SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from "@/data/instrumentos";
 
 function NormaBadge({ norma }: { norma: string }) {
   const colors: Record<string, string> = {
