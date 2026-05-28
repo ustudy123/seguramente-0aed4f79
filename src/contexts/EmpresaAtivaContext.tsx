@@ -78,41 +78,6 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const semVinculos = isProfissional && !loadingVinculos && empresaIdsPermitidas.length === 0;
 
-  // Restore from localStorage or auto-select single company
-  useEffect(() => {
-    if (!tenantId || isLoading || initialized) return;
-    if (empresas.length === 0) {
-      setEmpresaAtivaState(null);
-      setInitialized(true);
-      return;
-    }
-    const storageKey = `empresa_ativa_${tenantId}`;
-    const savedId = localStorage.getItem(storageKey);
-    if (savedId) {
-      const found = empresas.find((e) => e.id === savedId);
-      if (found) {
-        setEmpresaAtivaState(found);
-        setInitialized(true);
-        return;
-      }
-    }
-    // Auto-select first company when nothing saved (or saved ID not found)
-    setEmpresaAtivaState(empresas[0]);
-    localStorage.setItem(storageKey, empresas[0].id);
-    setInitialized(true);
-  }, [tenantId, empresas, isLoading, initialized]);
-
-  // Se a empresa ativa não está mais na lista filtrada, resetar
-  useEffect(() => {
-    if (!initialized || isLoading) return;
-    if (empresaAtiva && empresas.length > 0 && !empresas.find((e) => e.id === empresaAtiva.id)) {
-      setEmpresaAtivaState(empresas[0]);
-      if (tenantId) {
-        localStorage.setItem(`empresa_ativa_${tenantId}`, empresas[0].id);
-      }
-    }
-  }, [empresas, empresaAtiva, initialized, isLoading, tenantId]);
-
   const setEmpresaAtiva = useCallback(
     (empresa: EmpresaCadastro | null) => {
       setEmpresaAtivaState(empresa);
@@ -127,6 +92,49 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
     },
     [tenantId]
   );
+
+  // Restore from localStorage or auto-select single company
+  useEffect(() => {
+    if (!tenantId || isLoading) return;
+    
+    // Se já temos uma empresa ativa válida para o tenant atual, não precisamos auto-selecionar
+    if (empresaAtiva && empresas.some(e => e.id === empresaAtiva.id)) {
+      setInitialized(true);
+      return;
+    }
+
+    if (empresas.length === 0) {
+      setEmpresaAtivaState(null);
+      setInitialized(true);
+      return;
+    }
+
+    const storageKey = `empresa_ativa_${tenantId}`;
+    const savedId = localStorage.getItem(storageKey);
+    
+    if (savedId) {
+      const found = empresas.find((e) => e.id === savedId);
+      if (found) {
+        setEmpresaAtivaState(found);
+        setInitialized(true);
+        return;
+      }
+    }
+
+    // Auto-select first company when nothing saved (or saved ID not found)
+    setEmpresaAtivaState(empresas[0]);
+    localStorage.setItem(storageKey, empresas[0].id);
+    setInitialized(true);
+  }, [tenantId, empresas, isLoading, empresaAtiva]);
+
+  // Se a empresa ativa não está mais na lista filtrada e já terminou de carregar, resetar para a primeira
+  useEffect(() => {
+    if (isLoading || empresas.length === 0) return;
+    
+    if (empresaAtiva && !empresas.find((e) => e.id === empresaAtiva.id)) {
+      setEmpresaAtiva(empresas[0]);
+    }
+  }, [empresas, empresaAtiva, isLoading, setEmpresaAtiva]);
 
   return (
     <EmpresaAtivaContext.Provider
