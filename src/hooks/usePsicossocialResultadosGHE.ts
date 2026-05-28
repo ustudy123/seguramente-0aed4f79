@@ -16,8 +16,6 @@ interface RespostaRow {
 
 interface CampanhaGheRow {
   id: string;
-interface CampanhaGheRow {
-  id: string;
   ghe_ids: string[] | null;
 }
 
@@ -53,8 +51,15 @@ export interface ResultadoGHE {
   composicaoCargos: string[];
 }
 
+/**
+ * Agrega respostas psicossociais por GHE.
+ * Prioriza `ghe_id_snapshot` da resposta; quando ausente, usa o `ghe_ids`
  * da campanha (atribui a resposta a cada GHE vinculado à campanha).
+ * Também carrega a composição cadastral do GHE (setores + cargos) via
+ * `psicossocial_ghe_cargos` para exibir as informações básicas mesmo
+ * quando os snapshots vierem vazios.
  */
+
 
 export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) {
   const { tenantId } = useTenant();
