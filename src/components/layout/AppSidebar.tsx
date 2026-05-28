@@ -196,7 +196,7 @@ const menuSections: MenuSection[] = [
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       {
-        title: "Psicossocial NR-01",
+        title: "Psicossocial",
         icon: Brain,
         path: "/psicossocial",
         children: [
