@@ -16,12 +16,21 @@ interface RespostaRow {
 
 interface CampanhaGheRow {
   id: string;
+interface CampanhaGheRow {
+  id: string;
   ghe_ids: string[] | null;
 }
 
 interface GheRow {
   id: string;
   nome: string;
+  codigo?: string | null;
+}
+
+interface GheCargoRow {
+  ghe_id: string;
+  cargo_id: string | null;
+  departamento_id: string | null;
 }
 
 export interface EstratoGHE {
@@ -33,17 +42,17 @@ export interface EstratoGHE {
 export interface ResultadoGHE {
   ghe_id: string | null;
   ghe_nome: string;
+  ghe_codigo?: string | null;
   count: number;
   radar: RadarDimensao[];
   ipsMedio: number | null;
   campanhas: number;
   setores: EstratoGHE[];
   cargos: EstratoGHE[];
+  composicaoSetores: string[];
+  composicaoCargos: string[];
 }
 
-/**
- * Agrega respostas psicossociais por GHE.
- * Prioriza `ghe_id_snapshot` da resposta; quando ausente, usa o `ghe_ids`
  * da campanha (atribui a resposta a cada GHE vinculado à campanha).
  */
 
