@@ -5,6 +5,7 @@ import { AdmissaoStats } from '@/components/admissao/AdmissaoStats';
 import { AdmissaoList } from '@/components/admissao/AdmissaoList';
 import { AdmissaoForm } from '@/components/admissao/AdmissaoForm';
 import { AdmissaoDetail } from '@/components/admissao/AdmissaoDetail';
+import { supabase } from '@/integrations/supabase/client';
 
 import { useAdmissoes } from '@/hooks/useAdmissoes';
 import { useAuthContext } from '@/contexts/AuthContext';
