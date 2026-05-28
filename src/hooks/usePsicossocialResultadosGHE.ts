@@ -258,23 +258,31 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         }))
         .sort((a, b) => b.count - a.count);
 
-    return Array.from(grupos.entries()).map(([id, g]) => ({
-      ghe_id: id === "__sem_ghe__" ? null : id,
-      ghe_nome: g.nome,
-      count: g.count,
-      radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
-        subject,
-        value: Math.round(soma / n),
-        fullMark: 100,
-      })),
-      ipsMedio: g.ipsList.length > 0
-        ? Math.round(g.ipsList.reduce((a, b) => a + b, 0) / g.ipsList.length)
-        : null,
-      campanhas: g.campanhas.size,
-      setores: estratoFrom(g.setoresAcc),
-      cargos: estratoFrom(g.cargosAcc),
-    }));
+    return Array.from(grupos.entries()).map(([id, g]) => {
+      const realGheId = id === "__sem_ghe__" ? null : id;
+      const comp = realGheId ? composicaoPorGhe.get(realGheId) : undefined;
+      return {
+        ghe_id: realGheId,
+        ghe_nome: g.nome,
+        ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
+        count: g.count,
+        radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
+          subject,
+          value: Math.round(soma / n),
+          fullMark: 100,
+        })),
+        ipsMedio: g.ipsList.length > 0
+          ? Math.round(g.ipsList.reduce((a, b) => a + b, 0) / g.ipsList.length)
+          : null,
+        campanhas: g.campanhas.size,
+        setores: estratoFrom(g.setoresAcc),
+        cargos: estratoFrom(g.cargosAcc),
+        composicaoSetores: comp?.setores ?? [],
+        composicaoCargos: comp?.cargos ?? [],
+      };
+    });
   }, [query.data]);
+
 
 
   return {
