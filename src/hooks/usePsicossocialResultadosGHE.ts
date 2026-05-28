@@ -14,7 +14,17 @@ interface RespostaRow {
   indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
 }
 
-interface CampanhaGheRow {
+interface RespostaRow {
+  id: string;
+  campanha_id: string;
+  ghe_id_snapshot: string | null;
+  ghe_nome_snapshot: string | null;
+  setor_snapshot: string | null;
+  cargo_snapshot: string | null;
+  indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
+}
+
+
   id: string;
   ghe_ids: string[] | null;
 }
