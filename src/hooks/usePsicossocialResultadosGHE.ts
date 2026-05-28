@@ -69,9 +69,6 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
       let ghes: GheRow[] = [];
       if (allGheIds.length > 0) {
-        const { data: ghesData, error: ghesErr } = await fromTable("ghe")
-      let ghes: GheRow[] = [];
-      if (allGheIds.length > 0) {
         const { data: ghesData, error: ghesErr } = await fromTable("psicossocial_ghe")
           .select("id, nome")
           .in("id", allGheIds);
