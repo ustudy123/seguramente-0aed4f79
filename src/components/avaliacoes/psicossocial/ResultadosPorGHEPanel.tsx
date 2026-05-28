@@ -385,6 +385,11 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
             <SheetTitle className="flex items-center gap-2 text-base">
               <Users className="h-5 w-5 text-cyan-600" />
               {ghe.ghe_nome}
+              {ghe.ghe_codigo && (
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  {ghe.ghe_codigo}
+                </Badge>
+              )}
             </SheetTitle>
             <SheetDescription className="text-xs">
               {ghe.count} respondente(s) · {ghe.campanhas} campanha(s)
@@ -406,7 +411,40 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
                 <Badge className="bg-emerald-600 text-white text-[10px]">{ghe.baixos} baixo(s)</Badge>
               )}
             </div>
+
+            {(ghe.composicaoSetores.length > 0 || ghe.composicaoCargos.length > 0) && (
+              <div className="mt-2 rounded-md border bg-muted/30 p-2.5 space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                  Composição cadastral do GHE
+                </p>
+                {ghe.composicaoSetores.length > 0 && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      Setores ({ghe.composicaoSetores.length}):
+                    </span>
+                    {ghe.composicaoSetores.map(s => (
+                      <Badge key={s} variant="secondary" className="text-[10px] font-normal">
+                        {s}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {ghe.composicaoCargos.length > 0 && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      Cargos ({ghe.composicaoCargos.length}):
+                    </span>
+                    {ghe.composicaoCargos.map(c => (
+                      <Badge key={c} variant="outline" className="text-[10px] font-normal bg-cyan-50 text-cyan-700 border-cyan-200">
+                        {c}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </SheetHeader>
+
 
           <ScrollArea className="flex-1 px-6 py-4">
             <Tabs defaultValue="fatores" className="space-y-3">

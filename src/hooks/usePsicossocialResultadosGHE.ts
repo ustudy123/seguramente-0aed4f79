@@ -14,6 +14,16 @@ interface RespostaRow {
   indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
 }
 
+interface RespostaRow {
+  id: string;
+  campanha_id: string;
+  ghe_id_snapshot: string | null;
+  ghe_nome_snapshot: string | null;
+  setor_snapshot: string | null;
+  cargo_snapshot: string | null;
+  indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
+}
+
 interface CampanhaGheRow {
   id: string;
   ghe_ids: string[] | null;
@@ -22,6 +32,13 @@ interface CampanhaGheRow {
 interface GheRow {
   id: string;
   nome: string;
+  codigo?: string | null;
+}
+
+interface GheCargoRow {
+  ghe_id: string;
+  cargo_id: string | null;
+  departamento_id: string | null;
 }
 
 export interface EstratoGHE {
@@ -33,19 +50,26 @@ export interface EstratoGHE {
 export interface ResultadoGHE {
   ghe_id: string | null;
   ghe_nome: string;
+  ghe_codigo?: string | null;
   count: number;
   radar: RadarDimensao[];
   ipsMedio: number | null;
   campanhas: number;
   setores: EstratoGHE[];
   cargos: EstratoGHE[];
+  composicaoSetores: string[];
+  composicaoCargos: string[];
 }
 
 /**
  * Agrega respostas psicossociais por GHE.
  * Prioriza `ghe_id_snapshot` da resposta; quando ausente, usa o `ghe_ids`
  * da campanha (atribui a resposta a cada GHE vinculado à campanha).
+ * Também carrega a composição cadastral do GHE (setores + cargos) via
+ * `psicossocial_ghe_cargos` para exibir as informações básicas mesmo
+ * quando os snapshots vierem vazios.
  */
+
 
 export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) {
   const { tenantId } = useTenant();
@@ -55,7 +79,12 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     queryKey: ["psicossocial-respostas-por-ghe-v2", tenantId, idsKey],
     queryFn: async () => {
       if (!tenantId || !campanhaIds || campanhaIds.length === 0) {
-        return { respostas: [] as RespostaRow[], campanhasGhe: [] as CampanhaGheRow[], ghes: [] as GheRow[] };
+        return {
+          respostas: [] as RespostaRow[],
+          campanhasGhe: [] as CampanhaGheRow[],
+          ghes: [] as GheRow[],
+          composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[] }>(),
+        };
       }
 
       const [respRes, campRes] = await Promise.all([
@@ -74,35 +103,81 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       if (respRes.error) throw respRes.error;
       if (campRes.error) throw campRes.error;
 
+      const respostas = (respRes.data ?? []) as unknown as RespostaRow[];
       const campanhasGhe = (campRes.data ?? []) as unknown as CampanhaGheRow[];
+
+      // Combina GHE ids da campanha + snapshots das respostas para carregar composição completa
       const allGheIds = Array.from(
-        new Set(campanhasGhe.flatMap((c) => c.ghe_ids ?? []).filter(Boolean))
+        new Set([
+          ...campanhasGhe.flatMap((c) => c.ghe_ids ?? []),
+          ...respostas.map((r) => r.ghe_id_snapshot).filter(Boolean) as string[],
+        ].filter(Boolean))
       );
 
       let ghes: GheRow[] = [];
+      const composicaoPorGhe = new Map<string, { setores: string[]; cargos: string[] }>();
+
       if (allGheIds.length > 0) {
-        const { data: ghesData, error: ghesErr } = await fromTable("psicossocial_ghe")
-          .select("id, nome")
-          .in("id", allGheIds);
-        if (ghesErr) throw ghesErr;
-        ghes = (ghesData ?? []) as unknown as GheRow[];
+        const [ghesRes, ghesCargosRes] = await Promise.all([
+          fromTable("psicossocial_ghe")
+            .select("id, nome, codigo")
+            .in("id", allGheIds),
+          fromTable("psicossocial_ghe_cargos")
+            .select("ghe_id, cargo_id, departamento_id")
+            .in("ghe_id", allGheIds),
+        ]);
+
+        if (ghesRes.error) throw ghesRes.error;
+        if (ghesCargosRes.error) throw ghesCargosRes.error;
+
+        ghes = (ghesRes.data ?? []) as unknown as GheRow[];
+        const gheCargos = (ghesCargosRes.data ?? []) as unknown as GheCargoRow[];
+
+        const cargoIds = Array.from(new Set(gheCargos.map((g) => g.cargo_id).filter(Boolean) as string[]));
+        const deptIds = Array.from(new Set(gheCargos.map((g) => g.departamento_id).filter(Boolean) as string[]));
+
+        const [cargosRes, deptsRes] = await Promise.all([
+          cargoIds.length > 0
+            ? fromTable("cargos").select("id, nome").in("id", cargoIds)
+            : Promise.resolve({ data: [], error: null }),
+          deptIds.length > 0
+            ? fromTable("departamentos").select("id, nome").in("id", deptIds)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
+
+        if (cargosRes.error) throw cargosRes.error;
+        if (deptsRes.error) throw deptsRes.error;
+
+        const cargoNomeMap = new Map<string, string>(
+          (cargosRes.data ?? []).map((c: { id: string; nome: string }) => [c.id, c.nome])
+        );
+        const deptNomeMap = new Map<string, string>(
+          (deptsRes.data ?? []).map((d: { id: string; nome: string }) => [d.id, d.nome])
+        );
+
+        for (const gc of gheCargos) {
+          const entry = composicaoPorGhe.get(gc.ghe_id) ?? { setores: [] as string[], cargos: [] as string[] };
+          const setor = gc.departamento_id ? deptNomeMap.get(gc.departamento_id) : null;
+          const cargo = gc.cargo_id ? cargoNomeMap.get(gc.cargo_id) : null;
+          if (setor && !entry.setores.includes(setor)) entry.setores.push(setor);
+          if (cargo && !entry.cargos.includes(cargo)) entry.cargos.push(cargo);
+          composicaoPorGhe.set(gc.ghe_id, entry);
+        }
       }
 
-      return {
-        respostas: (respRes.data ?? []) as unknown as RespostaRow[],
-        campanhasGhe,
-        ghes,
-      };
+      return { respostas, campanhasGhe, ghes, composicaoPorGhe };
     },
     enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
     staleTime: 60_000,
   });
 
+
   const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
-    const { respostas = [], campanhasGhe = [], ghes = [] } = query.data ?? {};
+    const { respostas = [], campanhasGhe = [], ghes = [], composicaoPorGhe = new Map() } = query.data ?? {};
     if (respostas.length === 0) return [];
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
+    const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
     const campanhaGheMap = new Map(
       campanhasGhe.map((c) => [c.id, (c.ghe_ids ?? []).filter(Boolean)])
     );
@@ -183,23 +258,31 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         }))
         .sort((a, b) => b.count - a.count);
 
-    return Array.from(grupos.entries()).map(([id, g]) => ({
-      ghe_id: id === "__sem_ghe__" ? null : id,
-      ghe_nome: g.nome,
-      count: g.count,
-      radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
-        subject,
-        value: Math.round(soma / n),
-        fullMark: 100,
-      })),
-      ipsMedio: g.ipsList.length > 0
-        ? Math.round(g.ipsList.reduce((a, b) => a + b, 0) / g.ipsList.length)
-        : null,
-      campanhas: g.campanhas.size,
-      setores: estratoFrom(g.setoresAcc),
-      cargos: estratoFrom(g.cargosAcc),
-    }));
+    return Array.from(grupos.entries()).map(([id, g]) => {
+      const realGheId = id === "__sem_ghe__" ? null : id;
+      const comp = realGheId ? composicaoPorGhe.get(realGheId) : undefined;
+      return {
+        ghe_id: realGheId,
+        ghe_nome: g.nome,
+        ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
+        count: g.count,
+        radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
+          subject,
+          value: Math.round(soma / n),
+          fullMark: 100,
+        })),
+        ipsMedio: g.ipsList.length > 0
+          ? Math.round(g.ipsList.reduce((a, b) => a + b, 0) / g.ipsList.length)
+          : null,
+        campanhas: g.campanhas.size,
+        setores: estratoFrom(g.setoresAcc),
+        cargos: estratoFrom(g.cargosAcc),
+        composicaoSetores: comp?.setores ?? [],
+        composicaoCargos: comp?.cargos ?? [],
+      };
+    });
   }, [query.data]);
+
 
 
   return {
