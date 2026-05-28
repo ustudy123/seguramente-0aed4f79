@@ -409,90 +409,111 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
           </SheetHeader>
 
           <ScrollArea className="flex-1 px-6 py-4">
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                <Activity className="h-3.5 w-3.5 mt-0.5 shrink-0 text-cyan-600" />
-                Fatores psicossociais avaliados para este Grupo Homogêneo de Exposição, ordenados do
-                mais crítico ao mais saudável. Para cada fator não tolerável (crítico/alto) você pode
-                gerar uma <strong>ação 5W2H</strong> direto no Plano de Ação Global.
-              </p>
+            <Tabs defaultValue="fatores" className="space-y-3">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="fatores" className="text-xs">Fatores</TabsTrigger>
+                <TabsTrigger value="setores" className="text-xs">
+                  Por setor ({ghe.setores.length})
+                </TabsTrigger>
+                <TabsTrigger value="cargos" className="text-xs">
+                  Por cargo ({ghe.cargos.length})
+                </TabsTrigger>
+              </TabsList>
 
-              {ghe.fatores.length === 0 ? (
-                <div className="text-center text-sm text-muted-foreground py-6">
-                  Nenhum fator avaliado neste GHE.
-                </div>
-              ) : (
-                ghe.fatores.map((f) => {
-                  const cor =
-                    f.nivelKey === 'critico' ? 'border-l-red-500 bg-red-50/30' :
-                    f.nivelKey === 'alto' ? 'border-l-orange-500 bg-orange-50/30' :
-                    f.nivelKey === 'medio' ? 'border-l-amber-500 bg-amber-50/30' :
-                    'border-l-emerald-500 bg-emerald-50/20';
-                  return (
-                    <Card key={f.subject} className={cn("border-l-4", cor)}>
-                      <CardContent className="p-3 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="font-semibold text-sm leading-tight">{f.fator}</p>
-                              <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-700 border-purple-200">
-                                {f.categoriaLabel}
-                              </Badge>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-                              {f.descricao}
-                            </p>
-                          </div>
-                          <Badge variant="outline" className={cn("shrink-0 text-[10px]", GRO_NIVEL_RISCO_COLORS[f.nivelKey])}>
-                            {f.nivelLabel}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 text-[10px]">
-                          <div>
-                            <p className="text-muted-foreground uppercase">Score</p>
-                            <p className="font-bold text-sm">{f.scoreReal}%</p>
-                            <Progress value={f.scoreReal} className="h-1 mt-0.5" />
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground uppercase">Probabilidade</p>
-                            <p className="font-semibold text-xs">{f.probabilidadeLabel}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground uppercase">Severidade</p>
-                            <p className="font-semibold text-xs">{f.severidadeLabel}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2 pt-1 border-t">
-                          <Badge variant="outline" className="text-[9px] font-mono">{f.norma}</Badge>
-                          {(f.nivelKey === 'critico' || f.nivelKey === 'alto') && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5"
-                              onClick={() => setAcaoAlerta(f)}
-                            >
-                              <Sparkles className="h-3 w-3" />
-                              Criar Ação 5W2H
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-
-              <div className="mt-4 p-3 rounded-lg border bg-muted/30 text-[11px] text-muted-foreground flex items-start gap-2">
-                <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-600" />
-                <p>
-                  Os scores apresentados resultam exclusivamente das respostas dos colaboradores deste GHE,
-                  mantendo o anonimato individual (mínimo {MINIMO_ANONIMATO} respondentes — ISO 45003).
-                  Use as ações 5W2H para registrar evidência do tratamento dos riscos no PGR.
+              <TabsContent value="fatores" className="space-y-3 mt-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                  <Activity className="h-3.5 w-3.5 mt-0.5 shrink-0 text-cyan-600" />
+                  Fatores psicossociais avaliados para este Grupo Homogêneo de Exposição, ordenados do
+                  mais crítico ao mais saudável. Para cada fator não tolerável (crítico/alto) você pode
+                  gerar uma <strong>ação 5W2H</strong> direto no Plano de Ação Global.
                 </p>
-              </div>
-            </div>
+
+                {ghe.fatores.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground py-6">
+                    Nenhum fator avaliado neste GHE.
+                  </div>
+                ) : (
+                  ghe.fatores.map((f) => {
+                    const cor =
+                      f.nivelKey === 'critico' ? 'border-l-red-500 bg-red-50/30' :
+                      f.nivelKey === 'alto' ? 'border-l-orange-500 bg-orange-50/30' :
+                      f.nivelKey === 'medio' ? 'border-l-amber-500 bg-amber-50/30' :
+                      'border-l-emerald-500 bg-emerald-50/20';
+                    return (
+                      <Card key={f.subject} className={cn("border-l-4", cor)}>
+                        <CardContent className="p-3 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="font-semibold text-sm leading-tight">{f.fator}</p>
+                                <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-700 border-purple-200">
+                                  {f.categoriaLabel}
+                                </Badge>
+                              </div>
+                              <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                                {f.descricao}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className={cn("shrink-0 text-[10px]", GRO_NIVEL_RISCO_COLORS[f.nivelKey])}>
+                              {f.nivelLabel}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-[10px]">
+                            <div>
+                              <p className="text-muted-foreground uppercase">Score</p>
+                              <p className="font-bold text-sm">{f.scoreReal}%</p>
+                              <Progress value={f.scoreReal} className="h-1 mt-0.5" />
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground uppercase">Probabilidade</p>
+                              <p className="font-semibold text-xs">{f.probabilidadeLabel}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground uppercase">Severidade</p>
+                              <p className="font-semibold text-xs">{f.severidadeLabel}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                            <Badge variant="outline" className="text-[9px] font-mono">{f.norma}</Badge>
+                            {(f.nivelKey === 'critico' || f.nivelKey === 'alto') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5"
+                                onClick={() => setAcaoAlerta(f)}
+                              >
+                                <Sparkles className="h-3 w-3" />
+                                Criar Ação 5W2H
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+
+                <div className="mt-4 p-3 rounded-lg border bg-muted/30 text-[11px] text-muted-foreground flex items-start gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-600" />
+                  <p>
+                    Os scores apresentados resultam exclusivamente das respostas dos colaboradores deste GHE,
+                    mantendo o anonimato individual (mínimo {MINIMO_ANONIMATO} respondentes — ISO 45003).
+                    Use as ações 5W2H para registrar evidência do tratamento dos riscos no PGR.
+                  </p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="setores" className="mt-3">
+                <EstratificacaoLista estratos={ghe.setores} tipo="setor" />
+              </TabsContent>
+              <TabsContent value="cargos" className="mt-3">
+                <EstratificacaoLista estratos={ghe.cargos} tipo="cargo" />
+              </TabsContent>
+            </Tabs>
+          </ScrollArea>
+
           </ScrollArea>
         </SheetContent>
       </Sheet>
