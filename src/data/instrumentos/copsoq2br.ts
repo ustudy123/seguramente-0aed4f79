@@ -172,7 +172,7 @@ export const COPSOQ2BR_DIMENSOES: DimensaoInstrumento[] = [
     tipo: 'risco',
     normas: ['ISO 45003'],
     perguntas: [
-      { id: 'c2br_17', dimensao: 'c2br_saude', texto: 'De modo geral, como você diria que está sua saúde? (Considere 0 = Excelente, 4 = Ruim)' },
+      { id: 'c2br_17', dimensao: 'c2br_saude', texto: 'De modo geral, como você diria que está sua saúde?' },
     ],
   },
 
