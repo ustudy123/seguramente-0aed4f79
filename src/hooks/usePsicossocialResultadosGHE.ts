@@ -177,6 +177,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     if (respostas.length === 0) return [];
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
+    const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
     const campanhaGheMap = new Map(
       campanhasGhe.map((c) => [c.id, (c.ghe_ids ?? []).filter(Boolean)])
     );
