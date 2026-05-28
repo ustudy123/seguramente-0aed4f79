@@ -85,14 +85,12 @@ function avaliarFatores(radar: ResultadoGHE['radar'], isSipro: boolean): FatorAv
     };
   });
 }
-
-const ordemNivel: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
-
 export function ResultadosPorGHEPanel() {
   const { campanhas, isLoadingCampanhas } = usePsicossocial();
   const [gheDrillDown, setGheDrillDown] = useState<GHEAvaliado | null>(null);
+  const [campanhaFiltro, setCampanhaFiltro] = useState<string>("all");
 
-  const campanhasValidas = useMemo(
+  const campanhasValidasTodas = useMemo(
     () => campanhas.filter(c =>
       c.ips_score != null &&
       (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
@@ -101,6 +99,17 @@ export function ResultadosPorGHEPanel() {
     ),
     [campanhas],
   );
+
+  const campanhasValidas = useMemo(
+    () => campanhaFiltro === "all"
+      ? campanhasValidasTodas
+      : campanhasValidasTodas.filter(c => c.id === campanhaFiltro),
+    [campanhasValidasTodas, campanhaFiltro],
+  );
+
+  const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
+  const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
+  const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
   const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
