@@ -78,6 +78,21 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const semVinculos = isProfissional && !loadingVinculos && empresaIdsPermitidas.length === 0;
 
+  const setEmpresaAtiva = useCallback(
+    (empresa: EmpresaCadastro | null) => {
+      setEmpresaAtivaState(empresa);
+      if (tenantId) {
+        const storageKey = `empresa_ativa_${tenantId}`;
+        if (empresa) {
+          localStorage.setItem(storageKey, empresa.id);
+        } else {
+          localStorage.removeItem(storageKey);
+        }
+      }
+    },
+    [tenantId]
+  );
+
   // Restore from localStorage or auto-select single company
   useEffect(() => {
     if (!tenantId || isLoading) return;
@@ -120,21 +135,6 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setEmpresaAtiva(empresas[0]);
     }
   }, [empresas, empresaAtiva, isLoading, setEmpresaAtiva]);
-
-  const setEmpresaAtiva = useCallback(
-    (empresa: EmpresaCadastro | null) => {
-      setEmpresaAtivaState(empresa);
-      if (tenantId) {
-        const storageKey = `empresa_ativa_${tenantId}`;
-        if (empresa) {
-          localStorage.setItem(storageKey, empresa.id);
-        } else {
-          localStorage.removeItem(storageKey);
-        }
-      }
-    },
-    [tenantId]
-  );
 
   return (
     <EmpresaAtivaContext.Provider
