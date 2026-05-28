@@ -73,7 +73,7 @@ async function registrarConsentimento(
 function getInstrumentoLabel(instrumento?: string) {
   switch (instrumento) {
     case 'copsoq': return 'COPSOQ III — 13 dimensões psicossociais';
-    case 'copsoq2br': return 'COPSOQ II-Br — Versão curta validada (40 perguntas)';
+    case 'copsoq2br': return 'COPSOQ Adaptado — Versão curta validada (40 perguntas)';
     case 'hse': return 'HSE Management Standards — 7 padrões';
     case 'proart': return 'PROART — Protocolo de Avaliação de Riscos';
     case 'sipro': return 'SIPRO — Índice YourEyes de Risco Psicossocial';
