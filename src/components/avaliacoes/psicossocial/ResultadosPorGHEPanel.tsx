@@ -528,7 +528,9 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
         />
       )}
     </>
+  );
 }
+
 
 interface EstratificacaoListaProps {
   estratos: EstratoGHE[];
