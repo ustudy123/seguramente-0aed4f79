@@ -514,7 +514,6 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
             </Tabs>
           </ScrollArea>
 
-          </ScrollArea>
         </SheetContent>
       </Sheet>
 
