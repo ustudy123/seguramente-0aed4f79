@@ -155,49 +155,79 @@ export function ResultadosPorGHEPanel() {
       });
   }, [resultadosPorGHE, isSipro]);
 
+  const filtroCampanhaBar = (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-1">
+      <span className="text-xs font-medium text-muted-foreground">Filtrar por campanha:</span>
+      <Select value={campanhaFiltro} onValueChange={setCampanhaFiltro}>
+        <SelectTrigger className="h-8 text-xs w-full sm:w-[320px]">
+          <SelectValue placeholder="Selecione uma campanha" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">
+            Todas as campanhas ({campanhasValidasTodas.length})
+          </SelectItem>
+          {campanhasValidasTodas.map(c => (
+            <SelectItem key={c.id} value={c.id}>
+              {c.nome ?? "Campanha sem nome"} · {c.total_respostas ?? 0} resp.
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   if (isLoadingCampanhas || isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando resultados por GHE…
+      <div className="space-y-3">
+        {filtroCampanhaBar}
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando resultados por GHE…
+        </div>
       </div>
     );
   }
 
   if (campanhasValidas.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-10 text-center gap-2">
-          <Inbox className="h-8 w-8 text-muted-foreground opacity-40" />
-          <p className="text-sm font-medium">Nenhuma campanha válida encontrada</p>
-          <p className="text-xs text-muted-foreground max-w-md">
-            É necessário pelo menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas
-            e dados do radar calculados.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        {filtroCampanhaBar}
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-10 text-center gap-2">
+            <Inbox className="h-8 w-8 text-muted-foreground opacity-40" />
+            <p className="text-sm font-medium">Nenhuma campanha válida encontrada</p>
+            <p className="text-xs text-muted-foreground max-w-md">
+              É necessário pelo menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas
+              e dados do radar calculados.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   if (ghesAvaliados.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-10 text-center gap-2">
-          <Users className="h-8 w-8 text-muted-foreground opacity-40" />
-          <p className="text-sm font-medium">Nenhum GHE com respostas vinculadas</p>
-          <p className="text-xs text-muted-foreground max-w-md">
-            Encontramos <strong>{campanhasValidas.length} campanha(s) válida(s)</strong>, mas
-            nenhuma resposta carrega o <code>ghe_id_snapshot</code> e as campanhas correspondentes
-            não têm GHEs (<code>ghe_ids</code>) configurados.
-          </p>
-          <p className="text-xs text-muted-foreground max-w-md">
-            Para liberar a análise: edite a campanha e vincule um ou mais GHEs, ou colete novas
-            respostas via link público com GHE definido por par Setor + Função.
-          </p>
-          {error && (
-            <p className="text-xs text-red-600 mt-2">Erro ao carregar: {String(error)}</p>
-          )}
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        {filtroCampanhaBar}
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-10 text-center gap-2">
+            <Users className="h-8 w-8 text-muted-foreground opacity-40" />
+            <p className="text-sm font-medium">Nenhum GHE com respostas vinculadas</p>
+            <p className="text-xs text-muted-foreground max-w-md">
+              Encontramos <strong>{campanhasValidas.length} campanha(s) válida(s)</strong>, mas
+              nenhuma resposta carrega o <code>ghe_id_snapshot</code> e as campanhas correspondentes
+              não têm GHEs (<code>ghe_ids</code>) configurados.
+            </p>
+            <p className="text-xs text-muted-foreground max-w-md">
+              Para liberar a análise: edite a campanha e vincule um ou mais GHEs, ou colete novas
+              respostas via link público com GHE definido por par Setor + Função.
+            </p>
+            {error && (
+              <p className="text-xs text-red-600 mt-2">Erro ao carregar: {String(error)}</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -207,7 +237,9 @@ export function ResultadosPorGHEPanel() {
 
   return (
     <div className="space-y-4">
+      {filtroCampanhaBar}
       <Card>
+
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
