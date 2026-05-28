@@ -162,7 +162,7 @@ export function InstrumentosVisualizacao() {
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1">
             <Layers className="h-3 w-3" />
-            {COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS} perguntas total
+            {COPSOQ_TOTAL_PERGUNTAS + COPSOQ2BR_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS} perguntas total
           </Badge>
         </div>
       </div>
