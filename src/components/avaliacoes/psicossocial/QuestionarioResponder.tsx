@@ -272,7 +272,7 @@ export function QuestionarioResponder({
 
               {/* Perguntas */}
               <div className="space-y-6">
-                          {(ESCALAS_CUSTOMIZADAS[pergunta.id] ?? (pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO)).map(op => {
+                {perguntasDimAtual.map((pergunta, pi) => {
                   const respostaAtual = respostas[pergunta.id];
                   return (
                     <div key={pergunta.id} className="space-y-3 py-4 border-b border-border/60 last:border-b-0">
