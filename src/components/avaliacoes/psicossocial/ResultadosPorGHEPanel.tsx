@@ -528,5 +528,73 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
         />
       )}
     </>
+}
+
+interface EstratificacaoListaProps {
+  estratos: EstratoGHE[];
+  tipo: "setor" | "cargo";
+}
+
+function EstratificacaoLista({ estratos, tipo }: EstratificacaoListaProps) {
+  if (estratos.length === 0) {
+    return (
+      <div className="text-center text-sm text-muted-foreground py-6">
+        Nenhum {tipo} informado nas respostas deste GHE.
+      </div>
+    );
+  }
+  const total = estratos.reduce((s, e) => s + e.count, 0);
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+        <Target className="h-3.5 w-3.5 mt-0.5 shrink-0 text-cyan-600" />
+        Estratificação por {tipo} dentro deste GHE. Grupos com menos de {MINIMO_ANONIMATO}{" "}
+        respondentes têm o IPS suprimido para preservar o anonimato (ISO 45003).
+      </p>
+      {estratos.map((e) => {
+        const bloqueado = e.count < MINIMO_ANONIMATO;
+        const pct = total > 0 ? Math.round((e.count / total) * 100) : 0;
+        return (
+          <Card key={e.nome} className={cn("border-l-4", bloqueado ? "border-l-muted" :
+            e.ipsMedio == null ? "border-l-muted" :
+            e.ipsMedio < 35 ? "border-l-red-500" :
+            e.ipsMedio < 50 ? "border-l-orange-500" :
+            e.ipsMedio < 65 ? "border-l-amber-500" :
+            e.ipsMedio < 80 ? "border-l-blue-500" : "border-l-emerald-500")}>
+            <CardContent className="p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm leading-tight truncate">{e.nome}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {e.count} respondente(s) · {pct}% do GHE
+                  </p>
+                </div>
+                {bloqueado ? (
+                  <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700 bg-amber-50">
+                    <Lock className="h-3 w-3" /> Anonimato
+                  </Badge>
+                ) : e.ipsMedio != null ? (
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] text-muted-foreground uppercase">IPS</p>
+                    <p className={cn(
+                      "font-bold text-base leading-none",
+                      e.ipsMedio < 35 ? "text-red-600" :
+                      e.ipsMedio < 50 ? "text-orange-600" :
+                      e.ipsMedio < 65 ? "text-amber-600" :
+                      e.ipsMedio < 80 ? "text-blue-600" : "text-emerald-600",
+                    )}>
+                      {e.ipsMedio}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              <Progress value={pct} className="h-1" />
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
+}
+
 }
