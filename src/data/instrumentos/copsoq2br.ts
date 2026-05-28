@@ -138,7 +138,7 @@ export const COPSOQ2BR_DIMENSOES: DimensaoInstrumento[] = [
 
   // ─── 9. Conflito Trabalho-Família (2 itens) ─────────────────────────────
   {
-    id: 'c2br_conflito_familia',
+      { id: 'c2br_17', dimensao: 'c2br_saude', texto: 'De modo geral, como você diria que está sua saúde?' },
     nome: 'Equilíbrio Trabalho-Vida',
     descricao: 'Interferência negativa do trabalho na vida privada (itens 14A-14B)',
     tipo: 'risco',
