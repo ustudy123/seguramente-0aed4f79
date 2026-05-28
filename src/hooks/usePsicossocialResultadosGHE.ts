@@ -24,7 +24,7 @@ interface RespostaRow {
   indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
 }
 
-
+interface CampanhaGheRow {
   id: string;
   ghe_ids: string[] | null;
 }
