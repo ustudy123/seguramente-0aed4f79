@@ -11,7 +11,7 @@ export type CampanhaPeriodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anu
 export type EventoGatilhoTipo = 'acidente' | 'denuncia' | 'reestruturacao' | 'conflito' | 'ia_sugestao' | 'solicitacao_colaborador';
 export type ConvitePsicossocialStatus = 'pendente' | 'iniciado' | 'concluido' | 'expirado';
 export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
-export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'sipro' | 'customizado';
+export type InstrumentoPsicossocial = 'copsoq' | 'copsoq2br' | 'hse' | 'proart' | 'sipro' | 'customizado';
 export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
 
 // IPS - Índice Psicossocial YourEyes (0-100, higher = healthier)
