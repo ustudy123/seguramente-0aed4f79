@@ -63,6 +63,7 @@ function getDimensoesCompletas(instrumento: InstrumentoPsicossocial, blocosDinam
   let base: DimensaoInstrumento[];
   switch (instrumento) {
     case 'copsoq': base = COPSOQ_DIMENSOES; break;
+    case 'copsoq2br': base = COPSOQ2BR_DIMENSOES; break;
     case 'hse': base = HSE_DIMENSOES; break;
     case 'proart': base = PROART_DIMENSOES; break;
     case 'sipro': base = SIPRO_DIMENSOES; break;
