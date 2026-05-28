@@ -182,15 +182,15 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
   const validas = useMemo(() => {
     return campanhas.filter(
       (c) => (c.total_respostas || 0) >= MINIMO_ANONIMATO
-    ).sort((a, b) => new Date(b.data_fim || b.created_at).getTime() - new Date(a.data_fim || a.created_at).getTime());
+    ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
 
-  // Campanha mais recente (prioriza encerradas)
+  // Campanha mais recente = última criada (independente do status)
   const campanhaMaisRecenteId = useMemo(() => {
     if (validas.length === 0) return "";
-    const encerradas = validas.filter(c => c.status === "encerrada");
-    return (encerradas[0] ?? validas[0]).id;
+    return validas[0].id;
   }, [validas]);
+
 
   const [filtroCampanha, setFiltroCampanha] = useState<string>(campanhaMaisRecenteId);
 
