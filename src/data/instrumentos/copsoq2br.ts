@@ -4,7 +4,7 @@
  * Reproduz literalmente a versão brasileira curta do Copenhagen
  * Psychosocial Questionnaire II (Kristensen et al., 2005) traduzida e
  * validada por Josiane Sotrate Gonçalves (UFSCar) e referenciada pelos
- * estudos da USP. As 33 perguntas estão agrupadas nas 10 dimensões
+ * estudos da USP. As 40 perguntas estão agrupadas nas 13 dimensões
  * originais do instrumento, sem ajustes para NR-01/ISO 45003.
  *
  * Para análises que exijam adaptação às normas brasileiras, use o
@@ -124,7 +124,47 @@ export const COPSOQ2BR_DIMENSOES: DimensaoInstrumento[] = [
     ],
   },
 
-  // ─── 8. Saúde Geral (1 item) ────────────────────────────────────────────
+  // ─── 8. Satisfação no Trabalho (1 item) ─────────────────────────────────
+  {
+    id: 'c2br_satisfacao',
+    nome: 'Satisfação no Trabalho',
+    descricao: 'Satisfação geral com o trabalho considerando todos os aspectos (item 13)',
+    tipo: 'protetor',
+    normas: ['ISO 45003'],
+    perguntas: [
+      { id: 'c2br_13', dimensao: 'c2br_satisfacao', texto: 'Qual é o seu nível de satisfação com o seu trabalho como um todo, considerando todos os aspectos?', invertida: true },
+    ],
+  },
+
+  // ─── 9. Conflito Trabalho-Família (2 itens) ─────────────────────────────
+  {
+    id: 'c2br_conflito_familia',
+    nome: 'Conflito Trabalho-Família',
+    descricao: 'Interferência negativa do trabalho na vida privada (itens 14A-14B)',
+    tipo: 'risco',
+    normas: ['NR-17', 'ISO 45003'],
+    perguntas: [
+      { id: 'c2br_14A', dimensao: 'c2br_conflito_familia', texto: 'Você sente que seu trabalho consome tanta energia que tem efeito negativo na sua vida privada?' },
+      { id: 'c2br_14B', dimensao: 'c2br_conflito_familia', texto: 'Você sente que seu trabalho ocupa tanto tempo que tem efeito negativo na sua vida privada?' },
+    ],
+  },
+
+  // ─── 10. Valores no Local de Trabalho (4 itens) ─────────────────────────
+  {
+    id: 'c2br_valores',
+    nome: 'Confiança e Justiça Organizacional',
+    descricao: 'Confiança mútua entre superiores e empregados e justiça organizacional (itens 15A-16B)',
+    tipo: 'protetor',
+    normas: ['NR-01', 'ISO 45003'],
+    perguntas: [
+      { id: 'c2br_15A', dimensao: 'c2br_valores', texto: 'Você pode confiar nas informações que vêm dos seus superiores?', invertida: true },
+      { id: 'c2br_15B', dimensao: 'c2br_valores', texto: 'Seus superiores confiam que os empregados realizarão bem o trabalho?', invertida: true },
+      { id: 'c2br_16A', dimensao: 'c2br_valores', texto: 'Os conflitos são resolvidos de forma justa?', invertida: true },
+      { id: 'c2br_16B', dimensao: 'c2br_valores', texto: 'O trabalho é distribuído de forma justa?', invertida: true },
+    ],
+  },
+
+  // ─── 11. Saúde Geral (1 item) ───────────────────────────────────────────
   {
     id: 'c2br_saude',
     nome: 'Sinais Precoces de Saúde',
