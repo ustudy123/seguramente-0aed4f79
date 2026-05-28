@@ -413,13 +413,15 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          allowTaint: false, // Changed from true to avoid SecurityError on toDataURL
+          allowTaint: false,
           scrollX: 0,
           scrollY: 0,
+          windowWidth: 794,
         });
         if (needsMount) container.removeChild(element);
         return canvas;
       } catch (err) {
+        console.error("Erro no html2canvas para elemento:", element.tagName, err);
         if (needsMount && element.parentElement === container) {
           container.removeChild(element);
         }
