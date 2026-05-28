@@ -201,7 +201,6 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     }));
   }, [query.data]);
 
-  }, [query.data]);
 
   return {
     resultadosPorGHE,
