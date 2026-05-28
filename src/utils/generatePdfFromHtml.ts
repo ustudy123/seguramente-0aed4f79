@@ -413,7 +413,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          allowTaint: true,
+          allowTaint: false, // Changed from true to avoid SecurityError on toDataURL
           scrollX: 0,
           scrollY: 0,
         });
