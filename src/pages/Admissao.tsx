@@ -189,7 +189,7 @@ export default function Admissao() {
             const tenantId = user?.app_metadata?.tenant_id;
 
             if (tenantId) {
-              await supabase.from('hub_processos').insert({
+              await (supabase as any).from('hub_processos').insert({
                 tenant_id: tenantId,
                 tipo: 'admissao',
                 status: 'pendente',
