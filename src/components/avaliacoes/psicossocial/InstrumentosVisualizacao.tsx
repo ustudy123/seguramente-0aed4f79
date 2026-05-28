@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS, SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from "@/data/instrumentos";
+import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, COPSOQ2BR_DIMENSOES, COPSOQ2BR_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS, SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from "@/data/instrumentos";
 
 function NormaBadge({ norma }: { norma: string }) {
   const colors: Record<string, string> = {
@@ -162,7 +162,7 @@ export function InstrumentosVisualizacao() {
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1">
             <Layers className="h-3 w-3" />
-            {COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS} perguntas total
+            {COPSOQ_TOTAL_PERGUNTAS + COPSOQ2BR_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS} perguntas total
           </Badge>
         </div>
       </div>
@@ -202,6 +202,11 @@ export function InstrumentosVisualizacao() {
             <Brain className="h-4 w-4" />
             COPSOQ III
             <Badge variant="secondary" className="text-xs ml-1">{COPSOQ_TOTAL_PERGUNTAS}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="copsoq2br" className="gap-2">
+            <Brain className="h-4 w-4" />
+            COPSOQ II-Br
+            <Badge variant="secondary" className="text-xs ml-1">{COPSOQ2BR_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
           <TabsTrigger value="hse" className="gap-2">
             <CheckCircle2 className="h-4 w-4" />

@@ -139,7 +139,7 @@ export const COPSOQ2BR_DIMENSOES: DimensaoInstrumento[] = [
   // ─── 9. Conflito Trabalho-Família (2 itens) ─────────────────────────────
   {
     id: 'c2br_conflito_familia',
-    nome: 'Conflito Trabalho-Família',
+    nome: 'Equilíbrio Trabalho-Vida',
     descricao: 'Interferência negativa do trabalho na vida privada (itens 14A-14B)',
     tipo: 'risco',
     normas: ['NR-17', 'ISO 45003'],
@@ -152,7 +152,7 @@ export const COPSOQ2BR_DIMENSOES: DimensaoInstrumento[] = [
   // ─── 10. Valores no Local de Trabalho (4 itens) ─────────────────────────
   {
     id: 'c2br_valores',
-    nome: 'Confiança e Justiça Organizacional',
+    nome: 'Justiça Organizacional',
     descricao: 'Confiança mútua entre superiores e empregados e justiça organizacional (itens 15A-16B)',
     tipo: 'protetor',
     normas: ['NR-01', 'ISO 45003'],

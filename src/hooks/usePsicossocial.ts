@@ -52,7 +52,7 @@ export function calcularIndicadores(
   instrumento: InstrumentoPsicossocial = 'sipro',
   blocosDinamicos?: string[]
 ): IndicadoresPsicossociais {
-  const validKeys = ['copsoq', 'hse', 'proart', 'sipro'] as const;
+  const validKeys = ['copsoq', 'copsoq2br', 'hse', 'proart', 'sipro'] as const;
   type ValidKey = typeof validKeys[number];
   const instrumentoKey: ValidKey = validKeys.includes(instrumento as ValidKey)
     ? instrumento as ValidKey

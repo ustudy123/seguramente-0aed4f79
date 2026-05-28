@@ -339,20 +339,22 @@ export function calcularIPSInstrumento(
   return { ips, porDimensao };
 }
 
-export function getDimensoesByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'sipro' | 'ambos'): DimensaoInstrumento[] {
+export function getDimensoesByInstrumento(instrumento: 'copsoq' | 'copsoq2br' | 'hse' | 'proart' | 'sipro' | 'ambos'): DimensaoInstrumento[] {
   if (instrumento === 'copsoq') return COPSOQ_DIMENSOES;
+  if (instrumento === 'copsoq2br') return COPSOQ2BR_DIMENSOES;
   if (instrumento === 'hse') return HSE_DIMENSOES;
   if (instrumento === 'proart') return PROART_DIMENSOES;
   if (instrumento === 'sipro') return SIPRO_DIMENSOES;
-  return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES, ...PROART_DIMENSOES, ...SIPRO_DIMENSOES];
+  return [...COPSOQ_DIMENSOES, ...COPSOQ2BR_DIMENSOES, ...HSE_DIMENSOES, ...PROART_DIMENSOES, ...SIPRO_DIMENSOES];
 }
 
-export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'sipro' | 'ambos'): number {
+export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'copsoq2br' | 'hse' | 'proart' | 'sipro' | 'ambos'): number {
   if (instrumento === 'copsoq') return COPSOQ_TOTAL_PERGUNTAS;
+  if (instrumento === 'copsoq2br') return COPSOQ2BR_TOTAL_PERGUNTAS;
   if (instrumento === 'hse') return HSE_TOTAL_PERGUNTAS;
   if (instrumento === 'proart') return PROART_TOTAL_PERGUNTAS;
   if (instrumento === 'sipro') return SIPRO_TOTAL_PERGUNTAS;
-  return COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS;
+  return COPSOQ_TOTAL_PERGUNTAS + COPSOQ2BR_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS;
 }
 
 /** Retorna label de classificação IRP-S em português */

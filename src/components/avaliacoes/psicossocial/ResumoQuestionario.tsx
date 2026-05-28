@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { COPSOQ_DIMENSOES } from "@/data/instrumentos/copsoq";
+import { COPSOQ2BR_DIMENSOES } from "@/data/instrumentos/copsoq2br";
 import { HSE_DIMENSOES } from "@/data/instrumentos/hse";
 import { PROART_DIMENSOES } from "@/data/instrumentos/proart";
 import { SIPRO_DIMENSOES } from "@/data/instrumentos/sipro";
@@ -40,6 +41,7 @@ function getDimensoesCompletas(
   let base: DimensaoInstrumento[];
   switch (instrumento) {
     case "copsoq": base = COPSOQ_DIMENSOES; break;
+    case "copsoq2br": base = COPSOQ2BR_DIMENSOES; break;
     case "hse": base = HSE_DIMENSOES; break;
     case "proart": base = PROART_DIMENSOES; break;
     case "sipro": base = SIPRO_DIMENSOES; break;

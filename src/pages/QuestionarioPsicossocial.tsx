@@ -73,6 +73,7 @@ async function registrarConsentimento(
 function getInstrumentoLabel(instrumento?: string) {
   switch (instrumento) {
     case 'copsoq': return 'COPSOQ III — 13 dimensões psicossociais';
+    case 'copsoq2br': return 'COPSOQ II-Br — Versão curta validada (40 perguntas)';
     case 'hse': return 'HSE Management Standards — 7 padrões';
     case 'proart': return 'PROART — Protocolo de Avaliação de Riscos';
     case 'sipro': return 'SIPRO — Índice YourEyes de Risco Psicossocial';
@@ -81,7 +82,7 @@ function getInstrumentoLabel(instrumento?: string) {
 }
 
 function getTotalPerguntas(instrumento?: string, blocosDinamicos?: string[]) {
-  const valid = ['copsoq', 'hse', 'proart', 'sipro', 'ambos'] as const;
+  const valid = ['copsoq', 'copsoq2br', 'hse', 'proart', 'sipro', 'ambos'] as const;
   type V = typeof valid[number];
   const key: V = valid.includes(instrumento as V) ? instrumento as V : 'sipro';
   const dims = getDimensoesByInstrumento(key);
