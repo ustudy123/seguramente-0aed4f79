@@ -85,6 +85,9 @@ function avaliarFatores(radar: ResultadoGHE['radar'], isSipro: boolean): FatorAv
     };
   });
 }
+
+const ordemNivel: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+
 export function ResultadosPorGHEPanel() {
   const { campanhas, isLoadingCampanhas } = usePsicossocial();
   const [gheDrillDown, setGheDrillDown] = useState<GHEAvaliado | null>(null);
@@ -111,9 +114,6 @@ export function ResultadosPorGHEPanel() {
   const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
   const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
 
-  const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
-  const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
-  const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
 
   if (typeof window !== "undefined") {
     // Diagnóstico em runtime para entender por que o painel pode aparecer vazio
