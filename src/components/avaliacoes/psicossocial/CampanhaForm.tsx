@@ -99,7 +99,7 @@ const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
   tipo: z.enum(['regular', 'extraordinaria']).default('regular'),
-  instrumento: z.enum(['copsoq', 'hse', 'proart', 'sipro', 'customizado']).default('sipro'),
+  instrumento: z.enum(['copsoq', 'copsoq2br', 'hse', 'proart', 'sipro', 'customizado']).default('sipro'),
   tipo_instrumento: z.enum(['questionario', 'entrevista_guiada']).default('questionario'),
   periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
