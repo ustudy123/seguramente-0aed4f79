@@ -149,7 +149,7 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
   },
   {
     id: 'copsoq2br',
-    nome: 'COPSOQ II-Br (Versão Curta)',
+    nome: 'COPSOQ Adaptado',
     descricao: 'Copenhagen Psychosocial Questionnaire II — Versão brasileira validada',
     uso: 'Versão curta original do COPSOQ II adaptada e validada para o Brasil por Gonçalves et al. (2021) — 40 perguntas em 13 dimensões, sem ajustes para NR-01/NR-17',
     totalPerguntas: 40,
