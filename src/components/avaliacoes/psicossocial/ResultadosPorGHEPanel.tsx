@@ -598,5 +598,3 @@ function EstratificacaoLista({ estratos, tipo }: EstratificacaoListaProps) {
     </div>
   );
 }
-
-}
