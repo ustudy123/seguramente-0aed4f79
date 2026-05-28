@@ -148,6 +148,14 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
     dimensoes: ['Demanda Quantitativa', 'Demanda Cognitiva', 'Demanda Emocional', 'Influência e Controle', 'Suporte dos Colegas', 'Suporte da Liderança', 'Clareza de Papéis', 'Conflito de Papéis', 'Reconhecimento', 'Previsibilidade', 'Sentido do Trabalho', 'Burnout', 'Equilíbrio Trabalho-Vida', 'Assédio e Comportamentos Ofensivos', 'Ameaças e Violência'],
   },
   {
+    id: 'copsoq2br',
+    nome: 'COPSOQ II-Br (Versão Curta)',
+    descricao: 'Copenhagen Psychosocial Questionnaire II — Versão brasileira validada',
+    uso: 'Versão curta original do COPSOQ II adaptada e validada para o Brasil por Gonçalves et al. (2021) — 40 perguntas em 13 dimensões, sem ajustes para NR-01/NR-17',
+    totalPerguntas: 40,
+    dimensoes: ['Demandas no Trabalho', 'Influência e Desenvolvimento', 'Sentido do Trabalho', 'Previsibilidade', 'Reconhecimento', 'Clareza de Papéis', 'Suporte da Liderança', 'Satisfação no Trabalho', 'Equilíbrio Trabalho-Vida', 'Justiça Organizacional', 'Sinais Precoces de Saúde', 'Burnout', 'Assédio'],
+  },
+  {
     id: 'hse',
     nome: 'HSE Management Standards',
     descricao: 'Health and Safety Executive (UK)',
