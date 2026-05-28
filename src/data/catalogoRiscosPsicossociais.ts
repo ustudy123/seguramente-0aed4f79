@@ -103,6 +103,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Demandas Emocionais',
       'Trabalho Emocional',
       'Esgotamento Empático',
+      'Demandas no Trabalho',
     ],
   },
   {
@@ -136,6 +137,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Autonomia e Controle',
       'Autonomia',
       'Influência e Controle',
+      'Influência e Desenvolvimento',
       'Influência',
       'Controle',
       'Margem de Decisão',
@@ -265,6 +267,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Reconhecimento e Justiça',
       'Recompensa',
       'Esforço-Recompensa',
+      'Satisfação no Trabalho',
     ],
   },
   {
