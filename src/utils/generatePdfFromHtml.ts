@@ -76,16 +76,20 @@ export function normalizeManualHtml(html: string) {
   baseStyle.textContent = `
     html, body {
       background: #ffffff !important;
+      color: #000000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
     body {
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
       font-kerning: normal;
-      max-width: 794px;
-      margin: 0 auto;
-      padding: 0 20px;
-      box-sizing: border-box;
+      width: 794px !important;
+      max-width: 794px !important;
+      margin: 0 auto !important;
+      padding: 0 40px !important;
+      box-sizing: border-box !important;
       overflow-wrap: break-word;
       word-wrap: break-word;
       word-break: break-word;
@@ -93,10 +97,12 @@ export function normalizeManualHtml(html: string) {
 
     *, *::before, *::after {
       box-sizing: border-box;
+      color: inherit;
     }
 
     img, svg, canvas {
       max-width: 100%;
+      height: auto;
     }
 
     p, li, td, th, div, span, blockquote {
@@ -106,6 +112,16 @@ export function normalizeManualHtml(html: string) {
     }
   `;
   documentNode.head.appendChild(baseStyle);
+
+  // Ensure naked text nodes in body are wrapped in <p>
+  Array.from(documentNode.body.childNodes).forEach(node => {
+    if (node.nodeType === 3 && node.textContent?.trim()) { // 3 is Node.TEXT_NODE
+      const p = documentNode.createElement("p");
+      p.textContent = node.textContent;
+      documentNode.body.insertBefore(p, node);
+      documentNode.body.removeChild(node);
+    }
+  });
 
   // Fix double numbering: if <li> text already starts with "N." or "N)",
   // remove the auto-numbering from the parent <ol>.
@@ -201,10 +217,10 @@ export function normalizeManualHtml(html: string) {
 
 /**
  * Identify "block" elements within the body that should be captured as
- * non-splittable units. Falls back to all direct children of the body.
+ * non-splittable units.
  */
 function collectSections(root: HTMLElement): HTMLElement[] {
-  if (!root || !root.children || root.children.length === 0) return [];
+  if (!root) return [];
   
   const sections: HTMLElement[] = [];
   const isHeading = (el: HTMLElement) => el && el.tagName && /^H[1-6]$/i.test(el.tagName);
@@ -212,31 +228,36 @@ function collectSections(root: HTMLElement): HTMLElement[] {
   const isStandaloneRenderable = (node: HTMLElement) => {
     if (["STYLE", "SCRIPT"].includes(node.tagName)) return false;
     if (isHeading(node)) return true;
-    if (["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(node.tagName)) return true;
+    if (["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR", "SECTION", "ARTICLE"].includes(node.tagName)) return true;
     return hasVisualContainerStyle(node);
   };
 
-  // Deeply collect all significant elements
   const walk = (node: HTMLElement) => {
-    const children = Array.from(node.children) as HTMLElement[];
-    
-    // Check if this node is a container that should be flattened
-    const isGenericContainer = ["DIV", "SECTION", "ARTICLE", "BODY"].includes(node.tagName);
-    const hasManyBlockChildren = children.length > 2 && children.some(c => 
-      isHeading(c) || ["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(c.tagName)
-    );
+    // If it's the root itself, always recurse
+    if (node === root) {
+      Array.from(node.children).forEach((child) => walk(child as HTMLElement));
+      return;
+    }
 
-    if (isGenericContainer && (hasManyBlockChildren || node === root) && !hasVisualContainerStyle(node)) {
-      children.forEach(walk);
-    } else if (isStandaloneRenderable(node)) {
+    if (isStandaloneRenderable(node)) {
       sections.push(node);
+      return;
+    }
+
+    // For generic containers like DIV that aren't standalone, keep digging
+    if (["DIV", "SPAN", "BODY", "MAIN"].includes(node.tagName)) {
+      Array.from(node.children).forEach((child) => walk(child as HTMLElement));
     }
   };
 
   walk(root);
 
+  if (sections.length === 0) {
+    console.warn("Nenhuma seção renderizável encontrada via walk. Usando fallback de children.");
+    return Array.from(root.children).filter(c => !["STYLE", "SCRIPT"].includes(c.tagName)) as HTMLElement[];
+  }
+
   // Refined grouping: group headings with their immediate followers
-  // AND group short elements that might be split unnecessarily
   const grouped: HTMLElement[] = [];
   let i = 0;
   while (i < sections.length) {
@@ -246,16 +267,14 @@ function collectSections(root: HTMLElement): HTMLElement[] {
       const wrapper = document.createElement("div");
       wrapper.style.cssText = "background:#ffffff; width: 100%; box-sizing: border-box; display: block; overflow: visible;";
       
-      // Clone heading
       const headingClone = current.cloneNode(true) as HTMLElement;
-      // Reduce margin between heading and content
       headingClone.style.marginBottom = "8px";
       headingClone.style.marginTop = "16px";
       wrapper.appendChild(headingClone);
       
-      // Keep adding elements until we hit another heading or a large block
       let j = i + 1;
-      while (j < sections.length && j < i + 5) { // Limit grouping to prevent massive blocks
+      // Keep adding elements until we hit another heading or a large block
+      while (j < sections.length && j < i + 5) {
         const next = sections[j];
         if (isHeading(next)) break;
         
@@ -266,7 +285,6 @@ function collectSections(root: HTMLElement): HTMLElement[] {
         }
         wrapper.appendChild(nextClone);
         
-        // Stop if it's a large block (like a table)
         if (["TABLE", "UL", "OL"].includes(next.tagName) || hasVisualContainerStyle(next)) {
           j++;
           break;
@@ -284,14 +302,15 @@ function collectSections(root: HTMLElement): HTMLElement[] {
     }
   }
 
-  return grouped.length ? grouped : Array.from(root.children) as HTMLElement[];
+  return grouped;
 }
 
 export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfFromHtmlOptions) {
-  if (!html.trim()) {
+  if (!html || !html.trim()) {
     throw new Error("O manual está vazio.");
   }
 
+  console.log("Iniciando geração de PDF para:", filenamePrefix);
   const preparedHtml = normalizeManualHtml(html);
 
   const parser = new DOMParser();
@@ -304,10 +323,11 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   // Hidden offscreen container in the main document
   const container = document.createElement("div");
   container.setAttribute("aria-hidden", "true");
+  container.className = "pdf-generation-container";
   container.style.cssText = [
     "position: fixed",
     "top: 0",
-    "left: -10000px",
+    "left: -5000px", // Less extreme offset
     "width: 794px",
     "background: #ffffff",
     "visibility: visible",
@@ -327,16 +347,18 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     "width: 794px",
     "max-width: 794px",
     "margin: 0 auto",
-    "padding: 0 20px",
+    "padding: 0 40px",
     "box-sizing: border-box",
     "overflow-wrap: break-word",
     "word-wrap: break-word",
     "word-break: break-word",
     "background: #ffffff",
+    "color: #000000",
   ].join(";");
   container.appendChild(contentDiv);
 
   document.body.appendChild(container);
+  console.log("Conteúdo montado no DOM para captura.");
 
   try {
     // Ensure all images are loaded
@@ -364,6 +386,13 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const SECTION_GAP_MM = 2;
 
     const sections = collectSections(contentDiv);
+    console.log(`Geração PDF: ${sections.length} seções identificadas.`);
+    
+    if (sections.length === 0) {
+      console.error("Erro Crítico: Nenhuma seção encontrada no manual.");
+      throw new Error("Não foi possível identificar o conteúdo do manual para geração do PDF.");
+    }
+
     let currentY = PDF_MARGIN_MM;
 
     const renderElementToCanvas = async (element: HTMLElement) => {
@@ -384,13 +413,15 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          allowTaint: true,
+          allowTaint: false,
           scrollX: 0,
           scrollY: 0,
+          windowWidth: 794,
         });
         if (needsMount) container.removeChild(element);
         return canvas;
       } catch (err) {
+        console.error("Erro no html2canvas para elemento:", element.tagName, err);
         if (needsMount && element.parentElement === container) {
           container.removeChild(element);
         }
