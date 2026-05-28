@@ -4,7 +4,7 @@
  * Reproduz literalmente a versão brasileira curta do Copenhagen
  * Psychosocial Questionnaire II (Kristensen et al., 2005) traduzida e
  * validada por Josiane Sotrate Gonçalves (UFSCar) e referenciada pelos
- * estudos da USP. As 33 perguntas estão agrupadas nas 10 dimensões
+ * estudos da USP. As 40 perguntas estão agrupadas nas 13 dimensões
  * originais do instrumento, sem ajustes para NR-01/ISO 45003.
  *
  * Para análises que exijam adaptação às normas brasileiras, use o
