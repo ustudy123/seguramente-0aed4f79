@@ -60,10 +60,11 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
       const [respRes, campRes] = await Promise.all([
         fromTable("questionario_psicossocial_respostas")
-          .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, indicadores")
+          .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, setor_snapshot, cargo_snapshot, indicadores")
           .eq("tenant_id", tenantId)
           .in("campanha_id", campanhaIds)
           .not("indicadores", "is", null),
+
         fromTable("questionario_psicossocial_campanhas")
           .select("id, ghe_ids")
           .eq("tenant_id", tenantId)
