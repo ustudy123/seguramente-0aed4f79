@@ -16,12 +16,7 @@ import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
 import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
 import { supabasePublic } from "@/lib/supabasePublic";
-
-const ESCALA_RISCO_LABELS = ["Nunca", "Raramente", "Às vezes", "Frequentemente", "Sempre"];
-const ESCALA_PROTETOR_LABELS = ["Nunca", "Raramente", "Às vezes", "Frequentemente", "Sempre"];
-
-const ESCALA_EMOJI_RISCO = ["😄", "🙂", "😐", "😟", "😣"];
-const ESCALA_EMOJI_PROTETOR = ["😣", "😟", "😐", "🙂", "😄"];
+import { getEscalaOpcao } from "@/components/avaliacoes/psicossocial/escalas";
 
 interface Props {
   instrumento: InstrumentoPsicossocial;
@@ -91,8 +86,8 @@ export function ResumoQuestionario({
           .filter((p) => respostas[p.id] !== undefined)
           .map((p) => {
             const v = respostas[p.id];
-            const labels = p.invertida ? ESCALA_PROTETOR_LABELS : ESCALA_RISCO_LABELS;
-            return { texto: p.texto, resposta: labels[v] ?? String(v) };
+            const opcao = getEscalaOpcao(p.id, p.invertida, v);
+            return { texto: p.texto, resposta: opcao?.label ?? String(v) };
           }),
       })),
     [dimensoes, respostas]
@@ -153,7 +148,7 @@ export function ResumoQuestionario({
                   const dim = dimensoes[di];
                   const perg = dim.perguntas.find((p) => p.texto === q.texto);
                   const valor = perg ? respostas[perg.id] : 0;
-                  const emoji = (perg?.invertida ? ESCALA_EMOJI_PROTETOR : ESCALA_EMOJI_RISCO)[valor] ?? "•";
+                  const emoji = perg ? getEscalaOpcao(perg.id, perg.invertida, valor)?.emoji ?? "•" : "•";
                   return (
                     <li key={qi} className="px-4 sm:px-5 py-3 flex items-start gap-3">
                       <span
