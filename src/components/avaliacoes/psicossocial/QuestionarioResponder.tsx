@@ -41,6 +41,21 @@ const ESCALA_PROTETOR = [
   { valor: 4, label: 'Sempre',         emoji: '😄', intensidade: 0 },
 ];
 
+// Escala de auto-percepção de SAÚDE (item 17 COPSOQ): 0 = Excelente, 4 = Ruim
+const ESCALA_SAUDE = [
+  { valor: 0, label: 'Excelente',  emoji: '😄', intensidade: 0 },
+  { valor: 1, label: 'Muito boa',  emoji: '🙂', intensidade: 1 },
+  { valor: 2, label: 'Boa',        emoji: '😐', intensidade: 2 },
+  { valor: 3, label: 'Razoável',   emoji: '😟', intensidade: 3 },
+  { valor: 4, label: 'Ruim',       emoji: '😣', intensidade: 4 },
+];
+
+// IDs de perguntas com escala customizada
+const ESCALAS_CUSTOMIZADAS: Record<string, typeof ESCALA_SAUDE> = {
+  c2br_17: ESCALA_SAUDE,
+};
+
+
 // Mapeia intensidade (0 ideal → 4 pior) em estilos discretos quando selecionado
 const ESTILO_INTENSIDADE: Record<number, { selBg: string; selBorder: string; selText: string; ring: string }> = {
   0: { selBg: 'bg-emerald-50',    selBorder: 'border-emerald-500', selText: 'text-emerald-900', ring: 'ring-emerald-200' },
@@ -272,7 +287,7 @@ export function QuestionarioResponder({
                       </p>
                       <div className="pl-7">
                         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-                          {(pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => {
+                          {(ESCALAS_CUSTOMIZADAS[pergunta.id] ?? (pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO)).map(op => {
                             const ativo = respostaAtual === op.valor;
                             const estilo = ESTILO_INTENSIDADE[op.intensidade];
                             return (
