@@ -22,38 +22,7 @@ import { SIPRO_DIMENSOES } from "@/data/instrumentos/sipro";
 import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
 import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
-
-// Escala Likert — fatores de RISCO (0 = ideal, 4 = pior)
-const ESCALA_RISCO = [
-  { valor: 0, label: 'Nunca',          emoji: '😄', intensidade: 0 },
-  { valor: 1, label: 'Raramente',      emoji: '🙂', intensidade: 1 },
-  { valor: 2, label: 'Às vezes',       emoji: '😐', intensidade: 2 },
-  { valor: 3, label: 'Frequentemente', emoji: '😟', intensidade: 3 },
-  { valor: 4, label: 'Sempre',         emoji: '😣', intensidade: 4 },
-];
-
-// Escala Likert — fatores PROTETORES (invertida: 0 = pior, 4 = ideal)
-const ESCALA_PROTETOR = [
-  { valor: 0, label: 'Nunca',          emoji: '😣', intensidade: 4 },
-  { valor: 1, label: 'Raramente',      emoji: '😟', intensidade: 3 },
-  { valor: 2, label: 'Às vezes',       emoji: '😐', intensidade: 2 },
-  { valor: 3, label: 'Frequentemente', emoji: '🙂', intensidade: 1 },
-  { valor: 4, label: 'Sempre',         emoji: '😄', intensidade: 0 },
-];
-
-// Escala de auto-percepção de SAÚDE (item 17 COPSOQ): 0 = Excelente, 4 = Ruim
-const ESCALA_SAUDE = [
-  { valor: 0, label: 'Excelente',  emoji: '😄', intensidade: 0 },
-  { valor: 1, label: 'Muito boa',  emoji: '🙂', intensidade: 1 },
-  { valor: 2, label: 'Boa',        emoji: '😐', intensidade: 2 },
-  { valor: 3, label: 'Razoável',   emoji: '😟', intensidade: 3 },
-  { valor: 4, label: 'Ruim',       emoji: '😣', intensidade: 4 },
-];
-
-// IDs de perguntas com escala customizada
-const ESCALAS_CUSTOMIZADAS: Record<string, typeof ESCALA_SAUDE> = {
-  c2br_17: ESCALA_SAUDE,
-};
+import { getEscalaPergunta } from "@/components/avaliacoes/psicossocial/escalas";
 
 
 // Mapeia intensidade (0 ideal → 4 pior) em estilos discretos quando selecionado
@@ -287,7 +256,7 @@ export function QuestionarioResponder({
                       </p>
                       <div className="pl-7">
                         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-                          {(ESCALAS_CUSTOMIZADAS[pergunta.id] ?? (pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO)).map(op => {
+                          {getEscalaPergunta(pergunta.id, pergunta.invertida).map(op => {
                             const ativo = respostaAtual === op.valor;
                             const estilo = ESTILO_INTENSIDADE[op.intensidade];
                             return (
