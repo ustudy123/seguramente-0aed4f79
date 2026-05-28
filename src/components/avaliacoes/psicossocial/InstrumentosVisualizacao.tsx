@@ -304,6 +304,34 @@ export function InstrumentosVisualizacao() {
           </div>
         </TabsContent>
 
+        {/* COPSOQ II-Br */}
+        <TabsContent value="copsoq2br" className="mt-4 space-y-3">
+          <Card className="bg-indigo-50/40 border-indigo-200">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-indigo-600" />
+                  <span><strong>{COPSOQ2BR_DIMENSOES.length}</strong> dimensões — Versão Curta Brasileira</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  <span><strong>{COPSOQ2BR_DIMENSOES.filter(d => d.tipo === 'risco').length}</strong> fatores de risco</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <span><strong>{COPSOQ2BR_DIMENSOES.filter(d => d.tipo === 'protetor').length}</strong> fatores protetores</span>
+                </div>
+                <span className="text-muted-foreground">COPSOQ II-Br · Gonçalves et al. (2021) · 40 itens · Sem adaptação YourEyes — instrumento puro</span>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="space-y-2">
+            {COPSOQ2BR_DIMENSOES.map((dim, i) => (
+              <DimensaoCard key={dim.id} dimensao={dim} numero={i + 1} />
+            ))}
+          </div>
+        </TabsContent>
+
         {/* SIPRO */}
         <TabsContent value="sipro" className="mt-4 space-y-3">
           <Card className="bg-violet-50/40 border-violet-200">
