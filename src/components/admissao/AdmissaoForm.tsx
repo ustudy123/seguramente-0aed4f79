@@ -857,6 +857,19 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                   id="salario"
                   {...formProfissionais.register('salario')}
                   placeholder="R$ 0.000,00"
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, "");
+                    if (value === "") {
+                      formProfissionais.setValue('salario', "", { shouldValidate: true });
+                      return;
+                    }
+                    const amount = (parseInt(value) / 100).toFixed(2);
+                    const formatted = new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(parseFloat(amount));
+                    formProfissionais.setValue('salario', formatted, { shouldValidate: true });
+                  }}
                 />
                 {formProfissionais.formState.errors.salario && (
                   <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.salario.message}</p>

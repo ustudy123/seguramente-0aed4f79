@@ -137,8 +137,9 @@ function DocumentItem({
     if (documento.arquivo instanceof File) {
       const localUrl = URL.createObjectURL(documento.arquivo);
       const isImage = documento.arquivo.type.startsWith('image/');
+      const isPdf = documento.arquivo.type === 'application/pdf';
       
-      if (isImage) {
+      if (isImage || isPdf) {
         setPreviewUrl(localUrl);
         setPreviewOpen(true);
       } else {
@@ -150,14 +151,22 @@ function DocumentItem({
     const filePath = documento.arquivo_url || documento.urlPreview;
     
     if (!filePath) {
-      console.error('No file path available for document:', documento.nome, 'Doc data:', { arquivo_url: documento.arquivo_url, urlPreview: documento.urlPreview, arquivo_nome: documento.arquivo_nome });
+      console.error('No file path available for document:', documento.nome);
       toast.error('Arquivo não encontrado. O documento pode não ter sido salvo corretamente.');
       return;
     }
     
-    // If it's already a full URL, open directly
+    // If it's already a full URL, check if it's previewable
     if (filePath.startsWith('http')) {
-      window.open(filePath, '_blank');
+      const isImage = filePath.match(/\.(jpg|jpeg|png|gif|webp)/i);
+      const isPdf = filePath.toLowerCase().endsWith('.pdf');
+      
+      if (isImage || isPdf) {
+        setPreviewUrl(filePath);
+        setPreviewOpen(true);
+      } else {
+        window.open(filePath, '_blank');
+      }
       return;
     }
     
@@ -170,14 +179,15 @@ function DocumentItem({
       
       if (error) {
         console.error('Error creating signed URL:', error);
-        toast.error('Erro ao gerar link de visualização. Verifique se o arquivo foi enviado corretamente.');
+        toast.error('Erro ao gerar link de visualização.');
         return;
       }
       
       const fileName = documento.arquivo_nome || documento.arquivo_url || '';
       const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)/i);
+      const isPdf = fileName.toLowerCase().endsWith('.pdf');
       
-      if (isImage) {
+      if (isImage || isPdf) {
         setPreviewUrl(data.signedUrl);
         setPreviewOpen(true);
       } else {
@@ -340,28 +350,40 @@ function DocumentItem({
 
       {/* Image Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Image className="h-5 w-5" />
+              <FileIcon className="h-5 w-5" />
               {documento.nome}
             </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex-1 flex flex-col items-center gap-4 overflow-hidden">
             {previewUrl && (
-              <img 
-                src={previewUrl} 
-                alt={documento.nome} 
-                className="max-h-[60vh] object-contain rounded-lg"
-              />
+              <>
+                {previewUrl.toLowerCase().includes('.pdf') || (documento.arquivo?.type === 'application/pdf') ? (
+                  <iframe 
+                    src={`${previewUrl}#toolbar=0`} 
+                    className="w-full h-full rounded-lg border border-border"
+                    title={documento.nome}
+                  />
+                ) : (
+                  <img 
+                    src={previewUrl} 
+                    alt={documento.nome} 
+                    className="max-h-full object-contain rounded-lg"
+                  />
+                )}
+              </>
             )}
-            <Button 
-              variant="outline" 
-              onClick={() => previewUrl && window.open(previewUrl, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Abrir em nova aba
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => previewUrl && window.open(previewUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Abrir em nova aba
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

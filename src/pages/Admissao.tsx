@@ -5,6 +5,7 @@ import { AdmissaoStats } from '@/components/admissao/AdmissaoStats';
 import { AdmissaoList } from '@/components/admissao/AdmissaoList';
 import { AdmissaoForm } from '@/components/admissao/AdmissaoForm';
 import { AdmissaoDetail } from '@/components/admissao/AdmissaoDetail';
+import { supabase } from '@/integrations/supabase/client';
 
 import { useAdmissoes } from '@/hooks/useAdmissoes';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -181,6 +182,30 @@ export default function Admissao() {
               }
             }
           }
+          
+          // Criar processo no Hub Contábil
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const tenantId = user?.app_metadata?.tenant_id;
+
+            if (tenantId) {
+              await (supabase as any).from('hub_processos').insert({
+                tenant_id: tenantId,
+                tipo: 'admissao',
+                status: 'pendente',
+                prioridade: 'normal',
+                titulo: `Admissão: ${dados.dadosPessoais.nomeCompleto}`,
+                colaborador_nome: dados.dadosPessoais.nomeCompleto,
+                colaborador_cpf: dados.dadosPessoais.cpf,
+                origem_modulo: 'admissao',
+                origem_registro_id: novaAdmissao.id,
+                data_referencia: new Date().toISOString().split('T')[0]
+              });
+            }
+          } catch (hubErr) {
+            console.error('Erro ao criar processo no Hub Contábil:', hubErr);
+          }
+
           toast.success('Documentos enviados com sucesso!');
         }
       } else if (viewMode === 'edit' && selectedId) {
