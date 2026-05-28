@@ -7,8 +7,13 @@ import type { RadarDimensao } from "@/types/psicossocial";
 interface RespostaRow {
   id: string;
   campanha_id: string;
+interface RespostaRow {
+  id: string;
+  campanha_id: string;
   ghe_id_snapshot: string | null;
   ghe_nome_snapshot: string | null;
+  setor_snapshot: string | null;
+  cargo_snapshot: string | null;
   indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
 }
 
@@ -22,6 +27,12 @@ interface GheRow {
   nome: string;
 }
 
+export interface EstratoGHE {
+  nome: string;
+  count: number;
+  ipsMedio: number | null;
+}
+
 export interface ResultadoGHE {
   ghe_id: string | null;
   ghe_nome: string;
@@ -29,11 +40,10 @@ export interface ResultadoGHE {
   radar: RadarDimensao[];
   ipsMedio: number | null;
   campanhas: number;
+  setores: EstratoGHE[];
+  cargos: EstratoGHE[];
 }
 
-/**
- * Agrega respostas psicossociais por GHE.
- * Prioriza `ghe_id_snapshot` da resposta; quando ausente, usa o `ghe_ids`
  * da campanha (atribui a resposta a cada GHE vinculado à campanha).
  */
 export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) {
