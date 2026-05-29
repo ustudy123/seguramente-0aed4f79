@@ -562,7 +562,7 @@ function RadarPanel({
 }
 
 // ────────── componente principal ──────────
-const MINIMO_ANONIMATO = 5;
+
 
 interface RadaresPsicossocialSectionProps {
   campanhas?: CampanhaPsicossocial[];
