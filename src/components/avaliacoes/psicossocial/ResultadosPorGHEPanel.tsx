@@ -412,38 +412,54 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
               )}
             </div>
 
-            {(ghe.composicaoSetores.length > 0 || ghe.composicaoCargos.length > 0) && (
-              <div className="mt-2 rounded-md border bg-muted/30 p-2.5 space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase text-muted-foreground">
-                  Composição cadastral do GHE
+            {ghe.composicaoSetorCargos.length > 0 && (
+              <div className="mt-2 rounded-md border bg-muted/30 p-2.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Composição cadastral do GHE
+                  </p>
+                  <span className="text-[10px] text-muted-foreground">
+                    {ghe.composicaoSetorCargos.length} setor(es) · {ghe.composicaoCargos.length} cargo(s)
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  Vínculos Setor → Cargo conforme cadastro do GHE. Um mesmo cargo pode aparecer em mais de um setor.
                 </p>
-                {ghe.composicaoSetores.length > 0 && (
-                  <div className="flex flex-wrap gap-1 items-center">
-                    <span className="text-[10px] font-medium text-muted-foreground">
-                      Setores ({ghe.composicaoSetores.length}):
-                    </span>
-                    {ghe.composicaoSetores.map(s => (
-                      <Badge key={s} variant="secondary" className="text-[10px] font-normal">
-                        {s}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {ghe.composicaoCargos.length > 0 && (
-                  <div className="flex flex-wrap gap-1 items-center">
-                    <span className="text-[10px] font-medium text-muted-foreground">
-                      Cargos ({ghe.composicaoCargos.length}):
-                    </span>
-                    {ghe.composicaoCargos.map(c => (
-                      <Badge key={c} variant="outline" className="text-[10px] font-normal bg-cyan-50 text-cyan-700 border-cyan-200">
-                        {c}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-1.5">
+                  {ghe.composicaoSetorCargos.map(({ setor, cargos }) => (
+                    <div key={setor} className="rounded border bg-background/60 p-2">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Badge variant="secondary" className="text-[10px] font-medium">
+                          {setor}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          {cargos.length} cargo(s)
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {cargos.length === 0 ? (
+                          <span className="text-[10px] text-muted-foreground italic">
+                            Setor sem cargo vinculado neste GHE
+                          </span>
+                        ) : (
+                          cargos.map(c => (
+                            <Badge
+                              key={c}
+                              variant="outline"
+                              className="text-[10px] font-normal bg-cyan-50 text-cyan-700 border-cyan-200"
+                            >
+                              {c}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </SheetHeader>
+
 
 
           <ScrollArea className="flex-1 px-6 py-4">

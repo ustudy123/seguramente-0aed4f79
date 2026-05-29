@@ -47,6 +47,11 @@ export interface EstratoGHE {
   ipsMedio: number | null;
 }
 
+export interface SetorComposicao {
+  setor: string;
+  cargos: string[];
+}
+
 export interface ResultadoGHE {
   ghe_id: string | null;
   ghe_nome: string;
@@ -59,7 +64,9 @@ export interface ResultadoGHE {
   cargos: EstratoGHE[];
   composicaoSetores: string[];
   composicaoCargos: string[];
+  composicaoSetorCargos: SetorComposicao[];
 }
+
 
 /**
  * Agrega respostas psicossociais por GHE.
@@ -83,7 +90,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           respostas: [] as RespostaRow[],
           campanhasGhe: [] as CampanhaGheRow[],
           ghes: [] as GheRow[],
-          composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[] }>(),
+          composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>(),
         };
       }
 
@@ -115,7 +122,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       );
 
       let ghes: GheRow[] = [];
-      const composicaoPorGhe = new Map<string, { setores: string[]; cargos: string[] }>();
+      const composicaoPorGhe = new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
 
       if (allGheIds.length > 0) {
         const [ghesRes, ghesCargosRes] = await Promise.all([
@@ -156,14 +163,24 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         );
 
         for (const gc of gheCargos) {
-          const entry = composicaoPorGhe.get(gc.ghe_id) ?? { setores: [] as string[], cargos: [] as string[] };
+          const entry = composicaoPorGhe.get(gc.ghe_id) ?? {
+            setores: [] as string[],
+            cargos: [] as string[],
+            setorCargos: new Map<string, Set<string>>(),
+          };
           const setor = gc.departamento_id ? deptNomeMap.get(gc.departamento_id) : null;
           const cargo = gc.cargo_id ? cargoNomeMap.get(gc.cargo_id) : null;
           if (setor && !entry.setores.includes(setor)) entry.setores.push(setor);
           if (cargo && !entry.cargos.includes(cargo)) entry.cargos.push(cargo);
+          if (setor) {
+            const set = entry.setorCargos.get(setor) ?? new Set<string>();
+            if (cargo) set.add(cargo);
+            entry.setorCargos.set(setor, set);
+          }
           composicaoPorGhe.set(gc.ghe_id, entry);
         }
       }
+
 
       return { respostas, campanhasGhe, ghes, composicaoPorGhe };
     },
@@ -173,8 +190,11 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
 
   const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
-    const { respostas = [], campanhasGhe = [], ghes = [], composicaoPorGhe = new Map() } = query.data ?? {};
-    if (respostas.length === 0) return [];
+    const data = query.data;
+    const respostas = data?.respostas ?? [];
+    const campanhasGhe = data?.campanhasGhe ?? [];
+    const ghes = data?.ghes ?? [];
+    const composicaoPorGhe = data?.composicaoPorGhe ?? new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
@@ -279,6 +299,11 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         cargos: estratoFrom(g.cargosAcc),
         composicaoSetores: comp?.setores ?? [],
         composicaoCargos: comp?.cargos ?? [],
+        composicaoSetorCargos: comp?.setorCargos
+          ? Array.from(comp.setorCargos.entries())
+              .map(([setor, cargos]) => ({ setor, cargos: Array.from(cargos).sort() }))
+              .sort((a, b) => a.setor.localeCompare(b.setor))
+          : [],
       };
     });
   }, [query.data]);
