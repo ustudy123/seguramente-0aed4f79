@@ -48,6 +48,59 @@ const CATEGORIAS: { value: ContratoCategoria; label: string }[] = [
 
 const PUBLIC_BASE = "https://www.youreyes.com.br";
 
+// Converte texto plano em HTML formatado automaticamente
+function textoParaHtml(texto: string): string {
+  if (!texto.trim()) return "";
+  // Se já parece HTML, retorna como está
+  if (/<(p|div|h[1-6]|ul|ol|li|strong|em|br)[\s>]/i.test(texto)) return texto;
+
+  const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inline = (s: string) =>
+    escape(s)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/__(.+?)__/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  const blocos = texto.replace(/\r\n/g, "\n").split(/\n{2,}/);
+  const html: string[] = [];
+
+  for (const bloco of blocos) {
+    const linhas = bloco.split("\n").map(l => l.trim()).filter(Boolean);
+    if (!linhas.length) continue;
+
+    // Heading markdown: # Título
+    const h = linhas[0].match(/^(#{1,3})\s+(.+)$/);
+    if (h && linhas.length === 1) {
+      const lvl = h[1].length + 1; // # -> h2
+      html.push(`<h${lvl}>${inline(h[2])}</h${lvl}>`);
+      continue;
+    }
+
+    // Cláusula / título em CAPS curto
+    if (linhas.length === 1 && linhas[0].length < 80 && linhas[0] === linhas[0].toUpperCase() && /[A-ZÀ-Ý]/.test(linhas[0])) {
+      html.push(`<h3 style="margin-top:1.5em">${inline(linhas[0])}</h3>`);
+      continue;
+    }
+
+    // Lista numerada (1. / 1) / a))
+    if (linhas.every(l => /^(\d+[\.\)]|[a-z][\.\)])\s+/i.test(l))) {
+      html.push("<ol>" + linhas.map(l => `<li>${inline(l.replace(/^(\d+[\.\)]|[a-z][\.\)])\s+/i, ""))}</li>`).join("") + "</ol>");
+      continue;
+    }
+
+    // Lista com marcadores
+    if (linhas.every(l => /^[-•*]\s+/.test(l))) {
+      html.push("<ul>" + linhas.map(l => `<li>${inline(l.replace(/^[-•*]\s+/, ""))}</li>`).join("") + "</ul>");
+      continue;
+    }
+
+    // Parágrafo normal (quebras de linha viram <br>)
+    html.push(`<p>${linhas.map(inline).join("<br>")}</p>`);
+  }
+
+  return html.join("\n");
+}
+
 function emptyContrato(): Partial<ContratoAceite> {
   return {
     titulo: "",
@@ -258,10 +311,36 @@ export default function ContratosAceite() {
               </div>
 
               <div>
-                <Label>Corpo do contrato (texto/HTML) *</Label>
-                <Textarea rows={12} className="font-mono text-xs" value={editing.corpo_html || ""}
-                  onChange={e => setEditing({ ...editing, corpo_html: e.target.value })}
-                  placeholder="Use parágrafos, listas e formatação HTML básica (<p>, <ul>, <strong>, etc.)" />
+                <div className="flex items-center justify-between mb-1">
+                  <Label>Corpo do contrato *</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Cole o texto puro do contrato — o sistema formata automaticamente. Suporta também HTML se preferir.
+                  </p>
+                </div>
+                <Tabs defaultValue="texto" className="w-full">
+                  <TabsList className="h-8">
+                    <TabsTrigger value="texto" className="text-xs h-7">Editor</TabsTrigger>
+                    <TabsTrigger value="preview" className="text-xs h-7">Pré-visualização</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="texto" className="mt-2">
+                    <Textarea
+                      rows={14}
+                      className="text-sm"
+                      value={editing.corpo_html || ""}
+                      onChange={e => setEditing({ ...editing, corpo_html: e.target.value })}
+                      placeholder={`Cole aqui o seu contrato em texto puro. Exemplo:\n\nCONTRATO DE PRESTAÇÃO DE SERVIÇOS\n\n# Cláusula 1 - Objeto\n\nO presente contrato tem por objeto...\n\n- Item de lista\n- Outro item\n\n1. Cláusula numerada\n2. Outra cláusula\n\nUse **negrito** e *itálico* quando precisar.`}
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      💡 Dicas: linhas em <strong>CAIXA ALTA</strong> viram títulos · linhas começando com <code>-</code> viram lista · use <code>**negrito**</code> e <code>*itálico*</code> · linhas em branco separam parágrafos.
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="preview" className="mt-2">
+                    <div
+                      className="prose prose-sm max-w-none border rounded-md p-4 min-h-[280px] bg-card"
+                      dangerouslySetInnerHTML={{ __html: textoParaHtml(editing.corpo_html || "") || "<p class='text-muted-foreground'>Nada para visualizar ainda.</p>" }}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
 
               <div className="space-y-2 border rounded-lg p-4">
