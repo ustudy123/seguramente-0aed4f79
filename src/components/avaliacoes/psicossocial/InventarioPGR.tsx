@@ -614,7 +614,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             </TableHeader>
             <TableBody>
               {(expanded ? inventario : inventario.slice(0, 7)).map((item) => (
-                <TableRow key={item.dimensao} className={cn("border-l-2", nivelColors[item.nivelKey])}>
+                <TableRow key={item.fatorId} className={cn("border-l-2", nivelColors[item.nivelKey])}>
                   <TableCell className="py-2 align-top max-w-[320px]">
                     <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                       <p className="font-medium text-sm leading-tight">{item.fator}</p>
@@ -623,12 +623,20 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
                       </Badge>
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-snug">{item.descricao}</p>
-                    {item.dimensao !== item.fator && (
-                      <p className="text-[10px] text-muted-foreground/70 italic mt-0.5">
-                        Dimensão do instrumento: {item.dimensao}
-                      </p>
+                    {item.dimensoes.length > 0 && !(item.dimensoes.length === 1 && item.dimensoes[0] === item.fator) && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <span className="text-[10px] text-muted-foreground/70 italic">
+                          Dimensões do instrumento ({item.dimensoes.length}):
+                        </span>
+                        {item.dimensoes.map((d) => (
+                          <Badge key={d} variant="secondary" className="text-[9px] px-1 py-0 h-4 font-normal">
+                            {d}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </TableCell>
+
                   <TableCell className="py-2 text-center">
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="font-bold text-sm">{item.scoreReal}%</span>
