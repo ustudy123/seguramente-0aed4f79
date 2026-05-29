@@ -90,7 +90,7 @@ export function useUsuarioVinculos() {
   const empresaIdsPermitidas = temAcessoGlobal ? [] : vinculos.map((v) => v.empresa_id);
 
   // "Restrito" = qualquer usuário que NÃO é owner/admin global (deve ser filtrado por vínculo)
-  const isRestrito = !temAcessoGlobal;
+  const isRestrito = !!usuarioBase && !temAcessoGlobal;
 
   return {
     /** @deprecated use isRestrito — mantido para compatibilidade */
