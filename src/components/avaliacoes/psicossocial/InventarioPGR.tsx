@@ -180,6 +180,8 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
    * Agregação real das dimensões.
    * - Sem filtro de GHE: usa radar_data já calculado das campanhas válidas (média ponderada por respondentes).
    * - Com filtro de GHE: usa radar reconstruído das respostas individuais do GHE selecionado.
+   */
+
   const inventario = useMemo((): InventarioItem[] => {
     if (campanhasValidas.length === 0) return [];
 
