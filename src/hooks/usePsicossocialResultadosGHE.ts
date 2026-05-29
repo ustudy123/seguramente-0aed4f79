@@ -90,7 +90,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           respostas: [] as RespostaRow[],
           campanhasGhe: [] as CampanhaGheRow[],
           ghes: [] as GheRow[],
-          composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[] }>(),
+          composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>(),
         };
       }
 
