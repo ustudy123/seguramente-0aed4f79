@@ -47,6 +47,11 @@ export interface EstratoGHE {
   ipsMedio: number | null;
 }
 
+export interface SetorComposicao {
+  setor: string;
+  cargos: string[];
+}
+
 export interface ResultadoGHE {
   ghe_id: string | null;
   ghe_nome: string;
@@ -59,7 +64,9 @@ export interface ResultadoGHE {
   cargos: EstratoGHE[];
   composicaoSetores: string[];
   composicaoCargos: string[];
+  composicaoSetorCargos: SetorComposicao[];
 }
+
 
 /**
  * Agrega respostas psicossociais por GHE.
