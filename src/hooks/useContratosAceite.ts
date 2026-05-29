@@ -18,6 +18,9 @@ export interface ContratoAceite {
   requer_telefone: boolean;
   requer_selfie: boolean;
   requer_geolocalizacao: boolean;
+  requer_cnpj: boolean;
+  requer_razao_social: boolean;
+  requer_representante: boolean;
   validade_dias: number | null;
   limite_assinaturas: number | null;
   versao: number;
@@ -50,6 +53,9 @@ export interface ContratoAssinatura {
   selfie_imagem: string | null;
   user_agent: string | null;
   observacoes: string | null;
+  signatario_cnpj: string | null;
+  signatario_razao_social: string | null;
+  signatario_representante: string | null;
   created_at: string;
 }
 
