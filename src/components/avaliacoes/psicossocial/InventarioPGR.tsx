@@ -271,7 +271,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     return items.sort((a, b) => (ordem[a.nivelKey] ?? 4) - (ordem[b.nivelKey] ?? 4));
   }, [campanhasValidas, isSipro, filtroCampanha, gheSelecionado, bloqueadoPorAnonimatoGHE]);
 
-  }, [campanhasValidas, isSipro, filtroCampanha, gheSelecionado, bloqueadoPorAnonimatoGHE]);
+
 
   const criticos = inventario.filter(i => i.nivelKey === 'critico').length;
   const altos = inventario.filter(i => i.nivelKey === 'alto').length;
