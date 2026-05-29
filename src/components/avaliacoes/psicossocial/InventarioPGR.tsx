@@ -215,15 +215,15 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     // 2. Reagrupa por fator do catálogo (13 fatores padrão NR-01 / ISO 45003).
     //    Várias dimensões do instrumento (COPSOQ/SIPRO/HSE) podem mapear ao mesmo fator
     //    — aqui consolidamos a média ponderada para um único registro por fator.
-    type FatorAgg = {
+    const porFator: Record<string, {
       fatorId: string;
       dimensoes: Set<string>;
       somaScore: number;
       pesoTotal: number;
       campanhas: number;
       normativa: ReturnType<typeof getNormativaForSubject>;
-    };
-    const porFator: Record<string, FatorAgg> = {};
+    }> = {};
+
 
 
     Object.entries(porSubject).forEach(([subject, agg]) => {
