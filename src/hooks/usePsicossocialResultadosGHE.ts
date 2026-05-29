@@ -163,13 +163,24 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         );
 
         for (const gc of gheCargos) {
-          const entry = composicaoPorGhe.get(gc.ghe_id) ?? { setores: [] as string[], cargos: [] as string[] };
+          const entry = composicaoPorGhe.get(gc.ghe_id) ?? {
+            setores: [] as string[],
+            cargos: [] as string[],
+            setorCargos: new Map<string, Set<string>>(),
+          };
           const setor = gc.departamento_id ? deptNomeMap.get(gc.departamento_id) : null;
           const cargo = gc.cargo_id ? cargoNomeMap.get(gc.cargo_id) : null;
           if (setor && !entry.setores.includes(setor)) entry.setores.push(setor);
           if (cargo && !entry.cargos.includes(cargo)) entry.cargos.push(cargo);
+          if (setor) {
+            const set = entry.setorCargos.get(setor) ?? new Set<string>();
+            if (cargo) set.add(cargo);
+            entry.setorCargos.set(setor, set);
+          }
           composicaoPorGhe.set(gc.ghe_id, entry);
         }
+      }
+
       }
 
       return { respostas, campanhasGhe, ghes, composicaoPorGhe };
