@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
 import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RISCO_LABELS } from "@/types/gro";
+import { resolverFatorPorSubject } from "@/data/catalogoRiscosPsicossociais";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
