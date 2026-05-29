@@ -331,16 +331,17 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
 
       autoTable(doc, {
         startY: 46,
-        head: [["Dimensão / Fator", "Descrição do Risco", "Base Normativa", "Score Real", "Probabilidade", "Severidade", "Grau de Risco"]],
+        head: [["Fator de Risco", "Dimensões do Instrumento", "Base Normativa", "Score Real", "Probabilidade", "Severidade", "Grau de Risco"]],
         body: inventario.map(item => [
-          item.dimensao,
           item.fator,
+          item.dimensoes.join(" • "),
           item.norma,
           `${item.scoreReal}%`,
           item.probabilidadeLabel,
           item.severidadeLabel,
           item.nivelLabel,
         ]),
+
         headStyles: { fillColor: [88, 28, 135], textColor: 255, fontSize: 8 },
         bodyStyles: { fontSize: 8 },
         columnStyles: {
