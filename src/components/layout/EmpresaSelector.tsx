@@ -30,10 +30,10 @@ const formatCnpj = (cnpj: string | null) => {
 
 export const EmpresaSelector = () => {
   const [open, setOpen] = useState(false);
-  const { empresaAtiva, setEmpresaAtiva, empresas, isLoading, isProfissional, semVinculos } = useEmpresaAtiva();
+  const { empresaAtiva, setEmpresaAtiva, empresas, isLoading, initialized, isProfissional, semVinculos } = useEmpresaAtiva();
   const { tenant } = useTenant();
 
-  if (isLoading) {
+  if (isLoading || !initialized) {
     return (
       <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
         <Building2 className="w-4 h-4" />

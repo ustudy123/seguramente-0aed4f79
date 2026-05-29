@@ -30,7 +30,7 @@ const formatCnpj = (cnpj: string | null) => {
  * - Tem 2+ vínculos (com 1 vínculo, seleciona automaticamente)
  */
 export function EmpresaSelecaoObrigatoria() {
-  const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading } = useEmpresaAtiva();
+  const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading, initialized } = useEmpresaAtiva();
   const { loading: authLoading, user } = useAuth();
   const [selected, setSelected] = useState<EmpresaCadastro | null>(null);
   const [busca, setBusca] = useState("");
@@ -64,8 +64,8 @@ export function EmpresaSelecaoObrigatoria() {
   // Não mostrar para não-profissionais
   if (!isProfissional) return null;
 
-  // Não mostrar durante loading dos dados de empresas/vínculos
-  if (isLoading) return null;
+  // Não mostrar durante loading dos dados de empresas/vínculos ou enquanto o contexto está inicializando
+  if (isLoading || !initialized) return null;
 
   // Profissional sem vínculos — só mostra após o grace period confirmar
   if (semVinculos) {

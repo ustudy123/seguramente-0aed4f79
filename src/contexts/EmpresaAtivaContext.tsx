@@ -11,6 +11,8 @@ interface EmpresaAtivaContextType {
   setEmpresaAtiva: (empresa: EmpresaCadastro | null) => void;
   empresas: EmpresaCadastro[];
   isLoading: boolean;
+  /** true quando o contexto já tentou restaurar a empresa do storage ou auto-selecionar */
+  initialized: boolean;
   /** true quando o usuário é profissional e tem restrição por vínculo */
   isProfissional: boolean;
   /** true quando profissional não tem nenhum vínculo ativo */
@@ -95,7 +97,12 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Restore from localStorage or auto-select single company
   useEffect(() => {
-    if (!tenantId || isLoading) return;
+    if (isLoading) return;
+
+    if (!tenantId) {
+      setInitialized(true);
+      return;
+    }
     
     // Se já temos uma empresa ativa válida para o tenant atual, não precisamos auto-selecionar
     if (empresaAtiva && empresas.some(e => e.id === empresaAtiva.id)) {
@@ -144,6 +151,7 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setEmpresaAtiva,
         empresas,
         isLoading,
+        initialized,
         isProfissional,
         semVinculos,
       }}
