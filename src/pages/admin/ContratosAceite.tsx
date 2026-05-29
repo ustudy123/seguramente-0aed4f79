@@ -142,10 +142,12 @@ export default function ContratosAceite() {
       toast.error("Título e corpo do contrato são obrigatórios");
       return;
     }
+    // Converte texto plano em HTML automaticamente ao salvar
+    const payload = { ...editing, corpo_html: textoParaHtml(editing.corpo_html) };
     if (editing.id) {
-      await updateContrato.mutateAsync(editing as ContratoAceite);
+      await updateContrato.mutateAsync(payload as ContratoAceite);
     } else {
-      await createContrato.mutateAsync(editing);
+      await createContrato.mutateAsync(payload);
     }
     setEditorOpen(false);
     setEditing(null);
