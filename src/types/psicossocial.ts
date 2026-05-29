@@ -141,7 +141,7 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
   },
   {
     id: 'copsoq',
-    nome: 'COPSOQ III',
+    nome: 'COPSOQ modificado',
     descricao: 'Copenhagen Psychosocial Questionnaire',
     uso: 'Diagnóstico geral de riscos psicossociais — 15 dimensões validadas internacionalmente',
     totalPerguntas: 49,

@@ -244,7 +244,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
                 <SelectContent>
                   <SelectItem value="todos">Todos Instrumentos</SelectItem>
                   <SelectItem value="sipro">SIPRO</SelectItem>
-                  <SelectItem value="copsoq">COPSOQ III</SelectItem>
+                  <SelectItem value="copsoq">COPSOQ modificado</SelectItem>
                   <SelectItem value="hse">HSE</SelectItem>
                   <SelectItem value="proart">PROART</SelectItem>
                 </SelectContent>
