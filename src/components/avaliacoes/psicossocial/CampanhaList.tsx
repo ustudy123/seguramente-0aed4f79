@@ -50,9 +50,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
-
-const MINIMO_ANONIMATO = 5;
+import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas } from "@/types/psicossocial";
 
 interface CampanhaListProps {
   campanhas: CampanhaPsicossocial[];
