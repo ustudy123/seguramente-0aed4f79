@@ -11,6 +11,8 @@ interface EmpresaAtivaContextType {
   setEmpresaAtiva: (empresa: EmpresaCadastro | null) => void;
   empresas: EmpresaCadastro[];
   isLoading: boolean;
+  /** true quando o contexto já tentou restaurar a empresa do storage ou auto-selecionar */
+  initialized: boolean;
   /** true quando o usuário é profissional e tem restrição por vínculo */
   isProfissional: boolean;
   /** true quando profissional não tem nenhum vínculo ativo */
