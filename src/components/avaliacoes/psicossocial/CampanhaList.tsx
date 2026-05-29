@@ -101,7 +101,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
           const situacoes = campanha.situacoes_trabalho ?? [];
 
           if (
-            totalRespostas >= MINIMO_ANONIMATO &&
+            totalRespostas >= getMinimoRespostas(campanha) &&
             radarData && radarData.length > 0 &&
             situacoes.length > 0 &&
             !campanha.gro_exportado_em
