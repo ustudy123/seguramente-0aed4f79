@@ -9,13 +9,12 @@ interface ProximaAcaoBannerProps {
   onVerResultados: (campanha: CampanhaPsicossocial) => void;
 }
 
-const MINIMO = 5;
-
 export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: ProximaAcaoBannerProps) {
   const ativas = campanhas.filter(c => c.status === 'ativa');
   const rascunhos = campanhas.filter(c => c.status === 'rascunho');
-  const ativaComPoucasRespostas = ativas.find(c => (c.total_respostas || 0) < MINIMO);
-  const ativaComRespostas = ativas.find(c => (c.total_respostas || 0) >= MINIMO);
+  
+  const ativaComPoucasRespostas = ativas.find(c => (c.total_respostas || 0) < getMinimoRespostas(c));
+  const ativaComRespostas = ativas.find(c => (c.total_respostas || 0) >= getMinimoRespostas(c));
 
   // Rascunho pendente de ativação
   if (rascunhos.length > 0 && ativas.length === 0) {
