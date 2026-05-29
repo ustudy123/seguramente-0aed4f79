@@ -136,7 +136,7 @@ export function PsicossocialDashboard() {
   // aceitamos campanhas com qualquer N desde que o TOTAL agregado da empresa ≥ mínimo.
   const campanhasComIPS = campanhas.filter(c =>
     c.ips_score != null && (
-      (c.total_respostas || 0) >= (c.tipo_instrumento === "entrevista_guiada" ? 1 : MINIMO_ANONIMATO_PADRAO) ||
+      (c.total_respostas || 0) >= getMinimoRespostas(c) ||
       consolidadoLiberado
     )
   );
