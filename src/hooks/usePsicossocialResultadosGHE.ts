@@ -121,7 +121,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         ].filter(Boolean))
       );
 
-      let ghes: GheRow[] = [];
+      const composicaoPorGhe = new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, string[]> }>();
       const composicaoPorGhe = new Map<string, { setores: string[]; cargos: string[] }>();
 
       if (allGheIds.length > 0) {
