@@ -47,7 +47,8 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
   // Campanha ativa, mas sem respostas suficientes
   if (ativaComPoucasRespostas) {
     const respostas = ativaComPoucasRespostas.total_respostas || 0;
-    const faltam = MINIMO - respostas;
+    const minimo = getMinimoRespostas(ativaComPoucasRespostas);
+    const faltam = minimo - respostas;
     return (
       <div className={cn(
         "flex items-center gap-4 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/60",
