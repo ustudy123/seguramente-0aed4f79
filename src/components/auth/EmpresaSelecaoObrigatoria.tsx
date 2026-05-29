@@ -30,7 +30,7 @@ const formatCnpj = (cnpj: string | null) => {
  * - Tem 2+ vínculos (com 1 vínculo, seleciona automaticamente)
  */
 export function EmpresaSelecaoObrigatoria() {
-  const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading } = useEmpresaAtiva();
+  const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading, initialized } = useEmpresaAtiva();
   const { loading: authLoading, user } = useAuth();
   const [selected, setSelected] = useState<EmpresaCadastro | null>(null);
   const [busca, setBusca] = useState("");
