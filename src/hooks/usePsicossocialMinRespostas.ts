@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, getMinimoRespostas } from "@/types/psicossocial";
 
 /** Mínimo absoluto de respostas — ISO 45003 / COPSOQ III */
 export const MIN_RESPOSTAS_ABS = 5;
