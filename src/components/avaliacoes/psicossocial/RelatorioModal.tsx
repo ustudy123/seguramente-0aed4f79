@@ -212,7 +212,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
           bodyStyles: { fontSize: 8 },
           alternateRowStyles: { fillColor: [248, 245, 255] },
           didParseCell: (data) => {
-            if (data.section === "body" && data.column.index === 2) {
+            if (data.section === "body" && data.column.index === 3) {
+
               const v = String(data.cell.raw);
               if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
               else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
