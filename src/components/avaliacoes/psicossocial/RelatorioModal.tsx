@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
 import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RISCO_LABELS } from "@/types/gro";
+import { resolverFatorPorSubject } from "@/data/catalogoRiscosPsicossociais";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
@@ -73,19 +74,33 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const ipsScore = isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
   const radar = (campanha?.radar_data ?? []) as RadarDimensao[];
+  // Agrega dimensões do instrumento por Fator de Risco Psicossocial (catálogo 13 fatores NR-01/ISO 45003)
+  const fatoresAvaliados = useMemo(() => {
+    type Agg = { fator: string; dimensoes: string[]; soma: number; n: number };
+    const porFator: Record<string, Agg> = {};
+    for (const d of radar) {
+      const f = resolverFatorPorSubject(d.subject);
+      const key = f?.nome ?? d.subject;
+      if (!porFator[key]) porFator[key] = { fator: key, dimensoes: [], soma: 0, n: 0 };
+      porFator[key].dimensoes.push(d.subject);
+      porFator[key].soma += d.value;
+      porFator[key].n += 1;
+    }
+    return Object.values(porFator).map(a => {
+      const scoreMedio = a.n > 0 ? a.soma / a.n : 0;
+      const risco = isSipro ? Math.round(scoreMedio) : Math.round(100 - scoreMedio);
+      const prob = scoreToProbabilidade(scoreMedio, isSipro);
+      const sev = scoreToSeveridade(scoreMedio, isSipro);
+      const nivel = calcularNivelGRO(prob, sev);
+      return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+    }).sort((a, b) => b.risco - a.risco);
+  }, [radar, isSipro]);
 
-  const dimensoesAvaliadas = radar.map(d => {
-    const risco = isSipro ? d.value : 100 - d.value;
-    const prob = scoreToProbabilidade(d.value, isSipro);
-    const sev = scoreToSeveridade(d.value, isSipro);
-    const nivel = calcularNivelGRO(prob, sev);
-    return { ...d, risco, nivel };
-  }).sort((a, b) => b.risco - a.risco);
+  const criticos = fatoresAvaliados.filter(d => d.nivel === 'critico');
+  const altos = fatoresAvaliados.filter(d => d.nivel === 'alto');
+  const medios = fatoresAvaliados.filter(d => d.nivel === 'medio');
+  const baixos = fatoresAvaliados.filter(d => d.nivel === 'baixo');
 
-  const criticos = dimensoesAvaliadas.filter(d => d.nivel === 'critico');
-  const altos = dimensoesAvaliadas.filter(d => d.nivel === 'alto');
-  const medios = dimensoesAvaliadas.filter(d => d.nivel === 'medio');
-  const baixos = dimensoesAvaliadas.filter(d => d.nivel === 'baixo');
 
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -184,18 +199,21 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         y += 5;
         autoTable(doc, {
           startY: y,
-          head: [["Dimensão", "Score Risco", "Nível GRO", "Base Normativa"]],
-          body: dimensoesAvaliadas.map(d => [
-            d.subject,
+          head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+          body: fatoresAvaliados.map(d => [
+            d.fator,
+            d.dimensoes.join(", "),
             `${d.risco}%`,
             GRO_NIVEL_RISCO_LABELS[d.nivel],
             "NR-01 / NR-17 / ISO 45003",
           ]),
+
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
           bodyStyles: { fontSize: 8 },
           alternateRowStyles: { fillColor: [248, 245, 255] },
           didParseCell: (data) => {
-            if (data.section === "body" && data.column.index === 2) {
+            if (data.section === "body" && data.column.index === 3) {
+
               const v = String(data.cell.raw);
               if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
               else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
@@ -460,13 +478,20 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
                         ))}
                       </div>
 
-                      {/* Inventário de dimensões */}
+                      {/* Inventário por Fator de Risco (13 fatores NR-01 / ISO 45003) */}
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dimensões avaliadas ({dimensoesAvaliadas.length})</p>
-                        {dimensoesAvaliadas.map(d => (
-                          <div key={d.subject} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
-                            <span className="font-medium">{d.subject}</span>
-                            <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fatores de risco avaliados ({fatoresAvaliados.length})</p>
+                        {fatoresAvaliados.map(d => (
+                          <div key={d.fator} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{d.fator}</span>
+                              {d.dimensoes.length > 0 && (
+                                <span className="text-[11px] text-muted-foreground">
+                                  Dimensões: {d.dimensoes.join(" · ")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
                               <span className="text-xs text-muted-foreground">{d.risco}%</span>
                               <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
                                 {GRO_NIVEL_RISCO_LABELS[d.nivel]}
@@ -475,6 +500,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
                           </div>
                         ))}
                       </div>
+
                     </>
                   )}
 
