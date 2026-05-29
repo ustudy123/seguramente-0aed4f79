@@ -101,7 +101,6 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const medios = fatoresAvaliados.filter(d => d.nivel === 'medio');
   const baixos = fatoresAvaliados.filter(d => d.nivel === 'baixo');
 
-  const baixos = dimensoesAvaliadas.filter(d => d.nivel === 'baixo');
 
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
