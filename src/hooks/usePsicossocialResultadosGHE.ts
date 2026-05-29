@@ -190,8 +190,12 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
 
   const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
-    const { respostas = [], campanhasGhe = [], ghes = [], composicaoPorGhe = new Map() } = query.data ?? {};
-    if (respostas.length === 0) return [];
+  const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
+    const data = query.data;
+    const respostas = data?.respostas ?? [];
+    const campanhasGhe = data?.campanhasGhe ?? [];
+    const ghes = data?.ghes ?? [];
+    const composicaoPorGhe = data?.composicaoPorGhe ?? new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
