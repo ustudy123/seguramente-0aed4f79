@@ -383,7 +383,7 @@ export function PsicossocialDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{totalRespostas > 0 ? totalRespostas : '—'}</div>
               <p className="text-xs text-muted-foreground">
-                {totalRespostas >= MINIMO_ANONIMATO ? '✅ Análise liberada' : `Mín. ${MINIMO_ANONIMATO} para análise`}
+                {totalRespostas >= MINIMO_ANONIMATO_PADRAO ? "✅ Análise liberada" : `Mín. ${MINIMO_ANONIMATO_PADRAO} para análise`}
               </p>
             </CardContent>
           </Card>
