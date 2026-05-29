@@ -345,7 +345,8 @@ export function RiscosPsicossociaisPanel() {
         </TabsContent>
 
         <TabsContent value="instrumentos" className="space-y-3">
-          <Card>
+                cruzar respostas vindas de questionários externos (COPSOQ modificado, COPSOQ Br, JCQ, ERI, HSE-MS, PROART) com o catálogo padrão NR-01 / ISO 45003.
+
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground">
                 Cada fator psicossocial mapeia para uma ou mais dimensões dos instrumentos validados internacionalmente. Use esta referência para
