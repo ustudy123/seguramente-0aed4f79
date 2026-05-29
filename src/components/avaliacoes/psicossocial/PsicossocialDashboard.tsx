@@ -136,18 +136,18 @@ export function PsicossocialDashboard() {
   // aceitamos campanhas com qualquer N desde que o TOTAL agregado da empresa ≥ mínimo.
   const campanhasComIPS = campanhas.filter(c =>
     c.ips_score != null && (
-      (c.total_respostas || 0) >= MINIMO_ANONIMATO ||
+      (c.total_respostas || 0) >= (c.tipo_instrumento === "entrevista_guiada" ? 1 : MINIMO_ANONIMATO_PADRAO) ||
       consolidadoLiberado
     )
   );
   const totalRespostasConsolidado = campanhasComIPS.reduce((s, c) => s + (c.total_respostas || 0), 0);
   const consolidadoValido = consolidadoLiberado
-    ? totalRespostasConsolidado >= MINIMO_ANONIMATO
+    ? totalRespostasConsolidado >= MINIMO_ANONIMATO_PADRAO
     : campanhasComIPS.length > 0;
   const usandoFallbackEmpresa = consolidadoLiberado &&
     campanhasComIPS.length > 0 &&
-    campanhasComIPS.every(c => (c.total_respostas || 0) < MINIMO_ANONIMATO) &&
-    totalRespostasConsolidado >= MINIMO_ANONIMATO;
+    campanhasComIPS.every(c => (c.total_respostas || 0) < (c.tipo_instrumento === "entrevista_guiada" ? 1 : MINIMO_ANONIMATO_PADRAO)) &&
+    totalRespostasConsolidado >= MINIMO_ANONIMATO_PADRAO;
 
   // Para campanhas SIPRO, o campo `ips_score` armazena o IRP-S (alto = ruim).
   // Convertemos para a escala IPS (alto = bom) usando 100 - score, mantendo a
