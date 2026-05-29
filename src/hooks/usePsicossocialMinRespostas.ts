@@ -47,7 +47,7 @@ function ceilMin(elegiveis: number, ausencias: number, pct: number): number {
  *  - Se a campanha não tem GHEs, retorna o mínimo absoluto de 5.
  */
 export function useMinRespostasCampanha(
-  campanha: Pick<CampanhaPsicossocial, "id" | "tenant_id" | "empresa_id"> & { ghe_ids?: string[] | null },
+  campanha: Pick<CampanhaPsicossocial, "id" | "tenant_id" | "empresa_id" | "tipo_instrumento"> & { ghe_ids?: string[] | null },
 ): MinRespostasResult {
   const gheIds = campanha.ghe_ids || [];
   const hasGhes = gheIds.length > 0;
