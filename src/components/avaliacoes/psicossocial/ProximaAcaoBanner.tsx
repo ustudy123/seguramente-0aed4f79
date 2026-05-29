@@ -64,7 +64,7 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
             </p>
             <p className="text-xs text-blue-700 mt-0.5">
               Campanha <strong>"{ativaComPoucasRespostas.nome}"</strong> tem {respostas} resposta{respostas !== 1 ? 's' : ''}. 
-              Mínimo de {MINIMO} garante o anonimato.
+              Mínimo de {minimo} garante o anonimato.
             </p>
           </div>
         </div>
