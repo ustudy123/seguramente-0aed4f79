@@ -587,7 +587,7 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const campanhasValidas = useMemo(() => {
     return campanhas.filter(
       c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
-        && (c.total_respostas || 0) >= MINIMO_ANONIMATO
+        && (c.total_respostas || 0) >= getMinimoRespostas(c)
     ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
 
