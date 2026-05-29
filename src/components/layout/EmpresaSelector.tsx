@@ -30,7 +30,7 @@ const formatCnpj = (cnpj: string | null) => {
 
 export const EmpresaSelector = () => {
   const [open, setOpen] = useState(false);
-  const { empresaAtiva, setEmpresaAtiva, empresas, isLoading, isProfissional, semVinculos } = useEmpresaAtiva();
+  const { empresaAtiva, setEmpresaAtiva, empresas, isLoading, initialized, isProfissional, semVinculos } = useEmpresaAtiva();
   const { tenant } = useTenant();
 
   if (isLoading) {
