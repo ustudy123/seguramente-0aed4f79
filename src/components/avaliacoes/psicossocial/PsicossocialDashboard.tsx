@@ -298,7 +298,7 @@ export function PsicossocialDashboard() {
                     <Lock className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    Mín. {MINIMO_ANONIMATO} respostas para liberar análise
+                    Mín. {MINIMO_ANONIMATO_PADRAO} respostas para liberar análise
                   </p>
                   <p className="text-xs text-muted-foreground/70 text-center">
                     Isso garante o anonimato dos respondentes
