@@ -60,6 +60,9 @@ function emptyContrato(): Partial<ContratoAceite> {
     requer_telefone: false,
     requer_selfie: false,
     requer_geolocalizacao: false,
+    requer_cnpj: false,
+    requer_razao_social: false,
+    requer_representante: false,
     validade_dias: 30,
     limite_assinaturas: null,
     ativo: true,
@@ -271,6 +274,9 @@ export default function ContratosAceite() {
                     { k: "requer_endereco", l: "Endereço completo" },
                     { k: "requer_selfie", l: "Selfie (foto ao vivo)" },
                     { k: "requer_geolocalizacao", l: "Geolocalização" },
+                    { k: "requer_cnpj", l: "CNPJ" },
+                    { k: "requer_razao_social", l: "Razão Social" },
+                    { k: "requer_representante", l: "Representante Legal" },
                   ].map(f => (
                     <div key={f.k} className="flex items-center gap-2">
                       <Switch
