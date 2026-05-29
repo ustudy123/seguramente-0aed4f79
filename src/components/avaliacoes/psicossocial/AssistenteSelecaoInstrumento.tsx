@@ -82,7 +82,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     motivosCopsoq.push("empresa de médio-grande porte — COPSOQ amplamente validado");
   } else {
     copsoq += 20; hse += 14; sipro += 6;
-    motivosCopsoq.push("grande empresa (500+) — COPSOQ III referência global");
+    motivosCopsoq.push("grande empresa (500+) — COPSOQ modificado referência global");
     motivosHse.push("escala grande favorece HSE como padrão de gestão");
   }
 
@@ -103,7 +103,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
   if (c.objetivo === 'diagnostico') {
     sipro += 25; copsoq += 18;
     motivosSipro.push("diagnóstico inicial — SIPRO cobre 12 dimensões NR-01/ISO 45003");
-    motivosCopsoq.push("COPSOQ III também é referência para diagnósticos abrangentes");
+    motivosCopsoq.push("COPSOQ modificado também é referência para diagnósticos abrangentes");
   } else if (c.objetivo === 'pgr') {
     sipro += 25; copsoq += 15;
     motivosSipro.push("integração nativa ao PGR dentro do YourEyes");
@@ -118,7 +118,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     motivosSipro.push("SIPRO detecta dimensões com risco de sobrecarga");
   } else if (c.objetivo === 'auditoria') {
     copsoq += 25; hse += 18; sipro += 10;
-    motivosCopsoq.push("COPSOQ III referência internacional para auditorias externas");
+    motivosCopsoq.push("COPSOQ modificado referência internacional para auditorias externas");
     motivosHse.push("HSE padrão britânico reconhecido por órgãos regulatórios");
   }
 
@@ -255,7 +255,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     },
     {
       id: 'copsoq' as const,
-      nome: 'COPSOQ III',
+      nome: 'COPSOQ modificado',
       descricao: 'Instrumento psicossocial mais utilizado internacionalmente, com base científica robusta e ampla cobertura de fatores organizacionais.',
       score: normalize(copsoq),
       motivos: motivosCopsoq.filter(Boolean).slice(0, 4),

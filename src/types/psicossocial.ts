@@ -141,7 +141,7 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
   },
   {
     id: 'copsoq',
-    nome: 'COPSOQ III',
+    nome: 'COPSOQ modificado',
     descricao: 'Copenhagen Psychosocial Questionnaire',
     uso: 'Diagnóstico geral de riscos psicossociais — 15 dimensões validadas internacionalmente',
     totalPerguntas: 49,
@@ -149,7 +149,8 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
   },
   {
     id: 'copsoq2br',
-    nome: 'COPSOQ Adaptado',
+    nome: 'COPSOQ Br',
+
     descricao: 'Copenhagen Psychosocial Questionnaire II — Versão brasileira validada',
     uso: 'Versão curta original do COPSOQ II adaptada e validada para o Brasil por Gonçalves et al. (2021) — 40 perguntas em 13 dimensões, sem ajustes para NR-01/NR-17',
     totalPerguntas: 40,

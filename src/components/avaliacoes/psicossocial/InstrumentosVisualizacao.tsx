@@ -200,14 +200,15 @@ export function InstrumentosVisualizacao() {
           </TabsTrigger>
           <TabsTrigger value="copsoq" className="gap-2">
             <Brain className="h-4 w-4" />
-            COPSOQ III
+            COPSOQ modificado
             <Badge variant="secondary" className="text-xs ml-1">{COPSOQ_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
           <TabsTrigger value="copsoq2br" className="gap-2">
             <Brain className="h-4 w-4" />
-            COPSOQ II-Br
+            COPSOQ Br
             <Badge variant="secondary" className="text-xs ml-1">{COPSOQ2BR_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
+
           <TabsTrigger value="hse" className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
             HSE Management Standards
@@ -321,8 +322,9 @@ export function InstrumentosVisualizacao() {
                   <Shield className="h-4 w-4 text-emerald-500" />
                   <span><strong>{COPSOQ2BR_DIMENSOES.filter(d => d.tipo === 'protetor').length}</strong> fatores protetores</span>
                 </div>
-                <span className="text-muted-foreground">COPSOQ II-Br · Gonçalves et al. (2021) · 40 itens · Sem adaptação YourEyes — instrumento puro</span>
+                <span className="text-muted-foreground">COPSOQ Br · Gonçalves et al. (2021) · 40 itens · Sem adaptação YourEyes — instrumento puro</span>
               </div>
+
             </CardContent>
           </Card>
           <div className="space-y-2">
