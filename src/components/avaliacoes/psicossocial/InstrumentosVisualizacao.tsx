@@ -200,14 +200,15 @@ export function InstrumentosVisualizacao() {
           </TabsTrigger>
           <TabsTrigger value="copsoq" className="gap-2">
             <Brain className="h-4 w-4" />
-            COPSOQ III
+            COPSOQ modificado
             <Badge variant="secondary" className="text-xs ml-1">{COPSOQ_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
           <TabsTrigger value="copsoq2br" className="gap-2">
             <Brain className="h-4 w-4" />
-            COPSOQ II-Br
+            COPSOQ Br
             <Badge variant="secondary" className="text-xs ml-1">{COPSOQ2BR_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
+
           <TabsTrigger value="hse" className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
             HSE Management Standards
