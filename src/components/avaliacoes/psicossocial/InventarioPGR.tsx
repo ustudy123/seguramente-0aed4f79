@@ -90,7 +90,8 @@ function getNormativaForSubject(subject: string): {
 }
 
 interface InventarioItem {
-  dimensao: string;
+  fatorId: string;
+  dimensoes: string[]; // dimensões do instrumento equivalentes a este fator
   fator: string;
   norma: string;
   descricao: string;
@@ -101,7 +102,7 @@ interface InventarioItem {
   severidadeLabel: string;
   nivelLabel: string;
   nivelKey: 'baixo' | 'medio' | 'alto' | 'critico';
-  fonteCampanhas: number; // quantas campanhas contribuíram com score para essa dimensão
+  fonteCampanhas: number; // quantas campanhas contribuíram com score para esse fator
 }
 
 export function InventarioPGR({ campanhas }: InventarioPGRProps) {
@@ -179,17 +180,16 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
    * Agregação real das dimensões.
    * - Sem filtro de GHE: usa radar_data já calculado das campanhas válidas (média ponderada por respondentes).
    * - Com filtro de GHE: usa radar reconstruído das respostas individuais do GHE selecionado.
-   */
   const inventario = useMemo((): InventarioItem[] => {
     if (campanhasValidas.length === 0) return [];
 
-    let agregado: Record<string, { somaScore: number; pesoTotal: number; campanhas: number }> = {};
+    // 1. Coleta scores brutos por subject (dimensão do instrumento)
+    const porSubject: Record<string, { somaScore: number; pesoTotal: number; campanhas: number }> = {};
 
     if (gheSelecionado) {
-      // Reaproveita radar já calculado por GHE (média simples já aplicada no hook)
       if (bloqueadoPorAnonimatoGHE) return [];
       gheSelecionado.radar.forEach(dim => {
-        agregado[dim.subject] = { somaScore: dim.value, pesoTotal: 1, campanhas: 1 };
+        porSubject[dim.subject] = { somaScore: dim.value, pesoTotal: 1, campanhas: 1 };
       });
     } else {
       const campanhasParaProcessar = filtroCampanha === "todos"
@@ -201,32 +201,63 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
       campanhasParaProcessar.forEach(campanha => {
         const peso = campanha.total_respostas ?? 1;
         const radar = campanha.radar_data as RadarDimensao[];
-
         radar.forEach(dim => {
-          if (!agregado[dim.subject]) {
-            agregado[dim.subject] = { somaScore: 0, pesoTotal: 0, campanhas: 0 };
+          if (!porSubject[dim.subject]) {
+            porSubject[dim.subject] = { somaScore: 0, pesoTotal: 0, campanhas: 0 };
           }
-          agregado[dim.subject].somaScore += dim.value * peso;
-          agregado[dim.subject].pesoTotal += peso;
-          agregado[dim.subject].campanhas += 1;
+          porSubject[dim.subject].somaScore += dim.value * peso;
+          porSubject[dim.subject].pesoTotal += peso;
+          porSubject[dim.subject].campanhas += 1;
         });
       });
     }
 
-    const items: InventarioItem[] = Object.entries(agregado).map(([subject, agg]) => {
+    // 2. Reagrupa por fator do catálogo (13 fatores padrão NR-01 / ISO 45003).
+    //    Várias dimensões do instrumento (COPSOQ/SIPRO/HSE) podem mapear ao mesmo fator
+    //    — aqui consolidamos a média ponderada para um único registro por fator.
+    const porFator: Record<string, {
+      fatorId: string;
+      dimensoes: Set<string>;
+      somaScore: number;
+      pesoTotal: number;
+      campanhas: number;
+      normativa: ReturnType<typeof getNormativaForSubject>;
+    }> = {};
+
+    Object.entries(porSubject).forEach(([subject, agg]) => {
+      const normativa = getNormativaForSubject(subject);
+      // chave estável: nome do fator do catálogo (ou subject puro quando não catalogado)
+      const fatorKey = normativa.fator;
+      if (!porFator[fatorKey]) {
+        porFator[fatorKey] = {
+          fatorId: fatorKey,
+          dimensoes: new Set(),
+          somaScore: 0,
+          pesoTotal: 0,
+          campanhas: 0,
+          normativa,
+        };
+      }
+      porFator[fatorKey].dimensoes.add(subject);
+      porFator[fatorKey].somaScore += agg.somaScore;
+      porFator[fatorKey].pesoTotal += agg.pesoTotal;
+      porFator[fatorKey].campanhas = Math.max(porFator[fatorKey].campanhas, agg.campanhas);
+    });
+
+    const items: InventarioItem[] = Object.values(porFator).map(agg => {
       const scoreReal = Math.round(agg.somaScore / agg.pesoTotal);
       const prob = scoreToProbabilidade(scoreReal, isSipro);
       const sev = scoreToSeveridade(scoreReal, isSipro);
       const nivel = calcularNivelGRO(prob, sev);
-      const normativa = getNormativaForSubject(subject);
 
       return {
-        dimensao: subject,
-        fator: normativa.fator,
-        norma: normativa.norma,
-        descricao: normativa.descricao,
-        categoriaLabel: normativa.categoriaLabel,
-        manifestacoes: normativa.manifestacoes,
+        fatorId: agg.fatorId,
+        dimensoes: Array.from(agg.dimensoes).sort(),
+        fator: agg.normativa.fator,
+        norma: agg.normativa.norma,
+        descricao: agg.normativa.descricao,
+        categoriaLabel: agg.normativa.categoriaLabel,
+        manifestacoes: agg.normativa.manifestacoes,
         scoreReal,
         probabilidadeLabel: GRO_PROBABILIDADE_LABELS[prob],
         severidadeLabel: GRO_SEVERIDADE_LABELS[sev],
@@ -236,10 +267,11 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
       };
     });
 
-    // Ordenar por gravidade (crítico → alto → médio → baixo)
     const ordem: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
     return items.sort((a, b) => (ordem[a.nivelKey] ?? 4) - (ordem[b.nivelKey] ?? 4));
   }, [campanhasValidas, isSipro, filtroCampanha, gheSelecionado, bloqueadoPorAnonimatoGHE]);
+
+
 
   const criticos = inventario.filter(i => i.nivelKey === 'critico').length;
   const altos = inventario.filter(i => i.nivelKey === 'alto').length;
@@ -299,16 +331,17 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
 
       autoTable(doc, {
         startY: 46,
-        head: [["Dimensão / Fator", "Descrição do Risco", "Base Normativa", "Score Real", "Probabilidade", "Severidade", "Grau de Risco"]],
+        head: [["Fator de Risco", "Dimensões do Instrumento", "Base Normativa", "Score Real", "Probabilidade", "Severidade", "Grau de Risco"]],
         body: inventario.map(item => [
-          item.dimensao,
           item.fator,
+          item.dimensoes.join(" • "),
           item.norma,
           `${item.scoreReal}%`,
           item.probabilidadeLabel,
           item.severidadeLabel,
           item.nivelLabel,
         ]),
+
         headStyles: { fillColor: [88, 28, 135], textColor: 255, fontSize: 8 },
         bodyStyles: { fontSize: 8 },
         columnStyles: {
@@ -581,7 +614,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             </TableHeader>
             <TableBody>
               {(expanded ? inventario : inventario.slice(0, 7)).map((item) => (
-                <TableRow key={item.dimensao} className={cn("border-l-2", nivelColors[item.nivelKey])}>
+                <TableRow key={item.fatorId} className={cn("border-l-2", nivelColors[item.nivelKey])}>
                   <TableCell className="py-2 align-top max-w-[320px]">
                     <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                       <p className="font-medium text-sm leading-tight">{item.fator}</p>
@@ -590,12 +623,20 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
                       </Badge>
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-snug">{item.descricao}</p>
-                    {item.dimensao !== item.fator && (
-                      <p className="text-[10px] text-muted-foreground/70 italic mt-0.5">
-                        Dimensão do instrumento: {item.dimensao}
-                      </p>
+                    {item.dimensoes.length > 0 && !(item.dimensoes.length === 1 && item.dimensoes[0] === item.fator) && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <span className="text-[10px] text-muted-foreground/70 italic">
+                          Dimensões do instrumento ({item.dimensoes.length}):
+                        </span>
+                        {item.dimensoes.map((d) => (
+                          <Badge key={d} variant="secondary" className="text-[9px] px-1 py-0 h-4 font-normal">
+                            {d}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </TableCell>
+
                   <TableCell className="py-2 text-center">
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="font-bold text-sm">{item.scoreReal}%</span>
