@@ -555,8 +555,12 @@ export function usePsicossocial() {
 
     const isEntrevistaGuiada = campanhaRes.data?.tipo_instrumento === "entrevista_guiada";
     const MINIMO_ANONIMATO = isEntrevistaGuiada ? 1 : 5;
-    // Anonimato é garantido pelo número total de respostas recebidas (não de convites)
-    const anonimato_garantido = totalRespostas >= MINIMO_ANONIMATO;
+    // Para entrevista guiada, as respostas vivem em `psicossocial_entrevistas` (concluídas).
+    // Para questionários, contam as respostas reais salvas.
+    const respostasEfetivas = isEntrevistaGuiada
+      ? Math.max(totalRespostas, entrevistasConcluidas)
+      : totalRespostas;
+    const anonimato_garantido = respostasEfetivas >= MINIMO_ANONIMATO;
 
     // IPS médio agregado (só exibido com anonimato garantido)
     const respostasComIPS = respostas.filter(r => r.indicadores?.IPS !== undefined);
