@@ -146,7 +146,7 @@ export function PsicossocialDashboard() {
     : campanhasComIPS.length > 0;
   const usandoFallbackEmpresa = consolidadoLiberado &&
     campanhasComIPS.length > 0 &&
-    campanhasComIPS.every(c => (c.total_respostas || 0) < (c.tipo_instrumento === "entrevista_guiada" ? 1 : MINIMO_ANONIMATO_PADRAO)) &&
+    campanhasComIPS.every(c => (c.total_respostas || 0) < getMinimoRespostas(c)) &&
     totalRespostasConsolidado >= MINIMO_ANONIMATO_PADRAO;
 
   // Para campanhas SIPRO, o campo `ips_score` armazena o IRP-S (alto = ruim).
