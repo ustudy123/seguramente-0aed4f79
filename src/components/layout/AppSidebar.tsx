@@ -485,6 +485,7 @@ interface AppSidebarProps {
   onClose?: () => void;
 }
 
+
 export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -599,20 +600,34 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isCollapsed ? 72 : 264 }}
+      animate={{ 
+        width: isCollapsed ? 72 : 264,
+        x: 0,
+        opacity: 1
+      }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-screen gradient-sidebar border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-40"
+      className={cn(
+        "h-screen gradient-sidebar border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-40",
+        isMobile && "shadow-2xl shadow-black/50"
+      )}
     >
       {/* Logo */}
-      <div className="p-4 flex items-center justify-center border-b border-white/[0.08] bg-white rounded-b-xl">
-        {isCollapsed ? (
+      <div className="p-4 flex items-center justify-between border-b border-white/[0.08] bg-white rounded-b-xl relative group/logo">
+        <div className="flex-1 flex justify-center">
           <Logo size="md" showText={false} />
-        ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Logo size="md" showText={false} />
-          </motion.div>
+        </div>
+        
+        {!isMobile && (
+          <button
+            onClick={onToggle}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center shadow-lg opacity-0 group-hover/logo:opacity-100 transition-opacity z-50 border border-white/10"
+            title={isCollapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+          </button>
         )}
       </div>
+
 
       {/* Search */}
       {!isCollapsed && (

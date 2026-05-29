@@ -39,9 +39,12 @@ function getRoleLabel(roles: AppRole[]): string {
 interface HeaderProps {
   onMenuToggle?: () => void;
   isMobile?: boolean;
+  isSidebarCollapsed?: boolean;
+  onSidebarToggle?: () => void;
 }
 
-export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
+
+export const Header = ({ onMenuToggle, isMobile, isSidebarCollapsed, onSidebarToggle }: HeaderProps) => {
   const { profile, signOut, isSuperAdmin, user, roles } = useAuthContext();
   const { tenant } = useTenant();
   const { humorHoje } = useHumorDiario();
@@ -64,12 +67,23 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
   return (
     <header className="h-16 border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30" style={{ background: 'linear-gradient(135deg, hsl(215 65% 12%) 0%, hsl(207 90% 39%) 50%, hsl(152 66% 39%) 100%)' }}>
       <div className="flex items-center gap-2">
-        {isMobile && (
+        {isMobile ? (
           <Button variant="ghost" size="icon" onClick={onMenuToggle} className="mr-1 text-white hover:bg-white/15">
+            <Menu className="w-5 h-5" />
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onSidebarToggle} 
+            className="text-white/80 hover:text-white hover:bg-white/15 transition-all"
+            title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+          >
             <Menu className="w-5 h-5" />
           </Button>
         )}
       </div>
+
 
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-4">
