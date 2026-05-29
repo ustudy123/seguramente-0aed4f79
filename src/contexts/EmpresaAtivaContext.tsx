@@ -97,7 +97,12 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Restore from localStorage or auto-select single company
   useEffect(() => {
-    if (!tenantId || isLoading) return;
+    if (isLoading) return;
+
+    if (!tenantId) {
+      setInitialized(true);
+      return;
+    }
     
     // Se já temos uma empresa ativa válida para o tenant atual, não precisamos auto-selecionar
     if (empresaAtiva && empresas.some(e => e.id === empresaAtiva.id)) {
