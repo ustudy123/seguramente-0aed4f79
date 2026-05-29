@@ -181,7 +181,6 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         }
       }
 
-      }
 
       return { respostas, campanhasGhe, ghes, composicaoPorGhe };
     },
