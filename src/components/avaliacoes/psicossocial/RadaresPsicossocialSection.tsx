@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas } from "@/types/psicossocial";
 import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
