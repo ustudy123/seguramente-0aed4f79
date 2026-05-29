@@ -881,8 +881,8 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
               <p className="font-semibold text-sm">Sem dados para os radares de Burnout & Boreout</p>
               <p className="text-xs text-muted-foreground">
                 {campanhas.length === 0
-                  ? 'Nenhuma campanha psicossocial criada para esta empresa. Crie uma campanha SIPRO e colete no mínimo 5 respostas para liberar os radares.'
-                  : `Nenhuma campanha desta empresa atingiu o mínimo de ${MINIMO_ANONIMATO} respostas com dimensões SIPRO. Os radares só são calculados com dados reais — não exibimos estimativas para preservar a integridade do diagnóstico.`}
+                  ? 'Nenhuma campanha psicossocial criada para esta empresa. Crie uma campanha SIPRO para liberar os radares.'
+                  : `Nenhuma campanha desta empresa atingiu o mínimo de respostas necessárias para liberar os radares. Os radares só são calculados com dados reais — não exibimos estimativas para preservar a integridade do diagnóstico.`}
               </p>
             </div>
           </CardContent>
