@@ -115,9 +115,12 @@ export function useMinRespostasCampanha(
     },
   });
 
+  // Entrevista guiada não tem limite de anonimato (exibe resultados desde a primeira resposta)
+  const isEntrevistaGuiada = campanha.tipo_instrumento === "entrevista_guiada";
+
   if (!hasGhes) {
     return {
-      minRespostas: MIN_RESPOSTAS_ABS,
+      minRespostas: isEntrevistaGuiada ? 1 : MIN_RESPOSTAS_ABS,
       totalElegiveis: 0,
       totalBase: 0,
       porGhe: [],
