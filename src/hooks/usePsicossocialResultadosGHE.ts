@@ -296,6 +296,11 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         cargos: estratoFrom(g.cargosAcc),
         composicaoSetores: comp?.setores ?? [],
         composicaoCargos: comp?.cargos ?? [],
+        composicaoSetorCargos: comp?.setorCargos
+          ? Array.from(comp.setorCargos.entries())
+              .map(([setor, cargos]) => ({ setor, cargos: Array.from(cargos).sort() }))
+              .sort((a, b) => a.setor.localeCompare(b.setor))
+          : [],
       };
     });
   }, [query.data]);
