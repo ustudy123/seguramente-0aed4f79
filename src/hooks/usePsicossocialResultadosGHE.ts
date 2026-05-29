@@ -190,7 +190,6 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
 
   const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
-  const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
     const data = query.data;
     const respostas = data?.respostas ?? [];
     const campanhasGhe = data?.campanhasGhe ?? [];
