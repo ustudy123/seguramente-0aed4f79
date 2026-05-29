@@ -69,7 +69,10 @@ export const MainLayout = forwardRef<HTMLDivElement>((_, ref) => {
           <Header
             onMenuToggle={() => setIsMobileSidebarOpen(true)}
             isMobile={isMobile}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onSidebarToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
+
           <main className={isMobile ? "flex-1 p-3" : "flex-1 p-6"}>
             <Outlet />
           </main>
