@@ -74,18 +74,33 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const ipsScore = isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
   const radar = (campanha?.radar_data ?? []) as RadarDimensao[];
+  // Agrega dimensões do instrumento por Fator de Risco Psicossocial (catálogo 13 fatores NR-01/ISO 45003)
+  const fatoresAvaliados = useMemo(() => {
+    type Agg = { fator: string; dimensoes: string[]; soma: number; n: number };
+    const porFator: Record<string, Agg> = {};
+    for (const d of radar) {
+      const f = resolverFatorPorSubject(d.subject);
+      const key = f?.nome ?? d.subject;
+      if (!porFator[key]) porFator[key] = { fator: key, dimensoes: [], soma: 0, n: 0 };
+      porFator[key].dimensoes.push(d.subject);
+      porFator[key].soma += d.value;
+      porFator[key].n += 1;
+    }
+    return Object.values(porFator).map(a => {
+      const scoreMedio = a.n > 0 ? a.soma / a.n : 0;
+      const risco = isSipro ? Math.round(scoreMedio) : Math.round(100 - scoreMedio);
+      const prob = scoreToProbabilidade(scoreMedio, isSipro);
+      const sev = scoreToSeveridade(scoreMedio, isSipro);
+      const nivel = calcularNivelGRO(prob, sev);
+      return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+    }).sort((a, b) => b.risco - a.risco);
+  }, [radar, isSipro]);
 
-  const dimensoesAvaliadas = radar.map(d => {
-    const risco = isSipro ? d.value : 100 - d.value;
-    const prob = scoreToProbabilidade(d.value, isSipro);
-    const sev = scoreToSeveridade(d.value, isSipro);
-    const nivel = calcularNivelGRO(prob, sev);
-    return { ...d, risco, nivel };
-  }).sort((a, b) => b.risco - a.risco);
+  const criticos = fatoresAvaliados.filter(d => d.nivel === 'critico');
+  const altos = fatoresAvaliados.filter(d => d.nivel === 'alto');
+  const medios = fatoresAvaliados.filter(d => d.nivel === 'medio');
+  const baixos = fatoresAvaliados.filter(d => d.nivel === 'baixo');
 
-  const criticos = dimensoesAvaliadas.filter(d => d.nivel === 'critico');
-  const altos = dimensoesAvaliadas.filter(d => d.nivel === 'alto');
-  const medios = dimensoesAvaliadas.filter(d => d.nivel === 'medio');
   const baixos = dimensoesAvaliadas.filter(d => d.nivel === 'baixo');
 
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
