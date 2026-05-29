@@ -90,7 +90,8 @@ function getNormativaForSubject(subject: string): {
 }
 
 interface InventarioItem {
-  dimensao: string;
+  fatorId: string;
+  dimensoes: string[]; // dimensões do instrumento equivalentes a este fator
   fator: string;
   norma: string;
   descricao: string;
@@ -101,7 +102,7 @@ interface InventarioItem {
   severidadeLabel: string;
   nivelLabel: string;
   nivelKey: 'baixo' | 'medio' | 'alto' | 'critico';
-  fonteCampanhas: number; // quantas campanhas contribuíram com score para essa dimensão
+  fonteCampanhas: number; // quantas campanhas contribuíram com score para esse fator
 }
 
 export function InventarioPGR({ campanhas }: InventarioPGRProps) {
