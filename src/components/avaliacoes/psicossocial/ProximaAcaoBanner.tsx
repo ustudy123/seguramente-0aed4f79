@@ -1,7 +1,7 @@
 import { ArrowRight, Link2, BarChart3, Users, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, getMinimoRespostas } from "@/types/psicossocial";
 
 interface ProximaAcaoBannerProps {
   campanhas: CampanhaPsicossocial[];
