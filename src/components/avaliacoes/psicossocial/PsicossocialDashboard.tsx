@@ -50,7 +50,7 @@ import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
-import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
+import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao, MINIMO_ANONIMATO_PADRAO, getMinimoRespostas } from "@/types/psicossocial";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
