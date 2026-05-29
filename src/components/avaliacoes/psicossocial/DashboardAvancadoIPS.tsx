@@ -149,7 +149,7 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
                   <SelectContent>
                     <SelectItem value="todos">Todas as Campanhas</SelectItem>
                     {campanhas
-                      .filter(c => (c.total_respostas || 0) >= 5)
+                      .filter(c => (c.total_respostas || 0) >= (c.tipo_instrumento === 'entrevista_guiada' ? 1 : 5))
                       .map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                       ))}
