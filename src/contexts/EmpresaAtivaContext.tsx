@@ -146,6 +146,7 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setEmpresaAtiva,
         empresas,
         isLoading,
+        initialized,
         isProfissional,
         semVinculos,
       }}
