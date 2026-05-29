@@ -74,7 +74,7 @@ Inclua título curto, descrição detalhada do que fazer, justificativa (por qu�
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -98,7 +98,30 @@ Inclua título curto, descrição detalhada do que fazer, justificativa (por qu�
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const choice = data.choices?.[0];
+    const toolCall = choice?.message?.tool_calls?.[0];
+
+    // Se não houver tool_call, pode ser que o gpt-4o-mini respondeu em texto direto
+    if (!toolCall?.function?.arguments) {
+      const content = choice?.message?.content;
+      if (content) {
+        // Tenta encontrar um JSON na resposta se o modelo falhou em usar a tool formalmente mas respondeu algo parecido
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const resultado = JSON.parse(jsonMatch[0]);
+            if (resultado.sugestoes) {
+              return new Response(JSON.stringify(resultado), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao parsear conteúdo de texto como JSON:", e);
+        }
+      }
+      throw new Error("Resposta inválida da IA");
+    }
 
     if (!toolCall?.function?.arguments) {
       throw new Error("Resposta inválida da IA");
