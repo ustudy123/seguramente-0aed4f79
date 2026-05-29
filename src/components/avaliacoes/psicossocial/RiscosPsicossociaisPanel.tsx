@@ -37,11 +37,15 @@ interface InstrumentoMap {
 
 const INSTRUMENTOS: { key: string; label: string; color: string }[] = [
   { key: "SIPRO", label: "SIPRO", color: "bg-primary/10 text-primary border-primary/30" },
-  { key: "COPSOQ_III", label: "COPSOQ III", color: "bg-sky-500/10 text-sky-700 border-sky-500/30" },
+  { key: "COPSOQ_III", label: "COPSOQ modificado", color: "bg-sky-500/10 text-sky-700 border-sky-500/30" },
+  { key: "COPSOQ_BR", label: "COPSOQ Br", color: "bg-indigo-500/10 text-indigo-700 border-indigo-500/30" },
+  { key: "COPSOQ2BR", label: "COPSOQ Br", color: "bg-indigo-500/10 text-indigo-700 border-indigo-500/30" },
   { key: "JCQ", label: "JCQ (Karasek)", color: "bg-violet-500/10 text-violet-700 border-violet-500/30" },
   { key: "ERI", label: "ERI (Siegrist)", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
   { key: "HSE_MS", label: "HSE-MS", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30" },
+  { key: "PROART", label: "PROART", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
 ];
+
 
 const instrLabel = (k: string) => INSTRUMENTOS.find((i) => i.key === k)?.label || k;
 const instrColor = (k: string) => INSTRUMENTOS.find((i) => i.key === k)?.color || "bg-muted text-muted-foreground";
