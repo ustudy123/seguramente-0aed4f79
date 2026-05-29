@@ -509,7 +509,7 @@ export function usePsicossocial() {
 
   // Calcular estatísticas de uma campanha
   const calcularEstatisticas = async (campanhaId: string): Promise<EstatisticasCampanha> => {
-    const [convites, respostas, participacoesRes, entrevistasRes] = await Promise.all([
+    const [convites, respostas, participacoesRes, entrevistasRes, campanhaRes] = await Promise.all([
       buscarConvites(campanhaId),
       buscarRespostas(campanhaId),
       supabase
@@ -520,6 +520,11 @@ export function usePsicossocial() {
         .from("psicossocial_entrevistas")
         .select("id,status")
         .eq("campanha_id", campanhaId),
+      supabase
+        .from("questionario_psicossocial_campanhas")
+        .select("tipo_instrumento")
+        .eq("id", campanhaId)
+        .single(),
     ]);
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
