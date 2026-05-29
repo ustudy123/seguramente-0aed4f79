@@ -552,7 +552,8 @@ export function usePsicossocial() {
     // "Total elegível" = max(elegíveis nominais, respostas, entrevistas geradas)
     const total = Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas);
 
-    const MINIMO_ANONIMATO = 5;
+    const isEntrevistaGuiada = campanhaRes.data?.tipo_instrumento === "entrevista_guiada";
+    const MINIMO_ANONIMATO = isEntrevistaGuiada ? 1 : 5;
     // Anonimato é garantido pelo número total de respostas recebidas (não de convites)
     const anonimato_garantido = totalRespostas >= MINIMO_ANONIMATO;
 
