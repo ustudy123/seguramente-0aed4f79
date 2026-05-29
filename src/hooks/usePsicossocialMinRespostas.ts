@@ -161,9 +161,11 @@ export function useMinRespostasCampanha(
 
   const totalElegiveis = porGhe.reduce((s, x) => s + x.elegiveis, 0);
   const totalBase = porGhe.reduce((s, x) => s + x.base, 0);
-  const minRespostas = porGhe.length > 0
-    ? Math.max(MIN_RESPOSTAS_ABS, porGhe.reduce((s, x) => s + x.min, 0))
-    : MIN_RESPOSTAS_ABS;
+  const minRespostas = isEntrevistaGuiada 
+    ? 1 
+    : porGhe.length > 0
+      ? Math.max(MIN_RESPOSTAS_ABS, porGhe.reduce((s, x) => s + x.min, 0))
+      : MIN_RESPOSTAS_ABS;
   const configurado = porGhe.some(x => x.percentual > 0 || x.ausencias > 0);
 
   return {
