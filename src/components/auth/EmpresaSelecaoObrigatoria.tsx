@@ -64,8 +64,8 @@ export function EmpresaSelecaoObrigatoria() {
   // Não mostrar para não-profissionais
   if (!isProfissional) return null;
 
-  // Não mostrar durante loading dos dados de empresas/vínculos
-  if (isLoading) return null;
+  // Não mostrar durante loading dos dados de empresas/vínculos ou enquanto o contexto está inicializando
+  if (isLoading || !initialized) return null;
 
   // Profissional sem vínculos — só mostra após o grace period confirmar
   if (semVinculos) {
