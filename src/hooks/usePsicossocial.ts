@@ -285,7 +285,8 @@ export function usePsicossocial() {
             .eq("id", id)
             .single();
 
-          if (campanha?.radar_data && (campanha.total_respostas ?? 0) >= 5) {
+          const minRespostas = campanha.tipo_instrumento === 'entrevista_guiada' ? 1 : 5;
+          if (campanha?.radar_data && (campanha.total_respostas ?? 0) >= minRespostas) {
             const situacoes = campanha.situacoes_trabalho ?? [];
 
             if (situacoes.length > 0) {
