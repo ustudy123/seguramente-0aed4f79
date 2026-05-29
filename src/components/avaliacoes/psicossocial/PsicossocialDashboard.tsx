@@ -288,7 +288,7 @@ export function PsicossocialDashboard() {
                   <IPSGauge score={ipsConsolidado} classificacao={ipsClassificacao} size="md" />
                   {usandoFallbackEmpresa && (
                     <div className="mt-3 w-full rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-1.5 text-[11px] text-amber-900 leading-snug">
-                      <strong>Visão consolidada da empresa</strong> — categorias individuais permanecem ocultas (&lt; {MINIMO_ANONIMATO} respondentes). Total agregado: {totalRespostasConsolidado} respostas.
+                      <strong>Visão consolidada da empresa</strong> — categorias individuais permanecem ocultas (&lt; {MINIMO_ANONIMATO_PADRAO} respondentes). Total agregado: {totalRespostasConsolidado} respostas.
                     </div>
                   )}
                 </>
