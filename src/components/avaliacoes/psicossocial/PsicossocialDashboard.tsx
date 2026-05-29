@@ -55,7 +55,7 @@ import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
-const MINIMO_ANONIMATO_PADRAO = 5;
+
 // Empresas autorizadas a visualizar IPS consolidado da empresa quando
 // campanhas individuais ficam abaixo do mínimo (ISO 45003) — sem expor
 // os scores por categoria. Caso pontual aprovado pelo cliente.
