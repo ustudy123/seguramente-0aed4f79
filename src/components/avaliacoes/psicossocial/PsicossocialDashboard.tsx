@@ -481,8 +481,8 @@ export function PsicossocialDashboard() {
                   <div>
                     <p className="font-semibold text-sm">🔒 Regra de Anonimato Estatístico</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Os resultados só são apresentados quando houver <strong>mínimo de {MINIMO_ANONIMATO} respostas</strong> na campanha.
-                      Com menos de {MINIMO_ANONIMATO} respondentes, a análise permanece bloqueada para garantir que ninguém seja identificado.
+                      Os resultados só são apresentados quando houver <strong>mínimo de {MINIMO_ANONIMATO_PADRAO} respostas</strong> na campanha.
+                      Com menos de {MINIMO_ANONIMATO_PADRAO} respondentes, a análise permanece bloqueada para garantir que ninguém seja identificado.
                       Em empresas pequenas, o sistema agrupa dados por Setor → Empresa automaticamente.
                     </p>
                   </div>
