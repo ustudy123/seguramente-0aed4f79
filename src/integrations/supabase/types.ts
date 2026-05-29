@@ -2538,9 +2538,12 @@ export type Database = {
           descricao_publica: string | null
           id: string
           limite_assinaturas: number | null
+          requer_cnpj: boolean
           requer_cpf: boolean
           requer_endereco: boolean
           requer_geolocalizacao: boolean
+          requer_razao_social: boolean
+          requer_representante: boolean
           requer_rg: boolean
           requer_selfie: boolean
           requer_telefone: boolean
@@ -2558,9 +2561,12 @@ export type Database = {
           descricao_publica?: string | null
           id?: string
           limite_assinaturas?: number | null
+          requer_cnpj?: boolean
           requer_cpf?: boolean
           requer_endereco?: boolean
           requer_geolocalizacao?: boolean
+          requer_razao_social?: boolean
+          requer_representante?: boolean
           requer_rg?: boolean
           requer_selfie?: boolean
           requer_telefone?: boolean
@@ -2578,9 +2584,12 @@ export type Database = {
           descricao_publica?: string | null
           id?: string
           limite_assinaturas?: number | null
+          requer_cnpj?: boolean
           requer_cpf?: boolean
           requer_endereco?: boolean
           requer_geolocalizacao?: boolean
+          requer_razao_social?: boolean
+          requer_representante?: boolean
           requer_rg?: boolean
           requer_selfie?: boolean
           requer_telefone?: boolean
@@ -2607,10 +2616,13 @@ export type Database = {
           link_enviado_para: string | null
           observacoes: string | null
           selfie_imagem: string | null
+          signatario_cnpj: string | null
           signatario_cpf: string | null
           signatario_email: string | null
           signatario_endereco: string | null
           signatario_nome: string | null
+          signatario_razao_social: string | null
+          signatario_representante: string | null
           signatario_rg: string | null
           signatario_telefone: string | null
           status: Database["public"]["Enums"]["contrato_assinatura_status"]
@@ -2633,10 +2645,13 @@ export type Database = {
           link_enviado_para?: string | null
           observacoes?: string | null
           selfie_imagem?: string | null
+          signatario_cnpj?: string | null
           signatario_cpf?: string | null
           signatario_email?: string | null
           signatario_endereco?: string | null
           signatario_nome?: string | null
+          signatario_razao_social?: string | null
+          signatario_representante?: string | null
           signatario_rg?: string | null
           signatario_telefone?: string | null
           status?: Database["public"]["Enums"]["contrato_assinatura_status"]
@@ -2659,10 +2674,13 @@ export type Database = {
           link_enviado_para?: string | null
           observacoes?: string | null
           selfie_imagem?: string | null
+          signatario_cnpj?: string | null
           signatario_cpf?: string | null
           signatario_email?: string | null
           signatario_endereco?: string | null
           signatario_nome?: string | null
+          signatario_razao_social?: string | null
+          signatario_representante?: string | null
           signatario_rg?: string | null
           signatario_telefone?: string | null
           status?: Database["public"]["Enums"]["contrato_assinatura_status"]
@@ -21735,25 +21753,48 @@ export type Database = {
           out_razao_social: string
         }[]
       }
-      registrar_assinatura_contrato: {
-        Args: {
-          _assinatura_imagem: string
-          _cpf: string
-          _email: string
-          _endereco: string
-          _geo_lat: number
-          _geo_lng: number
-          _hash: string
-          _ip: string
-          _nome: string
-          _rg: string
-          _selfie_imagem: string
-          _telefone: string
-          _token: string
-          _user_agent: string
-        }
-        Returns: Json
-      }
+      registrar_assinatura_contrato:
+        | {
+            Args: {
+              _assinatura_imagem?: string
+              _cnpj?: string
+              _cpf?: string
+              _email?: string
+              _endereco?: string
+              _geo_lat?: number
+              _geo_lng?: number
+              _hash?: string
+              _ip?: string
+              _nome: string
+              _razao_social?: string
+              _representante?: string
+              _rg?: string
+              _selfie_imagem?: string
+              _telefone?: string
+              _token: string
+              _user_agent?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _assinatura_imagem: string
+              _cpf: string
+              _email: string
+              _endereco: string
+              _geo_lat: number
+              _geo_lng: number
+              _hash: string
+              _ip: string
+              _nome: string
+              _rg: string
+              _selfie_imagem: string
+              _telefone: string
+              _token: string
+              _user_agent: string
+            }
+            Returns: Json
+          }
       registrar_ponto_externo: {
         Args: {
           p_endereco?: string
