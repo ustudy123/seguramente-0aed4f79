@@ -199,13 +199,15 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         y += 5;
         autoTable(doc, {
           startY: y,
-          head: [["Dimensão", "Score Risco", "Nível GRO", "Base Normativa"]],
-          body: dimensoesAvaliadas.map(d => [
-            d.subject,
+          head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+          body: fatoresAvaliados.map(d => [
+            d.fator,
+            d.dimensoes.join(", "),
             `${d.risco}%`,
             GRO_NIVEL_RISCO_LABELS[d.nivel],
             "NR-01 / NR-17 / ISO 45003",
           ]),
+
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
           bodyStyles: { fontSize: 8 },
           alternateRowStyles: { fillColor: [248, 245, 255] },
