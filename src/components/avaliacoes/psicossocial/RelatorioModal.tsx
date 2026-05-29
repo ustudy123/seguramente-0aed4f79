@@ -478,13 +478,20 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
                         ))}
                       </div>
 
-                      {/* Inventário de dimensões */}
+                      {/* Inventário por Fator de Risco (13 fatores NR-01 / ISO 45003) */}
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dimensões avaliadas ({dimensoesAvaliadas.length})</p>
-                        {dimensoesAvaliadas.map(d => (
-                          <div key={d.subject} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
-                            <span className="font-medium">{d.subject}</span>
-                            <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fatores de risco avaliados ({fatoresAvaliados.length})</p>
+                        {fatoresAvaliados.map(d => (
+                          <div key={d.fator} className="flex items-center justify-between py-2 px-3 rounded border bg-card text-sm">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{d.fator}</span>
+                              {d.dimensoes.length > 0 && (
+                                <span className="text-[11px] text-muted-foreground">
+                                  Dimensões: {d.dimensoes.join(" · ")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
                               <span className="text-xs text-muted-foreground">{d.risco}%</span>
                               <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
                                 {GRO_NIVEL_RISCO_LABELS[d.nivel]}
@@ -493,6 +500,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
                           </div>
                         ))}
                       </div>
+
                     </>
                   )}
 
