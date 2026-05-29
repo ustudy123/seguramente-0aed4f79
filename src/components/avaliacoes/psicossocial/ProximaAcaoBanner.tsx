@@ -1,7 +1,7 @@
 import { ArrowRight, Link2, BarChart3, Users, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, getMinimoRespostas } from "@/types/psicossocial";
 
 interface ProximaAcaoBannerProps {
   campanhas: CampanhaPsicossocial[];
@@ -9,13 +9,12 @@ interface ProximaAcaoBannerProps {
   onVerResultados: (campanha: CampanhaPsicossocial) => void;
 }
 
-const MINIMO = 5;
-
 export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: ProximaAcaoBannerProps) {
   const ativas = campanhas.filter(c => c.status === 'ativa');
   const rascunhos = campanhas.filter(c => c.status === 'rascunho');
-  const ativaComPoucasRespostas = ativas.find(c => (c.total_respostas || 0) < MINIMO);
-  const ativaComRespostas = ativas.find(c => (c.total_respostas || 0) >= MINIMO);
+  
+  const ativaComPoucasRespostas = ativas.find(c => (c.total_respostas || 0) < getMinimoRespostas(c));
+  const ativaComRespostas = ativas.find(c => (c.total_respostas || 0) >= getMinimoRespostas(c));
 
   // Rascunho pendente de ativação
   if (rascunhos.length > 0 && ativas.length === 0) {
@@ -48,7 +47,8 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
   // Campanha ativa, mas sem respostas suficientes
   if (ativaComPoucasRespostas) {
     const respostas = ativaComPoucasRespostas.total_respostas || 0;
-    const faltam = MINIMO - respostas;
+    const minimo = getMinimoRespostas(ativaComPoucasRespostas);
+    const faltam = minimo - respostas;
     return (
       <div className={cn(
         "flex items-center gap-4 p-4 rounded-xl border-2 border-blue-200 bg-blue-50/60",
@@ -64,7 +64,7 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
             </p>
             <p className="text-xs text-blue-700 mt-0.5">
               Campanha <strong>"{ativaComPoucasRespostas.nome}"</strong> tem {respostas} resposta{respostas !== 1 ? 's' : ''}. 
-              Mínimo de {MINIMO} garante o anonimato.
+              Mínimo de {minimo} garante o anonimato.
             </p>
           </div>
         </div>

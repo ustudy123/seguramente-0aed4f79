@@ -14,6 +14,13 @@ export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
 export type InstrumentoPsicossocial = 'copsoq' | 'copsoq2br' | 'hse' | 'proart' | 'sipro' | 'customizado';
 export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
 
+export const MINIMO_ANONIMATO_PADRAO = 5;
+
+export function getMinimoRespostas(campanha?: Partial<CampanhaPsicossocial> | null): number {
+  if (!campanha) return MINIMO_ANONIMATO_PADRAO;
+  return campanha.tipo_instrumento === 'entrevista_guiada' ? 1 : MINIMO_ANONIMATO_PADRAO;
+}
+
 // IPS - Índice Psicossocial YourEyes (0-100, higher = healthier)
 export type IPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 

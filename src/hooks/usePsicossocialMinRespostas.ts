@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, getMinimoRespostas } from "@/types/psicossocial";
 
 /** Mínimo absoluto de respostas — ISO 45003 / COPSOQ III */
 export const MIN_RESPOSTAS_ABS = 5;
@@ -47,7 +47,7 @@ function ceilMin(elegiveis: number, ausencias: number, pct: number): number {
  *  - Se a campanha não tem GHEs, retorna o mínimo absoluto de 5.
  */
 export function useMinRespostasCampanha(
-  campanha: Pick<CampanhaPsicossocial, "id" | "tenant_id" | "empresa_id"> & { ghe_ids?: string[] | null },
+  campanha: Pick<CampanhaPsicossocial, "id" | "tenant_id" | "empresa_id" | "tipo_instrumento"> & { ghe_ids?: string[] | null },
 ): MinRespostasResult {
   const gheIds = campanha.ghe_ids || [];
   const hasGhes = gheIds.length > 0;
@@ -115,9 +115,12 @@ export function useMinRespostasCampanha(
     },
   });
 
+  // Entrevista guiada não tem limite de anonimato (exibe resultados desde a primeira resposta)
+  const isEntrevistaGuiada = campanha.tipo_instrumento === "entrevista_guiada";
+
   if (!hasGhes) {
     return {
-      minRespostas: MIN_RESPOSTAS_ABS,
+      minRespostas: isEntrevistaGuiada ? 1 : MIN_RESPOSTAS_ABS,
       totalElegiveis: 0,
       totalBase: 0,
       porGhe: [],
@@ -158,9 +161,11 @@ export function useMinRespostasCampanha(
 
   const totalElegiveis = porGhe.reduce((s, x) => s + x.elegiveis, 0);
   const totalBase = porGhe.reduce((s, x) => s + x.base, 0);
-  const minRespostas = porGhe.length > 0
-    ? Math.max(MIN_RESPOSTAS_ABS, porGhe.reduce((s, x) => s + x.min, 0))
-    : MIN_RESPOSTAS_ABS;
+  const minRespostas = isEntrevistaGuiada 
+    ? 1 
+    : porGhe.length > 0
+      ? Math.max(MIN_RESPOSTAS_ABS, porGhe.reduce((s, x) => s + x.min, 0))
+      : MIN_RESPOSTAS_ABS;
   const configurado = porGhe.some(x => x.percentual > 0 || x.ausencias > 0);
 
   return {

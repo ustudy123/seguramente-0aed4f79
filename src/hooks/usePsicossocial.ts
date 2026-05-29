@@ -285,7 +285,8 @@ export function usePsicossocial() {
             .eq("id", id)
             .single();
 
-          if (campanha?.radar_data && (campanha.total_respostas ?? 0) >= 5) {
+          const minRespostas = campanha.tipo_instrumento === 'entrevista_guiada' ? 1 : 5;
+          if (campanha?.radar_data && (campanha.total_respostas ?? 0) >= minRespostas) {
             const situacoes = campanha.situacoes_trabalho ?? [];
 
             if (situacoes.length > 0) {
@@ -509,7 +510,7 @@ export function usePsicossocial() {
 
   // Calcular estatísticas de uma campanha
   const calcularEstatisticas = async (campanhaId: string): Promise<EstatisticasCampanha> => {
-    const [convites, respostas, participacoesRes, entrevistasRes] = await Promise.all([
+    const [convites, respostas, participacoesRes, entrevistasRes, campanhaRes] = await Promise.all([
       buscarConvites(campanhaId),
       buscarRespostas(campanhaId),
       supabase
@@ -520,6 +521,11 @@ export function usePsicossocial() {
         .from("psicossocial_entrevistas")
         .select("id,status")
         .eq("campanha_id", campanhaId),
+      supabase
+        .from("questionario_psicossocial_campanhas")
+        .select("tipo_instrumento")
+        .eq("id", campanhaId)
+        .single(),
     ]);
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
@@ -547,7 +553,8 @@ export function usePsicossocial() {
     // "Total elegível" = max(elegíveis nominais, respostas, entrevistas geradas)
     const total = Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas);
 
-    const MINIMO_ANONIMATO = 5;
+    const isEntrevistaGuiada = campanhaRes.data?.tipo_instrumento === "entrevista_guiada";
+    const MINIMO_ANONIMATO = isEntrevistaGuiada ? 1 : 5;
     // Anonimato é garantido pelo número total de respostas recebidas (não de convites)
     const anonimato_garantido = totalRespostas >= MINIMO_ANONIMATO;
 

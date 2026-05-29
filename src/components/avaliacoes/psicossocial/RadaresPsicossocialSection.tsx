@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas } from "@/types/psicossocial";
 import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
@@ -562,7 +562,7 @@ function RadarPanel({
 }
 
 // ────────── componente principal ──────────
-const MINIMO_ANONIMATO = 5;
+
 
 interface RadaresPsicossocialSectionProps {
   campanhas?: CampanhaPsicossocial[];
@@ -587,7 +587,7 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const campanhasValidas = useMemo(() => {
     return campanhas.filter(
       c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
-        && (c.total_respostas || 0) >= MINIMO_ANONIMATO
+        && (c.total_respostas || 0) >= getMinimoRespostas(c)
     ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
 
@@ -881,8 +881,8 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
               <p className="font-semibold text-sm">Sem dados para os radares de Burnout & Boreout</p>
               <p className="text-xs text-muted-foreground">
                 {campanhas.length === 0
-                  ? 'Nenhuma campanha psicossocial criada para esta empresa. Crie uma campanha SIPRO e colete no mínimo 5 respostas para liberar os radares.'
-                  : `Nenhuma campanha desta empresa atingiu o mínimo de ${MINIMO_ANONIMATO} respostas com dimensões SIPRO. Os radares só são calculados com dados reais — não exibimos estimativas para preservar a integridade do diagnóstico.`}
+                  ? 'Nenhuma campanha psicossocial criada para esta empresa. Crie uma campanha SIPRO para liberar os radares.'
+                  : `Nenhuma campanha desta empresa atingiu o mínimo de respostas necessárias para liberar os radares. Os radares só são calculados com dados reais — não exibimos estimativas para preservar a integridade do diagnóstico.`}
               </p>
             </div>
           </CardContent>

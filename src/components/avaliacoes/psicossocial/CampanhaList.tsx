@@ -50,9 +50,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
-
-const MINIMO_ANONIMATO = 5;
+import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas } from "@/types/psicossocial";
 
 interface CampanhaListProps {
   campanhas: CampanhaPsicossocial[];
@@ -103,7 +101,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
           const situacoes = campanha.situacoes_trabalho ?? [];
 
           if (
-            totalRespostas >= MINIMO_ANONIMATO &&
+            totalRespostas >= getMinimoRespostas(campanha) &&
             radarData && radarData.length > 0 &&
             situacoes.length > 0 &&
             !campanha.gro_exportado_em

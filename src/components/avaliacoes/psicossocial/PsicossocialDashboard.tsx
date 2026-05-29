@@ -50,12 +50,12 @@ import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
-import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
+import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao, MINIMO_ANONIMATO_PADRAO, getMinimoRespostas } from "@/types/psicossocial";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
-const MINIMO_ANONIMATO = 5;
+
 // Empresas autorizadas a visualizar IPS consolidado da empresa quando
 // campanhas individuais ficam abaixo do mínimo (ISO 45003) — sem expor
 // os scores por categoria. Caso pontual aprovado pelo cliente.
@@ -136,18 +136,18 @@ export function PsicossocialDashboard() {
   // aceitamos campanhas com qualquer N desde que o TOTAL agregado da empresa ≥ mínimo.
   const campanhasComIPS = campanhas.filter(c =>
     c.ips_score != null && (
-      (c.total_respostas || 0) >= MINIMO_ANONIMATO ||
+      (c.total_respostas || 0) >= getMinimoRespostas(c) ||
       consolidadoLiberado
     )
   );
   const totalRespostasConsolidado = campanhasComIPS.reduce((s, c) => s + (c.total_respostas || 0), 0);
   const consolidadoValido = consolidadoLiberado
-    ? totalRespostasConsolidado >= MINIMO_ANONIMATO
+    ? totalRespostasConsolidado >= MINIMO_ANONIMATO_PADRAO
     : campanhasComIPS.length > 0;
   const usandoFallbackEmpresa = consolidadoLiberado &&
     campanhasComIPS.length > 0 &&
-    campanhasComIPS.every(c => (c.total_respostas || 0) < MINIMO_ANONIMATO) &&
-    totalRespostasConsolidado >= MINIMO_ANONIMATO;
+    campanhasComIPS.every(c => (c.total_respostas || 0) < getMinimoRespostas(c)) &&
+    totalRespostasConsolidado >= MINIMO_ANONIMATO_PADRAO;
 
   // Para campanhas SIPRO, o campo `ips_score` armazena o IRP-S (alto = ruim).
   // Convertemos para a escala IPS (alto = bom) usando 100 - score, mantendo a
@@ -288,7 +288,7 @@ export function PsicossocialDashboard() {
                   <IPSGauge score={ipsConsolidado} classificacao={ipsClassificacao} size="md" />
                   {usandoFallbackEmpresa && (
                     <div className="mt-3 w-full rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-1.5 text-[11px] text-amber-900 leading-snug">
-                      <strong>Visão consolidada da empresa</strong> — categorias individuais permanecem ocultas (&lt; {MINIMO_ANONIMATO} respondentes). Total agregado: {totalRespostasConsolidado} respostas.
+                      <strong>Visão consolidada da empresa</strong> — categorias individuais permanecem ocultas (&lt; {MINIMO_ANONIMATO_PADRAO} respondentes). Total agregado: {totalRespostasConsolidado} respostas.
                     </div>
                   )}
                 </>
@@ -298,7 +298,7 @@ export function PsicossocialDashboard() {
                     <Lock className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    Mín. {MINIMO_ANONIMATO} respostas para liberar análise
+                    Mín. {MINIMO_ANONIMATO_PADRAO} respostas para liberar análise
                   </p>
                   <p className="text-xs text-muted-foreground/70 text-center">
                     Isso garante o anonimato dos respondentes
@@ -383,7 +383,7 @@ export function PsicossocialDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{totalRespostas > 0 ? totalRespostas : '—'}</div>
               <p className="text-xs text-muted-foreground">
-                {totalRespostas >= MINIMO_ANONIMATO ? '✅ Análise liberada' : `Mín. ${MINIMO_ANONIMATO} para análise`}
+                {totalRespostas >= MINIMO_ANONIMATO_PADRAO ? "✅ Análise liberada" : `Mín. ${MINIMO_ANONIMATO_PADRAO} para análise`}
               </p>
             </CardContent>
           </Card>
@@ -481,8 +481,8 @@ export function PsicossocialDashboard() {
                   <div>
                     <p className="font-semibold text-sm">🔒 Regra de Anonimato Estatístico</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Os resultados só são apresentados quando houver <strong>mínimo de {MINIMO_ANONIMATO} respostas</strong> na campanha.
-                      Com menos de {MINIMO_ANONIMATO} respondentes, a análise permanece bloqueada para garantir que ninguém seja identificado.
+                      Os resultados só são apresentados quando houver <strong>mínimo de {MINIMO_ANONIMATO_PADRAO} respostas</strong> na campanha.
+                      Com menos de {MINIMO_ANONIMATO_PADRAO} respondentes, a análise permanece bloqueada para garantir que ninguém seja identificado.
                       Em empresas pequenas, o sistema agrupa dados por Setor → Empresa automaticamente.
                     </p>
                   </div>
