@@ -460,7 +460,6 @@ function GHEDrillDownSheet({ ghe, onOpenChange }: GHEDrillDownSheetProps) {
             )}
           </SheetHeader>
 
-          </SheetHeader>
 
 
           <ScrollArea className="flex-1 px-6 py-4">
