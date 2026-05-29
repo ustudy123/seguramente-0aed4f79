@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, AlertCircle, Shield, MapPin, Camera, RefreshCw, Eraser } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, Shield, MapPin, Camera, RefreshCw, Eraser, Building2 } from "lucide-react";
+import { buscarCnpj, formatCnpj, cleanCnpj } from "@/lib/brasilapi";
 import SignatureCanvas from "react-signature-canvas";
 import { toast } from "sonner";
 import logoImage from "@/assets/logo-youreyes.svg";
@@ -25,6 +26,9 @@ interface ContratoInfo {
   requer_telefone: boolean;
   requer_selfie: boolean;
   requer_geolocalizacao: boolean;
+  requer_cnpj: boolean;
+  requer_razao_social: boolean;
+  requer_representante: boolean;
 }
 
 async function sha256(text: string): Promise<string> {
@@ -50,6 +54,10 @@ export default function AssinarContrato() {
   const [selfie, setSelfie] = useState<string | null>(null);
   const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [cnpj, setCnpj] = useState("");
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [representante, setRepresentante] = useState("");
   const [sucesso, setSucesso] = useState(false);
 
   // Signature
@@ -169,6 +177,29 @@ export default function AssinarContrato() {
     toast.success("Selfie capturada");
   }, [pararCamera]);
 
+  const handleCnpjLookup = async (value: string) => {
+    const cleaned = cleanCnpj(value);
+    setCnpj(formatCnpj(cleaned));
+    
+    if (cleaned.length === 14) {
+      setBuscandoCnpj(true);
+      try {
+        const data = await buscarCnpj(cleaned);
+        if (data?.razao_social) {
+          setRazaoSocial(data.razao_social);
+          if (data.logradouro) {
+            setEndereco(`${data.logradouro}, ${data.numero}${data.complemento ? ` - ${data.complemento}` : ""} - ${data.bairro}, ${data.municipio} - ${data.uf}, ${data.cep}`);
+          }
+          toast.success("Dados da empresa localizados");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar CNPJ:", error);
+      } finally {
+        setBuscandoCnpj(false);
+      }
+    }
+  };
+
   const limparAssinatura = () => { sigRef.current?.clear(); setHasSig(false); };
 
   const handleEnviar = async () => {
@@ -176,6 +207,9 @@ export default function AssinarContrato() {
     if (!aceito) { toast.error("Você precisa concordar com os termos"); return; }
     if (!nome.trim()) { toast.error("Informe seu nome"); return; }
     if (contrato.requer_cpf && !cpf.trim()) { toast.error("CPF obrigatório"); return; }
+    if (contrato.requer_cnpj && !cnpj.trim()) { toast.error("CNPJ obrigatório"); return; }
+    if (contrato.requer_razao_social && !razaoSocial.trim()) { toast.error("Razão Social obrigatória"); return; }
+    if (contrato.requer_representante && !representante.trim()) { toast.error("Nome do representante legal obrigatório"); return; }
     if (contrato.requer_telefone && !telefone.trim()) { toast.error("Telefone obrigatório"); return; }
     if (contrato.requer_rg && !rg.trim()) { toast.error("RG obrigatório"); return; }
     if (contrato.requer_endereco && !endereco.trim()) { toast.error("Endereço obrigatório"); return; }
@@ -212,6 +246,9 @@ export default function AssinarContrato() {
         _geo_lat: geo?.lat ?? null,
         _geo_lng: geo?.lng ?? null,
         _hash: hash,
+        _cnpj: cnpj || null,
+        _razao_social: razaoSocial || null,
+        _representante: representante || null,
       });
       if (error) throw error;
       const result = data as any;
@@ -330,6 +367,43 @@ export default function AssinarContrato() {
                 </div>
               )}
             </div>
+            
+            {(contrato.requer_cnpj || contrato.requer_razao_social || contrato.requer_representante) && (
+              <div className="pt-4 border-t space-y-4">
+                <div className="flex items-center gap-2 text-primary">
+                  <Building2 className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Dados da Empresa</span>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-3">
+                  {contrato.requer_cnpj && (
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-2">
+                        CNPJ * {buscandoCnpj && <Loader2 className="w-3 h-3 animate-spin" />}
+                      </Label>
+                      <Input 
+                        value={cnpj} 
+                        onChange={e => handleCnpjLookup(e.target.value)} 
+                        placeholder="00.000.000/0000-00"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  )}
+                  {contrato.requer_razao_social && (
+                    <div className="space-y-1.5">
+                      <Label>Razão Social *</Label>
+                      <Input value={razaoSocial} onChange={e => setRazaoSocial(e.target.value)} />
+                    </div>
+                  )}
+                  {contrato.requer_representante && (
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label>Nome do Representante Legal *</Label>
+                      <Input value={representante} onChange={e => setRepresentante(e.target.value)} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {contrato.requer_geolocalizacao && (
               <Button type="button" variant="outline" size="sm" onClick={capturarGeo}>
