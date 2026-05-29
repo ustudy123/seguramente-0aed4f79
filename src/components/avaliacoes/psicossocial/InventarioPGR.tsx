@@ -180,6 +180,8 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
    * Agregação real das dimensões.
    * - Sem filtro de GHE: usa radar_data já calculado das campanhas válidas (média ponderada por respondentes).
    * - Com filtro de GHE: usa radar reconstruído das respostas individuais do GHE selecionado.
+   */
+
   const inventario = useMemo((): InventarioItem[] => {
     if (campanhasValidas.length === 0) return [];
 
@@ -215,14 +217,19 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     // 2. Reagrupa por fator do catálogo (13 fatores padrão NR-01 / ISO 45003).
     //    Várias dimensões do instrumento (COPSOQ/SIPRO/HSE) podem mapear ao mesmo fator
     //    — aqui consolidamos a média ponderada para um único registro por fator.
-    const porFator: Record<string, {
+    type FatorAgg = {
       fatorId: string;
       dimensoes: Set<string>;
       somaScore: number;
       pesoTotal: number;
       campanhas: number;
       normativa: ReturnType<typeof getNormativaForSubject>;
-    }> = {};
+    };
+    const porFator: Record<string, FatorAgg> = {};
+
+
+
+
 
     Object.entries(porSubject).forEach(([subject, agg]) => {
       const normativa = getNormativaForSubject(subject);
