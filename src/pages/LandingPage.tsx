@@ -242,19 +242,14 @@ export default function LandingPage() {
                 style={{ boxShadow: '0 30px 80px -20px hsl(25 66% 40% / 0.35)' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-orange-500/10 pointer-events-none" />
-                <video
-                  src="/videos/hero.mp4"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  poster="/og-image.png"
-                  className="w-full h-auto block bg-black rounded-xl relative z-10"
-                >
-                  Seu navegador não suporta vídeo HTML5.
-                </video>
+                <img
+                  src={mockupDashboard}
+                  alt="YourEyes Dashboard"
+                  className="w-full h-auto block rounded-xl relative z-10 shadow-2xl"
+                />
               </div>
               <p className="text-center text-[10px] uppercase tracking-widest text-gray-500 mt-6 font-bold opacity-60">
-                Veja em 2 minutos como a YourEyes blinda sua empresa
+                Plataforma completa para gestão de riscos psicossociais
               </p>
             </motion.div>
 
