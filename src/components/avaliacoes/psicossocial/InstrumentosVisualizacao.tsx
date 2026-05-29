@@ -321,10 +321,10 @@ export function InstrumentosVisualizacao() {
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-emerald-500" />
                   <span><strong>{COPSOQ2BR_DIMENSOES.filter(d => d.tipo === 'protetor').length}</strong> fatores protetores</span>
+                </div>
                 <span className="text-muted-foreground">COPSOQ Br · Gonçalves et al. (2021) · 40 itens · Sem adaptação YourEyes — instrumento puro</span>
-
-                <span className="text-muted-foreground">COPSOQ II-Br · Gonçalves et al. (2021) · 40 itens · Sem adaptação YourEyes — instrumento puro</span>
               </div>
+
             </CardContent>
           </Card>
           <div className="space-y-2">
