@@ -519,7 +519,7 @@ export function usePsicossocial() {
         .eq("campanha_id", campanhaId),
       supabase
         .from("psicossocial_entrevistas")
-        .select("id,status")
+        .select("id,status,resumo_ia")
         .eq("campanha_id", campanhaId),
       supabase
         .from("questionario_psicossocial_campanhas")
@@ -529,7 +529,8 @@ export function usePsicossocial() {
     ]);
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
-    const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null }>;
+    const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null; resumo_ia: any }>;
+
 
     // Convites individuais (campanhas com distribuição nominal — modelo legado)
     const totalConvites = convites.length;
