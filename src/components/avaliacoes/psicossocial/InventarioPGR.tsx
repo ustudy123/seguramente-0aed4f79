@@ -125,14 +125,17 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   // GAP-P2: Riscos GRO que precisam de reavaliação (pós-ação concluída)
   const pendentesReavaliacao = groRiscos.filter(r => r.necessita_reavaliacao).length;
 
-  // Campanhas válidas (mín. anonimato e com radar_data real)
+  // Campanhas válidas (mín. anonimato para questionário, 1 para entrevista guiada)
   const campanhasValidas = useMemo(() =>
-    campanhas.filter(c =>
-      c.ips_score != null &&
-      (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
-      Array.isArray(c.radar_data) &&
-      c.radar_data.length > 0
-    ),
+    campanhas.filter(c => {
+      const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
+      const minRespostas = isEntrevistaGuiada ? 1 : MINIMO_ANONIMATO;
+      
+      return c.ips_score != null &&
+        (c.total_respostas || 0) >= minRespostas &&
+        Array.isArray(c.radar_data) &&
+        c.radar_data.length > 0;
+    }),
     [campanhas]
   );
 
@@ -415,7 +418,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             <ShieldAlert className="h-8 w-8 text-muted-foreground opacity-40" />
             <p className="text-sm font-medium">Inventário quantitativo não disponível</p>
             <p className="text-xs text-muted-foreground">
-              Necessário ao menos uma campanha por questionário com mín. {MINIMO_ANONIMATO} respostas. As evidências de entrevistas guiadas aparecem acima quando existirem.
+              Necessário ao menos uma campanha concluída (questionários exigem mín. {MINIMO_ANONIMATO} respostas; entrevistas guiadas exigem mín. 1).
             </p>
           </CardContent>
         </Card>
@@ -716,11 +719,11 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           <div className="grid gap-1.5 sm:grid-cols-2 text-xs text-muted-foreground">
             <div className="flex items-start gap-1.5">
               <span className="text-purple-600 font-bold shrink-0">1.</span>
-              <span><strong>Coleta:</strong> Respostas agregadas anonimamente (mín. 5 respondentes por grupo)</span>
+              <span><strong>Coleta:</strong> Respostas agregadas (mín. 5 para questionários; s/ mínimo para entrevista guiada)</span>
             </div>
             <div className="flex items-start gap-1.5">
               <span className="text-purple-600 font-bold shrink-0">2.</span>
-              <span><strong>Score real:</strong> Média ponderada por n° de respondentes de {campanhasValidas.length} campanha(s)</span>
+              <span><strong>Score real:</strong> Média ponderada de {campanhasValidas.length} campanha(s)</span>
             </div>
             <div className="flex items-start gap-1.5">
               <span className="text-purple-600 font-bold shrink-0">3.</span>

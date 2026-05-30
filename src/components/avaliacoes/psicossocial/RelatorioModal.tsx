@@ -57,11 +57,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   );
   const { data: evidenciasQualitativas = [] } = useEvidenciasEntrevista(campanhaEntrevistaIds);
 
-  const campanhasValidas = campanhas.filter(c =>
-    c.ips_score != null &&
-    (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
-    Array.isArray(c.radar_data) && c.radar_data.length > 0
-  );
+  const campanhasValidas = campanhas.filter(c => {
+    const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
+    const minRespostas = isEntrevistaGuiada ? 1 : MINIMO_ANONIMATO;
+    
+    return c.ips_score != null &&
+      (c.total_respostas || 0) >= minRespostas &&
+      Array.isArray(c.radar_data) && c.radar_data.length > 0;
+  });
 
   const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
   const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
@@ -242,7 +245,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         },
         {
           titulo: "4.2 Cálculo do IPS (Índice Psicossocial YourEyes)",
-          corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: ≥80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para garantir confidencialidade (ISO 45003 §6.1.2).",
+          corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: ≥80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para questionários (ISO 45003 §6.1.2); entrevistas guiadas são isentas deste mínimo por natureza qualitativa.",
         },
         {
           titulo: "4.3 Conversão para Nível GRO (NR-01)",
