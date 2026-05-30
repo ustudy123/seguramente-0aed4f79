@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -44,6 +44,7 @@ import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
 import { DashboardAvancadoIPS } from "./DashboardAvancadoIPS";
 import { ResultadosPsicossociaisHub } from "./ResultadosPsicossociaisHub";
+import { useEntrevistasGuiadasAggregates } from "@/hooks/useEntrevistasGuiadasAggregates";
 
 
 import { OnboardingEmptyState } from "./OnboardingEmptyState";
@@ -102,6 +103,26 @@ export function PsicossocialDashboard() {
 
   const { campanhas: campanhasAll, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
   const campanhas = apenasAtivas ? campanhasAll.filter(c => c.status === 'ativa') : campanhasAll;
+  const campanhasEntrevistaIds = useMemo(
+    () => campanhas.filter(c => (c as any).tipo_instrumento === "entrevista_guiada").map(c => c.id),
+    [campanhas],
+  );
+  const { agregadosPorCampanha } = useEntrevistasGuiadasAggregates(campanhasEntrevistaIds);
+  const campanhasEnriquecidas = useMemo<CampanhaPsicossocial[]>(() => {
+    if (agregadosPorCampanha.size === 0) return campanhas;
+
+    return campanhas.map((campanha) => {
+      const agregado = agregadosPorCampanha.get(campanha.id);
+      if (!agregado) return campanha;
+
+      return {
+        ...campanha,
+        ips_score: agregado.ips_score ?? campanha.ips_score,
+        radar_data: agregado.radar_data.length > 0 ? agregado.radar_data : campanha.radar_data,
+        total_respostas: agregado.total_concluidas || campanha.total_respostas,
+      } as CampanhaPsicossocial;
+    });
+  }, [campanhas, agregadosPorCampanha]);
 
   const handleNovaCampanha = () => {
     setCampanhaParaEditar(undefined);
@@ -461,7 +482,7 @@ export function PsicossocialDashboard() {
 
           {/* Tab: Inventário PGR */}
           <TabsContent value="pgr" className="mt-4 space-y-4">
-            <InventarioPGR campanhas={campanhas} />
+            <InventarioPGR campanhas={campanhasEnriquecidas} />
           </TabsContent>
 
           {/* Tab: Instrumentos */}
