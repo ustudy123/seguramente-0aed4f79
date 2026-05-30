@@ -180,9 +180,13 @@ interface Props {
 
 export function IndicesDerivadosDashboard({ campanhas }: Props) {
   const validas = useMemo(() => {
-    return campanhas.filter(
-      (c) => (c.total_respostas || 0) >= MINIMO_ANONIMATO
-    ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return campanhas.filter((c) => {
+      // Entrevistas guiadas não exigem o mínimo de anonimato (5 respostas):
+      // são entrevistas nominais e devem aparecer mesmo com 1 resposta.
+      const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
+      if (isEntrevistaGuiada) return (c.total_respostas || 0) >= 1;
+      return (c.total_respostas || 0) >= MINIMO_ANONIMATO;
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
 
   // Campanha mais recente = última criada (independente do status)
