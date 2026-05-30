@@ -519,7 +519,7 @@ export function usePsicossocial() {
         .eq("campanha_id", campanhaId),
       supabase
         .from("psicossocial_entrevistas")
-        .select("id,status")
+        .select("id,status,resumo_ia")
         .eq("campanha_id", campanhaId),
       supabase
         .from("questionario_psicossocial_campanhas")
@@ -529,7 +529,8 @@ export function usePsicossocial() {
     ]);
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
-    const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null }>;
+    const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null; resumo_ia: any }>;
+
 
     // Convites individuais (campanhas com distribuição nominal — modelo legado)
     const totalConvites = convites.length;
@@ -580,7 +581,7 @@ export function usePsicossocial() {
       if (allRadar.length > 0) {
         const subjects = allRadar[0].map(d => d.subject);
         radar = subjects.map(subject => ({
-          subject: subject, // Mantemos o nome completo para garantir o match no ResultadosModal
+          subject: subject,
           value: Math.round(
             allRadar.reduce((acc, r) => {
               const found = r.find(d => d.subject === subject);
@@ -591,6 +592,43 @@ export function usePsicossocial() {
         }));
       }
     }
+
+    // ── Entrevista guiada: agregar IPS/radar a partir de `resumo_ia.riscos` ──
+    // O instrumento é SIPRO/IRP-S (maior = pior). Convertemos prob*sev (1-25)
+    // para escala 0-100 e usamos a média como score de risco.
+    if (anonimato_garantido && isEntrevistaGuiada && (ips === undefined || !radar || radar.length === 0)) {
+      const entrevistasConcl = entrevistas.filter(e => e.status === 'concluida' && e.resumo_ia);
+      const riscoAcc = new Map<string, { soma: number; n: number }>();
+      for (const e of entrevistasConcl) {
+        const riscos = (e.resumo_ia?.riscos ?? []) as Array<{
+          risco_nome?: string; presente?: boolean; probabilidade?: number; severidade?: number;
+        }>;
+        for (const r of riscos) {
+          if (!r.risco_nome || r.presente === false) continue;
+          const prob = Number(r.probabilidade) || 0;
+          const sev = Number(r.severidade) || 0;
+          const score = Math.min(100, Math.max(0, prob * sev * 4));
+          const acc = riscoAcc.get(r.risco_nome) ?? { soma: 0, n: 0 };
+          acc.soma += score;
+          acc.n += 1;
+          riscoAcc.set(r.risco_nome, acc);
+        }
+      }
+      if (riscoAcc.size > 0) {
+        const radarFromEntrevistas: RadarDimensao[] = Array.from(riscoAcc.entries()).map(([subject, { soma, n }]) => ({
+          subject,
+          value: Math.round(soma / n),
+          fullMark: 100,
+        }));
+        const riscoMedio = Math.round(
+          radarFromEntrevistas.reduce((a, b) => a + b.value, 0) / radarFromEntrevistas.length
+        );
+        radar = radarFromEntrevistas;
+        // SIPRO/IRP-S: score = risco direto (maior = pior).
+        ips = riscoMedio;
+      }
+    }
+
 
     // ── Agregação por Departamento e Cargo (via convite vinculado ao CPF) ──
     // ISO 45003: só expõe grupos com ≥5 respostas (anonimato).
