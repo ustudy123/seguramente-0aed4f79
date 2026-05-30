@@ -225,7 +225,7 @@ export function PsicossocialDashboard() {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">Privacidade e anonimato protegidos</p>
                 <p className="text-sm text-muted-foreground">
-                  As respostas são anônimas, exibidas apenas de forma agregada e respeitam o mínimo de 5 respondentes por grupo.
+                  As respostas são anônimas e agregadas. Questionários exigem mín. 5 respostas; entrevistas guiadas são liberadas a partir de 1 resposta.
                 </p>
               </div>
             </div>
@@ -298,7 +298,7 @@ export function PsicossocialDashboard() {
                     <Lock className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    Mín. {MINIMO_ANONIMATO_PADRAO} respostas para liberar análise
+                    Mín. 5 respostas (ou 1 entrevista) para análise
                   </p>
                   <p className="text-xs text-muted-foreground/70 text-center">
                     Isso garante o anonimato dos respondentes
@@ -372,7 +372,7 @@ export function PsicossocialDashboard() {
                     <Info className="h-3 w-3 text-muted-foreground/60 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Total acumulado de todas as campanhas. Mínimo de 5 por campanha para liberar a análise.</p>
+                    <p className="text-xs">Total acumulado. Mínimo de 5 por questionário (ou 1 por entrevista) para liberar a análise.</p>
                   </TooltipContent>
                 </Tooltip>
               </CardTitle>
@@ -481,8 +481,8 @@ export function PsicossocialDashboard() {
                   <div>
                     <p className="font-semibold text-sm">🔒 Regra de Anonimato Estatístico</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Os resultados só são apresentados quando houver <strong>mínimo de {MINIMO_ANONIMATO_PADRAO} respostas</strong> na campanha.
-                      Com menos de {MINIMO_ANONIMATO_PADRAO} respondentes, a análise permanece bloqueada para garantir que ninguém seja identificado.
+                      Os resultados só são apresentados quando houver <strong>mínimo de {MINIMO_ANONIMATO_PADRAO} respostas</strong> por questionário (ou 1 por entrevista guiada).
+                      Com menos que o mínimo, a análise permanece bloqueada para garantir o anonimato estatístico (ISO 45003).
                       Em empresas pequenas, o sistema agrupa dados por Setor → Empresa automaticamente.
                     </p>
                   </div>
