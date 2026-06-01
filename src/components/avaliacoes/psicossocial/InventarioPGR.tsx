@@ -109,22 +109,6 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
-  const [filtroCampanha, setFiltroCampanha] = useState<string>(campanhas.length === 1 ? campanhas[0].id : "todos");
-  const [filtroGHE, setFiltroGHE] = useState<string>("todos");
-
-  useEffect(() => {
-    if (campanhas.length === 1) {
-      setFiltroCampanha(campanhas[0].id);
-    } else if (filtroCampanha !== "todos" && !campanhas.some(c => c.id === filtroCampanha)) {
-      setFiltroCampanha("todos");
-    }
-  }, [campanhas, filtroCampanha]);
-
-  const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
-
-  // GAP-P2: Riscos GRO que precisam de reavaliação (pós-ação concluída)
-  const pendentesReavaliacao = groRiscos.filter(r => r.necessita_reavaliacao).length;
-
   // Campanhas válidas (mín. anonimato para questionário, 1 para entrevista guiada)
   const campanhasValidas = useMemo(() =>
     campanhas.filter(c => {
@@ -138,6 +122,23 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     }),
     [campanhas]
   );
+
+  const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
+  const pendentesReavaliacao = groRiscos.filter(r => r.necessita_reavaliacao).length;
+
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("todos");
+  const [filtroGHE, setFiltroGHE] = useState<string>("todos");
+
+  useEffect(() => {
+    if (campanhasValidas.length > 0) {
+      if (filtroCampanha === "todos") {
+        // Se estiver em "todos", mantém
+      } else if (!campanhasValidas.some(c => c.id === filtroCampanha)) {
+        // Se a campanha selecionada não for mais válida, volta para "todos"
+        setFiltroCampanha("todos");
+      }
+    }
+  }, [campanhasValidas, filtroCampanha]);
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
   const campanhaAtual = campanhasValidas[0];
@@ -749,7 +750,8 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
       <RelatorioModal
         open={relatorioOpen}
         onClose={() => setRelatorioOpen(false)}
-        campanhas={campanhas}
+        campanhas={campanhasValidas}
+        campanhaIdInicial={filtroCampanha === "todos" ? undefined : filtroCampanha}
       />
       </Card>
     </div>

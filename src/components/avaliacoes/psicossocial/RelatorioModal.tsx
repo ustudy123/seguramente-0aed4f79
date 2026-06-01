@@ -3,7 +3,7 @@
  * Gera relatório psicossocial completo + seção de metodologia exportável (PDF)
  * Conformidade: NR-01, NR-17, ISO 45003, COPSOQ III
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FileText, Download, Loader2, X, Shield, BookOpen, AlertTriangle, CheckCircle2, Info, Quote } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ interface RelatorioModalProps {
   onClose: () => void;
   campanhas: CampanhaPsicossocial[];
   empresaNome?: string;
+  campanhaIdInicial?: string;
 }
 
 const NIVEL_BADGE: Record<string, string> = {
@@ -41,8 +43,15 @@ const NIVEL_BADGE: Record<string, string> = {
   baixo: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
-export function RelatorioModal({ open, onClose, campanhas, empresaNome }: RelatorioModalProps) {
+export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanhaIdInicial }: RelatorioModalProps) {
   const [exportando, setExportando] = useState(false);
+  const [filtroCampanhaId, setFiltroCampanhaId] = useState<string>("todos");
+
+  useEffect(() => {
+    if (open) {
+      setFiltroCampanhaId(campanhaIdInicial || "todos");
+    }
+  }, [open, campanhaIdInicial]);
   const { tenantId, user, profile } = useAuthContext();
   const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
 
@@ -73,9 +82,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
 
   // Prioridade para campanha de entrevista guiada se houver evidências qualitativas
   const campanha = useMemo(() => {
+    if (filtroCampanhaId !== "todos") {
+      return campanhasValidas.find(c => c.id === filtroCampanhaId) ?? campanhasValidas[0];
+    }
     if (temEvidenciasQualitativas && campanhasEntrevista.length > 0) return campanhasEntrevista[0];
     return campanhasValidas[0] ?? campanhasEntrevista[0];
-  }, [temEvidenciasQualitativas, campanhasEntrevista, campanhasValidas]);
+  }, [filtroCampanhaId, temEvidenciasQualitativas, campanhasEntrevista, campanhasValidas]);
 
   const isEntrevista = (campanha as any)?.tipo_instrumento === "entrevista_guiada";
   const isSipro = campanha?.instrumento === 'sipro' && !isEntrevista;
@@ -468,7 +480,24 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
             <FileText className="h-5 w-5 text-purple-600" />
             Relatório de Diagnóstico Psicossocial
           </DialogTitle>
-          <DialogDescription>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs text-muted-foreground font-medium">Campanha:</span>
+            <Select value={filtroCampanhaId} onValueChange={setFiltroCampanhaId}>
+              <SelectTrigger className="h-8 w-[240px] text-xs">
+                <SelectValue placeholder="Selecionar Campanha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Média Consolidada (Geral)</SelectItem>
+                {campanhasValidas.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {(c as any).tipo_instrumento === "entrevista_guiada" ? "🎙️ " : ""}
+                    {c.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogDescription className="mt-2">
             NR-01 · NR-17 · ISO 45003 · COPSOQ III — Documento estruturado com metodologia
           </DialogDescription>
         </DialogHeader>
