@@ -61,17 +61,25 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
     const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
     const minRespostas = isEntrevistaGuiada ? 1 : MINIMO_ANONIMATO;
     
+    // Para campanhas de entrevista, não exigimos radar_data no filtro se tivermos evidências qualitativas,
+    // mas o useMemo fatoresAvaliados usa radar_data. 
+    // Vamos garantir que a campanha selecionada seja a mais relevante.
     return c.ips_score != null &&
-      (c.total_respostas || 0) >= minRespostas &&
-      Array.isArray(c.radar_data) && c.radar_data.length > 0;
+      (c.total_respostas || 0) >= minRespostas;
   });
 
   const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
   const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
 
-  const campanha = campanhasValidas[0] ?? campanhasEntrevista[0];
-  const isSipro = campanha?.instrumento === 'sipro';
-  const isEntrevistaOnly = !campanhasValidas.length && temEvidenciasQualitativas;
+  // Prioridade para campanha de entrevista guiada se houver evidências qualitativas
+  const campanha = useMemo(() => {
+    if (temEvidenciasQualitativas && campanhasEntrevista.length > 0) return campanhasEntrevista[0];
+    return campanhasValidas[0] ?? campanhasEntrevista[0];
+  }, [temEvidenciasQualitativas, campanhasEntrevista, campanhasValidas]);
+
+  const isEntrevista = (campanha as any)?.tipo_instrumento === "entrevista_guiada";
+  const isSipro = campanha?.instrumento === 'sipro' && !isEntrevista;
+  const isEntrevistaOnly = isEntrevista || (!campanhasValidas.length && temEvidenciasQualitativas);
   const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
   const rawScore = campanha?.ips_score ?? 0;
   const ipsScore = isSipro ? 100 - rawScore : rawScore;
@@ -144,11 +152,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
       y += 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      const identificacao = isEntrevistaOnly
+      const identificacao = isEntrevista
         ? [
             ["Campanha", campanha.nome],
             ["Modalidade", "Entrevista Guiada por IA (qualitativa)"],
             ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Respondentes", String(campanha.total_respostas ?? 0)],
             ["Entrevistas com evidências", String(evidenciasQualitativas.reduce((s, e) => s + e.count, 0))],
             ["Fatores identificados", String(evidenciasQualitativas.length)],
             ["Razão Social", empresaAtiva?.razao_social ?? "N/D"],
