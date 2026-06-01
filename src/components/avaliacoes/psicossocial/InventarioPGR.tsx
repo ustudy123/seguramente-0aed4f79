@@ -140,7 +140,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     }
   }, [campanhasValidas, filtroCampanha]);
 
-  const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
+  const isSipro = campanhasValidas[0]?.instrumento === 'sipro' || (campanhasValidas[0] as any)?.tipo_instrumento === "entrevista_guiada";
   const campanhaAtual = campanhasValidas[0];
   const semEscopoGRO = !campanhaAtual?.situacoes_trabalho || campanhaAtual.situacoes_trabalho.length === 0;
 
