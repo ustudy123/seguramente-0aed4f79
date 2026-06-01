@@ -13,8 +13,10 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
   const ativas = campanhas.filter(c => c.status === 'ativa');
   const rascunhos = campanhas.filter(c => c.status === 'rascunho');
   
+  // Priorizamos campanhas que já têm resultados para mostrar o banner de sucesso
+  const campanhasComRespostas = ativas.filter(c => (c.total_respostas || 0) >= getMinimoRespostas(c));
+  // Se não houver nenhuma com resultados, mostramos a que falta resposta (se existir)
   const ativaComPoucasRespostas = ativas.find(c => (c.total_respostas || 0) < getMinimoRespostas(c));
-  const ativaComRespostas = ativas.find(c => (c.total_respostas || 0) >= getMinimoRespostas(c));
 
   // Rascunho pendente de ativação
   if (rascunhos.length > 0 && ativas.length === 0) {
@@ -40,6 +42,42 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
           Vá em <strong className="mx-1">Campanhas</strong> → menu ⋮ → Ativar
           <ArrowRight className="h-3.5 w-3.5 ml-1" />
         </div>
+      </div>
+    );
+  }
+
+  // Campanha ativa com respostas suficientes (Prioridade)
+  if (campanhasComRespostas.length > 0) {
+    const principal = campanhasComRespostas[0];
+    const totalOutras = campanhasComRespostas.length - 1;
+
+    return (
+      <div className={cn(
+        "flex items-center gap-4 p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/60",
+        "flex-col sm:flex-row"
+      )}>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="p-2 rounded-lg bg-emerald-100 shrink-0">
+            <BarChart3 className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-emerald-800">
+              ✅ Análise disponível — {principal.total_respostas} respostas coletadas!
+            </p>
+            <p className="text-xs text-emerald-700 mt-0.5">
+              O IPS e todos os índices de <strong>"{principal.nome}"</strong> {totalOutras > 0 ? `e outras ${totalOutras} campanhas ` : ''}estão prontos para visualização.
+            </p>
+          </div>
+        </div>
+        <Button
+          id="btn-ver-resultados-banner"
+          size="sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shrink-0"
+          onClick={() => onVerResultados(principal)}
+        >
+          <BarChart3 className="h-4 w-4" />
+          Ver Resultados
+        </Button>
       </div>
     );
   }
@@ -77,39 +115,6 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
         >
           <Link2 className="h-4 w-4" />
           Enviar Link
-        </Button>
-      </div>
-    );
-  }
-
-  // Campanha ativa com respostas suficientes
-  if (ativaComRespostas) {
-    return (
-      <div className={cn(
-        "flex items-center gap-4 p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/60",
-        "flex-col sm:flex-row"
-      )}>
-        <div className="flex items-center gap-3 flex-1">
-          <div className="p-2 rounded-lg bg-emerald-100 shrink-0">
-            <BarChart3 className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-emerald-800">
-              ✅ Análise disponível — {ativaComRespostas.total_respostas} respostas coletadas!
-            </p>
-            <p className="text-xs text-emerald-700 mt-0.5">
-              O IPS e todos os índices de <strong>"{ativaComRespostas.nome}"</strong> estão prontos para visualização.
-            </p>
-          </div>
-        </div>
-        <Button
-          id="btn-ver-resultados-banner"
-          size="sm"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shrink-0"
-          onClick={() => onVerResultados(ativaComRespostas)}
-        >
-          <BarChart3 className="h-4 w-4" />
-          Ver Resultados
         </Button>
       </div>
     );
