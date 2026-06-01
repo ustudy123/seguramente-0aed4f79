@@ -14,7 +14,7 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
   const rascunhos = campanhas.filter(c => c.status === 'rascunho');
   
   const ativaComPoucasRespostas = ativas.find(c => (c.total_respostas || 0) < getMinimoRespostas(c));
-  const ativaComRespostas = ativas.find(c => (c.total_respostas || 0) >= getMinimoRespostas(c));
+  const ativaComRespostas = ativas.filter(c => (c.total_respostas || 0) >= getMinimoRespostas(c));
 
   // Rascunho pendente de ativação
   if (rascunhos.length > 0 && ativas.length === 0) {
