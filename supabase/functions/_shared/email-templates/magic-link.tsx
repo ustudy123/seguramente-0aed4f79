@@ -10,10 +10,13 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Preview,
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const LOGO_URL = 'https://youreyes.com.br/logo-youreyes-new.png'
 
 interface MagicLinkEmailProps {
   siteName: string
@@ -30,6 +33,7 @@ export const MagicLinkEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
+          <Img src={LOGO_URL} alt="YourEyes" width="64" height="64" style={logoImg} />
           <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
@@ -59,6 +63,7 @@ export default MagicLinkEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '32px 28px', maxWidth: '480px', margin: '0 auto' }
 const logoSection = { textAlign: 'center' as const, marginBottom: '8px' }
+const logoImg = { display: 'block', margin: '0 auto 8px' }
 const logoText = { fontSize: '24px', fontWeight: 'bold' as const, color: 'hsl(262, 52%, 50%)', margin: '0' }
 const divider = { borderColor: '#e8e5f0', margin: '16px 0' }
 const h1 = {
