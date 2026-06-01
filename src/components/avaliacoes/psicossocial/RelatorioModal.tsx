@@ -26,6 +26,15 @@ import { useEvidenciasEntrevista } from "@/hooks/useEvidenciasEntrevista";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// Remove accented characters for jsPDF compatibility
+const sanitize = (text: string): string =>
+  text
+    ? text
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\x00-\x7F]/g, " ")
+    : "";
+
 const MINIMO_ANONIMATO = 5;
 
 interface RelatorioModalProps {
@@ -90,7 +99,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
   }, [filtroCampanhaId, temEvidenciasQualitativas, campanhasEntrevista, campanhasValidas]);
 
   const isEntrevista = (campanha as any)?.tipo_instrumento === "entrevista_guiada";
-  const isSipro = campanha?.instrumento === 'sipro' && !isEntrevista;
+  const isSipro = (campanha?.instrumento === 'sipro' && !isEntrevista) || isEntrevista;
   const isEntrevistaOnly = isEntrevista || (!campanhasValidas.length && temEvidenciasQualitativas);
   const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
   const rawScore = campanha?.ips_score ?? 0;
@@ -384,12 +393,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         y = 20;
         doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
-        doc.text("6. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS POR IA", 14, y);
+        doc.text("6. EVIDENCIAS QUALITATIVAS — ENTREVISTAS GUIADAS POR IA", 14, y);
         y += 5;
         doc.setFontSize(8);
         doc.setFont("helvetica", "italic");
         const introQual = doc.splitTextToSize(
-          "Resultados qualitativos extraídos automaticamente por IA a partir de entrevistas individuais guiadas (SIPRO conversacional). Trechos anonimizados — nomes, locais e identificadores removidos para preservar o anonimato (LGPD + ISO 45003).",
+          "Resultados qualitativos extraidos automaticamente por IA a partir de entrevistas individuais guiadas (SIPRO conversacional). Trechos anonimizados — nomes, locais e identificadores removidos para preservar o anonimato (LGPD + ISO 45003).",
           pageW - 28,
         );
         doc.text(introQual, 14, y);
@@ -397,13 +406,13 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
         autoTable(doc, {
           startY: y,
-          head: [["Fator de Risco", "Menções", "P", "S", "Nível"]],
+          head: [["Fator de Risco", "Mencoes", "P", "S", "Nivel"]],
           body: evidenciasQualitativas.map((ev) => [
-            ev.risco_nome,
+            sanitize(ev.risco_nome),
             String(ev.count),
             String(ev.p_max),
             String(ev.s_max),
-            GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel,
+            sanitize(GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel),
           ]),
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
           bodyStyles: { fontSize: 8 },
@@ -411,16 +420,16 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           didParseCell: (data) => {
             if (data.section === "body" && data.column.index === 4) {
               const v = String(data.cell.raw);
-              if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
+              if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
               else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-              else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+              else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
               else data.cell.styles.textColor = [5, 122, 85];
             }
           },
         });
         y = (doc as any).lastAutoTable.finalY + 8;
 
-        // Trechos anonimizados por fator (até 3 por risco)
+        // Trechos anonimizados por fator (ate 3 por risco)
         for (const ev of evidenciasQualitativas) {
           const trechos: string[] = [];
           for (const e of ev.evidencias) {
@@ -433,12 +442,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           if (y > 255) { doc.addPage(); y = 20; }
           doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
-          doc.text(`• ${ev.risco_nome}`, 14, y);
+          doc.text(`• ${sanitize(ev.risco_nome)}`, 14, y);
           y += 4;
           doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
           for (const t of trechos) {
-            const linhas = doc.splitTextToSize(`"${t}"`, pageW - 32);
+            const linhas = doc.splitTextToSize(`"${sanitize(t)}"`, pageW - 32);
             if (y + linhas.length * 4 > 280) { doc.addPage(); y = 20; }
             doc.text(linhas, 18, y);
             y += linhas.length * 4 + 2;
@@ -447,6 +456,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         }
       }
 
+      addFooter();
       const pdfFileName = `Relatorio_Psicossocial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
       doc.save(pdfFileName);
 
@@ -520,9 +530,9 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 <TabsTrigger value="conformidade">Conformidade</TabsTrigger>
               </TabsList>
 
-              <ScrollArea className="flex-1 mt-3">
+              <div className="flex-1 mt-3 overflow-hidden flex flex-col min-h-[400px]">
                 {/* ── Relatório ─────────────────────────────────────── */}
-                <TabsContent value="relatorio" className="mt-0 space-y-4 px-1">
+                <TabsContent value="relatorio" className="mt-0 flex-1 overflow-y-auto space-y-4 px-1 pb-6">
                   {/* Identificação */}
                   <div className="rounded-lg border p-4 space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Identificação</p>
@@ -625,7 +635,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 </TabsContent>
 
                 {/* ── Metodologia ───────────────────────────────────── */}
-                <TabsContent value="metodologia" className="mt-0 space-y-4 px-1">
+                <TabsContent value="metodologia" className="mt-0 flex-1 overflow-y-auto space-y-4 px-1 pb-6">
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-purple-50 border border-purple-200 text-xs text-purple-800">
                     <BookOpen className="h-4 w-4 shrink-0 mt-0.5" />
                     <p>Este documento descreve os critérios, lógica e fontes utilizados para a geração do diagnóstico psicossocial, garantindo rastreabilidade e auditabilidade conforme exigido pela NR-01.</p>
@@ -693,7 +703,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                     <p>O relatório exportado em PDF inclui a seção de metodologia completa, tornando o documento auditável e rastreável conforme NR-01 §1.4.2.</p>
                   </div>
                 </TabsContent>
-              </ScrollArea>
+              </div>
             </Tabs>
 
             <Separator />
