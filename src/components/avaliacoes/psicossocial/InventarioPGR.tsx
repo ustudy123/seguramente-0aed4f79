@@ -123,6 +123,9 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     [campanhas]
   );
 
+  const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
+  const pendentesReavaliacao = groRiscos.filter(r => r.necessita_reavaliacao).length;
+
   const [filtroCampanha, setFiltroCampanha] = useState<string>("todos");
   const [filtroGHE, setFiltroGHE] = useState<string>("todos");
 
