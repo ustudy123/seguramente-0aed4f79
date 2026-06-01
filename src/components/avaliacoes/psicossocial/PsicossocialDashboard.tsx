@@ -318,17 +318,17 @@ export function PsicossocialDashboard() {
                   )}
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-2 py-4">
-                  <div className="p-3 rounded-full bg-muted">
-                    <Lock className="h-6 w-6 text-muted-foreground" />
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <div className="p-3 rounded-full bg-muted">
+                      <Lock className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Mínimo de respostas não atingido para análise
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 text-center">
+                      Questionários: mín. 5 · Entrevistas: mín. 1
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground text-center">
-                    Mín. 5 respostas (ou 1 entrevista) para análise
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 text-center">
-                    Isso garante o anonimato dos respondentes
-                  </p>
-                </div>
               )}
               
               {ipsConsolidado != null && (
