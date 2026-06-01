@@ -62,6 +62,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 // os scores por categoria. Caso pontual aprovado pelo cliente.
 const EMPRESAS_CONSOLIDADO_LIBERADO = new Set<string>([
   "85b3e1db-6564-4fbc-987f-f8dea4f29ff3", // Laboratório Bioanálises / Dalmora
+  "640e74f8-5807-4e92-9852-6f2964e52702", // SUDOMED (tecnico.capanema@sudomed.com.br)
 ]);
 
 const INDICES_INFO = [
