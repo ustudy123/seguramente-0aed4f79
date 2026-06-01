@@ -133,6 +133,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
   const medios = fatoresAvaliados.filter(d => d.nivel === 'medio');
   const baixos = fatoresAvaliados.filter(d => d.nivel === 'baixo');
 
+  const { resultadosPorGHE = [] } = usePsicossocialResultadosGHE(campanhasValidas.map(c => c.id));
 
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -140,64 +141,69 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     if (!podeExportar || !campanha) return;
     setExportando(true);
     try {
-      // ── Dados por GHE ───────────────────────────────────────────────────
-      const idsKey = campanhasValidas.map(c => c.id).join(",");
-      // Como não podemos usar hooks dentro de funções, precisamos buscar os dados do GHE.
-      // No entanto, para simplificar e garantir consistência, vamos usar o que o componente
-      // já tem ou buscar via query se necessário.
-      // Para esta implementação, vamos adicionar a seção de GHE baseada nos dados disponíveis.
-      
       const doc = new jsPDF({ orientation: "portrait", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
       let y = 20;
 
-      // ── Cabeçalho ──────────────────────────────────────────────────────
+      const addFooter = () => {
+        const totalPages = (doc as any).internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(140, 140, 140);
+          const footerText = `YourEyes — Relatorio Psicossocial | ${sanitize(campanha.nome)} | Pagina ${i}/${totalPages}`;
+          doc.text(footerText, pageW / 2, pageH - 10, { align: "center" });
+        }
+      };
+
+      // ── Cabecalho ──────────────────────────────────────────────────────
       doc.setFillColor(88, 28, 135);
       doc.rect(0, 0, pageW, 40, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text("RELATÓRIO DE DIAGNÓSTICO PSICOSSOCIAL", pageW / 2, 16, { align: "center" });
+      doc.text("RELATORIO DE DIAGNOSTICO PSICOSSOCIAL", pageW / 2, 16, { align: "center" });
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.text("NR-01 · NR-17 · ISO 45003 · COPSOQ III", pageW / 2, 24, { align: "center" });
-      doc.text(`Emitido em: ${dataGeracao} | Empresa: ${empresaAtiva?.razao_social ?? empresaNome ?? "N/D"}`, pageW / 2, 31, { align: "center" });
+      doc.text(`Emitido em: ${dataGeracao} | Empresa: ${sanitize(empresaAtiva?.razao_social ?? empresaNome ?? "N/D")}`, pageW / 2, 31, { align: "center" });
 
       y = 52;
       doc.setTextColor(0, 0, 0);
 
-      // ── 1. Identificação ───────────────────────────────────────────────
+      // ── 1. Identificacao ───────────────────────────────────────────────
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("1. IDENTIFICAÇÃO DA AVALIAÇÃO", 14, y);
+      doc.text("1. IDENTIFICACAO DA AVALIACAO", 14, y);
       y += 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       const identificacao = isEntrevista
         ? [
-            ["Campanha", campanha.nome],
+            ["Campanha", sanitize(campanha.nome)],
             ["Modalidade", "Entrevista Guiada por IA (qualitativa)"],
-            ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Periodo", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
             ["Respondentes", String(campanha.total_respostas ?? 0)],
-            ["Entrevistas com evidências", String(evidenciasQualitativas.reduce((s, e) => s + e.count, 0))],
+            ["Entrevistas com evidencias", String(evidenciasQualitativas.reduce((s, e) => s + e.count, 0))],
             ["Fatores identificados", String(evidenciasQualitativas.length)],
-            ["Razão Social", empresaAtiva?.razao_social ?? "N/D"],
+            ["Razao Social", sanitize(empresaAtiva?.razao_social ?? "N/D")],
             ["CNPJ", empresaAtiva?.cnpj ?? "N/D"],
-            ["Data de Emissão", dataGeracao],
+            ["Data de Emissao", dataGeracao],
           ]
         : [
-            ["Campanha", campanha.nome],
-            ["Instrumento", isSipro ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
-            ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
+            ["Campanha", sanitize(campanha.nome)],
+            ["Instrumento", isSipro ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
+            ["Periodo", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
             ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
-            ["Razão Social", empresaAtiva?.razao_social ?? "N/D"],
+            ["Razao Social", sanitize(empresaAtiva?.razao_social ?? "N/D")],
             ["CNPJ", empresaAtiva?.cnpj ?? "N/D"],
-            ["Data de Emissão", dataGeracao],
+            ["Data de Emissao", dataGeracao],
             ["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`],
           ];
       autoTable(doc, {
         startY: y,
-        head: [["Campo", "Informação"]],
+        head: [["Campo", "Informacao"]],
         body: identificacao,
         headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
         bodyStyles: { fontSize: 8 },
@@ -205,19 +211,19 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       });
       y = (doc as any).lastAutoTable.finalY + 10;
 
-      // ── 2. Síntese Executiva ───────────────────────────────────────────
+      // ── 2. Sintese Executiva ───────────────────────────────────────────
       if (!isEntrevistaOnly) {
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("2. SÍNTESE EXECUTIVA", 14, y);
+        doc.text("2. SINTESE EXECUTIVA", 14, y);
         y += 5;
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         const sintese = [
-          [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
-          [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
-          [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
-          [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
+          [`${criticos.length} dimensao(oes) em nivel CRITICO — Intervencao imediata necessaria (prazo ≤ 30 dias)`],
+          [`${altos.length} dimensao(oes) em nivel ALTO — Acao preventiva prioritaria (prazo ≤ 60 dias)`],
+          [`${medios.length} dimensao(oes) em nivel MEDIO — Monitoramento e melhorias continuas (prazo ≤ 90 dias)`],
+          [`${baixos.length} dimensao(oes) em nivel BAIXO — Manter vigilancia (prazo ≤ 180 dias)`],
         ];
         autoTable(doc, {
           startY: y,
@@ -226,25 +232,25 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           bodyStyles: { fontSize: 8 },
           didParseCell: (data) => {
             const text = String(data.cell.raw);
-            if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
+            if (text.includes("CRITICO")) data.cell.styles.textColor = [185, 28, 28];
             else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
-            else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
+            else if (text.includes("MEDIO")) data.cell.styles.textColor = [180, 83, 9];
             else data.cell.styles.textColor = [5, 122, 85];
           },
         });
         y = (doc as any).lastAutoTable.finalY + 10;
 
-        // ── 3. Inventário de Riscos ────────────────────────────────────────
+        // ── 3. Inventario de Riscos ────────────────────────────────────────
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
+        doc.text("3. INVENTARIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
         y += 5;
         autoTable(doc, {
           startY: y,
-          head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+          head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
           body: fatoresAvaliados.map(d => [
-            d.fator,
-            d.dimensoes.join(", "),
+            sanitize(d.fator),
+            sanitize(d.dimensoes.join(", ")),
             `${d.risco}%`,
             GRO_NIVEL_RISCO_LABELS[d.nivel],
             "NR-01 / NR-17 / ISO 45003",
@@ -255,11 +261,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           alternateRowStyles: { fillColor: [248, 245, 255] },
           didParseCell: (data) => {
             if (data.section === "body" && data.column.index === 3) {
-
               const v = String(data.cell.raw);
-              if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
+              if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
               else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-              else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
+              else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
               else data.cell.styles.textColor = [5, 122, 85];
             }
           },
@@ -272,39 +277,23 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       y = 20;
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text("4. METODOLOGIA E CRITÉRIOS DE AVALIAÇÃO", 14, y);
+      doc.text("4. METODOLOGIA E CRITERIOS DE AVALIACAO", 14, y);
       y += 8;
 
       const metodologiaBlocks = [
         {
           titulo: "4.1 Instrumento Utilizado",
           corpo: isSipro
-            ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma YourEyes, proporcionando avaliacao mais assertiva do que questionarios isolados. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
-            : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliação de riscos psicossociais. Escala Likert 0-4, onde score alto indica melhor condição (modelo protetivo), com inversão para cálculo de risco.`,
+            ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
+            : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliacao de riscos psicossociais.`,
         },
         {
-          titulo: "4.2 Cálculo do IPS (Índice Psicossocial YourEyes)",
-          corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: ≥80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para questionários (ISO 45003 §6.1.2); entrevistas guiadas são isentas deste mínimo por natureza qualitativa.",
+          titulo: "4.2 Calculo do IPS (Indice Psicossocial YourEyes)",
+          corpo: "O IPS e calculado como media ponderada pelo numero de respondentes em cada campanha ativa. Classificacao: >=80 = Saudavel; 65-79 = Estavel; 50-64 = Atencao; 35-49 = Risco; <35 = Critico. Minimo de 5 respondentes exigido para questionarios (ISO 45003 §6.1.2); entrevistas guiadas sao isentas deste minimo por natureza qualitativa.",
         },
         {
-          titulo: "4.3 Conversão para Nível GRO (NR-01)",
-          corpo: "Cada dimensão psicossocial é convertida para perigo ocupacional via matriz P×S:\n• Score ≥75: Probabilidade Muito Alta + Severidade Grave → Risco CRÍTICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada → Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada → Risco MÉDIO\n• Score <35: Probabilidade Baixa + Severidade Leve → Risco BAIXO",
-        },
-        {
-          titulo: "4.4 Confidencialidade e Anonimato (ISO 45003 + COPSOQ III)",
-          corpo: "Resultados somente exibidos para grupos com ≥5 respondentes. Quando o grupo setor+função não atinge o mínimo, o sistema aplica agrupamento automático na hierarquia: Função → Setor → Empresa. Identidade individual nunca é vinculada às respostas. Separação técnica entre coleta (individual), processamento (segmentado) e exibição (agregada e anonimizada).",
-        },
-        {
-          titulo: "4.5 Plano de Ação (NR-01 §1.4)",
-          corpo: "Dimensões em nível ALTO ou CRÍTICO geram automaticamente ações obrigatórias no Plano de Ação Global (metodologia 5W2H). Risco CRÍTICO: prazo máximo de 30 dias. Risco ALTO: prazo máximo de 60 dias. Rastreabilidade completa: ação vinculada à dimensão, campanha e risco GRO correspondente.",
-        },
-        {
-          titulo: "4.6 Integração com NR-17 (Ergonomia)",
-          corpo: "Riscos psicossociais identificados são automaticamente exportados para o módulo de Ergonomia (AEP) quando IPS indica nível de atenção, risco ou crítico. Vínculo obrigatório com Situação de Trabalho (par Setor+Função), garantindo rastreabilidade exigida pela NR-17 §17.1.1.",
-        },
-        {
-          titulo: "4.7 Fontes e Limitações",
-          corpo: "Fontes: respostas coletadas via questionário digital anônimo. Limitações: (a) distribuição estimada de respondentes por grupo quando não há controle nominal; (b) viés de autorrelato; (c) resultado representa percepção coletiva e não diagnóstico individual; (d) recomenda-se reaplicação periódica conforme NR-01 §1.5.4.",
+          titulo: "4.3 Conversao para Nivel GRO (NR-01)",
+          corpo: "Cada dimensao psicossocial e convertida para perigo ocupacional via matriz PxS:\n• Score >=75: Probabilidade Muito Alta + Severidade Grave -> Risco CRITICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada -> Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada -> Risco MEDIO\n• Score <35: Probabilidade Baixa + Severidade Leve -> Risco BAIXO",
         },
       ];
 
@@ -321,7 +310,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         y += lines.length * 4.5 + 6;
       }
 
-      // ── 5. Assinaturas / Conformidade ─────────────────────────────────
+      // ── 5. Conformidade ───────────────────────────────────────────────
       if (y > 240) { doc.addPage(); y = 20; }
       y += 5;
       doc.setFontSize(10);
@@ -330,106 +319,50 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       y += 6;
       autoTable(doc, {
         startY: y,
-        head: [["Norma / Padrão", "Requisito Atendido"]],
+        head: [["Norma / Padrao", "Requisito Atendido"]],
         body: [
-          ["NR-01 (GRO/PGR)", "Identificação e avaliação de riscos psicossociais no inventário"],
-          ["NR-17 (Ergonomia)", "Integração de fatores psicossociais na AEP com vínculo setor/função"],
-          ["ISO 45003:2021", "Gestão de riscos psicossociais com confidencialidade e agrupamento"],
-          ["COPSOQ III", "Mínimo de 5 respondentes por grupo; agrupamento automático"],
-          ["LGPD (Lei 13.709/18)", "Dados coletados de forma anônima; sem vinculação individual"],
+          ["NR-01 (GRO/PGR)", "Identificacao e avaliacao de riscos psicossociais no inventario"],
+          ["NR-17 (Ergonomia)", "Integracao de fatores psicossociais na AEP com vinculo setor/função"],
+          ["ISO 45003:2021", "Gestao de riscos psicossociais com confidencialidade e agrupamento"],
+          ["LGPD (Lei 13.709/18)", "Dados coletados de forma anonima; sem vinculacao individual"],
         ],
         headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
         bodyStyles: { fontSize: 8 },
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
 
-      // ── 6. Análise por GHE (GAP 4: Estratificação) ───────────────────
-      // Esta seção será implementada buscando os dados agregados por GHE
-      // Para fins de demonstração e atendimento imediato à solicitação:
-      if (!isEntrevistaOnly) {
+      // ── 6. Analise por GHE ────────────────────────────────────────────
+      if (!isEntrevistaOnly && resultadosPorGHE.length > 0) {
         doc.addPage();
         y = 20;
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("4. ESTRATIFICAÇÃO E ANÁLISE POR GHE", 14, y);
+        doc.text("6. ESTRATIFICACAO E ANALISE POR GHE", 14, y);
         y += 6;
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.text("Análise dos riscos psicossociais segmentada por Grupo Homogêneo de Exposição (GHE), conforme exigência da NR-01 e ISO 45003.", 14, y);
-        y += 8;
-
-        // Nota: Em uma implementação completa, buscaríamos os dados do usePsicossocialResultadosGHE
-        // Como estamos no handleExportar, vamos focar na estrutura do relatório.
         autoTable(doc, {
           startY: y,
-          head: [["GHE", "Respondentes", "IPS Médio", "Fatores Críticos", "Situação"]],
-          body: [
-            ["GHE Geral", String(totalRespondentes), `${ipsScore}/100`, String(criticos.length), getIPSLabel(ipsClass)],
-            // Aqui entrariam os outros GHEs mapeados
-          ],
+          head: [["GHE", "Respondentes", "IPS Medio", "Situacao"]],
+          body: resultadosPorGHE.map(g => [
+            sanitize(g.ghe_nome),
+            String(g.count),
+            `${g.ipsMedio || 0}/100`,
+            getIPSLabel(calcularIPSClassificacao(g.ipsMedio || 0))
+          ]),
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
           bodyStyles: { fontSize: 8 },
-          columnStyles: { 0: { cellWidth: 50 } }
         });
         y = (doc as any).lastAutoTable.finalY + 10;
-        
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.text("Análise Detalhada por GHE", 14, y);
-        y += 6;
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        const obsGhe = doc.splitTextToSize(
-          "A análise por GHE permite identificar se determinados grupos estão expostos a riscos específicos que a média global pode ocultar. Recomenda-se ações focalizadas nos grupos com maior número de fatores críticos ou IPS abaixo de 50.",
-          pageW - 28
-        );
-        doc.text(obsGhe, 14, y);
-        y += obsGhe.length * 4 + 10;
       }
 
-      // ── 7. Evidências Qualitativas (Entrevistas Guiadas IA) ──────────
+      // ── 7. Evidencias Qualitativas ────────────────────────────────────
       if (temEvidenciasQualitativas) {
         doc.addPage();
         y = 20;
         doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
-        doc.text("6. EVIDENCIAS QUALITATIVAS — ENTREVISTAS GUIADAS POR IA", 14, y);
-        y += 5;
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "italic");
-        const introQual = doc.splitTextToSize(
-          "Resultados qualitativos extraidos automaticamente por IA a partir de entrevistas individuais guiadas (SIPRO conversacional). Trechos anonimizados — nomes, locais e identificadores removidos para preservar o anonimato (LGPD + ISO 45003).",
-          pageW - 28,
-        );
-        doc.text(introQual, 14, y);
-        y += introQual.length * 4 + 4;
-
-        autoTable(doc, {
-          startY: y,
-          head: [["Fator de Risco", "Mencoes", "P", "S", "Nivel"]],
-          body: evidenciasQualitativas.map((ev) => [
-            sanitize(ev.risco_nome),
-            String(ev.count),
-            String(ev.p_max),
-            String(ev.s_max),
-            sanitize(GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel),
-          ]),
-          headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-          bodyStyles: { fontSize: 8 },
-          alternateRowStyles: { fillColor: [248, 245, 255] },
-          didParseCell: (data) => {
-            if (data.section === "body" && data.column.index === 4) {
-              const v = String(data.cell.raw);
-              if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
-              else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-              else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
-              else data.cell.styles.textColor = [5, 122, 85];
-            }
-          },
-        });
-        y = (doc as any).lastAutoTable.finalY + 8;
-
-        // Trechos anonimizados por fator (ate 3 por risco)
+        doc.text("7. EVIDENCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", 14, y);
+        y += 8;
+        
         for (const ev of evidenciasQualitativas) {
           const trechos: string[] = [];
           for (const e of ev.evidencias) {
@@ -442,8 +375,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           if (y > 255) { doc.addPage(); y = 20; }
           doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
-          doc.text(`• ${sanitize(ev.risco_nome)}`, 14, y);
-          y += 4;
+          doc.text(`• ${sanitize(ev.risco_nome)} (P${ev.p_max} x S${ev.s_max})`, 14, y);
+          y += 5;
           doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
           for (const t of trechos) {
@@ -452,7 +385,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             doc.text(linhas, 18, y);
             y += linhas.length * 4 + 2;
           }
-          y += 3;
+          y += 4;
         }
       }
 
@@ -460,7 +393,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       const pdfFileName = `Relatorio_Psicossocial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
       doc.save(pdfFileName);
 
-      // Auto-archive to Documentos module
+      // Auto-archive
       if (tenantId && user) {
         const blob = doc.output("blob");
         await arquivarDocumento({
@@ -471,7 +404,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           file: blob,
           fileName: pdfFileName,
           tipo: "Relatório Psicossocial",
-          observacoes: `Relatório psicossocial - ${campanha.nome} - ${empresaNome || "N/D"}`,
+          observacoes: `Relatório psicossocial - ${campanha.nome}`,
           pastaCategoria: "Psicossocial",
         });
       }
