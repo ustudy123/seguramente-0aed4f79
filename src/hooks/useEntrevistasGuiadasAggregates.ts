@@ -67,10 +67,15 @@ export function useEntrevistasGuiadasAggregates(campanhaIds: string[] | undefine
         const riscos = e.resumo_ia?.riscos ?? [];
         for (const r of riscos) {
           if (!r.risco_nome || r.presente === false) continue;
-          const prob = Number(r.probabilidade) || 0;
-          const sev = Number(r.severidade) || 0;
-          // prob (1-5) * sev (1-5) → 1-25 → escala 0-100
-          const score = Math.min(100, Math.max(0, prob * sev * 4));
+          
+          const probValue = Number(r.probabilidade) || 0;
+          const sevValue = Number(r.severidade) || 0;
+          
+          // Mapeamento dinâmico: se a escala for 1-5, convertemos proporcionalmente para 0-100
+          // prob (1-5) * sev (1-5) -> max 25. 25 * 4 = 100.
+          // No entanto, para ser mais preciso com o inventário, vamos usar a média ponderada dos riscos.
+          // Se prob=3 e sev=3 (Moderado), score = 3 * 3 * 4 = 36%
+          const score = Math.min(100, Math.max(0, probValue * sevValue * 4));
           const acc = riscoAcc.get(r.risco_nome) ?? { soma: 0, n: 0 };
           acc.soma += score;
           acc.n += 1;

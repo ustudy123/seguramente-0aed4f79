@@ -182,7 +182,8 @@ export function scoreToProbabilidadeLabel(score: number, isSipro = true): string
 
 export function scoreToSeveridade(score: number, isSipro = true): GROSeveridade {
   const risco = isSipro ? score : 100 - score;
-  if (risco >= 65) return 'grave';
-  if (risco >= 40) return 'moderada';
+  if (risco >= 75) return 'gravissima';
+  if (risco >= 55) return 'grave';
+  if (risco >= 35) return 'moderada';
   return 'leve';
 }
