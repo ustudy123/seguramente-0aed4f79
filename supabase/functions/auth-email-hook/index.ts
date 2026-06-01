@@ -37,9 +37,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "YourEyes"
-const SENDER_DOMAIN = "notify.youreyes.com.br"
+const SENDER_DOMAIN = "seguramente.app.br" // Use verified domain
 const ROOT_DOMAIN = "youreyes.com.br"
-const FROM_DOMAIN = "youreyes.com.br" // Domain shown in From address
+const FROM_DOMAIN = "seguramente.app.br" // Domain shown in From address
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -206,7 +206,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
   // payload.type is the hook event type ("auth")
   const emailType = payload.data.action_type
-  console.log('Received auth event', { emailType, email: payload.data.email, run_id })
+  console.log('Received auth event', { emailType, email: payload.data.email, run_id, url: payload.data.url })
 
   const EmailTemplate = EMAIL_TEMPLATES[emailType]
   if (!EmailTemplate) {
@@ -246,6 +246,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   const fromAddress = `${SITE_NAME} <no-reply@${FROM_DOMAIN}>`
+  console.log('Sending email from', fromAddress, 'to', payload.data.email)
   const subject = EMAIL_SUBJECTS[emailType] || 'Notification'
 
   const resendResponse = await fetch('https://api.resend.com/emails', {

@@ -24,7 +24,7 @@ interface SignupEmailProps {
   confirmationUrl: string
 }
 
-const LOGO_URL = 'https://youreyes.com.br/logo-youreyes.svg'
+const LOGO_URL = 'https://youreyes.com.br/logo-youreyes-new.png'
 
 export const SignupEmail = ({
   siteUrl,
