@@ -23,6 +23,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import { useEvidenciasEntrevista } from "@/hooks/useEvidenciasEntrevista";
+import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosGHE";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
