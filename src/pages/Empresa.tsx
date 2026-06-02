@@ -160,19 +160,42 @@ export default function Empresa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cadastro, viewMode, cliente, user, profile, selectedEmpresaId]);
 
-  // Auto-save desativado a pedido — o salvamento é manual via botão "Salvar".
-  // Mantemos apenas o rascunho local (localStorage) para evitar perda de dados.
+  // Salva o rascunho local sempre que houver conteúdo significativo no formulário.
+  // Não depende mais de hasChanges — assim, mesmo dados restaurados continuam persistidos
+  // e mudanças vindas de efeitos internos (ex.: auto-cálculo PCD) também são guardadas.
   useEffect(() => {
     if (viewMode === 'list') return;
-    if (!hasChanges) return;
     if (!draftKey) return;
+    // Só persiste se houver algo relevante (evita gravar objeto vazio)
+    const temConteudo = formData && Object.keys(formData).some((k) => {
+      const v = (formData as any)[k];
+      return v !== undefined && v !== null && v !== '' && v !== 0 && v !== false;
+    });
+    if (!temConteudo) return;
     const t = setTimeout(() => {
       try {
         localStorage.setItem(draftKey, JSON.stringify({ data: formData, ts: Date.now() }));
       } catch { /* ignore */ }
-    }, 800);
+    }, 300);
     return () => clearTimeout(t);
-  }, [formData, hasChanges, viewMode, draftKey]);
+  }, [formData, viewMode, draftKey]);
+
+  // Flush síncrono ao desmontar ou trocar de aba do navegador — garante que nada se perca
+  useEffect(() => {
+    const flush = () => {
+      if (viewMode === 'list' || !draftKey) return;
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ data: formData, ts: Date.now() }));
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('beforeunload', flush);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      flush();
+      window.removeEventListener('beforeunload', flush);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [formData, viewMode, draftKey]);
 
   const clearDraft = () => {
     if (draftKey) {
