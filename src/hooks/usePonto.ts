@@ -129,8 +129,9 @@ export function usePonto() {
           query = query.eq("data", dataStr);
         }
 
+        // Isolamento estrito por empresa ativa (operacional)
         if (empresaAtivaId) {
-          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+          query = query.eq("empresa_id", empresaAtivaId);
         }
 
         const { data: pontos, error } = await query
@@ -157,8 +158,9 @@ export function usePonto() {
           .eq("tenant_id", tenantId)
           .eq("data_marcacao", hoje);
 
+        // Isolamento estrito por empresa ativa (operacional)
         if (empresaAtivaId) {
-          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+          query = query.eq("empresa_id", empresaAtivaId);
         }
 
         const { data, error } = await query
