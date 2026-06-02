@@ -255,7 +255,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
             <Lock className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground text-center max-w-sm">
-            Os índices derivados serão exibidos após a primeira campanha encerrada com o mínimo de respostas (5 para questionários ou 1 para entrevistas).
+            Os índices derivados serão exibidos após a primeira campanha encerrada com o mínimo de respostas (5 para questionários ou 1 para entrevistas guiadas com IA).
           </p>
         </CardContent>
       </Card>
