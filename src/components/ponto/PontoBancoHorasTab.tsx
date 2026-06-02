@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,12 +7,13 @@ import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { format } from "date-fns";
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
+import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -32,6 +33,10 @@ export function PontoBancoHorasTab() {
 
   const [showCriar, setShowCriar] = useState(false);
   const [showMovimentacao, setShowMovimentacao] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importando, setImportando] = useState(false);
+  const [importResumo, setImportResumo] = useState<{ ok: number; erros: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [criarForm, setCriarForm] = useState({ colaborador_id: "", tipo: "mensal" });
   const [movForm, setMovForm] = useState({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
 
@@ -72,6 +77,94 @@ export function PontoBancoHorasTab() {
   const totalDebitos = bancos.reduce((s, b) => s + b.debitos_minutos, 0);
   const totalSaldo = bancos.reduce((s, b) => s + b.saldo_atual_minutos, 0);
 
+  const onlyDigits = (s: string) => (s || "").toString().replace(/\D/g, "");
+
+  const baixarModeloImport = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["CPF", "Tipo Banco", "Tipo Movimentacao", "Data Referencia", "Minutos", "Descricao"],
+      ["00000000000", "mensal", "credito", format(new Date(), "yyyy-MM-dd"), 60, "Hora extra exemplo"],
+      ["00000000000", "mensal", "debito", format(new Date(), "yyyy-MM-dd"), 30, "Atraso exemplo"],
+      ["00000000000", "mensal", "compensacao", format(new Date(), "yyyy-MM-dd"), 60, "Folga compensada"],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "BancoHoras");
+    XLSX.writeFile(wb, `modelo-import-banco-horas-${competencia}.xlsx`);
+  };
+
+  const handleImportFile = async (file: File) => {
+    setImportando(true);
+    setImportResumo(null);
+    const erros: string[] = [];
+    let ok = 0;
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      if (rows.length === 0) { toast.error("Planilha vazia"); setImportando(false); return; }
+
+      // Mapa CPF → colaborador (apenas dígitos)
+      const colabPorCpf = new Map<string, typeof colaboradores[number]>();
+      for (const c of colaboradores) colabPorCpf.set(onlyDigits(c.cpf || ""), c);
+
+      // Mapa CPF → banco já existente nesta competência
+      const bancoPorCpf = new Map<string, BancoHoras>();
+      for (const b of bancos) bancoPorCpf.set(onlyDigits(b.colaborador_cpf || ""), b);
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const linha = i + 2;
+        try {
+          const cpf = onlyDigits(String(r["CPF"] ?? r["cpf"] ?? ""));
+          const tipoBanco = String(r["Tipo Banco"] ?? r["tipo_banco"] ?? "mensal").toLowerCase().trim();
+          const tipoMov = String(r["Tipo Movimentacao"] ?? r["Tipo Movimentação"] ?? r["tipo_movimentacao"] ?? "credito").toLowerCase().trim();
+          const dataRef = String(r["Data Referencia"] ?? r["Data Referência"] ?? r["data_referencia"] ?? "").trim();
+          const minutos = Number(r["Minutos"] ?? r["minutos"] ?? 0);
+          const descricao = String(r["Descricao"] ?? r["Descrição"] ?? r["descricao"] ?? "").trim();
+
+          if (!cpf) { erros.push(`Linha ${linha}: CPF vazio`); continue; }
+          const colab = colabPorCpf.get(cpf);
+          if (!colab) { erros.push(`Linha ${linha}: colaborador (CPF ${cpf}) não encontrado`); continue; }
+          if (!["credito", "debito", "compensacao"].includes(tipoMov)) { erros.push(`Linha ${linha}: tipo movimentação inválido (${tipoMov})`); continue; }
+          if (!dataRef || isNaN(new Date(dataRef).getTime())) { erros.push(`Linha ${linha}: data inválida`); continue; }
+          if (!minutos || minutos <= 0) { erros.push(`Linha ${linha}: minutos inválidos`); continue; }
+
+          let banco = bancoPorCpf.get(cpf);
+          if (!banco) {
+            banco = await criarBancoHoras({
+              colaborador_id: colab.id,
+              colaborador_nome: colab.nome_completo,
+              colaborador_cpf: colab.cpf,
+              tipo: ["mensal", "semestral", "anual"].includes(tipoBanco) ? tipoBanco : "mensal",
+              competencia,
+            }) as BancoHoras;
+            bancoPorCpf.set(cpf, banco);
+          }
+
+          await adicionarMovimentacao({
+            bancoHorasId: banco.id,
+            colaboradorCpf: colab.cpf,
+            dataReferencia: dataRef,
+            tipo: tipoMov,
+            minutos,
+            descricao,
+          });
+          ok++;
+        } catch (e: any) {
+          erros.push(`Linha ${linha}: ${e?.message || "erro desconhecido"}`);
+        }
+      }
+      setImportResumo({ ok, erros });
+      if (ok > 0) toast.success(`${ok} movimentação(ões) importada(s)`);
+      if (erros.length > 0) toast.warning(`${erros.length} linha(s) com erro`);
+    } catch (e: any) {
+      toast.error("Erro ao ler planilha: " + (e?.message || ""));
+    } finally {
+      setImportando(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -81,8 +174,11 @@ export function PontoBancoHorasTab() {
           </h3>
           <p className="text-sm text-muted-foreground">Saldos, movimentações e compensações</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
+          <Button variant="outline" onClick={() => setShowImport(true)}>
+            <Upload className="w-4 h-4 mr-2" /> Importar
+          </Button>
           <Button onClick={() => setShowCriar(true)}>
             <Plus className="w-4 h-4 mr-2" /> Novo Banco
           </Button>
@@ -268,6 +364,50 @@ export function PontoBancoHorasTab() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowMovimentacao(false)}>Cancelar</Button>
             <Button onClick={handleMovimentacao} disabled={adicionandoMovimentacao}>{adicionandoMovimentacao ? "Registrando..." : "Registrar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Importar */}
+      <Dialog open={showImport} onOpenChange={(o) => { setShowImport(o); if (!o) setImportResumo(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5" /> Importar Banco de Horas</DialogTitle>
+            <DialogDescription>
+              Envie uma planilha .xlsx com as colunas: <strong>CPF</strong>, <strong>Tipo Banco</strong> (mensal/semestral/anual),
+              <strong> Tipo Movimentacao</strong> (credito/debito/compensacao), <strong>Data Referencia</strong> (AAAA-MM-DD),
+              <strong> Minutos</strong>, <strong>Descricao</strong>. Cada linha cria uma movimentação na competência <strong>{competencia}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Button variant="outline" size="sm" onClick={baixarModeloImport} className="w-full">
+              <Download className="w-4 h-4 mr-2" /> Baixar modelo de planilha
+            </Button>
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              disabled={importando}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+            />
+            {importando && <p className="text-sm text-muted-foreground">Processando planilha…</p>}
+            {importResumo && (
+              <div className="rounded-md border p-3 text-sm space-y-2 max-h-60 overflow-auto">
+                <p className="font-medium text-green-700">{importResumo.ok} movimentação(ões) importada(s) com sucesso.</p>
+                {importResumo.erros.length > 0 && (
+                  <div className="text-red-700">
+                    <p className="font-medium">{importResumo.erros.length} erro(s):</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5">
+                      {importResumo.erros.slice(0, 30).map((e, i) => <li key={i}>{e}</li>)}
+                      {importResumo.erros.length > 30 && <li>… e mais {importResumo.erros.length - 30}</li>}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImport(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
