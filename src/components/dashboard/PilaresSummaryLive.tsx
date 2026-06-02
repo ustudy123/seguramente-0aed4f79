@@ -102,7 +102,7 @@ export const PilaresSummaryLive = () => {
   const pilaresComDados = data ? [
     data.organizacao.cargosDefinidos > 0 || data.organizacao.admissoesAndamento > 0,
     data.condicoes.itensNr17Total > 0 || data.condicoes.episDisponiveis > 0 || data.condicoes.riscosAtivos > 0,
-    data.experiencia.humorTotal > 0 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0,
+    data.experiencia.humorTotal >= 3 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0,
     data.governanca.acoesTotal > 0 || data.governanca.evidenciasEnviadas > 0 || data.governanca.terceirosAtivos > 0 || data.governanca.ptsBloqueadas > 0,
   ].filter(Boolean).length : 0;
 
