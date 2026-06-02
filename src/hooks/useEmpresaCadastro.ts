@@ -200,6 +200,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list_ativa'] });
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
     },
   });
