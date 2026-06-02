@@ -162,6 +162,7 @@ const statusStyles: Record<string, string> = {
   ferias: "bg-info/10 text-info border-info/20",
   afastado: "bg-warning/10 text-warning border-warning/20",
   desligado: "bg-muted text-muted-foreground border-muted",
+  inativo: "bg-muted text-muted-foreground border-muted",
 };
 
 const statusLabels: Record<string, string> = {
@@ -170,7 +171,15 @@ const statusLabels: Record<string, string> = {
   ferias: "Férias",
   afastado: "Afastado",
   desligado: "Desligado",
+  inativo: "Inativo",
 };
+
+// Resolve o status visível considerando a flag `inativo` (sobrescreve status base)
+function resolveStatus(colab: { status: string; inativo?: boolean | null }): { key: string; label: string } {
+  if ((colab as any).inativo) return { key: "inativo", label: "Inativo" };
+  const key = colab.status || "concluido";
+  return { key, label: statusLabels[key] || "Ativo" };
+}
 
 // ========== Ativos Tab Component ==========
 function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShowImport: (v: boolean) => void }) {
@@ -539,9 +548,9 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 flex-wrap">
-                <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
-                  {statusLabels[colab.status] || "Ativo"}
-                </Badge>
+                {(() => { const s = resolveStatus(colab); return (
+                  <Badge className={cn("text-xs", statusStyles[s.key] || statusStyles.concluido)}>{s.label}</Badge>
+                ); })()}
                 <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} compact />
               </div>
             </motion.div>
@@ -581,9 +590,9 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
-                        {statusLabels[colab.status] || "Ativo"}
-                      </Badge>
+                      {(() => { const s = resolveStatus(colab); return (
+                        <Badge className={cn("text-xs", statusStyles[s.key] || statusStyles.concluido)}>{s.label}</Badge>
+                      ); })()}
                       <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} compact />
                     </div>
                   </TableCell>
@@ -732,9 +741,9 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               </div>
               <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColaborador.cpf, nome: selectedColaborador.nome_completo })} />
               <div className="pt-4 border-t flex justify-between items-center">
-                <Badge className={cn("text-xs", statusStyles[selectedColaborador.status] || statusStyles.concluido)}>
-                  {statusLabels[selectedColaborador.status] || "Ativo"}
-                </Badge>
+                {(() => { const s = resolveStatus(selectedColaborador); return (
+                  <Badge className={cn("text-xs", statusStyles[s.key] || statusStyles.concluido)}>{s.label}</Badge>
+                ); })()}
                 <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Fechar</Button>
               </div>
             </div>
