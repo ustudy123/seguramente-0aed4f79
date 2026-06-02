@@ -112,7 +112,7 @@ export function EmpresaEnquadramentoLegal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Situação</Label>
-            <Select value={data.sesmt_situacao || 'inexistente'} onValueChange={v => onChange({
+            <Select value={data.sesmt_situacao || 'inexistente'} disabled={!data.sesmt_obrigatorio} onValueChange={v => onChange({
             sesmt_situacao: v as EmpresaCadastro['sesmt_situacao']
           })}>
               <SelectTrigger>
@@ -124,6 +124,9 @@ export function EmpresaEnquadramentoLegal({
                 <SelectItem value="inexistente">Inexistente</SelectItem>
               </SelectContent>
             </Select>
+            {!data.sesmt_obrigatorio && (
+              <p className="text-xs text-muted-foreground">Habilite "SESMT Obrigatório" para definir a situação.</p>
+            )}
           </div>
         </div>
 
