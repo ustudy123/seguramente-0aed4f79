@@ -148,12 +148,13 @@ const Ponto = () => {
     if (proximo) setTipoMarcacao(proximo);
   }, [selectedColaborador, tiposJaRegistrados.join(",")]);
   const { data: ajustesPendentesRaw = [] } = useAjustesPendentes();
-  // Filtra ajustes pela empresa ativa cruzando pelo CPF dos colaboradores carregados
+  // Ajustes são escopados por tenant (a tabela não possui empresa_id).
+  // Se houver colaboradores carregados para a empresa ativa, filtra; caso contrário, mostra todos do tenant.
   const ajustesPendentes = useMemo(() => {
     const cpfsEmpresa = new Set(
       colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
     );
-    if (cpfsEmpresa.size === 0) return [];
+    if (cpfsEmpresa.size === 0) return ajustesPendentesRaw;
     return ajustesPendentesRaw.filter((a: any) =>
       cpfsEmpresa.has((a.colaborador_cpf || "").replace(/\D/g, ""))
     );
