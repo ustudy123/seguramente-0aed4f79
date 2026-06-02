@@ -343,6 +343,11 @@ export default function Empresa() {
     );
   }
 
+  const _tipoPessoa = formData.tipo_pessoa || 'pj';
+  const camposMinimosOk = !!(formData.razao_social || '').trim() &&
+    ((_tipoPessoa === 'pj' && !!(formData.cnpj || '').trim()) ||
+     (_tipoPessoa === 'pf' && !!(formData.cpf || '').trim()));
+
   return (
     <div className="space-y-6">
       {/* Header */}
