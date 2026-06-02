@@ -215,28 +215,23 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
 
     return INDICES.map((idx) => {
-      const rawAtual = (atual[idx.campo] as number | null) ?? null;
-      const rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
+      const isEntrevista = (atual as any)?.tipo_instrumento === "entrevista_guiada";
+      let rawAtual = (atual[idx.campo] as number | null) ?? null;
+      let rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
+
+      // Se for entrevista e nao tiver os campos derivados (IRP_S, etc), 
+      // usamos o IPS ja calculado e invertemos para representar o risco.
+      if (isEntrevista && rawAtual === null && atual.ips_score !== null) {
+        rawAtual = 100 - atual.ips_score;
+      }
 
       // No SIPRO, os scores no banco ja sao de RISCO (alto = pior).
       // Se por algum motivo o score vier invertido (como parece ocorrer em alguns instrumentos legados),
       // verificamos se o IPS principal indica saude (IPS alto = Protecao alta) para ajustar a visualizacao.
-      const isProtectiveInDB = rawAtual != null && rawAtual > 50 && atual.ips_score != null && atual.ips_score > 50;
-      const isEntrevista = (atual as any)?.tipo_instrumento === "entrevista_guiada";
+      const isProtectiveInDB = rawAtual != null && rawAtual > 50 && atual.ips_score != null && (atual.instrumento === 'sipro' ? (100 - atual.ips_score) : atual.ips_score) > 50;
       
-      let scoreAtual = isProtectiveInDB ? Math.max(0, 100 - rawAtual!) : rawAtual;
-      let scoreAnterior = isProtectiveInDB ? (rawAnterior != null ? Math.max(0, 100 - rawAnterior) : null) : rawAnterior;
-
-      // Ajuste especial para Entrevistas Guiadas por IA:
-      // O IPS das entrevistas já é gerado como PROTETIVO (alto=bom) no hook de agregação.
-      // Para os cards de risco, precisamos garantir que o valor exibido seja o RISCO (alto=ruim).
-      if (isEntrevista && scoreAtual != null) {
-        // Se o score veio do hook como protetivo (como o IPS), invertemos para o card de risco
-        // O radar_data das entrevistas no hook já é RISCO (alto=pior), mas o IPS é 100-risco.
-        // Como o IRP-S etc usam campos da campanha, precisamos checar se eles foram preenchidos
-        // pelo aggregate. O aggregate só preenche ips_score e radar_data.
-        // Os demais (IBO, IRP_S) nas entrevistas devem ser calculados a partir do radar se faltarem.
-      }
+      const scoreAtual = isProtectiveInDB ? Math.max(0, 100 - rawAtual!) : rawAtual;
+      const scoreAnterior = isProtectiveInDB ? (rawAnterior != null ? Math.max(0, 100 - rawAnterior) : null) : rawAnterior;
 
       let tendencia: "up" | "down" | "stable" | null = null;
       if (scoreAtual != null && scoreAnterior != null) {
