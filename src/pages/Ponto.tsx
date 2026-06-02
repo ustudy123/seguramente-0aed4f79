@@ -495,7 +495,20 @@ const Ponto = () => {
                       </TableCell>
                       <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
                       <TableCell className="text-center">
-                        <Badge className={cn("text-xs", statusConfig.color)}>{statusConfig.label}</Badge>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
+                            if (colab) setAjusteColaborador(colab.id);
+                            setAjusteData(format(selectedDate, "yyyy-MM-dd"));
+                            setAjusteTipo(ponto.status === "ajuste_pendente" ? "correcao" : "inclusao");
+                            setShowAjusteModal(true);
+                          }}
+                          title="Clique para solicitar/ajustar"
+                          className="inline-flex"
+                        >
+                          <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", statusConfig.color)}>{statusConfig.label}</Badge>
+                        </button>
                       </TableCell>
                     </TableRow>
                   );
