@@ -184,7 +184,9 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       // Entrevistas guiadas não exigem o mínimo de anonimato (5 respostas):
       // são entrevistas nominais e devem aparecer mesmo com 1 resposta.
       const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
-      if (isEntrevistaGuiada) return (c.total_respostas || 0) >= 1;
+      const hasRadar = Array.isArray(c.radar_data) && c.radar_data.length > 0;
+      
+      if (isEntrevistaGuiada) return (c.total_respostas || 0) >= 1 && hasRadar;
       return (c.total_respostas || 0) >= MINIMO_ANONIMATO;
     }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
