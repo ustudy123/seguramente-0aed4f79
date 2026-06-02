@@ -212,6 +212,7 @@ export default function Empresa() {
   };
 
   const handleEdit = (id: string) => {
+    createdIdRef.current = null;
     setSelectedEmpresaId(id);
     setViewMode('edit');
     setHasChanges(false);
@@ -219,6 +220,7 @@ export default function Empresa() {
   };
 
   const handleNew = () => {
+    createdIdRef.current = null;
     setSelectedEmpresaId(null);
     setFormData({});
     setViewMode('new');
