@@ -289,8 +289,10 @@ export default function Empresa() {
     createdIdRef.current = null;
     setViewMode('list');
     setSelectedEmpresaId(null);
+    setActiveTab('dados');
     setHasChanges(false);
     setRascunhoRestaurado(false);
+    try { sessionStorage.removeItem(NAV_STATE_KEY); } catch { /* ignore */ }
   };
 
   // LIST VIEW
