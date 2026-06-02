@@ -116,9 +116,11 @@ export const useDashboardData = () => {
       const ouvidoriaPendente = ouvidoriaRes.count || 0;
       const feedHoje = feedRes.count || 0;
       const humorPositivo = humores.filter(h => ["feliz", "motivado", "tranquilo", "grato", "animado"].includes(h.humor)).length;
-      // Score só com base em sinais reais (sem pontuação de cortesia)
+      // Score só com base em sinais reais (sem pontuação de cortesia).
+      // Exige um volume mínimo de check-ins (>=3) para evitar que 1 clique no
+      // header de check-in (humor 5h) já gere um % artificial no dashboard.
       const expSubs: number[] = [];
-      if (humores.length > 0) expSubs.push((humorPositivo / humores.length) * 100);
+      if (humores.length >= 3) expSubs.push((humorPositivo / humores.length) * 100);
       if (ouvidoriaPendente > 0) expSubs.push(Math.max(0, 100 - ouvidoriaPendente * 10));
       if (feedHoje > 0) expSubs.push(100);
       const scoreExperiencia = expSubs.length

@@ -102,7 +102,7 @@ export const PilaresSummaryLive = () => {
   const pilaresComDados = data ? [
     data.organizacao.cargosDefinidos > 0 || data.organizacao.admissoesAndamento > 0,
     data.condicoes.itensNr17Total > 0 || data.condicoes.episDisponiveis > 0 || data.condicoes.riscosAtivos > 0,
-    data.experiencia.humorTotal > 0 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0,
+    data.experiencia.humorTotal >= 3 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0,
     data.governanca.acoesTotal > 0 || data.governanca.evidenciasEnviadas > 0 || data.governanca.terceirosAtivos > 0 || data.governanca.ptsBloqueadas > 0,
   ].filter(Boolean).length : 0;
 
@@ -134,7 +134,7 @@ export const PilaresSummaryLive = () => {
     const p = data[key] as any;
     if (key === "organizacao") return p.cargosDefinidos > 0 || p.departamentos > 0 || p.admissoesAndamento > 0;
     if (key === "condicoes") return p.itensNr17Total > 0 || p.episDisponiveis > 0 || p.riscosAtivos > 0;
-    if (key === "experiencia") return p.humorTotal > 0 || p.ouvidoriaPendente > 0 || p.feedPostsHoje > 0;
+    if (key === "experiencia") return p.humorTotal >= 3 || p.ouvidoriaPendente > 0 || p.feedPostsHoje > 0;
     if (key === "governanca") return p.acoesTotal > 0 || p.evidenciasEnviadas > 0 || p.terceirosAtivos > 0;
     return false;
   };
