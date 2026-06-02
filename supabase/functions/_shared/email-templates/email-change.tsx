@@ -3,6 +3,7 @@
 import * as React from 'npm:react@18.3.1'
 
 import {
+  Img,
   Body,
   Button,
   Container,
@@ -35,7 +36,7 @@ export const EmailChangeEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>YourEyes</Text>
+          <Img src="https://www.youreyes.com.br/__l5e/assets-v1/71abd0f4-9610-42ba-8d8d-abed0207ebd0/logo-youreyes.png" alt="YourEyes" width="140" style={{ margin: '0 auto', display: 'block' }} />
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Confirme a alteração de e-mail</Heading>
