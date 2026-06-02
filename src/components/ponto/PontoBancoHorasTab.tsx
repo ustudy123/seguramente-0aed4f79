@@ -174,8 +174,11 @@ export function PontoBancoHorasTab() {
           </h3>
           <p className="text-sm text-muted-foreground">Saldos, movimentações e compensações</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
+          <Button variant="outline" onClick={() => setShowImport(true)}>
+            <Upload className="w-4 h-4 mr-2" /> Importar
+          </Button>
           <Button onClick={() => setShowCriar(true)}>
             <Plus className="w-4 h-4 mr-2" /> Novo Banco
           </Button>
