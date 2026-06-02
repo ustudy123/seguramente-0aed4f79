@@ -741,9 +741,9 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               </div>
               <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColaborador.cpf, nome: selectedColaborador.nome_completo })} />
               <div className="pt-4 border-t flex justify-between items-center">
-                <Badge className={cn("text-xs", statusStyles[selectedColaborador.status] || statusStyles.concluido)}>
-                  {statusLabels[selectedColaborador.status] || "Ativo"}
-                </Badge>
+                {(() => { const s = resolveStatus(selectedColaborador); return (
+                  <Badge className={cn("text-xs", statusStyles[s.key] || statusStyles.concluido)}>{s.label}</Badge>
+                ); })()}
                 <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Fechar</Button>
               </div>
             </div>
