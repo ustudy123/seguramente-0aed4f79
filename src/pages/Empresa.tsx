@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -63,6 +63,8 @@ export default function Empresa() {
   const [formData, setFormData] = useState<Partial<EmpresaCadastro>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [rascunhoRestaurado, setRascunhoRestaurado] = useState(false);
+  const savingRef = useRef(false);
+  const createdIdRef = useRef<string | null>(null);
 
   // Chave do rascunho — isolada por usuário e por empresa (ou "new")
   const draftKey = user?.id
@@ -166,31 +168,51 @@ export default function Empresa() {
   };
 
   const handleSave = async () => {
+    // Trava de re-entrância: evita inserts duplicados em duplo-clique / re-render
+    if (savingRef.current || upsertCadastro.isPending) return;
+
+    // Validações mínimas antes de qualquer gravação
+    const razao = (formData.razao_social || '').trim();
+    if (!razao) {
+      toast.error('Informe a Razão Social / Nome antes de salvar.');
+      return;
+    }
+    const tipo = formData.tipo_pessoa || 'pj';
+    if (tipo === 'pj' && (!formData.cnpj || !formData.cnpj.trim())) {
+      toast.error('O CNPJ é obrigatório para Pessoa Jurídica.');
+      return;
+    }
+    if (tipo === 'pf' && (!formData.cpf || !formData.cpf.trim())) {
+      toast.error('O CPF é obrigatório para Pessoa Física.');
+      return;
+    }
+
+    // Se já criamos nessa sessão (createdIdRef), força update em vez de novo insert
+    const payload: Partial<EmpresaCadastro> = createdIdRef.current && !selectedEmpresaId
+      ? { ...formData, id: createdIdRef.current as any }
+      : formData;
+
+    savingRef.current = true;
     try {
-      if (formData.tipo_pessoa === 'pj' && (!formData.cnpj || !formData.cnpj.trim())) {
-        toast.error('O CNPJ é obrigatório para Pessoa Jurídica.');
-        return;
-      }
-      if (formData.tipo_pessoa === 'pf' && (!formData.cpf || !formData.cpf.trim())) {
-        toast.error('O CPF é obrigatório para Pessoa Física.');
-        return;
-      }
-      const saved: any = await upsertCadastro.mutateAsync(formData);
+      const saved: any = await upsertCadastro.mutateAsync(payload);
       clearDraft();
       setHasChanges(false);
       setRascunhoRestaurado(false);
       if (viewMode === 'new' && saved?.id) {
+        createdIdRef.current = saved.id;
         setSelectedEmpresaId(saved.id);
         setViewMode('edit');
       }
       toast.success('Alterações salvas com sucesso!');
-      // Mantém na tela de edição conforme solicitado
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + (error?.message || 'Erro desconhecido'));
+    } finally {
+      savingRef.current = false;
     }
   };
 
   const handleEdit = (id: string) => {
+    createdIdRef.current = null;
     setSelectedEmpresaId(id);
     setViewMode('edit');
     setHasChanges(false);
@@ -198,6 +220,7 @@ export default function Empresa() {
   };
 
   const handleNew = () => {
+    createdIdRef.current = null;
     setSelectedEmpresaId(null);
     setFormData({});
     setViewMode('new');
@@ -245,6 +268,7 @@ export default function Empresa() {
   };
 
   const handleBack = () => {
+    createdIdRef.current = null;
     setViewMode('list');
     setSelectedEmpresaId(null);
     setHasChanges(false);
@@ -319,6 +343,11 @@ export default function Empresa() {
     );
   }
 
+  const _tipoPessoa = formData.tipo_pessoa || 'pj';
+  const camposMinimosOk = !!(formData.razao_social || '').trim() &&
+    ((_tipoPessoa === 'pj' && !!(formData.cnpj || '').trim()) ||
+     (_tipoPessoa === 'pf' && !!(formData.cpf || '').trim()));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -341,7 +370,8 @@ export default function Empresa() {
         </div>
         <Button
           onClick={handleSave}
-          disabled={!hasChanges || upsertCadastro.isPending}
+          disabled={!hasChanges || upsertCadastro.isPending || !camposMinimosOk}
+          title={!camposMinimosOk ? 'Preencha Razão Social/Nome e CNPJ ou CPF para salvar.' : ''}
         >
           {upsertCadastro.isPending ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -503,7 +533,8 @@ export default function Empresa() {
             ) : null}
             <Button
               onClick={handleSave}
-              disabled={!hasChanges || upsertCadastro.isPending}
+              disabled={!hasChanges || upsertCadastro.isPending || !camposMinimosOk}
+              title={!camposMinimosOk ? 'Preencha Razão Social/Nome e CNPJ ou CPF para salvar.' : ''}
               className="gap-2"
             >
               {upsertCadastro.isPending ? (
