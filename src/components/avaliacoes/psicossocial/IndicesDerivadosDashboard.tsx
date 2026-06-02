@@ -216,10 +216,10 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       const rawAtual = (atual[idx.campo] as number | null) ?? null;
       const rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
 
-      // Os scores no banco são PROTETIVOS (alto = saudável). Para os cards que
-      // exibem escala de RISCO (invertido = true), convertemos: risco = 100 - score.
-      const scoreAtual = rawAtual != null && idx.invertido ? Math.max(0, 100 - rawAtual) : rawAtual;
-      const scoreAnterior = rawAnterior != null && idx.invertido ? Math.max(0, 100 - rawAnterior) : rawAnterior;
+      // No SIPRO, os scores no banco já são de RISCO (alto = pior).
+      // Se por algum motivo o score vier invertido (protetivo), mantemos a lógica de ajuste.
+      const scoreAtual = rawAtual;
+      const scoreAnterior = rawAnterior;
 
       let tendencia: "up" | "down" | "stable" | null = null;
       if (scoreAtual != null && scoreAnterior != null) {
