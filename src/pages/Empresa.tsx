@@ -22,11 +22,29 @@ import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'list' | 'edit' | 'new';
 
+const NAV_STATE_KEY = 'empresa-nav-state:v1';
+
 export default function Empresa() {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('dados');
+  // Restaura viewMode/selectedEmpresaId/activeTab da última visita
+  const restoredNav = (() => {
+    try {
+      const raw = sessionStorage.getItem(NAV_STATE_KEY);
+      if (raw) return JSON.parse(raw) as { viewMode: ViewMode; selectedEmpresaId: string | null; activeTab: string };
+    } catch { /* ignore */ }
+    return null;
+  })();
+
+  const [viewMode, setViewMode] = useState<ViewMode>(restoredNav?.viewMode || 'list');
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(restoredNav?.selectedEmpresaId || null);
+  const [activeTab, setActiveTab] = useState(restoredNav?.activeTab || 'dados');
   const { user, profile } = useAuth();
+
+  // Persiste o estado de navegação para que voltar à página restaure a empresa em edição e a aba atual
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(NAV_STATE_KEY, JSON.stringify({ viewMode, selectedEmpresaId, activeTab }));
+    } catch { /* ignore */ }
+  }, [viewMode, selectedEmpresaId, activeTab]);
 
   const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai'];
   const currentTabIndex = TABS.indexOf(activeTab);
@@ -109,7 +127,7 @@ export default function Empresa() {
         setFormData({ ...base, ...draft });
         setRascunhoRestaurado(true);
         toast.info('Rascunho local restaurado — continue de onde parou.');
-      } else {
+      } else if (!rascunhoRestaurado) {
         setFormData(base);
       }
     }
@@ -135,7 +153,7 @@ export default function Empresa() {
         setFormData({ ...base, ...draft });
         setRascunhoRestaurado(true);
         toast.info('Rascunho local restaurado — continue de onde parou.');
-      } else {
+      } else if (!rascunhoRestaurado) {
         setFormData(base);
       }
     }
@@ -271,8 +289,10 @@ export default function Empresa() {
     createdIdRef.current = null;
     setViewMode('list');
     setSelectedEmpresaId(null);
+    setActiveTab('dados');
     setHasChanges(false);
     setRascunhoRestaurado(false);
+    try { sessionStorage.removeItem(NAV_STATE_KEY); } catch { /* ignore */ }
   };
 
   // LIST VIEW
