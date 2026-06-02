@@ -116,10 +116,10 @@ export function calcularIndicadores(
       : undefined;
 
     let classificacao: ReturnType<typeof calcularIPSClassificacao>;
-    if (irps <= 20) classificacao = 'saudavel';
-    else if (irps <= 35) classificacao = 'estavel';
-    else if (irps <= 50) classificacao = 'atencao';
-    else if (irps <= 65) classificacao = 'risco';
+    if (irps <= 25) classificacao = 'saudavel';
+    else if (irps <= 50) classificacao = 'estavel';
+    else if (irps <= 75) classificacao = 'atencao';
+    else if (irps <= 90) classificacao = 'risco';
     else classificacao = 'critico';
 
     return {
