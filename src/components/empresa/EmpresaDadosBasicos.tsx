@@ -220,9 +220,11 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
           <div className="space-y-2">
             <Label>Inscrição Municipal</Label>
             <Input
-              placeholder="Inscrição Municipal"
+              placeholder="Somente números"
               value={data.inscricao_municipal || ''}
-              onChange={(e) => onChange({ inscricao_municipal: e.target.value })}
+              inputMode="numeric"
+              maxLength={20}
+              onChange={(e) => onChange({ inscricao_municipal: e.target.value.replace(/\D/g, '') })}
             />
           </div>
         </div>
