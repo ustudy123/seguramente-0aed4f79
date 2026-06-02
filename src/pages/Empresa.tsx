@@ -533,7 +533,8 @@ export default function Empresa() {
             ) : null}
             <Button
               onClick={handleSave}
-              disabled={!hasChanges || upsertCadastro.isPending}
+              disabled={!hasChanges || upsertCadastro.isPending || !camposMinimosOk}
+              title={!camposMinimosOk ? 'Preencha Razão Social/Nome e CNPJ ou CPF para salvar.' : ''}
               className="gap-2"
             >
               {upsertCadastro.isPending ? (
