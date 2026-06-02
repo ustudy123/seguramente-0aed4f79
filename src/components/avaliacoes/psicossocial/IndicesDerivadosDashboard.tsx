@@ -184,7 +184,9 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       // Entrevistas guiadas não exigem o mínimo de anonimato (5 respostas):
       // são entrevistas nominais e devem aparecer mesmo com 1 resposta.
       const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
-      if (isEntrevistaGuiada) return (c.total_respostas || 0) >= 1;
+      const hasRadar = Array.isArray(c.radar_data) && c.radar_data.length > 0;
+      
+      if (isEntrevistaGuiada) return (c.total_respostas || 0) >= 1 && hasRadar;
       return (c.total_respostas || 0) >= MINIMO_ANONIMATO;
     }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
@@ -213,13 +215,20 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
 
     return INDICES.map((idx) => {
-      const rawAtual = (atual[idx.campo] as number | null) ?? null;
-      const rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
+      const isEntrevista = (atual as any)?.tipo_instrumento === "entrevista_guiada";
+      let rawAtual = (atual[idx.campo] as number | null) ?? null;
+      let rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
+
+      // Se for entrevista e nao tiver os campos derivados (IRP_S, etc), 
+      // usamos o IPS ja calculado e invertemos para representar o risco.
+      if (isEntrevista && rawAtual === null && atual.ips_score !== null) {
+        rawAtual = 100 - atual.ips_score;
+      }
 
       // No SIPRO, os scores no banco ja sao de RISCO (alto = pior).
       // Se por algum motivo o score vier invertido (como parece ocorrer em alguns instrumentos legados),
       // verificamos se o IPS principal indica saude (IPS alto = Protecao alta) para ajustar a visualizacao.
-      const isProtectiveInDB = rawAtual != null && rawAtual > 50 && atual.ips_score != null && atual.ips_score > 50;
+      const isProtectiveInDB = rawAtual != null && rawAtual > 50 && atual.ips_score != null && (atual.instrumento === 'sipro' ? (100 - atual.ips_score) : atual.ips_score) > 50;
       
       const scoreAtual = isProtectiveInDB ? Math.max(0, 100 - rawAtual!) : rawAtual;
       const scoreAnterior = isProtectiveInDB ? (rawAnterior != null ? Math.max(0, 100 - rawAnterior) : null) : rawAnterior;
@@ -253,7 +262,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
             <Lock className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground text-center max-w-sm">
-            Os índices derivados serão exibidos após a primeira campanha encerrada com o mínimo de respostas (5 para questionários ou 1 para entrevistas).
+            Os índices derivados serão exibidos após a primeira campanha encerrada com o mínimo de respostas (5 para questionários ou 1 para entrevistas guiadas com IA).
           </p>
         </CardContent>
       </Card>

@@ -156,7 +156,7 @@ export function PsicossocialDashboard() {
   // Regra padrão (ISO 45003): só entram no consolidado campanhas que individualmente
   // atinjam o mínimo de respondentes. Para empresas com liberação pontual,
   // aceitamos campanhas com qualquer N desde que o TOTAL agregado da empresa ≥ mínimo.
-  const campanhasComIPS = campanhas.filter(c => {
+  const campanhasComIPS = campanhasEnriquecidas.filter(c => {
     const totalRespostas = c.total_respostas || 0;
     const minimo = getMinimoRespostas(c);
     
