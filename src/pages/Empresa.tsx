@@ -63,6 +63,8 @@ export default function Empresa() {
   const [formData, setFormData] = useState<Partial<EmpresaCadastro>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [rascunhoRestaurado, setRascunhoRestaurado] = useState(false);
+  const savingRef = useRef(false);
+  const createdIdRef = useRef<string | null>(null);
 
   // Chave do rascunho — isolada por usuário e por empresa (ou "new")
   const draftKey = user?.id
