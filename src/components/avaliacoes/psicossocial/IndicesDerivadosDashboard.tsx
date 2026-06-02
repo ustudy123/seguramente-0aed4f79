@@ -168,7 +168,7 @@ function classificar(score: number): Semaforo {
 }
 
 const SEMAFORO_CONFIG: Record<Semaforo, { label: string; bg: string; text: string; dot: string }> = {
-  saudavel: { label: "Favorável", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+  saudavel: { label: "Baixo",     bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
   atencao:  { label: "Atenção",   bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-500"   },
   moderado: { label: "Moderado",  bg: "bg-orange-50",  text: "text-orange-700",  dot: "bg-orange-500"  },
   elevado:  { label: "Elevado",   bg: "bg-red-50",     text: "text-red-700",     dot: "bg-red-500"     },
@@ -225,11 +225,10 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       if (scoreAtual != null && scoreAnterior != null) {
         const diff = scoreAtual - scoreAnterior;
         if (Math.abs(diff) < 3) tendencia = "stable";
-        else if (idx.invertido) {
+        else {
           // Escala de risco: subiu = piorou, desceu = melhorou
+          // Queremos que a seta aponte para cima se o valor numérico SUBIU
           tendencia = diff > 0 ? "up" : "down";
-        } else {
-          tendencia = diff > 0 ? "down" : "up";
         }
       }
 
