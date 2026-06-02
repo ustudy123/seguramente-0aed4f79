@@ -33,6 +33,10 @@ export function PontoBancoHorasTab() {
 
   const [showCriar, setShowCriar] = useState(false);
   const [showMovimentacao, setShowMovimentacao] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importando, setImportando] = useState(false);
+  const [importResumo, setImportResumo] = useState<{ ok: number; erros: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [criarForm, setCriarForm] = useState({ colaborador_id: "", tipo: "mensal" });
   const [movForm, setMovForm] = useState({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
 
