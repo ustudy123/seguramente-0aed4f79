@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -247,10 +248,9 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>Telefone</Label>
-          <Input
-            placeholder="(00) 0000-0000"
+          <PhoneInput
             value={data.telefone || ''}
-            onChange={(e) => onChange({ telefone: e.target.value })}
+            onChange={(v) => onChange({ telefone: v })}
           />
         </div>
         <div className="space-y-2">
