@@ -77,6 +77,94 @@ export function PontoBancoHorasTab() {
   const totalDebitos = bancos.reduce((s, b) => s + b.debitos_minutos, 0);
   const totalSaldo = bancos.reduce((s, b) => s + b.saldo_atual_minutos, 0);
 
+  const onlyDigits = (s: string) => (s || "").toString().replace(/\D/g, "");
+
+  const baixarModeloImport = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["CPF", "Tipo Banco", "Tipo Movimentacao", "Data Referencia", "Minutos", "Descricao"],
+      ["00000000000", "mensal", "credito", format(new Date(), "yyyy-MM-dd"), 60, "Hora extra exemplo"],
+      ["00000000000", "mensal", "debito", format(new Date(), "yyyy-MM-dd"), 30, "Atraso exemplo"],
+      ["00000000000", "mensal", "compensacao", format(new Date(), "yyyy-MM-dd"), 60, "Folga compensada"],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "BancoHoras");
+    XLSX.writeFile(wb, `modelo-import-banco-horas-${competencia}.xlsx`);
+  };
+
+  const handleImportFile = async (file: File) => {
+    setImportando(true);
+    setImportResumo(null);
+    const erros: string[] = [];
+    let ok = 0;
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      if (rows.length === 0) { toast.error("Planilha vazia"); setImportando(false); return; }
+
+      // Mapa CPF → colaborador (apenas dígitos)
+      const colabPorCpf = new Map<string, typeof colaboradores[number]>();
+      for (const c of colaboradores) colabPorCpf.set(onlyDigits(c.cpf || ""), c);
+
+      // Mapa CPF → banco já existente nesta competência
+      const bancoPorCpf = new Map<string, BancoHoras>();
+      for (const b of bancos) bancoPorCpf.set(onlyDigits(b.colaborador_cpf || ""), b);
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const linha = i + 2;
+        try {
+          const cpf = onlyDigits(String(r["CPF"] ?? r["cpf"] ?? ""));
+          const tipoBanco = String(r["Tipo Banco"] ?? r["tipo_banco"] ?? "mensal").toLowerCase().trim();
+          const tipoMov = String(r["Tipo Movimentacao"] ?? r["Tipo Movimentação"] ?? r["tipo_movimentacao"] ?? "credito").toLowerCase().trim();
+          const dataRef = String(r["Data Referencia"] ?? r["Data Referência"] ?? r["data_referencia"] ?? "").trim();
+          const minutos = Number(r["Minutos"] ?? r["minutos"] ?? 0);
+          const descricao = String(r["Descricao"] ?? r["Descrição"] ?? r["descricao"] ?? "").trim();
+
+          if (!cpf) { erros.push(`Linha ${linha}: CPF vazio`); continue; }
+          const colab = colabPorCpf.get(cpf);
+          if (!colab) { erros.push(`Linha ${linha}: colaborador (CPF ${cpf}) não encontrado`); continue; }
+          if (!["credito", "debito", "compensacao"].includes(tipoMov)) { erros.push(`Linha ${linha}: tipo movimentação inválido (${tipoMov})`); continue; }
+          if (!dataRef || isNaN(new Date(dataRef).getTime())) { erros.push(`Linha ${linha}: data inválida`); continue; }
+          if (!minutos || minutos <= 0) { erros.push(`Linha ${linha}: minutos inválidos`); continue; }
+
+          let banco = bancoPorCpf.get(cpf);
+          if (!banco) {
+            banco = await criarBancoHoras({
+              colaborador_id: colab.id,
+              colaborador_nome: colab.nome_completo,
+              colaborador_cpf: colab.cpf,
+              tipo: ["mensal", "semestral", "anual"].includes(tipoBanco) ? tipoBanco : "mensal",
+              competencia,
+            }) as BancoHoras;
+            bancoPorCpf.set(cpf, banco);
+          }
+
+          await adicionarMovimentacao({
+            bancoHorasId: banco.id,
+            colaboradorCpf: colab.cpf,
+            dataReferencia: dataRef,
+            tipo: tipoMov,
+            minutos,
+            descricao,
+          });
+          ok++;
+        } catch (e: any) {
+          erros.push(`Linha ${linha}: ${e?.message || "erro desconhecido"}`);
+        }
+      }
+      setImportResumo({ ok, erros });
+      if (ok > 0) toast.success(`${ok} movimentação(ões) importada(s)`);
+      if (erros.length > 0) toast.warning(`${erros.length} linha(s) com erro`);
+    } catch (e: any) {
+      toast.error("Erro ao ler planilha: " + (e?.message || ""));
+    } finally {
+      setImportando(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
