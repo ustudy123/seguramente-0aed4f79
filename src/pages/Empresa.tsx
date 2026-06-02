@@ -168,27 +168,46 @@ export default function Empresa() {
   };
 
   const handleSave = async () => {
+    // Trava de re-entrância: evita inserts duplicados em duplo-clique / re-render
+    if (savingRef.current || upsertCadastro.isPending) return;
+
+    // Validações mínimas antes de qualquer gravação
+    const razao = (formData.razao_social || '').trim();
+    if (!razao) {
+      toast.error('Informe a Razão Social / Nome antes de salvar.');
+      return;
+    }
+    const tipo = formData.tipo_pessoa || 'pj';
+    if (tipo === 'pj' && (!formData.cnpj || !formData.cnpj.trim())) {
+      toast.error('O CNPJ é obrigatório para Pessoa Jurídica.');
+      return;
+    }
+    if (tipo === 'pf' && (!formData.cpf || !formData.cpf.trim())) {
+      toast.error('O CPF é obrigatório para Pessoa Física.');
+      return;
+    }
+
+    // Se já criamos nessa sessão (createdIdRef), força update em vez de novo insert
+    const payload: Partial<EmpresaCadastro> = createdIdRef.current && !selectedEmpresaId
+      ? { ...formData, id: createdIdRef.current as any }
+      : formData;
+
+    savingRef.current = true;
     try {
-      if (formData.tipo_pessoa === 'pj' && (!formData.cnpj || !formData.cnpj.trim())) {
-        toast.error('O CNPJ é obrigatório para Pessoa Jurídica.');
-        return;
-      }
-      if (formData.tipo_pessoa === 'pf' && (!formData.cpf || !formData.cpf.trim())) {
-        toast.error('O CPF é obrigatório para Pessoa Física.');
-        return;
-      }
-      const saved: any = await upsertCadastro.mutateAsync(formData);
+      const saved: any = await upsertCadastro.mutateAsync(payload);
       clearDraft();
       setHasChanges(false);
       setRascunhoRestaurado(false);
       if (viewMode === 'new' && saved?.id) {
+        createdIdRef.current = saved.id;
         setSelectedEmpresaId(saved.id);
         setViewMode('edit');
       }
       toast.success('Alterações salvas com sucesso!');
-      // Mantém na tela de edição conforme solicitado
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + (error?.message || 'Erro desconhecido'));
+    } finally {
+      savingRef.current = false;
     }
   };
 
