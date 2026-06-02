@@ -548,9 +548,9 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 flex-wrap">
-                <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
-                  {statusLabels[colab.status] || "Ativo"}
-                </Badge>
+                {(() => { const s = resolveStatus(colab); return (
+                  <Badge className={cn("text-xs", statusStyles[s.key] || statusStyles.concluido)}>{s.label}</Badge>
+                ); })()}
                 <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} compact />
               </div>
             </motion.div>
