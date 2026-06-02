@@ -3291,9 +3291,12 @@ export type Database = {
           descricao: string | null
           empresa_id: string | null
           filial_id: string | null
+          gestor_admissao_id: string | null
+          gestor_substituto_admissao_id: string | null
           id: string
           nome: string
           responsavel_id: string | null
+          substituto_ativo: boolean
           tenant_id: string
           updated_at: string
         }
@@ -3303,9 +3306,12 @@ export type Database = {
           descricao?: string | null
           empresa_id?: string | null
           filial_id?: string | null
+          gestor_admissao_id?: string | null
+          gestor_substituto_admissao_id?: string | null
           id?: string
           nome: string
           responsavel_id?: string | null
+          substituto_ativo?: boolean
           tenant_id: string
           updated_at?: string
         }
@@ -3315,9 +3321,12 @@ export type Database = {
           descricao?: string | null
           empresa_id?: string | null
           filial_id?: string | null
+          gestor_admissao_id?: string | null
+          gestor_substituto_admissao_id?: string | null
           id?: string
           nome?: string
           responsavel_id?: string | null
+          substituto_ativo?: boolean
           tenant_id?: string
           updated_at?: string
         }
@@ -3334,6 +3343,20 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "filiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departamentos_gestor_admissao_id_fkey"
+            columns: ["gestor_admissao_id"]
+            isOneToOne: false
+            referencedRelation: "admissoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departamentos_gestor_substituto_admissao_id_fkey"
+            columns: ["gestor_substituto_admissao_id"]
+            isOneToOne: false
+            referencedRelation: "admissoes"
             referencedColumns: ["id"]
           },
           {
