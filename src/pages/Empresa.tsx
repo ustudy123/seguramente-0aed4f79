@@ -268,6 +268,7 @@ export default function Empresa() {
   };
 
   const handleBack = () => {
+    createdIdRef.current = null;
     setViewMode('list');
     setSelectedEmpresaId(null);
     setHasChanges(false);
