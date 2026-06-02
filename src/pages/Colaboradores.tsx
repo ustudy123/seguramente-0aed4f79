@@ -162,6 +162,7 @@ const statusStyles: Record<string, string> = {
   ferias: "bg-info/10 text-info border-info/20",
   afastado: "bg-warning/10 text-warning border-warning/20",
   desligado: "bg-muted text-muted-foreground border-muted",
+  inativo: "bg-muted text-muted-foreground border-muted",
 };
 
 const statusLabels: Record<string, string> = {
@@ -170,7 +171,15 @@ const statusLabels: Record<string, string> = {
   ferias: "Férias",
   afastado: "Afastado",
   desligado: "Desligado",
+  inativo: "Inativo",
 };
+
+// Resolve o status visível considerando a flag `inativo` (sobrescreve status base)
+function resolveStatus(colab: { status: string; inativo?: boolean | null }): { key: string; label: string } {
+  if ((colab as any).inativo) return { key: "inativo", label: "Inativo" };
+  const key = colab.status || "concluido";
+  return { key, label: statusLabels[key] || "Ativo" };
+}
 
 // ========== Ativos Tab Component ==========
 function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShowImport: (v: boolean) => void }) {
