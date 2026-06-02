@@ -363,21 +363,10 @@ export default function Empresa() {
             </p>
           </div>
         </div>
-        {(() => {
-          const tipo = formData.tipo_pessoa || 'pj';
-          const camposMinimos = !!(formData.razao_social || '').trim() &&
-            ((tipo === 'pj' && !!(formData.cnpj || '').trim()) ||
-             (tipo === 'pf' && !!(formData.cpf || '').trim()));
-          return (
         <Button
           onClick={handleSave}
-          disabled={!hasChanges || upsertCadastro.isPending || !camposMinimos}
-          title={!camposMinimos ? 'Preencha Razão Social/Nome e CNPJ ou CPF para salvar.' : ''}
-        ></Button>);})()}
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || upsertCadastro.isPending}
-          style={{ display: 'none' }}
+          disabled={!hasChanges || upsertCadastro.isPending || !camposMinimosOk}
+          title={!camposMinimosOk ? 'Preencha Razão Social/Nome e CNPJ ou CPF para salvar.' : ''}
         >
           {upsertCadastro.isPending ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
