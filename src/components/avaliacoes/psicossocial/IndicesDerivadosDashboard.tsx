@@ -216,10 +216,13 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       const rawAtual = (atual[idx.campo] as number | null) ?? null;
       const rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
 
-      // No SIPRO, os scores no banco já são de RISCO (alto = pior).
-      // Se por algum motivo o score vier invertido (protetivo), mantemos a lógica de ajuste.
-      const scoreAtual = rawAtual;
-      const scoreAnterior = rawAnterior;
+      // No SIPRO, os scores no banco ja sao de RISCO (alto = pior).
+      // Se por algum motivo o score vier invertido (como parece ocorrer em alguns instrumentos legados),
+      // verificamos se o IPS principal indica saude (IPS alto = Protecao alta) para ajustar a visualizacao.
+      const isProtectiveInDB = rawAtual != null && rawAtual > 50 && atual.ips_score != null && atual.ips_score > 50;
+      
+      const scoreAtual = isProtectiveInDB ? Math.max(0, 100 - rawAtual!) : rawAtual;
+      const scoreAnterior = isProtectiveInDB ? (rawAnterior != null ? Math.max(0, 100 - rawAnterior) : null) : rawAnterior;
 
       let tendencia: "up" | "down" | "stable" | null = null;
       if (scoreAtual != null && scoreAnterior != null) {
