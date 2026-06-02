@@ -153,7 +153,7 @@ export default function Empresa() {
         setFormData({ ...base, ...draft });
         setRascunhoRestaurado(true);
         toast.info('Rascunho local restaurado — continue de onde parou.');
-      } else {
+      } else if (!rascunhoRestaurado) {
         setFormData(base);
       }
     }
