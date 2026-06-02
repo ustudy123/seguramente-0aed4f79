@@ -148,12 +148,13 @@ const Ponto = () => {
     if (proximo) setTipoMarcacao(proximo);
   }, [selectedColaborador, tiposJaRegistrados.join(",")]);
   const { data: ajustesPendentesRaw = [] } = useAjustesPendentes();
-  // Filtra ajustes pela empresa ativa cruzando pelo CPF dos colaboradores carregados
+  // Ajustes são escopados por tenant (a tabela não possui empresa_id).
+  // Se houver colaboradores carregados para a empresa ativa, filtra; caso contrário, mostra todos do tenant.
   const ajustesPendentes = useMemo(() => {
     const cpfsEmpresa = new Set(
       colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
     );
-    if (cpfsEmpresa.size === 0) return [];
+    if (cpfsEmpresa.size === 0) return ajustesPendentesRaw;
     return ajustesPendentesRaw.filter((a: any) =>
       cpfsEmpresa.has((a.colaborador_cpf || "").replace(/\D/g, ""))
     );
@@ -494,7 +495,20 @@ const Ponto = () => {
                       </TableCell>
                       <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
                       <TableCell className="text-center">
-                        <Badge className={cn("text-xs", statusConfig.color)}>{statusConfig.label}</Badge>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
+                            if (colab) setAjusteColaborador(colab.id);
+                            setAjusteData(format(selectedDate, "yyyy-MM-dd"));
+                            setAjusteTipo(ponto.status === "ajuste_pendente" ? "correcao" : "inclusao");
+                            setShowAjusteModal(true);
+                          }}
+                          title="Clique para solicitar/ajustar"
+                          className="inline-flex"
+                        >
+                          <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", statusConfig.color)}>{statusConfig.label}</Badge>
+                        </button>
                       </TableCell>
                     </TableRow>
                   );
