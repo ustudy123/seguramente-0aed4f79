@@ -167,9 +167,11 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
             <div className="space-y-2">
               <Label>Inscrição Estadual</Label>
               <Input
-                placeholder="Inscrição Estadual"
+                placeholder="Somente números"
                 value={data.inscricao_estadual || ''}
-                onChange={(e) => onChange({ inscricao_estadual: e.target.value })}
+                inputMode="numeric"
+                maxLength={20}
+                onChange={(e) => onChange({ inscricao_estadual: e.target.value.replace(/\D/g, '') })}
               />
             </div>
           </>
