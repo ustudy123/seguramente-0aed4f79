@@ -123,7 +123,7 @@ export function calcularIndicadores(
     else classificacao = 'critico';
 
     return {
-      IPS: irps,
+      IPS: 100 - irps, // IPS = Índice de Proteção (alto = saudável)
       IPS_classificacao: classificacao,
       IRP_S: irps,
       IBO_S: iboS,
