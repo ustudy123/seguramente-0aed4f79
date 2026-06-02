@@ -104,7 +104,7 @@ export const DashboardPilares = () => {
         color="purple"
         delay={0.3}
         pilarIndicator="experiencia"
-        hasData={data.experiencia.humorTotal > 0 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0}
+        hasData={data.experiencia.humorTotal >= 3 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0}
         metrics={[
           {
             label: "Humor Positivo (7d)",
