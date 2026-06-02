@@ -225,11 +225,10 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       if (scoreAtual != null && scoreAnterior != null) {
         const diff = scoreAtual - scoreAnterior;
         if (Math.abs(diff) < 3) tendencia = "stable";
-        else if (idx.invertido) {
+        else {
           // Escala de risco: subiu = piorou, desceu = melhorou
+          // Queremos que a seta aponte para cima se o valor numérico SUBIU
           tendencia = diff > 0 ? "up" : "down";
-        } else {
-          tendencia = diff > 0 ? "down" : "up";
         }
       }
 
