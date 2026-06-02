@@ -367,6 +367,50 @@ export function PontoBancoHorasTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Importar */}
+      <Dialog open={showImport} onOpenChange={(o) => { setShowImport(o); if (!o) setImportResumo(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5" /> Importar Banco de Horas</DialogTitle>
+            <DialogDescription>
+              Envie uma planilha .xlsx com as colunas: <strong>CPF</strong>, <strong>Tipo Banco</strong> (mensal/semestral/anual),
+              <strong> Tipo Movimentacao</strong> (credito/debito/compensacao), <strong>Data Referencia</strong> (AAAA-MM-DD),
+              <strong> Minutos</strong>, <strong>Descricao</strong>. Cada linha cria uma movimentação na competência <strong>{competencia}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Button variant="outline" size="sm" onClick={baixarModeloImport} className="w-full">
+              <Download className="w-4 h-4 mr-2" /> Baixar modelo de planilha
+            </Button>
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              disabled={importando}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+            />
+            {importando && <p className="text-sm text-muted-foreground">Processando planilha…</p>}
+            {importResumo && (
+              <div className="rounded-md border p-3 text-sm space-y-2 max-h-60 overflow-auto">
+                <p className="font-medium text-green-700">{importResumo.ok} movimentação(ões) importada(s) com sucesso.</p>
+                {importResumo.erros.length > 0 && (
+                  <div className="text-red-700">
+                    <p className="font-medium">{importResumo.erros.length} erro(s):</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5">
+                      {importResumo.erros.slice(0, 30).map((e, i) => <li key={i}>{e}</li>)}
+                      {importResumo.erros.length > 30 && <li>… e mais {importResumo.erros.length - 30}</li>}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImport(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
