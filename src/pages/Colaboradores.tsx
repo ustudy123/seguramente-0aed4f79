@@ -986,6 +986,7 @@ function AdmissoesTab() {
       salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
       gestor_imediato: dados.dadosProfissionais.gestorImediato,
       centro_custo: dados.dadosProfissionais.centroCusto,
+      cbo: dados.dadosProfissionais.cbo,
       banco: dados.dadosBancarios.banco,
       agencia: dados.dadosBancarios.agencia,
       conta: dados.dadosBancarios.conta,
