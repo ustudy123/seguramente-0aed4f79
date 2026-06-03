@@ -46,9 +46,87 @@ export function PontoFechamentoTab() {
 
   const { data: fechamentos = [] } = useFechamentos();
   const { data: espelhos = [], isLoading } = useEspelhos(competencia);
+  const queryClient = useQueryClient();
 
   const fechamentoAtual = fechamentos.find(f => f.competencia === competencia);
   const isFechado = fechamentoAtual?.status === "fechado";
+
+  // Live preview: aggregate ponto_diario when there are no persisted espelhos
+  const periodo = (() => {
+    const [yStr, mStr] = competencia.split("-");
+    const y = parseInt(yStr); const m = parseInt(mStr);
+    const lastDay = new Date(y, m, 0).getDate();
+    return { start: `${competencia}-01`, end: `${competencia}-${String(lastDay).padStart(2, "0")}` };
+  })();
+
+  const { data: previewEspelhos = [], isLoading: loadingPreview } = useQuery({
+    queryKey: ["ponto-espelhos-preview", tenantId, empresaAtivaId, competencia],
+    queryFn: async (): Promise<PontoEspelho[]> => {
+      if (!tenantId) return [];
+      let q = fromTable("ponto_diario")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .gte("data", periodo.start)
+        .lte("data", periodo.end);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      const map = new Map<string, any>();
+      (data || []).forEach((r: any) => {
+        const key = r.colaborador_cpf || r.colaborador_id;
+        if (!key) return;
+        if (!map.has(key)) {
+          map.set(key, {
+            id: `preview-${key}`,
+            tenant_id: tenantId,
+            colaborador_id: r.colaborador_id,
+            colaborador_nome: r.colaborador_nome,
+            colaborador_cpf: r.colaborador_cpf,
+            competencia,
+            total_horas_normais_minutos: 0,
+            total_horas_extras_50_minutos: 0,
+            total_horas_extras_100_minutos: 0,
+            total_adicional_noturno_minutos: 0,
+            total_faltas: 0,
+            total_atrasos_minutos: 0,
+            total_dsr: 0,
+            banco_horas_saldo_minutos: 0,
+            status: "preview",
+            ressalva_texto: null,
+            data_confirmacao: null,
+            created_at: r.created_at,
+          });
+        }
+        const agg = map.get(key);
+        agg.total_horas_extras_50_minutos += Number(r.horas_extras_50_minutos || 0);
+        agg.total_horas_extras_100_minutos += Number(r.horas_extras_100_minutos || 0);
+        agg.total_adicional_noturno_minutos += Number(r.adicional_noturno_minutos || 0);
+        agg.total_atrasos_minutos += Number(r.atraso_minutos || 0);
+        if (r.status === "falta") agg.total_faltas += 1;
+      });
+      return Array.from(map.values()).sort((a, b) => (a.colaborador_nome || "").localeCompare(b.colaborador_nome || ""));
+    },
+    enabled: !!tenantId && espelhos.length === 0,
+  });
+
+  // Realtime: refresh espelhos/preview when ponto changes
+  useEffect(() => {
+    if (!tenantId) return;
+    const channel = supabase
+      .channel(`ponto-espelho-live-${tenantId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ponto_diario", filter: `tenant_id=eq.${tenantId}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ponto-espelhos-preview"] });
+        queryClient.invalidateQueries({ queryKey: ["ponto-espelhos"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "ponto_registros", filter: `tenant_id=eq.${tenantId}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ponto-espelhos-preview"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tenantId, queryClient]);
+
+  const rowsToShow: PontoEspelho[] = espelhos.length > 0 ? espelhos : previewEspelhos;
+  const isPreview = espelhos.length === 0 && previewEspelhos.length > 0;
 
   const formatMinutos = (min: number) => {
     const abs = Math.abs(min);
