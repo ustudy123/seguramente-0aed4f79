@@ -465,6 +465,26 @@ export function useAdmissoes() {
       }
     }
 
+    // === VALIDAÇÃO PÓS-UPLOAD ===
+    // Confirma que o documento ficou persistido com arquivo e status 'enviado'
+    const { data: verifyDoc, error: verifyError } = await supabase
+      .from('admissao_documentos')
+      .select('id, status, arquivo_url, arquivo_nome')
+      .eq('id', documentoId)
+      .maybeSingle();
+
+    if (verifyError) {
+      console.error('[uploadDocumento] Falha na verificação pós-upload:', verifyError);
+      throw new Error('Não foi possível confirmar a persistência do documento. Tente novamente.');
+    }
+
+    if (!verifyDoc || verifyDoc.status !== 'enviado' || !verifyDoc.arquivo_url) {
+      console.error('[uploadDocumento] Documento ainda pendente após upload:', verifyDoc);
+      throw new Error(
+        "Documento enviado ao storage, mas o registro não foi atualizado para 'enviado'. Tente novamente."
+      );
+    }
+
     return filePath;
   };
 
