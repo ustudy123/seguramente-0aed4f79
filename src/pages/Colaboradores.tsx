@@ -1076,6 +1076,23 @@ function AdmissoesTab() {
         }
       } else if (viewMode === "edit" && selectedId) {
         await atualizarAdmissao({ id: selectedId, dados: formData });
+
+        // Upload documentos anexados na edição
+        if (dados.documentosComArquivo?.length) {
+          for (const docLocal of dados.documentosComArquivo) {
+            // Em edit mode os IDs já são reais (vieram do banco). Só fazemos upload
+            // se NÃO for um placeholder `new-doc-N`.
+            if (!docLocal.documentoId.startsWith('new-doc-')) {
+              try {
+                await uploadDocumento(selectedId, docLocal.documentoId, docLocal.file);
+              } catch (err) {
+                console.error('Erro ao enviar documento:', err);
+              }
+            }
+          }
+          toast.success("Documentos enviados com sucesso!");
+        }
+
         toast.success("Admissão atualizada com sucesso!"); setViewMode("detail");
       }
     } catch (error: any) { toast.error(error.message || "Erro ao salvar admissão"); }
