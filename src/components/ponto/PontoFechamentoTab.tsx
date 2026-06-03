@@ -27,6 +27,7 @@ const STATUS_FECHAMENTO: Record<string, { label: string; color: string }> = {
 };
 
 const STATUS_ESPELHO: Record<string, { label: string; color: string }> = {
+  preview: { label: "Em andamento", color: "bg-blue-100 text-blue-800" },
   gerado: { label: "Gerado", color: "bg-gray-100 text-gray-800" },
   enviado: { label: "Enviado", color: "bg-blue-100 text-blue-800" },
   confirmado: { label: "Confirmado", color: "bg-green-100 text-green-800" },
