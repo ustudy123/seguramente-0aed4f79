@@ -1154,6 +1154,15 @@ function AdmissoesTab() {
       banco: a.banco || "", agencia: a.agencia || "", conta: a.conta || "",
       tipoConta: a.tipo_conta || "", chavePix: a.chave_pix || "",
     },
+    exameAdmissional: {
+      dataExame: (a as any).exame_admissional_data || "",
+      dataValidade: (a as any).exame_admissional_validade || "",
+      resultado: (a as any).exame_admissional_resultado || "",
+      clinica: (a as any).exame_admissional_clinica || "",
+      medico: (a as any).exame_admissional_medico || "",
+      crm: (a as any).exame_admissional_crm || "",
+      observacoes: (a as any).exame_admissional_observacoes || "",
+    },
     documentos: (a.documentos || []).map(d => ({
       id: d.id, nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, status: d.status,
       arquivo_url: d.arquivo_url || undefined, arquivo_nome: d.arquivo_nome || undefined,
