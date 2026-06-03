@@ -192,6 +192,8 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [vinculoFilter, setVinculoFilter] = useState<"clt" | "pj" | "todos">("clt");
+
   const [showForm, setShowForm] = useState(false);
   const [showNovoChoice, setShowNovoChoice] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
