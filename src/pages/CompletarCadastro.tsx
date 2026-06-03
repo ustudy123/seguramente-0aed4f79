@@ -71,7 +71,7 @@ export default function CompletarCadastro() {
   };
 
   const ensureDocumentos = async () => {
-    const { error } = await supabase.rpc("ensure_admissao_documentos_by_token", {
+    const { error } = await (supabase as any).rpc("ensure_admissao_documentos_by_token", {
       _token: token as string,
     });
 
