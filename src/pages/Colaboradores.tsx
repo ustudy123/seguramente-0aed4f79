@@ -440,6 +440,16 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               ))}
             </SelectContent>
           </Select>
+          <Select value={vinculoFilter} onValueChange={(v) => setVinculoFilter(v as "clt" | "pj" | "todos")}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Vínculo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="clt">CLT</SelectItem>
+              <SelectItem value="pj">PJ / CNPJ</SelectItem>
+              <SelectItem value="todos">Todos os vínculos</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" size="icon" onClick={handleExportarColaboradores} title="Exportar colaboradores">
             <Download className="w-4 h-4" />
           </Button>
