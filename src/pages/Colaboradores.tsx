@@ -1297,6 +1297,8 @@ function AdmissoesTab() {
             onSubmit={handleSubmitForm}
             onCancel={handleBack}
             onAutoSave={viewMode === "edit" && selectedId ? handleAutoSave : undefined}
+            onDocumentUploadImmediate={viewMode === "edit" ? handleDocumentUpload : undefined}
+            onDocumentRemoveImmediate={viewMode === "edit" ? handleDocumentRemove : undefined}
             initialData={selectedAdmissaoFormatted ? {
               dadosPessoais: selectedAdmissaoFormatted.dadosPessoais,
               dadosContato: selectedAdmissaoFormatted.dadosContato,

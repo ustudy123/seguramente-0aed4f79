@@ -554,6 +554,8 @@ export default function Admissao() {
           <AdmissaoForm
             onSubmit={handleSubmitForm}
             onCancel={handleBack}
+            onDocumentUploadImmediate={viewMode === 'edit' ? handleDocumentUpload : undefined}
+            onDocumentRemoveImmediate={viewMode === 'edit' ? handleDocumentRemove : undefined}
             initialData={selectedAdmissaoFormatted ? {
               dadosPessoais: selectedAdmissaoFormatted.dadosPessoais,
               dadosContato: selectedAdmissaoFormatted.dadosContato,

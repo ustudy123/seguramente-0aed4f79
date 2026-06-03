@@ -41,8 +41,8 @@ export interface DocumentoAdmissaoExtended {
 
 interface DocumentUploadProps {
   documentos: DocumentoAdmissaoExtended[];
-  onUpload: (documentoId: string, file: File) => void;
-  onRemove: (documentoId: string) => void;
+  onUpload: (documentoId: string, file: File) => void | Promise<void>;
+  onRemove: (documentoId: string) => void | Promise<void>;
   onApprove?: (documentoId: string) => void;
   onReject?: (documentoId: string, motivo: string) => void;
   onToggleObrigatorio?: (documentoId: string, obrigatorio: boolean) => void;
@@ -68,8 +68,8 @@ function DocumentItem({
   editableObrigatorio 
 }: { 
   documento: DocumentoAdmissaoExtended;
-  onUpload: (file: File) => void;
-  onRemove: () => void;
+  onUpload: (file: File) => void | Promise<void>;
+  onRemove: () => void | Promise<void>;
   onApprove?: () => void;
   onReject?: (motivo: string) => void;
   onToggleObrigatorio?: (obrigatorio: boolean) => void;
@@ -103,7 +103,9 @@ function DocumentItem({
       setUploadProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          onUpload(file);
+          void Promise.resolve(onUpload(file)).catch(() => {
+            setUploadProgress(0);
+          });
           return 100;
         }
         return prev + 10;
