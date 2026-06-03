@@ -91,6 +91,14 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
 
   // GAP 1: Encerrar campanha + exportar automaticamente ao GRO se tiver dimensões críticas
   const handleEncerrar = async (campanha: CampanhaPsicossocial) => {
+    const ok = await confirm({
+      title: "Encerrar campanha?",
+      description: `Tem certeza que deseja encerrar a campanha "${campanha.nome}"? Após o encerramento, novas respostas não serão mais aceitas. Se houver dimensões críticas, os riscos serão exportados automaticamente ao GRO (NR-17).`,
+      confirmLabel: "Encerrar",
+      cancelLabel: "Cancelar",
+      variant: "destructive",
+    });
+    if (!ok) return;
     atualizarStatusCampanha.mutate(
       { id: campanha.id, status: 'encerrada' },
       {
