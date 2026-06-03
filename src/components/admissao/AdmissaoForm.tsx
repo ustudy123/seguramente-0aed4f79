@@ -388,7 +388,31 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     ));
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
+    // Validar TODAS as etapas obrigatórias antes de enviar
+    const results = await Promise.all([
+      formPessoais.trigger(),
+      formContato.trigger(),
+      formProfissionais.trigger(),
+      formBancarios.trigger(),
+      formExame.trigger(),
+    ]);
+    const stepsLabels = ['Dados Pessoais', 'Contato', 'Profissional', 'Bancários', 'Exame Admissional'];
+    const stepsForms = [formPessoais, formContato, formProfissionais, formBancarios, formExame];
+    const invalidIndex = results.findIndex((ok) => !ok);
+    if (invalidIndex !== -1) {
+      const form = stepsForms[invalidIndex];
+      const msgs = Object.values(form.formState.errors || {})
+        .map((e: any) => e?.message)
+        .filter((m: any): m is string => typeof m === 'string');
+      toast.error(
+        `Não foi possível enviar: complete a etapa "${stepsLabels[invalidIndex]}".`,
+        { description: msgs.slice(0, 3).join(' • ') || 'Há campos obrigatórios pendentes.' }
+      );
+      setCurrentStep(invalidIndex + 1);
+      return;
+    }
+
     // Coletar documentos que possuem arquivos locais para upload
     const docsComArquivo = documentos
       .filter(doc => doc.arquivo instanceof File)
