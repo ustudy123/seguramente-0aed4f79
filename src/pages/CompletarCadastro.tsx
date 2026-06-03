@@ -140,7 +140,21 @@ export default function CompletarCadastro() {
       if (updateError) throw updateError;
 
       await fetchDocumentos();
-      toast.success("Documento enviado com sucesso!");
+
+      // Validação pós-upload: confirma que o documento saiu de "pendente"
+      const { data: verifyList, error: verifyErr } = await supabase.rpc(
+        "get_admissao_documentos_by_token",
+        { _token: token as string }
+      );
+      if (verifyErr) throw verifyErr;
+      const persisted = (verifyList as any[] | null)?.find((d) => d.id === documentoId);
+      if (!persisted || persisted.status !== 'enviado' || !persisted.arquivo_url) {
+        console.error('[CompletarCadastro] Documento ainda pendente após upload:', persisted);
+        toast.error("Documento enviado, mas não foi confirmado no banco. Tente novamente.");
+        return;
+      }
+
+      toast.success("Documento enviado e confirmado!");
     } catch (error) {
       console.error("Erro no upload do documento:", error);
       toast.error("Erro ao enviar documento");
