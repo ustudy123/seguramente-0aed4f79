@@ -71,7 +71,7 @@ export default function CompletarCadastro() {
   };
 
   const ensureDocumentos = async () => {
-    const { error } = await (supabase as any).rpc("ensure_admissao_documentos_by_token", {
+    const { error } = await supabase.rpc("ensure_admissao_documentos_by_token", {
       _token: token as string,
     });
 
@@ -139,11 +139,7 @@ export default function CompletarCadastro() {
 
       if (updateError) throw updateError;
 
-      setDocumentos(prev => prev.map(doc => 
-        doc.id === documentoId 
-          ? { ...doc, status: 'enviado', arquivo_nome: file.name } 
-          : doc
-      ));
+      await fetchDocumentos();
       toast.success("Documento enviado com sucesso!");
     } catch (error) {
       console.error("Erro no upload do documento:", error);
@@ -170,11 +166,7 @@ export default function CompletarCadastro() {
 
       if (error) throw error;
 
-      setDocumentos(prev => prev.map(doc => 
-        doc.id === documentoId 
-          ? { ...doc, status: 'pendente', arquivo_nome: undefined, arquivo_url: undefined } 
-          : doc
-      ));
+      await fetchDocumentos();
       toast.success("Documento removido");
     } catch (error) {
       console.error("Erro ao remover documento:", error);
