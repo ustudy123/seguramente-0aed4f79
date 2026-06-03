@@ -259,17 +259,23 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     autoSaveTimerRef.current = setTimeout(performAutoSave, 3000);
   }, [onAutoSave, performAutoSave]);
 
-  // Watch all forms for changes
-  const watchPessoais = formPessoais.watch();
-  const watchContato = formContato.watch();
-  const watchProfissionais = formProfissionais.watch();
-  const watchBancarios = formBancarios.watch();
-  const watchExame = formExame.watch();
-
+  // Subscribe to form changes once. Using watch(callback) avoids resetting
+  // the debounce timer on every parent re-render (which happens whenever
+  // react-query invalidates and refetches `admissoes`, wiping the 3s timer
+  // before it can ever fire and silently dropping auto-saves).
   useEffect(() => {
-    scheduleAutoSave();
-    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [watchPessoais, watchContato, watchProfissionais, watchBancarios, watchExame, scheduleAutoSave]);
+    const subs = [
+      formPessoais.watch(() => scheduleAutoSave()),
+      formContato.watch(() => scheduleAutoSave()),
+      formProfissionais.watch(() => scheduleAutoSave()),
+      formBancarios.watch(() => scheduleAutoSave()),
+      formExame.watch(() => scheduleAutoSave()),
+    ];
+    return () => {
+      subs.forEach((s) => s.unsubscribe());
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [formPessoais, formContato, formProfissionais, formBancarios, formExame, scheduleAutoSave]);
 
   // ── CPF lookup: busca usuário existente ──────────────────────────────────────
   const buscarUsuarioPorCpf = useCallback(async (cpf: string) => {
