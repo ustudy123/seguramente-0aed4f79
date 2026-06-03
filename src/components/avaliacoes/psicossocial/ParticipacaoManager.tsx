@@ -490,12 +490,20 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               Exportar Links
             </Button>
           )}
-          <Button size="sm" onClick={() => setShowAddDialog(true)}>
-            <UserPlus className="h-4 w-4 mr-1" />
-            Adicionar Elegível
-          </Button>
+          {campanha.status !== "encerrada" && (
+            <Button size="sm" onClick={() => setShowAddDialog(true)}>
+              <UserPlus className="h-4 w-4 mr-1" />
+              Adicionar Elegível
+            </Button>
+          )}
         </div>
       </div>
+
+      {campanha.status === "encerrada" && (
+        <div className="text-xs text-muted-foreground bg-muted/40 border rounded-md px-3 py-2">
+          Esta campanha está <strong>encerrada</strong>. Não é possível adicionar novos participantes.
+        </div>
+      )}
 
       {/* Tabela de participantes */}
       <Card>
