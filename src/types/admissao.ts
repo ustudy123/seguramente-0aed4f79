@@ -16,6 +16,8 @@ export interface DocumentoAdmissao {
   obrigatorio: boolean;
   status: DocumentoStatus;
   arquivo?: File;
+  arquivo_url?: string;
+  arquivo_nome?: string;
   urlPreview?: string;
   dataEnvio?: Date;
   observacao?: string;
