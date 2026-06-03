@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  ClipboardCheck
+  ClipboardCheck,
+  Stethoscope
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,14 @@ export function AdmissaoDetail({
   const [showChecklist, setShowChecklist] = useState(false);
   const resolvedPhotoUrl = useStorageImageUrl(admissao.fotoUrl, 'documentos');
   const { dadosPessoais, dadosContato, dadosProfissionais, dadosBancarios, documentos, status, historicoAprovacao, dataCriacao } = admissao;
+  const exameAdmissional = (admissao as any).exameAdmissional || {};
+
+  const formatDateValue = (value?: string) => {
+    if (!value) return '-';
+    const parsed = parseISO(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return format(parsed, 'dd/MM/yyyy');
+  };
 
   const initials = dadosPessoais.nomeCompleto
     .split(' ')
@@ -196,6 +205,7 @@ export function AdmissaoDetail({
               <InfoCard icon={DollarSign} label="Salário" value={dadosProfissionais.salario} />
               <InfoCard icon={User} label="Gestor Imediato" value={dadosProfissionais.gestorImediato} />
               <InfoCard icon={Building} label="Centro de Custo" value={dadosProfissionais.centroCusto} />
+              <InfoCard icon={Briefcase} label="CBO" value={dadosProfissionais.cbo || '-'} />
             </div>
           </div>
 
@@ -213,6 +223,25 @@ export function AdmissaoDetail({
               {dadosBancarios.chavePix && (
                 <InfoCard icon={CreditCard} label="Chave PIX" value={dadosBancarios.chavePix} />
               )}
+            </div>
+          </div>
+
+          {/* Exame Admissional */}
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Stethoscope className="h-5 w-5 text-primary" />
+              Exame Admissional
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <InfoCard icon={Calendar} label="Data do Exame" value={formatDateValue(exameAdmissional.dataExame)} />
+              <InfoCard icon={Calendar} label="Validade" value={formatDateValue(exameAdmissional.dataValidade)} />
+              <InfoCard icon={Stethoscope} label="Resultado" value={exameAdmissional.resultado || '-'} />
+              <InfoCard icon={Building} label="Clínica" value={exameAdmissional.clinica || '-'} />
+              <InfoCard icon={User} label="Médico Responsável" value={exameAdmissional.medico || '-'} />
+              <InfoCard icon={Briefcase} label="CRM" value={exameAdmissional.crm || '-'} />
+              <div className="sm:col-span-2 lg:col-span-3">
+                <InfoCard icon={ClipboardCheck} label="Observações" value={exameAdmissional.observacoes || '-'} />
+              </div>
             </div>
           </div>
         </TabsContent>
