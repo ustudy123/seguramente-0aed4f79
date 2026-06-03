@@ -1027,6 +1027,7 @@ function AdmissoesTab() {
     documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => {
     try {
+      console.log('[Colaboradores] handleSubmitForm documentosComArquivo:', dados.documentosComArquivo);
       const formData: AdmissaoFormData = {
         nome_completo: dados.dadosPessoais.nomeCompleto, cpf: dados.dadosPessoais.cpf,
         rg: dados.dadosPessoais.rg, data_nascimento: dados.dadosPessoais.dataNascimento,
