@@ -1148,6 +1148,7 @@ function AdmissoesTab() {
       jornadaTrabalho: a.jornada_trabalho || "",
       salario: a.salario ? `R$ ${a.salario.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "",
       gestorImediato: a.gestor_imediato || "", centroCusto: a.centro_custo || "",
+      cbo: (a as any).cbo || "",
     },
     dadosBancarios: {
       banco: a.banco || "", agencia: a.agencia || "", conta: a.conta || "",
