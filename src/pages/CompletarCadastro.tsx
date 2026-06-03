@@ -12,6 +12,7 @@ import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
 import { DocumentoStatus, AdmissaoStatus } from "@/types/admissao";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
+import { buildSafeStorageFileName } from "@/utils/storagePath";
 
 export default function CompletarCadastro() {
   const { token } = useParams();
@@ -114,9 +115,8 @@ export default function CompletarCadastro() {
 
   const handleUploadDocument = async (documentoId: string, file: File) => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${colaborador.tenant_id}/admissoes/${colaborador.id}/docs/${documentoId}-${Math.random()}.${fileExt}`;
-      const filePath = `admissao/documentos/${fileName}`;
+      const safeFileName = buildSafeStorageFileName(documentoId, file.name);
+      const filePath = `${colaborador.tenant_id}/admissoes/${colaborador.id}/${safeFileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
