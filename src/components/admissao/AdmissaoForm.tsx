@@ -86,6 +86,8 @@ interface AdmissaoFormProps {
     dadosBancarios: Partial<DadosBancarios>;
     exameAdmissional?: Partial<DadosExameAdmissional>;
   }) => Promise<void>;
+  onDocumentUploadImmediate?: (documentoId: string, file: File) => Promise<void>;
+  onDocumentRemoveImmediate?: (documentoId: string) => Promise<void>;
   initialData?: {
     dadosPessoais?: Partial<DadosPessoais>;
     dadosContato?: Partial<DadosContato>;
@@ -97,7 +99,7 @@ interface AdmissaoFormProps {
 }
 
 
-export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
+export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, onDocumentUploadImmediate, onDocumentRemoveImmediate, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const { departamentos } = useDepartamentos();
   const { filiais } = useFiliais();
@@ -368,20 +370,57 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     }
   };
 
-  const handleDocumentUpload = (documentoId: string, file: File) => {
-    setDocumentos(prev => prev.map(doc =>
+  const handleDocumentUpload = async (documentoId: string, file: File) => {
+    const previousDocumentos = documentos;
+    const nextDocumentos = previousDocumentos.map(doc =>
       doc.id === documentoId
-        ? { ...doc, arquivo: file, status: 'enviado', dataEnvio: new Date() }
+        ? {
+            ...doc,
+            arquivo: file,
+            arquivo_nome: file.name,
+            status: 'enviado',
+            dataEnvio: new Date(),
+          }
         : doc
-    ));
+    );
+
+    setDocumentos(nextDocumentos);
+
+    if (onDocumentUploadImmediate) {
+      try {
+        await onDocumentUploadImmediate(documentoId, file);
+      } catch (error) {
+        setDocumentos(previousDocumentos);
+        throw error;
+      }
+    }
   };
 
-  const handleDocumentRemove = (documentoId: string) => {
-    setDocumentos(prev => prev.map(doc =>
+  const handleDocumentRemove = async (documentoId: string) => {
+    const previousDocumentos = documentos;
+    const nextDocumentos = previousDocumentos.map(doc =>
       doc.id === documentoId
-        ? { ...doc, arquivo: undefined, status: 'pendente', dataEnvio: undefined }
+        ? {
+            ...doc,
+            arquivo: undefined,
+            arquivo_url: undefined,
+            arquivo_nome: undefined,
+            status: 'pendente',
+            dataEnvio: undefined,
+          }
         : doc
-    ));
+    );
+
+    setDocumentos(nextDocumentos);
+
+    if (onDocumentRemoveImmediate) {
+      try {
+        await onDocumentRemoveImmediate(documentoId);
+      } catch (error) {
+        setDocumentos(previousDocumentos);
+        throw error;
+      }
+    }
   };
 
   const handleToggleObrigatorio = (documentoId: string, obrigatorio: boolean) => {
