@@ -368,6 +368,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
   };
 
   const handleDocumentUpload = (documentoId: string, file: File) => {
+    console.log('[AdmissaoForm] Adicionando arquivo ao documento:', documentoId, file.name);
     setDocumentos(prev => prev.map(doc =>
       doc.id === documentoId
         ? { ...doc, arquivo: file, status: 'enviado', dataEnvio: new Date() }
@@ -424,6 +425,8 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
         file: doc.arquivo as File,
         obrigatorio: doc.obrigatorio,
       }));
+
+    console.log('[AdmissaoForm] FinalSubmit docsComArquivo:', docsComArquivo);
 
     onSubmit({
       dadosPessoais: formPessoais.getValues(),

@@ -1027,6 +1027,7 @@ function AdmissoesTab() {
     documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => {
     try {
+      console.log('[Colaboradores] handleSubmitForm documentosComArquivo:', dados.documentosComArquivo);
       const formData: AdmissaoFormData = {
         nome_completo: dados.dadosPessoais.nomeCompleto, cpf: dados.dadosPessoais.cpf,
         rg: dados.dadosPessoais.rg, data_nascimento: dados.dadosPessoais.dataNascimento,
@@ -1061,18 +1062,31 @@ function AdmissoesTab() {
 
         // Upload documentos que foram anexados no formulário
         if (dados.documentosComArquivo?.length) {
-          for (const docLocal of dados.documentosComArquivo) {
-            const indexMatch = docLocal.documentoId.match(/new-doc-(\d+)/);
-            if (indexMatch && novaAdmissao.documentos?.[parseInt(indexMatch[1])]) {
-              const realDocId = novaAdmissao.documentos[parseInt(indexMatch[1])].id;
-              try {
-                await uploadDocumento(novaAdmissao.id, realDocId, docLocal.file);
-              } catch (err) {
-                console.error('Erro ao enviar documento:', err);
+          // Precisamos buscar os IDs reais dos documentos recém-criados
+          const { data: realDocs, error: realDocsErr } = await supabase
+            .from('admissao_documentos')
+            .select('id, nome, tipo')
+            .eq('admissao_id', novaAdmissao.id);
+
+          if (!realDocsErr && realDocs) {
+            for (const docLocal of dados.documentosComArquivo) {
+              const indexMatch = docLocal.documentoId.match(/new-doc-(\d+)/);
+              if (indexMatch) {
+                const index = parseInt(indexMatch[1]);
+                // O fallback para novaAdmissao.documentos pode falhar se o hook não atualizou rápido
+                // então usamos realDocs que acabamos de buscar diretamente do banco
+                const realDoc = realDocs[index];
+                if (realDoc) {
+                  try {
+                    await uploadDocumento(novaAdmissao.id, realDoc.id, docLocal.file);
+                  } catch (err) {
+                    console.error('Erro ao enviar documento:', err);
+                  }
+                }
               }
             }
+            toast.success("Documentos enviados com sucesso!");
           }
-          toast.success("Documentos enviados com sucesso!");
         }
       } else if (viewMode === "edit" && selectedId) {
         await atualizarAdmissao({ id: selectedId, dados: formData });
