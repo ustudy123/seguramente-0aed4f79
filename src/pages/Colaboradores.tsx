@@ -1076,6 +1076,23 @@ function AdmissoesTab() {
         }
       } else if (viewMode === "edit" && selectedId) {
         await atualizarAdmissao({ id: selectedId, dados: formData });
+
+        // Upload documentos anexados na edição
+        if (dados.documentosComArquivo?.length) {
+          for (const docLocal of dados.documentosComArquivo) {
+            // Em edit mode os IDs já são reais (vieram do banco). Só fazemos upload
+            // se NÃO for um placeholder `new-doc-N`.
+            if (!docLocal.documentoId.startsWith('new-doc-')) {
+              try {
+                await uploadDocumento(selectedId, docLocal.documentoId, docLocal.file);
+              } catch (err) {
+                console.error('Erro ao enviar documento:', err);
+              }
+            }
+          }
+          toast.success("Documentos enviados com sucesso!");
+        }
+
         toast.success("Admissão atualizada com sucesso!"); setViewMode("detail");
       }
     } catch (error: any) { toast.error(error.message || "Erro ao salvar admissão"); }
@@ -1154,6 +1171,15 @@ function AdmissoesTab() {
       banco: a.banco || "", agencia: a.agencia || "", conta: a.conta || "",
       tipoConta: a.tipo_conta || "", chavePix: a.chave_pix || "",
     },
+    exameAdmissional: {
+      dataExame: (a as any).exame_admissional_data || "",
+      dataValidade: (a as any).exame_admissional_validade || "",
+      resultado: (a as any).exame_admissional_resultado || "",
+      clinica: (a as any).exame_admissional_clinica || "",
+      medico: (a as any).exame_admissional_medico || "",
+      crm: (a as any).exame_admissional_crm || "",
+      observacoes: (a as any).exame_admissional_observacoes || "",
+    },
     documentos: (a.documentos || []).map(d => ({
       id: d.id, nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, status: d.status,
       arquivo_url: d.arquivo_url || undefined, arquivo_nome: d.arquivo_nome || undefined,
@@ -1199,6 +1225,8 @@ function AdmissoesTab() {
               dadosContato: selectedAdmissaoFormatted.dadosContato,
               dadosProfissionais: selectedAdmissaoFormatted.dadosProfissionais,
               dadosBancarios: selectedAdmissaoFormatted.dadosBancarios,
+              exameAdmissional: (selectedAdmissaoFormatted as any).exameAdmissional,
+              documentos: (selectedAdmissaoFormatted as any).documentos,
             } : undefined}
           />
         </div>
