@@ -599,7 +599,10 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
       </Card>
 
       {/* Dialog: Adicionar participante */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog open={showAddDialog} onOpenChange={(open) => {
+        setShowAddDialog(open);
+        if (!open) setForm({ colaborador_nome: "", colaborador_cpf: "", setor: "", cargo: "", unidade: "", turno: "" });
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Adicionar Participante Elegível</DialogTitle>
