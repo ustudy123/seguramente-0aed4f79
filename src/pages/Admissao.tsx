@@ -317,6 +317,7 @@ export default function Admissao() {
         toast.success('Documento enviado com sucesso!');
       } catch (error: any) {
         toast.error(error.message || 'Erro ao enviar documento');
+        throw error;
       }
     }
   };
@@ -336,6 +337,7 @@ export default function Admissao() {
       toast.info('Documento removido');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao remover documento');
+      throw error;
     }
   };
 
