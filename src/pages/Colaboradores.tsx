@@ -1128,7 +1128,7 @@ function AdmissoesTab() {
     );
   }
 
-  const admissoesFormatted = admissoes.map(a => ({
+  const admissoesFormatted = admissoes.filter(a => a.status !== 'desligado').map(a => ({
     id: a.id,
     dadosPessoais: {
       nomeCompleto: a.nome_completo, cpf: a.cpf, rg: a.rg || "", dataNascimento: a.data_nascimento || "",
