@@ -45,7 +45,8 @@ export default function CompletarCadastro() {
       }
 
       setColaborador(data);
-      fetchDocumentos();
+      await ensureDocumentos();
+      await fetchDocumentos();
     } catch (error) {
       console.error("Erro ao buscar colaborador:", error);
     } finally {
@@ -67,6 +68,14 @@ export default function CompletarCadastro() {
       ...doc,
       status: doc.status as DocumentoStatus,
     })));
+  };
+
+  const ensureDocumentos = async () => {
+    const { error } = await supabase.rpc("ensure_admissao_documentos_by_token", {
+      _token: token as string,
+    });
+
+    if (error) throw error;
   };
 
   const handleUploadPhoto = async (file: File) => {
