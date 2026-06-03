@@ -192,6 +192,8 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [vinculoFilter, setVinculoFilter] = useState<"clt" | "pj" | "todos">("clt");
+
   const [showForm, setShowForm] = useState(false);
   const [showNovoChoice, setShowNovoChoice] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
@@ -357,22 +359,33 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
     queryKey: ["colaboradores-list", tenantId, empresaAtivaId],
     queryFn: async (): Promise<ColaboradorExtendido[]> => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url, inativo")
-        .eq("tenant_id", tenantId)
-        .eq("status", "concluido");
-
-      if (empresaAtivaId) {
-        query = query.eq("empresa_id", empresaAtivaId);
+      // Paginate to bypass Supabase 1000-row default limit
+      const PAGE = 1000;
+      const acc: any[] = [];
+      let from = 0;
+      for (let i = 0; i < 100; i++) {
+        let q = supabase
+          .from("admissoes")
+          .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url, inativo")
+          .eq("tenant_id", tenantId)
+          .eq("status", "concluido");
+        if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+        const { data, error } = await q.order("nome_completo").range(from, from + PAGE - 1);
+        if (error) throw error;
+        const chunk = data || [];
+        acc.push(...chunk);
+        if (chunk.length < PAGE) break;
+        from += PAGE;
       }
-
-      const { data, error } = await query.order("nome_completo");
-      if (error) throw error;
-      return data || [];
+      return acc;
     },
     enabled: !!tenantId,
   });
+
+  // Tipos de vínculo considerados PJ/CNPJ
+  const PJ_TIPOS = new Set(["pj", "prolabore", "pro_labore", "terceiro", "terceirizado", "autonomo"]);
+  const isPJ = (tc: string | null | undefined) =>
+    PJ_TIPOS.has((tc || "").toString().trim().toLowerCase());
 
   const filteredColaboradores = colaboradores.filter((colab) => {
     const matchesSearch = 
@@ -381,8 +394,16 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       colab.cargo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDepartment = departmentFilter === "all" || colab.departamento === departmentFilter;
     const matchesStatus = statusFilter === "all" || colab.status === statusFilter;
-    return matchesSearch && matchesDepartment && matchesStatus;
+    // Vínculo: CLT (não-PJ) | PJ (somente ativos) | Todos (oculta PJ inativos)
+    const ehPJ = isPJ(colab.tipo_contrato);
+    const inativo = !!(colab as any).inativo;
+    let matchesVinculo = true;
+    if (vinculoFilter === "clt") matchesVinculo = !ehPJ;
+    else if (vinculoFilter === "pj") matchesVinculo = ehPJ && !inativo;
+    else matchesVinculo = !ehPJ || !inativo; // todos: oculta PJ inativo
+    return matchesSearch && matchesDepartment && matchesStatus && matchesVinculo;
   });
+
 
   const departments = [
     ...new Set(
@@ -417,6 +438,16 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               {departments.map((dept) => (
                 <SelectItem key={dept} value={dept}>{dept}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={vinculoFilter} onValueChange={(v) => setVinculoFilter(v as "clt" | "pj" | "todos")}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Vínculo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="clt">CLT</SelectItem>
+              <SelectItem value="pj">PJ / CNPJ</SelectItem>
+              <SelectItem value="todos">Todos os vínculos</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={handleExportarColaboradores} title="Exportar colaboradores">

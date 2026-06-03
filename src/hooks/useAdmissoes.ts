@@ -39,21 +39,27 @@ export function useAdmissoes() {
     queryFn: async (): Promise<AdmissaoCompleta[]> => {
       if (!tenantId) return [];
 
-      // Fetch admissões
-      let query = supabase
-        .from('admissoes')
-        .select('*')
-        .eq('tenant_id', tenantId);
-
-      if (empresaAtivaId) {
-        query = query.eq('empresa_id', empresaAtivaId);
+      // Fetch admissões with pagination to bypass Supabase 1000-row default limit
+      const PAGE = 1000;
+      const admissoesData: any[] = [];
+      let from = 0;
+      for (let i = 0; i < 100; i++) {
+        let q = supabase
+          .from('admissoes')
+          .select('*')
+          .eq('tenant_id', tenantId);
+        if (empresaAtivaId) q = q.eq('empresa_id', empresaAtivaId);
+        const { data, error: admissoesError } = await q
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (admissoesError) throw admissoesError;
+        const chunk = data || [];
+        admissoesData.push(...chunk);
+        if (chunk.length < PAGE) break;
+        from += PAGE;
       }
+      if (!admissoesData.length) return [];
 
-      const { data: admissoesData, error: admissoesError } = await query
-        .order('created_at', { ascending: false });
-
-      if (admissoesError) throw admissoesError;
-      if (!admissoesData?.length) return [];
 
       // Fetch related data for all admissões
       const admissaoIds = admissoesData.map(a => a.id);
