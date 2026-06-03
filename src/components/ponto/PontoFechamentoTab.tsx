@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import { format } from "date-fns";
-import { Lock, Unlock, FileText, CheckCircle, AlertTriangle, Download, Archive } from "lucide-react";
+import { Lock, Unlock, FileText, CheckCircle, AlertTriangle, Download, Archive, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_FECHAMENTO: Record<string, { label: string; color: string }> = {
   aberto: { label: "Aberto", color: "bg-green-100 text-green-800" },
@@ -24,6 +27,7 @@ const STATUS_FECHAMENTO: Record<string, { label: string; color: string }> = {
 };
 
 const STATUS_ESPELHO: Record<string, { label: string; color: string }> = {
+  preview: { label: "Em andamento", color: "bg-blue-100 text-blue-800" },
   gerado: { label: "Gerado", color: "bg-gray-100 text-gray-800" },
   enviado: { label: "Enviado", color: "bg-blue-100 text-blue-800" },
   confirmado: { label: "Confirmado", color: "bg-green-100 text-green-800" },
@@ -43,9 +47,87 @@ export function PontoFechamentoTab() {
 
   const { data: fechamentos = [] } = useFechamentos();
   const { data: espelhos = [], isLoading } = useEspelhos(competencia);
+  const queryClient = useQueryClient();
 
   const fechamentoAtual = fechamentos.find(f => f.competencia === competencia);
   const isFechado = fechamentoAtual?.status === "fechado";
+
+  // Live preview: aggregate ponto_diario when there are no persisted espelhos
+  const periodo = (() => {
+    const [yStr, mStr] = competencia.split("-");
+    const y = parseInt(yStr); const m = parseInt(mStr);
+    const lastDay = new Date(y, m, 0).getDate();
+    return { start: `${competencia}-01`, end: `${competencia}-${String(lastDay).padStart(2, "0")}` };
+  })();
+
+  const { data: previewEspelhos = [], isLoading: loadingPreview } = useQuery({
+    queryKey: ["ponto-espelhos-preview", tenantId, empresaAtivaId, competencia],
+    queryFn: async (): Promise<PontoEspelho[]> => {
+      if (!tenantId) return [];
+      let q = fromTable("ponto_diario")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .gte("data", periodo.start)
+        .lte("data", periodo.end);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      const map = new Map<string, any>();
+      (data || []).forEach((r: any) => {
+        const key = r.colaborador_cpf || r.colaborador_id;
+        if (!key) return;
+        if (!map.has(key)) {
+          map.set(key, {
+            id: `preview-${key}`,
+            tenant_id: tenantId,
+            colaborador_id: r.colaborador_id,
+            colaborador_nome: r.colaborador_nome,
+            colaborador_cpf: r.colaborador_cpf,
+            competencia,
+            total_horas_normais_minutos: 0,
+            total_horas_extras_50_minutos: 0,
+            total_horas_extras_100_minutos: 0,
+            total_adicional_noturno_minutos: 0,
+            total_faltas: 0,
+            total_atrasos_minutos: 0,
+            total_dsr: 0,
+            banco_horas_saldo_minutos: 0,
+            status: "preview",
+            ressalva_texto: null,
+            data_confirmacao: null,
+            created_at: r.created_at,
+          });
+        }
+        const agg = map.get(key);
+        agg.total_horas_extras_50_minutos += Number(r.horas_extras_50_minutos || 0);
+        agg.total_horas_extras_100_minutos += Number(r.horas_extras_100_minutos || 0);
+        agg.total_adicional_noturno_minutos += Number(r.adicional_noturno_minutos || 0);
+        agg.total_atrasos_minutos += Number(r.atraso_minutos || 0);
+        if (r.status === "falta") agg.total_faltas += 1;
+      });
+      return Array.from(map.values()).sort((a, b) => (a.colaborador_nome || "").localeCompare(b.colaborador_nome || ""));
+    },
+    enabled: !!tenantId && espelhos.length === 0,
+  });
+
+  // Realtime: refresh espelhos/preview when ponto changes
+  useEffect(() => {
+    if (!tenantId) return;
+    const channel = supabase
+      .channel(`ponto-espelho-live-${tenantId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ponto_diario", filter: `tenant_id=eq.${tenantId}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ponto-espelhos-preview"] });
+        queryClient.invalidateQueries({ queryKey: ["ponto-espelhos"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "ponto_registros", filter: `tenant_id=eq.${tenantId}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ponto-espelhos-preview"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tenantId, queryClient]);
+
+  const rowsToShow: PontoEspelho[] = espelhos.length > 0 ? espelhos : previewEspelhos;
+  const isPreview = espelhos.length === 0 && previewEspelhos.length > 0;
 
   const formatMinutos = (min: number) => {
     const abs = Math.abs(min);
@@ -167,7 +249,15 @@ export function PontoFechamentoTab() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="w-4 h-4" /> Espelhos de Ponto — {competencia}
+            {isPreview && (
+              <Badge variant="outline" className="ml-2 text-xs">Pré-visualização ao vivo</Badge>
+            )}
           </CardTitle>
+          {isPreview && (
+            <p className="text-xs text-muted-foreground">
+              Mostrando totais calculados em tempo real a partir das marcações do período. Feche o período para gerar os espelhos oficiais.
+            </p>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -184,13 +274,13 @@ export function PontoFechamentoTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {(isLoading || loadingPreview) && rowsToShow.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
-              ) : espelhos.length === 0 ? (
+              ) : rowsToShow.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {isFechado ? "Nenhum espelho gerado." : "Feche o período para gerar espelhos."}
+                  Nenhum registro de ponto encontrado para {competencia}.
                 </TableCell></TableRow>
-              ) : espelhos.map(e => (
+              ) : rowsToShow.map(e => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.colaborador_nome}</TableCell>
                   <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_50_minutos)}</TableCell>
@@ -199,13 +289,15 @@ export function PontoFechamentoTab() {
                   <TableCell className="text-right">{e.total_faltas}</TableCell>
                   <TableCell className="text-right font-mono">{formatMinutos(e.total_atrasos_minutos)}</TableCell>
                   <TableCell>
-                    <Badge className={STATUS_ESPELHO[e.status]?.color}>{STATUS_ESPELHO[e.status]?.label}</Badge>
+                    <Badge className={STATUS_ESPELHO[e.status]?.color}>{STATUS_ESPELHO[e.status]?.label || e.status}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => gerarEspelhoPDF(e)} title="Baixar PDF">
-                        <Download className="w-4 h-4" />
-                      </Button>
+                      {e.status !== "preview" && (
+                        <Button size="sm" variant="ghost" onClick={() => gerarEspelhoPDF(e)} title="Baixar PDF">
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      )}
                       {e.status === "gerado" && (
                         <>
                           <Button size="sm" variant="ghost" className="text-success" onClick={() => handleConfirmar(e.id)} title="Confirmar">
@@ -224,6 +316,7 @@ export function PontoFechamentoTab() {
           </Table>
         </CardContent>
       </Card>
+
 
       {/* Dialog Fechar */}
       <Dialog open={showFechar} onOpenChange={setShowFechar}>
