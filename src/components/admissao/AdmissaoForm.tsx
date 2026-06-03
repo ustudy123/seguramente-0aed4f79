@@ -425,6 +425,8 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
         obrigatorio: doc.obrigatorio,
       }));
 
+    console.log('[AdmissaoForm] FinalSubmit docsComArquivo:', docsComArquivo);
+
     onSubmit({
       dadosPessoais: formPessoais.getValues(),
       dadosContato: formContato.getValues(),
