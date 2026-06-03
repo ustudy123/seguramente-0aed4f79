@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import { format } from "date-fns";
-import { Lock, Unlock, FileText, CheckCircle, AlertTriangle, Download, Archive } from "lucide-react";
+import { Lock, Unlock, FileText, CheckCircle, AlertTriangle, Download, Archive, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_FECHAMENTO: Record<string, { label: string; color: string }> = {
   aberto: { label: "Aberto", color: "bg-green-100 text-green-800" },
