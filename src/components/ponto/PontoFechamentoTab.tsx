@@ -69,7 +69,7 @@ export function PontoFechamentoTab() {
         .eq("tenant_id", tenantId)
         .gte("data", periodo.start)
         .lte("data", periodo.end);
-      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
       const { data, error } = await q as { data: any[] | null; error: Error | null };
       if (error) throw error;
       const map = new Map<string, any>();

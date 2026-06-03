@@ -114,7 +114,7 @@ const Ponto = () => {
         .select("colaborador_cpf,hora_marcacao,tipo_marcacao")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
-      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
       const { data, error } = await q.order("hora_marcacao", { ascending: true }) as { data: any[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
