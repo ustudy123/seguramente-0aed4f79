@@ -519,10 +519,12 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                 Adicione os colaboradores elegíveis para gerar links individuais e controlar a participação
               </p>
-              <Button size="sm" className="mt-4" onClick={() => setShowAddDialog(true)}>
-                <UserPlus className="h-4 w-4 mr-1" />
-                Adicionar primeiro elegível
-              </Button>
+              {campanha.status !== "encerrada" && (
+                <Button size="sm" className="mt-4" onClick={() => setShowAddDialog(true)}>
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Adicionar primeiro elegível
+                </Button>
+              )}
             </div>
           ) : (
             <Table>
