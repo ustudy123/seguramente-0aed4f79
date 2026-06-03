@@ -91,6 +91,7 @@ interface AdmissaoFormProps {
     dadosProfissionais?: Partial<DadosProfissionais>;
     dadosBancarios?: Partial<DadosBancarios>;
     exameAdmissional?: Partial<DadosExameAdmissional>;
+    documentos?: Array<Partial<DocumentoAdmissao> & { id: string; nome: string; tipo: string; obrigatorio: boolean; status: any }>;
   };
 }
 
