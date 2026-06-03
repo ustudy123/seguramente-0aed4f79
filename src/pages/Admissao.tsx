@@ -112,6 +112,7 @@ export default function Admissao() {
     dadosProfissionais: any;
     dadosBancarios: any;
     exameAdmissional?: any;
+    documentos?: { id: string; nome: string; tipo: string; obrigatorio: boolean; status: string }[];
     documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => {
     try {
@@ -168,13 +169,51 @@ export default function Admissao() {
         setSelectedId(novaAdmissao.id);
         setViewMode('detail');
 
-        // Upload documentos que foram anexados no formulário
-        if (dados.documentosComArquivo?.length) {
-          for (const docLocal of dados.documentosComArquivo) {
-            // Encontrar o ID real do documento pelo índice (new-doc-X -> index X)
-            const indexMatch = docLocal.documentoId.match(/new-doc-(\d+)/);
-            if (indexMatch && novaAdmissao.documentos?.[parseInt(indexMatch[1])]) {
-              const realDocId = novaAdmissao.documentos[parseInt(indexMatch[1])].id;
+        if (dados.documentos?.length) {
+          const docsPadraoPorChave = new Map(
+            (novaAdmissao.documentos || []).map((doc) => [`${doc.nome}::${doc.tipo}`, doc])
+          );
+
+          const docsParaInserir = dados.documentos
+            .filter((doc) => !docsPadraoPorChave.has(`${doc.nome}::${doc.tipo}`))
+            .map((doc) => ({
+              admissao_id: novaAdmissao.id,
+              tenant_id: novaAdmissao.tenant_id,
+              nome: doc.nome,
+              tipo: doc.tipo,
+              obrigatorio: doc.obrigatorio,
+              status: 'pendente' as const,
+            }));
+
+          if (docsParaInserir.length) {
+            const { error: insertDocsError } = await supabase
+              .from('admissao_documentos')
+              .insert(docsParaInserir);
+
+            if (insertDocsError) throw insertDocsError;
+          }
+
+          const { data: syncedDocs, error: syncedDocsError } = await supabase
+            .from('admissao_documentos')
+            .select('id, nome, tipo')
+            .eq('admissao_id', novaAdmissao.id)
+            .order('created_at', { ascending: true });
+
+          if (syncedDocsError) throw syncedDocsError;
+
+          // Upload documentos que foram anexados no formulário
+          if (dados.documentosComArquivo?.length && syncedDocs) {
+            const syncedDocsByKey = new Map(
+              syncedDocs.map((doc) => [`${doc.nome}::${doc.tipo}`, doc.id])
+            );
+
+            for (const docLocal of dados.documentosComArquivo) {
+              const docMeta = dados.documentos.find((doc) => doc.id === docLocal.documentoId);
+              if (!docMeta) continue;
+
+              const realDocId = syncedDocsByKey.get(`${docMeta.nome}::${docMeta.tipo}`);
+              if (!realDocId) continue;
+
               try {
                 await uploadDocumento(novaAdmissao.id, realDocId, docLocal.file);
               } catch (err) {
@@ -210,6 +249,59 @@ export default function Admissao() {
         }
       } else if (viewMode === 'edit' && selectedId) {
         await atualizarAdmissao({ id: selectedId, dados: formData });
+
+        let documentosReaisPorLocalId = new Map<string, string>();
+        if (dados.documentos?.length) {
+          const docsExistentesReais = dados.documentos.filter((doc) => !doc.id.startsWith('new-doc-'));
+          docsExistentesReais.forEach((doc) => documentosReaisPorLocalId.set(doc.id, doc.id));
+
+          const docsNovos = dados.documentos.filter((doc) => doc.id.startsWith('new-doc-'));
+          if (docsNovos.length) {
+            const { data: admissaoAtual, error: admissaoAtualError } = await supabase
+              .from('admissoes')
+              .select('tenant_id')
+              .eq('id', selectedId)
+              .single();
+
+            if (admissaoAtualError) throw admissaoAtualError;
+
+            const docsParaInserir = docsNovos.map((doc) => ({
+              admissao_id: selectedId,
+              tenant_id: admissaoAtual.tenant_id,
+              nome: doc.nome,
+              tipo: doc.tipo,
+              obrigatorio: doc.obrigatorio,
+              status: 'pendente' as const,
+            }));
+
+            const { data: insertedDocs, error: insertedDocsError } = await supabase
+              .from('admissao_documentos')
+              .insert(docsParaInserir)
+              .select('id, nome, tipo');
+
+            if (insertedDocsError) throw insertedDocsError;
+
+            docsNovos.forEach((doc) => {
+              const inserted = insertedDocs?.find((item) => item.nome === doc.nome && item.tipo === doc.tipo);
+              if (inserted) documentosReaisPorLocalId.set(doc.id, inserted.id);
+            });
+          }
+        }
+
+        if (dados.documentosComArquivo?.length) {
+          for (const docLocal of dados.documentosComArquivo) {
+            const realDocId = documentosReaisPorLocalId.get(docLocal.documentoId);
+            if (!realDocId) continue;
+
+            try {
+              await uploadDocumento(selectedId, realDocId, docLocal.file);
+            } catch (err) {
+              console.error('Erro ao enviar documento:', err);
+            }
+          }
+          toast.success('Documentos enviados com sucesso!');
+        }
+
         toast.success('Admissão atualizada com sucesso!');
         setViewMode('detail');
       }
