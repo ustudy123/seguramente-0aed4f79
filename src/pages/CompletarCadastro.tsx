@@ -45,7 +45,8 @@ export default function CompletarCadastro() {
       }
 
       setColaborador(data);
-      fetchDocumentos();
+      await ensureDocumentos();
+      await fetchDocumentos();
     } catch (error) {
       console.error("Erro ao buscar colaborador:", error);
     } finally {
@@ -67,6 +68,14 @@ export default function CompletarCadastro() {
       ...doc,
       status: doc.status as DocumentoStatus,
     })));
+  };
+
+  const ensureDocumentos = async () => {
+    const { error } = await supabase.rpc("ensure_admissao_documentos_by_token", {
+      _token: token as string,
+    });
+
+    if (error) throw error;
   };
 
   const handleUploadPhoto = async (file: File) => {
@@ -130,11 +139,7 @@ export default function CompletarCadastro() {
 
       if (updateError) throw updateError;
 
-      setDocumentos(prev => prev.map(doc => 
-        doc.id === documentoId 
-          ? { ...doc, status: 'enviado', arquivo_nome: file.name } 
-          : doc
-      ));
+      await fetchDocumentos();
       toast.success("Documento enviado com sucesso!");
     } catch (error) {
       console.error("Erro no upload do documento:", error);
@@ -161,11 +166,7 @@ export default function CompletarCadastro() {
 
       if (error) throw error;
 
-      setDocumentos(prev => prev.map(doc => 
-        doc.id === documentoId 
-          ? { ...doc, status: 'pendente', arquivo_nome: undefined, arquivo_url: undefined } 
-          : doc
-      ));
+      await fetchDocumentos();
       toast.success("Documento removido");
     } catch (error) {
       console.error("Erro ao remover documento:", error);
