@@ -22,6 +22,7 @@ import {
 import { useAuth } from './useAuth';
 import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
 import { toast } from 'sonner';
+import { buildSafeStorageFileName } from '@/utils/storagePath';
 
 export function useAdmissoes() {
   const queryClient = useQueryClient();
@@ -389,7 +390,8 @@ export function useAdmissoes() {
   ): Promise<string> => {
     if (!tenantId || !user) throw new Error('Tenant ou usuário não encontrado');
 
-    const filePath = `${tenantId}/admissoes/${admissaoId}/${documentoId}-${file.name}`;
+    const safeFileName = buildSafeStorageFileName(documentoId, file.name);
+    const filePath = `${tenantId}/admissoes/${admissaoId}/${safeFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('documentos')

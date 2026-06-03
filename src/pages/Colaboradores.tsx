@@ -1178,14 +1178,14 @@ function AdmissoesTab() {
   const handleDocumentUpload = async (documentoId: string, file: File) => {
     if (selectedId) {
       try { await uploadDocumento(selectedId, documentoId, file); toast.success("Documento enviado com sucesso!"); }
-      catch (error: any) { toast.error(error.message || "Erro ao enviar documento"); }
+      catch (error: any) { toast.error(error.message || "Erro ao enviar documento"); throw error; }
     }
   };
   const handleDocumentRemove = async (documentoId: string) => {
     try {
       await atualizarDocumento({ documentoId, dados: { arquivo_url: null, arquivo_nome: null, arquivo_tamanho: null, status: "pendente", data_envio: null } });
       toast.info("Documento removido");
-    } catch (error: any) { toast.error(error.message || "Erro ao remover documento"); }
+    } catch (error: any) { toast.error(error.message || "Erro ao remover documento"); throw error; }
   };
   const handleDocumentApprove = async (documentoId: string) => {
     try { await atualizarDocumento({ documentoId, dados: { status: "aprovado" } }); toast.success("Documento aprovado!"); }

@@ -103,9 +103,13 @@ function DocumentItem({
       setUploadProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          void Promise.resolve(onUpload(file)).catch(() => {
-            setUploadProgress(0);
-          });
+          void Promise.resolve(onUpload(file))
+            .then(() => {
+              setUploadProgress(0);
+            })
+            .catch(() => {
+              setUploadProgress(0);
+            });
           return 100;
         }
         return prev + 10;
