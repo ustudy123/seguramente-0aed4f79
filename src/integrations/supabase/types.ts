@@ -21542,6 +21542,10 @@ export type Database = {
         Args: { p_doc: string; p_tipo: string }
         Returns: string
       }
+      ensure_admissao_documentos_by_token: {
+        Args: { _token: string }
+        Returns: number
+      }
       epi_atualizar_estoque_local_otimista: {
         Args: {
           p_estoque_local_id: string
