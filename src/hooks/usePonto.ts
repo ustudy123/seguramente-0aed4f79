@@ -129,9 +129,9 @@ export function usePonto() {
           query = query.eq("data", dataStr);
         }
 
-        // Isolamento estrito por empresa ativa (operacional)
+        // Empresa ativa OU registros sem empresa atribuída (histórico)
         if (empresaAtivaId) {
-          query = query.eq("empresa_id", empresaAtivaId);
+          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
         }
 
         const { data: pontos, error } = await query
