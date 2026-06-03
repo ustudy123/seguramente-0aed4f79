@@ -249,7 +249,15 @@ export function PontoFechamentoTab() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="w-4 h-4" /> Espelhos de Ponto — {competencia}
+            {isPreview && (
+              <Badge variant="outline" className="ml-2 text-xs">Pré-visualização ao vivo</Badge>
+            )}
           </CardTitle>
+          {isPreview && (
+            <p className="text-xs text-muted-foreground">
+              Mostrando totais calculados em tempo real a partir das marcações do período. Feche o período para gerar os espelhos oficiais.
+            </p>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -266,13 +274,13 @@ export function PontoFechamentoTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {(isLoading || loadingPreview) && rowsToShow.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
-              ) : espelhos.length === 0 ? (
+              ) : rowsToShow.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {isFechado ? "Nenhum espelho gerado." : "Feche o período para gerar espelhos."}
+                  Nenhum registro de ponto encontrado para {competencia}.
                 </TableCell></TableRow>
-              ) : espelhos.map(e => (
+              ) : rowsToShow.map(e => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.colaborador_nome}</TableCell>
                   <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_50_minutos)}</TableCell>
@@ -281,13 +289,15 @@ export function PontoFechamentoTab() {
                   <TableCell className="text-right">{e.total_faltas}</TableCell>
                   <TableCell className="text-right font-mono">{formatMinutos(e.total_atrasos_minutos)}</TableCell>
                   <TableCell>
-                    <Badge className={STATUS_ESPELHO[e.status]?.color}>{STATUS_ESPELHO[e.status]?.label}</Badge>
+                    <Badge className={STATUS_ESPELHO[e.status]?.color}>{STATUS_ESPELHO[e.status]?.label || e.status}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => gerarEspelhoPDF(e)} title="Baixar PDF">
-                        <Download className="w-4 h-4" />
-                      </Button>
+                      {e.status !== "preview" && (
+                        <Button size="sm" variant="ghost" onClick={() => gerarEspelhoPDF(e)} title="Baixar PDF">
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      )}
                       {e.status === "gerado" && (
                         <>
                           <Button size="sm" variant="ghost" className="text-success" onClick={() => handleConfirmar(e.id)} title="Confirmar">
@@ -306,6 +316,7 @@ export function PontoFechamentoTab() {
           </Table>
         </CardContent>
       </Card>
+
 
       {/* Dialog Fechar */}
       <Dialog open={showFechar} onOpenChange={setShowFechar}>
