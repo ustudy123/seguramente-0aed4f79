@@ -688,7 +688,7 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => { setForm({ colaborador_nome: "", colaborador_cpf: "", setor: "", cargo: "", unidade: "", turno: "" }); setShowAddDialog(false); }}>Cancelar</Button>
             <Button
               onClick={() => adicionarParticipante.mutate(form)}
               disabled={
