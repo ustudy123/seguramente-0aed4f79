@@ -84,39 +84,75 @@ export function usePontoEscalas() {
     enabled: !!tenantId,
   });
 
+  const sincronizarPeriodos = async (escalaId: string, diasConfig: any) => {
+    if (!diasConfig || typeof diasConfig !== "object") return;
+    if (!tenantId) return;
+    const DIAS = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"];
+    const novos: any[] = [];
+    DIAS.forEach((dia) => {
+      const c = diasConfig[dia];
+      if (!c || !c.trabalha) return;
+      const entrada = (c.entrada || "").substring(0,5);
+      const saida = (c.saida || "").substring(0,5);
+      if (!entrada || !saida) return;
+      if (c.tem_almoco && c.inicio_almoco && c.fim_almoco) {
+        const ini = c.inicio_almoco.substring(0,5);
+        const fim = c.fim_almoco.substring(0,5);
+        novos.push({ tenant_id: tenantId, escala_id: escalaId, dia_semana: dia, ordem_bloco: 1, hora_inicio: entrada, hora_fim: ini });
+        novos.push({ tenant_id: tenantId, escala_id: escalaId, dia_semana: dia, ordem_bloco: 2, hora_inicio: fim, hora_fim: saida });
+      } else {
+        novos.push({ tenant_id: tenantId, escala_id: escalaId, dia_semana: dia, ordem_bloco: 1, hora_inicio: entrada, hora_fim: saida });
+      }
+    });
+    await fromTable("ponto_escala_periodos").delete().eq("escala_id", escalaId);
+    if (novos.length > 0) {
+      const { error } = await fromTable("ponto_escala_periodos").insert(novos as any);
+      if (error) console.error("Erro ao sincronizar blocos diários:", error);
+    }
+  };
+
   const criarEscalaMutation = useMutation({
-    mutationFn: async (escala: Partial<PontoEscala>) => {
+    mutationFn: async (escala: Partial<PontoEscala> & { dias_config?: any }) => {
       if (!tenantId) throw new Error("Não autenticado");
+      const { dias_config, ...rest } = escala as any;
       const { data, error } = await fromTable("ponto_escalas")
-        .insert({ ...escala, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
+        .insert({ ...rest, dias_config, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
         .select()
         .single();
       if (error) throw error;
+      if (data?.id && dias_config) await sincronizarPeriodos(data.id, dias_config);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ponto-escalas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-escala-periodos"] });
       toast.success("Escala criada com sucesso!");
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const atualizarEscalaMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<PontoEscala> & { id: string }) => {
+    mutationFn: async ({ id, ...updates }: Partial<PontoEscala> & { id: string; dias_config?: any }) => {
+      const { dias_config, ...rest } = updates as any;
+      const payload: any = { ...rest };
+      if (dias_config !== undefined) payload.dias_config = dias_config;
       const { data, error } = await fromTable("ponto_escalas")
-        .update(updates as any)
+        .update(payload as any)
         .eq("id", id)
         .select()
         .single();
       if (error) throw error;
+      if (dias_config) await sincronizarPeriodos(id, dias_config);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ponto-escalas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-escala-periodos"] });
       toast.success("Escala atualizada!");
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const excluirEscalaMutation = useMutation({
     mutationFn: async (id: string) => {
