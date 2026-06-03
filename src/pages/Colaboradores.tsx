@@ -1208,6 +1208,8 @@ function AdmissoesTab() {
               dadosContato: selectedAdmissaoFormatted.dadosContato,
               dadosProfissionais: selectedAdmissaoFormatted.dadosProfissionais,
               dadosBancarios: selectedAdmissaoFormatted.dadosBancarios,
+              exameAdmissional: (selectedAdmissaoFormatted as any).exameAdmissional,
+              documentos: (selectedAdmissaoFormatted as any).documentos,
             } : undefined}
           />
         </div>
