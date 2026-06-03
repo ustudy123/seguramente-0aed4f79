@@ -372,13 +372,13 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, onDocumentUploadI
 
   const handleDocumentUpload = async (documentoId: string, file: File) => {
     const previousDocumentos = documentos;
-    const nextDocumentos = previousDocumentos.map(doc =>
+    const nextDocumentos: DocumentoAdmissao[] = previousDocumentos.map(doc =>
       doc.id === documentoId
         ? {
             ...doc,
             arquivo: file,
             arquivo_nome: file.name,
-            status: 'enviado',
+            status: 'enviado' as const,
             dataEnvio: new Date(),
           }
         : doc
@@ -398,14 +398,14 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, onDocumentUploadI
 
   const handleDocumentRemove = async (documentoId: string) => {
     const previousDocumentos = documentos;
-    const nextDocumentos = previousDocumentos.map(doc =>
+    const nextDocumentos: DocumentoAdmissao[] = previousDocumentos.map(doc =>
       doc.id === documentoId
         ? {
             ...doc,
             arquivo: undefined,
             arquivo_url: undefined,
             arquivo_nome: undefined,
-            status: 'pendente',
+            status: 'pendente' as const,
             dataEnvio: undefined,
           }
         : doc
