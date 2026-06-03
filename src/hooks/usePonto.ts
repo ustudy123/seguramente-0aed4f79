@@ -158,9 +158,9 @@ export function usePonto() {
           .eq("tenant_id", tenantId)
           .eq("data_marcacao", hoje);
 
-        // Isolamento estrito por empresa ativa (operacional)
+        // Empresa ativa OU marcações sem empresa atribuída (histórico)
         if (empresaAtivaId) {
-          query = query.eq("empresa_id", empresaAtivaId);
+          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
         }
 
         const { data, error } = await query
