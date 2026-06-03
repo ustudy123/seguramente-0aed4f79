@@ -312,6 +312,18 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     toast.success('Dados do usuário aplicados ao cadastro!');
   }, [usuarioEncontrado, formPessoais, formContato, formProfissionais]);
 
+  const getCurrentStepErrors = (): string[] => {
+    const formByStep: Record<number, any> = {
+      1: formPessoais, 2: formContato, 3: formProfissionais, 4: formBancarios, 5: formExame,
+    };
+    const form = formByStep[currentStep];
+    if (!form) return [];
+    const errs = form.formState.errors || {};
+    return Object.values(errs)
+      .map((e: any) => e?.message)
+      .filter((m: any): m is string => typeof m === 'string' && m.length > 0);
+  };
+
   const validateCurrentStep = async (): Promise<boolean> => {
     switch (currentStep) {
       case 1:
@@ -333,6 +345,16 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     const isValid = await validateCurrentStep();
     if (isValid && currentStep < 6) {
       setCurrentStep(currentStep + 1);
+      return;
+    }
+    if (!isValid) {
+      const errors = getCurrentStepErrors();
+      const stepTitle = STEPS[currentStep - 1]?.title || `Etapa ${currentStep}`;
+      const detail = errors.slice(0, 3).join(' • ');
+      toast.error(
+        `Preencha os campos obrigatórios em "${stepTitle}" antes de avançar.`,
+        { description: detail || 'Há campos obrigatórios pendentes nesta etapa.' }
+      );
     }
   };
 
@@ -366,7 +388,31 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     ));
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
+    // Validar TODAS as etapas obrigatórias antes de enviar
+    const results = await Promise.all([
+      formPessoais.trigger(),
+      formContato.trigger(),
+      formProfissionais.trigger(),
+      formBancarios.trigger(),
+      formExame.trigger(),
+    ]);
+    const stepsLabels = ['Dados Pessoais', 'Contato', 'Profissional', 'Bancários', 'Exame Admissional'];
+    const stepsForms = [formPessoais, formContato, formProfissionais, formBancarios, formExame];
+    const invalidIndex = results.findIndex((ok) => !ok);
+    if (invalidIndex !== -1) {
+      const form = stepsForms[invalidIndex];
+      const msgs = Object.values(form.formState.errors || {})
+        .map((e: any) => e?.message)
+        .filter((m: any): m is string => typeof m === 'string');
+      toast.error(
+        `Não foi possível enviar: complete a etapa "${stepsLabels[invalidIndex]}".`,
+        { description: msgs.slice(0, 3).join(' • ') || 'Há campos obrigatórios pendentes.' }
+      );
+      setCurrentStep(invalidIndex + 1);
+      return;
+    }
+
     // Coletar documentos que possuem arquivos locais para upload
     const docsComArquivo = documentos
       .filter(doc => doc.arquivo instanceof File)

@@ -986,6 +986,7 @@ function AdmissoesTab() {
       salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
       gestor_imediato: dados.dadosProfissionais.gestorImediato,
       centro_custo: dados.dadosProfissionais.centroCusto,
+      cbo: dados.dadosProfissionais.cbo,
       banco: dados.dadosBancarios.banco,
       agencia: dados.dadosBancarios.agencia,
       conta: dados.dadosBancarios.conta,
@@ -1042,6 +1043,7 @@ function AdmissoesTab() {
         tipo_contrato: dados.dadosProfissionais.tipoContrato, jornada_trabalho: dados.dadosProfissionais.jornadaTrabalho,
         salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
         gestor_imediato: dados.dadosProfissionais.gestorImediato, centro_custo: dados.dadosProfissionais.centroCusto,
+        cbo: dados.dadosProfissionais.cbo || undefined,
         banco: dados.dadosBancarios.banco, agencia: dados.dadosBancarios.agencia,
         conta: dados.dadosBancarios.conta, tipo_conta: dados.dadosBancarios.tipoConta,
         chave_pix: dados.dadosBancarios.chavePix,
@@ -1146,6 +1148,7 @@ function AdmissoesTab() {
       jornadaTrabalho: a.jornada_trabalho || "",
       salario: a.salario ? `R$ ${a.salario.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "",
       gestorImediato: a.gestor_imediato || "", centroCusto: a.centro_custo || "",
+      cbo: (a as any).cbo || "",
     },
     dadosBancarios: {
       banco: a.banco || "", agencia: a.agencia || "", conta: a.conta || "",
