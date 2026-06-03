@@ -114,11 +114,13 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
       (!empresaAtivaId || f.empresa_id === empresaAtivaId),
   );
   const [documentos, setDocumentos] = useState<DocumentoAdmissao[]>(
-    DOCUMENTOS_OBRIGATORIOS.map((doc, index) => ({
-      ...doc,
-      id: `new-doc-${index}`,
-      status: 'pendente',
-    }))
+    initialData?.documentos && initialData.documentos.length > 0
+      ? (initialData.documentos as DocumentoAdmissao[])
+      : DOCUMENTOS_OBRIGATORIOS.map((doc, index) => ({
+          ...doc,
+          id: `new-doc-${index}`,
+          status: 'pendente',
+        }))
   );
 
   // Form for step 1 - Dados Pessoais
