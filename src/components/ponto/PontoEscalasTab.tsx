@@ -208,6 +208,17 @@ export function PontoEscalasTab() {
       payload.sabado_util = !!escalaForm.dias_config.sabado?.trabalha || (escalaForm.compensacoes_mensais || []).some((c: Compensacao) => c.dia_semana === "sabado");
       payload.domingo_util = !!escalaForm.dias_config.domingo?.trabalha || (escalaForm.compensacoes_mensais || []).some((c: Compensacao) => c.dia_semana === "domingo");
       payload.compensacoes_mensais = escalaForm.compensacoes_mensais || [];
+      // Sincroniza resumo (Horário) e intervalo padrão a partir do primeiro dia trabalhado
+      const primeiroDia = DIAS_KEYS.map(k => escalaForm.dias_config[k] as DiaConfig).find(d => d?.trabalha);
+      if (primeiroDia) {
+        payload.hora_entrada_padrao = primeiroDia.entrada || payload.hora_entrada_padrao;
+        payload.hora_saida_padrao = primeiroDia.saida || payload.hora_saida_padrao;
+        if (primeiroDia.tem_almoco && primeiroDia.inicio_almoco && primeiroDia.fim_almoco) {
+          const toMin = (h: string) => { const [hh, mm] = h.split(":").map(Number); return hh * 60 + mm; };
+          const intervalo = toMin(primeiroDia.fim_almoco) - toMin(primeiroDia.inicio_almoco);
+          if (intervalo > 0) payload.intervalo_intrajornada_minutos = intervalo;
+        }
+      }
       // limpa campos ciclo
       payload.ciclo_horas_trabalho = null;
       payload.ciclo_horas_descanso = null;
