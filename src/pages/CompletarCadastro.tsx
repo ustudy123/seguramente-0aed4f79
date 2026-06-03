@@ -189,9 +189,20 @@ export default function CompletarCadastro() {
   };
 
   const handleSubmit = async () => {
-    const missingRequired = documentos.filter(d => d.obrigatorio && d.status === 'pendente');
+    // Refetch antes da validação para garantir estado mais recente do banco
+    await fetchDocumentos();
+    const { data: freshList, error: freshErr } = await supabase.rpc(
+      "get_admissao_documentos_by_token",
+      { _token: token as string }
+    );
+    if (freshErr) {
+      toast.error("Não foi possível validar os documentos. Tente novamente.");
+      return;
+    }
+    const list = (freshList as any[] | null) ?? [];
+    const missingRequired = list.filter((d) => d.obrigatorio && (d.status === 'pendente' || !d.arquivo_url));
     if (missingRequired.length > 0) {
-      toast.error(`Por favor, envie todos os documentos obrigatórios: ${missingRequired.map(d => d.nome).join(", ")}`);
+      toast.error(`Envie todos os documentos obrigatórios: ${missingRequired.map((d) => d.nome).join(", ")}`);
       return;
     }
 
