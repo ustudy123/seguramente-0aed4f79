@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Settings, Monitor, Link2, Globe2, Camera, MapPin, Save, Loader2, Info } from "lucide-react";
+import { Settings, Monitor, Link2, Globe2, Camera, MapPin, Save, Loader2, Info, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+
+import { ConfigJustificativasModal } from "./ConfigJustificativasModal";
 
 interface PontoConfig {
   id: string;
@@ -28,6 +30,8 @@ export function PontoConfigTab() {
   const { tenantId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const [showJustificativasModal, setShowJustificativasModal] = useState(false);
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["ponto-config", tenantId],
@@ -269,6 +273,31 @@ export function PontoConfigTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Justificativas */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="w-5 h-5 text-primary" /> Justificativas e Abonos
+          </CardTitle>
+          <CardDescription>Gerencie os motivos que os colaboradores podem usar para justificar ausências ou ajustes.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            variant="outline" 
+            className="w-full sm:w-auto gap-2"
+            onClick={() => setShowJustificativasModal(true)}
+          >
+            <FileText className="w-4 h-4" />
+            Configurar Justificativas
+          </Button>
+        </CardContent>
+      </Card>
+
+      <ConfigJustificativasModal 
+        open={showJustificativasModal} 
+        onOpenChange={setShowJustificativasModal} 
+      />
 
       {/* Save */}
       <div className="flex justify-end">
