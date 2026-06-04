@@ -518,7 +518,7 @@ export function SolicitarAjusteFolhaInterno({
                             ) : (
                               <label className={`flex items-center gap-1 text-[10px] cursor-pointer text-muted-foreground hover:text-foreground ${futuro ? "pointer-events-none opacity-50" : ""}`}>
                                 <Paperclip className="w-3 h-3" />
-                                <span>Anexar</span>
+                                <span>Anexar {ativo && justAtivas.find(j => j.id === ed.justificativaId)?.requer_anexo && "*"}</span>
                                 <input
                                   type="file" className="hidden"
                                   accept="image/*,application/pdf"
