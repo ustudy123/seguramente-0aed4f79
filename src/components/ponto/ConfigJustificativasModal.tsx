@@ -127,7 +127,7 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
                       <div className="font-medium">{j.nome}</div>
                       {j.descricao && <div className="text-xs text-muted-foreground">{j.descricao}</div>}
                     </td>
-                    <td className="px-3 py-2 text-xs">{j.requer_anexo ? "Sugerido" : "Opcional"}</td>
+                    <td className="px-3 py-2 text-xs">{j.requer_anexo ? "Obrigatório" : "Opcional"}</td>
                     <td className="px-3 py-2">
                       <Badge variant={j.ativo ? "outline" : "secondary"} className={j.ativo ? "border-emerald-500 text-emerald-700 dark:text-emerald-400" : ""}>
                         {j.ativo ? "Ativa" : "Inativa"}
