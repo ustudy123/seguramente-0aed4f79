@@ -219,7 +219,14 @@ export function SolicitarAjusteFolhaInterno({
     const now = new Date();
     for (const data of diasComAlteracao) {
       const ed = editDia(data);
-      const { motivo } = resolverMotivo(ed);
+      const { motivo, justId } = resolverMotivo(ed);
+      
+      // Valida obrigatoriedade de anexo se a justificativa exigir
+      const just = justAtivas.find(j => j.id === justId);
+      if (just?.requer_anexo && !ed.anexo) {
+        return `O anexo é obrigatório para a justificativa "${motivo}" em ${isoToBR(data)}.`;
+      }
+
       if (!motivo || motivo.length < 3) return `Selecione uma justificativa para ${isoToBR(data)}.`;
       const abono = Number(ed.horasAbono) || 0;
       if (abono < 0 || abono > 24) return `Horas de abono inválidas em ${isoToBR(data)} (0 a 24).`;
