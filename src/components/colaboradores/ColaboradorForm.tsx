@@ -139,6 +139,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       matricula_esocial: "",
       cbo: "",
       foto_url: "",
+      bate_ponto: true,
     },
   });
   const resolvedPhotoUrl = useStorageImageUrl(form.watch("foto_url"), "documentos");
