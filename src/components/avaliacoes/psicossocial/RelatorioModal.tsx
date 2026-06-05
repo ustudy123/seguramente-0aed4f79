@@ -752,11 +752,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-muted-foreground">{d.risco}%</span>
-                              <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
-                                {GRO_NIVEL_RISCO_LABELS[d.nivel]}
-                              </Badge>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-xs text-muted-foreground font-medium">{d.risco}%</span>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-muted-foreground leading-none mb-1">P{d.prob} · S{d.sev}</span>
+                                <Badge variant="outline" className={cn("text-[10px] h-5 py-0", NIVEL_BADGE[d.nivel])}>
+                                  {GRO_NIVEL_RISCO_LABELS[d.nivel]}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                         ))}
