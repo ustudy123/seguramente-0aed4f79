@@ -71,13 +71,20 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const seen = new Set<string>();
     return lista
       .sort((a, b) => {
-        // Matriz sempre primeiro
+        // "S.L. DUARTE" (Empresa Principal) sempre em primeiro
+        const nameA = (a.razao_social || a.nome_fantasia || "").toUpperCase();
+        const nameB = (b.razao_social || b.nome_fantasia || "").toUpperCase();
+        const isDuarteA = nameA.includes("DUARTE");
+        const isDuarteB = nameB.includes("DUARTE");
+
+        if (isDuarteA && !isDuarteB) return -1;
+        if (!isDuarteA && isDuarteB) return 1;
+
+        // Matriz vem depois do DUARTE, mas antes de Filiais
         if (a.tipo_unidade === "matriz" && b.tipo_unidade !== "matriz") return -1;
         if (a.tipo_unidade !== "matriz" && b.tipo_unidade === "matriz") return 1;
         
-        // Ordem alfabética para o resto (ou entre matrizes/filiais)
-        const nameA = a.razao_social || a.nome_fantasia || "";
-        const nameB = b.razao_social || b.nome_fantasia || "";
+        // Ordem alfabética para o resto
         return nameA.localeCompare(nameB);
       })
       .filter((e) => {
