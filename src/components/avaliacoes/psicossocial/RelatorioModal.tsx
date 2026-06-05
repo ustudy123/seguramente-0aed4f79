@@ -35,12 +35,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // Sanitize text for jsPDF
-// jsPDF standard fonts support WinAnsiEncoding which covers most Western European accents.
 const sanitize = (text: string): string => {
   if (!text) return "";
-  // Map common accented characters to their closest equivalents if jsPDF has trouble, 
-  // but for standard Western European, it should work if not normalized to NFD.
-  return text;
+  return text.normalize("NFC");
 };
 
 const MINIMO_ANONIMATO = 5;
