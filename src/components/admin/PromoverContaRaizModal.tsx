@@ -136,36 +136,26 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
-    const updateTenantAndOwner = async () => {
-      if (finalPrincipalId && migrationType === 'new') {
-        const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
-        if (pLocal) {
-          const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
-          
-          setNovoTenant(prev => ({
-            ...prev,
-            nome: nomeEmpresa || "",
-            slug: slugify(nomeEmpresa || "")
-          }));
+    if (finalPrincipalId && migrationType === 'new') {
+      const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
+      if (pLocal) {
+        const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
+        
+        setNovoTenant(prev => ({
+          ...prev,
+          nome: nomeEmpresa || "",
+          slug: nomeEmpresa ? nomeEmpresa.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) : ""
+        }));
 
-          // Busca dados adicionais como o e-mail da empresa para o proprietário
-          const { data, error } = await supabase
-            .from("empresa_cadastro")
-            .select("email")
-            .eq("id", finalPrincipalId)
-            .maybeSingle();
-          
-          if (!error && data?.email) {
-            setOwner(prev => ({
-              ...prev,
-              email: data.email || prev.email
-            }));
-          }
+        if (pLocal.email) {
+          setOwner(prev => ({
+            ...prev,
+            email: pLocal.email || prev.email,
+            nome: pLocal.razao_social || prev.nome
+          }));
         }
       }
-    };
-
-    updateTenantAndOwner();
+    }
   }, [finalPrincipalId, migrationType, empresasRaw]);
 
   const palavraConfirmacao = selecionadas.length === 1
