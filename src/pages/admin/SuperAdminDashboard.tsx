@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare, Brain, FileSignature, Rocket,
+  Activity, MessageSquare, Brain, FileSignature, Rocket, Edit,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
