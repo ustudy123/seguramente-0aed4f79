@@ -16,26 +16,29 @@ export interface Colaborador {
   empresa_id?: string | null;
   gestor_imediato?: string | null;
   foto_url?: string | null;
+  bate_ponto?: boolean | null;
 }
 
 interface UseColaboradoresOptions {
   /** Exclui contratos PJ/Pró-labore/Terceiros (usado em módulos exclusivos CLT como Ponto e Férias). */
   excluirPJ?: boolean;
+  /** Mantém apenas colaboradores marcados como "bate ponto" (usado no módulo Ponto). */
+  apenasBatePonto?: boolean;
 }
 
 export function useColaboradores(options: UseColaboradoresOptions = {}) {
-  const { excluirPJ = false } = options;
+  const { excluirPJ = false, apenasBatePonto = false } = options;
   const { tenantId } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
 
   const { data: colaboradores = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["colaboradores", tenantId, empresaAtivaId, excluirPJ],
+    queryKey: ["colaboradores", tenantId, empresaAtivaId, excluirPJ, apenasBatePonto],
     queryFn: async (): Promise<Colaborador[]> => {
       if (!tenantId) return [];
 
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, empresa_id, gestor_imediato, foto_url, tipo_contrato")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, empresa_id, gestor_imediato, foto_url, tipo_contrato, bate_ponto")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
 
