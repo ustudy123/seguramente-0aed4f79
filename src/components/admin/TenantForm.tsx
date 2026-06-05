@@ -38,33 +38,34 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
    };
  }
  
- export function TenantForm({ onSubmit, isLoading, onCancel, initialData }: TenantFormProps) {
-   const [nome, setNome] = useState(initialData?.nome || '');
-   const [slug, setSlug] = useState(initialData?.slug || '');
-  const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
+  export function TenantForm({ onSubmit, isLoading, onCancel, initialData }: TenantFormProps) {
+    const isEditing = !!initialData;
+    const [nome, setNome] = useState(initialData?.nome || '');
+    const [slug, setSlug] = useState(initialData?.slug || '');
+    const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
+    
+    // Owner fields - only for new tenants
+    const [ownerNome, setOwnerNome] = useState('');
+    const [ownerEmail, setOwnerEmail] = useState('');
+    const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
+    const [ownerPassword, setOwnerPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
   
-  // Owner fields
-  const [ownerNome, setOwnerNome] = useState('');
-  const [ownerEmail, setOwnerEmail] = useState('');
-  const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
-  const [ownerPassword, setOwnerPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
- 
-   const generateSlug = (name: string) => {
-     return name
-       .toLowerCase()
-       .normalize('NFD')
-       .replace(/[\u0300-\u036f]/g, '')
-       .replace(/[^a-z0-9]+/g, '-')
-       .replace(/^-|-$/g, '');
-   };
- 
-   const handleNomeChange = (value: string) => {
-     setNome(value);
-     if (!initialData?.slug) {
-       setSlug(generateSlug(value));
-     }
-   };
+    const generateSlug = (name: string) => {
+      return name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    };
+  
+    const handleNomeChange = (value: string) => {
+      setNome(value);
+      if (!isEditing) {
+        setSlug(generateSlug(value));
+      }
+    };
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
