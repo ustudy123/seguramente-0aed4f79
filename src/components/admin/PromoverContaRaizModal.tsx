@@ -49,10 +49,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const [targetTenantSearch, setTargetTenantSearch] = useState("");
   
   const [novoTenant, setNovoTenant] = useState({
-    nome: preselectedEmpresaNome || "",
-    slug: preselectedEmpresaNome
-      ? preselectedEmpresaNome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)
-      : "",
+    nome: "",
+    slug: "",
     plano: "starter",
   });
   const [owner, setOwner] = useState({ email: "", nome: "", password: "", inviteMode: true });
@@ -144,16 +142,14 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
         setNovoTenant(prev => ({
           ...prev,
           nome: nomeEmpresa || "",
-          slug: nomeEmpresa ? nomeEmpresa.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) : ""
+          slug: nomeEmpresa ? slugify(nomeEmpresa) : ""
         }));
 
-        if (pLocal.email) {
-          setOwner(prev => ({
-            ...prev,
-            email: pLocal.email || prev.email,
-            nome: pLocal.razao_social || prev.nome
-          }));
-        }
+        setOwner(prev => ({
+          ...prev,
+          email: pLocal.email || prev.email,
+          nome: pLocal.razao_social || prev.nome
+        }));
       }
     }
   }, [finalPrincipalId, migrationType, empresasRaw]);
@@ -171,10 +167,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     setTargetTenantId("");
     setTargetTenantSearch("");
     setNovoTenant({
-      nome: preselectedEmpresaNome || "",
-      slug: preselectedEmpresaNome
-        ? preselectedEmpresaNome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)
-        : "",
+      nome: "",
+      slug: "",
       plano: "starter"
     });
     setOwner({ email: "", nome: "", password: "", inviteMode: true });
