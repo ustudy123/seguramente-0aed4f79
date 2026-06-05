@@ -268,8 +268,9 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
      // Mutations
      createTenant: createTenantMutation.mutateAsync,
      updateTenant: updateTenantMutation.mutateAsync,
-     toggleTenant: toggleTenantMutation.mutateAsync,
-     createTenantOwner: createTenantOwnerMutation.mutateAsync,
+      toggleTenant: toggleTenantMutation.mutateAsync,
+      deleteTenant: deleteTenantMutation.mutateAsync,
+      createTenantOwner: createTenantOwnerMutation.mutateAsync,
      getTenantUsers,
  
      // Status
