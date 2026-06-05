@@ -78,15 +78,18 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
-    await onSubmit({ 
-      nome, 
-      slug, 
-      plano,
-      ownerNome,
-      ownerEmail,
-      accessMethod,
-      ownerPassword: accessMethod === 'password' ? ownerPassword : undefined,
-    });
+     await onSubmit({ 
+       nome, 
+       slug, 
+       plano,
+       email,
+       telefone,
+       cnpj,
+       ownerNome,
+       ownerEmail,
+       accessMethod,
+       ownerPassword: accessMethod === 'password' ? ownerPassword : undefined,
+     });
    };
  
    const isFormValid = nome && slug && (isEditing || (ownerNome && ownerEmail && 
