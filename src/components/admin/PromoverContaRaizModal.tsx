@@ -319,17 +319,19 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             </div>
 
             {selectedIds.size > 1 && (
-              <Alert>
-                <Building2 className="w-4 h-4" />
+              <Alert className="border-amber-500/50 bg-amber-500/5">
+                <Building2 className="w-4 h-4 text-amber-600" />
                 <AlertDescription className="text-sm">
-                  <strong>{selectedIds.size} empresas</strong> serão migradas para o <strong>mesmo</strong> novo tenant,
-                  sob a responsabilidade do <strong>mesmo</strong> dono.
+                  <strong>Atenção:</strong> As {selectedIds.size} empresas selecionadas serão migradas para o <strong>mesmo</strong> novo tenant (grupo).
+                  Elas continuarão juntas sob uma única conta-raiz independente e sob a responsabilidade do mesmo dono.
+                  <br /><br />
                   {matrizesSelecionadas > 0 && filiaisSelecionadas > 0 && (
-                    <> Vínculo matriz→filial é preservado quando ambas estão no lote.</>
+                    <p className="mt-1 text-xs">• O vínculo matriz→filial será preservado para as empresas deste lote.</p>
                   )}
                   {filiaisSemMatriz > 0 && (
-                    <> <strong className="text-destructive">{filiaisSemMatriz} filial(is)</strong> estão sem a matriz no lote — chegarão como "soltas" no novo tenant.</>
+                    <p className="mt-1 text-xs text-destructive">• {filiaisSemMatriz} filial(is) estão sendo migradas sem suas matrizes e ficarão "soltas" no novo grupo.</p>
                   )}
+                  <p className="mt-2 font-medium text-xs text-amber-700">Se deseja que cada empresa tenha sua própria conta-raiz independente, realize o processo individualmente para cada uma.</p>
                 </AlertDescription>
               </Alert>
             )}
