@@ -46,34 +46,33 @@ export function EmpresasPromociveisPanel() {
 
   // Lista de empresas-mãe (principais) para o seletor
   const maes = useMemo(() => {
-    const map = new Map<string, { tenant_id: string; tenant_nome: string; razao_social: string; total: number; is_principal: boolean }>();
+    // Agrupa todas as empresas por tenant
+    const tenantsMap = new Map<string, EmpresaRow[]>();
     for (const e of data) {
-      if (e.is_principal) {
-        map.set(e.tenant_id, {
-          tenant_id: e.tenant_id,
-          tenant_nome: e.tenant_nome,
-          razao_social: e.razao_social,
-          total: e.total_empresas_tenant - 1, // derivadas
-          is_principal: true,
-        });
-      }
-    }
-    
-    // Fallback: se houver empresas sem uma "principal" marcada (is_principal=true), 
-    // garantir que o tenant ainda apareça no mapeamento.
-    for (const e of data) {
-      if (!map.has(e.tenant_id)) {
-        map.set(e.tenant_id, {
-          tenant_id: e.tenant_id,
-          tenant_nome: e.tenant_nome,
-          razao_social: e.razao_social,
-          total: e.total_empresas_tenant - 1,
-          is_principal: false,
-        });
-      }
+      const group = tenantsMap.get(e.tenant_id) || [];
+      group.push(e);
+      tenantsMap.set(e.tenant_id, group);
     }
 
-    return Array.from(map.values()).sort((a, b) => a.razao_social.localeCompare(b.razao_social));
+    const result = Array.from(tenantsMap.entries()).map(([tenantId, empresas]) => {
+      // Tenta encontrar a marcada como principal (rn=1 da RPC)
+      let principal = empresas.find(e => e.is_principal);
+      
+      // Fallback: se por algum motivo não houver is_principal=true, pega a primeira
+      if (!principal) principal = empresas[0];
+
+      return {
+        tenant_id: tenantId,
+        tenant_nome: principal.tenant_nome,
+        razao_social: principal.razao_social,
+        cnpj: principal.cnpj,
+        total: empresas.length - 1, // derivadas
+        is_principal: !!principal.is_principal,
+        empresas: empresas, // Guardamos todas para facilitar o filtro depois
+      };
+    });
+
+    return result.sort((a, b) => a.razao_social.localeCompare(b.razao_social));
   }, [data]);
 
   const filtered = useMemo(() => {
@@ -170,18 +169,12 @@ export function EmpresasPromociveisPanel() {
               </TableHeader>
               <TableBody>
                 {maes.map((m) => {
-                  // Tentamos encontrar a empresa marcada como principal no banco
-                  let mae = data.find(e => e.tenant_id === m.tenant_id && e.is_principal);
-                  
-                  // Se não houver uma "principal" explícita, pegamos a primeira do tenant como referência
-                  if (!mae) {
-                    mae = data.find(e => e.tenant_id === m.tenant_id);
-                  }
-
+                  // A "mae" de exibição é a empresa principal do grupo (is_principal=true ou fallback)
+                  const mae = m.empresas.find(e => e.is_principal) || m.empresas[0];
                   if (!mae) return null;
 
-                  const derivadas = data.filter(e => e.tenant_id === mae!.tenant_id && e.empresa_id !== mae!.empresa_id);
-                  const isExpanded = selectedTenantId === mae.tenant_id;
+                  const derivadas = m.empresas.filter(e => e.empresa_id !== mae.empresa_id);
+                  const isExpanded = selectedTenantId === m.tenant_id;
                   
                   const searchTerms = search.toLowerCase().trim();
                   const matchesSearch = (row: EmpresaRow) => 
@@ -190,8 +183,11 @@ export function EmpresasPromociveisPanel() {
                     row.cnpj?.toLowerCase().includes(searchTerms) ||
                     row.tenant_owner_email?.toLowerCase().includes(searchTerms);
 
+                  // Se estiver filtrando por um tenant específico e não for este, oculta
                   if (selectedTenantId !== "__all__" && !isExpanded) return null;
-                  if (!matchesSearch(mae) && !derivadas.some(matchesSearch)) return null;
+                  
+                  // Se houver busca por texto, verifica se a mãe OU alguma derivada bate com a busca
+                  if (searchTerms && !matchesSearch(mae) && !derivadas.some(matchesSearch)) return null;
 
                   return (
                     <React.Fragment key={mae.tenant_id}>
