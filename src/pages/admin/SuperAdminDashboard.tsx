@@ -178,8 +178,11 @@ export default function SuperAdminDashboard() {
                                 <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/admin/tenants/${tenant.id}`)}>
-                                  <Eye className="w-4 h-4 mr-2" />Ver detalhes
+                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowEditForm(true); }}>
+                                  <Edit className="w-4 h-4 mr-2" />Editar empresa
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/admin/tenants/${tenant.id}`)} disabled>
+                                  <Eye className="w-4 h-4 mr-2" />Ver detalhes (Em breve)
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowOwnerForm(true); }}>
                                   <UserPlus className="w-4 h-4 mr-2" />Criar usuário owner
