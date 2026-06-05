@@ -281,16 +281,11 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Heurística de nome do novo tenant: se 1 empresa, usa o nome dela; se múltiplas, sugere matriz ou genérico
   const handleAdvanceStep1 = () => {
-    if (selecionadas.length === 1) {
-      const e = selecionadas[0];
-      const nome = e.nome_fantasia || e.razao_social;
-      setNovoTenant((s) => ({ ...s, nome, slug: slugify(nome) }));
-    } else if (selecionadas.length > 1 && !novoTenant.nome) {
-      // sugere o nome da matriz se houver
-      const matriz = selecionadas.find((e) => e.tipo_unidade === "matriz");
-      if (matriz) {
-        const nome = matriz.nome_fantasia || matriz.razao_social;
-        setNovoTenant((s) => ({ ...s, nome, slug: slugify(nome) }));
+    if (migrationType === 'new' && !novoTenant.nome) {
+      const principal = empresasRaw.find(e => e.id === finalPrincipalId);
+      if (principal) {
+        const nome = principal.nome_fantasia || principal.razao_social;
+        setNovoTenant((s) => ({ ...s, nome: nome || "", slug: slugify(nome || "") }));
       }
     }
     setStep(2);
@@ -311,7 +306,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             Promover Empresas a Conta-Raiz
           </DialogTitle>
           <DialogDescription>
-            Tenant de origem: <strong>{tenantNome}</strong> · Passo {step} de 4
+            Tenant de origem: <strong>{tenantNome}</strong> · Passo {step} de 3
           </DialogDescription>
         </DialogHeader>
 
@@ -357,58 +352,56 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                     : "Nenhuma empresa encontrada"}
                 </p>
               ) : (
-                (() => {
-                  // Identifica qual seria a "principal" do novo grupo (Matriz ou a mais antiga)
-                  const matriz = selecionadas.find(e => e.tipo_unidade === 'matriz');
-                  const oldest = [...selecionadas].sort((a, b) => {
-                    const ca = empresasRaw.find(r => r.id === a.id)?.created_at || '';
-                    const cb = empresasRaw.find(r => r.id === b.id)?.created_at || '';
-                    return ca.localeCompare(cb);
-                  })[0];
-                  const principalProvavelId = matriz?.id || oldest?.id;
+                filteredEmpresas.map((e) => {
+                  const checked = selectedIds.has(e.id);
+                  const matrizDoLote = e.matriz_id && selectedIds.has(e.matriz_id);
+                  const isPrincipal = e.id === finalPrincipalId;
 
-                  return filteredEmpresas.map((e) => {
-                    const checked = selectedIds.has(e.id);
-                    const matrizDoLote = e.matriz_id && selectedIds.has(e.matriz_id);
-                    const isPrincipalProvavel = checked && e.id === principalProvavelId && selectedIds.size > 1;
-
-                    return (
-                      <label
-                        key={e.id}
-                        className={`flex items-start gap-2 p-2 border-b last:border-0 cursor-pointer hover:bg-muted/30 ${checked ? "bg-primary/5" : ""}`}
-                      >
-                        <Checkbox checked={checked} onCheckedChange={() => toggleEmpresa(e.id)} className="mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium truncate">{e.razao_social}</span>
-                            {e.tipo_unidade === "matriz" && (
-                              <Badge variant="default" className="text-[10px] h-4 px-1">Matriz</Badge>
-                            )}
-                            {e.tipo_unidade === "filial" && (
-                              <Badge variant="outline" className="text-[10px] h-4 px-1">Filial</Badge>
-                            )}
-                            {isPrincipalProvavel && (
-                              <Badge className="bg-amber-500 text-white text-[10px] h-4 px-1 border-0">Principal do Novo Grupo</Badge>
-                            )}
-                            {checked && e.tipo_unidade === "filial" && matrizDoLote && (
-                              <Badge variant="secondary" className="text-[10px] h-4 px-1 gap-0.5">
-                                <GitBranch className="w-2.5 h-2.5" /> vínculo preservado
-                              </Badge>
-                            )}
-                            {checked && e.tipo_unidade === "filial" && e.matriz_id && !matrizDoLote && (
-                              <Badge variant="destructive" className="text-[10px] h-4 px-1">
-                                matriz ficará no tenant antigo
-                              </Badge>
-                            )}
-                          </div>
-                          {e.cnpj && (
-                            <p className="text-xs text-muted-foreground">{e.cnpj}</p>
+                  return (
+                    <div
+                      key={e.id}
+                      className={`flex items-start gap-2 p-2 border-b last:border-0 hover:bg-muted/30 ${checked ? "bg-primary/5" : ""}`}
+                    >
+                      <Checkbox checked={checked} onCheckedChange={() => toggleEmpresa(e.id)} className="mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium truncate">{e.razao_social}</span>
+                          {e.tipo_unidade === "matriz" && (
+                            <Badge variant="default" className="text-[10px] h-4 px-1">Matriz</Badge>
+                          )}
+                          {e.tipo_unidade === "filial" && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1">Filial</Badge>
+                          )}
+                          {isPrincipal && checked && (
+                            <Badge className="bg-amber-500 text-white text-[10px] h-4 px-1 border-0">
+                              <Crown className="w-2.5 h-2.5 mr-0.5" /> Principal
+                            </Badge>
+                          )}
+                          {checked && e.tipo_unidade === "filial" && matrizDoLote && (
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1 gap-0.5">
+                              <GitBranch className="w-2.5 h-2.5" /> vínculo preservado
+                            </Badge>
                           )}
                         </div>
-                      </label>
-                    );
-                  });
-                })()
+                        {e.cnpj && (
+                          <p className="text-xs text-muted-foreground">{e.cnpj}</p>
+                        )}
+                      </div>
+                      
+                      {checked && (
+                        <Button
+                          variant={isPrincipal ? "default" : "ghost"}
+                          size="icon"
+                          className={`h-7 w-7 ${isPrincipal ? "bg-amber-500 hover:bg-amber-600" : "text-muted-foreground"}`}
+                          onClick={() => setPrincipalIdOverride(e.id)}
+                          title={isPrincipal ? "Empresa Principal" : "Tornar Principal"}
+                        >
+                          <Star className={`w-4 h-4 ${isPrincipal ? "fill-white" : ""}`} />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
 
@@ -416,16 +409,15 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
               <Alert className="border-amber-500/50 bg-amber-500/5">
                 <Building2 className="w-4 h-4 text-amber-600" />
                 <AlertDescription className="text-sm">
-                  <strong>Atenção:</strong> As {selectedIds.size} empresas selecionadas serão migradas para o <strong>mesmo</strong> novo tenant (grupo).
-                  Elas continuarão juntas sob uma única conta-raiz independente e sob a responsabilidade do mesmo dono.
+                  <strong>Atenção:</strong> As {selectedIds.size} empresas selecionadas serão migradas em lote.
+                  Use o ícone de estrela (<Star className="w-3 h-3 inline" />) para definir qual será a <strong>empresa principal</strong> do novo grupo.
                   <br /><br />
                   {matrizesSelecionadas > 0 && filiaisSelecionadas > 0 && (
                     <p className="mt-1 text-xs">• O vínculo matriz→filial será preservado para as empresas deste lote.</p>
                   )}
                   {filiaisSemMatriz > 0 && (
-                    <p className="mt-1 text-xs text-destructive">• {filiaisSemMatriz} filial(is) estão sendo migradas sem suas matrizes e ficarão "soltas" no novo grupo.</p>
+                    <p className="mt-1 text-xs text-destructive">• {filiaisSemMatriz} filial(is) estão sendo migradas sem suas matrizes.</p>
                   )}
-                  <p className="mt-2 font-medium text-xs text-amber-700">Se deseja que cada empresa tenha sua própria conta-raiz independente, realize o processo individualmente para cada uma.</p>
                 </AlertDescription>
               </Alert>
             )}
@@ -433,8 +425,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             <Alert>
               <AlertTriangle className="w-4 h-4" />
               <AlertDescription className="text-sm">
-                Todos os dados das empresas selecionadas (colaboradores, documentos, OS, GRO, EPI, ponto, férias...) serão transferidos
-                para o novo tenant. <strong>{tenantNome}</strong> perderá acesso total a elas após a operação.
+                Todos os dados das empresas selecionadas (colaboradores, documentos, ponto, etc.) serão transferidos. 
+                <strong>{tenantNome}</strong> perderá acesso após a operação.
               </AlertDescription>
             </Alert>
 
@@ -447,72 +439,130 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
           </div>
         )}
 
-        {/* STEP 2 — Owner e tenant */}
+        {/* STEP 2 — Destino (Novo ou Existente) */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="space-y-3 p-3 rounded-md border">
-              <h4 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4" /> Novo Tenant</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Nome</Label>
-                  <Input value={novoTenant.nome} onChange={(e) => setNovoTenant({ ...novoTenant, nome: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Slug</Label>
-                  <Input value={novoTenant.slug} onChange={(e) => setNovoTenant({ ...novoTenant, slug: slugify(e.target.value) })} />
-                </div>
-              </div>
-              <div>
-                <Label>Plano</Label>
-                <Select value={novoTenant.plano} onValueChange={(v) => setNovoTenant({ ...novoTenant, plano: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="starter">Starter</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
-                    <SelectItem value="early_adopter">Early Adopter (Gratuito)</SelectItem>
-                    <SelectItem value="tester">Tester (Interno)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Tabs value={migrationType} onValueChange={(v: any) => setMigrationType(v)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="new">Criar Nova Conta-Raiz</TabsTrigger>
+                <TabsTrigger value="existing">Migrar para Existente</TabsTrigger>
+              </TabsList>
 
-            <div className="space-y-3 p-3 rounded-md border">
-              <h4 className="text-sm font-semibold flex items-center gap-2"><UserPlus className="w-4 h-4" /> Dono do Novo Tenant</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Nome completo</Label>
-                  <Input value={owner.nome} onChange={(e) => setOwner({ ...owner, nome: e.target.value })} />
+              <TabsContent value="new" className="space-y-4 pt-4">
+                <div className="space-y-3 p-3 rounded-md border">
+                  <h4 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4" /> Dados do Novo Tenant</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Nome</Label>
+                      <Input value={novoTenant.nome} onChange={(e) => setNovoTenant({ ...novoTenant, nome: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Slug (URL)</Label>
+                      <Input value={novoTenant.slug} onChange={(e) => setNovoTenant({ ...novoTenant, slug: slugify(e.target.value) })} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Plano</Label>
+                    <Select value={novoTenant.plano} onValueChange={(v) => setNovoTenant({ ...novoTenant, plano: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="starter">Starter</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="enterprise">Enterprise</SelectItem>
+                        <SelectItem value="early_adopter">Early Adopter</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div>
-                  <Label>E-mail</Label>
-                  <Input type="email" value={owner.email} onChange={(e) => setOwner({ ...owner, email: e.target.value })} />
+
+                <div className="space-y-3 p-3 rounded-md border">
+                  <h4 className="text-sm font-semibold flex items-center gap-2"><UserPlus className="w-4 h-4" /> Dono do Novo Tenant</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Nome completo</Label>
+                      <Input value={owner.nome} onChange={(e) => setOwner({ ...owner, nome: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>E-mail</Label>
+                      <Input type="email" value={owner.email} onChange={(e) => setOwner({ ...owner, email: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="invite" checked={owner.inviteMode} onCheckedChange={(c) => setOwner({ ...owner, inviteMode: !!c })} />
+                    <label htmlFor="invite" className="text-sm">Enviar convite por e-mail</label>
+                  </div>
+                  {!owner.inviteMode && (
+                    <div>
+                      <Label>Senha provisória</Label>
+                      <Input type="password" value={owner.password} onChange={(e) => setOwner({ ...owner, password: e.target.value })} />
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="invite" checked={owner.inviteMode} onCheckedChange={(c) => setOwner({ ...owner, inviteMode: !!c })} />
-                <label htmlFor="invite" className="text-sm">Enviar convite por e-mail (recomendado)</label>
-              </div>
-              {!owner.inviteMode && (
-                <div>
-                  <Label>Senha provisória</Label>
-                  <Input type="password" value={owner.password} onChange={(e) => setOwner({ ...owner, password: e.target.value })} />
+              </TabsContent>
+
+              <TabsContent value="existing" className="space-y-4 pt-4">
+                <div className="space-y-3 p-3 rounded-md border">
+                  <h4 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4" /> Selecionar Conta-Raiz Destino</h4>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por nome ou slug do tenant..."
+                      className="pl-9"
+                      value={targetTenantSearch}
+                      onChange={(e) => setTargetTenantSearch(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="border rounded-md max-h-48 overflow-y-auto">
+                    {isLoadingTenants && (
+                      <div className="p-4 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+                    )}
+                    {!isLoadingTenants && existingTenants.length === 0 && targetTenantSearch.length >= 3 && (
+                      <p className="p-4 text-xs text-center text-muted-foreground">Nenhum tenant encontrado.</p>
+                    )}
+                    {!isLoadingTenants && existingTenants.length === 0 && targetTenantSearch.length < 3 && (
+                      <p className="p-4 text-xs text-center text-muted-foreground">Digite ao menos 3 caracteres para buscar.</p>
+                    )}
+                    {existingTenants.map((t) => (
+                      <div
+                        key={t.id}
+                        className={`p-2 border-b last:border-0 cursor-pointer hover:bg-muted/50 flex justify-between items-center ${targetTenantId === t.id ? "bg-primary/5 border-primary/20" : ""}`}
+                        onClick={() => setTargetTenantId(t.id)}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{t.nome}</p>
+                          <p className="text-[10px] text-muted-foreground">{t.slug}</p>
+                        </div>
+                        {targetTenantId === t.id && <Badge className="bg-primary text-white">Selecionado</Badge>}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {targetTenantId && (
+                    <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+                      <ShieldCheck className="w-4 h-4 text-blue-600" />
+                      <AlertDescription className="text-xs">
+                        As empresas serão migradas para <strong>{existingTenants.find(t => t.id === targetTenantId)?.nome}</strong>. 
+                        O administrador desse tenant terá controle total sobre elas.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Esse dono será vinculado como administrador de <strong>todas</strong> as {selectedIds.size} empresa(s) selecionada(s).
-                Se já existir uma conta com este e-mail em outro tenant, ela será reaproveitada.
-              </p>
-            </div>
+              </TabsContent>
+            </Tabs>
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
               <Button
-                disabled={!novoTenant.nome || !novoTenant.slug || !owner.email || !owner.nome || (!owner.inviteMode && !owner.password)}
+                disabled={
+                  migrationType === 'new' 
+                    ? (!novoTenant.nome || !novoTenant.slug || !owner.email || !owner.nome || (!owner.inviteMode && !owner.password))
+                    : !targetTenantId
+                }
                 onClick={carregarDryRun}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Calcular pré-visualização
+                Próximo (Validar)
               </Button>
             </div>
           </div>
@@ -524,7 +574,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             <div className="p-3 bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200">
               <h4 className="font-semibold flex items-center gap-2"><Database className="w-4 h-4" /> Resumo da Migração</h4>
               <p className="text-sm mt-1">
-                Foram encontrados <strong>{dryRun.total_registros}</strong> registros operacionais vinculados às {selectedIds.size} empresas.
+                Foram encontrados <strong>{dryRun.total_registros}</strong> registros vinculados às {selectedIds.size} empresas.
               </p>
             </div>
 
@@ -553,7 +603,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
               <div className="flex items-center gap-2 pt-1">
                 <Checkbox id="conf" checked={confirmCheck} onCheckedChange={(v) => setConfirmCheck(!!v)} />
                 <label htmlFor="conf" className="text-sm text-destructive font-medium cursor-pointer">
-                  Estou ciente de que esta operação é irreversível e o acesso atual será perdido.
+                  Ciente de que esta operação é irreversível.
                 </label>
               </div>
             </div>
@@ -566,12 +616,15 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                 onClick={executar}
               >
                 {executing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Confirmar e Promover
+                Confirmar e Migrar
               </Button>
             </div>
           </div>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
   );
 }
