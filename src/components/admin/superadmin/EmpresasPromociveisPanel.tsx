@@ -153,7 +153,11 @@ export function EmpresasPromociveisPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {maes.map((mae) => {
+                {maes.map((m) => {
+                  // Recuperamos o objeto original da empresa principal para ter todos os campos (cnpj, ativo, etc)
+                  const mae = data.find(e => e.tenant_id === m.tenant_id && e.is_principal);
+                  if (!mae) return null;
+
                   const derivadas = data.filter(e => e.tenant_id === mae.tenant_id && !e.is_principal);
                   const isExpanded = selectedTenantId === mae.tenant_id;
                   
