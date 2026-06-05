@@ -805,16 +805,33 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
                   name="profissional_registro"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="sm:col-span-2">
                       <FormLabel>CRM *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="12345" {...field} />
-                      </FormControl>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input placeholder="12345" {...field} />
+                        </FormControl>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="icon"
+                          onClick={handleCrmLookup}
+                          disabled={searchingCrm}
+                          className="shrink-0"
+                          title="Validar e Buscar CRM"
+                        >
+                          {searchingCrm ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Search className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -826,7 +843,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     <FormItem>
                       <FormLabel>UF do CRM</FormLabel>
                       <FormControl>
-                        <Input placeholder="SP" maxLength={2} {...field} />
+                        <Input placeholder="SP" maxLength={2} {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -839,14 +856,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     <FormItem>
                       <FormLabel>RQE</FormLabel>
                       <FormControl>
-                        <Input placeholder="Registro de Especialista" {...field} />
+                        <Input placeholder="Especialista" {...field} />
                       </FormControl>
-                      <FormDescription className="text-xs">Quando houver</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
