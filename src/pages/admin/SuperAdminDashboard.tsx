@@ -151,6 +151,7 @@ export default function SuperAdminDashboard() {
 
           <TabsContent value="overview"><SuperAdminOverview /></TabsContent>
 
+          <TabsContent value="tenants">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
