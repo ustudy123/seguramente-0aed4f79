@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGafDashboards } from "@/hooks/useGafDashboards";
+import { useGafPermissions } from "@/hooks/useGafPermissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 
@@ -29,7 +30,10 @@ const CentralGaf = () => {
   const [activeTab, setActiveTab] = useState("absenteismo");
   const [formOpen, setFormOpen] = useState(false);
   
-  const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading } = useGafDashboards();
+  const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
+  const { permissions, isLoading: loadingPerms } = useGafPermissions();
+
+  const isLoading = loadingStats || loadingPerms;
 
   const handleCreateAfastamento = async (data: any) => {
     // Implementar a lógica de salvamento aqui
@@ -79,14 +83,18 @@ const CentralGaf = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between overflow-x-auto pb-2">
           <TabsList className="bg-muted/50 border">
-            <TabsTrigger value="absenteismo" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Absenteísmo
-            </TabsTrigger>
-            <TabsTrigger value="saude-mental" className="gap-2 text-purple-600 dark:text-purple-400">
-              <Brain className="h-4 w-4" />
-              Saúde Mental
-            </TabsTrigger>
+            {permissions.podeVerDashboardsGerais && (
+              <TabsTrigger value="absenteismo" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Absenteísmo
+              </TabsTrigger>
+            )}
+            {permissions.podeVerDashboardsGerais && (
+              <TabsTrigger value="saude-mental" className="gap-2 text-purple-600 dark:text-purple-400">
+                <Brain className="h-4 w-4" />
+                Saúde Mental
+              </TabsTrigger>
+            )}
             <TabsTrigger value="fap-rat" className="gap-2 text-orange-600 dark:text-orange-400">
               <ShieldAlert className="h-4 w-4" />
               FAP/RAT

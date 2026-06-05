@@ -9857,6 +9857,78 @@ export type Database = {
         }
         Relationships: []
       }
+      gaf_auditoria: {
+        Row: {
+          acao: string
+          created_at: string | null
+          entidade_id: string | null
+          entidade_tipo: string
+          id: string
+          metadados: Json | null
+          tenant_id: string
+          user_id: string | null
+          valor_anterior: Json | null
+          valor_novo: Json | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string | null
+          entidade_id?: string | null
+          entidade_tipo: string
+          id?: string
+          metadados?: Json | null
+          tenant_id: string
+          user_id?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string
+          id?: string
+          metadados?: Json | null
+          tenant_id?: string
+          user_id?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Relationships: []
+      }
+      gaf_usuarios_perfis: {
+        Row: {
+          created_at: string | null
+          id: string
+          perfil: Database["public"]["Enums"]["gaf_perfil"]
+          pode_ver_anexos_medicos: boolean | null
+          pode_ver_cid: boolean | null
+          tenant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          perfil: Database["public"]["Enums"]["gaf_perfil"]
+          pode_ver_anexos_medicos?: boolean | null
+          pode_ver_cid?: boolean | null
+          tenant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          perfil?: Database["public"]["Enums"]["gaf_perfil"]
+          pode_ver_anexos_medicos?: boolean | null
+          pode_ver_cid?: boolean | null
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gro_exportacoes_log: {
         Row: {
           campanha_id: string
@@ -22185,6 +22257,10 @@ export type Database = {
         Args: { _token: string }
         Returns: undefined
       }
+      gaf_tem_acesso_sensivel: {
+        Args: { p_tenant_id: string; p_tipo_dado: string; p_user_id: string }
+        Returns: boolean
+      }
       gerar_estrutura_padrao_pastas: {
         Args: {
           p_empresa_id: string
@@ -22769,6 +22845,15 @@ export type Database = {
         | "QUANTIDADE_X_VALOR"
         | "IMPORTADA_EXTERNA"
       frequencia_atividade: "diaria" | "semanal" | "mensal" | "eventual"
+      gaf_perfil:
+        | "admin"
+        | "rh"
+        | "dp"
+        | "sst"
+        | "medicina"
+        | "juridico"
+        | "gestor"
+        | "executivo"
       grupo_clinico:
         | "mental"
         | "osteomuscular"
@@ -23399,6 +23484,16 @@ export const Constants = {
         "IMPORTADA_EXTERNA",
       ],
       frequencia_atividade: ["diaria", "semanal", "mensal", "eventual"],
+      gaf_perfil: [
+        "admin",
+        "rh",
+        "dp",
+        "sst",
+        "medicina",
+        "juridico",
+        "gestor",
+        "executivo",
+      ],
       grupo_clinico: [
         "mental",
         "osteomuscular",
