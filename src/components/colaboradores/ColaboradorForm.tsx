@@ -161,6 +161,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         matricula_esocial: colaborador.matricula_esocial || "",
         cbo: colaborador.cbo || "",
         foto_url: colaborador.foto_url || "",
+        bate_ponto: colaborador.bate_ponto !== false,
       });
     } else if (open && !colaborador) {
       form.reset({
