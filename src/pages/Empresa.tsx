@@ -13,6 +13,7 @@ import { EmpresaObrigacoesTab } from '@/components/empresa/EmpresaObrigacoesTab'
 import { EmpresaImportExport } from '@/components/empresa/EmpresaImportExport';
 import { EmpresaList } from '@/components/empresa/EmpresaList';
 import { EmpresaAIContext } from '@/components/empresa/EmpresaAIContext';
+import { EmpresaCadastroChecklist } from '@/components/empresa/EmpresaCadastroChecklist';
 import { GruposEconomicosManager } from '@/components/empresa/GruposEconomicosManager';
 import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import { useAuth } from '@/hooks/useAuth';
@@ -440,6 +441,9 @@ export default function Empresa() {
           )}
         </p>
       </div>
+
+      {/* Checklist de preenchimento */}
+      <EmpresaCadastroChecklist data={formData} onGoToTab={setActiveTab} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
