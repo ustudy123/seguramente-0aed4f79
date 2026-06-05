@@ -139,6 +139,8 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
             .select('id')
             .eq('tenant_id', id)
             .eq('tipo_unidade', 'matriz')
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
           if (fetchError) throw fetchError;
