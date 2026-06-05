@@ -49,10 +49,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const [targetTenantSearch, setTargetTenantSearch] = useState("");
   
   const [novoTenant, setNovoTenant] = useState({
-    nome: preselectedEmpresaNome || "",
-    slug: preselectedEmpresaNome
-      ? preselectedEmpresaNome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)
-      : "",
+    nome: "",
+    slug: "",
     plano: "starter",
   });
   const [owner, setOwner] = useState({ email: "", nome: "", password: "", inviteMode: true });
