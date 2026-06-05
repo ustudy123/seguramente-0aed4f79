@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Rocket, Building2, ShieldCheck } from "lucide-react";
 import { PromoverContaRaizModal } from "@/components/admin/PromoverContaRaizModal";
+import { DefinirPrincipalModal } from "@/components/admin/DefinirPrincipalModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -32,6 +33,7 @@ export function EmpresasPromociveisPanel() {
   const [selectedTenantId, setSelectedTenantId] = useState<string>("__all__");
   const [target, setTarget] = useState<EmpresaRow | null>(null);
   const [open, setOpen] = useState(false);
+  const [openPrincipal, setOpenPrincipal] = useState(false);
 
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ["superadmin-empresas-all"],
@@ -181,16 +183,30 @@ export function EmpresasPromociveisPanel() {
                       {format(new Date(e.empresa_created_at), "dd/MM/yy", { locale: ptBR })}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        variant={e.is_principal ? "ghost" : "default"}
-                        disabled={e.is_principal}
-                        onClick={() => { setTarget(e); setOpen(true); }}
-                        title={e.is_principal ? "A empresa principal do tenant não pode ser promovida (já é a raiz)" : "Promover a Conta-Raiz"}
-                      >
-                        <Rocket className="w-3.5 h-3.5 mr-1" />
-                        Promover
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant={e.is_principal ? "ghost" : "default"}
+                          disabled={e.is_principal}
+                          onClick={() => { setTarget(e); setOpen(true); }}
+                          title={e.is_principal ? "A empresa principal do tenant não pode ser promovida (já é a raiz)" : "Promover a Conta-Raiz (Novo Tenant)"}
+                        >
+                          <Rocket className="w-3.5 h-3.5 mr-1" />
+                          Promover
+                        </Button>
+                        {!e.is_principal && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-amber-200 hover:bg-amber-50 text-amber-600"
+                            onClick={() => { setTarget(e); setOpenPrincipal(true); }}
+                            title="Tornar esta a unidade Principal (Matriz) dentro do mesmo tenant"
+                          >
+                            <Crown className="w-3.5 h-3.5 mr-1" />
+                            Matriz
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -208,6 +224,18 @@ export function EmpresasPromociveisPanel() {
           tenantNome={target.tenant_nome}
           preselectedEmpresaId={target.empresa_id}
           preselectedEmpresaNome={target.razao_social}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {target && (
+        <DefinirPrincipalModal
+          open={openPrincipal}
+          onOpenChange={(v) => { setOpenPrincipal(v); if (!v) setTarget(null); }}
+          empresaId={target.empresa_id}
+          empresaNome={target.razao_social}
+          tenantId={target.tenant_id}
+          tenantNome={target.tenant_nome}
           onSuccess={() => refetch()}
         />
       )}
