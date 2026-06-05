@@ -410,23 +410,24 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       }
 
       // ── 5. Conformidade ───────────────────────────────────────────────
-      if (y > 240) { doc.addPage(); y = 20; }
+      checkPageOverflow(30);
       y += 5;
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text("5. CONFORMIDADE NORMATIVA", 14, y);
+      doc.text("5. CONFORMIDADE NORMATIVA", ml, y);
       y += 6;
       autoTable(doc, {
         startY: y,
-        head: [["Norma / Padrao", "Requisito Atendido"]],
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Norma / Padrão", "Requisito Atendido"]],
         body: [
-          ["NR-01 (GRO/PGR)", "Identificacao e avaliacao de riscos psicossociais no inventario"],
-          ["NR-17 (Ergonomia)", "Integracao de fatores psicossociais na AEP com vinculo setor/função"],
-          ["ISO 45003:2021", "Gestao de riscos psicossociais com confidencialidade e agrupamento"],
-          ["LGPD (Lei 13.709/18)", "Dados coletados de forma anonima; sem vinculacao individual"],
+          ["NR-01 (GRO/PGR)", "Identificação e avaliação de riscos psicossociais no inventário"],
+          ["NR-17 (Ergonomia)", "Integração de fatores psicossociais na AEP com vínculo setor/função"],
+          ["ISO 45003:2021", "Gestão de riscos psicossociais com confidencialidade e agrupamento"],
+          ["LGPD (Lei 13.709/18)", "Dados coletados de forma anônima; sem vinculação individual"],
         ],
         headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-        bodyStyles: { fontSize: 8 },
+        bodyStyles: { fontSize: 8, halign: 'justify' },
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
 
