@@ -967,22 +967,36 @@ export type Database = {
           alerta_30_dias: boolean | null
           aso_retorno_id: string | null
           aso_retorno_pendente: boolean | null
+          atualizado_por: string | null
           beneficio_inss_id: string | null
+          cargo_id: string | null
           colaborador_cpf: string | null
           colaborador_id: string | null
           colaborador_nome: string
           created_at: string
+          criado_por: string | null
+          data_atestado: string | null
           data_fim: string | null
           data_inicio: string
           dias_totais: number | null
           empresa_id: string | null
           evento_saude_id: string | null
+          gestor_id: string | null
           id: string
           motivo_principal: Database["public"]["Enums"]["grupo_clinico"] | null
           nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes: string | null
+          prazo_indeterminado: boolean | null
+          setor_id: string | null
           status: Database["public"]["Enums"]["afastamento_status"]
+          status_geral_new:
+            | Database["public"]["Enums"]["afastamento_status_geral"]
+            | null
           tenant_id: string
+          tipo_principal_new:
+            | Database["public"]["Enums"]["afastamento_tipo_principal"]
+            | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -990,22 +1004,36 @@ export type Database = {
           alerta_30_dias?: boolean | null
           aso_retorno_id?: string | null
           aso_retorno_pendente?: boolean | null
+          atualizado_por?: string | null
           beneficio_inss_id?: string | null
+          cargo_id?: string | null
           colaborador_cpf?: string | null
           colaborador_id?: string | null
           colaborador_nome: string
           created_at?: string
+          criado_por?: string | null
+          data_atestado?: string | null
           data_fim?: string | null
           data_inicio: string
           dias_totais?: number | null
           empresa_id?: string | null
           evento_saude_id?: string | null
+          gestor_id?: string | null
           id?: string
           motivo_principal?: Database["public"]["Enums"]["grupo_clinico"] | null
           nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes?: string | null
+          prazo_indeterminado?: boolean | null
+          setor_id?: string | null
           status?: Database["public"]["Enums"]["afastamento_status"]
+          status_geral_new?:
+            | Database["public"]["Enums"]["afastamento_status_geral"]
+            | null
           tenant_id: string
+          tipo_principal_new?:
+            | Database["public"]["Enums"]["afastamento_tipo_principal"]
+            | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1013,22 +1041,36 @@ export type Database = {
           alerta_30_dias?: boolean | null
           aso_retorno_id?: string | null
           aso_retorno_pendente?: boolean | null
+          atualizado_por?: string | null
           beneficio_inss_id?: string | null
+          cargo_id?: string | null
           colaborador_cpf?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string
           created_at?: string
+          criado_por?: string | null
+          data_atestado?: string | null
           data_fim?: string | null
           data_inicio?: string
           dias_totais?: number | null
           empresa_id?: string | null
           evento_saude_id?: string | null
+          gestor_id?: string | null
           id?: string
           motivo_principal?: Database["public"]["Enums"]["grupo_clinico"] | null
           nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes?: string | null
+          prazo_indeterminado?: boolean | null
+          setor_id?: string | null
           status?: Database["public"]["Enums"]["afastamento_status"]
+          status_geral_new?:
+            | Database["public"]["Enums"]["afastamento_status_geral"]
+            | null
           tenant_id?: string
+          tipo_principal_new?:
+            | Database["public"]["Enums"]["afastamento_tipo_principal"]
+            | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1072,6 +1114,504 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_cat: {
+        Row: {
+          afastamento_id: string
+          agente_causador: string | null
+          cat_aplicavel: boolean | null
+          created_at: string | null
+          data_acidente: string | null
+          descricao_acidente: string | null
+          hora_acidente: string | null
+          id: string
+          justificativa_nao_aplicavel: string | null
+          local_acidente: string | null
+          parte_corpo: string | null
+          protocolo_esocial: string | null
+          status_cat: string | null
+          tenant_id: string
+          testemunhas: Json | null
+          tipo_cat: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          agente_causador?: string | null
+          cat_aplicavel?: boolean | null
+          created_at?: string | null
+          data_acidente?: string | null
+          descricao_acidente?: string | null
+          hora_acidente?: string | null
+          id?: string
+          justificativa_nao_aplicavel?: string | null
+          local_acidente?: string | null
+          parte_corpo?: string | null
+          protocolo_esocial?: string | null
+          status_cat?: string | null
+          tenant_id: string
+          testemunhas?: Json | null
+          tipo_cat?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          agente_causador?: string | null
+          cat_aplicavel?: boolean | null
+          created_at?: string | null
+          data_acidente?: string | null
+          descricao_acidente?: string | null
+          hora_acidente?: string | null
+          id?: string
+          justificativa_nao_aplicavel?: string | null
+          local_acidente?: string | null
+          parte_corpo?: string | null
+          protocolo_esocial?: string | null
+          status_cat?: string | null
+          tenant_id?: string
+          testemunhas?: Json | null
+          tipo_cat?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_cat_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_esocial: {
+        Row: {
+          afastamento_id: string
+          aplicavel: boolean | null
+          created_at: string | null
+          data_envio: string | null
+          evento: string
+          id: string
+          motivo_rejeicao: string | null
+          prazo: string | null
+          protocolo: string | null
+          responsavel_id: string | null
+          status: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          aplicavel?: boolean | null
+          created_at?: string | null
+          data_envio?: string | null
+          evento: string
+          id?: string
+          motivo_rejeicao?: string | null
+          prazo?: string | null
+          protocolo?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          aplicavel?: boolean | null
+          created_at?: string | null
+          data_envio?: string | null
+          evento?: string
+          id?: string
+          motivo_rejeicao?: string | null
+          prazo?: string | null
+          protocolo?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_esocial_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_fap: {
+        Row: {
+          afastamento_id: string
+          created_at: string | null
+          id: string
+          impacta_fap: boolean | null
+          motivo_impacto: string | null
+          nivel_risco: string | null
+          observacao_previdenciaria: string | null
+          status_analise: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          created_at?: string | null
+          id?: string
+          impacta_fap?: boolean | null
+          motivo_impacto?: string | null
+          nivel_risco?: string | null
+          observacao_previdenciaria?: string | null
+          status_analise?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          created_at?: string | null
+          id?: string
+          impacta_fap?: boolean | null
+          motivo_impacto?: string | null
+          nivel_risco?: string | null
+          observacao_previdenciaria?: string | null
+          status_analise?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_fap_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_marcadores: {
+        Row: {
+          afastamento_id: string
+          created_at: string | null
+          criado_automaticamente: boolean | null
+          id: string
+          marcador: string
+          origem: string | null
+          tenant_id: string
+        }
+        Insert: {
+          afastamento_id: string
+          created_at?: string | null
+          criado_automaticamente?: boolean | null
+          id?: string
+          marcador: string
+          origem?: string | null
+          tenant_id: string
+        }
+        Update: {
+          afastamento_id?: string
+          created_at?: string | null
+          criado_automaticamente?: boolean | null
+          id?: string
+          marcador?: string
+          origem?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_marcadores_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_ntep: {
+        Row: {
+          afastamento_id: string
+          cid: string | null
+          cnae: string | null
+          created_at: string | null
+          data_decisao: string | null
+          decisao: string | null
+          fundamento: string | null
+          id: string
+          justificativa: string | null
+          responsavel_id: string | null
+          status_ntep: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          cid?: string | null
+          cnae?: string | null
+          created_at?: string | null
+          data_decisao?: string | null
+          decisao?: string | null
+          fundamento?: string | null
+          id?: string
+          justificativa?: string | null
+          responsavel_id?: string | null
+          status_ntep?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          cid?: string | null
+          cnae?: string | null
+          created_at?: string | null
+          data_decisao?: string | null
+          decisao?: string | null
+          fundamento?: string | null
+          id?: string
+          justificativa?: string | null
+          responsavel_id?: string | null
+          status_ntep?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_ntep_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_pendencias: {
+        Row: {
+          afastamento_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          prazo: string | null
+          prioridade: string | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          responsavel_id: string | null
+          status: string | null
+          tenant_id: string
+          tipo_pendencia: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          prazo?: string | null
+          prioridade?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          tenant_id: string
+          tipo_pendencia: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          prazo?: string | null
+          prioridade?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          tenant_id?: string
+          tipo_pendencia?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_pendencias_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_previdenciario: {
+        Row: {
+          afastamento_id: string
+          created_at: string | null
+          data_alta: string | null
+          data_cessacao_prevista: string | null
+          data_inicio_beneficio: string | null
+          encaminhado_inss: boolean | null
+          especie_beneficio: string | null
+          houve_prorrogacao: boolean | null
+          id: string
+          numero_beneficio: string | null
+          status_previdenciario: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          created_at?: string | null
+          data_alta?: string | null
+          data_cessacao_prevista?: string | null
+          data_inicio_beneficio?: string | null
+          encaminhado_inss?: boolean | null
+          especie_beneficio?: string | null
+          houve_prorrogacao?: boolean | null
+          id?: string
+          numero_beneficio?: string | null
+          status_previdenciario?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          created_at?: string | null
+          data_alta?: string | null
+          data_cessacao_prevista?: string | null
+          data_inicio_beneficio?: string | null
+          encaminhado_inss?: boolean | null
+          especie_beneficio?: string | null
+          houve_prorrogacao?: boolean | null
+          id?: string
+          numero_beneficio?: string | null
+          status_previdenciario?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_previdenciario_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_retorno: {
+        Row: {
+          afastamento_id: string
+          alta_registrada: boolean | null
+          created_at: string | null
+          data_alta: string | null
+          data_prevista_retorno: string | null
+          entrevista_obrigatoria: boolean | null
+          exame_retorno_obrigatorio: boolean | null
+          id: string
+          resultado_retorno: string | null
+          status_aso_retorno: string | null
+          status_entrevista: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          alta_registrada?: boolean | null
+          created_at?: string | null
+          data_alta?: string | null
+          data_prevista_retorno?: string | null
+          entrevista_obrigatoria?: boolean | null
+          exame_retorno_obrigatorio?: boolean | null
+          id?: string
+          resultado_retorno?: string | null
+          status_aso_retorno?: string | null
+          status_entrevista?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          alta_registrada?: boolean | null
+          created_at?: string | null
+          data_alta?: string | null
+          data_prevista_retorno?: string | null
+          entrevista_obrigatoria?: boolean | null
+          exame_retorno_obrigatorio?: boolean | null
+          id?: string
+          resultado_retorno?: string | null
+          status_aso_retorno?: string | null
+          status_entrevista?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_retorno_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afastamentos_saude: {
+        Row: {
+          afastamento_id: string
+          arquivo_atestado_url: string | null
+          cid_capitulo: string | null
+          cid_complementar: string | null
+          cid_descricao: string | null
+          cid_grupo: string | null
+          cid_principal: string | null
+          created_at: string | null
+          especialidade: string | null
+          id: string
+          profissional_conselho: string | null
+          profissional_nome: string | null
+          profissional_numero: string | null
+          profissional_uf: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          afastamento_id: string
+          arquivo_atestado_url?: string | null
+          cid_capitulo?: string | null
+          cid_complementar?: string | null
+          cid_descricao?: string | null
+          cid_grupo?: string | null
+          cid_principal?: string | null
+          created_at?: string | null
+          especialidade?: string | null
+          id?: string
+          profissional_conselho?: string | null
+          profissional_nome?: string | null
+          profissional_numero?: string | null
+          profissional_uf?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          afastamento_id?: string
+          arquivo_atestado_url?: string | null
+          cid_capitulo?: string | null
+          cid_complementar?: string | null
+          cid_descricao?: string | null
+          cid_grupo?: string | null
+          cid_principal?: string | null
+          created_at?: string | null
+          especialidade?: string | null
+          id?: string
+          profissional_conselho?: string | null
+          profissional_nome?: string | null
+          profissional_numero?: string | null
+          profissional_uf?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_saude_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
             referencedColumns: ["id"]
           },
         ]
@@ -19494,6 +20034,74 @@ export type Database = {
           },
         ]
       }
+      restricoes_laborais: {
+        Row: {
+          adaptacoes_necessarias: string | null
+          afastamento_id: string | null
+          anexo_url: string | null
+          atividades_vedadas: string | null
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string
+          id: string
+          origem: string | null
+          permanente: boolean | null
+          responsavel_tecnico: string | null
+          status: string | null
+          temporaria: boolean | null
+          tenant_id: string
+          trabalhador_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adaptacoes_necessarias?: string | null
+          afastamento_id?: string | null
+          anexo_url?: string | null
+          atividades_vedadas?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao: string
+          id?: string
+          origem?: string | null
+          permanente?: boolean | null
+          responsavel_tecnico?: string | null
+          status?: string | null
+          temporaria?: boolean | null
+          tenant_id: string
+          trabalhador_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adaptacoes_necessarias?: string | null
+          afastamento_id?: string | null
+          anexo_url?: string | null
+          atividades_vedadas?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string
+          id?: string
+          origem?: string | null
+          permanente?: boolean | null
+          responsavel_tecnico?: string | null
+          status?: string | null
+          temporaria?: boolean | null
+          tenant_id?: string
+          trabalhador_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restricoes_laborais_afastamento_id_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sst_documentos: {
         Row: {
           analise_ia: Json | null
@@ -22036,6 +22644,39 @@ export type Database = {
         | "desligado"
       advertencia_status: "pendente" | "enviada" | "formalizada" | "arquivada"
       afastamento_status: "ativo" | "encerrado" | "beneficio_inss"
+      afastamento_status_geral:
+        | "rascunho"
+        | "registrado"
+        | "em_analise"
+        | "aguardando_documento"
+        | "aguardando_inss"
+        | "em_beneficio"
+        | "prazo_indeterminado"
+        | "retorno_pendente"
+        | "retorno_concluido"
+        | "encerrado"
+        | "pendencia_critica"
+        | "contestado"
+        | "cancelado"
+      afastamento_tipo_principal:
+        | "doenca_comum"
+        | "doenca_ocupacional"
+        | "acidente_tipico"
+        | "acidente_trajeto"
+        | "atestado_odontologico"
+        | "licenca_maternidade"
+        | "licenca_paternidade"
+        | "aborto_nao_criminoso"
+        | "beneficio_b31"
+        | "beneficio_b91"
+        | "reabilitacao_b92"
+        | "auxilio_acidente_b94"
+        | "licenca_nao_remunerada"
+        | "suspensao_disciplinar"
+        | "falta_justificada_legal"
+        | "mandato_sindical"
+        | "determinacao_judicial_legal"
+        | "outro_cct_act_politica_interna"
       app_role: "owner" | "admin" | "manager" | "user" | "superadmin"
       aptidao_ocupacional:
         | "apto"
@@ -22619,6 +23260,41 @@ export const Constants = {
       ],
       advertencia_status: ["pendente", "enviada", "formalizada", "arquivada"],
       afastamento_status: ["ativo", "encerrado", "beneficio_inss"],
+      afastamento_status_geral: [
+        "rascunho",
+        "registrado",
+        "em_analise",
+        "aguardando_documento",
+        "aguardando_inss",
+        "em_beneficio",
+        "prazo_indeterminado",
+        "retorno_pendente",
+        "retorno_concluido",
+        "encerrado",
+        "pendencia_critica",
+        "contestado",
+        "cancelado",
+      ],
+      afastamento_tipo_principal: [
+        "doenca_comum",
+        "doenca_ocupacional",
+        "acidente_tipico",
+        "acidente_trajeto",
+        "atestado_odontologico",
+        "licenca_maternidade",
+        "licenca_paternidade",
+        "aborto_nao_criminoso",
+        "beneficio_b31",
+        "beneficio_b91",
+        "reabilitacao_b92",
+        "auxilio_acidente_b94",
+        "licenca_nao_remunerada",
+        "suspensao_disciplinar",
+        "falta_justificada_legal",
+        "mandato_sindical",
+        "determinacao_judicial_legal",
+        "outro_cct_act_politica_interna",
+      ],
       app_role: ["owner", "admin", "manager", "user", "superadmin"],
       aptidao_ocupacional: [
         "apto",
