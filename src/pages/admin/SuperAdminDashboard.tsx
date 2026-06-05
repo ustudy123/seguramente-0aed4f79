@@ -248,6 +248,44 @@ export default function SuperAdminDashboard() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Empresa</DialogTitle>
+            <DialogDescription>Atualize os dados da empresa</DialogDescription>
+          </DialogHeader>
+          {showEditForm && selectedTenant && (
+            <TenantForm
+              initialData={{
+                nome: selectedTenant.nome,
+                slug: selectedTenant.slug,
+                plano: selectedTenant.plano,
+              }}
+              onSubmit={async (data) => {
+                try {
+                  await updateTenant({
+                    id: selectedTenant.id,
+                    nome: data.nome,
+                    slug: data.slug,
+                    plano: data.plano,
+                  });
+                  toast.success('Empresa atualizada com sucesso!');
+                  setShowEditForm(false);
+                  setSelectedTenant(null);
+                } catch (e: any) {
+                  toast.error(e.message || 'Erro ao atualizar empresa');
+                }
+              }}
+              isLoading={isUpdatingTenant}
+              onCancel={() => {
+                setShowEditForm(false);
+                setSelectedTenant(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showOwnerForm} onOpenChange={setShowOwnerForm}>
         <DialogContent>
           <DialogHeader>
