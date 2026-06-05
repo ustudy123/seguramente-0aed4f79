@@ -342,12 +342,15 @@ export function usePerfisAcesso() {
         .select().single();
       if (error) throw error;
       if (permissoes?.length) {
-        const perms = permissoes.map((p) => ({
-          ...p,
-          perfil_id: data.id,
-          tenant_id: tenantId,
-          is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
-        }));
+        const perms = permissoes.map((p) => {
+          const { id: _, created_at: __, ...pClean } = p as any;
+          return {
+            ...pClean,
+            perfil_id: data.id,
+            tenant_id: tenantId,
+            is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
+          };
+        });
         await fromTable("perfil_permissoes").insert(perms);
       }
       await logAuditPerfil(tenantId, data.id, "criacao", `Perfil "${data.nome}" criado`, null, perfilData, profile?.nome_completo);
