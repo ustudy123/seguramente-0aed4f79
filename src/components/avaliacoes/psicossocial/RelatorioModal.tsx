@@ -275,11 +275,11 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
         if (resultadosPorGHE.length > 0) {
           resultadosPorGHE.forEach((ghe) => {
-            if (y > 240) { doc.addPage(); y = 20; }
+            checkPageOverflow(30);
             
             doc.setFontSize(9);
             doc.setFont("helvetica", "bold");
-            doc.text(`GHE: ${sanitize(ghe.ghe_nome)}`, 14, y);
+            doc.text(`GHE: ${sanitize(ghe.ghe_nome)}`, ml, y);
             y += 4;
             
             const funcDepto = ghe.composicaoSetorCargos.length > 0 
@@ -288,10 +288,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
-            doc.text(`FUNCAO/DEPARTAMENTO: ${sanitize(funcDepto)}`, 14, y);
+            doc.text(`FUNÇÃO/DEPARTAMENTO: ${sanitize(funcDepto)}`, ml, y);
             y += 4;
             
-            doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, 14, y);
+            doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, ml, y);
             y += 5;
 
             // Agrega fatores por GHE
@@ -318,7 +318,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
             autoTable(doc, {
               startY: y,
-              head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
+              margin: { left: ml, right: mr, top: mt, bottom: mb },
+              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
               body: fatoresGHE.map(d => [
                 sanitize(d.fator),
                 sanitize(d.dimensoes.join(", ")),
@@ -327,14 +328,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 "NR-01 / NR-17 / ISO 45003",
               ]),
               headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-              bodyStyles: { fontSize: 8 },
+              bodyStyles: { fontSize: 8, halign: 'justify' },
               alternateRowStyles: { fillColor: [248, 245, 255] },
               didParseCell: (data) => {
                 if (data.section === "body" && data.column.index === 3) {
                   const v = String(data.cell.raw);
-                  if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
+                  if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                   else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-                  else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
+                  else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
                   else data.cell.styles.textColor = [5, 122, 85];
                 }
               },
@@ -344,7 +345,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         } else {
           autoTable(doc, {
             startY: y,
-            head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
+            margin: { left: ml, right: mr, top: mt, bottom: mb },
+            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
             body: fatoresAvaliados.map(d => [
               sanitize(d.fator),
               sanitize(d.dimensoes.join(", ")),
@@ -353,14 +355,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
               "NR-01 / NR-17 / ISO 45003",
             ]),
             headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-            bodyStyles: { fontSize: 8 },
+            bodyStyles: { fontSize: 8, halign: 'justify' },
             alternateRowStyles: { fillColor: [248, 245, 255] },
             didParseCell: (data) => {
               if (data.section === "body" && data.column.index === 3) {
                 const v = String(data.cell.raw);
-                if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
+                if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                 else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-                else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
+                else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
                 else data.cell.styles.textColor = [5, 122, 85];
               }
             },
