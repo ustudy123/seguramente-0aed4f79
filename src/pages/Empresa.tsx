@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers, Brain } from 'lucide-react';
+import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers, Brain, ClipboardCheck } from 'lucide-react';
 import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 import { EmpresaDadosBasicos } from '@/components/empresa/EmpresaDadosBasicos';
 import { EmpresaEnquadramentoLegal } from '@/components/empresa/EmpresaEnquadramentoLegal';
@@ -47,7 +47,7 @@ export default function Empresa() {
     } catch { /* ignore */ }
   }, [viewMode, selectedEmpresaId, activeTab]);
 
-  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai'];
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai', 'checklist'];
   const currentTabIndex = TABS.indexOf(activeTab);
   const isFirstTab = currentTabIndex === 0;
   const isLastTab = currentTabIndex === TABS.length - 1;
@@ -442,12 +442,9 @@ export default function Empresa() {
         </p>
       </div>
 
-      {/* Checklist de preenchimento */}
-      <EmpresaCadastroChecklist data={formData} onGoToTab={setActiveTab} />
-
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
           <TabsTrigger value="dados" className="text-xs">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Dados
@@ -475,6 +472,10 @@ export default function Empresa() {
           <TabsTrigger value="ai" className="text-xs">
             <Brain className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Contexto I.A.
+          </TabsTrigger>
+          <TabsTrigger value="checklist" className="text-xs">
+            <ClipboardCheck className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+            Checklist
           </TabsTrigger>
         </TabsList>
 
@@ -558,6 +559,18 @@ export default function Empresa() {
             </CardHeader>
             <CardContent>
               <EmpresaAIContext data={formData} onChange={handleChange} />
+            </CardContent>
+          </TabsContent>
+
+          <TabsContent value="checklist" className="mt-0">
+            <CardHeader>
+              <CardTitle className="text-lg">Checklist do Cadastro</CardTitle>
+              <CardDescription>
+                Acompanhe o que ainda falta preencher — destaque para os campos obrigatórios pendentes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmpresaCadastroChecklist data={formData} onGoToTab={setActiveTab} />
             </CardContent>
           </TabsContent>
 
