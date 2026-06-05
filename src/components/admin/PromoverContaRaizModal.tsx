@@ -134,25 +134,30 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
+    // Se não tiver principal ou se o modal estiver fechado, não fazemos nada
+    if (!open) return;
+
     if (finalPrincipalId && migrationType === 'new') {
       const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
       if (pLocal) {
         const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
-        
-        setNovoTenant(prev => ({
-          ...prev,
-          nome: nomeEmpresa || "",
-          slug: nomeEmpresa ? slugify(nomeEmpresa) : ""
-        }));
+        const newName = nomeEmpresa || "";
+        const newSlug = nomeEmpresa ? slugify(nomeEmpresa) : "";
+        const newEmail = pLocal.email || "";
+        const newNome = pLocal.razao_social || "";
 
-        setOwner(prev => ({
-          ...prev,
-          email: pLocal.email || prev.email,
-          nome: pLocal.razao_social || prev.nome
-        }));
+        setNovoTenant(prev => {
+          if (prev.nome === newName && prev.slug === newSlug) return prev;
+          return { ...prev, nome: newName, slug: newSlug };
+        });
+
+        setOwner(prev => {
+          if (prev.email === newEmail && prev.nome === newNome) return prev;
+          return { ...prev, email: newEmail, nome: newNome };
+        });
       }
     }
-  }, [finalPrincipalId, migrationType, empresasRaw]);
+  }, [finalPrincipalId, migrationType, empresasRaw, open]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
@@ -166,6 +171,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     setMigrationType('new');
     setTargetTenantId("");
     setTargetTenantSearch("");
+    // Limpamos explicitamente para garantir que não carregue lixo da abertura anterior
     setNovoTenant({
       nome: "",
       slug: "",
