@@ -357,11 +357,13 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           autoTable(doc, {
             startY: y,
             margin: { left: ml, right: mr, top: mt, bottom: mb },
-            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível GRO", "Base Normativa"]],
             body: fatoresAvaliados.map(d => [
               sanitize(d.fator),
               sanitize(d.dimensoes.join(", ")),
               `${d.risco}%`,
+              `P${d.prob}`,
+              `S${d.sev}`,
               GRO_NIVEL_RISCO_LABELS[d.nivel],
               "NR-01 / NR-17 / ISO 45003",
             ]),
@@ -369,7 +371,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             bodyStyles: { fontSize: 8, halign: 'justify' },
             alternateRowStyles: { fillColor: [248, 245, 255] },
             didParseCell: (data) => {
-              if (data.section === "body" && data.column.index === 3) {
+              if (data.section === "body" && data.column.index === 5) {
                 const v = String(data.cell.raw);
                 if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                 else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
