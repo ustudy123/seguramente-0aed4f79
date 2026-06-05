@@ -80,8 +80,8 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
     });
    };
  
-  const isFormValid = nome && slug && ownerNome && ownerEmail && 
-    (accessMethod === 'invite' || (accessMethod === 'password' && ownerPassword.length >= 6));
+   const isFormValid = nome && slug && (isEditing || (ownerNome && ownerEmail && 
+     (accessMethod === 'invite' || (accessMethod === 'password' && ownerPassword.length >= 6))));
  
    return (
      <form onSubmit={handleSubmit} className="space-y-4">
