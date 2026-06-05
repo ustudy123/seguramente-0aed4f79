@@ -227,17 +227,20 @@ export default function SuperAdminDashboard() {
             <DialogTitle>Nova Empresa</DialogTitle>
             <DialogDescription>Cadastre a empresa e o administrador principal</DialogDescription>
           </DialogHeader>
-          <TenantForm
-            onSubmit={async (data) => {
-              try {
-                const result = await createTenant(data);
-                toast.success(result.inviteSent ? 'Empresa criada! Convite enviado.' : 'Empresa criada com sucesso!');
-                setShowTenantForm(false);
-              } catch (e: any) { toast.error(e.message || 'Erro'); }
-            }}
-            isLoading={isCreatingTenant}
-            onCancel={() => setShowTenantForm(false)}
-          />
+          {showTenantForm && (
+            <TenantForm
+              key={`tenant-form-${showTenantForm}`}
+              onSubmit={async (data) => {
+                try {
+                  const result = await createTenant(data);
+                  toast.success(result.inviteSent ? 'Empresa criada! Convite enviado.' : 'Empresa criada com sucesso!');
+                  setShowTenantForm(false);
+                } catch (e: any) { toast.error(e.message || 'Erro'); }
+              }}
+              isLoading={isCreatingTenant}
+              onCancel={() => setShowTenantForm(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
