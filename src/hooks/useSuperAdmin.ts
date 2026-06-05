@@ -18,8 +18,11 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
  export interface TenantWithStats extends Tenant {
    total_usuarios: number;
-   total_colaboradores: number;
- }
+  total_colaboradores: number;
+  email?: string;
+  telefone?: string;
+  cnpj?: string;
+}
  
  export interface SuperAdmin {
    id: string;
