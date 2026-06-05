@@ -55,18 +55,26 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
 
-  const { data: empresas = [] } = useQuery({
+  const { data: empresasRaw = [] } = useQuery({
     queryKey: ["spinoff-empresas", tenantId],
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj, tipo_unidade, matriz_id")
+        .select("id, razao_social, nome_fantasia, cnpj, tipo_unidade, matriz_id, created_at")
         .eq("tenant_id", tenantId)
-        .order("razao_social") as { data: Empresa[] | null; error: Error | null };
+        .order("created_at", { ascending: true }) as { data: (Empresa & { created_at: string })[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
     },
     enabled: open && !!tenantId,
   });
+
+  // A empresa principal/raiz do tenant é a mais antiga (primeira criada).
+  // Ela NÃO pode ser promovida, pois já é a raiz do próprio tenant.
+  const principalId = empresasRaw[0]?.id;
+  const empresas = useMemo(
+    () => empresasRaw.filter((e) => e.id !== principalId),
+    [empresasRaw, principalId],
+  );
 
   const filteredEmpresas = useMemo(() => {
     if (!search.trim()) return empresas;
@@ -78,6 +86,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
         e.cnpj?.includes(q),
     );
   }, [empresas, search]);
+
 
   const selecionadas = useMemo(
     () => empresas.filter((e) => selectedIds.has(e.id)),
