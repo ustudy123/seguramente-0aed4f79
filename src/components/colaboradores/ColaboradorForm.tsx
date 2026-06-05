@@ -502,6 +502,32 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 />
               </div>
 
+              {/* Bate ponto */}
+              <FormField
+                control={form.control}
+                name="bate_ponto"
+                render={({ field }) => {
+                  const tipo = (form.watch("tipo_contrato") || "").toLowerCase();
+                  const naoCLT = ["pj", "prolabore", "pro_labore", "terceiro", "terceirizado", "autonomo"].includes(tipo);
+                  return (
+                    <FormItem className="flex items-center justify-between rounded-md border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Bate ponto eletrônico</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          {naoCLT
+                            ? "Vínculos PJ/terceiros normalmente não batem ponto. Ative apenas se houver acordo específico."
+                            : "Define se este colaborador aparece no módulo de Ponto Eletrônico."}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
+              />
+
+
               {/* Estabelecimento | Departamento */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
