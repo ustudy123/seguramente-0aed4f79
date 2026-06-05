@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -153,63 +153,119 @@ export function EmpresasPromociveisPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((e) => (
-                  <TableRow key={e.empresa_id}>
-                    <TableCell className="font-medium">
-                      {e.razao_social}
-                      {!e.ativo && <Badge variant="secondary" className="ml-2">Inativa</Badge>}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{e.cnpj || "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm">{e.tenant_nome}</span>
-                        <code className="text-[10px] text-muted-foreground">{e.tenant_slug}</code>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">{e.total_empresas_tenant}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {e.tenant_owner_email || "—"}
-                    </TableCell>
-                    <TableCell>
-                      {e.is_principal ? (
-                        <Badge className="bg-primary/10 text-primary border-primary/20">
-                          <ShieldCheck className="w-3 h-3 mr-1" />Principal (raiz)
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Derivada</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {format(new Date(e.empresa_created_at), "dd/MM/yy", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant={e.is_principal ? "ghost" : "default"}
-                          disabled={e.is_principal}
-                          onClick={() => { setTarget(e); setOpen(true); }}
-                          title={e.is_principal ? "A empresa principal do tenant não pode ser promovida (já é a raiz)" : "Promover a Conta-Raiz (Novo Tenant)"}
-                        >
-                          <Rocket className="w-3.5 h-3.5 mr-1" />
-                          Promover
-                        </Button>
-                        {!e.is_principal && (
+                {maes.map((m) => {
+                  // Recuperamos o objeto original da empresa principal para ter todos os campos (cnpj, ativo, etc)
+                  const mae = data.find(e => e.tenant_id === m.tenant_id && e.is_principal);
+                  if (!mae) return null;
+
+                  const derivadas = data.filter(e => e.tenant_id === mae.tenant_id && !e.is_principal);
+                  const isExpanded = selectedTenantId === mae.tenant_id;
+                  
+                  const searchTerms = search.toLowerCase().trim();
+                  const matchesSearch = (row: EmpresaRow) => 
+                    !searchTerms || 
+                    row.razao_social?.toLowerCase().includes(searchTerms) ||
+                    row.cnpj?.toLowerCase().includes(searchTerms) ||
+                    row.tenant_owner_email?.toLowerCase().includes(searchTerms);
+
+                  if (selectedTenantId !== "__all__" && !isExpanded) return null;
+                  if (!matchesSearch(mae) && !derivadas.some(matchesSearch)) return null;
+
+                  return (
+                    <React.Fragment key={mae.tenant_id}>
+                      <TableRow 
+                        className={`cursor-pointer transition-colors ${isExpanded ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'}`}
+                        onClick={() => setSelectedTenantId(isExpanded ? "__all__" : mae.tenant_id)}
+                      >
+                        <TableCell className="font-bold flex items-center gap-2">
+                          {derivadas.length > 0 && (
+                            <div className="w-4 h-4 flex items-center justify-center font-mono text-xs">
+                              {isExpanded ? "−" : "+"}
+                            </div>
+                          )}
+                          {mae.razao_social}
+                          {!mae.ativo && <Badge variant="secondary" className="ml-2">Inativa</Badge>}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{mae.cnpj || "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold">{mae.tenant_nome}</span>
+                            <code className="text-[10px] text-muted-foreground">{mae.tenant_slug}</code>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">{mae.total_empresas_tenant}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {mae.tenant_owner_email || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-primary/10 text-primary border-primary/20">
+                            <ShieldCheck className="w-3 h-3 mr-1" />Principal
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {format(new Date(mae.empresa_created_at), "dd/MM/yy", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="border-amber-200 hover:bg-amber-50 text-amber-600"
-                            onClick={() => { setTarget(e); setOpenPrincipal(true); }}
-                            title="Tornar esta a unidade Principal (Matriz) dentro do mesmo tenant"
+                            variant="ghost"
+                            disabled
+                            className="opacity-50"
                           >
-                            <Crown className="w-3.5 h-3.5 mr-1" />
-                            Matriz
+                            <Rocket className="w-3.5 h-3.5 mr-1" />
+                            Promover
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </TableCell>
+                      </TableRow>
+
+                      {isExpanded && derivadas.filter(matchesSearch).map((e) => (
+                        <TableRow key={e.empresa_id} className="bg-muted/30 border-l-4 border-l-primary/30">
+                          <TableCell className="pl-8 font-medium italic text-muted-foreground">
+                            └ {e.razao_social}
+                            {!e.ativo && <Badge variant="secondary" className="ml-2">Inativa</Badge>}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground opacity-70">{e.cnpj || "—"}</TableCell>
+                          <TableCell className="opacity-70">
+                            <span className="text-xs italic">Mesmo tenant</span>
+                          </TableCell>
+                          <TableCell className="text-center opacity-70">—</TableCell>
+                          <TableCell className="text-xs text-muted-foreground opacity-70">
+                            {e.tenant_owner_email || "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-muted-foreground">Derivada</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs opacity-70">
+                            {format(new Date(e.empresa_created_at), "dd/MM/yy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={(ev) => { ev.stopPropagation(); setTarget(e); setOpen(true); }}
+                                title="Promover a Conta-Raiz (Novo Tenant)"
+                              >
+                                <Rocket className="w-3.5 h-3.5 mr-1" />
+                                Promover
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-amber-200 hover:bg-amber-50 text-amber-600"
+                                onClick={(ev) => { ev.stopPropagation(); setTarget(e); setOpenPrincipal(true); }}
+                                title="Tornar esta a unidade Principal (Matriz) dentro do mesmo tenant"
+                              >
+                                <Crown className="w-3.5 h-3.5 mr-1" />
+                                Matriz
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
