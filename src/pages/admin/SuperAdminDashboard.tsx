@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare, Brain, FileSignature, Rocket,
+  Activity, MessageSquare, Brain, FileSignature, Rocket, Edit,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,10 +36,11 @@ import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const { tenants, isLoading, createTenant, toggleTenant, isCreatingTenant } = useSuperAdmin();
+  const { tenants, isLoading, createTenant, updateTenant, toggleTenant, isCreatingTenant, isUpdatingTenant } = useSuperAdmin();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showTenantForm, setShowTenantForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [showOwnerForm, setShowOwnerForm] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<TenantWithStats | null>(null);
   const [showSpinoff, setShowSpinoff] = useState(false);
@@ -177,7 +178,10 @@ export default function SuperAdminDashboard() {
                                 <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/admin/tenants/${tenant.id}`)}>
+                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowEditForm(true); }}>
+                                  <Edit className="w-4 h-4 mr-2" />Editar empresa
+                                </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => navigate(`/admin/tenants/${tenant.id}`)}>
                                   <Eye className="w-4 h-4 mr-2" />Ver detalhes
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowOwnerForm(true); }}>
@@ -239,6 +243,44 @@ export default function SuperAdminDashboard() {
               }}
               isLoading={isCreatingTenant}
               onCancel={() => setShowTenantForm(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Empresa</DialogTitle>
+            <DialogDescription>Atualize os dados da empresa</DialogDescription>
+          </DialogHeader>
+          {showEditForm && selectedTenant && (
+            <TenantForm
+              initialData={{
+                nome: selectedTenant.nome,
+                slug: selectedTenant.slug,
+                plano: selectedTenant.plano,
+              }}
+              onSubmit={async (data) => {
+                try {
+                  await updateTenant({
+                    id: selectedTenant.id,
+                    nome: data.nome,
+                    slug: data.slug,
+                    plano: data.plano,
+                  });
+                  toast.success('Empresa atualizada com sucesso!');
+                  setShowEditForm(false);
+                  setSelectedTenant(null);
+                } catch (e: any) {
+                  toast.error(e.message || 'Erro ao atualizar empresa');
+                }
+              }}
+              isLoading={isUpdatingTenant}
+              onCancel={() => {
+                setShowEditForm(false);
+                setSelectedTenant(null);
+              }}
             />
           )}
         </DialogContent>
