@@ -70,6 +70,7 @@ const formSchema = z.object({
   matricula_esocial: z.string().optional(),
   cbo: z.string().optional(),
   foto_url: z.string().optional(),
+  bate_ponto: z.boolean().default(true),
 });
 
 type FormData = z.infer<typeof formSchema>;
