@@ -134,25 +134,36 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
-    if (finalPrincipalId && migrationType === 'new') {
+    if (finalPrincipalId && migrationType === 'new' && open) {
       const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
       if (pLocal) {
         const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
         
-        setNovoTenant(prev => ({
-          ...prev,
-          nome: nomeEmpresa || "",
-          slug: nomeEmpresa ? slugify(nomeEmpresa) : ""
-        }));
+        setNovoTenant(prev => {
+          // Só atualiza se for diferente para evitar loops ou sobrescrever edições manuais se o ID mudar
+          const newName = nomeEmpresa || "";
+          const newSlug = nomeEmpresa ? slugify(nomeEmpresa) : "";
+          if (prev.nome === newName && prev.slug === newSlug) return prev;
+          return {
+            ...prev,
+            nome: newName,
+            slug: newSlug
+          };
+        });
 
-        setOwner(prev => ({
-          ...prev,
-          email: pLocal.email || prev.email,
-          nome: pLocal.razao_social || prev.nome
-        }));
+        setOwner(prev => {
+          const newEmail = pLocal.email || "";
+          const newNome = pLocal.razao_social || "";
+          if (prev.email === newEmail && prev.nome === newNome) return prev;
+          return {
+            ...prev,
+            email: newEmail,
+            nome: newNome
+          };
+        });
       }
     }
-  }, [finalPrincipalId, migrationType, empresasRaw]);
+  }, [finalPrincipalId, migrationType, empresasRaw, open]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
