@@ -434,14 +434,15 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       // ── 6. Analise por GHE ────────────────────────────────────────────
       if (!isEntrevistaOnly && resultadosPorGHE.length > 0) {
         doc.addPage();
-        y = 20;
+        y = mt;
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("6. ESTRATIFICACAO E ANALISE POR GHE", 14, y);
+        doc.text("6. ESTRATIFICAÇÃO E ANÁLISE POR GHE", ml, y);
         y += 6;
         autoTable(doc, {
           startY: y,
-          head: [["GHE", "Respondentes", "IPS Medio", "Situacao"]],
+          margin: { left: ml, right: mr, top: mt, bottom: mb },
+          head: [["GHE", "Respondentes", "IPS Médio", "Situação"]],
           body: resultadosPorGHE.map(g => [
             sanitize(g.ghe_nome),
             String(g.count),
@@ -449,7 +450,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             getIPSLabel(calcularIPSClassificacao(g.ipsMedio || 0))
           ]),
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-          bodyStyles: { fontSize: 8 },
+          bodyStyles: { fontSize: 8, halign: 'justify' },
         });
         y = (doc as any).lastAutoTable.finalY + 10;
       }
