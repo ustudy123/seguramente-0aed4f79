@@ -50,6 +50,25 @@ export default function SuperAdminDashboard() {
     t.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Conta empresas derivadas (total - principal) por tenant para saber se "Promover" faz sentido
+  const { data: empresasAll = [] } = useQuery({
+    queryKey: ['superadmin-empresas-all'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('superadmin_list_all_empresas');
+      if (error) throw error;
+      return (data || []) as Array<{ tenant_id: string; total_empresas_tenant: number }>;
+    },
+  });
+  const derivadasPorTenant = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const e of empresasAll) {
+      const total = Number(e.total_empresas_tenant) || 0;
+      map.set(e.tenant_id, Math.max(0, total - 1));
+    }
+    return map;
+  }, [empresasAll]);
+
+
   const handleToggleTenant = async (tenant: TenantWithStats) => {
     try {
       await toggleTenant({ id: tenant.id, ativo: !tenant.ativo });
