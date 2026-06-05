@@ -111,38 +111,69 @@ export interface PerfilAuditLog {
 }
 
 export const MODULOS_SISTEMA = [
-  { id: "colaboradores", label: "Colaboradores", grupo: "Pessoas" },
-  { id: "admissoes", label: "Admissões", grupo: "Pessoas" },
-  { id: "usuarios", label: "Usuários do Sistema", grupo: "Pessoas" },
-  { id: "perfis_acesso", label: "Perfis & Acessos", grupo: "Pessoas" },
-  { id: "ferias", label: "Férias", grupo: "Pessoas" },
-  { id: "ponto", label: "Ponto", grupo: "Pessoas" },
-  { id: "atestados", label: "Atestados", grupo: "Saúde" },
-  { id: "afastamentos", label: "Afastamentos", grupo: "Saúde" },
+  // Estrutura Organizacional
+  { id: "empresa", label: "Empresa", grupo: "Estrutura Organizacional" },
+  { id: "filiais", label: "Estabelecimentos / Obras", grupo: "Estrutura Organizacional" },
+  { id: "departamentos", label: "Departamentos", grupo: "Estrutura Organizacional" },
+  { id: "cargos", label: "Cargos", grupo: "Estrutura Organizacional" },
+  { id: "colaboradores", label: "Colaboradores", grupo: "Estrutura Organizacional" },
+  { id: "terceiros", label: "Prestadores de Serviços", grupo: "Estrutura Organizacional" },
+  { id: "organograma", label: "Organograma", grupo: "Estrutura Organizacional" },
+
+  // Planejamento & Gestão
+  { id: "identidade_estrategica", label: "Identidade Estratégica", grupo: "Planejamento & Gestão" },
+  { id: "planejamento_estrategico", label: "Planejamento Estratégico", grupo: "Planejamento & Gestão" },
+  { id: "metas", label: "Metas", grupo: "Planejamento & Gestão" },
+  { id: "plano_acao", label: "Plano de Ação", grupo: "Planejamento & Gestão" },
+
+  // Pessoas & Cultura
+  { id: "onboarding", label: "Onboarding", grupo: "Pessoas & Cultura" },
+  { id: "contratos_experiencia", label: "Contratos de Experiência", grupo: "Pessoas & Cultura" },
+  { id: "cultura_celebracoes", label: "Cultura & Celebrações", grupo: "Pessoas & Cultura" },
+  { id: "feed", label: "Mural Interno", grupo: "Pessoas & Cultura" },
+  { id: "bem_estar", label: "Meu Bem-Estar", grupo: "Pessoas & Cultura" },
+  { id: "feedback", label: "Feedback & Desenvolvimento", grupo: "Pessoas & Cultura" },
+  { id: "ouvidoria", label: "Ouvidoria", grupo: "Pessoas & Cultura" },
+
+  // Desenvolvimento & Performance
+  { id: "aprendizado", label: "Aprendizado & Competências", grupo: "Desenvolvimento & Performance" },
+  { id: "trilhas", label: "Trilhas", grupo: "Desenvolvimento & Performance" },
+  { id: "avaliacoes", label: "Avaliações", grupo: "Desenvolvimento & Performance" },
+  { id: "pdi", label: "PDI", grupo: "Desenvolvimento & Performance" },
+
+  // Jornada & Rotina
+  { id: "ponto", label: "Ponto", grupo: "Jornada & Rotina" },
+  { id: "analise_jornada", label: "Análise de Jornada", grupo: "Jornada & Rotina" },
+  { id: "ferias", label: "Férias", grupo: "Jornada & Rotina" },
+  { id: "atestados", label: "Atestados", grupo: "Jornada & Rotina" },
+  { id: "beneficios", label: "Benefícios", grupo: "Jornada & Rotina" },
+
+  // Saúde & Segurança
   { id: "sst", label: "Compliance SST", grupo: "Saúde & Segurança" },
-  { id: "incidentes", label: "Incidentes & Acidentes", grupo: "Saúde & Segurança" },
+  { id: "psicossocial", label: "Psicossocial", grupo: "Saúde & Segurança" },
+  { id: "ergonomia", label: "Ergonomia", grupo: "Saúde & Segurança" },
   { id: "epi", label: "EPIs", grupo: "Saúde & Segurança" },
-  { id: "ergonomia", label: "Ergonomia NR-17", grupo: "Saúde & Segurança" },
-  { id: "psicossocial", label: "Psicossocial NR-01", grupo: "Saúde & Segurança" },
-  { id: "plano_acao", label: "Plano de Ação", grupo: "Estratégia" },
-  { id: "estrategia", label: "Estratégia & Governança", grupo: "Estratégia" },
-  { id: "avaliacoes", label: "Avaliações", grupo: "Desenvolvimento" },
-  { id: "pdi", label: "PDI", grupo: "Desenvolvimento" },
-  { id: "trilhas", label: "Trilhas", grupo: "Desenvolvimento" },
-  { id: "onboarding", label: "Onboarding", grupo: "Desenvolvimento" },
-  { id: "feedback", label: "Feedback & Ocorrências", grupo: "Cultura" },
-  { id: "ouvidoria", label: "Ouvidoria", grupo: "Cultura" },
-  { id: "bem_estar", label: "Bem-Estar", grupo: "Cultura" },
-  { id: "cultura", label: "Cultura & Celebrações", grupo: "Cultura" },
-  { id: "feed", label: "Mural Interno", grupo: "Cultura" },
+  { id: "incidentes", label: "Incidentes & Acidentes", grupo: "Saúde & Segurança" },
+
+  // Documentos & Governança
+  { id: "documentos", label: "Documentos", grupo: "Documentos & Governança" },
+  { id: "hub_contabil", label: "Hub Contábil", grupo: "Documentos & Governança" },
+
+  // Financeiro
   { id: "financeiro", label: "Financeiro", grupo: "Financeiro" },
-  { id: "beneficios", label: "Benefícios", grupo: "Financeiro" },
-  { id: "hub_contabil", label: "Hub Contábil", grupo: "Financeiro" },
-  { id: "documentos", label: "Documentos", grupo: "Documentos" },
-  { id: "terceiros", label: "Terceiros & SST", grupo: "Documentos" },
-  { id: "marketplace", label: "Rede de Parceiros", grupo: "Outros" },
-  { id: "configuracoes", label: "Configurações", grupo: "Outros" },
-  { id: "auditoria", label: "Auditoria do Sistema", grupo: "Outros" },
+
+  // Rede de Parceiros
+  { id: "marketplace", label: "Rede de Parceiros", grupo: "Rede de Parceiros" },
+
+  // Academia
+  { id: "academia", label: "Academia", grupo: "Academia" },
+
+  // Sistema
+  { id: "usuarios", label: "Usuários", grupo: "Sistema" },
+  { id: "perfis_acesso", label: "Perfis & Acessos", grupo: "Sistema" },
+  { id: "configuracoes", label: "Configurações", grupo: "Sistema" },
+  { id: "suporte", label: "Suporte", grupo: "Sistema" },
+  { id: "auditoria", label: "Auditoria do Sistema", grupo: "Sistema" },
 ];
 
 export const ACOES_DISPONIVEIS = [
