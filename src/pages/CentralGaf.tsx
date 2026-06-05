@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGafDashboards } from "@/hooks/useGafDashboards";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 
 // Componentes internos que serão criados ou expandidos
 // import { AbsenteismoCharts } from "@/components/atestados/dashboards/AbsenteismoCharts";
@@ -26,7 +27,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const CentralGaf = () => {
   const [activeTab, setActiveTab] = useState("absenteismo");
+  const [formOpen, setFormOpen] = useState(false);
+  
   const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading } = useGafDashboards();
+
+  const handleCreateAfastamento = async (data: any) => {
+    // Implementar a lógica de salvamento aqui
+    console.log("Salvando afastamento:", data);
+  };
 
   if (isLoading) {
     return (
@@ -55,12 +63,18 @@ const CentralGaf = () => {
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Afastamento
           </Button>
         </div>
       </header>
+
+      <AtestadoForm 
+        open={formOpen} 
+        onOpenChange={setFormOpen} 
+        onSubmit={handleCreateAfastamento}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between overflow-x-auto pb-2">
