@@ -21,6 +21,7 @@ interface Empresa {
   cnpj?: string | null;
   tipo_unidade?: string | null;
   matriz_id?: string | null;
+  email?: string | null;
 }
 
 interface Props {
@@ -65,7 +66,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     queryKey: ["spinoff-empresas", tenantId],
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj, tipo_unidade, matriz_id, created_at")
+        .select("id, razao_social, nome_fantasia, cnpj, tipo_unidade, matriz_id, created_at, email")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: true }) as { data: (Empresa & { created_at: string })[] | null; error: Error | null };
       if (error) throw error;
@@ -135,36 +136,26 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
-    const updateTenantAndOwner = async () => {
-      if (finalPrincipalId && migrationType === 'new') {
-        const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
-        if (pLocal) {
-          const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
-          
-          setNovoTenant(prev => ({
-            ...prev,
-            nome: nomeEmpresa || "",
-            slug: slugify(nomeEmpresa || "")
-          }));
+    if (finalPrincipalId && migrationType === 'new') {
+      const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
+      if (pLocal) {
+        const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
+        
+        setNovoTenant(prev => ({
+          ...prev,
+          nome: nomeEmpresa || "",
+          slug: nomeEmpresa ? nomeEmpresa.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) : ""
+        }));
 
-          // Busca dados adicionais como o e-mail da empresa para o proprietário
-          const { data, error } = await supabase
-            .from("empresa_cadastro")
-            .select("email")
-            .eq("id", finalPrincipalId)
-            .maybeSingle();
-          
-          if (!error && data?.email) {
-            setOwner(prev => ({
-              ...prev,
-              email: data.email || prev.email
-            }));
-          }
+        if (pLocal.email) {
+          setOwner(prev => ({
+            ...prev,
+            email: pLocal.email || prev.email,
+            nome: pLocal.razao_social || prev.nome
+          }));
         }
       }
-    };
-
-    updateTenantAndOwner();
+    }
   }, [finalPrincipalId, migrationType, empresasRaw]);
 
   const palavraConfirmacao = selecionadas.length === 1
@@ -302,13 +293,6 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Heurística de nome do novo tenant: se 1 empresa, usa o nome dela; se múltiplas, sugere matriz ou genérico
   const handleAdvanceStep1 = () => {
-    if (migrationType === 'new' && !novoTenant.nome) {
-      const principal = empresasRaw.find(e => e.id === finalPrincipalId);
-      if (principal) {
-        const nome = principal.nome_fantasia || principal.razao_social;
-        setNovoTenant((s) => ({ ...s, nome: nome || "", slug: slugify(nome || "") }));
-      }
-    }
     setStep(2);
   };
 
