@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertTriangle, ShieldCheck, Building2, UserPlus, Database, GitBranch, Search } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, AlertTriangle, ShieldCheck, Building2, UserPlus, Database, GitBranch, Search, Star, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
@@ -40,7 +41,12 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(preselectedEmpresaId ? [preselectedEmpresaId] : []),
   );
+  const [principalIdOverride, setPrincipalIdOverride] = useState<string | null>(preselectedEmpresaId || null);
   const [search, setSearch] = useState("");
+  const [migrationType, setMigrationType] = useState<'new' | 'existing'>('new');
+  const [targetTenantId, setTargetTenantId] = useState("");
+  const [targetTenantSearch, setTargetTenantSearch] = useState("");
+  
   const [novoTenant, setNovoTenant] = useState({
     nome: preselectedEmpresaNome || "",
     slug: preselectedEmpresaNome
@@ -68,17 +74,32 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     enabled: open && !!tenantId,
   });
 
+  const { data: existingTenants = [], isLoading: isLoadingTenants } = useQuery({
+    queryKey: ["admin-tenants-search", targetTenantSearch],
+    queryFn: async () => {
+      if (!targetTenantSearch || targetTenantSearch.length < 3) return [];
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("id, nome, slug")
+        .or(`nome.ilike.%${targetTenantSearch}%,slug.ilike.%${targetTenantSearch}%`)
+        .neq("id", tenantId)
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: open && migrationType === 'existing',
+  });
+
   // A empresa principal/raiz do tenant é a mais antiga (primeira criada).
   // Ela NÃO pode ser promovida, pois já é a raiz do próprio tenant.
-  const principalId = empresasRaw[0]?.id;
+  const principalIdSource = empresasRaw[0]?.id;
   const empresas = useMemo(
     () => empresasRaw
-      .filter((e) => e.id !== principalId)
+      .filter((e) => e.id !== principalIdSource)
       .slice()
       .sort((a, b) => (a.razao_social || "").localeCompare(b.razao_social || "")),
-    [empresasRaw, principalId],
+    [empresasRaw, principalIdSource],
   );
-
 
   const filteredEmpresas = useMemo(() => {
     if (!search.trim()) return empresas;
@@ -91,11 +112,39 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     );
   }, [empresas, search]);
 
-
   const selecionadas = useMemo(
     () => empresas.filter((e) => selectedIds.has(e.id)),
     [empresas, selectedIds],
   );
+
+  // Calcula a principal automática do lote
+  const principalAutomaticaId = useMemo(() => {
+    const matriz = selecionadas.find(e => e.tipo_unidade === 'matriz');
+    if (matriz) return matriz.id;
+    
+    return [...selecionadas].sort((a, b) => {
+      const ca = empresasRaw.find(r => r.id === a.id)?.created_at || '';
+      const cb = empresasRaw.find(r => r.id === b.id)?.created_at || '';
+      return ca.localeCompare(cb);
+    })[0]?.id;
+  }, [selecionadas, empresasRaw]);
+
+  const finalPrincipalId = principalIdOverride || principalAutomaticaId;
+
+  // Atualiza os dados do novo tenant baseado na principal escolhida
+  useEffect(() => {
+    if (finalPrincipalId && migrationType === 'new') {
+      const p = empresasRaw.find(e => e.id === finalPrincipalId);
+      if (p) {
+        const nome = p.nome_fantasia || p.razao_social;
+        setNovoTenant(prev => ({
+          ...prev,
+          nome: nome || "",
+          slug: slugify(nome || "")
+        }));
+      }
+    }
+  }, [finalPrincipalId, migrationType]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
@@ -104,7 +153,11 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const reset = () => {
     setStep(1);
     setSelectedIds(new Set(preselectedEmpresaId ? [preselectedEmpresaId] : []));
+    setPrincipalIdOverride(preselectedEmpresaId || null);
     setSearch("");
+    setMigrationType('new');
+    setTargetTenantId("");
+    setTargetTenantSearch("");
     setNovoTenant({
       nome: preselectedEmpresaNome || "",
       slug: preselectedEmpresaNome
@@ -128,8 +181,12 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const toggleEmpresa = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+        if (principalIdOverride === id) setPrincipalIdOverride(null);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -137,6 +194,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const toggleAll = () => {
     if (selectedIds.size === filteredEmpresas.length) {
       setSelectedIds(new Set());
+      setPrincipalIdOverride(null);
     } else {
       setSelectedIds(new Set(filteredEmpresas.map((e) => e.id)));
     }
@@ -162,26 +220,40 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const executar = async () => {
     setExecuting(true);
     try {
+      // Reordena os IDs para que a principal seja a primeira (retrocompatibilidade opcional, 
+      // mas garante consistência se o RPC usar a primeira como base)
+      const sortedIds = [
+        finalPrincipalId,
+        ...Array.from(selectedIds).filter(id => id !== finalPrincipalId)
+      ].filter(Boolean) as string[];
+
+      const body: any = {
+        mode: "execute",
+        empresaIds: sortedIds,
+      };
+
+      if (migrationType === 'existing') {
+        body.targetTenantId = targetTenantId;
+      } else {
+        body.novoTenant = novoTenant;
+        body.owner = {
+          email: owner.email.trim(),
+          nome: owner.nome.trim(),
+          password: owner.inviteMode ? undefined : owner.password,
+          inviteMode: owner.inviteMode,
+        };
+      }
+
       const { data, error } = await supabase.functions.invoke("tenant-spinoff", {
-        body: {
-          mode: "execute",
-          empresaIds: Array.from(selectedIds),
-          novoTenant,
-          owner: {
-            email: owner.email.trim(),
-            nome: owner.nome.trim(),
-            password: owner.inviteMode ? undefined : owner.password,
-            inviteMode: owner.inviteMode,
-          },
-        },
+        body
       });
       if (error) {
         let realMsg = error.message;
         try {
           const ctx: any = (error as any).context;
           if (ctx?.json) {
-            const body = await ctx.json();
-            if (body?.error) realMsg = body.error;
+            const b = await ctx.json();
+            if (b?.error) realMsg = b.error;
           }
         } catch { /* ignore */ }
         throw new Error(realMsg);
@@ -191,7 +263,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
       toast.success(
         data?.owner?.inviteSent
           ? `Conta-Raiz criada com ${n} empresa(s)! Convite enviado ao novo dono.`
-          : `${n} empresa(s) promovida(s) a Conta-Raiz com sucesso!`,
+          : `${n} empresa(s) promovida(s) com sucesso!`,
       );
       onSuccess?.();
       handleClose(false);
@@ -205,6 +277,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   const slugify = (s: string) =>
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+
 
   // Heurística de nome do novo tenant: se 1 empresa, usa o nome dela; se múltiplas, sugere matriz ou genérico
   const handleAdvanceStep1 = () => {
