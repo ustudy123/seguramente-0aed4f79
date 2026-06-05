@@ -640,6 +640,7 @@ export type Database = {
           aviso_previo_cumprido: boolean | null
           bairro: string | null
           banco: string | null
+          bate_ponto: boolean
           cargo: string
           cbo: string | null
           celular: string | null
@@ -720,6 +721,7 @@ export type Database = {
           aviso_previo_cumprido?: boolean | null
           bairro?: string | null
           banco?: string | null
+          bate_ponto?: boolean
           cargo: string
           cbo?: string | null
           celular?: string | null
@@ -800,6 +802,7 @@ export type Database = {
           aviso_previo_cumprido?: boolean | null
           bairro?: string | null
           banco?: string | null
+          bate_ponto?: boolean
           cargo?: string
           cbo?: string | null
           celular?: string | null
@@ -21586,6 +21589,7 @@ export type Database = {
           aviso_previo_cumprido: boolean | null
           bairro: string | null
           banco: string | null
+          bate_ponto: boolean
           cargo: string
           cbo: string | null
           celular: string | null
