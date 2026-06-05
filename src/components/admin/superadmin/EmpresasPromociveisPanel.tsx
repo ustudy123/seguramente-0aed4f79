@@ -169,18 +169,12 @@ export function EmpresasPromociveisPanel() {
               </TableHeader>
               <TableBody>
                 {maes.map((m) => {
-                  // Tentamos encontrar a empresa marcada como principal no banco
-                  let mae = data.find(e => e.tenant_id === m.tenant_id && e.is_principal);
-                  
-                  // Se não houver uma "principal" explícita, pegamos a primeira do tenant como referência
-                  if (!mae) {
-                    mae = data.find(e => e.tenant_id === m.tenant_id);
-                  }
-
+                  // A "mae" de exibição é a empresa principal do grupo (is_principal=true ou fallback)
+                  const mae = m.empresas.find(e => e.is_principal) || m.empresas[0];
                   if (!mae) return null;
 
-                  const derivadas = data.filter(e => e.tenant_id === mae!.tenant_id && e.empresa_id !== mae!.empresa_id);
-                  const isExpanded = selectedTenantId === mae.tenant_id;
+                  const derivadas = m.empresas.filter(e => e.empresa_id !== mae.empresa_id);
+                  const isExpanded = selectedTenantId === m.tenant_id;
                   
                   const searchTerms = search.toLowerCase().trim();
                   const matchesSearch = (row: EmpresaRow) => 
@@ -189,8 +183,11 @@ export function EmpresasPromociveisPanel() {
                     row.cnpj?.toLowerCase().includes(searchTerms) ||
                     row.tenant_owner_email?.toLowerCase().includes(searchTerms);
 
+                  // Se estiver filtrando por um tenant específico e não for este, oculta
                   if (selectedTenantId !== "__all__" && !isExpanded) return null;
-                  if (!matchesSearch(mae) && !derivadas.some(matchesSearch)) return null;
+                  
+                  // Se houver busca por texto, verifica se a mãe OU alguma derivada bate com a busca
+                  if (searchTerms && !matchesSearch(mae) && !derivadas.some(matchesSearch)) return null;
 
                   return (
                     <React.Fragment key={mae.tenant_id}>
