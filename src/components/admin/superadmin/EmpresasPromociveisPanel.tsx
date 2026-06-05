@@ -170,11 +170,17 @@ export function EmpresasPromociveisPanel() {
               </TableHeader>
               <TableBody>
                 {maes.map((m) => {
-                  // Recuperamos o objeto original da empresa principal para ter todos os campos (cnpj, ativo, etc)
-                  const mae = data.find(e => e.tenant_id === m.tenant_id && e.is_principal);
+                  // Tentamos encontrar a empresa marcada como principal no banco
+                  let mae = data.find(e => e.tenant_id === m.tenant_id && e.is_principal);
+                  
+                  // Se não houver uma "principal" explícita, pegamos a primeira do tenant como referência
+                  if (!mae) {
+                    mae = data.find(e => e.tenant_id === m.tenant_id);
+                  }
+
                   if (!mae) return null;
 
-                  const derivadas = data.filter(e => e.tenant_id === mae.tenant_id && !e.is_principal);
+                  const derivadas = data.filter(e => e.tenant_id === mae!.tenant_id && e.empresa_id !== mae!.empresa_id);
                   const isExpanded = selectedTenantId === mae.tenant_id;
                   
                   const searchTerms = search.toLowerCase().trim();
