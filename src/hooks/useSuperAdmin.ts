@@ -205,17 +205,15 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
      enabled: isSuperAdmin,
    });
  
-   // Buscar usuários de um tenant específico
-   const getTenantUsers = async (tenantId: string) => {
-     const { data, error } = await supabase
-       .from('profiles')
-       .select('*, user_roles!inner(role)')
-       .eq('tenant_id', tenantId)
-       .order('nome_completo');
- 
-     if (error) throw error;
-     return data;
-   };
+    // Buscar usuários de um tenant específico
+    const getTenantUsers = async (tenantId: string) => {
+      const { data, error } = await supabase.rpc('superadmin_list_tenant_users', {
+        _tenant_id: tenantId
+      });
+  
+      if (error) throw error;
+      return (data as any[]) || [];
+    };
  
    // Criar usuário owner para um tenant
    const createTenantOwnerMutation = useMutation({

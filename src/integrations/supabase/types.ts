@@ -21935,6 +21935,10 @@ export type Database = {
           total_empresas_tenant: number
         }[]
       }
+      superadmin_list_tenant_users: {
+        Args: { _tenant_id: string }
+        Returns: Json
+      }
       superadmin_psicossocial_overview: { Args: never; Returns: Json }
       superadmin_spinoff_dry_run: {
         Args: { p_empresa_id: string }
