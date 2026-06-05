@@ -27,12 +27,12 @@ import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosG
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Sanitize text for jsPDF but maintain basic accented characters if using a standard font
-// The user explicitly requested proper accents.
-// jsPDF standard fonts (helvetica/times/courier) support WinAnsiEncoding which covers most Western European accents.
+// Sanitize text for jsPDF
+// jsPDF standard fonts support WinAnsiEncoding which covers most Western European accents.
 const sanitize = (text: string): string => {
   if (!text) return "";
-  // Keep the text as is, just handle null/undefined
+  // Map common accented characters to their closest equivalents if jsPDF has trouble, 
+  // but for standard Western European, it should work if not normalized to NFD.
   return text;
 };
 
@@ -70,34 +70,43 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     () => campanhas.filter((c: any) => c.tipo_instrumento === "entrevista_guiada"),
     [campanhas],
   );
-  const campanhaEntrevistaIds = useMemo(
-    () => campanhasEntrevista.map((c) => c.id),
-    [campanhasEntrevista],
-  );
-  const { data: evidenciasQualitativas = [] } = useEvidenciasEntrevista(campanhaEntrevistaIds);
-
+  
   const campanhasValidas = campanhas.filter(c => {
     const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
     const minRespostas = isEntrevistaGuiada ? 1 : MINIMO_ANONIMATO;
     
-    // Para campanhas de entrevista, não exigimos radar_data no filtro se tivermos evidências qualitativas,
-    // mas o useMemo fatoresAvaliados usa radar_data. 
-    // Vamos garantir que a campanha selecionada seja a mais relevante.
     return c.ips_score != null &&
       (c.total_respostas || 0) >= minRespostas;
   });
 
-  const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
-  const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
-
-  // Prioridade para campanha de entrevista guiada se houver evidências qualitativas
+  // Prioridade para campanha selecionada
   const campanha = useMemo(() => {
     if (filtroCampanhaId !== "todos") {
       return campanhasValidas.find(c => c.id === filtroCampanhaId) ?? campanhasValidas[0];
     }
-    if (temEvidenciasQualitativas && campanhasEntrevista.length > 0) return campanhasEntrevista[0];
-    return campanhasValidas[0] ?? campanhasEntrevista[0];
-  }, [filtroCampanhaId, temEvidenciasQualitativas, campanhasEntrevista, campanhasValidas]);
+    // Se "todos" estiver selecionado e houver campanhas válidas (quantitativas)
+    if (campanhasValidas.length > 0) return campanhasValidas[0];
+    return campanhasEntrevista[0];
+  }, [filtroCampanhaId, campanhasEntrevista, campanhasValidas]);
+
+  const campanhaEntrevistaIds = useMemo(() => {
+    // Se uma campanha específica está selecionada e é de entrevista, buscamos evidências apenas dela
+    if (campanha && (campanha as any).tipo_instrumento === "entrevista_guiada") {
+      return [campanha.id];
+    }
+    // Se "todos" está selecionado ou é quantitativa, buscamos de todas as entrevistas pertinentes à campanha atual
+    // Mas para evitar confusão entre campanhas, se for uma campanha quantitativa específica, 
+    // idealmente não mostraríamos evidências de entrevistas que não têm relação.
+    if (filtroCampanhaId !== "todos") {
+      return []; // Não traz evidências se for uma campanha quantitativa específica
+    }
+    return campanhasEntrevista.map(c => c.id);
+  }, [filtroCampanhaId, campanha, campanhasEntrevista]);
+
+  const { data: evidenciasQualitativas = [] } = useEvidenciasEntrevista(campanhaEntrevistaIds);
+
+  const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
+  const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
 
   const isEntrevista = (campanha as any)?.tipo_instrumento === "entrevista_guiada";
   const isSipro = (campanha?.instrumento === 'sipro' && !isEntrevista) || isEntrevista;
