@@ -60,11 +60,16 @@ serve(async (req) => {
     const { data: userData, error: userErr } = await callerClient.auth.getUser();
     if (userErr || !userData?.user) return json({ error: "Auth inválido" }, 401);
 
-    const { data: isSuper } = await admin.rpc("has_minimum_role", {
+    const { data: canMigrate, error: roleErr } = await admin.rpc("has_minimum_role", {
       _user_id: userData.user.id,
-      _target_role: 'admin'
+      _minimum_role: "admin",
     });
-    if (!isSuper) return json({ error: "Acesso negado: apenas administradores e donos podem realizar migrações." }, 403);
+    if (roleErr) {
+      return json({ error: `Falha ao validar permissão: ${roleErr.message}` }, 500);
+    }
+    if (!canMigrate) {
+      return json({ error: "Acesso negado: apenas administradores e donos podem realizar migrações." }, 403);
+    }
 
     const payload = (await req.json()) as Payload;
 
