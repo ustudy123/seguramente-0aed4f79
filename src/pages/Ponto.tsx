@@ -59,7 +59,7 @@ import { SolicitarAjusteFolhaInterno } from "@/components/ponto/SolicitarAjusteF
 const Ponto = () => {
   const { profile, tenantId: tenantIdAtivo } = useAuth();
   // Ponto eletrônico é exclusivo para vínculos CLT — exclui PJ/Pró-labore/Terceiros.
-  const { colaboradores } = useColaboradores({ excluirPJ: true });
+  const { colaboradores } = useColaboradores({ excluirPJ: true, apenasBatePonto: true });
   const {
     usePontoDiario, useMarcacoesHoje, useAjustesPendentes,
     registrarPonto, registrandoPonto,
