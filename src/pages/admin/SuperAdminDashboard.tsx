@@ -45,6 +45,9 @@ export default function SuperAdminDashboard() {
   const [selectedTenant, setSelectedTenant] = useState<TenantWithStats | null>(null);
   const [showSpinoff, setShowSpinoff] = useState(false);
   const [spinoffTenant, setSpinoffTenant] = useState<TenantWithStats | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredTenants = tenants.filter(t =>
     t.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
