@@ -27,14 +27,14 @@ import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosG
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Remove accented characters for jsPDF compatibility
-const sanitize = (text: string): string =>
-  text
-    ? text
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^\x00-\x7F]/g, " ")
-    : "";
+// Sanitize text for jsPDF but maintain basic accented characters if using a standard font
+// The user explicitly requested proper accents.
+// jsPDF standard fonts (helvetica/times/courier) support WinAnsiEncoding which covers most Western European accents.
+const sanitize = (text: string): string => {
+  if (!text) return "";
+  // Keep the text as is, just handle null/undefined
+  return text;
+};
 
 const MINIMO_ANONIMATO = 5;
 
@@ -142,10 +142,18 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     if (!podeExportar || !campanha) return;
     setExportando(true);
     try {
-      const doc = new jsPDF({ orientation: "portrait", format: "a4" });
+      const doc = new jsPDF({ orientation: "portrait", format: "a4", unit: "mm" });
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
-      let y = 20;
+      
+      // Margins ABNT: Superior 3.0, Esquerda 3.0, Inferior 2.0, Direita 2.0
+      const mt = 30; // Margin Top
+      const ml = 30; // Margin Left
+      const mb = 20; // Margin Bottom
+      const mr = 20; // Margin Right
+      const contentWidth = pageW - ml - mr;
+      
+      let y = mt;
 
       const addFooter = () => {
         const totalPages = (doc as any).internal.getNumberOfPages();
@@ -153,30 +161,44 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           doc.setPage(i);
           doc.setFontSize(8);
           doc.setTextColor(140, 140, 140);
-          const footerText = `YourEyes — Relatorio Psicossocial | ${sanitize(campanha.nome)} | Pagina ${i}/${totalPages}`;
-          doc.text(footerText, pageW / 2, pageH - 10, { align: "center" });
+          const footerText = `YourEyes — Relatório Psicossocial | ${sanitize(campanha.nome)} | Página ${i}/${totalPages}`;
+          const tw = doc.getTextWidth(footerText);
+          // Position footer inside bottom margin
+          doc.text(footerText, (pageW / 2), pageH - (mb / 2), { align: "center" });
         }
       };
 
       // ── Cabecalho ──────────────────────────────────────────────────────
       doc.setFillColor(88, 28, 135);
-      doc.rect(0, 0, pageW, 40, "F");
+      doc.rect(0, 0, pageW, 35, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text("RELATORIO DE DIAGNOSTICO PSICOSSOCIAL", pageW / 2, 16, { align: "center" });
+      doc.text("RELATÓRIO DE DIAGNÓSTICO PSICOSSOCIAL", pageW / 2, 12, { align: "center" });
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("NR-01 · NR-17 · ISO 45003 · COPSOQ III", pageW / 2, 24, { align: "center" });
-      doc.text(`Emitido em: ${dataGeracao} | Empresa: ${sanitize(empresaAtiva?.razao_social ?? empresaNome ?? "N/D")}`, pageW / 2, 31, { align: "center" });
+      doc.text("NR-01 · NR-17 · ISO 45003 · COPSOQ III", pageW / 2, 19, { align: "center" });
+      doc.text(`Emitido em: ${dataGeracao} | Empresa: ${sanitize(empresaAtiva?.razao_social ?? empresaNome ?? "N/D")}`, pageW / 2, 26, { align: "center" });
 
-      y = 52;
+      y = mt + 15; // Start content below top margin + spacing from header if it was at 0, but header is at top. 
+      // Adjusted y to be relative to mt
+      y = mt + 10;
       doc.setTextColor(0, 0, 0);
+
+      // Helper function to check page overflow
+      const checkPageOverflow = (neededHeight: number) => {
+        if (y + neededHeight > pageH - mb) {
+          doc.addPage();
+          y = mt;
+          return true;
+        }
+        return false;
+      };
 
       // ── 1. Identificacao ───────────────────────────────────────────────
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("1. IDENTIFICACAO DA AVALIACAO", 14, y);
+      doc.text("1. IDENTIFICAÇÃO DA AVALIAÇÃO", ml, y);
       y += 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
@@ -204,56 +226,60 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           ];
       autoTable(doc, {
         startY: y,
-        head: [["Campo", "Informacao"]],
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Campo", "Informação"]],
         body: identificacao,
         headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-        bodyStyles: { fontSize: 8 },
+        bodyStyles: { fontSize: 8, halign: 'justify' },
         columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
       });
       y = (doc as any).lastAutoTable.finalY + 10;
 
       // ── 2. Sintese Executiva ───────────────────────────────────────────
       if (!isEntrevistaOnly) {
+        checkPageOverflow(30);
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("2. SINTESE EXECUTIVA", 14, y);
+        doc.text("2. SÍNTESE EXECUTIVA", ml, y);
         y += 5;
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         const sintese = [
-          [`${criticos.length} dimensao(oes) em nivel CRITICO — Intervencao imediata necessaria (prazo ≤ 30 dias)`],
-          [`${altos.length} dimensao(oes) em nivel ALTO — Acao preventiva prioritaria (prazo ≤ 60 dias)`],
-          [`${medios.length} dimensao(oes) em nivel MEDIO — Monitoramento e melhorias continuas (prazo ≤ 90 dias)`],
-          [`${baixos.length} dimensao(oes) em nivel BAIXO — Manter vigilancia (prazo ≤ 180 dias)`],
+          [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
+          [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
+          [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
+          [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
         ];
         autoTable(doc, {
           startY: y,
+          margin: { left: ml, right: mr, top: mt, bottom: mb },
           body: sintese,
           headStyles: { fillColor: [88, 28, 135], fontSize: 8 },
-          bodyStyles: { fontSize: 8 },
+          bodyStyles: { fontSize: 8, halign: 'justify' },
           didParseCell: (data) => {
             const text = String(data.cell.raw);
-            if (text.includes("CRITICO")) data.cell.styles.textColor = [185, 28, 28];
+            if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
             else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
-            else if (text.includes("MEDIO")) data.cell.styles.textColor = [180, 83, 9];
+            else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
             else data.cell.styles.textColor = [5, 122, 85];
           },
         });
         y = (doc as any).lastAutoTable.finalY + 10;
 
         // ── 3. Inventario de Riscos ────────────────────────────────────────
+        checkPageOverflow(30);
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("3. INVENTARIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
+        doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", ml, y);
         y += 5;
 
         if (resultadosPorGHE.length > 0) {
           resultadosPorGHE.forEach((ghe) => {
-            if (y > 240) { doc.addPage(); y = 20; }
+            checkPageOverflow(30);
             
             doc.setFontSize(9);
             doc.setFont("helvetica", "bold");
-            doc.text(`GHE: ${sanitize(ghe.ghe_nome)}`, 14, y);
+            doc.text(`GHE: ${sanitize(ghe.ghe_nome)}`, ml, y);
             y += 4;
             
             const funcDepto = ghe.composicaoSetorCargos.length > 0 
@@ -262,10 +288,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
-            doc.text(`FUNCAO/DEPARTAMENTO: ${sanitize(funcDepto)}`, 14, y);
+            doc.text(`FUNÇÃO/DEPARTAMENTO: ${sanitize(funcDepto)}`, ml, y);
             y += 4;
             
-            doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, 14, y);
+            doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, ml, y);
             y += 5;
 
             // Agrega fatores por GHE
@@ -292,7 +318,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
             autoTable(doc, {
               startY: y,
-              head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
+              margin: { left: ml, right: mr, top: mt, bottom: mb },
+              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
               body: fatoresGHE.map(d => [
                 sanitize(d.fator),
                 sanitize(d.dimensoes.join(", ")),
@@ -301,14 +328,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 "NR-01 / NR-17 / ISO 45003",
               ]),
               headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-              bodyStyles: { fontSize: 8 },
+              bodyStyles: { fontSize: 8, halign: 'justify' },
               alternateRowStyles: { fillColor: [248, 245, 255] },
               didParseCell: (data) => {
                 if (data.section === "body" && data.column.index === 3) {
                   const v = String(data.cell.raw);
-                  if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
+                  if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                   else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-                  else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
+                  else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
                   else data.cell.styles.textColor = [5, 122, 85];
                 }
               },
@@ -318,7 +345,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         } else {
           autoTable(doc, {
             startY: y,
-            head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
+            margin: { left: ml, right: mr, top: mt, bottom: mb },
+            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
             body: fatoresAvaliados.map(d => [
               sanitize(d.fator),
               sanitize(d.dimensoes.join(", ")),
@@ -327,14 +355,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
               "NR-01 / NR-17 / ISO 45003",
             ]),
             headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-            bodyStyles: { fontSize: 8 },
+            bodyStyles: { fontSize: 8, halign: 'justify' },
             alternateRowStyles: { fillColor: [248, 245, 255] },
             didParseCell: (data) => {
               if (data.section === "body" && data.column.index === 3) {
                 const v = String(data.cell.raw);
-                if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
+                if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                 else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-                else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
+                else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
                 else data.cell.styles.textColor = [5, 122, 85];
               }
             },
@@ -345,74 +373,76 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
       // ── 4. Metodologia ────────────────────────────────────────────────
       doc.addPage();
-      y = 20;
+      y = mt;
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text("4. METODOLOGIA E CRITERIOS DE AVALIACAO", 14, y);
+      doc.text("4. METODOLOGIA E CRITÉRIOS DE AVALIAÇÃO", ml, y);
       y += 8;
 
       const metodologiaBlocks = [
         {
           titulo: "4.1 Instrumento Utilizado",
           corpo: isSipro
-            ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
-            : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliacao de riscos psicossociais.`,
+            ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Score calculado por dimensão em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
+            : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliação de riscos psicossociais.`,
         },
         {
-          titulo: "4.2 Calculo do IPS (Indice Psicossocial YourEyes)",
-          corpo: "O IPS e calculado como media ponderada pelo numero de respondentes em cada campanha ativa. Classificacao: >=80 = Saudavel; 65-79 = Estavel; 50-64 = Atencao; 35-49 = Risco; <35 = Critico. Minimo de 5 respondentes exigido para questionarios (ISO 45003 §6.1.2); entrevistas guiadas sao isentas deste minimo por natureza qualitativa.",
+          titulo: "4.2 Cálculo do IPS (Índice Psicossocial YourEyes)",
+          corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: >=80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para questionários (ISO 45003 §6.1.2); entrevistas guiadas são isentas deste mínimo por natureza qualitativa.",
         },
         {
-          titulo: "4.3 Conversao para Nivel GRO (NR-01)",
-          corpo: "Cada dimensao psicossocial e convertida para perigo ocupacional via matriz PxS:\n• Score >=75: Probabilidade Muito Alta + Severidade Grave -> Risco CRITICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada -> Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada -> Risco MEDIO\n• Score <35: Probabilidade Baixa + Severidade Leve -> Risco BAIXO",
+          titulo: "4.3 Conversão para Nível GRO (NR-01)",
+          corpo: "Cada dimensão psicossocial é convertida para perigo ocupacional via matriz PxS:\n• Score >=75: Probabilidade Muito Alta + Severidade Grave -> Risco CRÍTICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada -> Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada -> Risco MÉDIO\n• Score <35: Probabilidade Baixa + Severidade Leve -> Risco BAIXO",
         },
       ];
 
       for (const bloco of metodologiaBlocks) {
-        if (y > 250) { doc.addPage(); y = 20; }
+        checkPageOverflow(30);
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(bloco.titulo, 14, y);
+        doc.text(bloco.titulo, ml, y);
         y += 5;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        const lines = doc.splitTextToSize(bloco.corpo, pageW - 28);
-        doc.text(lines, 14, y);
+        const lines = doc.splitTextToSize(bloco.corpo, contentWidth);
+        doc.text(lines, ml, y, { align: 'justify', maxWidth: contentWidth });
         y += lines.length * 4.5 + 6;
       }
 
       // ── 5. Conformidade ───────────────────────────────────────────────
-      if (y > 240) { doc.addPage(); y = 20; }
+      checkPageOverflow(30);
       y += 5;
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text("5. CONFORMIDADE NORMATIVA", 14, y);
+      doc.text("5. CONFORMIDADE NORMATIVA", ml, y);
       y += 6;
       autoTable(doc, {
         startY: y,
-        head: [["Norma / Padrao", "Requisito Atendido"]],
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Norma / Padrão", "Requisito Atendido"]],
         body: [
-          ["NR-01 (GRO/PGR)", "Identificacao e avaliacao de riscos psicossociais no inventario"],
-          ["NR-17 (Ergonomia)", "Integracao de fatores psicossociais na AEP com vinculo setor/função"],
-          ["ISO 45003:2021", "Gestao de riscos psicossociais com confidencialidade e agrupamento"],
-          ["LGPD (Lei 13.709/18)", "Dados coletados de forma anonima; sem vinculacao individual"],
+          ["NR-01 (GRO/PGR)", "Identificação e avaliação de riscos psicossociais no inventário"],
+          ["NR-17 (Ergonomia)", "Integração de fatores psicossociais na AEP com vínculo setor/função"],
+          ["ISO 45003:2021", "Gestão de riscos psicossociais com confidencialidade e agrupamento"],
+          ["LGPD (Lei 13.709/18)", "Dados coletados de forma anônima; sem vinculação individual"],
         ],
         headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-        bodyStyles: { fontSize: 8 },
+        bodyStyles: { fontSize: 8, halign: 'justify' },
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
 
       // ── 6. Analise por GHE ────────────────────────────────────────────
       if (!isEntrevistaOnly && resultadosPorGHE.length > 0) {
         doc.addPage();
-        y = 20;
+        y = mt;
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("6. ESTRATIFICACAO E ANALISE POR GHE", 14, y);
+        doc.text("6. ESTRATIFICAÇÃO E ANÁLISE POR GHE", ml, y);
         y += 6;
         autoTable(doc, {
           startY: y,
-          head: [["GHE", "Respondentes", "IPS Medio", "Situacao"]],
+          margin: { left: ml, right: mr, top: mt, bottom: mb },
+          head: [["GHE", "Respondentes", "IPS Médio", "Situação"]],
           body: resultadosPorGHE.map(g => [
             sanitize(g.ghe_nome),
             String(g.count),
@@ -420,7 +450,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             getIPSLabel(calcularIPSClassificacao(g.ipsMedio || 0))
           ]),
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-          bodyStyles: { fontSize: 8 },
+          bodyStyles: { fontSize: 8, halign: 'justify' },
         });
         y = (doc as any).lastAutoTable.finalY + 10;
       }
@@ -428,10 +458,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       // ── 7. Evidencias Qualitativas ────────────────────────────────────
       if (temEvidenciasQualitativas) {
         doc.addPage();
-        y = 20;
+        y = mt;
         doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
-        doc.text("7. EVIDENCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", 14, y);
+        doc.text("7. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", ml, y);
         y += 8;
         
         for (const ev of evidenciasQualitativas) {
@@ -443,17 +473,17 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             if (trechos.length >= 3) break;
           }
           if (!trechos.length) continue;
-          if (y > 255) { doc.addPage(); y = 20; }
+          checkPageOverflow(30);
           doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
-          doc.text(`• ${sanitize(ev.risco_nome)} (P${ev.p_max} x S${ev.s_max})`, 14, y);
+          doc.text(`• ${sanitize(ev.risco_nome)} (P${ev.p_max} x S${ev.s_max})`, ml, y);
           y += 5;
           doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
           for (const t of trechos) {
-            const linhas = doc.splitTextToSize(`"${sanitize(t)}"`, pageW - 32);
-            if (y + linhas.length * 4 > 280) { doc.addPage(); y = 20; }
-            doc.text(linhas, 18, y);
+            const linhas = doc.splitTextToSize(`"${sanitize(t)}"`, contentWidth - 4);
+            checkPageOverflow(linhas.length * 4 + 4);
+            doc.text(linhas, ml + 4, y, { align: 'justify', maxWidth: contentWidth - 4 });
             y += linhas.length * 4 + 2;
           }
           y += 4;
