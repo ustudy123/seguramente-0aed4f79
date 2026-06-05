@@ -65,6 +65,26 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
       if (tenantError) throw tenantError;
 
+      // Step 1.5: Create the Matriz unit in empresa_cadastro
+      const { error: ecError } = await supabase
+        .from('empresa_cadastro')
+        .insert({
+          tenant_id: tenant.id,
+          nome_fantasia: data.nome,
+          razao_social: data.nome,
+          email: data.email,
+          telefone: data.telefone,
+          cnpj: data.cnpj,
+          tipo_unidade: 'matriz',
+          ativo: true
+        });
+
+      if (ecError) {
+        // Warning: if this fails, we still have the tenant. 
+        // We could cleanup or just log it. 
+        console.error('Error creating empresa_cadastro:', ecError);
+      }
+
       // Step 2: Create owner for the tenant via edge function
       const { data: result, error: ownerError } = await supabase.functions.invoke(
         'onboarding-signup',
