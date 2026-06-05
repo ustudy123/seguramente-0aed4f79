@@ -134,9 +134,6 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
     if (finalPrincipalId && migrationType === 'new') {
-      const p = (supabase as any).from("empresa_cadastro").select("razao_social, nome_fantasia").eq("id", finalPrincipalId).maybeSingle();
-      
-      // Como já temos as empresas no empresasRaw, vamos usar de lá para ser síncrono no primeiro render
       const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
       if (pLocal) {
         const nome = pLocal.nome_fantasia || pLocal.razao_social;
@@ -145,20 +142,17 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
           nome: nome || "",
           slug: slugify(nome || "")
         }));
-
-        // Se o dono estiver vazio, tenta buscar dados do responsável/contato se existissem, 
-        // mas por padrão vamos apenas garantir que o nome da empresa seja usado se nada foi digitado
       }
     }
   }, [finalPrincipalId, migrationType, empresasRaw]);
 
-  // Função para buscar dados detalhados da empresa principal quando ela muda
+  // Busca dados adicionais do dono se houver campos disponíveis na tabela
   useEffect(() => {
     const fetchPrincipalDetails = async () => {
       if (finalPrincipalId && step === 2 && migrationType === 'new') {
         const { data, error } = await supabase
           .from("empresa_cadastro")
-          .select("razao_social, nome_fantasia, email_contato, responsavel_nome")
+          .select("razao_social, nome_fantasia, email")
           .eq("id", finalPrincipalId)
           .maybeSingle();
         
@@ -171,11 +165,12 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
             slug: slugify(nomeEmpresa || prev.nome)
           }));
 
-          setOwner(prev => ({
-            ...prev,
-            nome: data.responsavel_nome || prev.nome,
-            email: data.email_contato || prev.email
-          }));
+          if (data.email) {
+            setOwner(prev => ({
+              ...prev,
+              email: data.email || prev.email
+            }));
+          }
         }
       }
     };
