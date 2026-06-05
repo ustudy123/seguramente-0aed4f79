@@ -72,9 +72,13 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
   // Ela NÃO pode ser promovida, pois já é a raiz do próprio tenant.
   const principalId = empresasRaw[0]?.id;
   const empresas = useMemo(
-    () => empresasRaw.filter((e) => e.id !== principalId),
+    () => empresasRaw
+      .filter((e) => e.id !== principalId)
+      .slice()
+      .sort((a, b) => (a.razao_social || "").localeCompare(b.razao_social || "")),
     [empresasRaw, principalId],
   );
+
 
   const filteredEmpresas = useMemo(() => {
     if (!search.trim()) return empresas;
