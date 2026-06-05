@@ -46,16 +46,19 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
   export function TenantForm({ onSubmit, isLoading, onCancel, initialData }: TenantFormProps) {
     const isEditing = !!initialData;
-    const [nome, setNome] = useState(initialData?.nome || '');
-    const [slug, setSlug] = useState(initialData?.slug || '');
-    const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
-    
-    // Owner fields - only for new tenants
-    const [ownerNome, setOwnerNome] = useState('');
-    const [ownerEmail, setOwnerEmail] = useState('');
-    const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
-    const [ownerPassword, setOwnerPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+     const [nome, setNome] = useState(initialData?.nome || '');
+     const [slug, setSlug] = useState(initialData?.slug || '');
+     const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
+     const [email, setEmail] = useState(initialData?.email || '');
+     const [telefone, setTelefone] = useState(initialData?.telefone || '');
+     const [cnpj, setCnpj] = useState(initialData?.cnpj || '');
+     
+     // Owner fields - only for new tenants
+     const [ownerNome, setOwnerNome] = useState('');
+     const [ownerEmail, setOwnerEmail] = useState('');
+     const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
+     const [ownerPassword, setOwnerPassword] = useState('');
+     const [showPassword, setShowPassword] = useState(false);
   
     const generateSlug = (name: string) => {
       return name
