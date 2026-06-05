@@ -83,14 +83,18 @@ const CentralGaf = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between overflow-x-auto pb-2">
           <TabsList className="bg-muted/50 border">
-            <TabsTrigger value="absenteismo" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Absenteísmo
-            </TabsTrigger>
-            <TabsTrigger value="saude-mental" className="gap-2 text-purple-600 dark:text-purple-400">
-              <Brain className="h-4 w-4" />
-              Saúde Mental
-            </TabsTrigger>
+            {permissions.podeVerDashboardsGerais && (
+              <TabsTrigger value="absenteismo" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Absenteísmo
+              </TabsTrigger>
+            )}
+            {permissions.podeVerDashboardsGerais && (
+              <TabsTrigger value="saude-mental" className="gap-2 text-purple-600 dark:text-purple-400">
+                <Brain className="h-4 w-4" />
+                Saúde Mental
+              </TabsTrigger>
+            )}
             <TabsTrigger value="fap-rat" className="gap-2 text-orange-600 dark:text-orange-400">
               <ShieldAlert className="h-4 w-4" />
               FAP/RAT
