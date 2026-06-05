@@ -176,7 +176,19 @@ const Ponto = () => {
   const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const handleToday = () => setSelectedDate(new Date());
 
+  // Conjunto de CPFs/IDs válidos para a empresa ativa (após filtros CLT e bate_ponto).
+  const colabIds = useMemo(() => new Set(colaboradores.map(c => c.id)), [colaboradores]);
+  const colabCpfs = useMemo(
+    () => new Set(colaboradores.map(c => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)),
+    [colaboradores]
+  );
+
   const filteredPontos = pontosDiarios.filter((ponto) => {
+    // Garante que o espelho mostre apenas colaboradores da empresa ativa (e que batem ponto).
+    const cpfDig = (ponto.colaborador_cpf || "").replace(/\D/g, "");
+    const pertence = colabIds.has(ponto.colaborador_id) || (cpfDig && colabCpfs.has(cpfDig));
+    if (!pertence) return false;
+
     const matchesStatus = statusFilter === "all" || ponto.status === statusFilter;
     const matchesSearch = ponto.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          ponto.colaborador_cpf.includes(searchTerm);
