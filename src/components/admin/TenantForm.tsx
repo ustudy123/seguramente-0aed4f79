@@ -237,7 +237,7 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
          </Button>
         <Button type="submit" disabled={isLoading || !isFormValid}>
            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {accessMethod === 'invite' ? 'Criar e Enviar Convite' : 'Criar Empresa'}
+          {isEditing ? 'Salvar Alterações' : (accessMethod === 'invite' ? 'Criar e Enviar Convite' : 'Criar Empresa')}
          </Button>
        </div>
      </form>
