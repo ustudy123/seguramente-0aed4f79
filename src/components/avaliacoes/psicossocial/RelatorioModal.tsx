@@ -142,10 +142,18 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     if (!podeExportar || !campanha) return;
     setExportando(true);
     try {
-      const doc = new jsPDF({ orientation: "portrait", format: "a4" });
+      const doc = new jsPDF({ orientation: "portrait", format: "a4", unit: "mm" });
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
-      let y = 20;
+      
+      // Margins ABNT: Superior 3.0, Esquerda 3.0, Inferior 2.0, Direita 2.0
+      const mt = 30; // Margin Top
+      const ml = 30; // Margin Left
+      const mb = 20; // Margin Bottom
+      const mr = 20; // Margin Right
+      const contentWidth = pageW - ml - mr;
+      
+      let y = mt;
 
       const addFooter = () => {
         const totalPages = (doc as any).internal.getNumberOfPages();
@@ -153,30 +161,44 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           doc.setPage(i);
           doc.setFontSize(8);
           doc.setTextColor(140, 140, 140);
-          const footerText = `YourEyes — Relatorio Psicossocial | ${sanitize(campanha.nome)} | Pagina ${i}/${totalPages}`;
-          doc.text(footerText, pageW / 2, pageH - 10, { align: "center" });
+          const footerText = `YourEyes — Relatório Psicossocial | ${sanitize(campanha.nome)} | Página ${i}/${totalPages}`;
+          const tw = doc.getTextWidth(footerText);
+          // Position footer inside bottom margin
+          doc.text(footerText, (pageW / 2), pageH - (mb / 2), { align: "center" });
         }
       };
 
       // ── Cabecalho ──────────────────────────────────────────────────────
       doc.setFillColor(88, 28, 135);
-      doc.rect(0, 0, pageW, 40, "F");
+      doc.rect(0, 0, pageW, 35, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text("RELATORIO DE DIAGNOSTICO PSICOSSOCIAL", pageW / 2, 16, { align: "center" });
+      doc.text("RELATÓRIO DE DIAGNÓSTICO PSICOSSOCIAL", pageW / 2, 12, { align: "center" });
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("NR-01 · NR-17 · ISO 45003 · COPSOQ III", pageW / 2, 24, { align: "center" });
-      doc.text(`Emitido em: ${dataGeracao} | Empresa: ${sanitize(empresaAtiva?.razao_social ?? empresaNome ?? "N/D")}`, pageW / 2, 31, { align: "center" });
+      doc.text("NR-01 · NR-17 · ISO 45003 · COPSOQ III", pageW / 2, 19, { align: "center" });
+      doc.text(`Emitido em: ${dataGeracao} | Empresa: ${sanitize(empresaAtiva?.razao_social ?? empresaNome ?? "N/D")}`, pageW / 2, 26, { align: "center" });
 
-      y = 52;
+      y = mt + 15; // Start content below top margin + spacing from header if it was at 0, but header is at top. 
+      // Adjusted y to be relative to mt
+      y = mt + 10;
       doc.setTextColor(0, 0, 0);
+
+      // Helper function to check page overflow
+      const checkPageOverflow = (neededHeight: number) => {
+        if (y + neededHeight > pageH - mb) {
+          doc.addPage();
+          y = mt;
+          return true;
+        }
+        return false;
+      };
 
       // ── 1. Identificacao ───────────────────────────────────────────────
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("1. IDENTIFICACAO DA AVALIACAO", 14, y);
+      doc.text("1. IDENTIFICAÇÃO DA AVALIAÇÃO", ml, y);
       y += 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
