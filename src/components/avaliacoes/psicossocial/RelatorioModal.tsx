@@ -27,14 +27,14 @@ import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosG
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Remove accented characters for jsPDF compatibility
-const sanitize = (text: string): string =>
-  text
-    ? text
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^\x00-\x7F]/g, " ")
-    : "";
+// Sanitize text for jsPDF but maintain basic accented characters if using a standard font
+// The user explicitly requested proper accents.
+// jsPDF standard fonts (helvetica/times/courier) support WinAnsiEncoding which covers most Western European accents.
+const sanitize = (text: string): string => {
+  if (!text) return "";
+  // Keep the text as is, just handle null/undefined
+  return text;
+};
 
 const MINIMO_ANONIMATO = 5;
 
