@@ -137,14 +137,23 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
       const p = empresasRaw.find(e => e.id === finalPrincipalId);
       if (p) {
         const nome = p.nome_fantasia || p.razao_social;
-        setNovoTenant(prev => ({
-          ...prev,
-          nome: nome || "",
-          slug: slugify(nome || "")
-        }));
+        setNovoTenant(prev => {
+          // Só atualiza se o campo estiver vazio ou for o valor inicial
+          const currentNome = prev.nome;
+          const isInitial = !currentNome || currentNome === preselectedEmpresaNome;
+          
+          if (isInitial) {
+            return {
+              ...prev,
+              nome: nome || "",
+              slug: slugify(nome || "")
+            };
+          }
+          return prev;
+        });
       }
     }
-  }, [finalPrincipalId, migrationType]);
+  }, [finalPrincipalId, migrationType, empresasRaw, preselectedEmpresaNome]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
