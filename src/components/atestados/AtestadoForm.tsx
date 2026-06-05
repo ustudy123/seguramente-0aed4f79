@@ -985,11 +985,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                           <FormControl>
                             <Input 
                               type="number" 
-                              placeholder="Dias" 
+                              placeholder="Dias (0 = Indeterminado)" 
                               {...field}
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
                           </FormControl>
+                          <FormDescription className="text-[10px]">
+                            Use 0 para prazo indeterminado.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
