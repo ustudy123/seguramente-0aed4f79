@@ -226,10 +226,11 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           ];
       autoTable(doc, {
         startY: y,
-        head: [["Campo", "Informacao"]],
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Campo", "Informação"]],
         body: identificacao,
         headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-        bodyStyles: { fontSize: 8 },
+        bodyStyles: { fontSize: 8, halign: 'justify' },
         columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
       });
       y = (doc as any).lastAutoTable.finalY + 10;
