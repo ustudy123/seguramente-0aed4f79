@@ -133,39 +133,26 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
-    if (finalPrincipalId && migrationType === 'new') {
-      const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
-      if (pLocal) {
-        const nome = pLocal.nome_fantasia || pLocal.razao_social;
-        setNovoTenant(prev => ({
-          ...prev,
-          nome: nome || "",
-          slug: slugify(nome || "")
-        }));
-      }
-    }
-  }, [finalPrincipalId, migrationType, empresasRaw]);
-
-  // Busca dados adicionais do dono se houver campos disponíveis na tabela
-  useEffect(() => {
-    const fetchPrincipalDetails = async () => {
-      if (finalPrincipalId && step === 2 && migrationType === 'new') {
-        const { data, error } = await supabase
-          .from("empresa_cadastro")
-          .select("razao_social, nome_fantasia, email")
-          .eq("id", finalPrincipalId)
-          .maybeSingle();
-        
-        if (!error && data) {
-          const nomeEmpresa = data.nome_fantasia || data.razao_social;
+    const updateTenantAndOwner = async () => {
+      if (finalPrincipalId && migrationType === 'new') {
+        const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
+        if (pLocal) {
+          const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
           
           setNovoTenant(prev => ({
             ...prev,
-            nome: nomeEmpresa || prev.nome,
-            slug: slugify(nomeEmpresa || prev.nome)
+            nome: nomeEmpresa || "",
+            slug: slugify(nomeEmpresa || "")
           }));
 
-          if (data.email) {
+          // Busca dados adicionais como o e-mail da empresa para o proprietário
+          const { data, error } = await supabase
+            .from("empresa_cadastro")
+            .select("email")
+            .eq("id", finalPrincipalId)
+            .maybeSingle();
+          
+          if (!error && data?.email) {
             setOwner(prev => ({
               ...prev,
               email: data.email || prev.email
@@ -175,8 +162,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
       }
     };
 
-    fetchPrincipalDetails();
-  }, [finalPrincipalId, step, migrationType]);
+    updateTenantAndOwner();
+  }, [finalPrincipalId, migrationType, empresasRaw]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
