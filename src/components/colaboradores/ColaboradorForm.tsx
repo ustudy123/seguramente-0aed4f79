@@ -179,6 +179,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         matricula_esocial: "",
         cbo: "",
         foto_url: "",
+        bate_ponto: true,
       });
     }
   }, [open, colaborador, form]);
