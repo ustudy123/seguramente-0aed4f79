@@ -134,7 +134,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       const prob = scoreToProbabilidade(scoreMedio, isSipro);
       const sev = scoreToSeveridade(scoreMedio, isSipro);
       const nivel = calcularNivelGRO(prob, sev);
-      return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+      return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel, prob, sev };
     }).sort((a, b) => b.risco - a.risco);
   }, [radar, isSipro]);
 
@@ -321,18 +321,20 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 const prob = scoreToProbabilidade(scoreMedio, isSipro);
                 const sev = scoreToSeveridade(scoreMedio, isSipro);
                 const nivel = calcularNivelGRO(prob, sev);
-                return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+                return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel, prob, sev };
               }).sort((a, b) => b.risco - a.risco);
             })();
 
             autoTable(doc, {
               startY: y,
               margin: { left: ml, right: mr, top: mt, bottom: mb },
-              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível GRO", "Base Normativa"]],
               body: fatoresGHE.map(d => [
                 sanitize(d.fator),
                 sanitize(d.dimensoes.join(", ")),
                 `${d.risco}%`,
+                `P${d.prob}`,
+                `S${d.sev}`,
                 GRO_NIVEL_RISCO_LABELS[d.nivel],
                 "NR-01 / NR-17 / ISO 45003",
               ]),
@@ -340,7 +342,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
               bodyStyles: { fontSize: 8, halign: 'justify' },
               alternateRowStyles: { fillColor: [248, 245, 255] },
               didParseCell: (data) => {
-                if (data.section === "body" && data.column.index === 3) {
+                if (data.section === "body" && data.column.index === 5) {
                   const v = String(data.cell.raw);
                   if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                   else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
@@ -355,11 +357,13 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           autoTable(doc, {
             startY: y,
             margin: { left: ml, right: mr, top: mt, bottom: mb },
-            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível GRO", "Base Normativa"]],
             body: fatoresAvaliados.map(d => [
               sanitize(d.fator),
               sanitize(d.dimensoes.join(", ")),
               `${d.risco}%`,
+              `P${d.prob}`,
+              `S${d.sev}`,
               GRO_NIVEL_RISCO_LABELS[d.nivel],
               "NR-01 / NR-17 / ISO 45003",
             ]),
@@ -367,7 +371,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             bodyStyles: { fontSize: 8, halign: 'justify' },
             alternateRowStyles: { fillColor: [248, 245, 255] },
             didParseCell: (data) => {
-              if (data.section === "body" && data.column.index === 3) {
+              if (data.section === "body" && data.column.index === 5) {
                 const v = String(data.cell.raw);
                 if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
                 else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
@@ -748,11 +752,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-muted-foreground">{d.risco}%</span>
-                              <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[d.nivel])}>
-                                {GRO_NIVEL_RISCO_LABELS[d.nivel]}
-                              </Badge>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-xs text-muted-foreground font-medium">{d.risco}%</span>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-muted-foreground leading-none mb-1">P{d.prob} · S{d.sev}</span>
+                                <Badge variant="outline" className={cn("text-[10px] h-5 py-0", NIVEL_BADGE[d.nivel])}>
+                                  {GRO_NIVEL_RISCO_LABELS[d.nivel]}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                         ))}
