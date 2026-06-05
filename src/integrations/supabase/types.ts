@@ -21916,6 +21916,10 @@ export type Database = {
         }
         Returns: Json
       }
+      superadmin_delete_tenant: {
+        Args: { _tenant_id: string }
+        Returns: undefined
+      }
       superadmin_global_stats: { Args: never; Returns: Json }
       superadmin_growth_series: { Args: { _dias?: number }; Returns: Json }
       superadmin_list_all_empresas: {

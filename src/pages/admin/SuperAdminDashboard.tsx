@@ -6,12 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare, Brain, FileSignature, Rocket, Edit,
+  Activity, MessageSquare, Brain, FileSignature, Rocket, Edit, Trash2, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
@@ -36,7 +38,7 @@ import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const { tenants, isLoading, createTenant, updateTenant, toggleTenant, isCreatingTenant, isUpdatingTenant } = useSuperAdmin();
+  const { tenants, isLoading, createTenant, updateTenant, toggleTenant, deleteTenant, isCreatingTenant, isUpdatingTenant } = useSuperAdmin();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showTenantForm, setShowTenantForm] = useState(false);
@@ -45,6 +47,9 @@ export default function SuperAdminDashboard() {
   const [selectedTenant, setSelectedTenant] = useState<TenantWithStats | null>(null);
   const [showSpinoff, setShowSpinoff] = useState(false);
   const [spinoffTenant, setSpinoffTenant] = useState<TenantWithStats | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredTenants = tenants.filter(t =>
     t.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,6 +80,23 @@ export default function SuperAdminDashboard() {
       await toggleTenant({ id: tenant.id, ativo: !tenant.ativo });
       toast.success(tenant.ativo ? 'Empresa desativada' : 'Empresa ativada');
     } catch { toast.error('Erro ao alterar status'); }
+  };
+
+  const handleDeleteTenant = async () => {
+    if (!selectedTenant || deleteConfirmationText !== 'EXCLUIR') return;
+
+    try {
+      setIsDeleting(true);
+      await deleteTenant(selectedTenant.id);
+      toast.success('Empresa excluída permanentemente');
+      setShowDeleteConfirm(false);
+      setSelectedTenant(null);
+      setDeleteConfirmationText('');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao excluir empresa');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -196,6 +218,13 @@ export default function SuperAdminDashboard() {
                                 <DropdownMenuItem onClick={() => handleToggleTenant(tenant)}>
                                   <Power className="w-4 h-4 mr-2" />{tenant.ativo ? 'Desativar' : 'Ativar'}
                                 </DropdownMenuItem>
+
+                                <DropdownMenuItem 
+                                  onClick={() => { setSelectedTenant(tenant); setShowDeleteConfirm(true); }}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />Excluir empresa
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -316,6 +345,54 @@ export default function SuperAdminDashboard() {
           tenantNome={spinoffTenant.nome}
         />
       )}
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Ação Irreversível
+            </DialogTitle>
+            <DialogDescription className="space-y-4 pt-2">
+              <p className="font-semibold text-foreground">
+                Você está prestes a excluir permanentemente a empresa <span className="underline">{selectedTenant?.nome}</span>.
+              </p>
+              <div className="bg-destructive/10 p-3 rounded-md border border-destructive/20 text-destructive text-xs">
+                <p className="font-bold mb-1 uppercase">Aviso Crítico:</p>
+                <ul className="list-disc ml-4 space-y-1">
+                  <li>Todos os usuários vinculados perderão acesso.</li>
+                  <li>Todas as empresas dependentes (filiais) serão removidas.</li>
+                  <li>Dados de colaboradores, ponto, financeiro e SST serão apagados.</li>
+                  <li>Esta ação NÃO pode ser desfeita.</li>
+                </ul>
+              </div>
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="confirm-delete">Para confirmar, digite <strong>EXCLUIR</strong> abaixo:</Label>
+                <Input
+                  id="confirm-delete"
+                  placeholder="Digite EXCLUIR"
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value.toUpperCase())}
+                  className="border-destructive/30 focus-visible:ring-destructive"
+                />
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationText(''); }}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteTenant}
+              disabled={deleteConfirmationText !== 'EXCLUIR' || isDeleting}
+            >
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Excluir Permanentemente
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
