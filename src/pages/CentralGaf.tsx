@@ -35,7 +35,9 @@ const CentralGaf = () => {
     loadingAtestados, 
     afastamentos, 
     loadingAfastamentos,
-    getSignedUrl
+    getSignedUrl,
+    createAtestado,
+    deleteAfastamento
   } = useAtestados();
   const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
   const { permissions, isLoading: loadingPerms } = useGafPermissions();
@@ -43,9 +45,12 @@ const CentralGaf = () => {
   const isLoading = loadingStats || loadingPerms || loadingAtestados || loadingAfastamentos;
 
   const handleCreateAtestado = async (data: { formData: any; file?: File; colaboradorId?: string }) => {
-    // Note: useAtestados doesn't export a 'createAtestado' directly in the destructuring
-    // I should check what it returns or add it
-    console.log("Submit via CentralGaf:", data);
+    try {
+      await createAtestado(data);
+      setFormOpen(false);
+    } catch (error) {
+      console.error("Erro ao criar atestado:", error);
+    }
   };
 
   if (isLoading) {
@@ -146,6 +151,7 @@ const CentralGaf = () => {
         <TabsContent value="afastamentos" className="space-y-6">
           <AfastamentoList 
             afastamentos={afastamentos} 
+            onDelete={deleteAfastamento}
           />
         </TabsContent>
 
