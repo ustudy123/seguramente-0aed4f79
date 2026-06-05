@@ -27,12 +27,12 @@ import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosG
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Sanitize text for jsPDF but maintain basic accented characters if using a standard font
-// The user explicitly requested proper accents.
-// jsPDF standard fonts (helvetica/times/courier) support WinAnsiEncoding which covers most Western European accents.
+// Sanitize text for jsPDF
+// jsPDF standard fonts support WinAnsiEncoding which covers most Western European accents.
 const sanitize = (text: string): string => {
   if (!text) return "";
-  // Keep the text as is, just handle null/undefined
+  // Map common accented characters to their closest equivalents if jsPDF has trouble, 
+  // but for standard Western European, it should work if not normalized to NFD.
   return text;
 };
 
