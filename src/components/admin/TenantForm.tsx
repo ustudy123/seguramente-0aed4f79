@@ -17,26 +17,32 @@ import type { Database } from '@/integrations/supabase/types';
 type TenantPlan = Database['public']['Enums']['tenant_plan'];
  type AccessMethod = 'invite' | 'password';
  
- export interface TenantFormData {
-   nome: string;
-   slug: string;
-   plano: TenantPlan;
-   ownerNome: string;
-   ownerEmail: string;
-   accessMethod: AccessMethod;
-   ownerPassword?: string;
- }
- 
- interface TenantFormProps {
-  onSubmit: (data: TenantFormData) => Promise<void>;
-   isLoading?: boolean;
-   onCancel: () => void;
-   initialData?: {
-     nome?: string;
-     slug?: string;
-    plano?: TenantPlan;
-   };
- }
+  export interface TenantFormData {
+    nome: string;
+    slug: string;
+    plano: TenantPlan;
+    email?: string;
+    telefone?: string;
+    cnpj?: string;
+    ownerNome: string;
+    ownerEmail: string;
+    accessMethod: AccessMethod;
+    ownerPassword?: string;
+  }
+  
+  interface TenantFormProps {
+   onSubmit: (data: TenantFormData) => Promise<void>;
+    isLoading?: boolean;
+    onCancel: () => void;
+    initialData?: {
+      nome?: string;
+      slug?: string;
+      plano?: TenantPlan;
+      email?: string;
+      telefone?: string;
+      cnpj?: string;
+    };
+  }
  
   export function TenantForm({ onSubmit, isLoading, onCancel, initialData }: TenantFormProps) {
     const isEditing = !!initialData;
