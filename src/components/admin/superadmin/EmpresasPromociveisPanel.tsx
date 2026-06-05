@@ -77,13 +77,9 @@ export function EmpresasPromociveisPanel() {
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase().trim();
+    if (!s) return data;
+    
     return data.filter((e) => {
-      // Quando uma mãe é selecionada, mostra só as derivadas dela
-      if (selectedTenantId !== "__all__") {
-        if (e.tenant_id !== selectedTenantId) return false;
-        if (e.is_principal) return false;
-      }
-      if (!s) return true;
       return (
         e.razao_social?.toLowerCase().includes(s) ||
         e.cnpj?.toLowerCase().includes(s) ||
@@ -91,7 +87,30 @@ export function EmpresasPromociveisPanel() {
         e.tenant_owner_email?.toLowerCase().includes(s)
       );
     });
-  }, [data, search, selectedTenantId]);
+  }, [data, search]);
+
+  const filteredMaes = useMemo(() => {
+    if (selectedTenantId !== "__all__") {
+      return maes.filter(m => m.tenant_id === selectedTenantId);
+    }
+    
+    const s = search.toLowerCase().trim();
+    if (!s) return maes;
+
+    return maes.filter(m => {
+      const matchesMae = 
+        m.razao_social?.toLowerCase().includes(s) ||
+        m.cnpj?.toLowerCase().includes(s) ||
+        m.tenant_nome?.toLowerCase().includes(s);
+      
+      const matchesDerivada = m.empresas.some(e => 
+        e.razao_social?.toLowerCase().includes(s) ||
+        e.cnpj?.toLowerCase().includes(s)
+      );
+
+      return matchesMae || matchesDerivada;
+    });
+  }, [maes, selectedTenantId, search]);
 
   const maeSelecionada = useMemo(
     () => maes.find((m) => m.tenant_id === selectedTenantId) || null,
