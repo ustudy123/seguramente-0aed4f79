@@ -186,7 +186,73 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
     form.setValue("colaborador_departamento", "");
   };
 
+  const handleCrmLookup = async () => {
+    const crm = form.getValues("profissional_registro");
+    const uf = form.getValues("profissional_uf");
+
+    if (!crm) {
+      toast.error("Preencha o CRM para buscar.");
+      return;
+    }
+
+    setSearchingCrm(true);
+    try {
+      // 1. Primeiro tenta no histórico local (mais rápido e gratuito)
+      const { data: existingAtestado, error } = await supabase
+        .from("atestados")
+        .select("profissional_nome, profissional_rqe, profissional_telefone, profissional_email, profissional_endereco")
+        .eq("profissional_registro", crm)
+        .eq("profissional_uf", uf || "")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingAtestado) {
+        form.setValue("profissional_nome", existingAtestado.profissional_nome || "");
+        if (existingAtestado.profissional_rqe) form.setValue("profissional_rqe", existingAtestado.profissional_rqe);
+        if (existingAtestado.profissional_telefone) form.setValue("profissional_telefone", existingAtestado.profissional_telefone);
+        if (existingAtestado.profissional_email) form.setValue("profissional_email", existingAtestado.profissional_email);
+        if (existingAtestado.profissional_endereco) form.setValue("profissional_endereco", existingAtestado.profissional_endereco);
+        
+        toast.success("Dados do médico recuperados do histórico.");
+        setSearchingCrm(false);
+        return;
+      }
+
+      // 2. Se não encontrou no histórico, tenta a validação/busca externa (simulada via Edge Function)
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/consultar-crm`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData?.session?.access_token}`,
+          },
+          body: JSON.stringify({ crm, uf }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const { data } = result;
+        if (data.nome) form.setValue("profissional_nome", data.nome);
+        if (data.rqe) form.setValue("profissional_rqe", data.rqe);
+        toast.success("Médico encontrado na base nacional.");
+      } else {
+        toast.info(result.message || "Médico não encontrado no histórico. Verifique os dados manualmente.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CRM:", error);
+      toast.error("Erro ao validar CRM.");
+    } finally {
+      setSearchingCrm(false);
+    }
+  };
+
   const extractDataFromFile = async (uploadedFile: File) => {
+
     setExtracting(true);
     setExtractionSuccess(false);
     
