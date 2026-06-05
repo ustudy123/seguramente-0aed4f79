@@ -147,8 +147,8 @@ serve(async (req) => {
       const { data: novoTenant, error: tErr } = await admin
         .from("tenants")
         .insert({
-          nome: payload.novoTenant.nome,
-          slug: payload.novoTenant.slug,
+          nome: payload.novoTenant.nome.trim(),
+          slug: payload.novoTenant.slug.trim(),
           plano: payload.novoTenant.plano || "starter",
           ativo: true,
         })
