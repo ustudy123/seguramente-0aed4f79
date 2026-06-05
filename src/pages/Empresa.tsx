@@ -562,6 +562,18 @@ export default function Empresa() {
             </CardContent>
           </TabsContent>
 
+          <TabsContent value="checklist" className="mt-0">
+            <CardHeader>
+              <CardTitle className="text-lg">Checklist do Cadastro</CardTitle>
+              <CardDescription>
+                Acompanhe o que ainda falta preencher — destaque para os campos obrigatórios pendentes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmpresaCadastroChecklist data={formData} onGoToTab={setActiveTab} />
+            </CardContent>
+          </TabsContent>
+
         </Card>
         {/* Bottom navigation */}
         <div className="flex items-center justify-between pt-2">
