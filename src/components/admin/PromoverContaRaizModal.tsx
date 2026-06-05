@@ -66,7 +66,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     queryKey: ["spinoff-empresas", tenantId],
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj, tipo_unidade, matriz_id, created_at")
+        .select("id, razao_social, nome_fantasia, cnpj, tipo_unidade, matriz_id, created_at, email")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: true }) as { data: (Empresa & { created_at: string })[] | null; error: Error | null };
       if (error) throw error;
