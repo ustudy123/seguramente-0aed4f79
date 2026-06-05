@@ -131,12 +131,12 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   const finalPrincipalId = principalIdOverride || principalAutomaticaId;
 
-  // Atualiza os dados do novo tenant baseado na principal escolhida
+  // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
     if (finalPrincipalId && migrationType === 'new') {
-      const p = empresasRaw.find(e => e.id === finalPrincipalId);
-      if (p) {
-        const nome = p.nome_fantasia || p.razao_social;
+      const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
+      if (pLocal) {
+        const nome = pLocal.nome_fantasia || pLocal.razao_social;
         setNovoTenant(prev => ({
           ...prev,
           nome: nome || "",
@@ -144,7 +144,39 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
         }));
       }
     }
-  }, [finalPrincipalId, migrationType]);
+  }, [finalPrincipalId, migrationType, empresasRaw]);
+
+  // Busca dados adicionais do dono se houver campos disponíveis na tabela
+  useEffect(() => {
+    const fetchPrincipalDetails = async () => {
+      if (finalPrincipalId && step === 2 && migrationType === 'new') {
+        const { data, error } = await supabase
+          .from("empresa_cadastro")
+          .select("razao_social, nome_fantasia, email")
+          .eq("id", finalPrincipalId)
+          .maybeSingle();
+        
+        if (!error && data) {
+          const nomeEmpresa = data.nome_fantasia || data.razao_social;
+          
+          setNovoTenant(prev => ({
+            ...prev,
+            nome: nomeEmpresa || prev.nome,
+            slug: slugify(nomeEmpresa || prev.nome)
+          }));
+
+          if (data.email) {
+            setOwner(prev => ({
+              ...prev,
+              email: data.email || prev.email
+            }));
+          }
+        }
+      }
+    };
+
+    fetchPrincipalDetails();
+  }, [finalPrincipalId, step, migrationType]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
