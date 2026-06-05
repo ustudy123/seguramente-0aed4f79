@@ -343,7 +343,7 @@ export function usePerfisAcesso() {
       if (error) throw error;
       if (permissoes?.length) {
         const perms = permissoes.map((p) => {
-          const { id: _, created_at: __, ...pClean } = p as any;
+          const { id: _, created_at: __, updated_at: ___, ...pClean } = p as any;
           return {
             ...pClean,
             perfil_id: data.id,
@@ -365,10 +365,11 @@ export function usePerfisAcesso() {
       const { data: before } = await fromTable("perfis_acesso").select("*").eq("id", id).single();
       
       // Sanitize empty strings to null for timestamp/date fields
-      if ('expira_em' in payload && !payload.expira_em) (payload as any).expira_em = null;
+      const sanitizedPayload = { ...payload };
+      if ('expira_em' in sanitizedPayload && !sanitizedPayload.expira_em) sanitizedPayload.expira_em = null as any;
       
       const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
-      const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
+      const updatePayload = nivelRisco ? { ...sanitizedPayload, nivel_risco: nivelRisco } : sanitizedPayload;
       
       // Update basic profile info
       const { error: updateError } = await fromTable("perfis_acesso").update(updatePayload).eq("id", id);
@@ -382,7 +383,8 @@ export function usePerfisAcesso() {
         
         if (permissoes.length > 0) {
           const permsToInsert = permissoes.map((p) => {
-            const { id: _, created_at: __, ...pClean } = p as any;
+            // Remove ID if it exists to allow fresh insertion
+            const { id: _, created_at: __, updated_at: ___, ...pClean } = p as any;
             return {
               ...pClean,
               perfil_id: id,

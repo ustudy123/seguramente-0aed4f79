@@ -377,7 +377,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
           is_perfil_principal: true,
         });
       }
-      refetchPerfilVinculos();
+      await refetchPerfilVinculos();
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      queryClient.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
     }
 
     setEditando(false);
