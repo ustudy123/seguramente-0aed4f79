@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Rocket, Building2, ShieldCheck } from "lucide-react";
+import { Search, Rocket, Building2, ShieldCheck, Crown } from "lucide-react";
 import { PromoverContaRaizModal } from "@/components/admin/PromoverContaRaizModal";
 import { DefinirPrincipalModal } from "@/components/admin/DefinirPrincipalModal";
 import { format } from "date-fns";
