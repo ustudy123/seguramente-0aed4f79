@@ -321,18 +321,20 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 const prob = scoreToProbabilidade(scoreMedio, isSipro);
                 const sev = scoreToSeveridade(scoreMedio, isSipro);
                 const nivel = calcularNivelGRO(prob, sev);
-                return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+                return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel, prob, sev };
               }).sort((a, b) => b.risco - a.risco);
             })();
 
             autoTable(doc, {
               startY: y,
               margin: { left: ml, right: mr, top: mt, bottom: mb },
-              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Nível GRO", "Base Normativa"]],
+              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível GRO", "Base Normativa"]],
               body: fatoresGHE.map(d => [
                 sanitize(d.fator),
                 sanitize(d.dimensoes.join(", ")),
                 `${d.risco}%`,
+                `P${d.prob}`,
+                `S${d.sev}`,
                 GRO_NIVEL_RISCO_LABELS[d.nivel],
                 "NR-01 / NR-17 / ISO 45003",
               ]),
