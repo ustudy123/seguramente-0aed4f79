@@ -260,6 +260,9 @@ export default function SuperAdminDashboard() {
                 nome: selectedTenant.nome,
                 slug: selectedTenant.slug,
                 plano: selectedTenant.plano,
+                email: selectedTenant.email,
+                telefone: selectedTenant.telefone,
+                cnpj: selectedTenant.cnpj,
               }}
               onSubmit={async (data) => {
                 try {
@@ -268,6 +271,9 @@ export default function SuperAdminDashboard() {
                     nome: data.nome,
                     slug: data.slug,
                     plano: data.plano,
+                    email: data.email,
+                    telefone: data.telefone,
+                    cnpj: data.cnpj,
                   });
                   toast.success('Empresa atualizada com sucesso!');
                   setShowEditForm(false);

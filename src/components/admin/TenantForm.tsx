@@ -17,39 +17,48 @@ import type { Database } from '@/integrations/supabase/types';
 type TenantPlan = Database['public']['Enums']['tenant_plan'];
  type AccessMethod = 'invite' | 'password';
  
- export interface TenantFormData {
-   nome: string;
-   slug: string;
-   plano: TenantPlan;
-   ownerNome: string;
-   ownerEmail: string;
-   accessMethod: AccessMethod;
-   ownerPassword?: string;
- }
- 
- interface TenantFormProps {
-  onSubmit: (data: TenantFormData) => Promise<void>;
-   isLoading?: boolean;
-   onCancel: () => void;
-   initialData?: {
-     nome?: string;
-     slug?: string;
-    plano?: TenantPlan;
-   };
- }
+  export interface TenantFormData {
+    nome: string;
+    slug: string;
+    plano: TenantPlan;
+    email?: string;
+    telefone?: string;
+    cnpj?: string;
+    ownerNome: string;
+    ownerEmail: string;
+    accessMethod: AccessMethod;
+    ownerPassword?: string;
+  }
+  
+  interface TenantFormProps {
+   onSubmit: (data: TenantFormData) => Promise<void>;
+    isLoading?: boolean;
+    onCancel: () => void;
+    initialData?: {
+      nome?: string;
+      slug?: string;
+      plano?: TenantPlan;
+      email?: string;
+      telefone?: string;
+      cnpj?: string;
+    };
+  }
  
   export function TenantForm({ onSubmit, isLoading, onCancel, initialData }: TenantFormProps) {
     const isEditing = !!initialData;
-    const [nome, setNome] = useState(initialData?.nome || '');
-    const [slug, setSlug] = useState(initialData?.slug || '');
-    const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
-    
-    // Owner fields - only for new tenants
-    const [ownerNome, setOwnerNome] = useState('');
-    const [ownerEmail, setOwnerEmail] = useState('');
-    const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
-    const [ownerPassword, setOwnerPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+     const [nome, setNome] = useState(initialData?.nome || '');
+     const [slug, setSlug] = useState(initialData?.slug || '');
+     const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
+     const [email, setEmail] = useState(initialData?.email || '');
+     const [telefone, setTelefone] = useState(initialData?.telefone || '');
+     const [cnpj, setCnpj] = useState(initialData?.cnpj || '');
+     
+     // Owner fields - only for new tenants
+     const [ownerNome, setOwnerNome] = useState('');
+     const [ownerEmail, setOwnerEmail] = useState('');
+     const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
+     const [ownerPassword, setOwnerPassword] = useState('');
+     const [showPassword, setShowPassword] = useState(false);
   
     const generateSlug = (name: string) => {
       return name
@@ -69,15 +78,18 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
-    await onSubmit({ 
-      nome, 
-      slug, 
-      plano,
-      ownerNome,
-      ownerEmail,
-      accessMethod,
-      ownerPassword: accessMethod === 'password' ? ownerPassword : undefined,
-    });
+     await onSubmit({ 
+       nome, 
+       slug, 
+       plano,
+       email,
+       telefone,
+       cnpj,
+       ownerNome,
+       ownerEmail,
+       accessMethod,
+       ownerPassword: accessMethod === 'password' ? ownerPassword : undefined,
+     });
    };
  
    const isFormValid = nome && slug && (isEditing || (ownerNome && ownerEmail && 
@@ -102,7 +114,40 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
          />
        </div>
  
-       <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail da Empresa</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="contato@empresa.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="telefone">Telefone</Label>
+            <Input
+              id="telefone"
+              placeholder="(00) 00000-0000"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="cnpj">CNPJ</Label>
+          <Input
+            id="cnpj"
+            placeholder="00.000.000/0000-00"
+            value={cnpj}
+            onChange={(e) => setCnpj(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
          <Label htmlFor="slug">Slug (identificador único)</Label>
          <Input
            id="slug"

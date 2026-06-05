@@ -18,8 +18,11 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
  export interface TenantWithStats extends Tenant {
    total_usuarios: number;
-   total_colaboradores: number;
- }
+  total_colaboradores: number;
+  email?: string;
+  telefone?: string;
+  cnpj?: string;
+}
  
  export interface SuperAdmin {
    id: string;
@@ -62,6 +65,26 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
       if (tenantError) throw tenantError;
 
+      // Step 1.5: Create the Matriz unit in empresa_cadastro
+      const { error: ecError } = await supabase
+        .from('empresa_cadastro')
+        .insert({
+          tenant_id: tenant.id,
+          nome_fantasia: data.nome,
+          razao_social: data.nome,
+          email: data.email,
+          telefone: data.telefone,
+          cnpj: data.cnpj,
+          tipo_unidade: 'matriz',
+          ativo: true
+        });
+
+      if (ecError) {
+        // Warning: if this fails, we still have the tenant. 
+        // We could cleanup or just log it. 
+        console.error('Error creating empresa_cadastro:', ecError);
+      }
+
       // Step 2: Create owner for the tenant via edge function
       const { data: result, error: ownerError } = await supabase.functions.invoke(
         'onboarding-signup',
@@ -97,16 +120,56 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
      },
    });
  
-   // Atualizar tenant
-   const updateTenantMutation = useMutation({
-    mutationFn: async ({ id, ...updateData }: { id: string; nome?: string; slug?: string; plano?: TenantPlan; ativo?: boolean }) => {
-       const { error } = await supabase
-         .from('tenants')
-        .update(updateData)
-         .eq('id', id);
- 
-       if (error) throw error;
-     },
+    // Atualizar tenant
+    const updateTenantMutation = useMutation({
+     mutationFn: async ({ id, email, telefone, cnpj, ...updateData }: { id: string; nome?: string; slug?: string; plano?: TenantPlan; ativo?: boolean; email?: string; telefone?: string; cnpj?: string }) => {
+        // Atualiza a tabela principal
+        const { error: tenantError } = await supabase
+          .from('tenants')
+          .update(updateData)
+          .eq('id', id);
+  
+        if (tenantError) throw tenantError;
+
+        // Atualiza os dados na empresa_cadastro (Matriz)
+        if (email !== undefined || telefone !== undefined || cnpj !== undefined) {
+          // Primeiro tenta atualizar a matriz existente
+          const { data: matriz, error: fetchError } = await supabase
+            .from('empresa_cadastro')
+            .select('id')
+            .eq('tenant_id', id)
+            .eq('tipo_unidade', 'matriz')
+            .maybeSingle();
+
+          if (fetchError) throw fetchError;
+
+          const updatePayload: any = {};
+          if (email !== undefined) updatePayload.email = email;
+          if (telefone !== undefined) updatePayload.telefone = telefone;
+          if (cnpj !== undefined) updatePayload.cnpj = cnpj;
+          if (updateData.nome) updatePayload.nome_fantasia = updateData.nome;
+
+          if (matriz) {
+            const { error: updateError } = await supabase
+              .from('empresa_cadastro')
+              .update(updatePayload)
+              .eq('id', matriz.id);
+            if (updateError) throw updateError;
+          } else {
+            // Se não existir matriz (estranho, mas possível), cria uma
+            const { error: insertError } = await supabase
+              .from('empresa_cadastro')
+              .insert({
+                tenant_id: id,
+                tipo_unidade: 'matriz',
+                ...updatePayload,
+                razao_social: updateData.nome || '',
+                ativo: true
+              });
+            if (insertError) throw insertError;
+          }
+        }
+      },
      onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
      },
