@@ -177,6 +177,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     setMigrationType('new');
     setTargetTenantId("");
     setTargetTenantSearch("");
+    // Limpamos explicitamente para garantir que não carregue lixo da abertura anterior
     setNovoTenant({
       nome: "",
       slug: "",
