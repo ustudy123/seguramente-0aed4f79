@@ -80,6 +80,23 @@ export default function SuperAdminDashboard() {
     } catch { toast.error('Erro ao alterar status'); }
   };
 
+  const handleDeleteTenant = async () => {
+    if (!selectedTenant || deleteConfirmationText !== 'EXCLUIR') return;
+
+    try {
+      setIsDeleting(true);
+      await deleteTenant(selectedTenant.id);
+      toast.success('Empresa excluída permanentemente');
+      setShowDeleteConfirm(false);
+      setSelectedTenant(null);
+      setDeleteConfirmationText('');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao excluir empresa');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-[1600px] mx-auto space-y-6">
