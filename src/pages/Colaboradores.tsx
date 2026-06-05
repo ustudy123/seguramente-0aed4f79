@@ -334,6 +334,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       matricula_esocial: src.matricula_esocial ?? null,
       cbo: src.cbo ?? null,
       foto_url: src.foto_url ?? colab.foto_url,
+      bate_ponto: src.bate_ponto,
     });
     setShowForm(true);
   };
