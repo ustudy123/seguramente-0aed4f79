@@ -36,7 +36,7 @@ import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const { tenants, isLoading, createTenant, updateTenant, toggleTenant, isCreatingTenant, isUpdatingTenant } = useSuperAdmin();
+  const { tenants, isLoading, createTenant, updateTenant, toggleTenant, deleteTenant, isCreatingTenant, isUpdatingTenant } = useSuperAdmin();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showTenantForm, setShowTenantForm] = useState(false);
