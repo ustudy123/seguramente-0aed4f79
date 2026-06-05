@@ -22123,6 +22123,10 @@ export type Database = {
         Args: { p_colaborador_id: string; p_data: string }
         Returns: Json
       }
+      check_ntep_relationship: {
+        Args: { p_cid: string; p_cnae: string }
+        Returns: string
+      }
       classificar_marcacao_clt: {
         Args: { p_marcacao_id: string }
         Returns: string
