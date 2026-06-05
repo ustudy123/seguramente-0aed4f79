@@ -17,7 +17,14 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
-import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RISCO_LABELS } from "@/types/gro";
+import { 
+  scoreToProbabilidade, 
+  scoreToSeveridade, 
+  calcularNivelGRO, 
+  GRO_NIVEL_RISCO_LABELS,
+  GRO_PROBABILIDADE_LABELS,
+  GRO_SEVERIDADE_LABELS
+} from "@/types/gro";
 import { resolverFatorPorSubject } from "@/data/catalogoRiscosPsicossociais";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
@@ -28,12 +35,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // Sanitize text for jsPDF
-// jsPDF standard fonts support WinAnsiEncoding which covers most Western European accents.
 const sanitize = (text: string): string => {
   if (!text) return "";
-  // Map common accented characters to their closest equivalents if jsPDF has trouble, 
-  // but for standard Western European, it should work if not normalized to NFD.
-  return text;
+  return text.normalize("NFC");
 };
 
 const MINIMO_ANONIMATO = 5;
@@ -333,8 +337,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 sanitize(d.fator),
                 sanitize(d.dimensoes.join(", ")),
                 `${d.risco}%`,
-                `P${d.prob}`,
-                `S${d.sev}`,
+                sanitize(GRO_PROBABILIDADE_LABELS[d.prob]),
+                sanitize(GRO_SEVERIDADE_LABELS[d.sev]),
                 GRO_NIVEL_RISCO_LABELS[d.nivel],
                 "NR-01 / NR-17 / ISO 45003",
               ]),
@@ -362,8 +366,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
               sanitize(d.fator),
               sanitize(d.dimensoes.join(", ")),
               `${d.risco}%`,
-              `P${d.prob}`,
-              `S${d.sev}`,
+              sanitize(GRO_PROBABILIDADE_LABELS[d.prob]),
+              sanitize(GRO_SEVERIDADE_LABELS[d.sev]),
               GRO_NIVEL_RISCO_LABELS[d.nivel],
               "NR-01 / NR-17 / ISO 45003",
             ]),

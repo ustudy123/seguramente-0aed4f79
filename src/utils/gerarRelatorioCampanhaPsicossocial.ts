@@ -4,9 +4,7 @@ import QRCode from "qrcode";
 // Remove acentos para compatibilidade com fontes padrão do jsPDF (WinAnsi)
 const s = (t: string): string =>
   (t || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\x00-\x7F]/g, " ");
+    .normalize("NFC");
 
 interface GerarRelatorioParams {
   empresaNome: string;
