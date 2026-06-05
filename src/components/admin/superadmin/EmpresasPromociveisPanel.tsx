@@ -91,10 +91,10 @@ export function EmpresasPromociveisPanel() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                Empresas (todas, incluindo derivadas)
+                Estrutura de Grupos e Filiais
               </CardTitle>
               <CardDescription>
-                Lista todas as empresas cadastradas em cada tenant. Promova uma empresa derivada para transformá-la em Conta-Raiz independente.
+                Visualize as empresas principais e suas filiais. Use o botão dourado "Matriz" dentro de uma empresa principal expandida para alternar qual unidade é a principal do grupo.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
