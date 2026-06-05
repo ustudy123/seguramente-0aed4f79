@@ -246,31 +246,101 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         doc.setFont("helvetica", "bold");
         doc.text("3. INVENTARIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
         y += 5;
-        autoTable(doc, {
-          startY: y,
-          head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
-          body: fatoresAvaliados.map(d => [
-            sanitize(d.fator),
-            sanitize(d.dimensoes.join(", ")),
-            `${d.risco}%`,
-            GRO_NIVEL_RISCO_LABELS[d.nivel],
-            "NR-01 / NR-17 / ISO 45003",
-          ]),
 
-          headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
-          bodyStyles: { fontSize: 8 },
-          alternateRowStyles: { fillColor: [248, 245, 255] },
-          didParseCell: (data) => {
-            if (data.section === "body" && data.column.index === 3) {
-              const v = String(data.cell.raw);
-              if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
-              else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-              else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
-              else data.cell.styles.textColor = [5, 122, 85];
-            }
-          },
-        });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        if (resultadosPorGHE.length > 0) {
+          resultadosPorGHE.forEach((ghe) => {
+            if (y > 240) { doc.addPage(); y = 20; }
+            
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text(`GHE: ${sanitize(ghe.ghe_nome)}`, 14, y);
+            y += 4;
+            
+            const funcDepto = ghe.composicaoSetorCargos.length > 0 
+              ? ghe.composicaoSetorCargos.map(c => `${c.cargos.join("/")}/${c.setor}`).join("; ")
+              : "N/A";
+            
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.text(`FUNCAO/DEPARTAMENTO: ${sanitize(funcDepto)}`, 14, y);
+            y += 4;
+            
+            doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, 14, y);
+            y += 5;
+
+            // Agrega fatores por GHE
+            const fatoresGHE = (() => {
+              type Agg = { fator: string; dimensoes: string[]; soma: number; n: number };
+              const porFator: Record<string, Agg> = {};
+              for (const d of ghe.radar) {
+                const f = resolverFatorPorSubject(d.subject);
+                const key = f?.nome ?? d.subject;
+                if (!porFator[key]) porFator[key] = { fator: key, dimensoes: [], soma: 0, n: 0 };
+                porFator[key].dimensoes.push(d.subject);
+                porFator[key].soma += d.value;
+                porFator[key].n += 1;
+              }
+              return Object.values(porFator).map(a => {
+                const scoreMedio = a.n > 0 ? a.soma / a.n : 0;
+                const risco = isSipro ? Math.round(scoreMedio) : Math.round(100 - scoreMedio);
+                const prob = scoreToProbabilidade(scoreMedio, isSipro);
+                const sev = scoreToSeveridade(scoreMedio, isSipro);
+                const nivel = calcularNivelGRO(prob, sev);
+                return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+              }).sort((a, b) => b.risco - a.risco);
+            })();
+
+            autoTable(doc, {
+              startY: y,
+              head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
+              body: fatoresGHE.map(d => [
+                sanitize(d.fator),
+                sanitize(d.dimensoes.join(", ")),
+                `${d.risco}%`,
+                GRO_NIVEL_RISCO_LABELS[d.nivel],
+                "NR-01 / NR-17 / ISO 45003",
+              ]),
+              headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
+              bodyStyles: { fontSize: 8 },
+              alternateRowStyles: { fillColor: [248, 245, 255] },
+              didParseCell: (data) => {
+                if (data.section === "body" && data.column.index === 3) {
+                  const v = String(data.cell.raw);
+                  if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
+                  else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
+                  else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
+                  else data.cell.styles.textColor = [5, 122, 85];
+                }
+              },
+            });
+            y = (doc as any).lastAutoTable.finalY + 12;
+          });
+        } else {
+          autoTable(doc, {
+            startY: y,
+            head: [["Fator de Risco", "Dimensoes equivalentes", "Score Risco", "Nivel GRO", "Base Normativa"]],
+            body: fatoresAvaliados.map(d => [
+              sanitize(d.fator),
+              sanitize(d.dimensoes.join(", ")),
+              `${d.risco}%`,
+              GRO_NIVEL_RISCO_LABELS[d.nivel],
+              "NR-01 / NR-17 / ISO 45003",
+            ]),
+            headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
+            bodyStyles: { fontSize: 8 },
+            alternateRowStyles: { fillColor: [248, 245, 255] },
+            didParseCell: (data) => {
+              if (data.section === "body" && data.column.index === 3) {
+                const v = String(data.cell.raw);
+                if (v.includes("Critico")) data.cell.styles.textColor = [185, 28, 28];
+                else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
+                else if (v.includes("Medio")) data.cell.styles.textColor = [180, 83, 9];
+                else data.cell.styles.textColor = [5, 122, 85];
+              }
+            },
+          });
+          y = (doc as any).lastAutoTable.finalY + 10;
+        }
       }
 
       // ── 4. Metodologia ────────────────────────────────────────────────
