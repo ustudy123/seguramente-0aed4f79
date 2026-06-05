@@ -365,10 +365,11 @@ export function usePerfisAcesso() {
       const { data: before } = await fromTable("perfis_acesso").select("*").eq("id", id).single();
       
       // Sanitize empty strings to null for timestamp/date fields
-      if ('expira_em' in payload && !payload.expira_em) (payload as any).expira_em = null;
+      const sanitizedPayload = { ...payload };
+      if ('expira_em' in sanitizedPayload && !sanitizedPayload.expira_em) sanitizedPayload.expira_em = null as any;
       
       const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
-      const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
+      const updatePayload = nivelRisco ? { ...sanitizedPayload, nivel_risco: nivelRisco } : sanitizedPayload;
       
       // Update basic profile info
       const { error: updateError } = await fromTable("perfis_acesso").update(updatePayload).eq("id", id);
