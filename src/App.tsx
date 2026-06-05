@@ -34,7 +34,7 @@ import PlanoAcao from "./pages/PlanoAcao";
 import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
 import Avaliacoes from "./pages/Avaliacoes";
 import MetasModule from "./pages/MetasModule";
-import Atestados from "./pages/Atestados";
+import CentralGaf from "./pages/CentralGaf";
 import Pdi from "./pages/Pdi";
 import Financeiro from "./pages/Financeiro";
 import Academia from "./pages/Academia";
@@ -179,7 +179,7 @@ const App = () => (
                 <Route path="/ferias" element={<Ferias />} />
                 <Route path="/avaliacoes" element={<Avaliacoes />} />
                 <Route path="/metas" element={<MetasModule />} />
-                <Route path="/atestados" element={<Atestados />} />
+                <Route path="/atestados" element={<CentralGaf />} />
                 <Route path="/plano-acao" element={<PlanoAcao />} />
                 <Route path="/plano-acao/:id" element={<PlanoAcaoDetalhe />} />
                 <Route path="/pdi" element={<Pdi />} />
