@@ -279,42 +279,58 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                 </p>
               ) : (
 
-                filteredEmpresas.map((e) => {
-                  const checked = selectedIds.has(e.id);
-                  const matrizDoLote = e.matriz_id && selectedIds.has(e.matriz_id);
-                  return (
-                    <label
-                      key={e.id}
-                      className={`flex items-start gap-2 p-2 border-b last:border-0 cursor-pointer hover:bg-muted/30 ${checked ? "bg-primary/5" : ""}`}
-                    >
-                      <Checkbox checked={checked} onCheckedChange={() => toggleEmpresa(e.id)} className="mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium truncate">{e.razao_social}</span>
-                          {e.tipo_unidade === "matriz" && (
-                            <Badge variant="default" className="text-[10px] h-4 px-1">Matriz</Badge>
-                          )}
-                          {e.tipo_unidade === "filial" && (
-                            <Badge variant="outline" className="text-[10px] h-4 px-1">Filial</Badge>
-                          )}
-                          {checked && e.tipo_unidade === "filial" && matrizDoLote && (
-                            <Badge variant="secondary" className="text-[10px] h-4 px-1 gap-0.5">
-                              <GitBranch className="w-2.5 h-2.5" /> vínculo preservado
-                            </Badge>
-                          )}
-                          {checked && e.tipo_unidade === "filial" && e.matriz_id && !matrizDoLote && (
-                            <Badge variant="destructive" className="text-[10px] h-4 px-1">
-                              matriz ficará no tenant antigo
-                            </Badge>
+                {(() => {
+                  // Identifica qual seria a "principal" do novo grupo (Matriz ou a mais antiga)
+                  const matriz = selecionadas.find(e => e.tipo_unidade === 'matriz');
+                  const oldest = [...selecionadas].sort((a, b) => {
+                    const ca = empresasRaw.find(r => r.id === a.id)?.created_at || '';
+                    const cb = empresasRaw.find(r => r.id === b.id)?.created_at || '';
+                    return ca.localeCompare(cb);
+                  })[0];
+                  const principalProvavelId = matriz?.id || oldest?.id;
+
+                  return filteredEmpresas.map((e) => {
+                    const checked = selectedIds.has(e.id);
+                    const matrizDoLote = e.matriz_id && selectedIds.has(e.matriz_id);
+                    const isPrincipalProvavel = checked && e.id === principalProvavelId && selectedIds.size > 1;
+
+                    return (
+                      <label
+                        key={e.id}
+                        className={`flex items-start gap-2 p-2 border-b last:border-0 cursor-pointer hover:bg-muted/30 ${checked ? "bg-primary/5" : ""}`}
+                      >
+                        <Checkbox checked={checked} onCheckedChange={() => toggleEmpresa(e.id)} className="mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium truncate">{e.razao_social}</span>
+                            {e.tipo_unidade === "matriz" && (
+                              <Badge variant="default" className="text-[10px] h-4 px-1">Matriz</Badge>
+                            )}
+                            {e.tipo_unidade === "filial" && (
+                              <Badge variant="outline" className="text-[10px] h-4 px-1">Filial</Badge>
+                            )}
+                            {isPrincipalProvavel && (
+                              <Badge className="bg-amber-500 text-white text-[10px] h-4 px-1 border-0">Principal do Novo Grupo</Badge>
+                            )}
+                            {checked && e.tipo_unidade === "filial" && matrizDoLote && (
+                              <Badge variant="secondary" className="text-[10px] h-4 px-1 gap-0.5">
+                                <GitBranch className="w-2.5 h-2.5" /> vínculo preservado
+                              </Badge>
+                            )}
+                            {checked && e.tipo_unidade === "filial" && e.matriz_id && !matrizDoLote && (
+                              <Badge variant="destructive" className="text-[10px] h-4 px-1">
+                                matriz ficará no tenant antigo
+                              </Badge>
+                            )}
+                          </div>
+                          {e.cnpj && (
+                            <p className="text-xs text-muted-foreground">{e.cnpj}</p>
                           )}
                         </div>
-                        {e.cnpj && (
-                          <p className="text-xs text-muted-foreground">{e.cnpj}</p>
-                        )}
-                      </div>
-                    </label>
-                  );
-                })
+                      </label>
+                    );
+                  });
+                })()}
               )}
             </div>
 
