@@ -170,7 +170,7 @@ export function EmpresasPromociveisPanel() {
           )}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-          ) : filtered.length === 0 ? (
+          ) : filteredMaes.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">Nenhuma empresa encontrada</div>
           ) : (
             <Table>
