@@ -378,9 +378,10 @@ export function usePerfisAcesso() {
         if (deleteError) throw deleteError;
         
         if (permissoes.length > 0) {
-          // Prepare new permissions
-          const permsToInsert = permissoes.map((p) => ({
-            ...p,
+          const permsToInsert = permissoes.map((p) => {
+            const { id: _, ...pWithoutId } = p as any;
+            return {
+              ...pWithoutId,
             perfil_id: id,
             tenant_id: tenantId,
             ativo: p.ativo !== false, // Ensure it's true unless explicitly false
