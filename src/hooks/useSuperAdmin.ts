@@ -175,8 +175,20 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
      },
    });
  
-   // Desativar/ativar tenant
-   const toggleTenantMutation = useMutation({
+    // Excluir tenant (apenas superadmin)
+    const deleteTenantMutation = useMutation({
+      mutationFn: async (id: string) => {
+        const { error } = await supabase.rpc('superadmin_delete_tenant', {
+          _tenant_id: id
+        });
+        if (error) throw error;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
+      },
+    });
+
+    // Desativar/ativar tenant
      mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
        const { error } = await supabase
          .from('tenants')
