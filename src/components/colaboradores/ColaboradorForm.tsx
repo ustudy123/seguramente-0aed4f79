@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -69,6 +70,7 @@ const formSchema = z.object({
   matricula_esocial: z.string().optional(),
   cbo: z.string().optional(),
   foto_url: z.string().optional(),
+  bate_ponto: z.boolean().default(true),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -89,6 +91,7 @@ export interface ColaboradorEditData {
   matricula_esocial?: string | null;
   cbo?: string | null;
   foto_url?: string | null;
+  bate_ponto?: boolean | null;
 }
 
 interface ColaboradorFormProps {
@@ -136,6 +139,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       matricula_esocial: "",
       cbo: "",
       foto_url: "",
+      bate_ponto: true,
     },
   });
   const resolvedPhotoUrl = useStorageImageUrl(form.watch("foto_url"), "documentos");
@@ -157,6 +161,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         matricula_esocial: colaborador.matricula_esocial || "",
         cbo: colaborador.cbo || "",
         foto_url: colaborador.foto_url || "",
+        bate_ponto: colaborador.bate_ponto !== false,
       });
     } else if (open && !colaborador) {
       form.reset({
@@ -174,6 +179,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         matricula_esocial: "",
         cbo: "",
         foto_url: "",
+        bate_ponto: true,
       });
     }
   }, [open, colaborador, form]);
@@ -228,6 +234,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           matricula_esocial: data.matricula_esocial || null,
           cbo: normalizeCBO(data.cbo) || null,
           foto_url: data.foto_url || null,
+          bate_ponto: data.bate_ponto,
         };
 
         const { data: updatedRow, error } = await supabase
@@ -282,6 +289,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           matricula_esocial: data.matricula_esocial || null,
           cbo: normalizeCBO(data.cbo) || null,
           foto_url: data.foto_url || null,
+          bate_ponto: data.bate_ponto,
         }).select("id").single();
 
         if (error) {
@@ -493,6 +501,32 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   )}
                 />
               </div>
+
+              {/* Bate ponto */}
+              <FormField
+                control={form.control}
+                name="bate_ponto"
+                render={({ field }) => {
+                  const tipo = (form.watch("tipo_contrato") || "").toLowerCase();
+                  const naoCLT = ["pj", "prolabore", "pro_labore", "terceiro", "terceirizado", "autonomo"].includes(tipo);
+                  return (
+                    <FormItem className="flex items-center justify-between rounded-md border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Bate ponto eletrônico</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          {naoCLT
+                            ? "Vínculos PJ/terceiros normalmente não batem ponto. Ative apenas se houver acordo específico."
+                            : "Define se este colaborador aparece no módulo de Ponto Eletrônico."}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
+              />
+
 
               {/* Estabelecimento | Departamento */}
               <div className="grid grid-cols-2 gap-3">

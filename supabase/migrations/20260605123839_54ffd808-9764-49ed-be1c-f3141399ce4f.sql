@@ -1,0 +1,2 @@
+ALTER TABLE public.admissoes ADD COLUMN IF NOT EXISTS bate_ponto boolean NOT NULL DEFAULT true;
+UPDATE public.admissoes SET bate_ponto = false WHERE lower(coalesce(tipo_contrato,'')) IN ('pj','prolabore','pro_labore','terceiro','terceirizado','autonomo');
