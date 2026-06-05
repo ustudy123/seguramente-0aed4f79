@@ -79,6 +79,30 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       (c.total_respostas || 0) >= minRespostas;
   });
 
+  // Prioridade para campanha selecionada
+  const campanha = useMemo(() => {
+    if (filtroCampanhaId !== "todos") {
+      return campanhasValidas.find(c => c.id === filtroCampanhaId) ?? campanhasValidas[0];
+    }
+    // Se "todos" estiver selecionado e houver campanhas válidas (quantitativas)
+    if (campanhasValidas.length > 0) return campanhasValidas[0];
+    return campanhasEntrevista[0];
+  }, [filtroCampanhaId, campanhasEntrevista, campanhasValidas]);
+
+  const campanhaEntrevistaIds = useMemo(() => {
+    // Se uma campanha específica está selecionada e é de entrevista, buscamos evidências apenas dela
+    if (campanha && (campanha as any).tipo_instrumento === "entrevista_guiada") {
+      return [campanha.id];
+    }
+    // Se "todos" está selecionado ou é quantitativa, buscamos de todas as entrevistas pertinentes à campanha atual
+    // Mas para evitar confusão entre campanhas, se for uma campanha quantitativa específica, 
+    // idealmente não mostraríamos evidências de entrevistas que não têm relação.
+    if (filtroCampanhaId !== "todos") {
+      return []; // Não traz evidências se for uma campanha quantitativa específica
+    }
+    return campanhasEntrevista.map(c => c.id);
+  }, [filtroCampanhaId, campanha, campanhasEntrevista]);
+
   const { data: evidenciasQualitativas = [] } = useEvidenciasEntrevista(campanhaEntrevistaIds);
 
   const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
