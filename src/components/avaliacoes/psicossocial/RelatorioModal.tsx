@@ -267,9 +267,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         y = (doc as any).lastAutoTable.finalY + 10;
 
         // ── 3. Inventario de Riscos ────────────────────────────────────────
+        checkPageOverflow(30);
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("3. INVENTARIO DE FATORES DE RISCO PSICOSSOCIAL", 14, y);
+        doc.text("3. INVENTÁRIO DE FATORES DE RISCO PSICOSSOCIAL", ml, y);
         y += 5;
 
         if (resultadosPorGHE.length > 0) {
