@@ -360,29 +360,49 @@ export function usePerfisAcesso() {
   const updatePerfil = useMutation({
     mutationFn: async ({ id, permissoes, ...payload }: Partial<PerfilAcesso> & { id: string; permissoes?: Partial<PerfilPermissao>[] }) => {
       const { data: before } = await fromTable("perfis_acesso").select("*").eq("id", id).single();
+      
       // Sanitize empty strings to null for timestamp/date fields
       if ('expira_em' in payload && !payload.expira_em) (payload as any).expira_em = null;
+      
       const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
       const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
-      const { error } = await fromTable("perfis_acesso").update(updatePayload).eq("id", id);
-      if (error) throw error;
+      
+      // Update basic profile info
+      const { error: updateError } = await fromTable("perfis_acesso").update(updatePayload).eq("id", id);
+      if (updateError) throw updateError;
+      
+      // Update permissions if provided
       if (permissoes !== undefined) {
-        await fromTable("perfil_permissoes").delete().eq("perfil_id", id);
-        if (permissoes.length) {
-          await fromTable("perfil_permissoes").insert(
-            permissoes.map((p) => ({
-              ...p,
-              perfil_id: id,
-              tenant_id: tenantId,
-              is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
-            }))
-          );
+        // Delete all existing permissions first to ensure clean state
+        const { error: deleteError } = await fromTable("perfil_permissoes").delete().eq("perfil_id", id);
+        if (deleteError) throw deleteError;
+        
+        if (permissoes.length > 0) {
+          // Prepare new permissions
+          const permsToInsert = permissoes.map((p) => ({
+            ...p,
+            perfil_id: id,
+            tenant_id: tenantId,
+            ativo: p.ativo !== false, // Ensure it's true unless explicitly false
+            is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
+          }));
+
+          // Insert in small batches if necessary, but here we try all at once
+          const { error: insertError } = await fromTable("perfil_permissoes").insert(permsToInsert);
+          if (insertError) throw insertError;
         }
       }
+      
       await logAuditPerfil(tenantId!, id, "edicao", `Perfil "${before?.nome}" editado`, before, updatePayload, profile?.nome_completo);
     },
-    onSuccess: () => { invalidate(); toast.success("Perfil atualizado!"); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
+    onSuccess: () => { 
+      invalidate(); 
+      toast.success("Perfil atualizado com sucesso!"); 
+    },
+    onError: (e: any) => {
+      console.error("Erro ao atualizar perfil:", e);
+      toast.error("Erro ao atualizar perfil: " + (e.message || "Ocorreu um erro inesperado"));
+    },
   });
 
   const togglePerfilStatus = useMutation({

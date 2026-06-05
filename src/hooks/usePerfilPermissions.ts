@@ -33,7 +33,8 @@ export function usePerfilPermissions() {
       return data as { id: string } | null;
     },
     enabled: !!user?.id && !!tenantId,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 1000, // Reduced from 10m to 1s to ensure fresh data after edits
+    gcTime: 1000 * 60 * 5,
   });
 
   // 2. Buscar o perfil vinculado ativo do usuário (usando usuarios_base.id)
@@ -56,7 +57,8 @@ export function usePerfilPermissions() {
       return data as { perfil_id: string } | null;
     },
     enabled: !!usuarioBase?.id && !!tenantId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1000,
+    gcTime: 1000 * 60 * 5,
   });
 
   // 3. Buscar as permissões do perfil
@@ -75,7 +77,8 @@ export function usePerfilPermissions() {
       return data as Array<{ modulo: string; acao: string; escopo: string; ativo: boolean }>;
     },
     enabled: !!vinculo?.perfil_id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1000,
+    gcTime: 1000 * 60 * 5,
   });
 
   // 3. Criar um Set para lookup rápido
