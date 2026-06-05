@@ -91,6 +91,7 @@ export interface ColaboradorEditData {
   matricula_esocial?: string | null;
   cbo?: string | null;
   foto_url?: string | null;
+  bate_ponto?: boolean | null;
 }
 
 interface ColaboradorFormProps {
