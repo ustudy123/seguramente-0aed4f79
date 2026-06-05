@@ -20,24 +20,37 @@ import { useGafPermissions } from "@/hooks/useGafPermissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 
-// Componentes internos que serão criados ou expandidos
-// import { AbsenteismoCharts } from "@/components/atestados/dashboards/AbsenteismoCharts";
-// import { SaudeMentalCharts } from "@/components/atestados/dashboards/SaudeMentalCharts";
-// import { FapRatCharts } from "@/components/atestados/dashboards/FapRatCharts";
-// import { PendenciasList } from "@/components/atestados/dashboards/PendenciasList";
+import { AtestadoList } from "@/components/atestados/AtestadoList";
+import { AfastamentoList } from "@/components/atestados/AfastamentoList";
+import { useAtestados } from "@/hooks/useAtestados";
+import { Calendar } from "lucide-react";
 
 const CentralGaf = () => {
   const [activeTab, setActiveTab] = useState("absenteismo");
   const [formOpen, setFormOpen] = useState(false);
   
+  const { 
+    atestados, 
+    deleteAtestado, 
+    loadingAtestados, 
+    afastamentos, 
+    loadingAfastamentos,
+    getSignedUrl,
+    createAtestado,
+    deleteAfastamento
+  } = useAtestados();
   const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
   const { permissions, isLoading: loadingPerms } = useGafPermissions();
 
-  const isLoading = loadingStats || loadingPerms;
+  const isLoading = loadingStats || loadingPerms || loadingAtestados || loadingAfastamentos;
 
-  const handleCreateAfastamento = async (data: any) => {
-    // Implementar a lógica de salvamento aqui
-    console.log("Salvando afastamento:", data);
+  const handleCreateAtestado = async (data: { formData: any; file?: File; colaboradorId?: string }) => {
+    try {
+      await createAtestado(data);
+      setFormOpen(false);
+    } catch (error) {
+      console.error("Erro ao criar atestado:", error);
+    }
   };
 
   if (isLoading) {
@@ -77,12 +90,20 @@ const CentralGaf = () => {
       <AtestadoForm 
         open={formOpen} 
         onOpenChange={setFormOpen} 
-        onSubmit={handleCreateAfastamento}
+        onSubmit={handleCreateAtestado}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between overflow-x-auto pb-2">
           <TabsList className="bg-muted/50 border">
+            <TabsTrigger value="atestados" className="gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Atestados
+            </TabsTrigger>
+            <TabsTrigger value="afastamentos" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Afastamentos
+            </TabsTrigger>
             {permissions.podeVerDashboardsGerais && (
               <TabsTrigger value="absenteismo" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -118,6 +139,21 @@ const CentralGaf = () => {
             </div>
           </div>
         </div>
+
+        <TabsContent value="atestados" className="space-y-6">
+          <AtestadoList 
+            atestados={atestados} 
+            onDelete={deleteAtestado} 
+            onDownload={getSignedUrl}
+          />
+        </TabsContent>
+
+        <TabsContent value="afastamentos" className="space-y-6">
+          <AfastamentoList 
+            afastamentos={afastamentos} 
+            onDelete={deleteAfastamento}
+          />
+        </TabsContent>
 
         <TabsContent value="absenteismo" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
