@@ -458,10 +458,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       // ── 7. Evidencias Qualitativas ────────────────────────────────────
       if (temEvidenciasQualitativas) {
         doc.addPage();
-        y = 20;
+        y = mt;
         doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
-        doc.text("7. EVIDENCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", 14, y);
+        doc.text("7. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", ml, y);
         y += 8;
         
         for (const ev of evidenciasQualitativas) {
@@ -473,17 +473,17 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             if (trechos.length >= 3) break;
           }
           if (!trechos.length) continue;
-          if (y > 255) { doc.addPage(); y = 20; }
+          checkPageOverflow(30);
           doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
-          doc.text(`• ${sanitize(ev.risco_nome)} (P${ev.p_max} x S${ev.s_max})`, 14, y);
+          doc.text(`• ${sanitize(ev.risco_nome)} (P${ev.p_max} x S${ev.s_max})`, ml, y);
           y += 5;
           doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
           for (const t of trechos) {
-            const linhas = doc.splitTextToSize(`"${sanitize(t)}"`, pageW - 32);
-            if (y + linhas.length * 4 > 280) { doc.addPage(); y = 20; }
-            doc.text(linhas, 18, y);
+            const linhas = doc.splitTextToSize(`"${sanitize(t)}"`, contentWidth - 4);
+            checkPageOverflow(linhas.length * 4 + 4);
+            doc.text(linhas, ml + 4, y, { align: 'justify', maxWidth: contentWidth - 4 });
             y += linhas.length * 4 + 2;
           }
           y += 4;
