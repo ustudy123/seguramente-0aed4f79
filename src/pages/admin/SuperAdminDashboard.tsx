@@ -260,6 +260,9 @@ export default function SuperAdminDashboard() {
                 nome: selectedTenant.nome,
                 slug: selectedTenant.slug,
                 plano: selectedTenant.plano,
+                email: selectedTenant.email,
+                telefone: selectedTenant.telefone,
+                cnpj: selectedTenant.cnpj,
               }}
               onSubmit={async (data) => {
                 try {
