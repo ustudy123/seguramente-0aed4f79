@@ -188,8 +188,8 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
       },
     });
 
-    // Desativar/ativar tenant
-     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+    const toggleTenantMutation = useMutation({
+      mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
        const { error } = await supabase
          .from('tenants')
          .update({ ativo })
