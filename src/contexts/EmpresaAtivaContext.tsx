@@ -69,11 +69,22 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Defesa contra duplicatas (mesmo id aparecendo mais de uma vez por race
     // condition de fetch/cache). Garante 1 entrada por empresa no seletor.
     const seen = new Set<string>();
-    return lista.filter((e) => {
-      if (!e?.id || seen.has(e.id)) return false;
-      seen.add(e.id);
-      return true;
-    });
+    return lista
+      .sort((a, b) => {
+        // Matriz sempre primeiro
+        if (a.tipo_unidade === "matriz" && b.tipo_unidade !== "matriz") return -1;
+        if (a.tipo_unidade !== "matriz" && b.tipo_unidade === "matriz") return 1;
+        
+        // Ordem alfabética para o resto (ou entre matrizes/filiais)
+        const nameA = a.razao_social || a.nome_fantasia || "";
+        const nameB = b.razao_social || b.nome_fantasia || "";
+        return nameA.localeCompare(nameB);
+      })
+      .filter((e) => {
+        if (!e?.id || seen.has(e.id)) return false;
+        seen.add(e.id);
+        return true;
+      });
   }, [todasEmpresas, isProfissional, empresaIdsPermitidas]);
 
   const isLoading = loadingEmpresas || loadingVinculos;
