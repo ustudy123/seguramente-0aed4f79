@@ -273,5 +273,6 @@ export function EmpresaCadastroChecklist({ data, onGoToTab }: Props) {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
