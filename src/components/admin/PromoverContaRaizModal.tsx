@@ -131,29 +131,57 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   const finalPrincipalId = principalIdOverride || principalAutomaticaId;
 
-  // Atualiza os dados do novo tenant baseado na principal escolhida
+  // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
     if (finalPrincipalId && migrationType === 'new') {
-      const p = empresasRaw.find(e => e.id === finalPrincipalId);
-      if (p) {
-        const nome = p.nome_fantasia || p.razao_social;
-        setNovoTenant(prev => {
-          // Só atualiza se o campo estiver vazio ou for o valor inicial
-          const currentNome = prev.nome;
-          const isInitial = !currentNome || currentNome === preselectedEmpresaNome;
-          
-          if (isInitial) {
-            return {
-              ...prev,
-              nome: nome || "",
-              slug: slugify(nome || "")
-            };
-          }
-          return prev;
-        });
+      const p = (supabase as any).from("empresa_cadastro").select("razao_social, nome_fantasia").eq("id", finalPrincipalId).maybeSingle();
+      
+      // Como já temos as empresas no empresasRaw, vamos usar de lá para ser síncrono no primeiro render
+      const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
+      if (pLocal) {
+        const nome = pLocal.nome_fantasia || pLocal.razao_social;
+        setNovoTenant(prev => ({
+          ...prev,
+          nome: nome || "",
+          slug: slugify(nome || "")
+        }));
+
+        // Se o dono estiver vazio, tenta buscar dados do responsável/contato se existissem, 
+        // mas por padrão vamos apenas garantir que o nome da empresa seja usado se nada foi digitado
       }
     }
-  }, [finalPrincipalId, migrationType, empresasRaw, preselectedEmpresaNome]);
+  }, [finalPrincipalId, migrationType, empresasRaw]);
+
+  // Função para buscar dados detalhados da empresa principal quando ela muda
+  useEffect(() => {
+    const fetchPrincipalDetails = async () => {
+      if (finalPrincipalId && step === 2 && migrationType === 'new') {
+        const { data, error } = await supabase
+          .from("empresa_cadastro")
+          .select("razao_social, nome_fantasia, email_contato, responsavel_nome")
+          .eq("id", finalPrincipalId)
+          .maybeSingle();
+        
+        if (!error && data) {
+          const nomeEmpresa = data.nome_fantasia || data.razao_social;
+          
+          setNovoTenant(prev => ({
+            ...prev,
+            nome: nomeEmpresa || prev.nome,
+            slug: slugify(nomeEmpresa || prev.nome)
+          }));
+
+          setOwner(prev => ({
+            ...prev,
+            nome: data.responsavel_nome || prev.nome,
+            email: data.email_contato || prev.email
+          }));
+        }
+      }
+    };
+
+    fetchPrincipalDetails();
+  }, [finalPrincipalId, step, migrationType]);
 
   const palavraConfirmacao = selecionadas.length === 1
     ? selecionadas[0].razao_social
