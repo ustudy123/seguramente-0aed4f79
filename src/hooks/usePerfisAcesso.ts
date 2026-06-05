@@ -383,7 +383,8 @@ export function usePerfisAcesso() {
         
         if (permissoes.length > 0) {
           const permsToInsert = permissoes.map((p) => {
-            const { id: _, created_at: __, ...pClean } = p as any;
+            // Remove ID if it exists to allow fresh insertion
+            const { id: _, created_at: __, updated_at: ___, ...pClean } = p as any;
             return {
               ...pClean,
               perfil_id: id,
