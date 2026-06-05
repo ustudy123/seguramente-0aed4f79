@@ -343,7 +343,7 @@ export function usePerfisAcesso() {
       if (error) throw error;
       if (permissoes?.length) {
         const perms = permissoes.map((p) => {
-          const { id: _, created_at: __, ...pClean } = p as any;
+          const { id: _, created_at: __, updated_at: ___, ...pClean } = p as any;
           return {
             ...pClean,
             perfil_id: data.id,
