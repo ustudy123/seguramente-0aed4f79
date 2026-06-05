@@ -122,8 +122,51 @@ export function EmpresaCadastroChecklist({ data, onGoToTab }: Props) {
 
   const completo = stats.reqFilled === stats.reqTotal;
 
+  const pendentesObrigatorios = useMemo(
+    () => blocks.flatMap(b => b.fields
+      .filter(f => f.required && !f.filled)
+      .map(f => ({ blockId: b.id, blockTitle: b.title, label: f.label }))
+    ),
+    [blocks]
+  );
+
   return (
-    <Card className="border-primary/20">
+    <div className="space-y-4">
+      {!completo && pendentesObrigatorios.length > 0 && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              {pendentesObrigatorios.length} campo(s) obrigatório(s) pendente(s)
+            </CardTitle>
+            <CardDescription>
+              Clique em um item para ir direto ao campo correspondente.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {pendentesObrigatorios.map((p, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => onGoToTab(p.blockId)}
+                    className="w-full text-left flex items-center gap-2 rounded-md border border-destructive/30 bg-background hover:bg-destructive/10 transition-colors px-3 py-2"
+                  >
+                    <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{p.label}</div>
+                      <div className="text-[11px] text-muted-foreground">{p.blockTitle}</div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="border-primary/20">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
