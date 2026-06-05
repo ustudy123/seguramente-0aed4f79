@@ -371,12 +371,122 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         }
       }
 
-      // ── 4. Metodologia ────────────────────────────────────────────────
+      // ── 4. Metodologia de Graduação de Risco (Novas Tabelas) ──────────
       doc.addPage();
       y = mt;
-      doc.setFontSize(13);
+      doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("4. METODOLOGIA E CRITÉRIOS DE AVALIAÇÃO", ml, y);
+      doc.text("4. METODOLOGIA DE GRADUAÇÃO DE RISCO (P x S)", ml, y);
+      y += 8;
+
+      doc.setFontSize(9);
+      doc.text("4.1. Tabela de Probabilidade", ml, y);
+      y += 4;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Índice/Nível", "Classificação", "Critério Operacional"]],
+        body: [
+          ["Nível 5", "Quase Certa", "Ocorrência contínua ou diária. Medidas de prevenção são inexistentes ou totalmente ineficazes."],
+          ["Nível 4", "Frequente", "Ocorre de forma regular na rotina de trabalho. Medidas de prevenção são insuficientes ou frágeis."],
+          ["Nível 3", "Possível", "Ocorrência documentada ou com relatos recorrentes. Medidas de prevenção apresentam falhas intermitentes."],
+          ["Nível 2", "Remota", "Pode ocorrer em situações muito específicas ou raramente no ano. Medidas de prevenção são majoritariamente eficazes."],
+          ["Nível 1", "Aceitável/Improvável", "Ocorrência imprevisível ou sem histórico no setor. Medidas de prevenção são totalmente eficazes."],
+        ],
+        headStyles: { fillColor: [31, 41, 55], fontSize: 8, textColor: 255 },
+        bodyStyles: { fontSize: 8, halign: 'justify' },
+        didParseCell: (data) => {
+          if (data.section === "body") {
+            const rowIdx = data.row.index;
+            const colors = [
+              [254, 226, 226], // Nível 5 - Vermelho
+              [255, 237, 213], // Nível 4 - Laranja
+              [254, 252, 232], // Nível 3 - Amarelo
+              [239, 246, 255], // Nível 2 - Azul
+              [240, 253, 244], // Nível 1 - Verde
+            ];
+            data.cell.styles.fillColor = colors[rowIdx] as [number, number, number];
+          }
+        }
+      });
+      y = (doc as any).lastAutoTable.finalY + 10;
+
+      checkPageOverflow(60);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("4.2. Tabela de Severidade", ml, y);
+      y += 4;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Índice/Nível", "Classificação", "Impacto à Saúde"]],
+        body: [
+          ["Nível 5", "Catastrófica/Crítica", "Incapacidade permanente para o trabalho ou comprometimento total e irreversível da saúde."],
+          ["Nível 4", "Grande/Alta", "Lesão crônica ou adoecimento ocupacional diagnosticado (ex: Burnout, ansiedade grave). Gera afastamento prolongado (> 15 dias)."],
+          ["Nível 3", "Média/Moderada", "Agravamento clínico tratável, disfunção reversível. Pode gerar absenteísmo de curto prazo (até 15 dias)."],
+          ["Nível 2", "Pequena/Menor", "Sintomas leves (ex: estresse pontual), sem necessidade de afastamento ou restrição médica."],
+          ["Nível 1", "Insignificante", "Desconforto temporário sem alteração clínica ou prejuízo ao desempenho laboral."],
+        ],
+        headStyles: { fillColor: [31, 41, 55], fontSize: 8, textColor: 255 },
+        bodyStyles: { fontSize: 8, halign: 'justify' },
+        didParseCell: (data) => {
+          if (data.section === "body") {
+            const rowIdx = data.row.index;
+            const colors = [
+              [254, 226, 226], // Nível 5 - Vermelho
+              [255, 237, 213], // Nível 4 - Laranja
+              [254, 252, 232], // Nível 3 - Amarelo
+              [239, 246, 255], // Nível 2 - Azul
+              [240, 253, 244], // Nível 1 - Verde
+            ];
+            data.cell.styles.fillColor = colors[rowIdx] as [number, number, number];
+          }
+        }
+      });
+      y = (doc as any).lastAutoTable.finalY + 10;
+
+      checkPageOverflow(80);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("4.3. Matriz de Graduação de Risco", ml, y);
+      y += 4;
+
+      const matrizData = [
+        ["5 - Quase Certa", "MÉDIO", "MÉDIO", "ALTO", "CRÍTICO", "CRÍTICO"],
+        ["4 - Frequente", "MÉDIO", "MÉDIO", "MÉDIO", "ALTO", "CRÍTICO"],
+        ["3 - Possível", "BAIXO", "BAIXO", "MÉDIO", "ALTO", "ALTO"],
+        ["2 - Remota", "TRIVIAL", "BAIXO", "BAIXO", "MÉDIO", "ALTO"],
+        ["1 - Improvável", "TRIVIAL", "TRIVIAL", "BAIXO", "BAIXO", "MÉDIO"],
+      ];
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: ml, right: mr, top: mt, bottom: mb },
+        head: [["Prob. \\ Sev.", "1 - Insig.", "2 - Pequena", "3 - Média", "4 - Grande", "5 - Catast."]],
+        body: matrizData,
+        headStyles: { fillColor: [31, 41, 55], fontSize: 7, textColor: 255, halign: 'center' },
+        bodyStyles: { fontSize: 7, halign: 'center', minCellHeight: 10 },
+        columnStyles: { 0: { fontStyle: "bold", fillColor: [31, 41, 55], textColor: 255, cellWidth: 30 } },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index > 0) {
+            const val = String(data.cell.raw);
+            if (val === "CRÍTICO") { data.cell.styles.fillColor = [254, 226, 226]; data.cell.styles.textColor = [153, 27, 27]; }
+            else if (val === "ALTO") { data.cell.styles.fillColor = [255, 237, 213]; data.cell.styles.textColor = [154, 52, 18]; }
+            else if (val === "MÉDIO") { data.cell.styles.fillColor = [254, 252, 232]; data.cell.styles.textColor = [133, 77, 14]; }
+            else if (val === "BAIXO") { data.cell.styles.fillColor = [239, 246, 255]; data.cell.styles.textColor = [30, 64, 175]; }
+            else if (val === "TRIVIAL") { data.cell.styles.fillColor = [240, 253, 244]; data.cell.styles.textColor = [22, 101, 52]; }
+          }
+        }
+      });
+      y = (doc as any).lastAutoTable.finalY + 12;
+
+      // ── 5. Metodologia (Original) ─────────────────────────────────────
+      checkPageOverflow(40);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("5. METODOLOGIA E CRITÉRIOS DE AVALIAÇÃO", ml, y);
       y += 8;
 
       const metodologiaBlocks = [
