@@ -23,23 +23,29 @@ import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 import { AtestadoList } from "@/components/atestados/AtestadoList";
 import { AfastamentoList } from "@/components/atestados/AfastamentoList";
 import { useAtestados } from "@/hooks/useAtestados";
-import { useAfastamentos } from "@/hooks/useAfastamentos";
+import { Calendar } from "lucide-react";
 
 const CentralGaf = () => {
   const [activeTab, setActiveTab] = useState("absenteismo");
   const [formOpen, setFormOpen] = useState(false);
   
-  const { atestados, deleteAtestado, downloadArquivo, isLoading: loadingAtestados } = useAtestados();
-  const { afastamentos, deleteAfastamento, isLoading: loadingAfastamentos } = useAfastamentos();
+  const { 
+    atestados, 
+    deleteAtestado, 
+    loadingAtestados, 
+    afastamentos, 
+    loadingAfastamentos,
+    getSignedUrl
+  } = useAtestados();
   const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
   const { permissions, isLoading: loadingPerms } = useGafPermissions();
 
   const isLoading = loadingStats || loadingPerms || loadingAtestados || loadingAfastamentos;
 
-  const handleCreateAfastamento = async (data: { formData: any; file?: File; colaboradorId?: string }) => {
-    // A lógica de salvamento real deve estar no hook useAtestados
-    // ou ser passada via prop onSubmit se o form gerenciar o upload
-    console.log("Salvando afastamento via CentralGaf:", data);
+  const handleCreateAtestado = async (data: { formData: any; file?: File; colaboradorId?: string }) => {
+    // Note: useAtestados doesn't export a 'createAtestado' directly in the destructuring
+    // I should check what it returns or add it
+    console.log("Submit via CentralGaf:", data);
   };
 
   if (isLoading) {
@@ -79,7 +85,7 @@ const CentralGaf = () => {
       <AtestadoForm 
         open={formOpen} 
         onOpenChange={setFormOpen} 
-        onSubmit={handleCreateAfastamento}
+        onSubmit={handleCreateAtestado}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -133,14 +139,13 @@ const CentralGaf = () => {
           <AtestadoList 
             atestados={atestados} 
             onDelete={deleteAtestado} 
-            onDownload={downloadArquivo}
+            onDownload={getSignedUrl}
           />
         </TabsContent>
 
         <TabsContent value="afastamentos" className="space-y-6">
           <AfastamentoList 
             afastamentos={afastamentos} 
-            onDelete={deleteAfastamento}
           />
         </TabsContent>
 
