@@ -308,7 +308,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
     // (centro_custo, gestor_imediato, matricula_esocial, cbo, etc.)
     const { data: full, error: fullErr } = await supabase
       .from("admissoes")
-      .select("id, nome_completo, cpf, email, celular, tipo_contrato, cargo, departamento, filial, centro_custo, gestor_imediato, data_admissao, matricula_esocial, cbo, foto_url")
+      .select("id, nome_completo, cpf, email, celular, tipo_contrato, cargo, departamento, filial, centro_custo, gestor_imediato, data_admissao, matricula_esocial, cbo, foto_url, bate_ponto")
       .eq("id", colab.id)
       .maybeSingle();
 
