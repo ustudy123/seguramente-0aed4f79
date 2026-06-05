@@ -60,6 +60,10 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
         });
       }
 
+      if (apenasBatePonto) {
+        rows = rows.filter((r: any) => r.bate_ponto !== false);
+      }
+
       // Deduplica por CPF (normalizado em apenas dígitos), mantendo a admissão mais recente.
       // Fallback para nome+empresa quando o CPF estiver vazio.
       const seen = new Set<string>();
