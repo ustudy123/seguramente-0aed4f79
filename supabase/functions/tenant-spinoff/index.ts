@@ -293,7 +293,10 @@ serve(async (req) => {
     }
 
     // 6) Migração de dados (UMA transação para todas as empresas)
-    const { data: rpcResult, error: rpcErr } = await admin.rpc(
+    // Importante: executar o RPC final com o contexto do usuário chamador.
+    // As funções SQL usam auth.uid() para validar a permissão, então se
+    // chamarmos com o client admin/service_role o auth.uid() fica sem o usuário.
+    const { data: rpcResult, error: rpcErr } = await callerClient.rpc(
       "superadmin_spinoff_execute_multi",
       {
         p_empresa_ids: empresaIds,
