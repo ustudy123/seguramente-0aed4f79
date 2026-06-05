@@ -21,6 +21,7 @@ interface Empresa {
   cnpj?: string | null;
   tipo_unidade?: string | null;
   matriz_id?: string | null;
+  email?: string | null;
 }
 
 interface Props {
