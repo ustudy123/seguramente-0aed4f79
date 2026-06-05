@@ -273,9 +273,12 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
               </div>
               {filteredEmpresas.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground text-center">
-                  Nenhuma empresa encontrada
+                  {empresasRaw.length <= 1
+                    ? "Este tenant possui apenas a empresa principal (raiz) — não há empresas derivadas para promover."
+                    : "Nenhuma empresa encontrada"}
                 </p>
               ) : (
+
                 filteredEmpresas.map((e) => {
                   const checked = selectedIds.has(e.id);
                   const matrizDoLote = e.matriz_id && selectedIds.has(e.matriz_id);
