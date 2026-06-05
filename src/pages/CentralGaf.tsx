@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGafDashboards } from "@/hooks/useGafDashboards";
+import { useGafPermissions } from "@/hooks/useGafPermissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 
@@ -29,7 +30,10 @@ const CentralGaf = () => {
   const [activeTab, setActiveTab] = useState("absenteismo");
   const [formOpen, setFormOpen] = useState(false);
   
-  const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading } = useGafDashboards();
+  const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
+  const { permissions, isLoading: loadingPerms } = useGafPermissions();
+
+  const isLoading = loadingStats || loadingPerms;
 
   const handleCreateAfastamento = async (data: any) => {
     // Implementar a lógica de salvamento aqui
