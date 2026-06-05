@@ -293,13 +293,6 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Heurística de nome do novo tenant: se 1 empresa, usa o nome dela; se múltiplas, sugere matriz ou genérico
   const handleAdvanceStep1 = () => {
-    if (migrationType === 'new' && !novoTenant.nome) {
-      const principal = empresasRaw.find(e => e.id === finalPrincipalId);
-      if (principal) {
-        const nome = principal.nome_fantasia || principal.razao_social;
-        setNovoTenant((s) => ({ ...s, nome: nome || "", slug: slugify(nome || "") }));
-      }
-    }
     setStep(2);
   };
 
