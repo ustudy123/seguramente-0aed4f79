@@ -625,6 +625,3 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
     </Dialog>
   );
 }
-
-  );
-}
