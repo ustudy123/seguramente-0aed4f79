@@ -134,32 +134,26 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Atualiza os dados do novo tenant e do proprietário baseado na principal escolhida
   useEffect(() => {
-    if (finalPrincipalId && migrationType === 'new' && open) {
+    // Se não tiver principal ou se o modal estiver fechado, não fazemos nada
+    if (!open) return;
+
+    if (finalPrincipalId && migrationType === 'new') {
       const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
       if (pLocal) {
         const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
-        
+        const newName = nomeEmpresa || "";
+        const newSlug = nomeEmpresa ? slugify(nomeEmpresa) : "";
+        const newEmail = pLocal.email || "";
+        const newNome = pLocal.razao_social || "";
+
         setNovoTenant(prev => {
-          // Só atualiza se for diferente para evitar loops ou sobrescrever edições manuais se o ID mudar
-          const newName = nomeEmpresa || "";
-          const newSlug = nomeEmpresa ? slugify(nomeEmpresa) : "";
           if (prev.nome === newName && prev.slug === newSlug) return prev;
-          return {
-            ...prev,
-            nome: newName,
-            slug: newSlug
-          };
+          return { ...prev, nome: newName, slug: newSlug };
         });
 
         setOwner(prev => {
-          const newEmail = pLocal.email || "";
-          const newNome = pLocal.razao_social || "";
           if (prev.email === newEmail && prev.nome === newNome) return prev;
-          return {
-            ...prev,
-            email: newEmail,
-            nome: newNome
-          };
+          return { ...prev, email: newEmail, nome: newNome };
         });
       }
     }
