@@ -373,39 +373,39 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
       // ── 4. Metodologia ────────────────────────────────────────────────
       doc.addPage();
-      y = 20;
+      y = mt;
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text("4. METODOLOGIA E CRITERIOS DE AVALIACAO", 14, y);
+      doc.text("4. METODOLOGIA E CRITÉRIOS DE AVALIAÇÃO", ml, y);
       y += 8;
 
       const metodologiaBlocks = [
         {
           titulo: "4.1 Instrumento Utilizado",
           corpo: isSipro
-            ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
-            : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliacao de riscos psicossociais.`,
+            ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Score calculado por dimensão em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
+            : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliação de riscos psicossociais.`,
         },
         {
-          titulo: "4.2 Calculo do IPS (Indice Psicossocial YourEyes)",
-          corpo: "O IPS e calculado como media ponderada pelo numero de respondentes em cada campanha ativa. Classificacao: >=80 = Saudavel; 65-79 = Estavel; 50-64 = Atencao; 35-49 = Risco; <35 = Critico. Minimo de 5 respondentes exigido para questionarios (ISO 45003 §6.1.2); entrevistas guiadas sao isentas deste minimo por natureza qualitativa.",
+          titulo: "4.2 Cálculo do IPS (Índice Psicossocial YourEyes)",
+          corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: >=80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para questionários (ISO 45003 §6.1.2); entrevistas guiadas são isentas deste mínimo por natureza qualitativa.",
         },
         {
-          titulo: "4.3 Conversao para Nivel GRO (NR-01)",
-          corpo: "Cada dimensao psicossocial e convertida para perigo ocupacional via matriz PxS:\n• Score >=75: Probabilidade Muito Alta + Severidade Grave -> Risco CRITICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada -> Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada -> Risco MEDIO\n• Score <35: Probabilidade Baixa + Severidade Leve -> Risco BAIXO",
+          titulo: "4.3 Conversão para Nível GRO (NR-01)",
+          corpo: "Cada dimensão psicossocial é convertida para perigo ocupacional via matriz PxS:\n• Score >=75: Probabilidade Muito Alta + Severidade Grave -> Risco CRÍTICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada -> Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada -> Risco MÉDIO\n• Score <35: Probabilidade Baixa + Severidade Leve -> Risco BAIXO",
         },
       ];
 
       for (const bloco of metodologiaBlocks) {
-        if (y > 250) { doc.addPage(); y = 20; }
+        checkPageOverflow(30);
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(bloco.titulo, 14, y);
+        doc.text(bloco.titulo, ml, y);
         y += 5;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        const lines = doc.splitTextToSize(bloco.corpo, pageW - 28);
-        doc.text(lines, 14, y);
+        const lines = doc.splitTextToSize(bloco.corpo, contentWidth);
+        doc.text(lines, ml, y, { align: 'justify', maxWidth: contentWidth });
         y += lines.length * 4.5 + 6;
       }
 
