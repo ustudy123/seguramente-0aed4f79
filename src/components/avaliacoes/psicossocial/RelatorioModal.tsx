@@ -79,6 +79,9 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       (c.total_respostas || 0) >= minRespostas;
   });
 
+  const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
+  const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
+
   // Prioridade para campanha selecionada
   const campanha = useMemo(() => {
     if (filtroCampanhaId !== "todos") {
