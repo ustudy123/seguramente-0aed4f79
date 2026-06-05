@@ -178,7 +178,7 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
     // Excluir tenant (apenas superadmin)
     const deleteTenantMutation = useMutation({
       mutationFn: async (id: string) => {
-        const { error } = await supabase.rpc('superadmin_delete_tenant', {
+        const { error } = await supabase.rpc('superadmin_delete_tenant' as any, {
           _tenant_id: id
         });
         if (error) throw error;
