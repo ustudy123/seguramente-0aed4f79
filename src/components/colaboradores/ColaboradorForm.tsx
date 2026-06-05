@@ -234,6 +234,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           matricula_esocial: data.matricula_esocial || null,
           cbo: normalizeCBO(data.cbo) || null,
           foto_url: data.foto_url || null,
+          bate_ponto: data.bate_ponto,
         };
 
         const { data: updatedRow, error } = await supabase
