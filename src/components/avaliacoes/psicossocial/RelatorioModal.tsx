@@ -134,7 +134,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       const prob = scoreToProbabilidade(scoreMedio, isSipro);
       const sev = scoreToSeveridade(scoreMedio, isSipro);
       const nivel = calcularNivelGRO(prob, sev);
-      return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel };
+      return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel, prob, sev };
     }).sort((a, b) => b.risco - a.risco);
   }, [radar, isSipro]);
 
