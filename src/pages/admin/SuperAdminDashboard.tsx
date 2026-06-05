@@ -271,6 +271,9 @@ export default function SuperAdminDashboard() {
                     nome: data.nome,
                     slug: data.slug,
                     plano: data.plano,
+                    email: data.email,
+                    telefone: data.telefone,
+                    cnpj: data.cnpj,
                   });
                   toast.success('Empresa atualizada com sucesso!');
                   setShowEditForm(false);
