@@ -141,19 +141,21 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
       const pLocal = empresasRaw.find(e => e.id === finalPrincipalId);
       if (pLocal) {
         const nomeEmpresa = pLocal.nome_fantasia || pLocal.razao_social;
-        const newName = nomeEmpresa || "";
-        const newSlug = nomeEmpresa ? slugify(nomeEmpresa) : "";
-        const newEmail = pLocal.email || "";
-        const newNome = pLocal.razao_social || "";
+        const newName = (nomeEmpresa || "").trim();
+        const newSlug = newName ? slugify(newName) : "";
+        const newEmail = (pLocal.email || "").trim();
+        const newNome = (pLocal.razao_social || "").trim();
 
         setNovoTenant(prev => {
+          // Só atualiza se o valor atual estiver vazio (para evitar sobrescrever edições manuais)
+          // OU se estiver sincronizando pela primeira vez após selecionar a principal
           if (prev.nome === newName && prev.slug === newSlug) return prev;
-          return { ...prev, nome: newName, slug: newSlug };
+          return { ...prev, nome: prev.nome || newName, slug: prev.slug || newSlug };
         });
 
         setOwner(prev => {
           if (prev.email === newEmail && prev.nome === newNome) return prev;
-          return { ...prev, email: newEmail, nome: newNome };
+          return { ...prev, email: prev.email || newEmail, nome: prev.nome || newNome };
         });
       }
     }
@@ -459,11 +461,16 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Nome</Label>
-                      <Input value={novoTenant.nome} onChange={(e) => setNovoTenant({ ...novoTenant, nome: e.target.value })} />
+                      <Input value={novoTenant.nome} onChange={(e) => setNovoTenant({ ...novoTenant, nome: e.target.value })} placeholder="Nome do Tenant" />
                     </div>
                     <div>
                       <Label>Slug (URL)</Label>
-                      <Input value={novoTenant.slug} onChange={(e) => setNovoTenant({ ...novoTenant, slug: slugify(e.target.value) })} />
+                      <Input 
+                        value={novoTenant.slug} 
+                        onChange={(e) => setNovoTenant({ ...novoTenant, slug: slugify(e.target.value) })} 
+                        placeholder="slug-do-tenant"
+                        className={novoTenant.slug && novoTenant.slug.length < 3 ? "border-amber-500" : ""}
+                      />
                     </div>
                   </div>
                   <div>
