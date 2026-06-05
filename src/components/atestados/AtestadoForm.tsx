@@ -131,12 +131,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const [file, setFile] = useState<File | null>(null);
   const [tipoAtestado, setTipoAtestado] = useState<AtestadoTipo>("assistencial");
   const [extracting, setExtracting] = useState(false);
+  const [searchingCrm, setSearchingCrm] = useState(false);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
   const [colaboradorSelecionado, setColaboradorSelecionado] = useState<Colaborador | null>(null);
   const [openColaboradorPopover, setOpenColaboradorPopover] = useState(false);
   
   const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
   const { getAfastamento } = useAfastamentosAtivos();
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
