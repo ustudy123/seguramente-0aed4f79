@@ -213,6 +213,8 @@ export default function SuperAdminDashboard() {
                                   </DropdownMenuItem>
                                 )}
 
+                                <DropdownMenuItem onClick={() => handleToggleTenant(tenant)}>
+                                  <Power className="w-4 h-4 mr-2" />{tenant.ativo ? 'Desativar' : 'Ativar'}
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem 
