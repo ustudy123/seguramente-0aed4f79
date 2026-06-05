@@ -187,7 +187,7 @@ export function EmpresasPromociveisPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {maes.map((m) => {
+                {filteredMaes.map((m) => {
                   // A "mae" de exibição é a empresa principal do grupo (is_principal=true ou fallback)
                   const mae = m.empresas.find(e => e.is_principal) || m.empresas[0];
                   if (!mae) return null;
