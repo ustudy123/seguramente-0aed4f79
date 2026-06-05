@@ -149,18 +149,31 @@ serve(async (req) => {
       if (!emailRegex.test(email))
         return json({ error: `E-mail inválido: "${email}". Use o formato nome@dominio.com` }, 400);
 
-      // 1) Cria novo tenant
-      const { data: novoTenant, error: tErr } = await admin
-        .from("tenants")
-        .insert({
-          nome: payload.novoTenant.nome.trim(),
-          slug: payload.novoTenant.slug.trim(),
-          plano: payload.novoTenant.plano || "starter",
-          ativo: true,
-        })
-        .select()
-        .single();
-      if (tErr) return json({ error: `Erro ao criar tenant: ${tErr.message}` }, 400);
+      // 1) Cria novo tenant (com retry automático em caso de slug duplicado)
+      const baseSlug = payload.novoTenant.slug.trim();
+      let slugToUse = baseSlug;
+      let novoTenant: any = null;
+      let tErr: any = null;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const res = await admin
+          .from("tenants")
+          .insert({
+            nome: payload.novoTenant.nome.trim(),
+            slug: slugToUse,
+            plano: payload.novoTenant.plano || "starter",
+            ativo: true,
+          })
+          .select()
+          .single();
+        if (!res.error) { novoTenant = res.data; tErr = null; break; }
+        tErr = res.error;
+        const msg = (res.error.message || "").toLowerCase();
+        const isSlugDup = msg.includes("tenants_slug_key") || (msg.includes("duplicate") && msg.includes("slug"));
+        if (!isSlugDup) break;
+        const suffix = Math.random().toString(36).slice(2, 7);
+        slugToUse = `${baseSlug}-${suffix}`;
+      }
+      if (tErr || !novoTenant) return json({ error: `Erro ao criar tenant: ${tErr?.message || "desconhecido"}` }, 400);
 
       finalTenantId = novoTenant.id as string;
       const ownerInfo: { userId: string; inviteSent: boolean; emailJaExistia: boolean } = {
