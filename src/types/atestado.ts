@@ -8,7 +8,14 @@ export type AtestadoSubtipoAssistencial =
   | 'psicologico'
   | 'comparecimento'
   | 'acompanhante'
-  | 'acidente';
+  | 'acidente'
+  | 'licenca_maternidade'
+  | 'licenca_paternidade'
+  | 'licenca_obito'
+  | 'licenca_casamento'
+  | 'licenca_amamentacao'
+  | 'afastamento_administrativo'
+  | 'outras_licencas';
 
 export type AtestadoSubtipoOcupacional = 
   | 'admissional'
@@ -285,6 +292,13 @@ export const SUBTIPO_ASSISTENCIAL_LABELS: Record<AtestadoSubtipoAssistencial, st
   comparecimento: 'Atestado de Comparecimento',
   acompanhante: 'Atestado de Acompanhante',
   acidente: 'Atestado por Acidente',
+  licenca_maternidade: 'Licença Maternidade',
+  licenca_paternidade: 'Licença Paternidade',
+  licenca_obito: 'Licença Nojo (Óbito)',
+  licenca_casamento: 'Licença Gala (Casamento)',
+  licenca_amamentacao: 'Licença Amamentação',
+  afastamento_administrativo: 'Afastamento Administrativo',
+  outras_licencas: 'Outras Licenças',
 };
 
 export const SUBTIPO_OCUPACIONAL_LABELS: Record<AtestadoSubtipoOcupacional, string> = {
