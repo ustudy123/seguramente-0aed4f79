@@ -114,7 +114,40 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
          />
        </div>
  
-       <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail da Empresa</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="contato@empresa.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="telefone">Telefone</Label>
+            <Input
+              id="telefone"
+              placeholder="(00) 00000-0000"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="cnpj">CNPJ</Label>
+          <Input
+            id="cnpj"
+            placeholder="00.000.000/0000-00"
+            value={cnpj}
+            onChange={(e) => setCnpj(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
          <Label htmlFor="slug">Slug (identificador único)</Label>
          <Input
            id="slug"
