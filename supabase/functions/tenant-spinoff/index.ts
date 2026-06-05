@@ -64,11 +64,18 @@ serve(async (req) => {
       _user_id: userData.user.id,
       _minimum_role: "admin",
     });
+    
+    console.log(`Checking permission for user ${userData.user.id} (${userData.user.email}): canMigrate=${canMigrate}, roleErr=${roleErr?.message}`);
+
     if (roleErr) {
       return json({ error: `Falha ao validar permissão: ${roleErr.message}` }, 500);
     }
     if (!canMigrate) {
-      return json({ error: "Acesso negado: apenas administradores e donos podem realizar migrações." }, 403);
+      // Let's check if the user is a super_admin as a fallback
+      const { data: isSuperAdmin } = await admin.from('user_roles').select('role').eq('user_id', userData.user.id).eq('role', 'super_admin').maybeSingle();
+      if (!isSuperAdmin) {
+        return json({ error: "Acesso negado: apenas administradores e donos podem realizar migrações." }, 403);
+      }
     }
 
     const payload = (await req.json()) as Payload;
