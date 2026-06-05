@@ -119,6 +119,8 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   // Calcula a principal automática do lote
   const principalAutomaticaId = useMemo(() => {
+    if (selecionadas.length === 0) return null;
+
     const matriz = selecionadas.find(e => e.tipo_unidade === 'matriz');
     if (matriz) return matriz.id;
     
