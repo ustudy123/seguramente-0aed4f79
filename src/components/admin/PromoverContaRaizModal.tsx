@@ -103,9 +103,15 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
 
   const reset = () => {
     setStep(1);
-    setSelectedIds(new Set());
+    setSelectedIds(new Set(preselectedEmpresaId ? [preselectedEmpresaId] : []));
     setSearch("");
-    setNovoTenant({ nome: "", slug: "", plano: "starter" });
+    setNovoTenant({
+      nome: preselectedEmpresaNome || "",
+      slug: preselectedEmpresaNome
+        ? preselectedEmpresaNome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)
+        : "",
+      plano: "starter"
+    });
     setOwner({ email: "", nome: "", password: "", inviteMode: true });
     setConfirmText("");
     setConfirmCheck(false);
@@ -278,8 +284,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                     : "Nenhuma empresa encontrada"}
                 </p>
               ) : (
-
-                {(() => {
+                (() => {
                   // Identifica qual seria a "principal" do novo grupo (Matriz ou a mais antiga)
                   const matriz = selecionadas.find(e => e.tipo_unidade === 'matriz');
                   const oldest = [...selecionadas].sort((a, b) => {
@@ -330,7 +335,7 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
                       </label>
                     );
                   });
-                })()}
+                })()
               )}
             </div>
 
@@ -440,92 +445,55 @@ export function PromoverContaRaizModal({ open, onOpenChange, tenantId, tenantNom
           </div>
         )}
 
-        {/* STEP 3 — Dry run */}
+        {/* STEP 3 — Dry Run Results */}
         {step === 3 && dryRun && (
           <div className="space-y-4">
-            <Alert>
-              <Database className="w-4 h-4" />
-              <AlertDescription className="text-sm">
-                Serão migrados <strong>{dryRun.total_registros}</strong> registros de{" "}
-                <strong>{dryRun.total_empresas}</strong> empresa(s), distribuídos em{" "}
-                <strong>{Object.keys(dryRun.por_tabela || {}).length}</strong> tabelas.
-              </AlertDescription>
-            </Alert>
+            <div className="p-3 bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200">
+              <h4 className="font-semibold flex items-center gap-2"><Database className="w-4 h-4" /> Resumo da Migração</h4>
+              <p className="text-sm mt-1">
+                Foram encontrados <strong>{dryRun.total_registros}</strong> registros operacionais vinculados às {selectedIds.size} empresas.
+              </p>
+            </div>
 
-            {Array.isArray(dryRun.empresas) && dryRun.empresas.length > 0 && (
-              <div className="border rounded-md p-3 space-y-1.5 max-h-40 overflow-y-auto">
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Empresas no lote:</p>
-                {dryRun.empresas.map((e: any) => (
-                  <div key={e.id} className="flex items-center gap-2 text-xs">
-                    <Building2 className="w-3 h-3 text-muted-foreground" />
-                    <span className="flex-1 truncate">{e.razao_social}</span>
-                    {e.tipo_unidade === "matriz" && <Badge variant="default" className="h-4 px-1 text-[10px]">M</Badge>}
-                    {e.tipo_unidade === "filial" && e.matriz_selecionada && (
-                      <Badge variant="secondary" className="h-4 px-1 text-[10px] gap-0.5">
-                        <GitBranch className="w-2.5 h-2.5" /> vinculada
-                      </Badge>
-                    )}
-                    {e.tipo_unidade === "filial" && !e.matriz_selecionada && (
-                      <Badge variant="outline" className="h-4 px-1 text-[10px]">solta</Badge>
-                    )}
-                  </div>
-                ))}
+            <div className="border rounded-md overflow-hidden">
+              <div className="bg-muted p-2 text-xs font-semibold grid grid-cols-2 border-b">
+                <span>Tabela</span>
+                <span className="text-right">Registros</span>
               </div>
-            )}
-
-            <div className="max-h-60 overflow-y-auto border rounded-md p-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Registros por tabela:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(dryRun.por_tabela || {}).map(([tabela, n]) => (
-                  <div key={tabela} className="flex items-center justify-between text-xs py-1 border-b last:border-0">
-                    <code className="text-muted-foreground">{tabela}</code>
-                    <Badge variant="secondary">{n as number}</Badge>
+              <div className="max-h-48 overflow-y-auto">
+                {Object.entries(dryRun.por_tabela || {}).map(([table, count]) => (
+                  <div key={table} className="p-2 text-xs grid grid-cols-2 border-b last:border-0 hover:bg-muted/30">
+                    <span className="font-mono">{table}</span>
+                    <span className="text-right">{count as number}</span>
                   </div>
                 ))}
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>Para confirmar a migração definitiva, digite <strong>{palavraConfirmacao}</strong>:</Label>
+              <Input
+                placeholder="Digite a palavra de confirmação"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+              />
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox id="conf" checked={confirmCheck} onCheckedChange={(v) => setConfirmCheck(!!v)} />
+                <label htmlFor="conf" className="text-sm text-destructive font-medium cursor-pointer">
+                  Estou ciente de que esta operação é irreversível e o acesso atual será perdido.
+                </label>
+              </div>
+            </div>
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(2)}>Voltar</Button>
-              <Button onClick={() => setStep(4)}>Próximo</Button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4 — Confirmação */}
-        {step === 4 && (
-          <div className="space-y-4">
-            <Alert variant="destructive">
-              <AlertTriangle className="w-4 h-4" />
-              <AlertDescription className="text-sm">
-                Esta operação é <strong>definitiva e irreversível</strong>. {tenantNome} perderá acesso completo às{" "}
-                {selectedIds.size} empresa(s) migrada(s). Acesso futuro só será possível se a nova Conta-Raiz conceder.
-              </AlertDescription>
-            </Alert>
-            <div>
-              <Label>
-                Para confirmar, digite exatamente: <strong>{palavraConfirmacao}</strong>
-              </Label>
-              <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} />
-            </div>
-            <div className="flex items-start gap-2">
-              <Checkbox id="conf" checked={confirmCheck} onCheckedChange={(c) => setConfirmCheck(!!c)} />
-              <label htmlFor="conf" className="text-sm">
-                Entendo que esta operação é definitiva, sem rollback, e o tenant de origem perderá acesso permanentemente a todas as empresas selecionadas.
-              </label>
-            </div>
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(3)} disabled={executing}>Voltar</Button>
               <Button
                 variant="destructive"
-                disabled={
-                  executing ||
-                  confirmText.trim() !== palavraConfirmacao ||
-                  !confirmCheck
-                }
+                disabled={confirmText !== palavraConfirmacao || !confirmCheck || executing}
                 onClick={executar}
               >
-                {executing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
-                Promover a Conta-Raiz
+                {executing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Confirmar e Promover
               </Button>
             </div>
           </div>
