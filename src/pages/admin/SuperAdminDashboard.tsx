@@ -151,13 +151,15 @@ export default function SuperAdminDashboard() {
 
           <TabsContent value="overview"><SuperAdminOverview /></TabsContent>
 
-          <TabsContent value="tenants">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Empresas Cadastradas</CardTitle>
+                <div>
+                  <CardTitle>Empresas Cadastradas</CardTitle>
+                  <CardDescription>Principais empresas (Matrizes) e suas filiais agrupadas.</CardDescription>
+                </div>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Buscar empresa..." value={searchTerm}
+                  <Input placeholder="Buscar empresa ou CNPJ..." value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
                 </div>
               </CardHeader>
@@ -171,7 +173,7 @@ export default function SuperAdminDashboard() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Empresa</TableHead>
-                        <TableHead>Slug</TableHead>
+                        <TableHead>CNPJ</TableHead>
                         <TableHead>Plano</TableHead>
                         <TableHead className="text-center">Usuários</TableHead>
                         <TableHead className="text-center">Colab.</TableHead>
@@ -184,7 +186,7 @@ export default function SuperAdminDashboard() {
                       {filteredTenants.map((tenant) => (
                         <TableRow key={tenant.id}>
                           <TableCell className="font-medium">{tenant.nome}</TableCell>
-                          <TableCell><code className="text-xs bg-muted px-2 py-1 rounded">{tenant.slug}</code></TableCell>
+                          <TableCell><code className="text-xs bg-muted px-2 py-1 rounded">{tenant.cnpj || "—"}</code></TableCell>
                           <TableCell><Badge variant="outline" className="capitalize">{tenant.plano}</Badge></TableCell>
                           <TableCell className="text-center">{tenant.total_usuarios}</TableCell>
                           <TableCell className="text-center">{tenant.total_colaboradores}</TableCell>
@@ -236,7 +238,7 @@ export default function SuperAdminDashboard() {
               </CardContent>
             </Card>
 
-            <div className="mt-6">
+            <div className="mt-8 pt-8 border-t">
               <EmpresasPromociveisPanel />
             </div>
           </TabsContent>
