@@ -379,14 +379,15 @@ export function usePerfisAcesso() {
         
         if (permissoes.length > 0) {
           const permsToInsert = permissoes.map((p) => {
-            const { id: _, ...pWithoutId } = p as any;
+            const { id: _, created_at: __, ...pClean } = p as any;
             return {
-              ...pWithoutId,
-            perfil_id: id,
-            tenant_id: tenantId,
-            ativo: p.ativo !== false, // Ensure it's true unless explicitly false
-            is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
-          }));
+              ...pClean,
+              perfil_id: id,
+              tenant_id: tenantId,
+              ativo: p.ativo !== false,
+              is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
+            };
+          });
 
           // Insert in small batches if necessary, but here we try all at once
           const { error: insertError } = await fromTable("perfil_permissoes").insert(permsToInsert);
