@@ -377,26 +377,49 @@ export function usePerfisAcesso() {
       
       // Update permissions if provided
       if (permissoes !== undefined) {
-        // Delete all existing permissions first to ensure clean state
-        const { error: deleteError } = await fromTable("perfil_permissoes").delete().eq("perfil_id", id);
-        if (deleteError) throw deleteError;
-        
-        if (permissoes.length > 0) {
-          const permsToInsert = permissoes.map((p) => {
-            // Remove ID if it exists to allow fresh insertion
-            const { id: _, created_at: __, updated_at: ___, ...pClean } = p as any;
-            return {
-              ...pClean,
-              perfil_id: id,
-              tenant_id: tenantId,
-              ativo: p.ativo !== false,
-              is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
-            };
-          });
+        // Use a more robust approach for updating permissions
+        try {
+          // 1. Delete all existing permissions first to ensure clean state
+          // Using supabase directly for more predictable behavior in delete
+          const { error: deleteError } = await supabase
+            .from("perfil_permissoes")
+            .delete()
+            .eq("perfil_id", id);
+            
+          if (deleteError) {
+            console.error("Erro ao deletar permissões anteriores:", deleteError);
+            throw deleteError;
+          }
+          
+          if (permissoes.length > 0) {
+            const permsToInsert = permissoes.map((p) => {
+              // Ensure we don't send any fields that might cause primary key or metadata conflicts
+              // We only want the core configuration fields
+              return {
+                perfil_id: id,
+                tenant_id: tenantId!,
+                modulo: p.modulo!,
+                acao: p.acao!,
+                escopo: p.escopo || 'empresa_inteira',
+                ativo: p.ativo !== false,
+                is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
+                recurso: p.recurso || null,
+              };
+            });
 
-          // Insert in small batches if necessary, but here we try all at once
-          const { error: insertError } = await fromTable("perfil_permissoes").insert(permsToInsert);
-          if (insertError) throw insertError;
+            // 2. Insert new permissions
+            const { error: insertError } = await supabase
+              .from("perfil_permissoes")
+              .insert(permsToInsert);
+              
+            if (insertError) {
+              console.error("Erro ao inserir novas permissões:", insertError);
+              throw insertError;
+            }
+          }
+        } catch (error) {
+          console.error("Falha crítica no sincronismo de permissões:", error);
+          throw error;
         }
       }
       
