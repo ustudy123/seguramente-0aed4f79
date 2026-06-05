@@ -157,7 +157,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const watchUnidade = form.watch("unidade_afastamento");
 
   useEffect(() => {
-    if (watchDataInicio && watchDiasAfastamento && watchDiasAfastamento > 0 && watchUnidade === "dias") {
+    // Só calcula se for em dias e tiver data de início e quantidade de dias
+    if (watchDataInicio && watchDiasAfastamento !== undefined && watchUnidade === "dias") {
+      // Se dias for 0 ou negativo (prazo indeterminado ou apenas comparecimento), não gera data fim automática
+      if (watchDiasAfastamento <= 0) {
+        form.setValue("data_fim_afastamento", undefined);
+        return;
+      }
+      
       const dataFim = new Date(watchDataInicio);
       dataFim.setDate(dataFim.getDate() + watchDiasAfastamento - 1); // -1 pois o dia inicial conta
       form.setValue("data_fim_afastamento", dataFim);
@@ -978,11 +985,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                           <FormControl>
                             <Input 
                               type="number" 
-                              placeholder="Dias" 
+                              placeholder="Dias (0 = Indeterminado)" 
                               {...field}
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
                           </FormControl>
+                          <FormDescription className="text-[10px]">
+                            Use 0 para prazo indeterminado.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
