@@ -260,7 +260,24 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
      },
    });
  
-   return {
+  // Alternar unidade principal (matriz) de um tenant
+  const setPrincipalEmpresaMutation = useMutation({
+    mutationFn: async ({ empresaId, tenantId }: { empresaId: string; tenantId: string }) => {
+      const { error } = await supabase.rpc('superadmin_set_principal_empresa', {
+        _empresa_id: empresaId,
+        _tenant_id: tenantId
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-empresas-all'] });
+      queryClient.invalidateQueries({ queryKey: ['spinoff-empresas'] });
+    },
+  });
+
+  return {
      // Estado
      isSuperAdmin,
      tenants,
@@ -273,7 +290,8 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
       toggleTenant: toggleTenantMutation.mutateAsync,
       deleteTenant: deleteTenantMutation.mutateAsync,
       createTenantOwner: createTenantOwnerMutation.mutateAsync,
-     getTenantUsers,
+      setPrincipalEmpresa: setPrincipalEmpresaMutation.mutateAsync,
+      getTenantUsers,
  
      // Status
      isCreatingTenant: createTenantMutation.isPending,

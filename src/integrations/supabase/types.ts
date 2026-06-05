@@ -21944,6 +21944,10 @@ export type Database = {
         Returns: Json
       }
       superadmin_psicossocial_overview: { Args: never; Returns: Json }
+      superadmin_set_principal_empresa: {
+        Args: { _empresa_id: string; _tenant_id: string }
+        Returns: undefined
+      }
       superadmin_spinoff_dry_run: {
         Args: { p_empresa_id: string }
         Returns: Json
