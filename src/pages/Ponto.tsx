@@ -126,11 +126,15 @@ const Ponto = () => {
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ hora: string; tipo: string }>>();
+    const map = new Map<string, Array<{ hora: string; tipo: string; original: boolean }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push({ hora: m.hora_marcacao, tipo: m.tipo_marcacao });
+      map.get(k)!.push({ 
+        hora: m.hora_marcacao, 
+        tipo: m.tipo_marcacao,
+        original: m.marcacao_original ?? true 
+      });
     }
     return map;
   }, [marcacoesDoDia]);
