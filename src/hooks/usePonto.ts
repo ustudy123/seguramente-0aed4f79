@@ -365,6 +365,7 @@ export function usePonto() {
       const { data, error } = await fromTable("ponto_ajustes")
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           colaborador_id: colaboradorId,
           colaborador_nome: colaboradorNome,
           colaborador_cpf: colaboradorCpf,
