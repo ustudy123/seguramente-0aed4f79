@@ -189,9 +189,12 @@ export function usePonto() {
           .eq("tenant_id", tenantId)
           .gte("created_at", desde.toISOString());
 
-        // Empresa ativa OU registros sem empresa atribuída (histórico)
+        // Empresa ativa OU registros sem empresa atribuída (histórico) OU registros do tenant base
         if (empresaAtivaId) {
           query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null,empresa_id.eq.${tenantId}`);
+        } else {
+          // Se não houver empresa ativa, mostra apenas o que é do tenant base ou nulo (ajustes globais)
+          query = query.or(`empresa_id.is.null,empresa_id.eq.${tenantId}`);
         }
 
         const { data, error } = await query.order("created_at", { ascending: false }) as { data: PontoAjuste[] | null; error: Error | null };
