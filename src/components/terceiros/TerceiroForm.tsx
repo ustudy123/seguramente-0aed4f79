@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
 import { formatCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { formatCpf, validateCpf } from "@/lib/cpf";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -33,7 +34,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [unidadesText, setUnidadesText] = useState((initial?.unidades || []).join(", "));
   const [setoresText, setSetoresText] = useState((initial?.setores || []).join(", "));
-  const emptyForm: Partial<Terceiro> = {
+  const emptyForm: Partial<Terceiro> & { tipo_pessoa?: 'pj' | 'pf' } = {
     razao_social: "",
     nome_fantasia: "",
     cnpj: "",
@@ -51,15 +52,18 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     contrato_fim: "",
     atividade_risco: false,
     observacoes: "",
+    tipo_pessoa: "pj",
   };
 
-  const [form, setForm] = useState<Partial<Terceiro>>(emptyForm);
+  const [form, setForm] = useState<Partial<Terceiro> & { tipo_pessoa?: 'pj' | 'pf' }>(emptyForm);
 
   // Reseta o formulário ao abrir/fechar ou trocar o registro em edição
   useEffect(() => {
     if (!open) return;
     
     const base = initial || emptyForm;
+    
+    const isPf = initial?.cnpj && initial.cnpj.replace(/\D/g, "").length === 11;
     
     setForm({
       razao_social: base.razao_social || "",
@@ -79,6 +83,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       contrato_fim: base.contrato_fim || "",
       atividade_risco: base.atividade_risco || false,
       observacoes: base.observacoes || "",
+      tipo_pessoa: isPf ? "pf" : "pj",
     });
     setUnidadesText((base.unidades || []).join(", "));
     setSetoresText((base.setores || []).join(", "));
@@ -95,7 +100,11 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   };
 
   const handleCnpjChange = (value: string) => {
-    set("cnpj", formatCnpj(value));
+    if (form.tipo_pessoa === "pj") {
+      set("cnpj", formatCnpj(value));
+    } else {
+      set("cnpj", formatCpf(value));
+    }
   };
 
   const handleBuscarCnpj = useCallback(async () => {
@@ -132,8 +141,9 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     if (!form.razao_social || !form.cnpj) return;
     
     // Clean empty date strings to null to avoid "invalid input syntax for type date" in Postgres
+    const { tipo_pessoa, ...baseData } = form;
     const submissionData = {
-      ...form,
+      ...baseData,
       contrato_inicio: form.contrato_inicio || null,
       contrato_fim: form.contrato_fim || null,
     };
@@ -184,19 +194,49 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           <DialogTitle>{initial ? "Editar Terceiro" : "Novo Terceiro"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label>CNPJ *</Label>
-            <div className="flex gap-1">
-              <Input value={form.cnpj || ""} onChange={(e) => handleCnpjChange(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
-              <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
-                {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Tipo de Pessoa *</Label>
+              <Select 
+                value={form.tipo_pessoa} 
+                onValueChange={(v) => {
+                  setForm(p => ({ 
+                    ...p, 
+                    tipo_pessoa: v as 'pf' | 'pj',
+                    cnpj: "" // Clear document on switch
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pj">Pessoa Jurídica (CNPJ)</SelectItem>
+                  <SelectItem value="pf">Pessoa Física (CPF)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{form.tipo_pessoa === 'pj' ? 'CNPJ *' : 'CPF *'}</Label>
+              <div className="flex gap-1">
+                <Input 
+                  value={form.cnpj || ""} 
+                  onChange={(e) => handleCnpjChange(e.target.value)} 
+                  placeholder={form.tipo_pessoa === 'pj' ? "00.000.000/0000-00" : "000.000.000-00"} 
+                  maxLength={form.tipo_pessoa === 'pj' ? 18 : 14} 
+                />
+                {form.tipo_pessoa === 'pj' && (
+                  <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
+                    {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Razão Social *</Label>
+              <Label>{form.tipo_pessoa === 'pf' ? 'Nome Completo' : 'Razão Social'} *</Label>
               <Input value={form.razao_social || ""} onChange={(e) => set("razao_social", e.target.value)} />
             </div>
             <div>

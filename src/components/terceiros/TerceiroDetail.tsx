@@ -15,6 +15,7 @@ import { DocumentoUploadForm } from "./DocumentoUploadForm";
 import { TreinamentoForm } from "./TreinamentoForm";
 import { format } from "date-fns";
 import { formatCnpj } from "@/lib/brasilapi";
+import { formatCpf } from "@/lib/cpf";
 
 const statusIcon = (s: string) => {
   switch (s) {
@@ -55,13 +56,15 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
   const [showTrabDocForm, setShowTrabDocForm] = useState(false);
   const [showTreinForm, setShowTreinForm] = useState(false);
 
+  const isCpf = terceiro.cnpj?.length === 11;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
           <h2 className="text-xl font-bold">{terceiro.razao_social}</h2>
-          <p className="text-sm text-muted-foreground">CNPJ: {formatCnpj(terceiro.cnpj)}</p>
+          <p className="text-sm text-muted-foreground">{isCpf ? 'CPF' : 'CNPJ'}: {isCpf ? formatCpf(terceiro.cnpj) : formatCnpj(terceiro.cnpj)}</p>
         </div>
         {statusBadge(terceiro.status)}
         {terceiro.atividade_risco && (

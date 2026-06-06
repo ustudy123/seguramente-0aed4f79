@@ -72,7 +72,7 @@ export function useTerceiros() {
     let q = fromTable("terceiros")
       .select("id, razao_social")
       .eq("tenant_id", tenantId)
-      .eq("cnpj", cnpj)
+      .or(`cnpj.eq.${cnpj}`)
       .limit(1);
     if (ignoreId) q = q.neq("id", ignoreId);
     const { data, error } = await q;
@@ -86,16 +86,19 @@ export function useTerceiros() {
   const createTerceiro = useMutation({
     mutationFn: async (payload: Partial<Terceiro>) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const cnpj = cleanCnpj(payload.cnpj);
-      if (!cnpj || cnpj.length !== 14) {
-        throw new Error("CNPJ inválido. Informe os 14 dígitos.");
+      const doc = cleanCnpj(payload.cnpj);
+      const isCpf = doc.length === 11;
+      const isCnpj = doc.length === 14;
+
+      if (!isCpf && !isCnpj) {
+        throw new Error("Documento inválido. Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).");
       }
-      await ensureCnpjUnique(cnpj);
+      await ensureCnpjUnique(doc);
       
       // Clean dates: empty strings to null for Postgres
       const finalPayload = {
         ...payload,
-        cnpj,
+        cnpj: doc,
         tenant_id: tenantId,
         empresa_id: empresaAtivaId || null,
         contrato_inicio: payload.contrato_inicio || null,
@@ -119,12 +122,15 @@ export function useTerceiros() {
   const updateTerceiro = useMutation({
     mutationFn: async ({ id, ...payload }: Partial<Terceiro> & { id: string }) => {
       if (payload.cnpj !== undefined) {
-        const cnpj = cleanCnpj(payload.cnpj);
-        if (!cnpj || cnpj.length !== 14) {
-          throw new Error("CNPJ inválido. Informe os 14 dígitos.");
+        const doc = cleanCnpj(payload.cnpj);
+        const isCpf = doc.length === 11;
+        const isCnpj = doc.length === 14;
+
+        if (doc && !isCpf && !isCnpj) {
+          throw new Error("Documento inválido. Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).");
         }
-        await ensureCnpjUnique(cnpj, id);
-        payload.cnpj = cnpj;
+        await ensureCnpjUnique(doc, id);
+        payload.cnpj = doc;
       }
 
       // Clean dates: empty strings to null
