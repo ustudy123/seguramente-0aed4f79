@@ -46,6 +46,7 @@ import { PontoAlertasTab } from "@/components/ponto/PontoAlertasTab";
 import { PontoRelatoriosTab } from "@/components/ponto/PontoRelatoriosTab";
 import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
+import { PontoAjustesTab } from "@/components/ponto/PontoAjustesTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
@@ -551,8 +552,9 @@ const Ponto = () => {
         {/* Ajustes */}
         <TabsContent value="ajustes" className="space-y-5">
           {(() => {
+            const pendentesSomente = ajustesPendentes.filter(a => a.status === "pendente");
             const total = ajustesPendentes.length;
-            const pend = ajustesPendentes.filter(a => a.status === "pendente").length;
+            const pend = pendentesSomente.length;
             const apr = ajustesPendentes.filter(a => a.status === "aprovado").length;
             const rej = ajustesPendentes.filter(a => a.status === "rejeitado").length;
             return (
