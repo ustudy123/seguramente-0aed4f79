@@ -72,7 +72,7 @@ export function useTerceiros() {
     let q = fromTable("terceiros")
       .select("id, razao_social")
       .eq("tenant_id", tenantId)
-      .eq("cnpj", cnpj)
+      .or(`cnpj.eq.${cnpj}`)
       .limit(1);
     if (ignoreId) q = q.neq("id", ignoreId);
     const { data, error } = await q;
