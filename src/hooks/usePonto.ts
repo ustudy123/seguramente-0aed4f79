@@ -191,7 +191,7 @@ export function usePonto() {
 
         // Empresa ativa OU registros sem empresa atribuída (histórico)
         if (empresaAtivaId) {
-          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null,empresa_id.eq.${tenantId}`);
         }
 
         const { data, error } = await query.order("created_at", { ascending: false }) as { data: PontoAjuste[] | null; error: Error | null };
