@@ -82,8 +82,8 @@ export default function CompletarCadastro() {
     setIsUploadingPhoto(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${colaborador.tenant_id}/${colaborador.id}-${Date.now()}.${fileExt}`;
-      const filePath = `colaboradores/fotos/${fileName}`;
+      const fileName = `${colaborador.id}-${Date.now()}.${fileExt}`;
+      const filePath = `colaboradores/fotos/${colaborador.tenant_id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
