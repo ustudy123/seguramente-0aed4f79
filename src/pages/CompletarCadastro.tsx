@@ -95,7 +95,7 @@ export default function CompletarCadastro() {
       if (uploadError) throw uploadError;
 
       const { error: updateError } = await supabase.rpc("update_admissao_foto_by_token", {
-        _token: token, // Changed to token directly as it is a UUID string that fits the parameter
+        _token: token,
         _foto_url: filePath,
       });
 
@@ -114,7 +114,7 @@ export default function CompletarCadastro() {
   const handleUploadDocument = async (documentoId: string, file: File) => {
     try {
       const safeFileName = buildSafeStorageFileName(documentoId, file.name);
-      const filePath = `${colaborador.tenant_id}/admissoes/${colaborador.id}/${safeFileName}`;
+      const filePath = `admissoes/${colaborador.tenant_id}/${colaborador.id}/${safeFileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
