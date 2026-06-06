@@ -41,11 +41,12 @@ export function TerceiroList({ terceiros, onSelect, onEdit, onDelete }: Props) {
     <div className="space-y-3">
       {terceiros.map((t) => {
         const st = statusMap[t.status] || statusMap.liberado;
+        const isCpf = t.cnpj?.length === 11;
         return (
           <Card key={t.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(t)}>
             <CardContent className="p-4 flex items-center gap-4">
               <div className="p-2 rounded-lg bg-muted">
-                <Building2 className="w-5 h-5 text-primary" />
+                {isCpf ? <User className="w-5 h-5 text-primary" /> : <Building2 className="w-5 h-5 text-primary" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
