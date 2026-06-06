@@ -127,10 +127,7 @@ export function SolicitarAjusteFolhaInterno({
       ((marcRes.data as any[]) || []).forEach((m) => {
         if (!map[m.data_marcacao]) map[m.data_marcacao] = {};
         const tipo = m.tipo_marcacao as TipoMarc;
-        // Se já existe uma marcação desse tipo, manter a que não é correção (original) se possível,
-        // mas aqui pegamos a primeira que aparecer pois o order by hora_marcacao garante a ordem cronológica.
-        // O ideal é que se houver mais de uma, a UI mostre que há algo estranho, mas por hora vamos garantir 
-        // que mapeamos corretamente os tipos.
+        // Se houver mais de uma marcação do mesmo tipo, pegamos a primeira
         if (!map[m.data_marcacao][tipo]) {
           map[m.data_marcacao][tipo] = fmtHora(m.hora_marcacao);
         }
@@ -363,7 +360,9 @@ export function SolicitarAjusteFolhaInterno({
                   </SelectTrigger>
                   <SelectContent>
                     {colaboradores.map((c) => (
-                      <SelectItem key={c.id} value={c.id} className="text-sm">{c.nome_completo}</SelectItem>
+                      <SelectItem key={c.id} value={c.id} className="text-sm">
+                        {c.nome_completo.normalize('NFC')}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
