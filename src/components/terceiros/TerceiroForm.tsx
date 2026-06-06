@@ -348,7 +348,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
                 value={unidadesText}
                 onChange={(e) => {
                   setUnidadesText(e.target.value);
-                  set("unidades", e.target.value.split(",").map((s) => s.trim()).filter(Boolean));
+                  const units = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
+                  setForm(p => ({ ...p, unidades: units }));
                 }}
                 onBlur={() => setUnidadesText((form.unidades || []).join(", "))}
                 placeholder="Ex: Matriz, Filial SP (separar por vírgula)"
@@ -360,7 +361,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
                 value={setoresText}
                 onChange={(e) => {
                   setSetoresText(e.target.value);
-                  set("setores", e.target.value.split(",").map((s) => s.trim()).filter(Boolean));
+                  const sectors = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
+                  setForm(p => ({ ...p, setores: sectors }));
                 }}
                 onBlur={() => setSetoresText((form.setores || []).join(", "))}
                 placeholder="Ex: Produção, Manutenção (separar por vírgula)"
