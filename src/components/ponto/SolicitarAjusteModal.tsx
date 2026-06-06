@@ -51,6 +51,10 @@ const JUSTIFICATIVAS_PRESET = [
 function fmtHora(h: string) { return (h || "").slice(0, 5); }
 function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
 function isoToBR(iso: string) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+function toMin(s?: string): number | null {
+  if (!s || !/^\d{2}:\d{2}/.test(s)) return null;
+  return Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
+}
 function diaSemana(iso: string) {
   const ds = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   return ds[new Date(iso + "T12:00:00").getDay()];
@@ -188,6 +192,15 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
           ? ed.justificativaOutro.trim()
           : ed.justificativaPreset.trim();
       if (!motivo || motivo.length < 5) return `Selecione uma justificativa para ${isoToBR(data)}.`;
+
+      // Validação de ordem cronológica dos horários
+      const h = { ...marcsPorDia[data], ...ed.horarios };
+      const e = toMin(h.entrada), sa = toMin(h.saida_almoco), ra = toMin(h.retorno_almoco), s = toMin(h.saida);
+      
+      if (e !== null && sa !== null && sa <= e) return `Em ${isoToBR(data)}, a Saída Almoço deve ser após a Entrada.`;
+      if (sa !== null && ra !== null && ra <= sa) return `Em ${isoToBR(data)}, o Retorno Almoço deve ser após a Saída Almoço.`;
+      if (ra !== null && s !== null && s <= ra) return `Em ${isoToBR(data)}, a Saída deve ser após o Retorno Almoço.`;
+      if (e !== null && s !== null && s <= e) return `Em ${isoToBR(data)}, a Saída deve ser após a Entrada.`;
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";

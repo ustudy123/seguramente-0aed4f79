@@ -176,7 +176,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                   </div>
                   {colab.totalPendentes > 0 && (
                     <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 font-semibold">
-                      {colab.totalPendentes} pendente{colab.totalPendentes > 1 ? "s" : ""}
+                      {colab.days.filter(d => d.items.some(a => a.status === "pendente")).length} dia(s) pendente(s)
                     </Badge>
                   )}
                 </button>
