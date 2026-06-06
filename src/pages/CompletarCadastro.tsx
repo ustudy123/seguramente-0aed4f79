@@ -36,7 +36,7 @@ export default function CompletarCadastro() {
     try {
       setLoading(true);
       const { data, error } = await supabase.rpc("get_admissao_by_token", {
-        _token: token as string,
+        _token: token,
       });
 
       if (error || !data) {
@@ -57,7 +57,7 @@ export default function CompletarCadastro() {
 
   const fetchDocumentos = async () => {
     const { data, error } = await supabase.rpc("get_admissao_documentos_by_token", {
-      _token: token as string,
+      _token: token,
     });
 
     if (error) {
@@ -73,7 +73,7 @@ export default function CompletarCadastro() {
 
   const ensureDocumentos = async () => {
     const { error } = await supabase.rpc("ensure_admissao_documentos_by_token", {
-      _token: token as string,
+      _token: token,
     });
 
     if (error) throw error;
