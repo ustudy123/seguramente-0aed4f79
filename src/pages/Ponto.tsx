@@ -112,7 +112,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("colaborador_cpf,hora_marcacao,tipo_marcacao")
+        .select("colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
