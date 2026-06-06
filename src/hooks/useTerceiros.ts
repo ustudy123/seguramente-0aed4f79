@@ -86,11 +86,14 @@ export function useTerceiros() {
   const createTerceiro = useMutation({
     mutationFn: async (payload: Partial<Terceiro>) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const cnpj = cleanCnpj(payload.cnpj);
-      if (!cnpj || cnpj.length !== 14) {
-        throw new Error("CNPJ inválido. Informe os 14 dígitos.");
+      const doc = cleanCnpj(payload.cnpj);
+      const isCpf = doc.length === 11;
+      const isCnpj = doc.length === 14;
+
+      if (!isCpf && !isCnpj) {
+        throw new Error("Documento inválido. Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).");
       }
-      await ensureCnpjUnique(cnpj);
+      await ensureCnpjUnique(doc);
       
       // Clean dates: empty strings to null for Postgres
       const finalPayload = {
