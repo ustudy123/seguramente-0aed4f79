@@ -45,8 +45,9 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
 
     const map = new Map<string, { nome: string; cpf: string; days: Map<string, PontoAjuste[]> }>();
     for (const a of filtered) {
-      if (!map.has(a.colaborador_id)) {
-        map.set(a.colaborador_id, { nome: a.colaborador_nome, cpf: a.colaborador_cpf, days: new Map() });
+      const colabId = a.colaborador_id;
+      if (!map.has(colabId)) {
+        map.set(colabId, { nome: a.colaborador_nome, cpf: a.colaborador_cpf, days: new Map() });
       }
       const colab = map.get(a.colaborador_id)!;
       const dateKey = (a.data_referencia || "").toString().slice(0, 10);
