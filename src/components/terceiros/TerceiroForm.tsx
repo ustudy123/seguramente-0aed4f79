@@ -141,8 +141,9 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     if (!form.razao_social || !form.cnpj) return;
     
     // Clean empty date strings to null to avoid "invalid input syntax for type date" in Postgres
+    const { tipo_pessoa, ...baseData } = form;
     const submissionData = {
-      ...form,
+      ...baseData,
       contrato_inicio: form.contrato_inicio || null,
       contrato_fim: form.contrato_fim || null,
     };
