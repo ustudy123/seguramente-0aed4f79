@@ -355,32 +355,28 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Unidades onde atua</Label>
-              <Input
-                value={unidadesText}
-                onChange={(e) => {
-                  setUnidadesText(e.target.value);
-                  const units = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
-                  setForm(p => ({ ...p, unidades: units }));
-                }}
-                onBlur={() => setUnidadesText((form.unidades || []).join(", "))}
-                placeholder="Ex: Matriz, Filial SP (separar por vírgula)"
-              />
-            </div>
-            <div>
-              <Label>Setores onde pode atuar</Label>
-              <Input
-                value={setoresText}
-                onChange={(e) => {
-                  setSetoresText(e.target.value);
-                  const sectors = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
-                  setForm(p => ({ ...p, setores: sectors }));
-                }}
-                onBlur={() => setSetoresText((form.setores || []).join(", "))}
-                placeholder="Ex: Produção, Manutenção (separar por vírgula)"
-              />
-            </div>
+            <MultiSelectCombobox
+              label="Unidades onde atua"
+              options={unidadesOptions}
+              selected={form.unidades || []}
+              onToggle={(val) => {
+                const current = form.unidades || [];
+                const next = current.includes(val) ? current.filter(x => x !== val) : [...current, val];
+                set("unidades", next);
+              }}
+              placeholder="Selecionar unidades..."
+            />
+            <MultiSelectCombobox
+              label="Setores onde pode atuar"
+              options={setoresOptions}
+              selected={form.setores || []}
+              onToggle={(val) => {
+                const current = form.setores || [];
+                const next = current.includes(val) ? current.filter(x => x !== val) : [...current, val];
+                set("setores", next);
+              }}
+              placeholder="Selecionar setores..."
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -457,5 +453,108 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MultiSelectCombobox({
+  label,
+  options,
+  selected,
+  onToggle,
+  placeholder = "Pesquisar...",
+}: {
+  label: string;
+  options: string[];
+  selected: string[];
+  onToggle: (val: string) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredOptions = options.filter(opt => 
+    opt.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            className="w-full justify-between h-auto min-h-10 px-3 py-2 font-normal"
+          >
+            {selected.length === 0 ? (
+              <span className="text-muted-foreground">{placeholder}</span>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {selected.map((v) => (
+                  <Badge key={v} variant="secondary" className="text-xs">
+                    {v}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0" align="start">
+          <Command shouldFilter={false}>
+            <CommandInput 
+              placeholder={placeholder} 
+              value={search}
+              onValueChange={setSearch}
+            />
+            <CommandList>
+              <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+              <CommandGroup>
+                {filteredOptions.map((opt) => (
+                  <CommandItem
+                    key={opt}
+                    value={opt}
+                    onSelect={() => onToggle(opt)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selected.includes(opt) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {opt}
+                  </CommandItem>
+                ))}
+                {search && !options.some(o => o.toLowerCase() === search.toLowerCase()) && (
+                  <CommandItem
+                    value={search}
+                    onSelect={() => {
+                      onToggle(search);
+                      setSearch("");
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar "{search}"
+                  </CommandItem>
+                )}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {selected.map((v) => (
+            <Badge key={v} variant="outline" className="gap-1 text-xs">
+              {v}
+              <X
+                className="w-3 h-3 cursor-pointer hover:text-destructive"
+                onClick={() => onToggle(v)}
+              />
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
