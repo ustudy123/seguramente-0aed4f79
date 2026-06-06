@@ -169,7 +169,7 @@ export default function CompletarCadastro() {
       }
 
       const { error } = await supabase.rpc("update_admissao_documento_by_token", {
-        _token: token as string,
+        _token: token,
         _documento_id: documentoId,
         _arquivo_url: null as any,
         _arquivo_nome: null as any,
@@ -193,7 +193,7 @@ export default function CompletarCadastro() {
     await fetchDocumentos();
     const { data: freshList, error: freshErr } = await supabase.rpc(
       "get_admissao_documentos_by_token",
-      { _token: token as string }
+      { _token: token }
     );
     if (freshErr) {
       toast.error("Não foi possível validar os documentos. Tente novamente.");
@@ -209,7 +209,7 @@ export default function CompletarCadastro() {
     setIsSubmitting(true);
     try {
       const { error } = await supabase.rpc("finalizar_admissao_by_token", {
-        _token: token as string,
+        _token: token,
       });
 
       if (error) throw error;
