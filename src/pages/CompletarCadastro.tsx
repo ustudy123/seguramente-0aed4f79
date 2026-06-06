@@ -11,6 +11,7 @@ import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload"
 import { DocumentoStatus } from "@/types/admissao";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import { buildSafeStorageFileName } from "@/utils/storagePath";
+import { cn } from "@/lib/utils";
 
 export default function CompletarCadastro() {
   const { token } = useParams();
@@ -267,12 +268,52 @@ export default function CompletarCadastro() {
             <CardDescription>Esta foto será usada no seu perfil e crachá.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
-            <Avatar className="h-32 w-32 border-4 border-primary/10">
-              <AvatarImage src={resolvedPhotoUrl || ""} />
-              <AvatarFallback className="bg-primary/5 text-primary text-4xl">
-                <User className="h-16 w-16" />
-              </AvatarFallback>
-            </Avatar>
+            <div 
+              className={cn(
+                "relative group cursor-pointer transition-all",
+                isUploadingPhoto && "opacity-50 cursor-not-allowed"
+              )}
+              onClick={() => !isUploadingPhoto && fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer.files?.[0];
+                if (file && file.type.startsWith('image/')) {
+                  handleUploadPhoto(file);
+                } else if (file) {
+                  toast.error("Por favor, envie apenas imagens.");
+                }
+              }}
+            >
+              <Avatar className="h-40 w-40 border-4 border-primary/10 transition-transform group-hover:scale-105">
+                <AvatarImage src={resolvedPhotoUrl || ""} />
+                <AvatarFallback className="bg-primary/5 text-primary text-4xl">
+                  <User className="h-20 w-20" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="h-10 w-10 text-white" />
+              </div>
+              {isUploadingPhoto && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+            
+            <div className="text-center">
+              <p className="text-sm font-medium text-primary mb-1">
+                Clique na imagem ou arraste sua foto aqui
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Formatos aceitos: JPG, PNG ou WebP
+              </p>
+            </div>
+
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
@@ -280,7 +321,7 @@ export default function CompletarCadastro() {
                 disabled={isUploadingPhoto}
               >
                 {isUploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Camera className="h-4 w-4 mr-2" />}
-                {colaborador.foto_url ? "Alterar Foto" : "Adicionar Foto"}
+                {colaborador.foto_url ? "Alterar Foto" : "Selecionar Foto"}
               </Button>
               <input 
                 type="file" 
