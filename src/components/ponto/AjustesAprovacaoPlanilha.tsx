@@ -45,10 +45,11 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
 
     const map = new Map<string, { nome: string; cpf: string; days: Map<string, PontoAjuste[]> }>();
     for (const a of filtered) {
-      if (!map.has(a.colaborador_id)) {
-        map.set(a.colaborador_id, { nome: a.colaborador_nome, cpf: a.colaborador_cpf, days: new Map() });
+      const colabId = a.colaborador_id;
+      if (!map.has(colabId)) {
+        map.set(colabId, { nome: a.colaborador_nome, cpf: a.colaborador_cpf, days: new Map() });
       }
-      const colab = map.get(a.colaborador_id)!;
+      const colab = map.get(colabId)!;
       const dateKey = (a.data_referencia || "").toString().slice(0, 10);
       if (!colab.days.has(dateKey)) colab.days.set(dateKey, []);
       colab.days.get(dateKey)!.push(a);
@@ -175,7 +176,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                     {isCollapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                     <Avatar className="h-9 w-9 shrink-0">
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                        {colab.nome.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                        {colab.nome.trim().split(/\s+/).map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">

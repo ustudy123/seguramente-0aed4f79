@@ -370,7 +370,7 @@ export function SolicitarAjusteFolhaInterno({
                   <SelectContent>
                     {colaboradores.map((c) => (
                       <SelectItem key={c.id} value={c.id} className="text-sm">
-                        {c.nome_completo.normalize('NFC')}
+                        {c.nome_completo}
                       </SelectItem>
                     ))}
                   </SelectContent>
