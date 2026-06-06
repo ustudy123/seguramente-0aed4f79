@@ -16788,6 +16788,7 @@ export type Database = {
           created_by_nome: string | null
           data_aprovacao: string | null
           data_referencia: string
+          empresa_id: string | null
           hora_original: string | null
           hora_solicitada: string | null
           horas_abonadas: number
@@ -16813,6 +16814,7 @@ export type Database = {
           created_by_nome?: string | null
           data_aprovacao?: string | null
           data_referencia: string
+          empresa_id?: string | null
           hora_original?: string | null
           hora_solicitada?: string | null
           horas_abonadas?: number
@@ -16838,6 +16840,7 @@ export type Database = {
           created_by_nome?: string | null
           data_aprovacao?: string | null
           data_referencia?: string
+          empresa_id?: string | null
           hora_original?: string | null
           hora_solicitada?: string | null
           horas_abonadas?: number
@@ -16852,6 +16855,13 @@ export type Database = {
           tipo_marcacao?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_ajustes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ponto_ajustes_justificativa_id_fkey"
             columns: ["justificativa_id"]
