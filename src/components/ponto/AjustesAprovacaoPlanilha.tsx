@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PontoAjuste } from "@/hooks/usePonto";
 
@@ -34,6 +43,9 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "pendente" | "aprovado" | "rejeitado">("pendente");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [rejeitarDialogOpen, setRejeitarDialogOpen] = useState(false);
+  const [rejeitarObservacao, setRejeitarObservacao] = useState("");
+  const [itemsParaRejeitar, setItemsParaRejeitar] = useState<PontoAjuste[]>([]);
 
   // Group: colaborador_id -> data_referencia -> ajustes[]
   const grouped = useMemo(() => {
@@ -88,18 +100,28 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: true });
   };
 
-  const handleRejeitarDia = async (items: PontoAjuste[]) => {
+  const handleRejeitarDia = (items: PontoAjuste[]) => {
     const pendentes = items.filter((a) => a.status === "pendente");
     if (pendentes.length === 0) return;
+    setItemsParaRejeitar(pendentes);
+    setRejeitarObservacao("");
+    setRejeitarDialogOpen(true);
+  };
 
-    const obs = window.prompt(`Observação para rejeição (${pendentes.length} marcação(ões) do dia):`, "") ?? undefined;
+  const confirmarRejeicao = async () => {
+    if (itemsParaRejeitar.length === 0) return;
+
+    const obs = rejeitarObservacao || undefined;
     
     // Processa todos menos o último silenciosamente
-    for (let i = 0; i < pendentes.length - 1; i++) {
-      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: false, observacao: obs, multiple: true });
+    for (let i = 0; i < itemsParaRejeitar.length - 1; i++) {
+      await processarAjuste({ ajusteId: itemsParaRejeitar[i].id, aprovado: false, observacao: obs, multiple: true });
     }
     // O último dispara o feedback visual
-    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: false, observacao: obs });
+    await processarAjuste({ ajusteId: itemsParaRejeitar[itemsParaRejeitar.length - 1].id, aprovado: false, observacao: obs });
+    
+    setRejeitarDialogOpen(false);
+    setItemsParaRejeitar([]);
   };
 
   return (
@@ -347,6 +369,33 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
           Logs de auditoria em conformidade com Portaria 671 MTP
         </div>
       </motion.div>
+      <Dialog open={rejeitarDialogOpen} onOpenChange={setRejeitarDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Observação para Rejeição</DialogTitle>
+            <DialogDescription>
+              Informe o motivo da rejeição das {itemsParaRejeitar.length} marcação(ões) do dia selecionado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Digite aqui o motivo da rejeição (ex: Não compareceu, horário incoerente...)"
+              value={rejeitarObservacao}
+              onChange={(e) => setRejeitarObservacao(e.target.value)}
+              className="min-h-[100px]"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setRejeitarDialogOpen(false)} disabled={processando}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmarRejeicao} disabled={processando}>
+              {processando ? "Processando..." : "Confirmar Rejeição"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }
