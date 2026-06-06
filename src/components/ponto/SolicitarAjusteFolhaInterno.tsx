@@ -238,6 +238,15 @@ export function SolicitarAjusteFolhaInterno({
           return `Em ${isoToBR(data)}: o abono (${abono.toFixed(1)}h) é maior que as horas registradas/ajustadas no dia (${horas.toFixed(1)}h). Ajuste os horários do dia ou reduza o abono.`;
         }
       }
+
+      // Validação de ordem cronológica dos horários
+      const h = horariosEfetivos(data);
+      const e = toMin(h.entrada), sa = toMin(h.saida_almoco), ra = toMin(h.retorno_almoco), s = toMin(h.saida);
+      
+      if (e !== null && sa !== null && sa <= e) return `Em ${isoToBR(data)}, a Saída Almoço deve ser após a Entrada.`;
+      if (sa !== null && ra !== null && ra <= sa) return `Em ${isoToBR(data)}, o Retorno Almoço deve ser após a Saída Almoço.`;
+      if (ra !== null && s !== null && s <= ra) return `Em ${isoToBR(data)}, a Saída deve ser após o Retorno Almoço.`;
+      if (e !== null && s !== null && s <= e) return `Em ${isoToBR(data)}, a Saída deve ser após a Entrada.`;
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";
