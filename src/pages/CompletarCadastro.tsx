@@ -2,15 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { User, Camera, Loader2, CheckCircle2, AlertCircle, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
-import { DocumentoStatus, AdmissaoStatus } from "@/types/admissao";
+import { DocumentoStatus } from "@/types/admissao";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import { buildSafeStorageFileName } from "@/utils/storagePath";
 
@@ -24,6 +22,7 @@ export default function CompletarCadastro() {
   const [documentos, setDocumentos] = useState<DocumentoAdmissaoExtended[]>([]);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const documentoInputRef = useRef<HTMLInputElement>(null);
   const resolvedPhotoUrl = useStorageImageUrl(colaborador?.foto_url, "documentos");
 
   useEffect(() => {
@@ -69,6 +68,17 @@ export default function CompletarCadastro() {
       ...doc,
       status: doc.status as DocumentoStatus,
     })));
+  };
+
+  const handleUploadFirstPendingDocument = async (file: File) => {
+    const pendingDocument = documentos.find((doc) => !doc.arquivo_url || doc.status === "pendente" || doc.status === "rejeitado");
+
+    if (!pendingDocument) {
+      toast.error("Não há documento pendente para anexar.");
+      return;
+    }
+
+    await handleUploadDocument(pendingDocument.id, file);
   };
 
   const ensureDocumentos = async () => {
@@ -312,9 +322,29 @@ export default function CompletarCadastro() {
                 isAdmin={false}
               />
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="rounded-lg border-2 border-dashed border-border bg-muted/20 p-8 text-center text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                <p>Nenhum documento solicitado no momento.</p>
+                <p className="mb-4">Nenhum documento solicitado no momento.</p>
+                <div className="flex flex-col items-center gap-3">
+                  <Button variant="outline" onClick={() => documentoInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Anexar documento
+                  </Button>
+                  <p className="text-xs text-muted-foreground">Você também pode arrastar um arquivo para um item quando os documentos forem exibidos.</p>
+                  <input
+                    ref={documentoInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        void handleUploadFirstPendingDocument(file);
+                        e.currentTarget.value = "";
+                      }
+                    }}
+                  />
+                </div>
               </div>
             )}
           </CardContent>

@@ -43,6 +43,7 @@ import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxFiel
 import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxField";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import { CBOAutocomplete, normalizeCBO } from "@/components/cbo/CBOAutocomplete";
+import { DOCUMENTOS_OBRIGATORIOS, type DocumentoStatus } from "@/types/database";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "Empregado CLT" },
@@ -304,6 +305,17 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         // Create collaborator folder in Documents module
         if (insertData?.id) {
           try {
+            await supabase.from("admissao_documentos").insert(
+              DOCUMENTOS_OBRIGATORIOS.map((doc) => ({
+                admissao_id: insertData.id,
+                tenant_id: tenantId,
+                nome: doc.nome,
+                tipo: doc.tipo,
+                obrigatorio: doc.obrigatorio,
+                status: "pendente" as DocumentoStatus,
+              }))
+            );
+
             const { criarPastaColaborador } = await import("@/utils/criarPastaColaborador");
             await criarPastaColaborador({
               tenantId,
