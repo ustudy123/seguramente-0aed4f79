@@ -268,6 +268,15 @@ export default function Empresa() {
     setViewMode('new');
     setHasChanges(false);
     setRascunhoRestaurado(false);
+    
+    // Clear draft when starting a brand new registration to avoid restoring 
+    // data from a previous "new" registration that wasn't properly cleaned up
+    const newDraftKey = user?.id ? `empresa-draft:${user.id}:new` : null;
+    if (newDraftKey) {
+      try {
+        localStorage.removeItem(newDraftKey);
+      } catch { /* ignore */ }
+    }
   };
 
   const handleToggleAtivo = (id: string, ativo: boolean) => {
