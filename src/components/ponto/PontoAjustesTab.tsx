@@ -44,8 +44,8 @@ export function PontoAjustesTab({ ajustes, processarAjuste, processandoAjuste, s
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-card border rounded-xl p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Solicitações Totais</p>
-            <p className="text-2xl font-bold tracking-tight">{stats.total}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Registros Pendentes</p>
+            <p className="text-2xl font-bold tracking-tight">{ajustes.filter(a => a.status === "pendente").length}</p>
           </div>
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             <FileText className="w-5 h-5" />
