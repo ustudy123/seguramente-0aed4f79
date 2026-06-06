@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -24,6 +25,15 @@ const SLOTS: Array<{ key: "entrada" | "saida_almoco" | "retorno_almoco" | "saida
   { key: "saida_almoco", label: "Saída Almoço", short: "S. Almoço" },
   { key: "retorno_almoco", label: "Retorno Almoço", short: "R. Almoço" },
   { key: "saida", label: "Saída", short: "Saída" },
+];
+
+const MOTIVOS_REJEICAO = [
+  "Horário incoerente com a jornada",
+  "Informação divergente do comprovante",
+  "Marcação duplicada",
+  "Não compareceu ao trabalho",
+  "Esqueceu de registrar no horário correto",
+  "Outro"
 ];
 
 const formatDate = (iso: string) => {
@@ -45,6 +55,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [rejeitarDialogOpen, setRejeitarDialogOpen] = useState(false);
   const [rejeitarObservacao, setRejeitarObservacao] = useState("");
+  const [rejeitarMotivoPredefinido, setRejeitarMotivoPredefinido] = useState("");
   const [itemsParaRejeitar, setItemsParaRejeitar] = useState<PontoAjuste[]>([]);
 
   // Group: colaborador_id -> data_referencia -> ajustes[]
@@ -105,13 +116,18 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     if (pendentes.length === 0) return;
     setItemsParaRejeitar(pendentes);
     setRejeitarObservacao("");
+    setRejeitarMotivoPredefinido("");
     setRejeitarDialogOpen(true);
   };
 
   const confirmarRejeicao = async () => {
     if (itemsParaRejeitar.length === 0) return;
 
-    const obs = rejeitarObservacao || undefined;
+    const finalMotivo = rejeitarMotivoPredefinido === "Outro" 
+      ? rejeitarObservacao 
+      : (rejeitarMotivoPredefinido + (rejeitarObservacao ? ` - ${rejeitarObservacao}` : ""));
+
+    const obs = finalMotivo || undefined;
     
     // Processa todos menos o último silenciosamente
     for (let i = 0; i < itemsParaRejeitar.length - 1; i++) {
@@ -377,14 +393,37 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
               Informe o motivo da rejeição das {itemsParaRejeitar.length} marcação(ões) do dia selecionado.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea
-              placeholder="Digite aqui o motivo da rejeição (ex: Não compareceu, horário incoerente...)"
-              value={rejeitarObservacao}
-              onChange={(e) => setRejeitarObservacao(e.target.value)}
-              className="min-h-[100px]"
-              autoFocus
-            />
+          <div className="grid gap-5 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="motivo-rejeicao" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Motivo Principal
+              </Label>
+              <Select value={rejeitarMotivoPredefinido} onValueChange={setRejeitarMotivoPredefinido}>
+                <SelectTrigger id="motivo-rejeicao">
+                  <SelectValue placeholder="Selecione um motivo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {MOTIVOS_REJEICAO.map((motivo) => (
+                    <SelectItem key={motivo} value={motivo}>
+                      {motivo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="observacao-rejeicao" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {rejeitarMotivoPredefinido === "Outro" ? "Especifique o motivo" : "Observações Adicionais (opcional)"}
+              </Label>
+              <Textarea
+                id="observacao-rejeicao"
+                placeholder={rejeitarMotivoPredefinido === "Outro" ? "Descreva o motivo da rejeição..." : "Digite aqui observações adicionais sobre a rejeição..."}
+                value={rejeitarObservacao}
+                onChange={(e) => setRejeitarObservacao(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setRejeitarDialogOpen(false)} disabled={processando}>
