@@ -234,7 +234,9 @@ function DocumentItem({
             {hasFile ? (
               <FileIcon className={cn("h-6 w-6", STATUS_CONFIG[documento.status].color)} />
             ) : (
-              <Upload className="h-6 w-6 animate-pulse" />
+              <div className="flex flex-col items-center">
+                <Upload className="h-6 w-6 animate-pulse mb-1" />
+              </div>
             )}
           </div>
           <div>
@@ -263,14 +265,21 @@ function DocumentItem({
                 <Badge variant="secondary" className="text-xs">Opcional</Badge>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <StatusIcon className={cn("h-3 w-3", STATUS_CONFIG[documento.status].color)} />
-              <span className={cn("text-xs", STATUS_CONFIG[documento.status].color)}>
-                {STATUS_CONFIG[documento.status].label}
-              </span>
-              {hasFile && (
-                <span className="text-xs text-muted-foreground">
-                  • {getFileName()}
+            <div className="flex flex-col gap-1 mt-0.5">
+              <div className="flex items-center gap-2">
+                <StatusIcon className={cn("h-3 w-3", STATUS_CONFIG[documento.status].color)} />
+                <span className={cn("text-xs", STATUS_CONFIG[documento.status].color)}>
+                  {STATUS_CONFIG[documento.status].label}
+                </span>
+                {hasFile && (
+                  <span className="text-xs text-muted-foreground">
+                    • {getFileName()}
+                  </span>
+                )}
+              </div>
+              {!hasFile && documento.status === 'pendente' && (
+                <span className="text-xs text-primary font-medium">
+                  Clique para selecionar ou arraste o arquivo aqui
                 </span>
               )}
             </div>
