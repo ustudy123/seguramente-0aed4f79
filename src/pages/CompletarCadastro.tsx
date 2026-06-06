@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Camera, Loader2, CheckCircle2, AlertCircle, Upload } from "lucide-react";
+import { User, Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
@@ -22,7 +22,6 @@ export default function CompletarCadastro() {
   const [documentos, setDocumentos] = useState<DocumentoAdmissaoExtended[]>([]);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const documentoInputRef = useRef<HTMLInputElement>(null);
   const resolvedPhotoUrl = useStorageImageUrl(colaborador?.foto_url, "documentos");
 
   useEffect(() => {
@@ -68,17 +67,6 @@ export default function CompletarCadastro() {
       ...doc,
       status: doc.status as DocumentoStatus,
     })));
-  };
-
-  const handleUploadFirstPendingDocument = async (file: File) => {
-    const pendingDocument = documentos.find((doc) => !doc.arquivo_url || doc.status === "pendente" || doc.status === "rejeitado");
-
-    if (!pendingDocument) {
-      toast.error("Não há documento pendente para anexar.");
-      return;
-    }
-
-    await handleUploadDocument(pendingDocument.id, file);
   };
 
   const ensureDocumentos = async () => {
