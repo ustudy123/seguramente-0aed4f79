@@ -114,7 +114,7 @@ export default function CompletarCadastro() {
   const handleUploadDocument = async (documentoId: string, file: File) => {
     try {
       const safeFileName = buildSafeStorageFileName(documentoId, file.name);
-      const filePath = `${colaborador.tenant_id}/admissoes/${colaborador.id}/${safeFileName}`;
+      const filePath = `admissoes/${colaborador.tenant_id}/${colaborador.id}/${safeFileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
