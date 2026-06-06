@@ -51,6 +51,10 @@ const JUSTIFICATIVAS_PRESET = [
 function fmtHora(h: string) { return (h || "").slice(0, 5); }
 function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
 function isoToBR(iso: string) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+function toMin(s?: string): number | null {
+  if (!s || !/^\d{2}:\d{2}/.test(s)) return null;
+  return Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
+}
 function diaSemana(iso: string) {
   const ds = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   return ds[new Date(iso + "T12:00:00").getDay()];
