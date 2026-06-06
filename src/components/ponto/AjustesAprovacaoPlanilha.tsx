@@ -369,6 +369,33 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
           Logs de auditoria em conformidade com Portaria 671 MTP
         </div>
       </motion.div>
+      <Dialog open={rejeitarDialogOpen} onOpenChange={setRejeitarDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Observação para Rejeição</DialogTitle>
+            <DialogDescription>
+              Informe o motivo da rejeição das {itemsParaRejeitar.length} marcação(ões) do dia selecionado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Digite aqui o motivo da rejeição (ex: Não compareceu, horário incoerente...)"
+              value={rejeitarObservacao}
+              onChange={(e) => setRejeitarObservacao(e.target.value)}
+              className="min-h-[100px]"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setRejeitarDialogOpen(false)} disabled={processando}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmarRejeicao} disabled={processando}>
+              {processando ? "Processando..." : "Confirmar Rejeição"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }
