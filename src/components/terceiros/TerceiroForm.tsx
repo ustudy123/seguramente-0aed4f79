@@ -33,50 +33,55 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [unidadesText, setUnidadesText] = useState((initial?.unidades || []).join(", "));
   const [setoresText, setSetoresText] = useState((initial?.setores || []).join(", "));
-  const [form, setForm] = useState<Partial<Terceiro>>({
-    razao_social: initial?.razao_social || "",
-    nome_fantasia: initial?.nome_fantasia || "",
-    cnpj: initial?.cnpj || "",
-    atividade_principal: initial?.atividade_principal || "",
-    cnae: initial?.cnae || "",
-    responsavel_nome: initial?.responsavel_nome || "",
-    responsavel_cargo: initial?.responsavel_cargo || "",
-    email: initial?.email || "",
-    telefone: initial?.telefone || "",
-    tipo_servico: initial?.tipo_servico || [],
-    unidades: initial?.unidades || [],
-    setores: initial?.setores || [],
-    tipo_acesso: initial?.tipo_acesso || "eventual",
-    contrato_inicio: initial?.contrato_inicio || "",
-    contrato_fim: initial?.contrato_fim || "",
-    atividade_risco: initial?.atividade_risco || false,
-    observacoes: initial?.observacoes || "",
-  });
+  const emptyForm: Partial<Terceiro> = {
+    razao_social: "",
+    nome_fantasia: "",
+    cnpj: "",
+    atividade_principal: "",
+    cnae: "",
+    responsavel_nome: "",
+    responsavel_cargo: "",
+    email: "",
+    telefone: "",
+    tipo_servico: [],
+    unidades: [],
+    setores: [],
+    tipo_acesso: "eventual",
+    contrato_inicio: "",
+    contrato_fim: "",
+    atividade_risco: false,
+    observacoes: "",
+  };
+
+  const [form, setForm] = useState<Partial<Terceiro>>(emptyForm);
 
   // Reseta o formulário ao abrir/fechar ou trocar o registro em edição
   useEffect(() => {
     if (!open) return;
+    
+    const base = initial || emptyForm;
+    
     setForm({
-      razao_social: initial?.razao_social || "",
-      nome_fantasia: initial?.nome_fantasia || "",
-      cnpj: initial?.cnpj || "",
-      atividade_principal: initial?.atividade_principal || "",
-      cnae: initial?.cnae || "",
-      responsavel_nome: initial?.responsavel_nome || "",
-      responsavel_cargo: initial?.responsavel_cargo || "",
-      email: initial?.email || "",
-      telefone: initial?.telefone || "",
-      tipo_servico: initial?.tipo_servico || [],
-      unidades: initial?.unidades || [],
-      setores: initial?.setores || [],
-      tipo_acesso: initial?.tipo_acesso || "eventual",
-      contrato_inicio: initial?.contrato_inicio || "",
-      contrato_fim: initial?.contrato_fim || "",
-      atividade_risco: initial?.atividade_risco || false,
-      observacoes: initial?.observacoes || "",
+      razao_social: base.razao_social || "",
+      nome_fantasia: base.nome_fantasia || "",
+      cnpj: base.cnpj || "",
+      atividade_principal: base.atividade_principal || "",
+      cnae: base.cnae || "",
+      responsavel_nome: base.responsavel_nome || "",
+      responsavel_cargo: base.responsavel_cargo || "",
+      email: base.email || "",
+      telefone: base.telefone || "",
+      tipo_servico: base.tipo_servico || [],
+      unidades: base.unidades || [],
+      setores: base.setores || [],
+      tipo_acesso: base.tipo_acesso || "eventual",
+      contrato_inicio: base.contrato_inicio || "",
+      contrato_fim: base.contrato_fim || "",
+      atividade_risco: base.atividade_risco || false,
+      observacoes: base.observacoes || "",
     });
-    setUnidadesText((initial?.unidades || []).join(", "));
-    setSetoresText((initial?.setores || []).join(", "));
+    setUnidadesText((base.unidades || []).join(", "));
+    setSetoresText((base.setores || []).join(", "));
     setCustomServicos([]);
     setServicoSearch("");
     setContractFile(null);
