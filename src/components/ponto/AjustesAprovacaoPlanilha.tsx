@@ -25,7 +25,7 @@ const formatDate = (iso: string) => {
 
 interface Props {
   ajustes: PontoAjuste[];
-  processarAjuste: (args: { ajusteId: string; aprovado: boolean; observacao?: string }) => Promise<unknown> | void;
+  processarAjuste: (args: { ajusteId: string; aprovado: boolean; observacao?: string; multiple?: boolean }) => Promise<unknown> | void;
   processando: boolean;
   onOpenAnexos: (ajuste: PontoAjuste) => void;
 }
@@ -77,17 +77,28 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
 
   const handleApprovarDia = async (items: PontoAjuste[]) => {
     const pendentes = items.filter((a) => a.status === "pendente");
-    for (const a of pendentes) {
-      await processarAjuste({ ajusteId: a.id, aprovado: true });
+    if (pendentes.length === 0) return;
+    
+    // Processa todos menos o último silenciosamente
+    for (let i = 0; i < pendentes.length - 1; i++) {
+      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: true, multiple: true });
     }
+    // O último dispara o feedback visual
+    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: true });
   };
 
   const handleRejeitarDia = async (items: PontoAjuste[]) => {
     const pendentes = items.filter((a) => a.status === "pendente");
+    if (pendentes.length === 0) return;
+
     const obs = window.prompt(`Observação para rejeição (${pendentes.length} marcação(ões) do dia):`, "") ?? undefined;
-    for (const a of pendentes) {
-      await processarAjuste({ ajusteId: a.id, aprovado: false, observacao: obs });
+    
+    // Processa todos menos o último silenciosamente
+    for (let i = 0; i < pendentes.length - 1; i++) {
+      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: false, observacao: obs, multiple: true });
     }
+    // O último dispara o feedback visual
+    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: false, observacao: obs });
   };
 
   return (
