@@ -151,14 +151,24 @@ const Ponto = () => {
   // Ajustes são escopados por tenant (a tabela não possui empresa_id).
   // Se houver colaboradores carregados para a empresa ativa, filtra; caso contrário, mostra todos do tenant.
   const ajustesPendentes = useMemo(() => {
+    // Se não houver colaboradores carregados, ou se não houver empresa selecionada,
+    // o hook useAjustesPendentes já filtra por empresa_id no banco se disponível.
+    // Aqui fazemos um fallback de segurança baseado no CPF se necessário.
+    if (!empresaAtivaId || colaboradores.length === 0) return ajustesPendentesRaw;
+    
     const cpfsEmpresa = new Set(
       colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
     );
-    if (cpfsEmpresa.size === 0) return ajustesPendentesRaw;
-    return ajustesPendentesRaw.filter((a: any) =>
-      cpfsEmpresa.has((a.colaborador_cpf || "").replace(/\D/g, ""))
-    );
-  }, [ajustesPendentesRaw, colaboradores]);
+    
+    return ajustesPendentesRaw.filter((a: any) => {
+      // Se o ajuste já tem empresa_id e ele bate com a ativa, mantém
+      if (a.empresa_id && a.empresa_id === empresaAtivaId) return true;
+      
+      // Caso contrário (histórico ou nulo), verifica pelo CPF do colaborador
+      const cpfDigito = (a.colaborador_cpf || "").replace(/\D/g, "");
+      return cpfDigito && cpfsEmpresa.has(cpfDigito);
+    });
+  }, [ajustesPendentesRaw, colaboradores, empresaAtivaId]);
 
   // Auto-capture geolocation when modal opens
   useEffect(() => {
