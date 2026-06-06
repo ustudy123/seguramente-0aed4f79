@@ -232,7 +232,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{tipoPessoa === 'pf' ? 'Nome Completo' : 'Razão Social'}</Label>
+          <Label>{tipoPessoa === 'pf' ? 'Nome Completo' : 'Razão Social'} *</Label>
           <Input
             placeholder={tipoPessoa === 'pf' ? 'Nome completo' : 'Razão Social completa'}
             value={data.razao_social || ''}
