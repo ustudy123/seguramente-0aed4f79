@@ -358,11 +358,22 @@ const Ponto = () => {
             </TabsTrigger>
             <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <FileText className="h-3.5 w-3.5" /> Ajustes
-              {ajustesPendentes.filter(a => a.status === "pendente").length > 0 && (
-                <Badge variant="destructive" className="ml-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px]">
-                  {ajustesPendentes.filter(a => a.status === "pendente").length}
-                </Badge>
-              )}
+              {(() => {
+                const pendentes = ajustesPendentes.filter(a => a.status === "pendente");
+                const uniqueDaysMap = new Map<string, Set<string>>();
+                pendentes.forEach(a => {
+                  const key = a.colaborador_id || a.colaborador_cpf;
+                  if (!uniqueDaysMap.has(key)) uniqueDaysMap.set(key, new Set());
+                  uniqueDaysMap.get(key)!.add(a.data_referencia);
+                });
+                let count = 0;
+                uniqueDaysMap.forEach(days => { count += days.size; });
+                return count > 0 && (
+                  <Badge variant="destructive" className="ml-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px]">
+                    {count}
+                  </Badge>
+                );
+              })()}
             </TabsTrigger>
             <TabsTrigger id="tab-ponto-compliance" value="compliance" className="flex items-center gap-1.5 text-xs sm:text-sm py-3 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary font-medium">
               <Shield className="h-3.5 w-3.5" /> Compliance
