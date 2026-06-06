@@ -59,7 +59,7 @@ export function TerceiroList({ terceiros, onSelect, onEdit, onDelete }: Props) {
                   )}
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                  <span>CNPJ: {formatCnpj(t.cnpj)}</span>
+                  <span>{isCpf ? 'CPF' : 'CNPJ'}: {isCpf ? formatCpf(t.cnpj) : formatCnpj(t.cnpj)}</span>
                   <span>Acesso: {acessoMap[t.tipo_acesso]}</span>
                   {t.contrato_fim && (
                     <span>Contrato até {format(new Date(t.contrato_fim), "dd/MM/yyyy")}</span>
