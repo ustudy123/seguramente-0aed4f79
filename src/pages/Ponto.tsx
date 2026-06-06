@@ -447,7 +447,8 @@ const Ponto = () => {
                 ) : filteredPontos.length === 0 ? (
                   <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
                 ) : filteredPontos.map((ponto) => {
-                  const statusConfig = STATUS_PONTO_CONFIG[ponto.status] || STATUS_PONTO_CONFIG.pendente;
+                  const pontoStatus = ponto.status === 'pendente' ? 'ajuste_pendente' : ponto.status;
+                  const statusConfig = STATUS_PONTO_CONFIG[pontoStatus] || STATUS_PONTO_CONFIG.pendente;
                   const cpfKey = onlyDigits(ponto.colaborador_cpf);
                   const marcs = marcacoesPorCpf.get(cpfKey) || [];
                   // Calcula total a partir dos pares (entrada → saída), independente do label
