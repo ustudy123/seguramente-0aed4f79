@@ -126,8 +126,13 @@ export function SolicitarAjusteFolhaInterno({
       const map: Record<string, Partial<Record<TipoMarc, string>>> = {};
       ((marcRes.data as any[]) || []).forEach((m) => {
         if (!map[m.data_marcacao]) map[m.data_marcacao] = {};
-        if (!map[m.data_marcacao][m.tipo_marcacao as TipoMarc]) {
-          map[m.data_marcacao][m.tipo_marcacao as TipoMarc] = fmtHora(m.hora_marcacao);
+        const tipo = m.tipo_marcacao as TipoMarc;
+        // Se já existe uma marcação desse tipo, manter a que não é correção (original) se possível,
+        // mas aqui pegamos a primeira que aparecer pois o order by hora_marcacao garante a ordem cronológica.
+        // O ideal é que se houver mais de uma, a UI mostre que há algo estranho, mas por hora vamos garantir 
+        // que mapeamos corretamente os tipos.
+        if (!map[m.data_marcacao][tipo]) {
+          map[m.data_marcacao][tipo] = fmtHora(m.hora_marcacao);
         }
       });
       setMarcsPorDia(map);
