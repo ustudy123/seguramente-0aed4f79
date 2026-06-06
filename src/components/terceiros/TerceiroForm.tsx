@@ -194,13 +194,43 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           <DialogTitle>{initial ? "Editar Terceiro" : "Novo Terceiro"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label>CNPJ *</Label>
-            <div className="flex gap-1">
-              <Input value={form.cnpj || ""} onChange={(e) => handleCnpjChange(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
-              <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
-                {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Tipo de Pessoa *</Label>
+              <Select 
+                value={form.tipo_pessoa} 
+                onValueChange={(v) => {
+                  setForm(p => ({ 
+                    ...p, 
+                    tipo_pessoa: v as 'pf' | 'pj',
+                    cnpj: "" // Clear document on switch
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pj">Pessoa Jurídica (CNPJ)</SelectItem>
+                  <SelectItem value="pf">Pessoa Física (CPF)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{form.tipo_pessoa === 'pj' ? 'CNPJ *' : 'CPF *'}</Label>
+              <div className="flex gap-1">
+                <Input 
+                  value={form.cnpj || ""} 
+                  onChange={(e) => handleCnpjChange(e.target.value)} 
+                  placeholder={form.tipo_pessoa === 'pj' ? "00.000.000/0000-00" : "000.000.000-00"} 
+                  maxLength={form.tipo_pessoa === 'pj' ? 18 : 14} 
+                />
+                {form.tipo_pessoa === 'pj' && (
+                  <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
+                    {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
