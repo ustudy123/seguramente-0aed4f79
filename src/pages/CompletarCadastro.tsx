@@ -2,15 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
-import { DocumentoStatus, AdmissaoStatus } from "@/types/admissao";
+import { DocumentoStatus } from "@/types/admissao";
 import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import { buildSafeStorageFileName } from "@/utils/storagePath";
 
@@ -305,14 +303,19 @@ export default function CompletarCadastro() {
           </CardHeader>
           <CardContent>
             {documentos.length > 0 ? (
-              <DocumentUpload 
-                documentos={documentos}
-                onUpload={handleUploadDocument}
-                onRemove={handleRemoveDocument}
-                isAdmin={false}
-              />
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Use o botão <strong>Enviar</strong> de cada documento ou arraste o arquivo para a área correspondente.
+                </p>
+                <DocumentUpload 
+                  documentos={documentos}
+                  onUpload={handleUploadDocument}
+                  onRemove={handleRemoveDocument}
+                  isAdmin={false}
+                />
+              </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="rounded-lg border-2 border-dashed border-border bg-muted/20 p-8 text-center text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
                 <p>Nenhum documento solicitado no momento.</p>
               </div>
