@@ -84,7 +84,7 @@ export default function CompletarCadastro() {
     setIsUploadingPhoto(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${colaborador.tenant_id}/${colaborador.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${colaborador.tenant_id}/${colaborador.id}-${Date.now()}.${fileExt}`;
       const filePath = `colaboradores/fotos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -97,7 +97,7 @@ export default function CompletarCadastro() {
       if (uploadError) throw uploadError;
 
       const { error: updateError } = await supabase.rpc("update_admissao_foto_by_token", {
-        _token: token as string,
+        _token: token, // Changed to token directly as it is a UUID string that fits the parameter
         _foto_url: filePath,
       });
 
@@ -128,7 +128,7 @@ export default function CompletarCadastro() {
       if (uploadError) throw uploadError;
 
       const { error: updateError } = await supabase.rpc("update_admissao_documento_by_token", {
-        _token: token as string,
+        _token: token,
         _documento_id: documentoId,
         _arquivo_url: filePath,
         _arquivo_nome: file.name,
@@ -144,7 +144,7 @@ export default function CompletarCadastro() {
       // Validação pós-upload: confirma que o documento saiu de "pendente"
       const { data: verifyList, error: verifyErr } = await supabase.rpc(
         "get_admissao_documentos_by_token",
-        { _token: token as string }
+        { _token: token }
       );
       if (verifyErr) throw verifyErr;
       const persisted = (verifyList as any[] | null)?.find((d) => d.id === documentoId);
