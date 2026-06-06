@@ -98,8 +98,6 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       observacoes: base.observacoes || "",
       tipo_pessoa: isPf ? "pf" : "pj",
     });
-    setUnidadesText((base.unidades || []).join(", "));
-    setSetoresText((base.setores || []).join(", "));
     setCustomServicos([]);
     setServicoSearch("");
     setContractFile(null);
