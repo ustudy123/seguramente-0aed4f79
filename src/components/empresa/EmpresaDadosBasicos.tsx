@@ -34,7 +34,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleaned = cleanCnpj(e.target.value);
     if (cleaned.length <= 14) {
-      onChange({ cnpj: formatCnpj(cleaned) });
+      onChange({ cnpj: cleaned });
     }
   };
 
@@ -139,7 +139,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               <div className="flex gap-2">
                 <Input
                   placeholder="00.000.000/0000-00"
-                  value={data.cnpj || ''}
+                  value={formatCnpj(data.cnpj || '')}
                   onChange={handleCnpjChange}
                   maxLength={18}
                   disabled={false}
