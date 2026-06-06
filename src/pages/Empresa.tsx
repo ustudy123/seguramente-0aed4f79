@@ -115,8 +115,8 @@ export default function Empresa() {
       const base: Partial<EmpresaCadastro> = {
         ...cadastro,
         razao_social: cadastro.razao_social || cliente?.nome_empresa || '',
-        cnpj: cadastro.cnpj || (onboardingIsCnpj ? cliente?.cnpj : '') || '',
-        cpf: cadastro.cpf || (onboardingIsCpf ? cliente?.cnpj : '') || '',
+        cnpj: (cadastro.cnpj || (onboardingIsCnpj ? cliente?.cnpj : '') || '').replace(/\D/g, ''),
+        cpf: (cadastro.cpf || (onboardingIsCpf ? cliente?.cnpj : '') || '').replace(/\D/g, ''),
         email: cadastro.email || cliente?.poc_email || user?.email || '',
         telefone: cadastro.telefone || cliente?.poc_telefone || profile?.telefone || '',
         total_colaboradores: cadastro.total_colaboradores || cliente?.quantidade_colaboradores || 0,
@@ -137,8 +137,8 @@ export default function Empresa() {
       const base: Partial<EmpresaCadastro> = cliente
         ? {
             razao_social: cliente.nome_empresa || '',
-            cnpj: onboardingIsCnpj ? cliente.cnpj : '',
-            cpf: onboardingIsCpf ? cliente.cnpj : '',
+            cnpj: (onboardingIsCnpj ? cliente.cnpj : '').replace(/\D/g, ''),
+            cpf: (onboardingIsCpf ? cliente.cnpj : '').replace(/\D/g, ''),
             email: cliente.poc_email || user?.email || '',
             telefone: cliente.poc_telefone || profile?.telefone || '',
             total_colaboradores: cliente.quantidade_colaboradores || 0,
