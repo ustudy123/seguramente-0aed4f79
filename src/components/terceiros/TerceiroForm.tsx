@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
 import { formatCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { formatCpf, validateCpf } from "@/lib/cpf";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
