@@ -91,8 +91,19 @@ export function useTerceiros() {
         throw new Error("CNPJ inválido. Informe os 14 dígitos.");
       }
       await ensureCnpjUnique(cnpj);
+      
+      // Clean dates: empty strings to null for Postgres
+      const finalPayload = {
+        ...payload,
+        cnpj,
+        tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
+        contrato_inicio: payload.contrato_inicio || null,
+        contrato_fim: payload.contrato_fim || null,
+      };
+
       const { data, error } = await fromTable("terceiros")
-        .insert({ ...payload, cnpj, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
+        .insert(finalPayload as any)
         .select()
         .single();
       if (error) throw error;
@@ -102,7 +113,7 @@ export function useTerceiros() {
       qc.invalidateQueries({ queryKey: ["terceiros"] });
       toast.success("Terceiro cadastrado!");
     },
-    onError: (e: any) => toast.error("Erro: " + e.message),
+    onError: (e: any) => toast.error("Erro: " + (e.message || "Erro desconhecido")),
   });
 
   const updateTerceiro = useMutation({
@@ -115,8 +126,16 @@ export function useTerceiros() {
         await ensureCnpjUnique(cnpj, id);
         payload.cnpj = cnpj;
       }
+
+      // Clean dates: empty strings to null
+      const finalPayload = {
+        ...payload,
+        contrato_inicio: payload.contrato_inicio || null,
+        contrato_fim: payload.contrato_fim || null,
+      };
+
       const { error } = await fromTable("terceiros")
-        .update(payload as any)
+        .update(finalPayload as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -124,7 +143,7 @@ export function useTerceiros() {
       qc.invalidateQueries({ queryKey: ["terceiros"] });
       toast.success("Terceiro atualizado!");
     },
-    onError: (e: any) => toast.error("Erro: " + e.message),
+    onError: (e: any) => toast.error("Erro: " + (e.message || "Erro desconhecido")),
   });
 
   const deleteTerceiro = useMutation({
