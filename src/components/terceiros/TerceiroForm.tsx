@@ -30,14 +30,23 @@ interface Props {
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
   const { user, tenantId } = useAuth();
+  const { empresas } = useEmpresaCadastro();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [servicoSearch, setServicoSearch] = useState("");
   const [customServicos, setCustomServicos] = useState<string[]>([]);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [uploadingContract, setUploadingContract] = useState(false);
   const [contractFile, setContractFile] = useState<File | null>(null);
-  const [unidadesText, setUnidadesText] = useState((initial?.unidades || []).join(", "));
-  const [setoresText, setSetoresText] = useState((initial?.setores || []).join(", "));
+
+  // Unidades options from empresas
+  const unidadesOptions = useMemo(() => {
+    return Array.from(new Set(empresas.map(e => e.razao_social).filter(Boolean))) as string[];
+  }, [empresas]);
+
+  // Setores options (generic for now, can be improved later)
+  const setoresOptions = [
+    "Administrativo", "Financeiro", "RH", "TI", "Manutenção", "Produção", "Logística", "Vendas", "Marketing", "SST"
+  ];
   const emptyForm: Partial<Terceiro> & { tipo_pessoa?: 'pj' | 'pf' } = {
     razao_social: "",
     nome_fantasia: "",
