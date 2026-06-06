@@ -46,6 +46,7 @@ import { PontoAlertasTab } from "@/components/ponto/PontoAlertasTab";
 import { PontoRelatoriosTab } from "@/components/ponto/PontoRelatoriosTab";
 import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
+import { PontoAjustesTab } from "@/components/ponto/PontoAjustesTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
@@ -550,50 +551,12 @@ const Ponto = () => {
 
         {/* Ajustes */}
         <TabsContent value="ajustes" className="space-y-5">
-          {(() => {
-            const total = ajustesPendentes.length;
-            const pend = ajustesPendentes.filter(a => a.status === "pendente").length;
-            const apr = ajustesPendentes.filter(a => a.status === "aprovado").length;
-            const rej = ajustesPendentes.filter(a => a.status === "rejeitado").length;
-            return (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="bg-card border rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Solicitações Totais</p>
-                    <p className="text-2xl font-bold tracking-tight">{total}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                </div>
-                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-amber-500">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1">Pendentes</p>
-                      <p className="text-2xl font-bold tracking-tight">{pend}</p>
-                    </div>
-                    {pend > 0 && <span className="bg-amber-500/10 text-amber-600 text-[10px] px-2 py-0.5 rounded font-semibold">Prioritário</span>}
-                  </div>
-                </div>
-                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-emerald-500">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mb-1">Aprovadas</p>
-                  <p className="text-2xl font-bold tracking-tight">{apr}</p>
-                </div>
-                <div className="bg-card border rounded-xl p-4 border-l-4 border-l-rose-500">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejeitadas</p>
-                  <p className="text-2xl font-bold tracking-tight">{rej}</p>
-                </div>
-              </motion.div>
-            );
-          })()}
-
-          <AjustesAprovacaoPlanilha
+          <PontoAjustesTab 
             ajustes={ajustesPendentes}
-            processarAjuste={async (args) => { await processarAjuste(args); }}
-            processando={processandoAjuste}
-            onOpenAnexos={(a) => setAnexosModalAjuste(a)}
+            processarAjuste={processarAjuste}
+            processandoAjuste={processandoAjuste}
+            setAnexosModalAjuste={setAnexosModalAjuste}
           />
-
         </TabsContent>
 
 
