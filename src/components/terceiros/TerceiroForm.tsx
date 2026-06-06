@@ -34,7 +34,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [unidadesText, setUnidadesText] = useState((initial?.unidades || []).join(", "));
   const [setoresText, setSetoresText] = useState((initial?.setores || []).join(", "));
-  const emptyForm: Partial<Terceiro> = {
+  const emptyForm: Partial<Terceiro> & { tipo_pessoa?: 'pj' | 'pf' } = {
     razao_social: "",
     nome_fantasia: "",
     cnpj: "",
@@ -52,9 +52,10 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     contrato_fim: "",
     atividade_risco: false,
     observacoes: "",
+    tipo_pessoa: "pj",
   };
 
-  const [form, setForm] = useState<Partial<Terceiro>>(emptyForm);
+  const [form, setForm] = useState<Partial<Terceiro> & { tipo_pessoa?: 'pj' | 'pf' }>(emptyForm);
 
   // Reseta o formulário ao abrir/fechar ou trocar o registro em edição
   useEffect(() => {
