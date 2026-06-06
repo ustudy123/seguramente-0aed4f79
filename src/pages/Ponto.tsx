@@ -519,11 +519,11 @@ const Ponto = () => {
                                   key={idx}
                                   className={cn(
                                     "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono border",
-                                    isEntry
+                                    m.original
                                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                       : "bg-rose-50 text-rose-700 border-rose-200"
                                   )}
-                                  title={isEntry ? "Entrada" : "Saída"}
+                                  title={m.original ? "Registro Nativo" : "Registro Ajustado"}
                                 >
                                   {isEntry ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}
                                   {m.hora?.substring(0, 5)}
