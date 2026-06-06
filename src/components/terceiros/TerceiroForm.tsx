@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Search, Upload, FileText } from "lucide-react";
+import { Loader2, X, Search, Upload, FileText, Check, ChevronsUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
@@ -15,6 +18,7 @@ import { formatCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
 import { formatCpf, validateCpf } from "@/lib/cpf";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
 
 interface Props {
   open: boolean;
