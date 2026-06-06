@@ -406,10 +406,12 @@ export function usePonto() {
       ajusteId,
       aprovado,
       observacao,
+      multiple,
     }: {
       ajusteId: string;
       aprovado: boolean;
       observacao?: string;
+      multiple?: boolean;
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
@@ -451,7 +453,10 @@ export function usePonto() {
       queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
-      toast.success(`Ajuste ${variables.aprovado ? "aprovado" : "rejeitado"} com sucesso!`);
+      
+      if (!variables.multiple) {
+        toast.success(`Ajuste ${variables.aprovado ? "aprovado" : "rejeitado"} com sucesso!`);
+      }
     },
     onError: (error: Error) => {
       toast.error("Erro ao processar ajuste: " + error.message);
