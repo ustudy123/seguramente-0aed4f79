@@ -98,7 +98,7 @@ export function useTerceiros() {
       // Clean dates: empty strings to null for Postgres
       const finalPayload = {
         ...payload,
-        cnpj,
+        cnpj: doc,
         tenant_id: tenantId,
         empresa_id: empresaAtivaId || null,
         contrato_inicio: payload.contrato_inicio || null,
