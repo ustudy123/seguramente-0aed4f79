@@ -127,7 +127,7 @@ export default function Empresa() {
       if (draft && !rascunhoRestaurado) {
         setFormData({ ...base, ...draft });
         setRascunhoRestaurado(true);
-        toast.info('Rascunho local restaurado — continue de onde parou.');
+        // Toast removido para evitar confusão se o usuário acabou de salvar
       } else if (!rascunhoRestaurado) {
         setFormData(base);
       }
@@ -146,14 +146,14 @@ export default function Empresa() {
             endereco: cliente.endereco || '',
           }
         : {
-            email: user?.email || '',
-            telefone: profile?.telefone || '',
+            // Campos devem vir vazios para novo cadastro manual
+            email: '',
+            telefone: '',
           };
       const draft = tryLoadDraft();
       if (draft && !rascunhoRestaurado) {
         setFormData({ ...base, ...draft });
         setRascunhoRestaurado(true);
-        toast.info('Rascunho local restaurado — continue de onde parou.');
       } else if (!rascunhoRestaurado) {
         setFormData(base);
       }
@@ -264,7 +264,10 @@ export default function Empresa() {
   const handleNew = () => {
     createdIdRef.current = null;
     setSelectedEmpresaId(null);
-    setFormData({});
+    setFormData({
+      email: '',
+      telefone: '',
+    });
     setViewMode('new');
     setHasChanges(false);
     setRascunhoRestaurado(false);
@@ -436,17 +439,17 @@ export default function Empresa() {
       </div>
 
       {/* Aviso de salvamento manual */}
-      <div className={`rounded-lg border px-4 py-2 flex items-center justify-between gap-3 ${hasChanges ? 'border-amber-500/30 bg-amber-500/5' : 'border-primary/20 bg-primary/5'}`}>
+      <div className={`rounded-lg border px-4 py-2 flex items-center justify-between gap-3 ${hasChanges || rascunhoRestaurado ? 'border-amber-500/30 bg-amber-500/5' : 'border-primary/20 bg-primary/5'}`}>
         <p className="text-xs text-muted-foreground">
           {upsertCadastro.isPending ? (
             <span className="flex items-center gap-1.5">
               <Loader2 className="w-3 h-3 animate-spin text-primary" />
               Salvando alterações...
             </span>
-          ) : hasChanges ? (
-            <span>⚠️ Você tem alterações não salvas. Clique em <strong>Salvar</strong> para gravar no banco de dados. (Rascunho local mantido automaticamente.)</span>
+          ) : (hasChanges || rascunhoRestaurado) ? (
+            <span>⚠️ Você tem alterações não salvas ou rascunho restaurado. Clique em <strong>Salvar</strong> para gravar no banco de dados.</span>
           ) : (
-            <span>✅ Tudo salvo. As alterações são gravadas apenas ao clicar em <strong>Salvar</strong>.</span>
+            <span>✅ Tudo salvo no banco de dados.</span>
           )}
         </p>
       </div>
