@@ -210,27 +210,31 @@ function DocumentItem({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "rounded-lg border-2 border-dashed p-4 transition-all",
-        isDragging ? "border-primary bg-primary/5" : "border-border",
+        "rounded-lg border-2 border-dashed p-6 transition-all",
+        isDragging ? "border-primary bg-primary/10 scale-[1.02]" : "border-border",
+        documento.status === 'pendente' && "hover:border-primary/50 hover:bg-muted/50 cursor-pointer",
         documento.status === 'aprovado' && "border-success/30 bg-success/5",
         documento.status === 'rejeitado' && "border-destructive/30 bg-destructive/5"
       )}
-      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+      onDragOver={(e) => { e.preventDefault(); if (documento.status === 'pendente') setIsDragging(true); }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
+      onClick={() => {
+        if (documento.status === 'pendente') fileInputRef.current?.click();
+      }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className={cn(
-            "p-2 rounded-lg",
-            documento.status === 'pendente' ? "bg-muted" : 
+            "p-3 rounded-xl shadow-sm",
+            documento.status === 'pendente' ? "bg-muted text-muted-foreground" : 
             documento.status === 'enviado' ? "bg-info/10" :
             documento.status === 'aprovado' ? "bg-success/10" : "bg-destructive/10"
           )}>
             {hasFile ? (
-              <FileIcon className={cn("h-5 w-5", STATUS_CONFIG[documento.status].color)} />
+              <FileIcon className={cn("h-6 w-6", STATUS_CONFIG[documento.status].color)} />
             ) : (
-              <FileIcon2 className="h-5 w-5 text-muted-foreground" />
+              <Upload className="h-6 w-6 animate-pulse" />
             )}
           </div>
           <div>
