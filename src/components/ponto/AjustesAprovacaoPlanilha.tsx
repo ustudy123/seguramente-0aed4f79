@@ -49,7 +49,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
       if (!map.has(colabId)) {
         map.set(colabId, { nome: a.colaborador_nome, cpf: a.colaborador_cpf, days: new Map() });
       }
-      const colab = map.get(a.colaborador_id)!;
+      const colab = map.get(colabId)!;
       const dateKey = (a.data_referencia || "").toString().slice(0, 10);
       if (!colab.days.has(dateKey)) colab.days.set(dateKey, []);
       colab.days.get(dateKey)!.push(a);
