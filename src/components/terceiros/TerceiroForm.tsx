@@ -63,6 +63,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     
     const base = initial || emptyForm;
     
+    const isPf = initial?.cnpj && initial.cnpj.replace(/\D/g, "").length === 11;
+    
     setForm({
       razao_social: base.razao_social || "",
       nome_fantasia: base.nome_fantasia || "",
@@ -81,6 +83,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       contrato_fim: base.contrato_fim || "",
       atividade_risco: base.atividade_risco || false,
       observacoes: base.observacoes || "",
+      tipo_pessoa: isPf ? "pf" : "pj",
     });
     setUnidadesText((base.unidades || []).join(", "));
     setSetoresText((base.setores || []).join(", "));
@@ -97,7 +100,11 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   };
 
   const handleCnpjChange = (value: string) => {
-    set("cnpj", formatCnpj(value));
+    if (form.tipo_pessoa === "pj") {
+      set("cnpj", formatCnpj(value));
+    } else {
+      set("cnpj", formatCpf(value));
+    }
   };
 
   const handleBuscarCnpj = useCallback(async () => {
