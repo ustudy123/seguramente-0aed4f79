@@ -176,7 +176,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                     {isCollapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                     <Avatar className="h-9 w-9 shrink-0">
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                        {colab.nome.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                        {colab.nome.trim().split(/\s+/).map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
