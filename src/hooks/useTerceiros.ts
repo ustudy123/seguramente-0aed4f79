@@ -122,12 +122,15 @@ export function useTerceiros() {
   const updateTerceiro = useMutation({
     mutationFn: async ({ id, ...payload }: Partial<Terceiro> & { id: string }) => {
       if (payload.cnpj !== undefined) {
-        const cnpj = cleanCnpj(payload.cnpj);
-        if (!cnpj || cnpj.length !== 14) {
-          throw new Error("CNPJ inválido. Informe os 14 dígitos.");
+        const doc = cleanCnpj(payload.cnpj);
+        const isCpf = doc.length === 11;
+        const isCnpj = doc.length === 14;
+
+        if (doc && !isCpf && !isCnpj) {
+          throw new Error("Documento inválido. Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).");
         }
-        await ensureCnpjUnique(cnpj, id);
-        payload.cnpj = cnpj;
+        await ensureCnpjUnique(doc, id);
+        payload.cnpj = doc;
       }
 
       // Clean dates: empty strings to null
