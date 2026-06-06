@@ -95,7 +95,7 @@ export default function CompletarCadastro() {
       if (uploadError) throw uploadError;
 
       const { error: updateError } = await supabase.rpc("update_admissao_foto_by_token", {
-        _token: token, // Changed to token directly as it is a UUID string that fits the parameter
+        _token: token,
         _foto_url: filePath,
       });
 
