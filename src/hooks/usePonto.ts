@@ -177,18 +177,24 @@ export function usePonto() {
   // Buscar ajustes (todos status, últimos 90 dias) — mantém histórico para conferência
   const useAjustesPendentes = () => {
     return useQuery({
-      queryKey: ["ponto-ajustes-pendentes", tenantId],
+      queryKey: ["ponto-ajustes-pendentes", tenantId, empresaAtivaId],
       queryFn: async (): Promise<PontoAjuste[]> => {
         if (!tenantId) return [];
 
         const desde = new Date();
         desde.setDate(desde.getDate() - 90);
 
-        const { data, error } = await fromTable("ponto_ajustes")
+        let query = fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
-          .gte("created_at", desde.toISOString())
-          .order("created_at", { ascending: false }) as { data: PontoAjuste[] | null; error: Error | null };
+          .gte("created_at", desde.toISOString());
+
+        // Empresa ativa OU registros sem empresa atribuída (histórico)
+        if (empresaAtivaId) {
+          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+        }
+
+        const { data, error } = await query.order("created_at", { ascending: false }) as { data: PontoAjuste[] | null; error: Error | null };
 
         if (error) throw error;
         return data || [];
@@ -359,6 +365,7 @@ export function usePonto() {
       const { data, error } = await fromTable("ponto_ajustes")
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           colaborador_id: colaboradorId,
           colaborador_nome: colaboradorNome,
           colaborador_cpf: colaboradorCpf,
