@@ -236,7 +236,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Razão Social *</Label>
+              <Label>{form.tipo_pessoa === 'pf' ? 'Nome Completo' : 'Razão Social'} *</Label>
               <Input value={form.razao_social || ""} onChange={(e) => set("razao_social", e.target.value)} />
             </div>
             <div>
