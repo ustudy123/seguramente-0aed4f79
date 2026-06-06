@@ -154,20 +154,27 @@ const Ponto = () => {
     // Se não houver colaboradores carregados, ou se não houver empresa selecionada,
     // o hook useAjustesPendentes já filtra por empresa_id no banco se disponível.
     // Aqui fazemos um fallback de segurança baseado no CPF se necessário.
-    if (!empresaAtivaId || colaboradores.length === 0) return ajustesPendentesRaw;
+    if (!empresaAtivaId) return ajustesPendentesRaw;
     
-    const cpfsEmpresa = new Set(
-      colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
-    );
-    
-    return ajustesPendentesRaw.filter((a: any) => {
-      // Se o ajuste já tem empresa_id e ele bate com a ativa, mantém
-      if (a.empresa_id && a.empresa_id === empresaAtivaId) return true;
+    // Se tivermos colaboradores carregados, filtramos apenas os ajustes dos colaboradores que PERTENCEM a essa empresa
+    // ou que tenham o empresa_id explicitamente vinculado à empresa ativa.
+    if (colaboradores.length > 0) {
+      const cpfsEmpresa = new Set(
+        colaboradores.map((c) => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)
+      );
       
-      // Caso contrário (histórico ou nulo), verifica pelo CPF do colaborador
-      const cpfDigito = (a.colaborador_cpf || "").replace(/\D/g, "");
-      return cpfDigito && cpfsEmpresa.has(cpfDigito);
-    });
+      return ajustesPendentesRaw.filter((a: any) => {
+        // Se o ajuste já tem empresa_id e ele bate com a ativa, mantém
+        if (a.empresa_id && a.empresa_id === empresaAtivaId) return true;
+        
+        // Se o ajuste é do tenant (global) ou nulo, verifica pelo CPF se o colaborador pertence a esta empresa
+        const cpfDigito = (a.colaborador_cpf || "").replace(/\D/g, "");
+        return cpfDigito && cpfsEmpresa.has(cpfDigito);
+      });
+    }
+
+    // Se não houver colaboradores carregados ainda mas houver empresaId, filtramos apenas pelo ID da empresa
+    return ajustesPendentesRaw.filter((a: any) => a.empresa_id === empresaAtivaId);
   }, [ajustesPendentesRaw, colaboradores, empresaAtivaId]);
 
   // Auto-capture geolocation when modal opens
