@@ -303,36 +303,21 @@ export default function CompletarCadastro() {
           </CardHeader>
           <CardContent>
             {documentos.length > 0 ? (
-              <DocumentUpload 
-                documentos={documentos}
-                onUpload={handleUploadDocument}
-                onRemove={handleRemoveDocument}
-                isAdmin={false}
-              />
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Use o botão <strong>Enviar</strong> de cada documento ou arraste o arquivo para a área correspondente.
+                </p>
+                <DocumentUpload 
+                  documentos={documentos}
+                  onUpload={handleUploadDocument}
+                  onRemove={handleRemoveDocument}
+                  isAdmin={false}
+                />
+              </div>
             ) : (
               <div className="rounded-lg border-2 border-dashed border-border bg-muted/20 p-8 text-center text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                <p className="mb-4">Nenhum documento solicitado no momento.</p>
-                <div className="flex flex-col items-center gap-3">
-                  <Button variant="outline" onClick={() => documentoInputRef.current?.click()}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Anexar documento
-                  </Button>
-                  <p className="text-xs text-muted-foreground">Você também pode arrastar um arquivo para um item quando os documentos forem exibidos.</p>
-                  <input
-                    ref={documentoInputRef}
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        void handleUploadFirstPendingDocument(file);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                </div>
+                <p>Nenhum documento solicitado no momento.</p>
               </div>
             )}
           </CardContent>
