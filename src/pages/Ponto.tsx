@@ -112,7 +112,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("colaborador_cpf,hora_marcacao,tipo_marcacao")
+        .select("colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
@@ -126,11 +126,15 @@ const Ponto = () => {
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ hora: string; tipo: string }>>();
+    const map = new Map<string, Array<{ hora: string; tipo: string; original: boolean }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push({ hora: m.hora_marcacao, tipo: m.tipo_marcacao });
+      map.get(k)!.push({ 
+        hora: m.hora_marcacao, 
+        tipo: m.tipo_marcacao,
+        original: m.marcacao_original ?? true 
+      });
     }
     return map;
   }, [marcacoesDoDia]);
@@ -515,11 +519,11 @@ const Ponto = () => {
                                   key={idx}
                                   className={cn(
                                     "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono border",
-                                    isEntry
+                                    m.original
                                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                       : "bg-rose-50 text-rose-700 border-rose-200"
                                   )}
-                                  title={isEntry ? "Entrada" : "Saída"}
+                                  title={m.original ? "Registro Nativo" : "Registro Ajustado"}
                                 >
                                   {isEntry ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}
                                   {m.hora?.substring(0, 5)}
