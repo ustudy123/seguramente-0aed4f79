@@ -115,11 +115,12 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           .limit(1)
           .maybeSingle();
         
-        if (data) {
+        if (data && !error) {
+          const doc = data as any;
           setExistingContract({
-            id: data.id,
-            name: data.arquivo_nome || "Contrato Anexado",
-            url: data.arquivo_url || ""
+            id: doc.id,
+            name: doc.arquivo_nome || "Contrato Anexado",
+            url: doc.arquivo_url || ""
           });
         } else {
           setExistingContract(null);
