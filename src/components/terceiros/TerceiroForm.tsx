@@ -245,7 +245,15 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       setContractFile(null);
     } catch (error: any) {
       console.error("Erro ao salvar terceiro:", error);
-      toast.error("Erro ao salvar documento: " + (error.message || "Erro desconhecido"));
+      let errorMessage = "Erro ao salvar documento. Por favor, tente novamente.";
+      
+      if (error.message?.includes("maximum allowed size") || error.error === "Payload Too Large") {
+        errorMessage = "O arquivo selecionado é muito grande. O limite máximo é de 5MB.";
+      } else if (error.message) {
+        errorMessage = `Erro ao salvar documento: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setUploadingContract(false);
     }
