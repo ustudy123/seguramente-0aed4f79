@@ -167,12 +167,15 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       // First create/update the third party
       const result = await (onSubmit(submissionData) as any);
       
+      // result might be the object directly or an object containing the data
+      const savedId = result?.id || result?.data?.id;
+
       // If there's a contract file, upload it to terceiro_documentos
-      if (contractFile && result?.id) {
+      if (contractFile && savedId) {
         setUploadingContract(true);
         const ts = Date.now();
         const safeName = contractFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const path = `${tenantId}/terceiros/${result.id}/contratos/${ts}_${safeName}`;
+        const path = `${tenantId}/terceiros/${savedId}/contratos/${ts}_${safeName}`;
         
         const { error: upErr } = await supabase.storage
           .from("documentos")
@@ -182,7 +185,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
 
         await supabase.from("terceiro_documentos" as any).insert({
           tenant_id: tenantId,
-          terceiro_id: result.id,
+          terceiro_id: savedId,
           tipo: "Contrato",
           nome: `Contrato Original - ${contractFile.name}`,
           arquivo_url: path,
