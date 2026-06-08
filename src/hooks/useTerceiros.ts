@@ -143,8 +143,11 @@ export function useTerceiros() {
 
       const { error } = await fromTable("terceiros")
         .update(finalPayload as any)
-        .eq("id", id);
+        .eq("id", id)
+        .select()
+        .single();
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiros"] });
