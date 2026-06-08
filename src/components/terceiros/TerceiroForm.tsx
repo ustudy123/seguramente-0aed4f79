@@ -497,11 +497,7 @@ function MultiSelectCombobox({
               <span className="text-muted-foreground">{placeholder}</span>
             ) : (
               <div className="flex flex-wrap gap-1">
-                {selected.map((v) => (
-                  <Badge key={v} variant="secondary" className="text-xs">
-                    {v}
-                  </Badge>
-                ))}
+                {selected.length} selecionado(s)
               </div>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
