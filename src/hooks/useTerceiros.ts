@@ -110,6 +110,7 @@ export function useTerceiros() {
         .select()
         .single();
       if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["terceiro-documentos"] }); // Invalidate docs too
       return data;
     },
     onSuccess: () => {
