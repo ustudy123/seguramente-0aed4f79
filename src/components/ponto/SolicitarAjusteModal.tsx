@@ -365,7 +365,12 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
             </div>
 
             {/* Folha */}
-            <div className="flex-1 w-full min-w-0 min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y scrollbar-thin">
+            <div className="relative flex-1 w-full min-w-0 min-h-[300px]">
+              <div
+                ref={scrollRef}
+                onScroll={updateScrollInfo}
+                className="h-full w-full min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md pr-2 pb-2 [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y scrollbar-thin"
+              >
               <div className="min-w-[760px] md:min-w-full">
 
               {loading ? (
@@ -474,6 +479,31 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                 </table>
               )}
               </div>
+              </div>
+
+              {scrollInfo.canScrollX && (
+                <div className="pointer-events-none absolute inset-x-4 bottom-1.5 h-1.5 rounded-full bg-border/60">
+                  <div
+                    className="h-full rounded-full bg-muted-foreground/60"
+                    style={{
+                      width: `${scrollInfo.thumbXSize}px`,
+                      transform: `translateX(${scrollInfo.thumbXOffset}px)`,
+                    }}
+                  />
+                </div>
+              )}
+
+              {scrollInfo.canScrollY && (
+                <div className="pointer-events-none absolute right-1.5 top-4 bottom-4 w-1.5 rounded-full bg-border/60">
+                  <div
+                    className="w-full rounded-full bg-muted-foreground/60"
+                    style={{
+                      height: `${scrollInfo.thumbYSize}px`,
+                      transform: `translateY(${scrollInfo.thumbYOffset}px)`,
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
 
