@@ -194,10 +194,13 @@ function recortarRangePlanilha(planilha: XLSX.WorkSheet): void {
     }
   }
 
-  if (ultimaLinhaComDados < range.e.r) {
-    range.e.r = ultimaLinhaComDados;
-    planilha["!ref"] = XLSX.utils.encode_range(range);
+  // Ensure we don't end up with an empty range if we find no data below headers
+  if (ultimaLinhaComDados < range.s.r) {
+    ultimaLinhaComDados = range.s.r;
   }
+
+  range.e.r = ultimaLinhaComDados;
+  planilha["!ref"] = XLSX.utils.encode_range(range);
 }
 
 function normalizarTexto(texto: string): string {
@@ -434,8 +437,13 @@ export function useImportacaoPlanilha() {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const planilha = workbook.Sheets[workbook.SheetNames[0]];
-          recortarRangePlanilha(planilha);
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
+          
+          // Clear any internal cache by using a fresh sheet object
+          const sheetName = workbook.SheetNames[0];
+          const freshPlanilha = workbook.Sheets[sheetName];
+          
+          recortarRangePlanilha(freshPlanilha);
+          const jsonData = XLSX.utils.sheet_to_json(freshPlanilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           if (jsonData.length < 1) { reject(new Error("Planilha vazia")); return; }
           const headers = jsonData[0].map(h => str(h)).filter(h => h.length > 0);
           const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows
@@ -457,9 +465,9 @@ export function useImportacaoPlanilha() {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array", cellDates: false });
-          const planilha = workbook.Sheets[workbook.SheetNames[0]];
-          recortarRangePlanilha(planilha);
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
+          const freshPlanilha = workbook.Sheets[workbook.SheetNames[0]];
+          recortarRangePlanilha(freshPlanilha);
+          const jsonData = XLSX.utils.sheet_to_json(freshPlanilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
 
           const headers = jsonData[0].map(h => str(h));
@@ -587,9 +595,9 @@ export function useImportacaoPlanilha() {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const primeiraAba = workbook.SheetNames[0];
-          const planilha = workbook.Sheets[primeiraAba];
-          recortarRangePlanilha(planilha);
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
+          const freshPlanilha = workbook.Sheets[primeiraAba];
+          recortarRangePlanilha(freshPlanilha);
+          const jsonData = XLSX.utils.sheet_to_json(freshPlanilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           
           if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
           
