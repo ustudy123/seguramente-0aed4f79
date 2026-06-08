@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -268,7 +267,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="w-[95vw] md:max-w-4xl max-h-[92vh] flex flex-col p-4 md:p-6">
+      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -307,8 +306,8 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
             </div>
 
             {/* Folha */}
-            <ScrollArea className="flex-1 border rounded-md" scrollHideDelay={0}>
-              <div className="min-w-[600px] md:min-w-full">
+            <div className="flex-1 w-full min-w-0 min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y scrollbar-thin">
+              <div className="min-w-[760px] md:min-w-full">
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -416,7 +415,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                 </table>
               )}
               </div>
-            </ScrollArea>
+            </div>
 
 
             {/* Rodapé com anexos + envio */}
