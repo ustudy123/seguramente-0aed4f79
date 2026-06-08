@@ -145,6 +145,22 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     setItemsParaRejeitar([]);
   };
 
+  const handleExcluirDia = async (items: PontoAjuste[]) => {
+    if (!excluirAjuste || items.length === 0) return;
+    const ok = await confirm({
+      title: "Excluir ajustes do dia",
+      description: `Excluir permanentemente ${items.length} solicitação(ões) de ajuste deste dia? Esta ação não pode ser desfeita e ficará registrada na auditoria.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    for (const a of items) {
+      await excluirAjuste({ ajusteId: a.id });
+    }
+  };
+
+
+
   return (
     <TooltipProvider delayDuration={150}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl border overflow-hidden shadow-sm">
