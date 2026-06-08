@@ -307,7 +307,9 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
             </div>
 
             {/* Folha */}
-            <ScrollArea className="flex-1 border rounded-md">
+            <ScrollArea className="flex-1 border rounded-md" scrollHideDelay={0}>
+              <div className="min-w-[600px] md:min-w-full">
+
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -413,7 +415,9 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                   </tbody>
                 </table>
               )}
+              </div>
             </ScrollArea>
+
 
             {/* Rodapé com anexos + envio */}
             <div className="space-y-3 pt-3 border-t">
