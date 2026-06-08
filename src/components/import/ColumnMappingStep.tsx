@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AlertTriangle, CheckCircle, ArrowRight, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,13 @@ function autoDetectMapping(fileHeaders: string[]): Record<string, string> {
     for (const header of fileHeaders) {
       if (usedHeaders.has(header)) continue;
       const normalizedHeader = normalize(header);
+      
+      // Guard: if looking for 'cpf', skip headers containing 'empresa'
+      if (field.key === "cpf" && normalizedHeader.includes("empresa")) continue;
+      
+      // Guard: if looking for 'cnpjEmpresa', skip if header is exactly 'cpf'
+      if (field.key === "cnpjEmpresa" && normalizedHeader === "cpf") continue;
+      
       for (const kw of keywords) {
         if (normalizedHeader.includes(normalize(kw))) {
           mapping[field.key] = header;
@@ -136,6 +143,11 @@ interface ColumnMappingStepProps {
 export function ColumnMappingStep({ fileHeaders, sampleRows, onConfirm, onBack }: ColumnMappingStepProps) {
   const initialMapping = useMemo(() => autoDetectMapping(fileHeaders), [fileHeaders]);
   const [mapping, setMapping] = useState<Record<string, string>>(initialMapping);
+
+  // Sync mapping state when fileHeaders prop changes (e.g., new file uploaded)
+  useEffect(() => {
+    setMapping(autoDetectMapping(fileHeaders));
+  }, [fileHeaders]);
 
   const requiredFields = SYSTEM_FIELDS.filter(f => f.required);
   const optionalFields = SYSTEM_FIELDS.filter(f => !f.required);

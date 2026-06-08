@@ -472,8 +472,11 @@ export function useImportacaoPlanilha() {
           recortarRangePlanilha(freshPlanilha);
           const jsonData = XLSX.utils.sheet_to_json(freshPlanilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           if (jsonData.length < 1) { reject(new Error("Planilha vazia")); return; }
-          const headers = jsonData[0].map(h => str(h)).filter(h => h.length > 0);
-          const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows
+          
+          // CRITICAL: Do NOT filter headers or sampleRows — keep raw indices in sync
+          // The column index mapping must remain consistent between headers and sample row values
+          const headers = jsonData[0].map(h => str(h)); // no .filter()
+          const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows — also unfiltered
           resolve({ headers, sampleRows });
         } catch (error) { reject(error); }
       };
@@ -632,14 +635,16 @@ export function useImportacaoPlanilha() {
           
           const mapeados: number[] = [];
           
+          // Ensure cnpjEmpresa is found first so cpf can exclude it
           const cnpjEmpresaIdx = encontrarColuna(headers, "cnpjEmpresa", mapeados);
           if (cnpjEmpresaIdx !== -1) mapeados.push(cnpjEmpresaIdx);
           
-          const nomeIdx = encontrarColuna(headers, "nome", mapeados);
-          if (nomeIdx !== -1) mapeados.push(nomeIdx);
-          
+          // Now find cpf — it will automatically skip empresa columns due to guard in encontrarColuna
           const cpfIdx = encontrarColuna(headers, "cpf", mapeados);
           if (cpfIdx !== -1) mapeados.push(cpfIdx);
+          
+          const nomeIdx = encontrarColuna(headers, "nome", mapeados);
+          if (nomeIdx !== -1) mapeados.push(nomeIdx);
 
           const idx = {
             cnpjEmpresa: cnpjEmpresaIdx,
