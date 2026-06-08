@@ -795,10 +795,11 @@ export function useImportacaoPlanilha() {
       const infoEmpresas: Record<string, { cnpj: string; razaoSocial: string }> = {}; // empresa_id -> info
 
       if (cnpjsUnicos.length > 0) {
-        const { data: empresas } = await fromTable("empresa_cadastro")
+        const { data: todasEmpresas } = await fromTable("empresa_cadastro")
           .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
-          .eq("tenant_id", tenantId)
-          .eq("ativo", true);
+          .eq("tenant_id", tenantId);
+
+        const empresas = (todasEmpresas || []).filter((e: any) => e.ativo);
 
         const docDuplicados = new Set<string>();
         (empresas || []).forEach((emp: any) => {
@@ -827,14 +828,31 @@ export function useImportacaoPlanilha() {
         // Validar que todos os documentos existem
         for (const doc of cnpjsUnicos) {
           if (!mapaEmpresas[doc]) {
-            if (docDuplicados.has(doc)) continue; // já reportado acima
-            const tipo = doc.length === 11 ? "CPF" : "CNPJ";
-            dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
-              resultado.erros.push({
-                linha: d.linha,
-                mensagem: `${tipo} ${formatarDocumento(doc)} não encontrado entre as empresas ATIVAS do cadastro`,
-              });
+            if (docDuplicados.has(doc)) continue; 
+            
+            const empresaExistenteInativa = (todasEmpresas || []).find((e: any) => {
+              const docE = e.tipo_pessoa === "pf" ? e.cpf : e.cnpj;
+              return docE && String(docE).replace(/\D/g, "") === doc;
             });
+
+            const tipo = doc.length === 11 ? "CPF" : "CNPJ";
+            const docFormatado = formatarDocumento(doc);
+
+            if (empresaExistenteInativa) {
+              dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
+                resultado.erros.push({
+                  linha: d.linha,
+                  mensagem: `Empresa com ${tipo} ${docFormatado} está INATIVA. Ative-a no cadastro de empresas antes de importar.`,
+                });
+              });
+            } else {
+              dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
+                resultado.erros.push({
+                  linha: d.linha,
+                  mensagem: `Empresa com ${tipo} ${docFormatado} não encontrada no sistema. Verifique se o CNPJ está correto ou se a empresa pertence a outro grupo.`,
+                });
+              });
+            }
           }
         }
       }
