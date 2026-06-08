@@ -546,7 +546,7 @@ export function SolicitarAjusteFolhaInterno({
                   </tbody>
                 </table>
               )}
-            </ScrollArea>
+            </div>
 
             <div className="space-y-3 pt-3 border-t">
               <div className="flex items-center justify-between gap-3 flex-wrap">
