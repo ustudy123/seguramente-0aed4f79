@@ -29,7 +29,7 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
-  const { user, tenantId } = useAuth();
+  const { user, profile, tenantId } = useAuth();
   const { empresas } = useEmpresaCadastro();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [servicoSearch, setServicoSearch] = useState("");
