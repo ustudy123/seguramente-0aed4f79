@@ -99,9 +99,11 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
-    setDados([]); // 🔴 LIMPA DADOS ANTIGOS IMEDIATAMENTE ao anexar novo arquivo
-    setFileHeaders([]); // Limpa headers antigos
-    setSampleRows([]); // Limpa samples antigos
+    setDados([]);
+    setResultado(null); // Limpa resultado anterior
+    setFileHeaders([]);
+    setSampleRows([]);
+    setUsarMapeamento(false); // Reseta modo de mapeamento
     setLendoArquivo(true);
 
     try {
@@ -133,9 +135,11 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
-    setDados([]); // 🔴 LIMPA DADOS ANTIGOS IMEDIATAMENTE ao anexar novo arquivo
-    setFileHeaders([]); // Limpa headers antigos
-    setSampleRows([]); // Limpa samples antigos
+    setDados([]);
+    setResultado(null); // Limpa resultado anterior
+    setFileHeaders([]);
+    setSampleRows([]);
+    setUsarMapeamento(false); // Reseta modo de mapeamento
     setLendoArquivo(true);
 
     try {
