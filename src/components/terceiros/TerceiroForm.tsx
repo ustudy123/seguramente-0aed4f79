@@ -29,7 +29,7 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
-  const { user, tenantId } = useAuth();
+  const { user, profile, tenantId } = useAuth();
   const { empresas } = useEmpresaCadastro();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [servicoSearch, setServicoSearch] = useState("");
@@ -186,6 +186,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
         await supabase.from("terceiro_documentos" as any).insert({
           tenant_id: tenantId,
           terceiro_id: savedId,
+          trabalhador_id: null,
           tipo: "Contrato",
           nome: `Contrato Original - ${contractFile.name}`,
           arquivo_url: path,
@@ -193,6 +194,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           arquivo_tamanho: contractFile.size,
           status: "valido",
           criado_por: user?.id,
+          criado_por_nome: profile?.nome_completo || user?.email,
         });
       }
       
