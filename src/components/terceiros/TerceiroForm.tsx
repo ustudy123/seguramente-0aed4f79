@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
-import { formatCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { formatCnpj, validateCnpj, buscarCnpj, formatPhone } from "@/lib/brasilapi";
 import { formatCpf, validateCpf } from "@/lib/cpf";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -116,6 +116,10 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     } else {
       set("cnpj", formatCpf(value));
     }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    set("telefone", formatPhone(value));
   };
 
   const handleBuscarCnpj = useCallback(async () => {
@@ -279,7 +283,12 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             </div>
             <div>
               <Label>Telefone</Label>
-              <Input value={form.telefone || ""} onChange={(e) => set("telefone", e.target.value)} />
+              <Input 
+                value={form.telefone || ""} 
+                onChange={(e) => handlePhoneChange(e.target.value)} 
+                placeholder="(00) 00000-0000"
+                maxLength={15}
+              />
             </div>
           </div>
 
