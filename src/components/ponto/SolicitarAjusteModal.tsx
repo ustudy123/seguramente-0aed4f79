@@ -79,48 +79,8 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
-  const [scrollInfo, setScrollInfo] = useState({
-    canScrollX: false,
-    canScrollY: false,
-    thumbXSize: 0,
-    thumbXOffset: 0,
-    thumbYSize: 0,
-    thumbYOffset: 0,
-  });
 
   const reset = () => { setEdits({}); setFiles([]); setDone(false); };
-
-  const updateScrollInfo = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const { clientWidth, scrollWidth, scrollLeft, clientHeight, scrollHeight, scrollTop } = el;
-    const canScrollX = scrollWidth > clientWidth + 1;
-    const canScrollY = scrollHeight > clientHeight + 1;
-
-    const trackX = Math.max(clientWidth - 32, 0);
-    const thumbXSize = canScrollX ? Math.max((clientWidth / scrollWidth) * trackX, 40) : 0;
-    const maxThumbX = Math.max(trackX - thumbXSize, 0);
-    const thumbXOffset = canScrollX && scrollWidth > clientWidth
-      ? (scrollLeft / (scrollWidth - clientWidth)) * maxThumbX
-      : 0;
-
-    const trackY = Math.max(clientHeight - 32, 0);
-    const thumbYSize = canScrollY ? Math.max((clientHeight / scrollHeight) * trackY, 40) : 0;
-    const maxThumbY = Math.max(trackY - thumbYSize, 0);
-    const thumbYOffset = canScrollY && scrollHeight > clientHeight
-      ? (scrollTop / (scrollHeight - clientHeight)) * maxThumbY
-      : 0;
-
-    setScrollInfo({
-      canScrollX,
-      canScrollY,
-      thumbXSize,
-      thumbXOffset,
-      thumbYSize,
-      thumbYOffset,
-    });
-  }, []);
 
   useEffect(() => {
     if (!open) return;
