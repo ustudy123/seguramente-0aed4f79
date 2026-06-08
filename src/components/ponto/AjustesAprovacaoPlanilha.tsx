@@ -48,10 +48,13 @@ interface Props {
   ajustes: PontoAjuste[];
   processarAjuste: (args: { ajusteId: string; aprovado: boolean; observacao?: string; multiple?: boolean }) => Promise<unknown> | void;
   processando: boolean;
+  excluirAjuste?: (args: { ajusteId: string }) => Promise<unknown> | void;
+  excluindoAjuste?: boolean;
   onOpenAnexos: (ajuste: PontoAjuste) => void;
 }
 
-export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando, onOpenAnexos }: Props) {
+export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando, excluirAjuste, excluindoAjuste, onOpenAnexos }: Props) {
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "pendente" | "aprovado" | "rejeitado">("pendente");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
