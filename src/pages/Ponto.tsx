@@ -572,8 +572,11 @@ const Ponto = () => {
             ajustes={ajustesPendentes}
             processarAjuste={processarAjuste}
             processandoAjuste={processandoAjuste}
+            excluirAjuste={excluirAjuste}
+            excluindoAjuste={excluindoAjuste}
             setAnexosModalAjuste={setAnexosModalAjuste}
           />
+
         </TabsContent>
 
 
