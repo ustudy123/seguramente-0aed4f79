@@ -113,6 +113,13 @@ function autoDetectMapping(fileHeaders: string[]): Record<string, string> {
     for (const header of fileHeaders) {
       if (usedHeaders.has(header)) continue;
       const normalizedHeader = normalize(header);
+      
+      // Guard: if looking for 'cpf', skip headers containing 'empresa'
+      if (field.key === "cpf" && normalizedHeader.includes("empresa")) continue;
+      
+      // Guard: if looking for 'cnpjEmpresa', skip if header is exactly 'cpf'
+      if (field.key === "cnpjEmpresa" && normalizedHeader === "cpf") continue;
+      
       for (const kw of keywords) {
         if (normalizedHeader.includes(normalize(kw))) {
           mapping[field.key] = header;
