@@ -365,145 +365,114 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
             </div>
 
             {/* Folha */}
-            <div className="relative flex-1 w-full min-w-0 min-h-[300px]">
-              <div
-                ref={scrollRef}
-                onScroll={updateScrollInfo}
-                className="h-full w-full min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md pr-2 pb-2 [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y scrollbar-thin"
-              >
+            <div
+              ref={scrollRef}
+              className="flex-1 w-full min-w-0 min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y ponto-scroll-visible"
+            >
               <div className="min-w-[760px] md:min-w-full">
-
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : diasMes.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
-              ) : (
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/50 sticky top-0 z-10">
-                    <tr className="text-left">
-                      <th className="px-2 py-2 font-medium w-[60px]">Dia</th>
-                      <th className="px-2 py-2 font-medium">Entrada</th>
-                      <th className="px-2 py-2 font-medium">S.Alm.</th>
-                      <th className="px-2 py-2 font-medium">R.Alm.</th>
-                      <th className="px-2 py-2 font-medium">Saída</th>
-
-
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {diasMes.map((data) => {
-                      const original = marcsPorDia[data] || {};
-                      const pendentes = pendentesPorDia[data] || [];
-                      const ed = editDia(data);
-                      const temAlteracao = ORDEM_TIPOS.some((t) => {
-                        const v = ed.horarios[t];
-                        return v && v !== original[t];
-                      });
-                      const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
-                      return (
-                        <>
-                          <tr
-                            key={data}
-                            className={`border-t ${temAlteracao ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""}`}
-                          >
-                            <td className="px-2 py-1.5 align-top">
-                              <div className="font-mono font-semibold">{isoToBR(data).slice(0,5)}</div>
-                              <div className="text-[10px] text-muted-foreground">{diaSemana(data)}</div>
-                              {pendentes.length > 0 && (
-                                <Badge variant="outline" className="text-[9px] mt-1 border-amber-500 text-amber-700 dark:text-amber-400">
-                                  {pendentes.length} pend.
-                                </Badge>
-                              )}
-                            </td>
-                            {ORDEM_TIPOS.map((t) => {
-                              const orig = original[t] || "";
-                              const valor = ed.horarios[t] ?? orig;
-                              const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
-                              const incluido = alterado && !orig;
-                              return (
-                                <td key={t} className="px-2 py-1.5 align-top">
-                                  <Input
-                                    type="time"
-                                    value={valor}
-                                    onChange={(e) => setHorario(data, t, e.target.value)}
-                                    className={`h-8 text-xs font-mono px-1 ${
-                                      incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                      : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                      : ""
-                                    }`}
-                                  />
-                                  {orig && alterado && (
-                                    <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                          {temAlteracao && (
-                            <tr key={`${data}-just`} className={temAlteracao ? "bg-primary/5" : ""}>
-                              <td colSpan={5} className="px-2 pb-3 pt-0">
-                                <div className="space-y-1.5 bg-background/50 p-2 rounded-md border border-primary/20">
-                                  <Label className="text-[10px] font-semibold text-primary uppercase tracking-wider">
-                                    Justificativa para {isoToBR(data)}
-                                  </Label>
-                                  <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
-                                    <SelectTrigger className="h-8 text-xs w-full bg-background">
-                                      <SelectValue placeholder="Selecione o motivo..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {JUSTIFICATIVAS_PRESET.map((j) => (
-                                        <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  {ed.justificativaPreset === "Outro (descrever)" && (
-                                    <Input
-                                      value={ed.justificativaOutro}
-                                      onChange={(e) => setJustificativaOutro(data, e.target.value)}
-                                      placeholder="Descreva detalhadamente o motivo"
-                                      className="h-8 text-xs bg-background"
-                                      maxLength={300}
-                                    />
-                                  )}
-                                </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : diasMes.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
+                ) : (
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/50 sticky top-0 z-10">
+                      <tr className="text-left">
+                        <th className="px-2 py-2 font-medium w-[60px]">Dia</th>
+                        <th className="px-2 py-2 font-medium">Entrada</th>
+                        <th className="px-2 py-2 font-medium">S.Alm.</th>
+                        <th className="px-2 py-2 font-medium">R.Alm.</th>
+                        <th className="px-2 py-2 font-medium">Saída</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {diasMes.map((data) => {
+                        const original = marcsPorDia[data] || {};
+                        const pendentes = pendentesPorDia[data] || [];
+                        const ed = editDia(data);
+                        const temAlteracao = ORDEM_TIPOS.some((t) => {
+                          const v = ed.horarios[t];
+                          return v && v !== original[t];
+                        });
+                        const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
+                        return (
+                          <>
+                            <tr
+                              key={data}
+                              className={`border-t ${temAlteracao ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""}`}
+                            >
+                              <td className="px-2 py-1.5 align-top">
+                                <div className="font-mono font-semibold">{isoToBR(data).slice(0,5)}</div>
+                                <div className="text-[10px] text-muted-foreground">{diaSemana(data)}</div>
+                                {pendentes.length > 0 && (
+                                  <Badge variant="outline" className="text-[9px] mt-1 border-amber-500 text-amber-700 dark:text-amber-400">
+                                    {pendentes.length} pend.
+                                  </Badge>
+                                )}
                               </td>
+                              {ORDEM_TIPOS.map((t) => {
+                                const orig = original[t] || "";
+                                const valor = ed.horarios[t] ?? orig;
+                                const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
+                                const incluido = alterado && !orig;
+                                return (
+                                  <td key={t} className="px-2 py-1.5 align-top">
+                                    <Input
+                                      type="time"
+                                      value={valor}
+                                      onChange={(e) => setHorario(data, t, e.target.value)}
+                                      className={`h-8 text-xs font-mono px-1 ${
+                                        incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                        : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                        : ""
+                                      }`}
+                                    />
+                                    {orig && alterado && (
+                                      <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
+                                    )}
+                                  </td>
+                                );
+                              })}
                             </tr>
-                          )}
-                        </>
-                      );
-
-                    })}
-                  </tbody>
-                </table>
-              )}
+                            {temAlteracao && (
+                              <tr key={`${data}-just`} className={temAlteracao ? "bg-primary/5" : ""}>
+                                <td colSpan={5} className="px-2 pb-3 pt-0">
+                                  <div className="space-y-1.5 bg-background/50 p-2 rounded-md border border-primary/20">
+                                    <Label className="text-[10px] font-semibold text-primary uppercase tracking-wider">
+                                      Justificativa para {isoToBR(data)}
+                                    </Label>
+                                    <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
+                                      <SelectTrigger className="h-8 text-xs w-full bg-background">
+                                        <SelectValue placeholder="Selecione o motivo..." />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {JUSTIFICATIVAS_PRESET.map((j) => (
+                                          <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    {ed.justificativaPreset === "Outro (descrever)" && (
+                                      <Input
+                                        value={ed.justificativaOutro}
+                                        onChange={(e) => setJustificativaOutro(data, e.target.value)}
+                                        placeholder="Descreva detalhadamente o motivo"
+                                        className="h-8 text-xs bg-background"
+                                        maxLength={300}
+                                      />
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
               </div>
-              </div>
-
-              {scrollInfo.canScrollX && (
-                <div className="pointer-events-none absolute inset-x-4 bottom-1.5 h-1.5 rounded-full bg-border/60">
-                  <div
-                    className="h-full rounded-full bg-muted-foreground/60"
-                    style={{
-                      width: `${scrollInfo.thumbXSize}px`,
-                      transform: `translateX(${scrollInfo.thumbXOffset}px)`,
-                    }}
-                  />
-                </div>
-              )}
-
-              {scrollInfo.canScrollY && (
-                <div className="pointer-events-none absolute right-1.5 top-4 bottom-4 w-1.5 rounded-full bg-border/60">
-                  <div
-                    className="w-full rounded-full bg-muted-foreground/60"
-                    style={{
-                      height: `${scrollInfo.thumbYSize}px`,
-                      transform: `translateY(${scrollInfo.thumbYOffset}px)`,
-                    }}
-                  />
-                </div>
-              )}
             </div>
 
 
