@@ -108,7 +108,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       const fetchContract = async () => {
         const { data, error } = await supabase
           .from("terceiro_documentos" as any)
-          .select("id, arquivo_nome, arquivo_url")
+          .select("*")
           .eq("terceiro_id", initial.id)
           .eq("tipo", "Contrato")
           .order('created_at', { ascending: false })
