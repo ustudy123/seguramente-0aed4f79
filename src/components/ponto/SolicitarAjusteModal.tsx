@@ -266,23 +266,6 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     return `${nomes[m-1]} ${y}`;
   }, [mesAtivo]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const frame = window.requestAnimationFrame(updateScrollInfo);
-    const el = scrollRef.current;
-    if (!el) return () => window.cancelAnimationFrame(frame);
-
-    const resizeObserver = new ResizeObserver(() => updateScrollInfo());
-    resizeObserver.observe(el);
-    window.addEventListener("resize", updateScrollInfo);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateScrollInfo);
-    };
-  }, [open, updateScrollInfo, diasMes.length, loading, edits, mesAtivo]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
