@@ -184,7 +184,6 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const handleSubmit = async () => {
     if (!form.razao_social || !form.cnpj) return;
     
-    // Clean empty date strings to null to avoid "invalid input syntax for type date" in Postgres
     const { tipo_pessoa, ...baseData } = form;
     const submissionData = {
       ...baseData,
@@ -193,19 +192,14 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     };
     
     try {
-      // First create/update the third party
       const result = await (onSubmit(submissionData) as any);
-      
-      // result might be the object directly or an object containing the data
-      // For mutations from react-query, mutateAsync returns the data directly
       const savedId = result?.id || result?.data?.id || initial?.id;
 
       if (!savedId) {
         throw new Error("Não foi possível obter o ID do terceiro salvo.");
       }
 
-      // If there's a contract file, upload it to terceiro_documentos
-      if (contractFile && savedId) {
+      if (contractFile) {
         setUploadingContract(true);
         const ts = Date.now();
         const safeName = contractFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
@@ -217,8 +211,14 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           
         if (upErr) throw upErr;
 
-        // If updating and there was an existing contract, we might want to delete it or just add the new one
-        // Usually, adding a new "Contrato" is fine as we show the latest one
+        // Ao subir um novo, removemos o antigo se existir
+        if (existingContract?.id) {
+          await supabase
+            .from("terceiro_documentos" as any)
+            .delete()
+            .eq("id", existingContract.id);
+        }
+
         await supabase.from("terceiro_documentos" as any).insert({
           tenant_id: tenantId,
           terceiro_id: savedId,
@@ -232,8 +232,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
         });
-      } else if (!existingContract && !contractFile && initial?.id) {
-        // Se o usuário removeu o contrato existente e não subiu um novo
+      } else if (!existingContract && initial?.id) {
+        // Se o usuário explicitamente removeu o contrato e não subiu outro
         await supabase
           .from("terceiro_documentos" as any)
           .delete()
@@ -245,6 +245,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       setContractFile(null);
     } catch (error: any) {
       console.error("Erro ao salvar terceiro:", error);
+      toast.error("Erro ao salvar documento: " + (error.message || "Erro desconhecido"));
     } finally {
       setUploadingContract(false);
     }
