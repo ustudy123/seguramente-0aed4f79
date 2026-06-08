@@ -480,6 +480,37 @@ export function usePonto() {
     },
   });
 
+  // Editar marcação de ponto (gestor/RH) — atualiza hora e marca como ajustada
+  const editarMarcacaoMutation = useMutation({
+    mutationFn: async ({
+      marcacaoId,
+      novaHora,
+    }: {
+      marcacaoId: string;
+      novaHora: string;
+    }) => {
+      if (!tenantId || !user) throw new Error("Usuário não autenticado");
+      const hora = novaHora.length === 5 ? `${novaHora}:00` : novaHora;
+      const { error } = await fromTable("ponto_marcacoes")
+        .update({
+          hora_marcacao: hora,
+          marcacao_original: false,
+        } as any)
+        .eq("id", marcacaoId);
+      if (error) throw error;
+      return marcacaoId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
+      toast.success("Marcação atualizada.");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao editar marcação: " + error.message);
+    },
+  });
+
   return {
     // Hooks de query
     usePontoDiario,
@@ -499,6 +530,9 @@ export function usePonto() {
 
     excluirAjuste: excluirAjusteMutation.mutateAsync,
     excluindoAjuste: excluirAjusteMutation.isPending,
+
+    editarMarcacao: editarMarcacaoMutation.mutateAsync,
+    editandoMarcacao: editarMarcacaoMutation.isPending,
   };
 }
 
