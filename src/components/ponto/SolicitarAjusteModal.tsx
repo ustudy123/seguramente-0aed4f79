@@ -318,11 +318,12 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                 <table className="w-full text-xs">
                   <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr className="text-left">
-                      <th className="px-2 py-2 font-medium w-[110px]">Dia</th>
-                      {ORDEM_TIPOS.map((t) => (
-                        <th key={t} className="px-2 py-2 font-medium">{TIPO_LABEL[t]}</th>
-                      ))}
-                      <th className="px-2 py-2 font-medium w-[260px]">Justificativa</th>
+                      <th className="px-2 py-2 font-medium w-[80px]">Dia</th>
+                      <th className="px-2 py-2 font-medium w-[80px]">Entrada</th>
+                      <th className="px-2 py-2 font-medium w-[80px]">S. Almoço</th>
+                      <th className="px-2 py-2 font-medium w-[80px]">R. Almoço</th>
+                      <th className="px-2 py-2 font-medium w-[80px]">Saída</th>
+
                     </tr>
                   </thead>
                   <tbody>
