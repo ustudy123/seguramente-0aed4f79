@@ -330,7 +330,8 @@ export function SolicitarAjusteFolhaInterno({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="max-w-6xl max-h-[92vh] flex flex-col">
+      <DialogContent className="max-w-6xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] sm:max-h-[92vh] flex flex-col p-3 sm:p-6 gap-3 sm:gap-4">
+
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
