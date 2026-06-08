@@ -329,6 +329,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                         <th className="px-2 py-2 font-medium">S.Alm.</th>
                         <th className="px-2 py-2 font-medium">R.Alm.</th>
                         <th className="px-2 py-2 font-medium">Saída</th>
+                        <th className="px-2 py-2 font-medium min-w-[200px]">Justificativa</th>
                       </tr>
                     </thead>
                     <tbody>
