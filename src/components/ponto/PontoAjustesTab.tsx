@@ -77,8 +77,11 @@ export function PontoAjustesTab({ ajustes, processarAjuste, processandoAjuste, e
         ajustes={ajustes}
         processarAjuste={processarAjuste}
         processando={processandoAjuste}
+        excluirAjuste={excluirAjuste}
+        excluindoAjuste={excluindoAjuste}
         onOpenAnexos={(a) => setAnexosModalAjuste(a)}
       />
+
     </div>
   );
 }
