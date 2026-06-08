@@ -635,14 +635,16 @@ export function useImportacaoPlanilha() {
           
           const mapeados: number[] = [];
           
+          // Ensure cnpjEmpresa is found first so cpf can exclude it
           const cnpjEmpresaIdx = encontrarColuna(headers, "cnpjEmpresa", mapeados);
           if (cnpjEmpresaIdx !== -1) mapeados.push(cnpjEmpresaIdx);
           
-          const nomeIdx = encontrarColuna(headers, "nome", mapeados);
-          if (nomeIdx !== -1) mapeados.push(nomeIdx);
-          
+          // Now find cpf — it will automatically skip empresa columns due to guard in encontrarColuna
           const cpfIdx = encontrarColuna(headers, "cpf", mapeados);
           if (cpfIdx !== -1) mapeados.push(cpfIdx);
+          
+          const nomeIdx = encontrarColuna(headers, "nome", mapeados);
+          if (nomeIdx !== -1) mapeados.push(nomeIdx);
 
           const idx = {
             cnpjEmpresa: cnpjEmpresaIdx,
