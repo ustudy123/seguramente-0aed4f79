@@ -54,19 +54,22 @@ import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
 import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 import { AjustesAprovacaoPlanilha } from "@/components/ponto/AjustesAprovacaoPlanilha";
 import { SolicitarAjusteFolhaInterno } from "@/components/ponto/SolicitarAjusteFolhaInterno";
+import { MarcacaoBadge } from "@/components/ponto/MarcacaoBadge";
 
 
 
 const Ponto = () => {
-  const { profile, tenantId: tenantIdAtivo } = useAuth();
+  const { profile, tenantId: tenantIdAtivo, hasMinimumRole } = useAuth();
   // Ponto eletrônico é exclusivo para vínculos CLT — exclui PJ/Pró-labore/Terceiros.
   const { colaboradores } = useColaboradores({ excluirPJ: true, apenasBatePonto: true });
+  const podeEditarMarcacao = hasMinimumRole("manager");
   const {
     usePontoDiario, useMarcacoesHoje, useAjustesPendentes,
     registrarPonto, registrandoPonto,
     solicitarAjuste, solicitandoAjuste,
     processarAjuste, processandoAjuste,
     excluirAjuste, excluindoAjuste,
+    editarMarcacao, editandoMarcacao,
   } = usePonto();
 
 
@@ -114,7 +117,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original")
+        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
@@ -128,11 +131,12 @@ const Ponto = () => {
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ hora: string; tipo: string; original: boolean }>>();
+    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push({ 
+        id: m.id,
         hora: m.hora_marcacao, 
         tipo: m.tipo_marcacao,
         original: m.marcacao_original ?? true 
@@ -514,22 +518,18 @@ const Ponto = () => {
                         ) : (
                           <div className="flex flex-wrap gap-1.5">
                             {marcs.map((m, idx) => {
-                              // Alterna E/S pela ordem (par=Entrada, ímpar=Saída) — não confia em rótulos fixos
                               const isEntry = idx % 2 === 0;
                               return (
-                                <span
-                                  key={idx}
-                                  className={cn(
-                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono border",
-                                    m.original
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : "bg-rose-50 text-rose-700 border-rose-200"
-                                  )}
-                                  title={m.original ? "Registro Nativo" : "Registro Ajustado"}
-                                >
-                                  {isEntry ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}
-                                  {m.hora?.substring(0, 5)}
-                                </span>
+                                <MarcacaoBadge
+                                  key={m.id || idx}
+                                  id={m.id}
+                                  hora={m.hora}
+                                  isEntry={isEntry}
+                                  original={m.original}
+                                  podeEditar={podeEditarMarcacao}
+                                  editando={editandoMarcacao}
+                                  onSalvar={editarMarcacao}
+                                />
                               );
                             })}
                           </div>
