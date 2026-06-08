@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search, Trash2 } from "lucide-react";
+import { confirm } from "@/components/ui/confirm-dialog";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
