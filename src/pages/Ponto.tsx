@@ -116,7 +116,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original")
+        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
@@ -130,11 +130,12 @@ const Ponto = () => {
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ hora: string; tipo: string; original: boolean }>>();
+    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push({ 
+        id: m.id,
         hora: m.hora_marcacao, 
         tipo: m.tipo_marcacao,
         original: m.marcacao_original ?? true 
