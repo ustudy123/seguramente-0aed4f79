@@ -268,7 +268,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="max-w-4xl max-h-[92vh] flex flex-col">
+      <DialogContent className="w-[95vw] md:max-w-4xl max-h-[92vh] flex flex-col p-4 md:p-6">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
