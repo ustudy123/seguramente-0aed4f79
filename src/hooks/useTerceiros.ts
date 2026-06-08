@@ -141,12 +141,13 @@ export function useTerceiros() {
         contrato_fim: payload.contrato_fim || null,
       };
 
-      const { error } = await fromTable("terceiros")
+      const { data, error } = await fromTable("terceiros")
         .update(finalPayload as any)
         .eq("id", id)
         .select()
         .single();
       if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["terceiro-documentos"] });
       return data;
     },
     onSuccess: () => {
