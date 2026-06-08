@@ -144,6 +144,11 @@ export function ColumnMappingStep({ fileHeaders, sampleRows, onConfirm, onBack }
   const initialMapping = useMemo(() => autoDetectMapping(fileHeaders), [fileHeaders]);
   const [mapping, setMapping] = useState<Record<string, string>>(initialMapping);
 
+  // Sync mapping state when fileHeaders prop changes (e.g., new file uploaded)
+  useEffect(() => {
+    setMapping(autoDetectMapping(fileHeaders));
+  }, [fileHeaders]);
+
   const requiredFields = SYSTEM_FIELDS.filter(f => f.required);
   const optionalFields = SYSTEM_FIELDS.filter(f => !f.required);
   const unmappedRequired = requiredFields.filter(f => !mapping[f.key]);
