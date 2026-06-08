@@ -390,7 +390,7 @@ export function SolicitarAjusteFolhaInterno({
               </div>
             </div>
 
-            <div className="flex-1 border rounded-md min-h-[300px] overflow-auto max-h-[60vh]">
+            <div className="flex-1 w-full min-w-0 border rounded-md min-h-[300px] overflow-x-auto overflow-y-auto max-h-[60vh] [-webkit-overflow-scrolling:touch] scrollbar-thin">
               {!colaboradorId ? (
                 <p className="text-center text-sm text-muted-foreground py-12">
                   Selecione um colaborador para visualizar a folha de ponto.
