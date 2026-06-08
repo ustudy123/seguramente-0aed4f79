@@ -630,68 +630,57 @@ export function useImportacaoPlanilha() {
           
           const headers = jsonData[0].map(h => str(h));
           
-          const idx = {
-            const mapeados: number[] = [];
-            
-            const cnpjEmpresaIdx = encontrarColuna(headers, "cnpjEmpresa", mapeados);
-            if (cnpjEmpresaIdx !== -1) mapeados.push(cnpjEmpresaIdx);
-            
-            const nomeIdx = encontrarColuna(headers, "nome", mapeados);
-            if (nomeIdx !== -1) mapeados.push(nomeIdx);
-            
-            const cpfIdx = encontrarColuna(headers, "cpf", mapeados);
-            if (cpfIdx !== -1) mapeados.push(cpfIdx);
+          const mapeados: number[] = [];
+          
+          const cnpjEmpresaIdx = encontrarColuna(headers, "cnpjEmpresa", mapeados);
+          if (cnpjEmpresaIdx !== -1) mapeados.push(cnpjEmpresaIdx);
+          
+          const nomeIdx = encontrarColuna(headers, "nome", mapeados);
+          if (nomeIdx !== -1) mapeados.push(nomeIdx);
+          
+          const cpfIdx = encontrarColuna(headers, "cpf", mapeados);
+          if (cpfIdx !== -1) mapeados.push(cpfIdx);
 
-            const idx = {
-              cnpjEmpresa: cnpjEmpresaIdx,
-              nome: nomeIdx,
-              cpf: cpfIdx,
-              sexo: encontrarColuna(headers, "sexo", mapeados),
-              dataNascimento: encontrarColuna(headers, "dataNascimento", mapeados),
-              estadoCivil: encontrarColuna(headers, "estadoCivil", mapeados),
-              naturalidade: encontrarColuna(headers, "naturalidade", mapeados),
-              nacionalidade: encontrarColuna(headers, "nacionalidade", mapeados),
-              nomeMae: encontrarColuna(headers, "nomeMae", mapeados),
-              nomePai: encontrarColuna(headers, "nomePai", mapeados),
-              rg: encontrarColuna(headers, "rg", mapeados),
-              pis: encontrarColuna(headers, "pis", mapeados),
-              email: encontrarColuna(headers, "email", mapeados),
-              telefone: encontrarColuna(headers, "telefone", mapeados),
-              celular: encontrarColuna(headers, "celular", mapeados),
-              cep: encontrarColuna(headers, "cep", mapeados),
-              endereco: encontrarColuna(headers, "endereco", mapeados),
-              numero: encontrarColuna(headers, "numero", mapeados),
-              complemento: encontrarColuna(headers, "complemento", mapeados),
-              bairro: encontrarColuna(headers, "bairro", mapeados),
-              cidade: encontrarColuna(headers, "cidade", mapeados),
-              estado: encontrarColuna(headers, "estado", mapeados),
-              situacao: encontrarColuna(headers, "situacao", mapeados),
-              filial: encontrarColuna(headers, "filial", mapeados),
-              cargo: encontrarColuna(headers, "cargo", mapeados),
-              departamento: encontrarColuna(headers, "departamento", mapeados),
-              nivel: encontrarColuna(headers, "nivel", mapeados),
-              tipoContrato: encontrarColuna(headers, "tipoContrato", mapeados),
-              dataAdmissao: encontrarColuna(headers, "dataAdmissao", mapeados),
-              salario: encontrarColuna(headers, "salario", mapeados),
-              centroCusto: encontrarColuna(headers, "centroCusto", mapeados),
-              gestorImediato: encontrarColuna(headers, "gestorImediato", mapeados),
-              matriculaEsocial: encontrarColuna(headers, "matriculaEsocial", mapeados),
-              banco: encontrarColuna(headers, "banco", mapeados),
-              agencia: encontrarColuna(headers, "agencia", mapeados),
-              conta: encontrarColuna(headers, "conta", mapeados),
-              tipoConta: encontrarColuna(headers, "tipoConta", mapeados),
-              chavePix: encontrarColuna(headers, "chavePix", mapeados),
-              cbo: encontrarColuna(headers, "cbo", mapeados),
-            };
-            centroCusto: encontrarColuna(headers, "centroCusto"),
-            gestorImediato: encontrarColuna(headers, "gestorImediato"),
-            matriculaEsocial: encontrarColuna(headers, "matriculaEsocial"),
-            banco: encontrarColuna(headers, "banco"),
-            agencia: encontrarColuna(headers, "agencia"),
-            conta: encontrarColuna(headers, "conta"),
-            tipoConta: encontrarColuna(headers, "tipoConta"),
-            chavePix: encontrarColuna(headers, "chavePix"),
-            cbo: encontrarColuna(headers, "cbo"),
+          const idx = {
+            cnpjEmpresa: cnpjEmpresaIdx,
+            nome: nomeIdx,
+            cpf: cpfIdx,
+            sexo: encontrarColuna(headers, "sexo", mapeados),
+            dataNascimento: encontrarColuna(headers, "dataNascimento", mapeados),
+            estadoCivil: encontrarColuna(headers, "estadoCivil", mapeados),
+            naturalidade: encontrarColuna(headers, "naturalidade", mapeados),
+            nacionalidade: encontrarColuna(headers, "nacionalidade", mapeados),
+            nomeMae: encontrarColuna(headers, "nomeMae", mapeados),
+            nomePai: encontrarColuna(headers, "nomePai", mapeados),
+            rg: encontrarColuna(headers, "rg", mapeados),
+            pis: encontrarColuna(headers, "pis", mapeados),
+            email: encontrarColuna(headers, "email", mapeados),
+            telefone: encontrarColuna(headers, "telefone", mapeados),
+            celular: encontrarColuna(headers, "celular", mapeados),
+            cep: encontrarColuna(headers, "cep", mapeados),
+            endereco: encontrarColuna(headers, "endereco", mapeados),
+            numero: encontrarColuna(headers, "numero", mapeados),
+            complemento: encontrarColuna(headers, "complemento", mapeados),
+            bairro: encontrarColuna(headers, "bairro", mapeados),
+            cidade: encontrarColuna(headers, "cidade", mapeados),
+            estado: encontrarColuna(headers, "estado", mapeados),
+            situacao: encontrarColuna(headers, "situacao", mapeados),
+            filial: encontrarColuna(headers, "filial", mapeados),
+            cargo: encontrarColuna(headers, "cargo", mapeados),
+            departamento: encontrarColuna(headers, "departamento", mapeados),
+            nivel: encontrarColuna(headers, "nivel", mapeados),
+            tipoContrato: encontrarColuna(headers, "tipoContrato", mapeados),
+            dataAdmissao: encontrarColuna(headers, "dataAdmissao", mapeados),
+            salario: encontrarColuna(headers, "salario", mapeados),
+            centroCusto: encontrarColuna(headers, "centroCusto", mapeados),
+            gestorImediato: encontrarColuna(headers, "gestorImediato", mapeados),
+            matriculaEsocial: encontrarColuna(headers, "matriculaEsocial", mapeados),
+            banco: encontrarColuna(headers, "banco", mapeados),
+            agencia: encontrarColuna(headers, "agencia", mapeados),
+            conta: encontrarColuna(headers, "conta", mapeados),
+            tipoConta: encontrarColuna(headers, "tipoConta", mapeados),
+            chavePix: encontrarColuna(headers, "chavePix", mapeados),
+            cbo: encontrarColuna(headers, "cbo", mapeados),
           };
           
           // A coluna do documento da empresa só é obrigatória se houver mais de uma empresa cadastrada
