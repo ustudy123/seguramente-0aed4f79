@@ -143,6 +143,7 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
                   onDelete={() => deleteTrabalhador.mutate(t.id)}
                   onUploadDoc={() => { setSelectedTrab(t); setShowTrabDocForm(true); }}
                   onAddTrein={() => { setSelectedTrab(t); setShowTreinForm(true); }}
+                  onViewDoc={handleViewFile}
                 />
               ))}
             </div>
@@ -211,12 +212,14 @@ function TrabalhadorCard({
   onDelete,
   onUploadDoc,
   onAddTrein,
+  onViewDoc,
 }: {
   trabalhador: TerceiroTrabalhador;
   terceiroId: string;
   onDelete: () => void;
   onUploadDoc: () => void;
   onAddTrein: () => void;
+  onViewDoc: (path: string) => void;
 }) {
   const { useDocumentos, useTreinamentos, deleteDocumento, deleteTreinamento } = useTerceiros();
   const { data: docs = [] } = useDocumentos(terceiroId, t.id);
@@ -262,7 +265,7 @@ function TrabalhadorCard({
                 docs={docs} 
                 onDelete={(d) => deleteDocumento.mutate(d)} 
                 compact 
-                onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url)}
+                onView={(d) => d.arquivo_url && onViewDoc(d.arquivo_url)}
               />
             ) : (
               <p className="text-xs text-muted-foreground">Nenhum documento.</p>
