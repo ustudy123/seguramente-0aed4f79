@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Search, Upload, FileText, Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Loader2, X, Search, Upload, FileText, Check, ChevronsUpDown, Plus, Eye } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -483,16 +483,43 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
                   <span className="text-sm font-medium">
                     {contractFile ? contractFile.name : existingContract?.name}
                   </span>
-                  <Button variant="ghost" size="sm" onClick={(e) => { 
-                    e.stopPropagation(); 
-                    if (contractFile) {
-                      setContractFile(null);
-                    } else {
-                      setExistingContract(null);
-                    }
-                  }}>
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {existingContract?.url && !contractFile && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const { data } = await supabase.storage
+                            .from("documentos")
+                            .getPublicUrl(existingContract.url);
+                          if (data?.publicUrl) {
+                            window.open(data.publicUrl, "_blank");
+                          }
+                        }}
+                        title="Visualizar arquivo atual"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (contractFile) {
+                          setContractFile(null);
+                        } else {
+                          setExistingContract(null);
+                        }
+                      }}
+                      title="Remover anexo"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-1 text-muted-foreground">
