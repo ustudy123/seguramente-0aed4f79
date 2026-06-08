@@ -55,7 +55,7 @@ export function ImportPlanilhaModal({
   titulo = "Importar Planilha",
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
-  const { lerArquivo, lerArquivoHeaders, lerArquivoComMapeamento, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
+  const { lerArquivo, lerArquivoHeaders, lerArquivoComMapeamento, processarImportacao, limparDados, isProcessing, progress } = useImportacaoPlanilha();
   const { empresaAtivaId, setEmpresaAtiva, empresas } = useEmpresaAtiva();
   
   
@@ -85,6 +85,7 @@ export function ImportPlanilhaModal({
     setUsarMapeamento(false);
     setPreviewFilter("todos");
     setLendoArquivo(false);
+    limparDados();
   };
 
   const fechar = () => {
@@ -359,7 +360,13 @@ export function ImportPlanilhaModal({
 
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen) resetar();
+        onOpenChange(isOpen);
+      }}
+    >
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Wrapper relative para overlay de "Lendo planilha…" — não pode ser na DialogContent pois sobrescreve o `fixed` do Radix */}
         <DialogHeader className="shrink-0">
