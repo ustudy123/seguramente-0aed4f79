@@ -137,24 +137,6 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     })();
   }, [open, token]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const frame = window.requestAnimationFrame(updateScrollInfo);
-    const el = scrollRef.current;
-    if (!el) return () => window.cancelAnimationFrame(frame);
-
-    const resizeObserver = new ResizeObserver(() => updateScrollInfo());
-    resizeObserver.observe(el);
-    window.addEventListener("resize", updateScrollInfo);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateScrollInfo);
-    };
-  }, [open, updateScrollInfo, diasMes.length, loading, edits]);
-
   // Gera lista de dias do mês ativo (limitado ao hoje)
   const diasMes = useMemo(() => {
     const [y, m] = mesAtivo.split("-").map(Number);
@@ -323,6 +305,24 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     return `${nomes[m-1]} ${y}`;
   }, [mesAtivo]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const frame = window.requestAnimationFrame(updateScrollInfo);
+    const el = scrollRef.current;
+    if (!el) return () => window.cancelAnimationFrame(frame);
+
+    const resizeObserver = new ResizeObserver(() => updateScrollInfo());
+    resizeObserver.observe(el);
+    window.addEventListener("resize", updateScrollInfo);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateScrollInfo);
+    };
+  }, [open, updateScrollInfo, diasMes.length, loading, edits, mesAtivo]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
