@@ -37,6 +37,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [uploadingContract, setUploadingContract] = useState(false);
   const [contractFile, setContractFile] = useState<File | null>(null);
+  const [existingContract, setExistingContract] = useState<{ name: string; url: string; id: string } | null>(null);
 
   // Unidades options from empresas
   const unidadesOptions = useMemo(() => {
@@ -101,6 +102,34 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     setCustomServicos([]);
     setServicoSearch("");
     setContractFile(null);
+    
+    // Busca o contrato se estiver editando
+    if (initial?.id) {
+      const fetchContract = async () => {
+        const { data, error } = await supabase
+          .from("terceiro_documentos" as any)
+          .select("*")
+          .eq("terceiro_id", initial.id)
+          .eq("tipo", "Contrato")
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (data && !error) {
+          const doc = data as any;
+          setExistingContract({
+            id: doc.id,
+            name: doc.arquivo_nome || "Contrato Anexado",
+            url: doc.arquivo_url || ""
+          });
+        } else {
+          setExistingContract(null);
+        }
+      };
+      fetchContract();
+    } else {
+      setExistingContract(null);
+    }
   }, [open, initial]);
 
   const set = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
@@ -196,6 +225,13 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
         });
+      } else if (!existingContract && !contractFile && initial?.id) {
+        // Se o usuário removeu o contrato existente e não subiu um novo
+        await supabase
+          .from("terceiro_documentos" as any)
+          .delete()
+          .eq("terceiro_id", initial.id)
+          .eq("tipo", "Contrato");
       }
       
       onOpenChange(false);
@@ -433,11 +469,20 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
                 className="hidden" 
                 onChange={(e) => setContractFile(e.target.files?.[0] || null)}
               />
-              {contractFile ? (
+              {(contractFile || existingContract) ? (
                 <div className="flex items-center justify-center gap-2 text-primary">
                   <FileText className="w-5 h-5" />
-                  <span className="text-sm font-medium">{contractFile.name}</span>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setContractFile(null); }}>
+                  <span className="text-sm font-medium">
+                    {contractFile ? contractFile.name : existingContract?.name}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (contractFile) {
+                      setContractFile(null);
+                    } else {
+                      setExistingContract(null);
+                    }
+                  }}>
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
