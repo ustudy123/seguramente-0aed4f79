@@ -396,25 +396,30 @@ export function useImportacaoPlanilha() {
   // Helper to get valid empresas for the tenant (indexa por CPF ou CNPJ)
   const getEmpresasValidas = async () => {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
+    
+    // Buscar todas as empresas do tenant para diagnóstico
     const { data } = await fromTable("empresa_cadastro")
       .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
-      .eq("tenant_id", tenantId)
-      .eq("ativo", true);
+      .eq("tenant_id", tenantId);
+
+    const empresasAtivas = (data || []).filter((e: any) => e.ativo);
 
     const mapa: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
-    (data || []).forEach((emp: any) => {
+    
+    empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
       if (!doc) return;
       const docLimpo = String(doc).replace(/\D/g, "");
       mapa[docLimpo] = emp.id;
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
+
     // Quando há apenas uma empresa cadastrada (típico de profissional liberal),
     // permitimos que a coluna de documento fique vazia na planilha.
-    const unicaEmpresaId = (data || []).length === 1 ? (data as any)[0].id : null;
+    const unicaEmpresaId = empresasAtivas.length === 1 ? empresasAtivas[0].id : null;
     if (unicaEmpresaId && !info[unicaEmpresaId]) {
-      const e = (data as any)[0];
+      const e = empresasAtivas[0];
       info[unicaEmpresaId] = { cnpj: e.cnpj || e.cpf || "", razaoSocial: e.razao_social || "Sem razão social" };
     }
     return { mapa, info, unicaEmpresaId };
