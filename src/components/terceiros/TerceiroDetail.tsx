@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, Users, FileText, Plus, Trash2, AlertTriangle, CheckCircle, Clock, XCircle,
-  GraduationCap,
+  GraduationCap, Eye, Download,
 } from "lucide-react";
 import type { Terceiro, TerceiroDocumento, TerceiroTrabalhador, TerceiroTreinamento } from "@/types/terceiros";
 import { useTerceiros } from "@/hooks/useTerceiros";
@@ -45,6 +45,7 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
     useTrabalhadores, createTrabalhador, deleteTrabalhador,
     useDocumentos, uploadDocumento, deleteDocumento,
     useTreinamentos, createTreinamento, deleteTreinamento,
+    getDownloadUrl,
   } = useTerceiros();
 
   const { data: trabalhadores = [] } = useTrabalhadores(terceiro.id);
@@ -55,6 +56,17 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
   const [selectedTrab, setSelectedTrab] = useState<TerceiroTrabalhador | null>(null);
   const [showTrabDocForm, setShowTrabDocForm] = useState(false);
   const [showTreinForm, setShowTreinForm] = useState(false);
+
+  const handleViewFile = async (path: string) => {
+    try {
+      const url = await getDownloadUrl(path);
+      if (url) {
+        window.open(url, "_blank");
+      }
+    } catch (error) {
+      console.error("Erro ao abrir arquivo:", error);
+    }
+  };
 
   const isCpf = terceiro.cnpj?.length === 11;
 
@@ -144,7 +156,11 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
               <Plus className="w-4 h-4 mr-1" /> Upload Documento
             </Button>
           </div>
-          <DocumentosTable docs={docsEmpresa} onDelete={(d) => deleteDocumento.mutate(d)} />
+          <DocumentosTable 
+            docs={docsEmpresa} 
+            onDelete={(d) => deleteDocumento.mutate(d)} 
+            onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url)}
+          />
         </TabsContent>
       </Tabs>
 
@@ -242,7 +258,12 @@ function TrabalhadorCard({
               <Button size="sm" variant="outline" onClick={onUploadDoc}><Plus className="w-3 h-3 mr-1" /> Doc</Button>
             </div>
             {docs.length > 0 ? (
-              <DocumentosTable docs={docs} onDelete={(d) => deleteDocumento.mutate(d)} compact />
+              <DocumentosTable 
+                docs={docs} 
+                onDelete={(d) => deleteDocumento.mutate(d)} 
+                compact 
+                onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url)}
+              />
             ) : (
               <p className="text-xs text-muted-foreground">Nenhum documento.</p>
             )}
@@ -297,7 +318,17 @@ function TrabalhadorCard({
   );
 }
 
-function DocumentosTable({ docs, onDelete, compact }: { docs: TerceiroDocumento[]; onDelete: (d: TerceiroDocumento) => void; compact?: boolean }) {
+function DocumentosTable({ 
+  docs, 
+  onDelete, 
+  compact,
+  onView,
+}: { 
+  docs: TerceiroDocumento[]; 
+  onDelete: (d: TerceiroDocumento) => void; 
+  compact?: boolean;
+  onView?: (d: TerceiroDocumento) => void;
+}) {
   if (docs.length === 0) return <p className="text-center text-muted-foreground py-4">Nenhum documento.</p>;
   return (
     <Table>
@@ -319,10 +350,17 @@ function DocumentosTable({ docs, onDelete, compact }: { docs: TerceiroDocumento[
             <TableCell className="text-sm">{d.data_emissao ? format(new Date(d.data_emissao), "dd/MM/yyyy") : "—"}</TableCell>
             <TableCell className="text-sm">{d.data_validade ? format(new Date(d.data_validade), "dd/MM/yyyy") : "—"}</TableCell>
             <TableCell>{statusIcon(d.status)}</TableCell>
-            <TableCell>
-              <Button variant="ghost" size="icon" onClick={() => onDelete(d)}>
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
+            <TableCell className="text-right">
+              <div className="flex items-center justify-end gap-1">
+                {d.arquivo_url && (
+                  <Button variant="ghost" size="icon" onClick={() => onView?.(d)} title="Visualizar">
+                    <Eye className="w-4 h-4 text-primary" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => onDelete(d)} title="Remover">
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

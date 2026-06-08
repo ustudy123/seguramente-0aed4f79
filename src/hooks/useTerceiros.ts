@@ -456,6 +456,14 @@ export function useTerceiros() {
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
+  const getDownloadUrl = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from("documentos")
+      .createSignedUrl(path, 60);
+    if (error) throw error;
+    return data.signedUrl;
+  };
+
   return {
     terceiros,
     isLoading,
@@ -471,5 +479,6 @@ export function useTerceiros() {
     useTreinamentos,
     createTreinamento,
     deleteTreinamento,
+    getDownloadUrl,
   };
 }
