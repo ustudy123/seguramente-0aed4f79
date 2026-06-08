@@ -518,22 +518,18 @@ const Ponto = () => {
                         ) : (
                           <div className="flex flex-wrap gap-1.5">
                             {marcs.map((m, idx) => {
-                              // Alterna E/S pela ordem (par=Entrada, ímpar=Saída) — não confia em rótulos fixos
                               const isEntry = idx % 2 === 0;
                               return (
-                                <span
-                                  key={idx}
-                                  className={cn(
-                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono border",
-                                    m.original
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : "bg-rose-50 text-rose-700 border-rose-200"
-                                  )}
-                                  title={m.original ? "Registro Nativo" : "Registro Ajustado"}
-                                >
-                                  {isEntry ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}
-                                  {m.hora?.substring(0, 5)}
-                                </span>
+                                <MarcacaoBadge
+                                  key={m.id || idx}
+                                  id={m.id}
+                                  hora={m.hora}
+                                  isEntry={isEntry}
+                                  original={m.original}
+                                  podeEditar={podeEditarMarcacao}
+                                  editando={editandoMarcacao}
+                                  onSalvar={editarMarcacao}
+                                />
                               );
                             })}
                           </div>
