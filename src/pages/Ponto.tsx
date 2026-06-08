@@ -66,7 +66,9 @@ const Ponto = () => {
     registrarPonto, registrandoPonto,
     solicitarAjuste, solicitandoAjuste,
     processarAjuste, processandoAjuste,
+    excluirAjuste, excluindoAjuste,
   } = usePonto();
+
 
   const geo = useGeolocation();
 
@@ -570,8 +572,11 @@ const Ponto = () => {
             ajustes={ajustesPendentes}
             processarAjuste={processarAjuste}
             processandoAjuste={processandoAjuste}
+            excluirAjuste={excluirAjuste}
+            excluindoAjuste={excluindoAjuste}
             setAnexosModalAjuste={setAnexosModalAjuste}
           />
+
         </TabsContent>
 
 

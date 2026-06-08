@@ -463,6 +463,23 @@ export function usePonto() {
     },
   });
 
+  // Excluir ajuste permanentemente (gestor/RH)
+  const excluirAjusteMutation = useMutation({
+    mutationFn: async ({ ajusteId }: { ajusteId: string }) => {
+      if (!tenantId || !user) throw new Error("Usuário não autenticado");
+      const { error } = await fromTable("ponto_ajustes").delete().eq("id", ajusteId);
+      if (error) throw error;
+      return ajusteId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
+      toast.success("Ajuste excluído permanentemente.");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir ajuste: " + error.message);
+    },
+  });
+
   return {
     // Hooks de query
     usePontoDiario,
@@ -479,5 +496,9 @@ export function usePonto() {
     
     processarAjuste: processarAjusteMutation.mutateAsync,
     processandoAjuste: processarAjusteMutation.isPending,
+
+    excluirAjuste: excluirAjusteMutation.mutateAsync,
+    excluindoAjuste: excluirAjusteMutation.isPending,
   };
 }
+

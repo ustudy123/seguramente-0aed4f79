@@ -8,10 +8,13 @@ interface Props {
   ajustes: PontoAjuste[];
   processarAjuste: (args: any) => Promise<any>;
   processandoAjuste: boolean;
+  excluirAjuste?: (args: { ajusteId: string }) => Promise<any>;
+  excluindoAjuste?: boolean;
   setAnexosModalAjuste: (ajuste: PontoAjuste | null) => void;
 }
 
-export function PontoAjustesTab({ ajustes, processarAjuste, processandoAjuste, setAnexosModalAjuste }: Props) {
+export function PontoAjustesTab({ ajustes, processarAjuste, processandoAjuste, excluirAjuste, excluindoAjuste, setAnexosModalAjuste }: Props) {
+
   // O contador no topo deve mostrar o número de DIAS que possuem ajustes pendentes,
   // para bater com a visualização da planilha onde cada linha é um dia.
   const stats = useMemo(() => {
@@ -74,8 +77,11 @@ export function PontoAjustesTab({ ajustes, processarAjuste, processandoAjuste, s
         ajustes={ajustes}
         processarAjuste={processarAjuste}
         processando={processandoAjuste}
+        excluirAjuste={excluirAjuste}
+        excluindoAjuste={excluindoAjuste}
         onOpenAnexos={(a) => setAnexosModalAjuste(a)}
       />
+
     </div>
   );
 }

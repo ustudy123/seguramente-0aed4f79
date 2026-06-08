@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search, Trash2 } from "lucide-react";
+import { confirm } from "@/components/ui/confirm-dialog";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,10 +48,13 @@ interface Props {
   ajustes: PontoAjuste[];
   processarAjuste: (args: { ajusteId: string; aprovado: boolean; observacao?: string; multiple?: boolean }) => Promise<unknown> | void;
   processando: boolean;
+  excluirAjuste?: (args: { ajusteId: string }) => Promise<unknown> | void;
+  excluindoAjuste?: boolean;
   onOpenAnexos: (ajuste: PontoAjuste) => void;
 }
 
-export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando, onOpenAnexos }: Props) {
+export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando, excluirAjuste, excluindoAjuste, onOpenAnexos }: Props) {
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "pendente" | "aprovado" | "rejeitado">("pendente");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -139,6 +144,22 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     setRejeitarDialogOpen(false);
     setItemsParaRejeitar([]);
   };
+
+  const handleExcluirDia = async (items: PontoAjuste[]) => {
+    if (!excluirAjuste || items.length === 0) return;
+    const ok = await confirm({
+      title: "Excluir ajustes do dia",
+      description: `Excluir permanentemente ${items.length} solicitação(ões) de ajuste deste dia? Esta ação não pode ser desfeita e ficará registrada na auditoria.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    for (const a of items) {
+      await excluirAjuste({ ajusteId: a.id });
+    }
+  };
+
+
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -339,33 +360,53 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                   </td>
 
                                   <td className="py-2.5 px-3 text-right align-top">
-                                    {hasPendente ? (
-                                      <div className="flex items-center justify-end gap-1.5">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="h-7 px-2 text-emerald-700 border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
-                                          onClick={() => handleApprovarDia(items)}
-                                          disabled={processando}
-                                        >
-                                          <CheckCircle className="w-3.5 h-3.5 mr-1" /> Aprovar dia
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="h-7 px-2 text-rose-700 border-rose-300 hover:bg-rose-50 hover:text-rose-700"
-                                          onClick={() => handleRejeitarDia(items)}
-                                          disabled={processando}
-                                        >
-                                          <XCircle className="w-3.5 h-3.5 mr-1" /> Rejeitar
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <span className="text-[11px] text-muted-foreground">
-                                        {items[0].aprovado_por_nome ? `por ${items[0].aprovado_por_nome}` : "—"}
-                                      </span>
-                                    )}
+                                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                      {hasPendente ? (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-emerald-700 border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                                            onClick={() => handleApprovarDia(items)}
+                                            disabled={processando}
+                                          >
+                                            <CheckCircle className="w-3.5 h-3.5 mr-1" /> Aprovar dia
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-rose-700 border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                                            onClick={() => handleRejeitarDia(items)}
+                                            disabled={processando}
+                                          >
+                                            <XCircle className="w-3.5 h-3.5 mr-1" /> Rejeitar
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <span className="text-[11px] text-muted-foreground mr-1">
+                                          {items[0].aprovado_por_nome ? `por ${items[0].aprovado_por_nome}` : "—"}
+                                        </span>
+                                      )}
+                                      {excluirAjuste && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-7 w-7 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                              onClick={() => handleExcluirDia(items)}
+                                              disabled={!!excluindoAjuste}
+                                              aria-label="Excluir ajustes do dia"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top">Excluir permanentemente</TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </div>
                                   </td>
+
                                 </tr>
                               );
                             })}
