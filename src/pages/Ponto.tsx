@@ -66,7 +66,9 @@ const Ponto = () => {
     registrarPonto, registrandoPonto,
     solicitarAjuste, solicitandoAjuste,
     processarAjuste, processandoAjuste,
+    excluirAjuste, excluindoAjuste,
   } = usePonto();
+
 
   const geo = useGeolocation();
 
