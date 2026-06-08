@@ -213,11 +213,25 @@ function normalizarTexto(texto: string): string {
 
 function encontrarColuna(headers: string[], campo: string): number {
   const possibilidades = MAPEAMENTO_COLUNAS[campo] || [];
-  for (const header of headers) {
-    const headerNormalizado = normalizarTexto(header);
+  const headersNormalizados = headers.map(h => normalizarTexto(h));
+  
+  // Primeiro tenta correspondência EXATA
+  for (const possibilidade of possibilidades) {
+    const possibilidadeNormalizada = normalizarTexto(possibilidade);
+    const index = headersNormalizados.indexOf(possibilidadeNormalizada);
+    if (index !== -1) return index;
+  }
+  
+  // Se não houver exata, tenta correspondência parcial (substring)
+  for (let i = 0; i < headersNormalizados.length; i++) {
+    const headerNormalizado = headersNormalizados[i];
+    if (!headerNormalizado) continue;
+    
     for (const possibilidade of possibilidades) {
-      if (headerNormalizado.includes(normalizarTexto(possibilidade))) {
-        return headers.indexOf(header);
+      const possibilidadeNormalizada = normalizarTexto(possibilidade);
+      // Evita correspondências muito curtas ou ambíguas
+      if (possibilidadeNormalizada.length > 2 && headerNormalizado.includes(possibilidadeNormalizada)) {
+        return i;
       }
     }
   }
