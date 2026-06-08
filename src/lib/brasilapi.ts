@@ -29,6 +29,14 @@ export const formatCnpj = (cnpj: string): string => {
   return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5, 8)}/${n.slice(8, 12)}-${n.slice(12, 14)}`;
 };
 
+export const formatPhone = (phone: string): string => {
+  const n = phone.replace(/\D/g, "");
+  if (n.length <= 2) return n;
+  if (n.length <= 6) return `(${n.slice(0, 2)}) ${n.slice(2)}`;
+  if (n.length <= 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
+  return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7, 11)}`;
+};
+
 export const validateCnpj = (cnpj: string): boolean => cleanCnpj(cnpj).length === 14;
 
 export const buscarCnpj = async (cnpj: string): Promise<BrasilApiCnpjResponse | null> => {
