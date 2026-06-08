@@ -211,30 +211,43 @@ function normalizarTexto(texto: string): string {
     .trim();
 }
 
-function encontrarColuna(headers: string[], campo: string): number {
+function encontrarColuna(headers: string[], campo: string, indicesJaMapeados: number[] = []): number {
   const possibilidades = MAPEAMENTO_COLUNAS[campo] || [];
   const headersNormalizados = headers.map(h => normalizarTexto(h));
   
-  // Primeiro tenta correspondência EXATA
+  // 1. Prioridade Máxima: Correspondência EXATA com headers completos (incluindo asterisco se houver)
   for (const possibilidade of possibilidades) {
-    const possibilidadeNormalizada = normalizarTexto(possibilidade);
-    const index = headersNormalizados.indexOf(possibilidadeNormalizada);
-    if (index !== -1) return index;
-  }
-  
-  // Se não houver exata, tenta correspondência parcial (substring)
-  for (let i = 0; i < headersNormalizados.length; i++) {
-    const headerNormalizado = headersNormalizados[i];
-    if (!headerNormalizado) continue;
-    
-    for (const possibilidade of possibilidades) {
-      const possibilidadeNormalizada = normalizarTexto(possibilidade);
-      // Evita correspondências muito curtas ou ambíguas
-      if (possibilidadeNormalizada.length > 2 && headerNormalizado.includes(possibilidadeNormalizada)) {
+    const possNormalizada = normalizarTexto(possibilidade);
+    for (let i = 0; i < headers.length; i++) {
+      if (indicesJaMapeados.includes(i)) continue;
+      
+      const hNorm = headersNormalizados[i];
+      // Tenta exato ou exato removendo o "*" que o sistema adiciona em modelos exportados
+      if (hNorm === possNormalizada || hNorm === possNormalizada + " *") {
         return i;
       }
     }
   }
+
+  // 2. Segunda Prioridade: Substring, mas com critério de exclusão para evitar colisões entre CPF e CNPJ/CPF Empresa
+  for (const possibilidade of possibilidades) {
+    const possNormalizada = normalizarTexto(possibilidade);
+    for (let i = 0; i < headers.length; i++) {
+      if (indicesJaMapeados.includes(i)) continue;
+      
+      const hNorm = headersNormalizados[i];
+      if (hNorm.includes(possNormalizada)) {
+        // Se estamos procurando 'cpf' e o header contém 'empresa', ignoramos para evitar pegar 'cnpj/cpf empresa'
+        if (campo === "cpf" && hNorm.includes("empresa")) continue;
+        
+        // Se estamos procurando 'cnpjEmpresa' e o header for apenas 'cpf', ignoramos para não roubar o CPF do funcionário
+        if (campo === "cnpjEmpresa" && hNorm === "cpf") continue;
+
+        return i;
+      }
+    }
+  }
+  
   return -1;
 }
 
