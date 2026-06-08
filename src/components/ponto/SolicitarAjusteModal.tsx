@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -70,6 +69,7 @@ interface DiaEdit {
 export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   const today = new Date().toISOString().slice(0, 10);
   const hojeDate = new Date();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [marcacoes, setMarcacoes] = useState<Marcacao[]>([]);
@@ -79,8 +79,48 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
+  const [scrollInfo, setScrollInfo] = useState({
+    canScrollX: false,
+    canScrollY: false,
+    thumbXSize: 0,
+    thumbXOffset: 0,
+    thumbYSize: 0,
+    thumbYOffset: 0,
+  });
 
   const reset = () => { setEdits({}); setFiles([]); setDone(false); };
+
+  const updateScrollInfo = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const { clientWidth, scrollWidth, scrollLeft, clientHeight, scrollHeight, scrollTop } = el;
+    const canScrollX = scrollWidth > clientWidth + 1;
+    const canScrollY = scrollHeight > clientHeight + 1;
+
+    const trackX = Math.max(clientWidth - 32, 0);
+    const thumbXSize = canScrollX ? Math.max((clientWidth / scrollWidth) * trackX, 40) : 0;
+    const maxThumbX = Math.max(trackX - thumbXSize, 0);
+    const thumbXOffset = canScrollX && scrollWidth > clientWidth
+      ? (scrollLeft / (scrollWidth - clientWidth)) * maxThumbX
+      : 0;
+
+    const trackY = Math.max(clientHeight - 32, 0);
+    const thumbYSize = canScrollY ? Math.max((clientHeight / scrollHeight) * trackY, 40) : 0;
+    const maxThumbY = Math.max(trackY - thumbYSize, 0);
+    const thumbYOffset = canScrollY && scrollHeight > clientHeight
+      ? (scrollTop / (scrollHeight - clientHeight)) * maxThumbY
+      : 0;
+
+    setScrollInfo({
+      canScrollX,
+      canScrollY,
+      thumbXSize,
+      thumbXOffset,
+      thumbYSize,
+      thumbYOffset,
+    });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -266,9 +306,27 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     return `${nomes[m-1]} ${y}`;
   }, [mesAtivo]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const frame = window.requestAnimationFrame(updateScrollInfo);
+    const el = scrollRef.current;
+    if (!el) return () => window.cancelAnimationFrame(frame);
+
+    const resizeObserver = new ResizeObserver(() => updateScrollInfo());
+    resizeObserver.observe(el);
+    window.addEventListener("resize", updateScrollInfo);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateScrollInfo);
+    };
+  }, [open, updateScrollInfo, diasMes.length, loading, edits, mesAtivo]);
+
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="w-[95vw] md:max-w-4xl max-h-[92vh] flex flex-col p-4 md:p-6">
+      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -307,8 +365,13 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
             </div>
 
             {/* Folha */}
-            <ScrollArea className="flex-1 border rounded-md" scrollHideDelay={0}>
-              <div className="min-w-[600px] md:min-w-full">
+            <div className="relative flex-1 w-full min-w-0 min-h-[300px]">
+              <div
+                ref={scrollRef}
+                onScroll={updateScrollInfo}
+                className="h-full w-full min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md pr-2 pb-2 [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y scrollbar-thin"
+              >
+              <div className="min-w-[760px] md:min-w-full">
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -416,7 +479,32 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                 </table>
               )}
               </div>
-            </ScrollArea>
+              </div>
+
+              {scrollInfo.canScrollX && (
+                <div className="pointer-events-none absolute inset-x-4 bottom-1.5 h-1.5 rounded-full bg-border/60">
+                  <div
+                    className="h-full rounded-full bg-muted-foreground/60"
+                    style={{
+                      width: `${scrollInfo.thumbXSize}px`,
+                      transform: `translateX(${scrollInfo.thumbXOffset}px)`,
+                    }}
+                  />
+                </div>
+              )}
+
+              {scrollInfo.canScrollY && (
+                <div className="pointer-events-none absolute right-1.5 top-4 bottom-4 w-1.5 rounded-full bg-border/60">
+                  <div
+                    className="w-full rounded-full bg-muted-foreground/60"
+                    style={{
+                      height: `${scrollInfo.thumbYSize}px`,
+                      transform: `translateY(${scrollInfo.thumbYOffset}px)`,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
 
 
             {/* Rodapé com anexos + envio */}
