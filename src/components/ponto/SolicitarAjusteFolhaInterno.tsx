@@ -390,7 +390,7 @@ export function SolicitarAjusteFolhaInterno({
               </div>
             </div>
 
-            <ScrollArea className="flex-1 border rounded-md min-h-[300px]">
+            <div className="flex-1 border rounded-md min-h-[300px] overflow-auto max-h-[60vh]">
               {!colaboradorId ? (
                 <p className="text-center text-sm text-muted-foreground py-12">
                   Selecione um colaborador para visualizar a folha de ponto.
@@ -400,7 +400,7 @@ export function SolicitarAjusteFolhaInterno({
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <table className="w-full text-xs">
+                <table className="w-full text-xs min-w-[900px]">
                   <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr className="text-left">
                       <th className="px-2 py-2 font-medium w-[90px]">Dia</th>
@@ -546,7 +546,7 @@ export function SolicitarAjusteFolhaInterno({
                   </tbody>
                 </table>
               )}
-            </ScrollArea>
+            </div>
 
             <div className="space-y-3 pt-3 border-t">
               <div className="flex items-center justify-between gap-3 flex-wrap">
