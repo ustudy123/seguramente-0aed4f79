@@ -269,7 +269,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6">
+      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-4xl h-[92vh] max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6 gap-3">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -290,37 +290,38 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
               </DialogDescription>
             </DialogHeader>
 
-            {/* Navegação de mês */}
-            <div className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2">
-              <Button variant="ghost" size="sm" onClick={() => navegarMes(-1)} className="h-8">
-                <ChevronLeft className="w-4 h-4 mr-1" /> Mês anterior
-              </Button>
-              <span className="text-sm font-semibold capitalize">{mesLabel}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navegarMes(1)}
-                className="h-8"
-                disabled={mesAtivo >= `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`}
-              >
-                Próximo mês <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
+            <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+              {/* Navegação de mês */}
+              <div className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2 shrink-0">
+                <Button variant="ghost" size="sm" onClick={() => navegarMes(-1)} className="h-8">
+                  <ChevronLeft className="w-4 h-4 mr-1" /> Mês anterior
+                </Button>
+                <span className="text-sm font-semibold capitalize">{mesLabel}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navegarMes(1)}
+                  className="h-8"
+                  disabled={mesAtivo >= `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`}
+                >
+                  Próximo mês <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
 
-            {/* Folha */}
-            <div
-              ref={scrollRef}
-              className="flex-1 w-full min-w-0 min-h-[300px] max-h-[60vh] overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y ponto-scroll-visible"
-            >
-              <div className="min-w-[760px] md:min-w-full">
-                {loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : diasMes.length === 0 ? (
-                  <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
-                ) : (
-                  <table className="w-full text-xs">
+              {/* Folha */}
+              <div
+                ref={scrollRef}
+                className="flex-1 min-h-0 w-full min-w-0 overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y ponto-scroll-visible"
+              >
+                <div className="min-w-[760px] md:min-w-full min-h-full">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : diasMes.length === 0 ? (
+                    <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
+                  ) : (
+                    <table className="w-full text-xs">
                     <thead className="bg-muted/50 sticky top-0 z-10">
                       <tr className="text-left">
                         <th className="px-2 py-2 font-medium w-[60px]">Dia</th>
@@ -413,14 +414,15 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                         );
                       })}
                     </tbody>
-                  </table>
-                )}
+                    </table>
+                  )}
+                </div>
               </div>
             </div>
 
 
             {/* Rodapé com anexos + envio */}
-            <div className="space-y-3 pt-3 border-t">
+            <div className="space-y-3 pt-3 border-t shrink-0 bg-background">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="flex-1 min-w-[220px]">
                   <Label className="text-xs flex items-center gap-1">
