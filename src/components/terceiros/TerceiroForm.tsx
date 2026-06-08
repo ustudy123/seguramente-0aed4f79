@@ -248,7 +248,7 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       let errorMessage = "Erro ao salvar documento. Por favor, tente novamente.";
       
       if (error.message?.includes("maximum allowed size") || error.error === "Payload Too Large") {
-        errorMessage = "O arquivo selecionado é muito grande. O limite máximo é de 100MB.";
+        errorMessage = "O arquivo selecionado é muito grande. O limite máximo é de 150MB.";
       } else if (error.message) {
         errorMessage = `Erro ao salvar documento: ${error.message}`;
       }
