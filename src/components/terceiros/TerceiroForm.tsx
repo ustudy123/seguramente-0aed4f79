@@ -197,7 +197,12 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       const result = await (onSubmit(submissionData) as any);
       
       // result might be the object directly or an object containing the data
-      const savedId = result?.id || result?.data?.id;
+      // For mutations from react-query, mutateAsync returns the data directly
+      const savedId = result?.id || result?.data?.id || initial?.id;
+
+      if (!savedId) {
+        throw new Error("Não foi possível obter o ID do terceiro salvo.");
+      }
 
       // If there's a contract file, upload it to terceiro_documentos
       if (contractFile && savedId) {
@@ -212,6 +217,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           
         if (upErr) throw upErr;
 
+        // If updating and there was an existing contract, we might want to delete it or just add the new one
+        // Usually, adding a new "Contrato" is fine as we show the latest one
         await supabase.from("terceiro_documentos" as any).insert({
           tenant_id: tenantId,
           terceiro_id: savedId,
