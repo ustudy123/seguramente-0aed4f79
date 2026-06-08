@@ -133,6 +133,9 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
+    setDados([]); // 🔴 LIMPA DADOS ANTIGOS IMEDIATAMENTE ao anexar novo arquivo
+    setFileHeaders([]); // Limpa headers antigos
+    setSampleRows([]); // Limpa samples antigos
     setLendoArquivo(true);
 
     try {
