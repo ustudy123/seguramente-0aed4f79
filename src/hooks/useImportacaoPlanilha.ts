@@ -414,43 +414,6 @@ export function useImportacaoPlanilha() {
   const [progress, setProgress] = useState(0);
 
   const str = (val: any) => String(val || "").trim();
-  const normalizarDocumento = (doc: unknown) => String(doc || "").replace(/\D/g, "");
-  const isEmpresaAtiva = (emp: any) => emp?.ativo !== false;
-  const obterDocumentosEmpresa = (emp: any) => {
-    const documentos = [normalizarDocumento(emp?.cnpj), normalizarDocumento(emp?.cpf)].filter(Boolean);
-    return [...new Set(documentos)].filter((doc) => doc.length === 11 || doc.length === 14);
-  };
-  const indexarEmpresasPorDocumento = (empresas: any[]) => {
-    const mapa: Record<string, string> = {};
-    const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
-    const docDuplicados = new Set<string>();
-    const empresasAtivas = (empresas || []).filter(isEmpresaAtiva);
-
-    empresasAtivas.forEach((emp: any) => {
-      const documentos = obterDocumentosEmpresa(emp);
-      if (documentos.length === 0) return;
-
-      info[emp.id] = {
-        cnpj: emp.cnpj || emp.cpf || "",
-        razaoSocial: emp.razao_social || "Sem razão social",
-      };
-
-      documentos.forEach((doc) => {
-        if (mapa[doc] && mapa[doc] !== emp.id) {
-          docDuplicados.add(doc);
-        }
-        mapa[doc] = emp.id;
-      });
-    });
-
-    return {
-      mapa,
-      info,
-      docDuplicados,
-      empresasAtivas,
-      unicaEmpresaId: empresasAtivas.length === 1 ? empresasAtivas[0].id : null as string | null,
-    };
-  };
 
   // Helper para formatar documento (CPF ou CNPJ) para exibição
   const formatarDocumento = (doc: string) => {
@@ -469,7 +432,26 @@ export function useImportacaoPlanilha() {
       .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
       .eq("tenant_id", tenantId);
 
-    const { mapa, info, unicaEmpresaId } = indexarEmpresasPorDocumento(data || []);
+    const empresasAtivas = (data || []).filter((e: any) => e.ativo);
+
+    const mapa: Record<string, string> = {};
+    const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
+    
+    empresasAtivas.forEach((emp: any) => {
+      const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+      if (!doc) return;
+      const docLimpo = String(doc).replace(/\D/g, "");
+      mapa[docLimpo] = emp.id;
+      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
+    });
+
+    // Quando há apenas uma empresa cadastrada (típico de profissional liberal),
+    // permitimos que a coluna de documento fique vazia na planilha.
+    const unicaEmpresaId = empresasAtivas.length === 1 ? empresasAtivas[0].id : null;
+    if (unicaEmpresaId && !info[unicaEmpresaId]) {
+      const e = empresasAtivas[0];
+      info[unicaEmpresaId] = { cnpj: e.cnpj || e.cpf || "", razaoSocial: e.razao_social || "Sem razão social" };
+    }
     return { mapa, info, unicaEmpresaId };
   };
 
@@ -868,10 +850,19 @@ export function useImportacaoPlanilha() {
           .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
           .eq("tenant_id", tenantId);
 
-        const indexacao = indexarEmpresasPorDocumento(todasEmpresas || []);
-        Object.assign(mapaEmpresas, indexacao.mapa);
-        Object.assign(infoEmpresas, indexacao.info);
-        const docDuplicados = indexacao.docDuplicados;
+        const empresas = (todasEmpresas || []).filter((e: any) => e.ativo);
+
+        const docDuplicados = new Set<string>();
+        (empresas || []).forEach((emp: any) => {
+          const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+          if (!doc) return;
+          const docLimpo = String(doc).replace(/\D/g, "");
+          if (mapaEmpresas[docLimpo] && mapaEmpresas[docLimpo] !== emp.id) {
+            docDuplicados.add(docLimpo);
+          }
+          mapaEmpresas[docLimpo] = emp.id;
+          infoEmpresas[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
+        });
 
         // Bloqueia importação quando há mais de uma empresa ATIVA com o mesmo CNPJ/CPF no tenant
         for (const doc of docDuplicados) {
@@ -891,7 +882,8 @@ export function useImportacaoPlanilha() {
             if (docDuplicados.has(doc)) continue; 
             
             const empresaExistenteInativa = (todasEmpresas || []).find((e: any) => {
-              return !isEmpresaAtiva(e) && obterDocumentosEmpresa(e).includes(doc);
+              const docE = e.tipo_pessoa === "pf" ? e.cpf : e.cnpj;
+              return docE && String(docE).replace(/\D/g, "") === doc;
             });
 
             const tipo = doc.length === 11 ? "CPF" : "CNPJ";

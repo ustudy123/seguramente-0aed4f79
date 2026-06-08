@@ -330,8 +330,7 @@ export function SolicitarAjusteFolhaInterno({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="max-w-6xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] sm:max-h-[92vh] flex flex-col p-3 sm:p-6 gap-3 sm:gap-4">
-
+      <DialogContent className="max-w-6xl max-h-[92vh] flex flex-col">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -393,7 +392,7 @@ export function SolicitarAjusteFolhaInterno({
 
             <ScrollArea className="flex-1 border rounded-md min-h-[300px]">
               {!colaboradorId ? (
-                <p className="text-center text-sm text-muted-foreground py-12 px-4">
+                <p className="text-center text-sm text-muted-foreground py-12">
                   Selecione um colaborador para visualizar a folha de ponto.
                 </p>
               ) : loading ? (
@@ -401,9 +400,19 @@ export function SolicitarAjusteFolhaInterno({
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <>
-                  {/* MOBILE: lista em cartões — simples e guiada */}
-                  <div className="md:hidden divide-y">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/50 sticky top-0 z-10">
+                    <tr className="text-left">
+                      <th className="px-2 py-2 font-medium w-[90px]">Dia</th>
+                      {ORDEM_TIPOS.map((t) => (
+                        <th key={t} className="px-2 py-2 font-medium">{TIPO_LABEL[t]}</th>
+                      ))}
+                      <th className="px-2 py-2 font-medium w-[200px]">Justificativa</th>
+                      <th className="px-2 py-2 font-medium w-[90px]">Abono (h)</th>
+                      <th className="px-2 py-2 font-medium w-[150px]">Anexo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {diasMes.map((data) => {
                       const original = marcsPorDia[data] || {};
                       const pendentes = pendentesPorDia[data] || 0;
@@ -418,74 +427,63 @@ export function SolicitarAjusteFolhaInterno({
                       const futuro = data > today;
                       const horasEfetiv = horasTrabalhadasDia(horariosEfetivos(data));
                       return (
-                        <div
+                        <tr
                           key={data}
-                          className={`p-3 ${ativo ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""} ${futuro ? "opacity-50" : ""}`}
+                          className={`border-t ${ativo ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""} ${futuro ? "opacity-50" : ""}`}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-baseline gap-2">
-                              <span className="font-mono font-bold text-base">{isoToBR(data).slice(0,5)}</span>
-                              <span className="text-xs text-muted-foreground">{diaSemana(data)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {pendentes > 0 && (
-                                <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700 dark:text-amber-400">
-                                  {pendentes} pend.
-                                </Badge>
-                              )}
-                              {ativo && <Badge className="text-[10px]">ajustado</Badge>}
-                            </div>
-                          </div>
-
-                          {/* 1. Horários — 2 colunas grandes */}
-                          <div className="grid grid-cols-2 gap-2">
-                            {ORDEM_TIPOS.map((t) => {
-                              const orig = original[t] || "";
-                              const valor = ed.horarios[t] ?? orig;
-                              const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
-                              const incluido = alterado && !orig;
-                              return (
-                                <div key={t}>
-                                  <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">{TIPO_LABEL[t]}</Label>
-                                  <Input
-                                    type="time"
-                                    value={valor}
-                                    disabled={futuro}
-                                    onChange={(e) => setHorario(data, t, e.target.value)}
-                                    className={`h-10 text-sm font-mono ${
-                                      incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                      : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                      : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
-                                      : ""
-                                    }`}
-                                  />
-                                  {orig && alterado && (
-                                    <div className="text-[10px] text-muted-foreground line-through">original: {orig}</div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* 2. Justificativa — só aparece se houver ajuste, em linha nova bem visível */}
-                          {ativo && (
-                            <div className="mt-3 space-y-2 p-2.5 rounded-md bg-background border">
-                              <div>
-                                <Label className="text-[11px] font-semibold">Justificativa *</Label>
+                          <td className="px-2 py-1.5 align-top">
+                            <div className="font-mono font-semibold">{isoToBR(data).slice(0,5)}</div>
+                            <div className="text-[10px] text-muted-foreground">{diaSemana(data)}</div>
+                            {pendentes > 0 && (
+                              <Badge variant="outline" className="text-[9px] mt-1 border-amber-500 text-amber-700 dark:text-amber-400">
+                                {pendentes} pend.
+                              </Badge>
+                            )}
+                          </td>
+                          {ORDEM_TIPOS.map((t) => {
+                            const orig = original[t] || "";
+                            const valor = ed.horarios[t] ?? orig;
+                            const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
+                            const incluido = alterado && !orig;
+                            return (
+                              <td key={t} className="px-2 py-1.5 align-top">
+                                <Input
+                                  type="time"
+                                  value={valor}
+                                  disabled={futuro}
+                                  onChange={(e) => setHorario(data, t, e.target.value)}
+                                  className={`h-8 text-xs font-mono ${
+                                    incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                    : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                    : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
+                                    : ""
+                                  }`}
+                                />
+                                {orig && alterado && (
+                                  <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="px-2 py-1.5 align-top">
+                            {ativo ? (
+                              <div className="space-y-1">
                                 <Select value={ed.justificativaId} onValueChange={(v) => patchDia(data, { justificativaId: v })}>
-                                  <SelectTrigger className="h-10 text-sm">
-                                    <SelectValue placeholder="Selecione o motivo…" />
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Selecione…" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {justAtivas.length === 0 && (
                                       <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
-                                        Nenhuma justificativa cadastrada. Peça ao RH.
+                                        Nenhuma justificativa cadastrada. Peça ao RH para configurar.
                                       </div>
                                     )}
                                     {justAtivas.map((j) => (
-                                      <SelectItem key={j.id} value={j.id} className="text-sm">{j.nome}</SelectItem>
+                                      <SelectItem key={j.id} value={j.id} className="text-xs">
+                                        {j.nome}
+                                      </SelectItem>
                                     ))}
-                                    <SelectItem value={OUTRO_VALUE} className="text-sm">Outro (descrever)</SelectItem>
+                                    <SelectItem value={OUTRO_VALUE} className="text-xs">Outro (descrever)</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 {ed.justificativaId === OUTRO_VALUE && (
@@ -493,214 +491,62 @@ export function SolicitarAjusteFolhaInterno({
                                     value={ed.outroTexto}
                                     onChange={(e) => patchDia(data, { outroTexto: e.target.value })}
                                     placeholder="Descreva o motivo"
-                                    className="h-10 text-sm mt-1.5"
+                                    className="h-8 text-xs"
                                     maxLength={300}
                                   />
                                 )}
                               </div>
-
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <Label className="text-[11px] font-semibold">Horas de abono</Label>
-                                  <Input
-                                    type="number" step="0.5" min="0" max="24"
-                                    disabled={futuro}
-                                    value={ed.horasAbono}
-                                    onChange={(e) => patchDia(data, { horasAbono: e.target.value })}
-                                    placeholder="0"
-                                    className="h-10 text-sm font-mono"
-                                  />
-                                  {(Number(ed.horasAbono) || 0) > 0 && (
-                                    <div className={`text-[10px] mt-0.5 ${
-                                      (Number(ed.horasAbono) || 0) > horasEfetiv + 0.001 ? "text-destructive" : "text-muted-foreground"
-                                    }`}>
-                                      dia: {horasEfetiv.toFixed(1)}h
-                                    </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <Label className="text-[11px] font-semibold">
-                                    Anexo {justAtivas.find(j => j.id === ed.justificativaId)?.requer_anexo && <span className="text-destructive">*</span>}
-                                  </Label>
-                                  {ed.anexo ? (
-                                    <div className="flex items-center justify-between gap-1 text-[11px] bg-muted rounded px-2 h-10">
-                                      <span className="truncate" title={ed.anexo.name}>{ed.anexo.name}</span>
-                                      <button type="button" onClick={() => handleAnexoDia(data, null)} className="text-destructive shrink-0">
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <label className={`flex items-center justify-center gap-1 text-xs cursor-pointer border rounded h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 ${futuro ? "pointer-events-none opacity-50" : ""}`}>
-                                      <Paperclip className="w-3.5 h-3.5" />
-                                      <span>Anexar</span>
-                                      <input
-                                        type="file" className="hidden"
-                                        accept="image/*,application/pdf"
-                                        onChange={(e) => handleAnexoDia(data, e.target.files?.[0] || null)}
-                                      />
-                                    </label>
-                                  )}
-                                </div>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground italic">— altere horário ou informe abono</span>
+                            )}
+                          </td>
+                          <td className="px-2 py-1.5 align-top">
+                            <Input
+                              type="number"
+                              step="0.5" min="0" max="24"
+                              disabled={futuro}
+                              value={ed.horasAbono}
+                              onChange={(e) => patchDia(data, { horasAbono: e.target.value })}
+                              placeholder="0"
+                              className="h-8 text-xs font-mono"
+                            />
+                            {ativo && (Number(ed.horasAbono) || 0) > 0 && (
+                              <div className={`text-[9px] mt-0.5 ${
+                                (Number(ed.horasAbono) || 0) > horasEfetiv + 0.001
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                              }`}>
+                                dia: {horasEfetiv.toFixed(1)}h
                               </div>
-                            </div>
-                          )}
-                        </div>
+                            )}
+                          </td>
+                          <td className="px-2 py-1.5 align-top">
+                            {ed.anexo ? (
+                              <div className="flex items-center justify-between gap-1 text-[10px] bg-muted/60 rounded px-1.5 py-1">
+                                <span className="truncate max-w-[100px]" title={ed.anexo.name}>{ed.anexo.name}</span>
+                                <button type="button" onClick={() => handleAnexoDia(data, null)} className="text-destructive shrink-0">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className={`flex items-center gap-1 text-[10px] cursor-pointer text-muted-foreground hover:text-foreground ${futuro ? "pointer-events-none opacity-50" : ""}`}>
+                                <Paperclip className="w-3 h-3" />
+                                <span>Anexar {ativo && justAtivas.find(j => j.id === ed.justificativaId)?.requer_anexo && "*"}</span>
+                                <input
+                                  type="file" className="hidden"
+                                  accept="image/*,application/pdf"
+                                  onChange={(e) => handleAnexoDia(data, e.target.files?.[0] || null)}
+                                />
+                              </label>
+                            )}
+                          </td>
+                        </tr>
                       );
                     })}
-                  </div>
-
-                  {/* DESKTOP: tabela com rolagem horizontal */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-xs min-w-[820px]">
-                      <thead className="bg-muted/50 sticky top-0 z-10">
-                        <tr className="text-left">
-                          <th className="px-2 py-2 font-medium w-[90px]">Dia</th>
-                          {ORDEM_TIPOS.map((t) => (
-                            <th key={t} className="px-2 py-2 font-medium">{TIPO_LABEL[t]}</th>
-                          ))}
-                          <th className="px-2 py-2 font-medium w-[200px]">Justificativa</th>
-                          <th className="px-2 py-2 font-medium w-[90px]">Abono (h)</th>
-                          <th className="px-2 py-2 font-medium w-[150px]">Anexo</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {diasMes.map((data) => {
-                          const original = marcsPorDia[data] || {};
-                          const pendentes = pendentesPorDia[data] || 0;
-                          const ed = editDia(data);
-                          const temAlteracaoHora = ORDEM_TIPOS.some((t) => {
-                            const v = ed.horarios[t];
-                            return v !== undefined && v !== original[t];
-                          });
-                          const temAbono = (Number(ed.horasAbono) || 0) > 0;
-                          const ativo = temAlteracaoHora || temAbono;
-                          const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
-                          const futuro = data > today;
-                          const horasEfetiv = horasTrabalhadasDia(horariosEfetivos(data));
-                          return (
-                            <tr
-                              key={data}
-                              className={`border-t ${ativo ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""} ${futuro ? "opacity-50" : ""}`}
-                            >
-                              <td className="px-2 py-1.5 align-top">
-                                <div className="font-mono font-semibold">{isoToBR(data).slice(0,5)}</div>
-                                <div className="text-[10px] text-muted-foreground">{diaSemana(data)}</div>
-                                {pendentes > 0 && (
-                                  <Badge variant="outline" className="text-[9px] mt-1 border-amber-500 text-amber-700 dark:text-amber-400">
-                                    {pendentes} pend.
-                                  </Badge>
-                                )}
-                              </td>
-                              {ORDEM_TIPOS.map((t) => {
-                                const orig = original[t] || "";
-                                const valor = ed.horarios[t] ?? orig;
-                                const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
-                                const incluido = alterado && !orig;
-                                return (
-                                  <td key={t} className="px-2 py-1.5 align-top">
-                                    <Input
-                                      type="time"
-                                      value={valor}
-                                      disabled={futuro}
-                                      onChange={(e) => setHorario(data, t, e.target.value)}
-                                      className={`h-8 text-xs font-mono ${
-                                        incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                        : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                        : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
-                                        : ""
-                                      }`}
-                                    />
-                                    {orig && alterado && (
-                                      <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              <td className="px-2 py-1.5 align-top">
-                                {ativo ? (
-                                  <div className="space-y-1">
-                                    <Select value={ed.justificativaId} onValueChange={(v) => patchDia(data, { justificativaId: v })}>
-                                      <SelectTrigger className="h-8 text-xs">
-                                        <SelectValue placeholder="Selecione…" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {justAtivas.length === 0 && (
-                                          <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
-                                            Nenhuma justificativa cadastrada. Peça ao RH para configurar.
-                                          </div>
-                                        )}
-                                        {justAtivas.map((j) => (
-                                          <SelectItem key={j.id} value={j.id} className="text-xs">
-                                            {j.nome}
-                                          </SelectItem>
-                                        ))}
-                                        <SelectItem value={OUTRO_VALUE} className="text-xs">Outro (descrever)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {ed.justificativaId === OUTRO_VALUE && (
-                                      <Input
-                                        value={ed.outroTexto}
-                                        onChange={(e) => patchDia(data, { outroTexto: e.target.value })}
-                                        placeholder="Descreva o motivo"
-                                        className="h-8 text-xs"
-                                        maxLength={300}
-                                      />
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-[10px] text-muted-foreground italic">— altere horário ou informe abono</span>
-                                )}
-                              </td>
-                              <td className="px-2 py-1.5 align-top">
-                                <Input
-                                  type="number"
-                                  step="0.5" min="0" max="24"
-                                  disabled={futuro}
-                                  value={ed.horasAbono}
-                                  onChange={(e) => patchDia(data, { horasAbono: e.target.value })}
-                                  placeholder="0"
-                                  className="h-8 text-xs font-mono"
-                                />
-                                {ativo && (Number(ed.horasAbono) || 0) > 0 && (
-                                  <div className={`text-[9px] mt-0.5 ${
-                                    (Number(ed.horasAbono) || 0) > horasEfetiv + 0.001
-                                      ? "text-destructive"
-                                      : "text-muted-foreground"
-                                  }`}>
-                                    dia: {horasEfetiv.toFixed(1)}h
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-2 py-1.5 align-top">
-                                {ed.anexo ? (
-                                  <div className="flex items-center justify-between gap-1 text-[10px] bg-muted/60 rounded px-1.5 py-1">
-                                    <span className="truncate max-w-[100px]" title={ed.anexo.name}>{ed.anexo.name}</span>
-                                    <button type="button" onClick={() => handleAnexoDia(data, null)} className="text-destructive shrink-0">
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <label className={`flex items-center gap-1 text-[10px] cursor-pointer text-muted-foreground hover:text-foreground ${futuro ? "pointer-events-none opacity-50" : ""}`}>
-                                    <Paperclip className="w-3 h-3" />
-                                    <span>Anexar {ativo && justAtivas.find(j => j.id === ed.justificativaId)?.requer_anexo && "*"}</span>
-                                    <input
-                                      type="file" className="hidden"
-                                      accept="image/*,application/pdf"
-                                      onChange={(e) => handleAnexoDia(data, e.target.files?.[0] || null)}
-                                    />
-                                  </label>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
+                  </tbody>
+                </table>
               )}
             </ScrollArea>
-
 
             <div className="space-y-3 pt-3 border-t">
               <div className="flex items-center justify-between gap-3 flex-wrap">
