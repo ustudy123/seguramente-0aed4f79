@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTenant } from "./useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -1122,11 +1122,17 @@ export function useImportacaoPlanilha() {
     }
   };
 
+  const limparDados = useCallback(() => {
+    // This helper doesn't need to do much since the hook is stateless regarding the data
+    // but we can provide it for consistency if the modal needs to trigger a reset
+  }, []);
+
   return {
     lerArquivo,
     lerArquivoHeaders,
     lerArquivoComMapeamento,
     processarImportacao,
+    limparDados,
     isProcessing,
     progress,
   };
