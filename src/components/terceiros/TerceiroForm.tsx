@@ -225,6 +225,13 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
         });
+      } else if (!existingContract && !contractFile && initial?.id) {
+        // Se o usuário removeu o contrato existente e não subiu um novo
+        await supabase
+          .from("terceiro_documentos" as any)
+          .delete()
+          .eq("terceiro_id", initial.id)
+          .eq("tipo", "Contrato");
       }
       
       onOpenChange(false);
