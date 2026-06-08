@@ -97,13 +97,15 @@ export function ImportPlanilhaModal({
     const file = acceptedFiles[0];
     if (!file) return;
 
+    // Reset ALL state immediately before processing new file
     setArquivo(file);
     setErro(null);
     setDados([]);
-    setResultado(null); // Limpa resultado anterior
+    setResultado(null);
     setFileHeaders([]);
     setSampleRows([]);
-    setUsarMapeamento(false); // Reseta modo de mapeamento
+    setUsarMapeamento(false);
+    setPreviewFilter("todos");
     setLendoArquivo(true);
 
     try {
