@@ -188,6 +188,34 @@
     background: hsl(var(--muted-foreground) / 0.5);
   }
 
+  /* Sempre exibir barras de rolagem (folha de ponto - mobile/iOS) */
+  .ponto-scroll-visible {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--muted) / 0.3);
+  }
+  .ponto-scroll-visible::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    -webkit-appearance: none;
+  }
+  .ponto-scroll-visible::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.3);
+    border-radius: 5px;
+  }
+  .ponto-scroll-visible::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.55);
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .ponto-scroll-visible::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.8);
+    background-clip: padding-box;
+  }
+  .ponto-scroll-visible::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   /* SST Report Professional Styles */
   .sst-report {
     @apply space-y-1;
