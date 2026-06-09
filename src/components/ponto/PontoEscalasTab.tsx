@@ -221,19 +221,11 @@ export function PontoEscalasTab() {
       } else if (diasTrab.length > 0) {
         payload.tipo = "personalizada";
       }
-      // Sincroniza resumo (Horário) e intervalo padrão a partir do primeiro dia trabalhado
+      // Sincroniza resumo (Horário) a partir do primeiro dia trabalhado
       const primeiroDia = DIAS_KEYS.map(k => escalaForm.dias_config[k] as DiaConfig).find(d => d?.trabalha);
       if (primeiroDia) {
         payload.hora_entrada_padrao = primeiroDia.entrada || payload.hora_entrada_padrao;
         payload.hora_saida_padrao = primeiroDia.saida || payload.hora_saida_padrao;
-        // Sempre sincroniza o intervalo se houver almoço, ou 0 se não houver
-        if (primeiroDia.tem_almoco && primeiroDia.inicio_almoco && primeiroDia.fim_almoco) {
-          const toMin = (h: string) => { const [hh, mm] = h.split(":").map(Number); return hh * 60 + mm; };
-          const intervalo = toMin(primeiroDia.fim_almoco) - toMin(primeiroDia.inicio_almoco);
-          payload.intervalo_intrajornada_minutos = Math.max(0, intervalo);
-        } else {
-          payload.intervalo_intrajornada_minutos = 0;
-        }
       }
 
       // limpa campos ciclo
