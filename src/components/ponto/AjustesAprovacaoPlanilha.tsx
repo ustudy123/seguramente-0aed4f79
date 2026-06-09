@@ -105,9 +105,21 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
   };
 
   const handleApprovarDia = async (items: PontoAjuste[]) => {
-    const pendentes = items.filter((a) => a.status === "pendente");
-    if (pendentes.length === 0) return;
-    
+    const pendentesRaw = items.filter((a) => a.status === "pendente");
+    if (pendentesRaw.length === 0) return;
+
+    // Ordena por sequência cronológica do tipo_marcacao para respeitar a trigger
+    // validar_sequencia_marcacao (retorno_almoco exige saida_almoco prévia).
+    const ORDEM_TIPO: Record<string, number> = {
+      entrada: 1,
+      saida_almoco: 2,
+      retorno_almoco: 3,
+      saida: 4,
+    };
+    const pendentes = [...pendentesRaw].sort(
+      (a, b) => (ORDEM_TIPO[a.tipo_marcacao ?? ""] ?? 99) - (ORDEM_TIPO[b.tipo_marcacao ?? ""] ?? 99)
+    );
+
     // Processa todos menos o último silenciosamente
     for (let i = 0; i < pendentes.length - 1; i++) {
       await processarAjuste({ ajusteId: pendentes[i].id, aprovado: true, multiple: true });
