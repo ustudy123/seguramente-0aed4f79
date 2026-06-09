@@ -508,7 +508,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                             form.nome_ocupante || "Selecione o colaborador..."
                           ) : (
                             form.selectedOcupantes.length > 0 
-                              ? `${form.selectedOcupantes.length} selecionado(s)` 
+                              ? form.selectedOcupantes.map(o => o.nome).join(", ") 
                               : form.nome_ocupante || "Selecione o(s) colaborador(es)..."
                           )}
                         </div>
