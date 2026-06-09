@@ -22452,6 +22452,10 @@ export type Database = {
           role: string
         }[]
       }
+      listar_ponto_externo: {
+        Args: { p_dias?: number; p_token: string }
+        Returns: Json
+      }
       obter_assinatura_manual_publica: {
         Args: { p_token: string }
         Returns: Json
@@ -22597,6 +22601,15 @@ export type Database = {
           p_hora_solicitada: string
           p_motivo: string
           p_tipo_marcacao: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      solicitar_ajustes_ponto_externo_batch: {
+        Args: {
+          p_anexos?: Json
+          p_itens: Json
+          p_motivo?: string
           p_token: string
         }
         Returns: Json
