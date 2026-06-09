@@ -234,7 +234,12 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         { 
           onSuccess: (createdNode: any) => { 
             if (insertingBetweenId && createdNode?.id) {
+              // Update the existing node to point to the newly created parent
               updateOrgNode.mutate({ id: insertingBetweenId, parent_id: createdNode.id });
+              
+              // If we have multiple occupants being added, only the first one should push the child down
+              // but since they all get the same parent_id, they will end up as siblings, which is correct.
+              // However, we should probably only update the child once.
               setInsertingBetweenId(null);
               toast.info("Posição inserida na hierarquia");
             }
