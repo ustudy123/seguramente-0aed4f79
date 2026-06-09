@@ -17,6 +17,7 @@ export interface Colaborador {
   gestor_imediato?: string | null;
   foto_url?: string | null;
   bate_ponto?: boolean | null;
+  inativo?: boolean | null;
 }
 
 interface UseColaboradoresOptions {
