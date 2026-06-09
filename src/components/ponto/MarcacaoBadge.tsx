@@ -21,7 +21,7 @@ interface Props {
 
 export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editando, onSalvar, onExcluir, excluindo }: Props) {
   const [open, setOpen] = useState(false);
-  const [confirmDel, setConfirmDel] = useState(false);
+  const [novaHora, setNovaHora] = useState(hora?.substring(0, 5) || "");
   const [novaHora, setNovaHora] = useState(hora?.substring(0, 5) || "");
 
   const badgeClasses = cn(
