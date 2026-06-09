@@ -518,7 +518,8 @@ const Ponto = () => {
                         ) : (
                           <div className="flex flex-wrap gap-1.5">
                             {marcs.map((m, idx) => {
-                              const isEntry = idx % 2 === 0;
+                              // Usar tipo real da marcação, não a posição
+                              const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
                               return (
                                 <MarcacaoBadge
                                   key={m.id || idx}

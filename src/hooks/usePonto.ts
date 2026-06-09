@@ -474,8 +474,10 @@ export function usePonto() {
             .eq("hora_marcacao", ajuste.hora_original);
         }
 
+        // Inserir nova marcação com tenant_id E empresa_id corretos
         const { error: insertError } = await fromTable("ponto_marcacoes").insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,  // Herda empresa ativa para manter escopo
           colaborador_id: ajuste.colaborador_id,
           colaborador_nome: ajuste.colaborador_nome,
           colaborador_cpf: ajuste.colaborador_cpf,
