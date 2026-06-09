@@ -379,7 +379,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                                 </td>
                               );
                             })}
-                            <td className="px-2 py-1.5 align-top min-w-[200px]">
+                            <td className="px-2 py-1.5 align-top">
                               {temAlteracao ? (
                                 <div className="space-y-1.5">
                                   <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
