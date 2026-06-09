@@ -311,7 +311,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
               {/* Folha */}
               <div
                 ref={scrollRef}
-                className="flex-1 min-h-0 w-full min-w-0 overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y ponto-scroll-visible"
+                className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto border rounded-md ponto-scroll-visible"
               >
                 <div className="min-w-[760px] md:min-w-full min-h-full">
                   {loading ? (
