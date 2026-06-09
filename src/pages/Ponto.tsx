@@ -70,6 +70,7 @@ const Ponto = () => {
     processarAjuste, processandoAjuste,
     excluirAjuste, excluindoAjuste,
     editarMarcacao, editandoMarcacao,
+    excluirMarcacao, excluindoMarcacao,
   } = usePonto();
 
 
