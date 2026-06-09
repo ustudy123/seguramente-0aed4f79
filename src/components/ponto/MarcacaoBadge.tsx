@@ -55,7 +55,7 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
             {content}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="start">
+        <PopoverContent className="w-64 max-w-[calc(100vw-2rem)] p-3" align="start" collisionPadding={16}>
           <div className="space-y-3">
             <div>
               <p className="text-sm font-semibold">Editar marcação</p>
@@ -70,7 +70,7 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
                 step={60}
               />
             </div>
-            <div className="flex justify-between gap-2">
+            <div className="flex flex-wrap justify-between gap-2">
               {onExcluir && (
                 <Button
                   size="sm"
