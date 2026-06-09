@@ -17,6 +17,7 @@ export interface Colaborador {
   gestor_imediato?: string | null;
   foto_url?: string | null;
   bate_ponto?: boolean | null;
+  inativo?: boolean | null;
 }
 
 interface UseColaboradoresOptions {
@@ -24,21 +25,23 @@ interface UseColaboradoresOptions {
   excluirPJ?: boolean;
   /** Mantém apenas colaboradores marcados como "bate ponto" (usado no módulo Ponto). */
   apenasBatePonto?: boolean;
+  /** Exclui colaboradores inativos. */
+  excluirInativos?: boolean;
 }
 
 export function useColaboradores(options: UseColaboradoresOptions = {}) {
-  const { excluirPJ = false, apenasBatePonto = false } = options;
+  const { excluirPJ = false, apenasBatePonto = false, excluirInativos = true } = options;
   const { tenantId } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
 
   const { data: colaboradores = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["colaboradores", tenantId, empresaAtivaId, excluirPJ, apenasBatePonto],
+    queryKey: ["colaboradores", tenantId, empresaAtivaId, excluirPJ, apenasBatePonto, excluirInativos],
     queryFn: async (): Promise<Colaborador[]> => {
       if (!tenantId) return [];
 
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, empresa_id, gestor_imediato, foto_url, tipo_contrato, bate_ponto")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, empresa_id, gestor_imediato, foto_url, tipo_contrato, bate_ponto, inativo")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
 
@@ -62,6 +65,10 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
 
       if (apenasBatePonto) {
         rows = rows.filter((r: any) => r.bate_ponto !== false);
+      }
+
+      if (excluirInativos) {
+        rows = rows.filter((r: any) => r.inativo !== true);
       }
 
       // Deduplica por CPF (normalizado em apenas dígitos), mantendo a admissão mais recente.

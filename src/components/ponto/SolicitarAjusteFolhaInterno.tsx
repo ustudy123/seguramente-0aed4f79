@@ -368,11 +368,13 @@ export function SolicitarAjusteFolhaInterno({
                     <SelectValue placeholder="Selecione o colaborador" />
                   </SelectTrigger>
                   <SelectContent>
-                    {colaboradores.map((c) => (
-                      <SelectItem key={c.id} value={c.id} className="text-sm">
-                        {c.nome_completo}
-                      </SelectItem>
-                    ))}
+                    {colaboradores
+                      .sort((a, b) => a.nome_completo.localeCompare(b.nome_completo))
+                      .map((c) => (
+                        <SelectItem key={c.id} value={c.id} className="text-sm">
+                          {c.nome_completo}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

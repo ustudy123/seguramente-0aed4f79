@@ -30,7 +30,7 @@ function getPontoExternoUrl(token: string): string {
 export function PontoLinksTab() {
   const { tenantId } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
-  const { colaboradores } = useColaboradores();
+  const { colaboradores } = useColaboradores({ excluirInativos: true, apenasBatePonto: true });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
