@@ -574,7 +574,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                 {organograma.length > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <Label>Superior {form.parent_id ? "" : "(opcional)"}</Label>
+                      <Label>Posição {form.parent_id ? "" : "(opcional)"}</Label>
                       {!editingNode && !insertingBetweenId && (
                         <Button 
                           variant="link" 
