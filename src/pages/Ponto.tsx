@@ -531,7 +531,10 @@ const Ponto = () => {
                                   podeEditar={podeEditarMarcacao}
                                   editando={editandoMarcacao}
                                   onSalvar={editarMarcacao}
+                                  onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
+                                  excluindo={excluindoMarcacao}
                                 />
+
                               );
                             })}
                           </div>
