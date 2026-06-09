@@ -25,6 +25,8 @@ interface UseColaboradoresOptions {
   excluirPJ?: boolean;
   /** Mantém apenas colaboradores marcados como "bate ponto" (usado no módulo Ponto). */
   apenasBatePonto?: boolean;
+  /** Exclui colaboradores inativos. */
+  excluirInativos?: boolean;
 }
 
 export function useColaboradores(options: UseColaboradoresOptions = {}) {
