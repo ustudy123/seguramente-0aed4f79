@@ -171,6 +171,19 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     setShowNew(true);
   };
 
+  const openDialogForRootInsertion = () => {
+    // To insert a new root above all existing roots, we need a special mode.
+    // However, the current logic for "insertingBetweenId" already works if parent_id is empty.
+    // The problem is that when inserting a new root, it should become the parent of ALL current roots.
+    // But since the UI usually triggers this from one specific card, we'll start with that.
+    // If the user wants a new global root, they should use "Nova Posição" and then manually move others under it,
+    // OR we can make "insertingBetween" on a root node behave as "new root parent".
+    setEditingNode(null);
+    setInsertingBetweenId("all_roots");
+    setForm({ ...INITIAL_FORM, parent_id: "" });
+    setShowNew(true);
+  };
+
   const executeFinalCreation = async (createInSystem: boolean) => {
     const titulo = form.titulo.trim();
 
@@ -215,7 +228,11 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       ? form.selectedOcupantes
       : [{ id: form.colaborador_id, nome: form.nome_ocupante }];
 
-    const parentId = form.parent_id || undefined;
+    // If we're choosing "Raiz" in the select but also want to insert above, we should respect the insert logic
+    const parentId = (insertingBetweenId && insertingBetweenId !== "all_roots")
+      ? (organograma.find(n => n.id === insertingBetweenId)?.parent_id || undefined)
+      : (form.parent_id || undefined);
+
     const resetForm = () => {
       setShowNew(false);
       setForm(INITIAL_FORM);
@@ -236,14 +253,19 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         { 
           onSuccess: (createdNode: any) => { 
             if (insertingBetweenId && createdNode?.id) {
-              // Update the existing node to point to the newly created parent
-              updateOrgNode.mutate({ id: insertingBetweenId, parent_id: createdNode.id });
-              
-              // If we have multiple occupants being added, only the first one should push the child down
-              // but since they all get the same parent_id, they will end up as siblings, which is correct.
-              // However, we should probably only update the child once.
+              if (insertingBetweenId === "all_roots") {
+                // Special case: new root above all existing roots
+                const currentRoots = organograma.filter(n => !n.parent_id);
+                currentRoots.forEach(root => {
+                  updateOrgNode.mutate({ id: root.id, parent_id: createdNode.id });
+                });
+                toast.info("Nova posição definida como raiz principal");
+              } else {
+                // Update the existing node to point to the newly created parent
+                updateOrgNode.mutate({ id: insertingBetweenId, parent_id: createdNode.id });
+                toast.info("Posição inserida na hierarquia");
+              }
               setInsertingBetweenId(null);
-              toast.info("Posição inserida na hierarquia");
             }
             remaining--; 
             if (remaining === 0) resetForm(); 
@@ -415,7 +437,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           )}
           <Dialog open={showNew} onOpenChange={setShowNew}>
             <DialogTrigger asChild>
-              <Button size="sm" onClick={() => { setEditingNode(null); setForm(INITIAL_FORM); }}>
+              <Button size="sm" onClick={() => { setEditingNode(null); setForm(INITIAL_FORM); setInsertingBetweenId(null); }}>
                 <Plus className="w-4 h-4 mr-1" /> Nova Posição
               </Button>
             </DialogTrigger>
@@ -551,11 +573,37 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
 
                 {organograma.length > 0 && (
                   <div className="space-y-1">
-                    <Label>Superior {form.parent_id ? "" : "(opcional)"}</Label>
-                    <Select value={form.parent_id || "_none"} onValueChange={(v) => setForm({ ...form, parent_id: v === "_none" ? "" : v })}>
+                    <div className="flex items-center justify-between">
+                      <Label>Superior {form.parent_id ? "" : "(opcional)"}</Label>
+                      {!editingNode && !insertingBetweenId && (
+                        <Button 
+                          variant="link" 
+                          className="h-auto p-0 text-[10px]" 
+                          onClick={openDialogForRootInsertion}
+                        >
+                          Tornar Raiz Principal (acima de todos)
+                        </Button>
+                      )}
+                      {insertingBetweenId === "all_roots" && (
+                        <Badge variant="secondary" className="text-[10px]">Modo: Nova Raiz Principal</Badge>
+                      )}
+                    </div>
+                    <Select 
+                      value={insertingBetweenId === "all_roots" ? "_new_root" : (form.parent_id || "_none")} 
+                      onValueChange={(v) => {
+                        if (v === "_new_root") {
+                          openDialogForRootInsertion();
+                        } else {
+                          setInsertingBetweenId(null);
+                          setForm({ ...form, parent_id: v === "_none" ? "" : v });
+                        }
+                      }}
+                      disabled={insertingBetweenId && insertingBetweenId !== "all_roots"}
+                    >
                       <SelectTrigger><SelectValue placeholder="Raiz (sem superior)" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="_none">Raiz (sem superior)</SelectItem>
+                        <SelectItem value="_new_root" className="text-primary font-medium">Tornar Raiz Principal (acima de todos)</SelectItem>
                         {organograma.map((n) => (
                           <SelectItem key={n.id} value={n.id}>{n.titulo}{n.nome_ocupante ? ` (${n.nome_ocupante})` : ""}</SelectItem>
                         ))}
