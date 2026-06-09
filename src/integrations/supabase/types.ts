@@ -22267,6 +22267,7 @@ export type Database = {
         Args: { _admissao_id: string }
         Returns: Json
       }
+      excluir_marcacao_ponto: { Args: { p_marcacao_id: string }; Returns: Json }
       finalizar_admissao_by_token: {
         Args: { _token: string }
         Returns: undefined

@@ -70,6 +70,7 @@ const Ponto = () => {
     processarAjuste, processandoAjuste,
     excluirAjuste, excluindoAjuste,
     editarMarcacao, editandoMarcacao,
+    excluirMarcacao, excluindoMarcacao,
   } = usePonto();
 
 
@@ -530,7 +531,10 @@ const Ponto = () => {
                                   podeEditar={podeEditarMarcacao}
                                   editando={editandoMarcacao}
                                   onSalvar={editarMarcacao}
+                                  onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
+                                  excluindo={excluindoMarcacao}
                                 />
+
                               );
                             })}
                           </div>
