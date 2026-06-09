@@ -166,6 +166,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     const childNode = organograma.find(n => n.id === childId);
     setEditingNode(null);
     setInsertingBetweenId(childId);
+    // When inserting between, the new node's parent becomes the child's current parent
     setForm({ ...INITIAL_FORM, parent_id: childNode?.parent_id || "" });
     setShowNew(true);
   };
