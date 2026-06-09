@@ -203,6 +203,8 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           toast.success("Posição atualizada");
           setShowNew(false);
           setEditingNode(null);
+          setForm(INITIAL_FORM);
+          setOcupanteSearch("");
         },
         onError: () => toast.error("Erro ao atualizar posição")
       });
