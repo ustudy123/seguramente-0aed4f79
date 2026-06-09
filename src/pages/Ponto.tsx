@@ -61,7 +61,7 @@ import { MarcacaoBadge } from "@/components/ponto/MarcacaoBadge";
 const Ponto = () => {
   const { profile, tenantId: tenantIdAtivo, hasMinimumRole } = useAuth();
   // Ponto eletrônico é exclusivo para vínculos CLT — exclui PJ/Pró-labore/Terceiros.
-  const { colaboradores } = useColaboradores({ excluirPJ: true, apenasBatePonto: true });
+  const { colaboradores } = useColaboradores({ excluirPJ: true, apenasBatePonto: true, excluirInativos: true });
   const podeEditarMarcacao = hasMinimumRole("manager");
   const {
     usePontoDiario, useMarcacoesHoje, useAjustesPendentes,
