@@ -41,7 +41,7 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
 
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, empresa_id, gestor_imediato, foto_url, tipo_contrato, bate_ponto")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, empresa_id, gestor_imediato, foto_url, tipo_contrato, bate_ponto, inativo")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
 
