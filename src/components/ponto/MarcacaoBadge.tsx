@@ -70,12 +70,12 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
                 step={60}
               />
             </div>
-            <div className="flex flex-wrap justify-between gap-2">
+            <div className="flex items-center gap-2">
               {onExcluir && (
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="flex-1 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                   disabled={editando || excluindo}
                   onClick={async () => {
                     setOpen(false);
@@ -92,21 +92,20 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
                 </Button>
               )}
-              <div className="flex gap-2 ml-auto">
-                <Button size="sm" variant="ghost" onClick={() => setOpen(false)} disabled={editando}>
-                  Cancelar
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={editando || !novaHora || novaHora === hora?.substring(0, 5)}
-                  onClick={async () => {
-                    await onSalvar({ marcacaoId: id, novaHora });
-                    setOpen(false);
-                  }}
-                >
-                  {editando ? <Loader2 className="w-3 h-3 animate-spin" /> : "Salvar"}
-                </Button>
-              </div>
+              <Button size="sm" variant="ghost" className="flex-1 px-2" onClick={() => setOpen(false)} disabled={editando}>
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 px-2"
+                disabled={editando || !novaHora || novaHora === hora?.substring(0, 5)}
+                onClick={async () => {
+                  await onSalvar({ marcacaoId: id, novaHora });
+                  setOpen(false);
+                }}
+              >
+                {editando ? <Loader2 className="w-3 h-3 animate-spin" /> : "Salvar"}
+              </Button>
             </div>
           </div>
         </PopoverContent>
