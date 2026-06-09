@@ -555,6 +555,26 @@ export function usePonto() {
     },
   });
 
+  // Excluir marcação de ponto (gestor/RH) — via RPC autorizado
+  const excluirMarcacaoMutation = useMutation({
+    mutationFn: async ({ marcacaoId }: { marcacaoId: string }) => {
+      const { data, error } = await (supabase as any).rpc("excluir_marcacao_ponto", {
+        p_marcacao_id: marcacaoId,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
+      toast.success("Marcação excluída.");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir marcação: " + error.message);
+    },
+  });
+
   return {
     // Hooks de query
     usePontoDiario,
@@ -577,6 +597,9 @@ export function usePonto() {
 
     editarMarcacao: editarMarcacaoMutation.mutateAsync,
     editandoMarcacao: editarMarcacaoMutation.isPending,
+
+    excluirMarcacao: excluirMarcacaoMutation.mutateAsync,
+    excluindoMarcacao: excluirMarcacaoMutation.isPending,
   };
 }
 
