@@ -503,12 +503,14 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" className="w-full justify-between font-normal text-left overflow-hidden">
-                        <div className="truncate flex-1">
+                        <div className="flex-1 text-left truncate">
                           {editingNode ? (
                             form.nome_ocupante || "Selecione o colaborador..."
                           ) : (
                             form.selectedOcupantes.length > 0 
-                              ? form.selectedOcupantes.map(o => o.nome).join(", ") 
+                              ? (form.selectedOcupantes.length === 1 
+                                  ? form.selectedOcupantes[0].nome 
+                                  : `${form.selectedOcupantes.length} selecionados (${form.selectedOcupantes.map(o => o.nome.split(' ')[0]).join(', ')})`)
                               : form.nome_ocupante || "Selecione o(s) colaborador(es)..."
                           )}
                         </div>
