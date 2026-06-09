@@ -269,7 +269,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-4xl h-[92vh] max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6 gap-3">
+      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-5xl h-[92vh] max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6 gap-3">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -458,11 +458,12 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                   </div>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="flex-1 order-2 sm:order-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="flex-1 order-1 sm:order-2" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
-                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar ${totalAlteracoes || ""} Ajuste${totalAlteracoes !== 1 ? "s" : ""}`}
+1
+2
+              <div className="grid grid-cols-2 gap-2 mt-auto">
+                <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
+                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes (${totalAlteracoes || 0})`}
                 </Button>
               </div>
 
