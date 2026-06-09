@@ -100,13 +100,13 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   // Gera lista de dias do mês ativo (limitado ao hoje)
   const diasMes = useMemo(() => {
     const [y, m] = mesAtivo.split("-").map(Number);
-    const last = new Date(y, m, 0).getDate();
+    const lastDay = new Date(y, m, 0).getDate();
     const arr: string[] = [];
-    for (let d = 1; d <= last; d++) {
+    for (let d = 1; d <= lastDay; d++) {
       const iso = `${y}-${pad(m)}-${pad(d)}`;
       if (iso <= today) arr.push(iso);
     }
-    return arr.reverse(); // mais recentes no topo
+    return arr; // Ordem cronológica (01, 02, 03...)
   }, [mesAtivo, today]);
 
   const marcsPorDia = useMemo(() => {
