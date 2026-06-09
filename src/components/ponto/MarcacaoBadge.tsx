@@ -78,7 +78,16 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
                   variant="ghost"
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   disabled={editando || excluindo}
-                  onClick={() => { setOpen(false); setConfirmDel(true); }}
+                  onClick={async () => {
+                    setOpen(false);
+                    const ok = await confirm({
+                      title: "Excluir marcação?",
+                      description: `A marcação das ${hora?.substring(0, 5)} será excluída permanentemente e a jornada do dia será recalculada. Use apenas para batidas duplicadas ou incorretas.`,
+                      confirmLabel: "Excluir",
+                      variant: "destructive",
+                    });
+                    if (ok) await onExcluir({ marcacaoId: id });
+                  }}
                   title="Excluir esta marcação (para batidas duplicadas/incorretas)"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
@@ -103,21 +112,6 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
           </div>
         </PopoverContent>
       </Popover>
-
-      {onExcluir && (
-        <ConfirmDialog
-          open={confirmDel}
-          onOpenChange={setConfirmDel}
-          title="Excluir marcação?"
-          description={`A marcação das ${hora?.substring(0, 5)} será excluída permanentemente e a jornada do dia será recalculada. Use esta ação apenas para batidas duplicadas ou incorretas.`}
-          confirmText="Excluir"
-          variant="destructive"
-          loading={!!excluindo}
-          onConfirm={async () => {
-            await onExcluir({ marcacaoId: id });
-          }}
-        />
-      )}
     </>
   );
 }
