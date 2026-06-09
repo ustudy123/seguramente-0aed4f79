@@ -387,7 +387,7 @@ export function usePonto() {
         for (const file of anexos) {
           const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
           const path = `${user.id}/${dataReferencia}/${Date.now()}_${safeName}`;
-          const { data: up, error: upErr } = await (await import("@/integrations/supabase/client")).supabase
+          const { data: up, error: upErr } = await supabase
             .storage.from("ponto-ajustes-anexos").upload(path, file, { contentType: file.type });
           if (upErr) throw upErr;
           anexosUploaded.push({ nome: file.name, url: up.path, tamanho: file.size, tipo: file.type });
