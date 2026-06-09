@@ -462,6 +462,18 @@ export function usePonto() {
 
       // Se aprovado e for inclusão/correção, criar nova marcação
       if (aprovado && ajuste.tipo_ajuste !== "justificativa" && ajuste.tipo_ajuste !== "abono" && ajuste.tipo_marcacao && ajuste.hora_solicitada) {
+        
+        // Se for correção, deletar a marcação original antes de inserir a nova
+        if (ajuste.tipo_ajuste === "correcao" && ajuste.hora_original) {
+          await fromTable("ponto_marcacoes")
+            .delete()
+            .eq("tenant_id", tenantId)
+            .eq("colaborador_id", ajuste.colaborador_id)
+            .eq("data_marcacao", ajuste.data_referencia)
+            .eq("tipo_marcacao", ajuste.tipo_marcacao)
+            .eq("hora_marcacao", ajuste.hora_original);
+        }
+
         const { error: insertError } = await fromTable("ponto_marcacoes").insert({
           tenant_id: tenantId,
           colaborador_id: ajuste.colaborador_id,
