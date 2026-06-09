@@ -362,7 +362,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                               const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
                               const incluido = alterado && !orig;
                               return (
-                                <td key={t} className="px-2 py-1.5 align-top">
+                                <td key={t} className="px-1.5 py-1.5 align-top">
                                   <Input
                                     type="time"
                                     value={valor}
