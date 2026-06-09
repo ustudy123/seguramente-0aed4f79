@@ -30,7 +30,7 @@ interface UseColaboradoresOptions {
 }
 
 export function useColaboradores(options: UseColaboradoresOptions = {}) {
-  const { excluirPJ = false, apenasBatePonto = false, excluirInativos = false } = options;
+  const { excluirPJ = false, apenasBatePonto = false, excluirInativos = true } = options;
   const { tenantId } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
 
