@@ -22225,6 +22225,10 @@ export type Database = {
         Args: { _admissao_id: string }
         Returns: Json
       }
+      consolidar_ponto_diario_manual: {
+        Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
+        Returns: undefined
+      }
       contar_colaboradores_por_empresa: {
         Args: { p_tenant_id: string }
         Returns: {
