@@ -269,7 +269,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-4xl h-[92vh] max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6 gap-3">
+      <DialogContent className="w-[95vw] max-w-[95vw] md:max-w-5xl h-[92vh] max-h-[92vh] flex flex-col overflow-hidden p-4 md:p-6 gap-3">
         {done ? (
           <div className="text-center space-y-3 py-6">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
@@ -311,7 +311,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
               {/* Folha */}
               <div
                 ref={scrollRef}
-                className="flex-1 min-h-0 w-full min-w-0 overflow-x-auto overflow-y-auto border rounded-md [-webkit-overflow-scrolling:touch] touch-pan-x touch-pan-y ponto-scroll-visible"
+                className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto border rounded-md ponto-scroll-visible"
               >
                 <div className="min-w-[760px] md:min-w-full min-h-full">
                   {loading ? (
@@ -321,15 +321,15 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                   ) : diasMes.length === 0 ? (
                     <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
                   ) : (
-                    <table className="w-full text-xs">
+                    <table className="w-full text-[11px]">
                     <thead className="bg-muted/50 sticky top-0 z-10">
                       <tr className="text-left">
-                        <th className="px-2 py-2 font-medium w-[60px]">Dia</th>
-                        <th className="px-2 py-2 font-medium">Entrada</th>
-                        <th className="px-2 py-2 font-medium">S.Alm.</th>
-                        <th className="px-2 py-2 font-medium">R.Alm.</th>
-                        <th className="px-2 py-2 font-medium">Saída</th>
-                        <th className="px-2 py-2 font-medium min-w-[200px]">Justificativa</th>
+                        <th className="px-2 py-2 font-medium w-[50px]">Dia</th>
+                        <th className="px-1.5 py-2 font-medium w-[90px]">Entrada</th>
+                        <th className="px-1.5 py-2 font-medium w-[90px]">S.Alm.</th>
+                        <th className="px-1.5 py-2 font-medium w-[90px]">R.Alm.</th>
+                        <th className="px-1.5 py-2 font-medium w-[90px]">Saída</th>
+                        <th className="px-2 py-2 font-medium">Justificativa</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -362,7 +362,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                               const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
                               const incluido = alterado && !orig;
                               return (
-                                <td key={t} className="px-2 py-1.5 align-top">
+                                <td key={t} className="px-1.5 py-1.5 align-top">
                                   <Input
                                     type="time"
                                     value={valor}
@@ -379,7 +379,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                                 </td>
                               );
                             })}
-                            <td className="px-2 py-1.5 align-top min-w-[200px]">
+                            <td className="px-2 py-1.5 align-top">
                               {temAlteracao ? (
                                 <div className="space-y-1.5">
                                   <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
@@ -458,11 +458,10 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                   </div>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="flex-1 order-2 sm:order-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="flex-1 order-1 sm:order-2" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
-                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar ${totalAlteracoes || ""} Ajuste${totalAlteracoes !== 1 ? "s" : ""}`}
+              <div className="grid grid-cols-2 gap-2 mt-auto">
+                <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
+                  {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes (${totalAlteracoes || 0})`}
                 </Button>
               </div>
 
