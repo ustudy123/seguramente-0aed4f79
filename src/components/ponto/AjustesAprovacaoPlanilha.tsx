@@ -125,6 +125,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     setRejeitarDialogOpen(true);
   };
 
+
   const confirmarRejeicao = async () => {
     if (itemsParaRejeitar.length === 0) return;
 
