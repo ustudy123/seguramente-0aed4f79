@@ -433,7 +433,7 @@ export function usePonto() {
 
       // Se aprovado e for inclusão/correção, criar nova marcação
       if (aprovado && ajuste.tipo_ajuste !== "justificativa" && ajuste.tipo_ajuste !== "abono" && ajuste.tipo_marcacao && ajuste.hora_solicitada) {
-        await fromTable("ponto_marcacoes").insert({
+        const { error: insertError } = await fromTable("ponto_marcacoes").insert({
           tenant_id: tenantId,
           colaborador_id: ajuste.colaborador_id,
           colaborador_nome: ajuste.colaborador_nome,
@@ -445,6 +445,7 @@ export function usePonto() {
           created_by: user.id,
           hash_marcacao: "placeholder",
         } as any);
+        if (insertError) throw insertError;
       }
 
       return ajuste;
