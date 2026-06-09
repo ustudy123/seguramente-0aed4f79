@@ -5,6 +5,7 @@ import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useEffect } from "react";
 
 // Tipos
 export interface PontoMarcacao {
