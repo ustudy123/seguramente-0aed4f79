@@ -22609,7 +22609,7 @@ export type Database = {
         Args: {
           p_anexos?: Json
           p_itens: Json
-          p_motivo: string
+          p_motivo?: string
           p_token: string
         }
         Returns: Json

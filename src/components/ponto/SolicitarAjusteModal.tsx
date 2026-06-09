@@ -87,7 +87,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     (async () => {
       setLoading(true);
       // Pede 45 dias para cobrir mês atual + anterior
-      const { data, error } = await supabasePublic.rpc("listar_ponto_externo", { p_token: token, p_dias: 45 });
+      const { data, error } = await supabasePublic.rpc("listar_ponto_externo" as any, { p_token: token, p_dias: 45 });
       if (error) { toast.error(error.message); setLoading(false); return; }
       const r = data as any;
       if (r?.error) { toast.error(r.error); setLoading(false); return; }
@@ -234,7 +234,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
         motivo: it.motivo,
       }));
 
-      const { data: resp, error } = await supabasePublic.rpc("solicitar_ajustes_ponto_externo_batch", {
+      const { data: resp, error } = await supabasePublic.rpc("solicitar_ajustes_ponto_externo_batch" as any, {
         p_token: token,
         p_itens: payload as any,
         p_motivo: "Ajustes da folha de ponto",
