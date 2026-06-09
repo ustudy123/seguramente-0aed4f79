@@ -114,7 +114,35 @@ export function usePonto() {
   const usePontoDiario = (data: Date, dataFim?: Date) => {
     const dataStr = format(data, "yyyy-MM-dd");
     const dataFimStr = dataFim ? format(dataFim, "yyyy-MM-dd") : null;
-    
+
+    // Realtime: ouve mudanças em ponto_marcacoes e ponto_diario
+    // para refletir automaticamente aprovações de ajustes no Espelho.
+    useEffect(() => {
+      if (!tenantId) return;
+      const channel = supabase
+        .channel(`espelho-realtime-${tenantId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "ponto_marcacoes", filter: `tenant_id=eq.${tenantId}` },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+            queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
+            queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "ponto_diario", filter: `tenant_id=eq.${tenantId}` },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+          }
+        )
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [tenantId]);
+
     return useQuery({
       queryKey: ["ponto-diario", tenantId, dataStr, dataFimStr, empresaAtivaId],
       queryFn: async (): Promise<PontoDiario[]> => {
