@@ -35,7 +35,7 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
   const { empresaAtivaId } = useEmpresaAtiva();
 
   const { data: colaboradores = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["colaboradores", tenantId, empresaAtivaId, excluirPJ, apenasBatePonto],
+    queryKey: ["colaboradores", tenantId, empresaAtivaId, excluirPJ, apenasBatePonto, excluirInativos],
     queryFn: async (): Promise<Colaborador[]> => {
       if (!tenantId) return [];
 
