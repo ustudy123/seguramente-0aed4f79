@@ -458,8 +458,6 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                   </div>
                 </div>
               </div>
-1
-2
               <div className="grid grid-cols-2 gap-2 mt-auto">
                 <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
                 <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
