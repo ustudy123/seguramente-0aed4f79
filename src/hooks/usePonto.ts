@@ -5,6 +5,7 @@ import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useEffect } from "react";
 
 // Tipos
 export interface PontoMarcacao {
@@ -113,7 +114,35 @@ export function usePonto() {
   const usePontoDiario = (data: Date, dataFim?: Date) => {
     const dataStr = format(data, "yyyy-MM-dd");
     const dataFimStr = dataFim ? format(dataFim, "yyyy-MM-dd") : null;
-    
+
+    // Realtime: ouve mudanças em ponto_marcacoes e ponto_diario
+    // para refletir automaticamente aprovações de ajustes no Espelho.
+    useEffect(() => {
+      if (!tenantId) return;
+      const channel = supabase
+        .channel(`espelho-realtime-${tenantId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "ponto_marcacoes", filter: `tenant_id=eq.${tenantId}` },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+            queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
+            queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "ponto_diario", filter: `tenant_id=eq.${tenantId}` },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+          }
+        )
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [tenantId]);
+
     return useQuery({
       queryKey: ["ponto-diario", tenantId, dataStr, dataFimStr, empresaAtivaId],
       queryFn: async (): Promise<PontoDiario[]> => {
@@ -433,7 +462,7 @@ export function usePonto() {
 
       // Se aprovado e for inclusão/correção, criar nova marcação
       if (aprovado && ajuste.tipo_ajuste !== "justificativa" && ajuste.tipo_ajuste !== "abono" && ajuste.tipo_marcacao && ajuste.hora_solicitada) {
-        await fromTable("ponto_marcacoes").insert({
+        const { error: insertError } = await fromTable("ponto_marcacoes").insert({
           tenant_id: tenantId,
           colaborador_id: ajuste.colaborador_id,
           colaborador_nome: ajuste.colaborador_nome,
@@ -445,6 +474,7 @@ export function usePonto() {
           created_by: user.id,
           hash_marcacao: "placeholder",
         } as any);
+        if (insertError) throw insertError;
       }
 
       return ajuste;
