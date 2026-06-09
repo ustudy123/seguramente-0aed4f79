@@ -22,7 +22,9 @@ export function MarcacaoBadge({ id, hora, isEntry, original, podeEditar, editand
 
   const badgeClasses = cn(
     "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono border transition",
-    original ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200",
+    isEntry 
+      ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+      : "bg-rose-50 text-rose-700 border-rose-200",
     podeEditar && "cursor-pointer hover:opacity-80 hover:shadow-sm"
   );
 
