@@ -67,6 +67,10 @@ export function useColaboradores(options: UseColaboradoresOptions = {}) {
         rows = rows.filter((r: any) => r.bate_ponto !== false);
       }
 
+      if (excluirInativos) {
+        rows = rows.filter((r: any) => r.inativo !== true);
+      }
+
       // Deduplica por CPF (normalizado em apenas dígitos), mantendo a admissão mais recente.
       // Fallback para nome+empresa quando o CPF estiver vazio.
       const seen = new Set<string>();
