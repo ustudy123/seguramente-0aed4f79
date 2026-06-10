@@ -48,13 +48,15 @@ import type {
   GrupoClinico 
 } from "@/types/atestado";
 import { 
-  ATESTADO_TIPO_LABELS,
-  SUBTIPO_ASSISTENCIAL_LABELS,
+  AFASTAMENTO_TIPO_LABELS,
+  SUBTIPO_LICENCAS_LABELS,
+  SUBTIPO_ATESTADOS_LABELS,
   SUBTIPO_OCUPACIONAL_LABELS,
   GRUPO_CLINICO_LABELS,
   GRUPO_CLINICO_COLORS,
   APTIDAO_LABELS,
   APTIDAO_COLORS,
+  type AfastamentoTipo
 } from "@/types/atestado";
 
 interface AtestadoListProps {
