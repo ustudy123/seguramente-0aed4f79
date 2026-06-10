@@ -3,10 +3,11 @@
 export type AfastamentoTipo = 'ocupacional' | 'licencas' | 'atestados';
 
 export type AfastamentoSubtipoOcupacional = 
-  | 'aso'
-  | 'pcmso'
-  | 'pgr'
-  | 'ltcat';
+  | 'admissional'
+  | 'periodico'
+  | 'retorno_trabalho'
+  | 'mudanca_risco'
+  | 'demissional';
 
 export type AfastamentoSubtipoLicencas = 
   | 'maternidade'
@@ -297,7 +298,10 @@ export const AFASTAMENTO_TIPO_LABELS: Record<AfastamentoTipo, string> = {
 };
 
 export const SUBTIPO_OCUPACIONAL_LABELS: Record<string, string> = {
+  admissional: 'Admissional',
   periodico: 'Periódico',
+  retorno_trabalho: 'Retorno ao trabalho',
+  mudanca_risco: 'Mudança de risco ocupacional',
   demissional: 'Demissional',
 };
 
