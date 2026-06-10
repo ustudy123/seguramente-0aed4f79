@@ -229,7 +229,7 @@ function encontrarColuna(headers: string[], campo: string, indicesJaMapeados: nu
     }
   }
 
-  // 2. Segunda Prioridade: Substring, mas com critério de exclusão para evitar colisões entre CPF e CNPJ/CPF Empresa
+  // 2. Segunda Prioridade: Substring, mas com critério de exclusão para evitar colisões
   for (const possibilidade of possibilidades) {
     const possNormalizada = normalizarTexto(possibilidade);
     for (let i = 0; i < headers.length; i++) {
@@ -238,7 +238,7 @@ function encontrarColuna(headers: string[], campo: string, indicesJaMapeados: nu
       const hNorm = headersNormalizados[i];
       if (hNorm.includes(possNormalizada)) {
         // Se estamos procurando 'cpf' e o header contém 'empresa', ignoramos para evitar pegar 'cnpj/cpf empresa'
-        if (campo === "cpf" && hNorm.includes("empresa")) continue;
+        if (campo === "cpf" && (hNorm.includes("empresa") || hNorm.includes("cnpj"))) continue;
         
         // Se estamos procurando 'cnpjEmpresa' e o header for apenas 'cpf', ignoramos para não roubar o CPF do funcionário
         if (campo === "cnpjEmpresa" && hNorm === "cpf") continue;
