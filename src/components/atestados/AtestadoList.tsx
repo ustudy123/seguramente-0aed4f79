@@ -85,7 +85,21 @@ export function AtestadoList({
       atestado.colaborador_nome.toLowerCase().includes(search.toLowerCase()) ||
       atestado.profissional_nome.toLowerCase().includes(search.toLowerCase());
     
-    const matchesTipo = tipoFilter === "all" || atestado.tipo === tipoFilter;
+    // Na página de afastamentos (atestados), não mostrar ocupacionais por padrão
+    const isAtestadosPage = window.location.pathname.includes('atestados');
+    const isOcupacionalPage = window.location.pathname.includes('saude-ocupacional');
+
+    let matchesTipo = true;
+    if (tipoFilter === "all") {
+      if (isAtestadosPage) {
+        matchesTipo = atestado.tipo !== 'ocupacional';
+      } else if (isOcupacionalPage) {
+        matchesTipo = atestado.tipo === 'ocupacional';
+      }
+    } else {
+      matchesTipo = atestado.tipo === tipoFilter;
+    }
+
     const matchesGrupo = grupoFilter === "all" || atestado.grupo_clinico === grupoFilter;
 
     return matchesSearch && matchesTipo && matchesGrupo;
@@ -149,7 +163,8 @@ export function AtestadoList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os tipos</SelectItem>
-            <SelectItem value="assistencial">Assistencial</SelectItem>
+            <SelectItem value="atestados">Atestados Médicos</SelectItem>
+            <SelectItem value="licencas">Licenças</SelectItem>
             <SelectItem value="ocupacional">Ocupacional</SelectItem>
           </SelectContent>
         </Select>
