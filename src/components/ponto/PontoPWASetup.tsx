@@ -87,6 +87,9 @@ export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
     document.head.appendChild(manifestLink);
 
     // Registra SW
+    let updateInterval: ReturnType<typeof setInterval> | null = null;
+    const onVisibleUpdate: { fn: (() => void) | null } = { fn: null };
+
     navigator.serviceWorker
       .register(PONTO_SW_URL, { scope: "/ponto-externo/", updateViaCache: "none" })
       .then(async (registration) => {
@@ -106,6 +109,18 @@ export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
             }
           });
         });
+
+        // PWA instalado pode ficar dias aberto sem recarregar — checa
+        // atualização a cada 30min e sempre que o app volta ao foco
+        // (o registro só checava no carregamento inicial)
+        updateInterval = setInterval(() => {
+          registration.update().catch(() => undefined);
+        }, 30 * 60 * 1000);
+
+        onVisibleUpdate.fn = () => {
+          if (!document.hidden) registration.update().catch(() => undefined);
+        };
+        document.addEventListener("visibilitychange", onVisibleUpdate.fn);
       })
       .catch((err) => console.warn("[PontoPWA] SW register falhou:", err));
 
@@ -137,6 +152,8 @@ export const PontoPWASetup = ({ token }: PontoPWASetupProps) => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+      if (updateInterval) clearInterval(updateInterval);
+      if (onVisibleUpdate.fn) document.removeEventListener("visibilitychange", onVisibleUpdate.fn);
       nodes.forEach((n) => n.parentNode?.removeChild(n));
       manifestLink.parentNode?.removeChild(manifestLink);
       URL.revokeObjectURL(manifestUrl);
