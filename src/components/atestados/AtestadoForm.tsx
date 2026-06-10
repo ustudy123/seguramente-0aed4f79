@@ -761,36 +761,39 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 Tipo de Afastamento
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="tipo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo *</FormLabel>
-                      <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setTipoAfastamento(value as AfastamentoTipo);
-                        }} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(AFASTAMENTO_TIPO_LABELS).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!window.location.pathname.includes('saude-ocupacional') && !window.location.pathname.includes('atestados') && (
+                  <FormField
+                    control={form.control}
+                    name="tipo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo *</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setTipoAfastamento(value as AfastamentoTipo);
+                          }} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(AFASTAMENTO_TIPO_LABELS).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
 
                 {watchTipo === "licencas" && (
                   <FormField
