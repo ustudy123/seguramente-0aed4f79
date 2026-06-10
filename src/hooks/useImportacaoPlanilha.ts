@@ -476,7 +476,7 @@ export function useImportacaoPlanilha() {
           mapa[docLimpo.padStart(14, "0")] = emp.id;
         }
       }
-      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
+      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || emp.nome_fantasia || "Sem razão social" };
     });
 
     // Mapear inativas para dar erro mais claro
