@@ -91,7 +91,7 @@ const Ponto = () => {
   const [showAjusteModal, setShowAjusteModal] = useState(false);
   const [anexosModalAjuste, setAnexosModalAjuste] = useState<PontoAjuste | null>(null);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
-  const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida">("entrada");
+  const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida">("entrada");
   
   // Selfie state
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
@@ -101,7 +101,7 @@ const Ponto = () => {
   const [ajusteColaborador, setAjusteColaborador] = useState<string>("");
   const [ajusteData, setAjusteData] = useState(format(new Date(), "yyyy-MM-dd"));
   const [ajusteTipo, setAjusteTipo] = useState<"inclusao" | "correcao" | "justificativa">("inclusao");
-  const [ajusteMarcacao, setAjusteMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida">("entrada");
+  const [ajusteMarcacao, setAjusteMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida">("entrada");
   const [ajusteHora, setAjusteHora] = useState("");
   const [ajusteMotivo, setAjusteMotivo] = useState("");
   const [ajusteAnexos, setAjusteAnexos] = useState<File[]>([]);
@@ -157,7 +157,7 @@ const Ponto = () => {
   // Auto-detect next tipo_marcacao when collaborator changes
   useEffect(() => {
     if (!selectedColaborador) return;
-    const ordem: Array<"entrada" | "saida_almoco" | "retorno_almoco" | "saida"> = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
+    const ordem: Array<"entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida"> = ["entrada", "saida_almoco", "retorno_almoco", "saida", "batida"];
     const proximo = ordem.find((t) => !tiposJaRegistrados.includes(t));
     if (proximo) setTipoMarcacao(proximo);
   }, [selectedColaborador, tiposJaRegistrados.join(",")]);

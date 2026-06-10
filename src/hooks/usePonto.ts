@@ -272,7 +272,7 @@ export function usePonto() {
       colaboradorId: string;
       colaboradorNome: string;
       colaboradorCpf: string;
-      tipoMarcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+      tipoMarcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida";
       latitude?: number;
       longitude?: number;
       enderecoGeolocalizacao?: string;
