@@ -34,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useDepartamentos, useFiliais, Departamento } from "@/hooks/useCadastros";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -95,6 +96,7 @@ function ColaboradorPicker({ value, onChange, placeholder, options, allowClear }
 export default function Departamentos() {
   const { departamentos, isLoading, createDepartamento, updateDepartamento, deleteDepartamento } = useDepartamentos();
   const { filiais } = useFiliais();
+  const { empresaAtiva } = useEmpresaAtiva();
   const { colaboradores } = useColaboradores({ excluirPJ: true });
   const { sincronizar } = useSyncCadastros();
   const { hasMinimumRole } = useAuth();
@@ -119,7 +121,12 @@ export default function Departamentos() {
   });
   const [provisioning, setProvisioning] = useState(false);
 
-  const filiaisAtivas = filiais.filter((f) => f.ativo);
+  // Mostra apenas estabelecimentos/obras ativos DA EMPRESA ATIVA.
+  // Sem esse filtro, o dropdown exibia registros de outras empresas
+  // do mesmo tenant (YOUREYES-148).
+  const filiaisAtivas = filiais.filter(
+    (f) => f.ativo && (!empresaAtiva || f.empresa_id === empresaAtiva.id)
+  );
 
   const colabOptions = useMemo(
     () => colaboradores.map((c) => ({ id: c.id, nome_completo: c.nome_completo, cpf: c.cpf })),
@@ -340,7 +347,12 @@ export default function Departamentos() {
                 <SelectTrigger id="filial"><SelectValue placeholder="Selecione um estabelecimento ou obra" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nenhum (vinculado à empresa)</SelectItem>
-                  {filiaisAtivas.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                  {filiaisAtivas.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.nome}
+                      <span className="text-muted-foreground"> · {f.tipo === "obra" ? "Obra" : "Estabelecimento"}</span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
