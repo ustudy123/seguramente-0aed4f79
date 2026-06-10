@@ -152,15 +152,22 @@ const Ponto = () => {
   const marcacoesColaboradorHoje = marcacoesHoje.filter(
     (m: any) => selectedColaborador && m.colaborador_cpf === selectedColaborador.cpf
   );
-  const tiposJaRegistrados = marcacoesColaboradorHoje.map((m: any) => m.tipo_marcacao);
-  
-  // Auto-detect next tipo_marcacao when collaborator changes
+  // Alternância entrada ↔ saída: classifica pela última marcação do dia
+  const classificaTipo = (t: string) => (t === "saida" || t === "saida_almoco" ? "out" : "in");
+  const ultimaMarcacaoHoje = [...marcacoesColaboradorHoje].sort((a: any, b: any) =>
+    String(a.hora_marcacao).localeCompare(String(b.hora_marcacao))
+  ).pop();
+  const proximoTipoEsperado: "entrada" | "saida" = !ultimaMarcacaoHoje
+    ? "entrada"
+    : classificaTipo(ultimaMarcacaoHoje.tipo_marcacao) === "in"
+    ? "saida"
+    : "entrada";
+
+  // Auto-seleciona o próximo tipo pela alternância quando troca o colaborador
   useEffect(() => {
     if (!selectedColaborador) return;
-    const ordem: any[] = ["entrada", "saida_almoco", "retorno_almoco", "saida", "batida"];
-    const proximo = ordem.find((t) => !tiposJaRegistrados.includes(t));
-    if (proximo) setTipoMarcacao(proximo as any);
-  }, [selectedColaborador, tiposJaRegistrados.join(",")]);
+    setTipoMarcacao(proximoTipoEsperado as any);
+  }, [selectedColaborador, proximoTipoEsperado]);
   const { data: ajustesPendentesRaw = [] } = useAjustesPendentes();
   // Ajustes são escopados por tenant (a tabela não possui empresa_id).
   // Se houver colaboradores carregados para a empresa ativa, filtra; caso contrário, mostra todos do tenant.
@@ -661,40 +668,32 @@ const Ponto = () => {
             <div className="space-y-2">
               <Label>Tipo de Marcação</Label>
               <div className="grid grid-cols-2 gap-2">
-                {(["entrada", "saida", "batida"] as const).map((tipo) => {
-                  const jaRegistrado = tiposJaRegistrados.includes(tipo) && tipo !== 'batida';
-                  const ordemRequisitos: Record<string, string[]> = {
-                    entrada: [],
-                    saida: ["entrada"],
-                    batida: [],
-                  };
-                  const requisitosAtendidos = (ordemRequisitos[tipo] ?? []).every(req => tiposJaRegistrados.includes(req));
-                  const desabilitado = jaRegistrado || !requisitosAtendidos;
-                  
+                {(["entrada", "saida"] as const).map((tipo) => {
+                  const esperado = tipo === proximoTipoEsperado;
                   return (
                     <Button
                       key={tipo}
                       type="button"
                       variant={tipoMarcacao === tipo ? "default" : "outline"}
-                      className={cn("justify-start", desabilitado && tipoMarcacao !== tipo && "opacity-50")}
+                      className={cn("justify-start", !esperado && tipoMarcacao !== tipo && "opacity-50")}
                       onClick={() => setTipoMarcacao(tipo)}
-                      disabled={desabilitado}
+                      disabled={!esperado}
                     >
-                      {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
-                      {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
+                      {tipo === "entrada" ? <LogIn className="w-4 h-4 mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
                       {TIPO_MARCACAO_LABELS[tipo]}
-                      {tipo === "batida" && <Clock className="w-4 h-4 mr-2" />}
-                      {jaRegistrado && <CheckCircle className="w-3.5 h-3.5 ml-auto text-green-500" />}
-                      {!jaRegistrado && !requisitosAtendidos && <Lock className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                      {!esperado && <Lock className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
                     </Button>
                   );
                 })}
               </div>
-              {tiposJaRegistrados.includes("entrada") && tiposJaRegistrados.includes("saida") && (
-                <p className="text-sm text-muted-foreground text-center py-1">
-                  ✅ Todas as marcações do dia já foram registradas.
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground text-center py-1">
+                {proximoTipoEsperado === "entrada"
+                  ? marcacoesColaboradorHoje.length === 0
+                    ? "Primeira marcação do dia: Entrada"
+                    : "Jornada fechada — a próxima marcação é uma Entrada"
+                  : "Jornada em aberto — a próxima marcação é uma Saída"}
+                {marcacoesColaboradorHoje.length > 0 && ` · ${marcacoesColaboradorHoje.length} marcação(ões) hoje`}
+              </p>
             </div>
 
             {/* Geolocalização */}
@@ -748,7 +747,7 @@ const Ponto = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRegistrarModal(false)}>Cancelar</Button>
-            <Button onClick={handleRegistrarPonto} disabled={!selectedColaborador || registrandoPonto || tiposJaRegistrados.includes(tipoMarcacao)}>
+            <Button onClick={handleRegistrarPonto} disabled={!selectedColaborador || registrandoPonto || tipoMarcacao !== proximoTipoEsperado}>
               {registrandoPonto ? "Registrando..." : "Registrar"}
             </Button>
           </DialogFooter>

@@ -29,16 +29,13 @@ interface RegistroResult {
   data: string;
 }
 
-type TipoMarcacao = "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+type TipoMarcacao = "entrada" | "saida";
+type MarcacaoDia = { tipo: string; classe: "in" | "out"; hora: string };
 
 const TIPO_LABELS: Record<TipoMarcacao, { label: string; icon: React.ReactNode; color: string }> = {
   entrada: { label: "Entrada", icon: <LogIn className="w-5 h-5" />, color: "bg-emerald-500 hover:bg-emerald-600" },
-  saida_almoco: { label: "Saída Almoço", icon: <LogOut className="w-5 h-5" />, color: "bg-amber-500 hover:bg-amber-600" },
-  retorno_almoco: { label: "Retorno Almoço", icon: <LogIn className="w-5 h-5" />, color: "bg-sky-500 hover:bg-sky-600" },
   saida: { label: "Saída", icon: <LogOut className="w-5 h-5" />, color: "bg-rose-500 hover:bg-rose-600" },
 };
-
-const SEQUENCIA_CLT: TipoMarcacao[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
 
 const traduzirErroPonto = (mensagem?: string | null) => {
   const texto = (mensagem || "").trim();
@@ -127,20 +124,18 @@ const PontoExterno = () => {
   }, [token]);
 
   // Próximo tipo a registrar (sequência CLT decidida pelo backend)
-  const [proximoTipo, setProximoTipo] = useState<TipoMarcacao | null>("entrada");
-  const [tiposRegistrados, setTiposRegistrados] = useState<TipoMarcacao[]>([]);
+  const [proximoTipo, setProximoTipo] = useState<TipoMarcacao>("entrada");
+  const [marcacoesDia, setMarcacoesDia] = useState<MarcacaoDia[]>([]);
 
   const carregarProximoTipo = useCallback(async () => {
     if (!token) return;
     const { data } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
     const r = data as any;
-    if (r?.jornada_completa) {
-      setProximoTipo(null);
-    } else if (SEQUENCIA_CLT.includes(r?.proximo_tipo)) {
-      setProximoTipo(r.proximo_tipo);
+    if (r?.proximo === "entrada" || r?.proximo === "saida") {
+      setProximoTipo(r.proximo);
     }
-    if (Array.isArray(r?.tipos_registrados)) {
-      setTiposRegistrados(r.tipos_registrados.filter((t: string) => SEQUENCIA_CLT.includes(t as TipoMarcacao)));
+    if (Array.isArray(r?.marcacoes)) {
+      setMarcacoesDia(r.marcacoes);
     }
   }, [token]);
 
@@ -302,49 +297,54 @@ const PontoExterno = () => {
               </div>
             )}
 
-            {/* Botão principal: próximo tipo da sequência CLT */}
-            {proximoTipo ? (
-              <>
-                <Button
-                  className={`${TIPO_LABELS[proximoTipo].color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
-                  disabled={registrando}
-                  onClick={handleRegistrar}
-                >
-                  {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : TIPO_LABELS[proximoTipo].icon}
-                  Registrar {TIPO_LABELS[proximoTipo].label}
-                </Button>
+            {/* Botão principal: próximo tipo pela alternância entrada/saída */}
+            <Button
+              className={`${TIPO_LABELS[proximoTipo].color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
+              disabled={registrando}
+              onClick={handleRegistrar}
+            >
+              {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : TIPO_LABELS[proximoTipo].icon}
+              Registrar {TIPO_LABELS[proximoTipo].label}
+            </Button>
 
-                {/* Seletor manual: para quem não marca almoço ou precisa de outro tipo */}
-                <div className="grid grid-cols-2 gap-1.5 pt-1">
-                  {SEQUENCIA_CLT.map((tipo) => {
-                    const jaRegistrado = tiposRegistrados.includes(tipo);
-                    const selecionado = tipo === proximoTipo;
-                    return (
-                      <button
-                        key={tipo}
-                        type="button"
-                        disabled={jaRegistrado || registrando}
-                        onClick={() => setProximoTipo(tipo)}
-                        className={`text-[11px] py-1.5 px-2 rounded-md border transition-colors ${
-                          selecionado
-                            ? "border-primary bg-primary/10 text-primary font-semibold"
-                            : jaRegistrado
-                            ? "border-transparent bg-muted text-muted-foreground line-through opacity-60"
-                            : "border-border bg-background text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {jaRegistrado ? "✓ " : ""}{TIPO_LABELS[tipo].label}
-                      </button>
-                    );
-                  })}
+            {/* A próxima marcação alterna automaticamente: entrada ↔ saída */}
+            <div className="grid grid-cols-2 gap-1.5 pt-1">
+              {(["entrada", "saida"] as TipoMarcacao[]).map((tipo) => {
+                const selecionado = tipo === proximoTipo;
+                return (
+                  <div
+                    key={tipo}
+                    className={`text-[11px] py-1.5 px-2 rounded-md border text-center transition-colors ${
+                      selecionado
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-transparent bg-muted text-muted-foreground opacity-60"
+                    }`}
+                  >
+                    {selecionado ? "→ " : ""}{TIPO_LABELS[tipo].label}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Marcações de hoje (suporta múltiplos ciclos entrada/saída) */}
+            {marcacoesDia.length > 0 && (
+              <div className="rounded-md border bg-muted/40 p-2.5 space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Suas marcações de hoje</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {marcacoesDia.map((m, i) => (
+                    <span
+                      key={i}
+                      className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                        m.classe === "in" ? "bg-emerald-500/15 text-emerald-600" : "bg-rose-500/15 text-rose-600"
+                      }`}
+                    >
+                      {m.classe === "in" ? "↳ Entrada" : "↰ Saída"} {m.hora}
+                    </span>
+                  ))}
                 </div>
-              </>
-            ) : (
-              <div className="text-center text-sm bg-emerald-500/10 text-emerald-600 rounded-md p-3 font-medium">
-                ✓ Sua jornada de hoje está completa (4 marcações).
-                <p className="text-xs text-muted-foreground mt-1 font-normal">
-                  Precisa registrar hora extra ou corrigir um horário? Use "Solicitar Ajuste de Ponto".
-                </p>
+                {proximoTipo === "saida" && (
+                  <p className="text-[11px] text-muted-foreground">Jornada em aberto — não esqueça de registrar a saída.</p>
+                )}
               </div>
             )}
 
