@@ -58,7 +58,7 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   nome: ["colaborador", "nome", "nome_completo", "nome completo", "funcionario", "funcionário"],
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
-  dataNascimento: ["data nascimento", "data_nascimento", "datanascimento", "nascimento", "dt nasc", "dt. nasc", "data de nascimento"],
+  dataNascimento: ["dt. nascimento", "data nascimento", "data_nascimento", "datanascimento", "nascimento", "dt nasc", "dt. nasc", "data de nascimento"],
   estadoCivil: ["estado civil", "estado_civil", "estadocivil", "civil"],
   naturalidade: ["naturalidade", "cidade natal", "cidade_natal"],
   nacionalidade: ["nacionalidade", "pais", "país"],
