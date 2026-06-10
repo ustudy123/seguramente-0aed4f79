@@ -22876,7 +22876,7 @@ export type Database = {
         | "mudanca_funcao"
         | "demissional"
         | "mudanca_risco"
-      atestado_tipo: "assistencial" | "ocupacional"
+      atestado_tipo: "assistencial" | "ocupacional" | "licencas" | "atestados"
       avaliacao_ciclo_status: "rascunho" | "ativo" | "encerrado" | "analisando"
       avaliacao_tipo: "simples" | "360"
       beneficio_inss_especie: "b31" | "b91"
@@ -23523,7 +23523,7 @@ export const Constants = {
         "demissional",
         "mudanca_risco",
       ],
-      atestado_tipo: ["assistencial", "ocupacional"],
+      atestado_tipo: ["assistencial", "ocupacional", "licencas", "atestados"],
       avaliacao_ciclo_status: ["rascunho", "ativo", "encerrado", "analisando"],
       avaliacao_tipo: ["simples", "360"],
       beneficio_inss_especie: ["b31", "b91"],
