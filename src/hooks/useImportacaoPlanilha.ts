@@ -519,7 +519,8 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (key: string) => idx[key] != null && idx[key] !== -1 ? str(l[idx[key]]) : "";
 
-            let cnpjEmpresa = g("cnpjEmpresa").replace(/\D/g, "");
+            let cnpjEmpresaOriginal = g("cnpjEmpresa");
+            let cnpjEmpresa = cnpjEmpresaOriginal.replace(/\D/g, "");
             const nome = g("nome");
             const cpfRaw = g("cpf");
             const cpf = formatarCPF(cpfRaw);
