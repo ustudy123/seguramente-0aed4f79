@@ -296,11 +296,9 @@ export const AFASTAMENTO_TIPO_LABELS: Record<AfastamentoTipo, string> = {
   atestados: 'Atestados Médicos',
 };
 
-export const SUBTIPO_OCUPACIONAL_LABELS: Record<AfastamentoSubtipoOcupacional, string> = {
-  aso: 'ASO (Atestado de Saúde Ocupacional)',
-  pcmso: 'PCMSO',
-  pgr: 'PGR',
-  ltcat: 'LTCAT',
+export const SUBTIPO_OCUPACIONAL_LABELS: Record<string, string> = {
+  periodico: 'Periódico',
+  demissional: 'Demissional',
 };
 
 export const SUBTIPO_LICENCAS_LABELS: Record<AfastamentoSubtipoLicencas, string> = {
