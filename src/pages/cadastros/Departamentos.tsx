@@ -328,7 +328,7 @@ export default function Departamentos() {
       </motion.div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedDepartamento ? "Editar Departamento" : "Novo Departamento"}</DialogTitle>
             <DialogDescription>
