@@ -177,9 +177,10 @@ export function AtestadoList({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.03 }}
           >
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-3 md:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/30 group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 transition-all group-hover:scale-110 duration-500" />
+              <CardContent className="p-4 md:p-5 relative">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex-1 min-w-0 space-y-2">
                     {/* Header */}
                     <div className="flex flex-wrap items-center gap-2">
