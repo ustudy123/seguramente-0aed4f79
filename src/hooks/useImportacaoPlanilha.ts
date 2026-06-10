@@ -447,29 +447,31 @@ export function useImportacaoPlanilha() {
     
     console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}. Ativas: ${empresasAtivas.length}`);
 
-    console.log(`[Import] Empresas recuperadas do banco: ${data?.length || 0}`);
-    if (data && data.length > 0) {
-      const campana = data.find((e: any) => String(e.cnpj).includes("55.054.444"));
-      if (campana) {
-        console.log(`[Import] Encontrada Campana:`, campana);
-        console.log(`[Import] Tenant da Campana: ${campana.tenant_id} | Seu Tenant: ${tenantId}`);
-      }
-    }
-
     empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
       if (!doc) return;
       const docLimpo = String(doc).replace(/\D/g, "");
       if (docLimpo) {
+        // Indexa pela versão limpa
         mapa[docLimpo] = emp.id;
-        mapa[String(doc).trim()] = emp.id;
+        
+        // Indexa pela versão original trim (pode ser formatada)
+        const docOriginal = String(doc).trim();
+        mapa[docOriginal] = emp.id;
         
         // Adiciona variações comuns de CNPJ formatado/não formatado
         if (docLimpo.length === 14) {
           const formatado = `${docLimpo.slice(0, 2)}.${docLimpo.slice(2, 5)}.${docLimpo.slice(5, 8)}/${docLimpo.slice(8, 12)}-${docLimpo.slice(12)}`;
           mapa[formatado] = emp.id;
+          
+          // Caso raro: CNPJ no banco está sem zero à esquerda mas na planilha tem
+          if (docLimpo.startsWith('0')) {
+             const semZero = docLimpo.substring(1);
+             mapa[semZero] = emp.id;
+          }
         }
         
+        // Se o documento no banco tem menos de 14 dígitos e não é PF, pode ser um CNPJ com zeros omitidos
         if (docLimpo.length < 14 && emp.tipo_pessoa !== 'pf') {
           mapa[docLimpo.padStart(14, "0")] = emp.id;
         }
@@ -575,9 +577,11 @@ export function useImportacaoPlanilha() {
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
             } else {
-              const estaNoMapa = mapaEmpresas[cnpjEmpresa] || 
+              // Limpa o documento da planilha para comparação
+              const cnpjLimpoPlanilha = cnpjEmpresa.replace(/\D/g, "");
+              const estaNoMapa = mapaEmpresas[cnpjLimpoPlanilha] || 
                                  mapaEmpresas[cnpjEmpresaOriginal.trim()] || 
-                                 mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || 
+                                 mapaEmpresas[cnpjLimpoPlanilha.padStart(14, '0')] ||
                                  mapaEmpresas[formatarDocumento(cnpjEmpresa)];
               
               if (!estaNoMapa) {
