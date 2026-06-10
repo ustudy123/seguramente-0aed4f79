@@ -14,14 +14,14 @@ interface Props {
 export const ConviteColaboradorEmail = ({ nome, empresa, confirmationUrl }: Props) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Você foi convidado para acessar o Seguramente</Preview>
+    <Preview>Você foi convidado para acessar o YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}><Img src="https://www.youreyes.com.br/__l5e/assets-v1/71abd0f4-9610-42ba-8d8d-abed0207ebd0/logo-youreyes.png" alt="YourEyes" width="140" style={{ margin: '0 auto', display: 'block' }} /></Section>
         <Hr style={divider} />
         <Heading style={h1}>Olá{nome ? `, ${nome}` : ''}!</Heading>
         <Text style={text}>
-          Você foi convidado(a) para acessar a plataforma <strong>Seguramente</strong>
+          Você foi convidado(a) para acessar a plataforma <strong>YourEyes</strong>
           {empresa ? ` pela empresa ${empresa}` : ''}.
         </Text>
         <Text style={text}>Clique no botão abaixo para ativar sua conta:</Text>
@@ -32,7 +32,7 @@ export const ConviteColaboradorEmail = ({ nome, empresa, confirmationUrl }: Prop
         )}
         <Text style={footer}>Se você não esperava este convite, ignore este e-mail.</Text>
         <Hr style={divider} />
-        <Text style={brand}>Seguramente — Plataforma de SST</Text>
+        <Text style={brand}>YourEyes — Inteligência que protege. Visão que antecipa.</Text>
       </Container>
     </Body>
   </Html>

@@ -31,7 +31,7 @@ export const ASOVencimentoEmail = ({ colaborador, tipo, vencimento, diasRestante
         )}
         <Text style={text}>Providencie o agendamento do exame o mais breve possível.</Text>
         <Hr style={divider} />
-        <Text style={brand}>Seguramente — Plataforma de SST</Text>
+        <Text style={brand}>YourEyes — Inteligência que protege. Visão que antecipa.</Text>
       </Container>
     </Body>
   </Html>

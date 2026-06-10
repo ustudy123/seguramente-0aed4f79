@@ -31,7 +31,7 @@ export const FeedbackEmail = ({ colaborador, categoria, descricao, registradoPor
         )}
         <Text style={text}>Acesse a plataforma para mais detalhes.</Text>
         <Hr style={divider} />
-        <Text style={brand}>Seguramente — Plataforma de SST</Text>
+        <Text style={brand}>YourEyes — Inteligência que protege. Visão que antecipa.</Text>
       </Container>
     </Body>
   </Html>

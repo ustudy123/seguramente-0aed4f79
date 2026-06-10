@@ -31,7 +31,7 @@ export const TreinamentoVencimentoEmail = ({ treinamento, colaborador, venciment
         )}
         <Text style={text}>Agende a reciclagem do treinamento para garantir conformidade.</Text>
         <Hr style={divider} />
-        <Text style={brand}>Seguramente — Plataforma de SST</Text>
+        <Text style={brand}>YourEyes — Inteligência que protege. Visão que antecipa.</Text>
       </Container>
     </Body>
   </Html>

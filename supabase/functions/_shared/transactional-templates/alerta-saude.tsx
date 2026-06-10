@@ -33,7 +33,7 @@ export const AlertaSaudeEmail = ({ titulo, colaborador, descricao, prioridade }:
         )}
         <Text style={text}>Acesse a plataforma para mais detalhes e registrar a ação necessária.</Text>
         <Hr style={divider} />
-        <Text style={brand}>Seguramente — Plataforma de SST</Text>
+        <Text style={brand}>YourEyes — Inteligência que protege. Visão que antecipa.</Text>
       </Container>
     </Body>
   </Html>

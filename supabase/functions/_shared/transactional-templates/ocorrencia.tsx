@@ -27,7 +27,7 @@ export const OcorrenciaEmail = ({ colaborador, tipo, descricao, dataOcorrencia }
         {descricao && <Text style={text}>{descricao}</Text>}
         <Text style={text}>Acesse a plataforma para registrar ações corretivas.</Text>
         <Hr style={divider} />
-        <Text style={brand}>Seguramente — Plataforma de SST</Text>
+        <Text style={brand}>YourEyes — Inteligência que protege. Visão que antecipa.</Text>
       </Container>
     </Body>
   </Html>
