@@ -261,10 +261,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         const sintese = [
-          [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo ≤ 30 dias)`],
-          [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo ≤ 60 dias)`],
-          [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo ≤ 90 dias)`],
-          [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo ≤ 180 dias)`],
+          [`${criticos.length} dimensão(ões) em nível CRÍTICO — Intervenção imediata necessária (prazo: até 30 dias)`],
+          [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo: até 60 dias)`],
+          [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo: até 90 dias)`],
+          [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo: até 180 dias)`],
         ];
         autoTable(doc, {
           startY: y,
@@ -399,8 +399,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       }
 
       // ── 4. Metodologia de Graduação de Risco (Novas Tabelas) ──────────
-      doc.addPage();
-      y = mt;
+      checkPageOverflow(70);
+      y += 2;
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.text("4. METODOLOGIA DE GRADUAÇÃO DE RISCO (P x S)", ml, y);
@@ -570,8 +570,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
       // ── 6. Analise por GHE ────────────────────────────────────────────
       if (!isEntrevistaOnly && resultadosPorGHE.length > 0) {
-        doc.addPage();
-        y = mt;
+        checkPageOverflow(50);
+        y += 2;
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.text("6. ESTRATIFICAÇÃO E ANÁLISE POR GHE", ml, y);
@@ -594,8 +594,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
       // ── 7. Evidencias Qualitativas ────────────────────────────────────
       if (temEvidenciasQualitativas) {
-        doc.addPage();
-        y = mt;
+        checkPageOverflow(60);
+        y += 2;
         doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
         doc.text("7. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", ml, y);
