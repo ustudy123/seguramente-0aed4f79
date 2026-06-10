@@ -444,54 +444,23 @@ export function usePonto() {
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await fromTable("ponto_ajustes")
-        .update({
-          status: aprovado ? "aprovado" : "rejeitado",
-          aprovado_por: user.id,
-          aprovado_por_nome: profile?.nome_completo,
-          data_aprovacao: new Date().toISOString(),
-          observacao_aprovador: observacao,
-        } as any)
-        .eq("id", ajusteId)
-        .select()
-        .single();
+      // Fluxo transacional no banco: atualiza status, remove marcação
+      // original (correção), insere a nova marcação, audita e reconsolida
+      // o espelho. Tudo numa única transação — ou completa, ou nada muda.
+      const { data, error } = await (supabase.rpc as any)("processar_ajuste_ponto", {
+        p_ajuste_id: ajusteId,
+        p_aprovado: aprovado,
+        p_observacao: observacao ?? null,
+      });
 
       if (error) throw error;
-      
-      const ajuste = data as PontoAjuste;
 
-      // Se aprovado e for inclusão/correção, criar nova marcação
-      if (aprovado && ajuste.tipo_ajuste !== "justificativa" && ajuste.tipo_ajuste !== "abono" && ajuste.tipo_marcacao && ajuste.hora_solicitada) {
-        
-        // Se for correção, deletar a marcação original antes de inserir a nova
-        if (ajuste.tipo_ajuste === "correcao" && ajuste.hora_original) {
-          await fromTable("ponto_marcacoes")
-            .delete()
-            .eq("tenant_id", tenantId)
-            .eq("colaborador_id", ajuste.colaborador_id)
-            .eq("data_marcacao", ajuste.data_referencia)
-            .eq("tipo_marcacao", ajuste.tipo_marcacao)
-            .eq("hora_marcacao", ajuste.hora_original);
-        }
-
-        // Inserir nova marcação com tenant_id E empresa_id corretos
-        const { error: insertError } = await fromTable("ponto_marcacoes").insert({
-          tenant_id: tenantId,
-          empresa_id: empresaAtivaId || null,  // Herda empresa ativa para manter escopo
-          colaborador_id: ajuste.colaborador_id,
-          colaborador_nome: ajuste.colaborador_nome,
-          colaborador_cpf: ajuste.colaborador_cpf,
-          data_marcacao: ajuste.data_referencia,
-          hora_marcacao: ajuste.hora_solicitada,
-          tipo_marcacao: ajuste.tipo_marcacao,
-          marcacao_original: false,
-          created_by: user.id,
-          hash_marcacao: "placeholder",
-        } as any);
-        if (insertError) throw insertError;
+      const result = data as { success?: boolean; error?: string } | null;
+      if (result && result.success !== true) {
+        throw new Error(result?.error || "Não foi possível processar o ajuste.");
       }
 
-      return ajuste;
+      return result;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
