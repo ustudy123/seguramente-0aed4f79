@@ -749,9 +749,9 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()]) {
-              const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
-              erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
+            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()] && !mapaEmpresas[cnpjEmpresa.padStart(14, '0')] && !mapaEmpresas[cnpjEmpresa.padStart(11, '0')]) {
+              const tipo = cnpjEmpresa.length <= 11 ? "CPF/CNPJ" : "CNPJ";
+              erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema (Tenant: ${tenantId})`);
             }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
