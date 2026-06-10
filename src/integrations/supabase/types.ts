@@ -22800,6 +22800,7 @@ export type Database = {
         | "retorno_trabalho"
         | "mudanca_funcao"
         | "demissional"
+        | "mudanca_risco"
       atestado_tipo: "assistencial" | "ocupacional"
       avaliacao_ciclo_status: "rascunho" | "ativo" | "encerrado" | "analisando"
       avaliacao_tipo: "simples" | "360"
@@ -23429,6 +23430,7 @@ export const Constants = {
         "retorno_trabalho",
         "mudanca_funcao",
         "demissional",
+        "mudanca_risco",
       ],
       atestado_tipo: ["assistencial", "ocupacional"],
       avaliacao_ciclo_status: ["rascunho", "ativo", "encerrado", "analisando"],

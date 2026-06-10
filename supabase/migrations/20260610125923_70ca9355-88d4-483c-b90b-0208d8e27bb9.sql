@@ -1,0 +1,1 @@
+ALTER TYPE public.atestado_subtipo_ocupacional ADD VALUE IF NOT EXISTS 'mudanca_risco';
