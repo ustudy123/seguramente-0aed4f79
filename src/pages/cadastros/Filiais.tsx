@@ -22,6 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useFiliais, Filial } from "@/hooks/useCadastros";
 import { buscarEnderecoPorCep, formatCep, cleanCep, validateCep } from "@/lib/viacep";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { formatPhone } from "@/lib/brasilapi";
 import type { EmpresaCadastro } from "@/types/empresa";
 
 const ESTADOS = [
@@ -345,7 +346,7 @@ export default function Filiais() {
                     {filial.cidade && filial.estado ? `${filial.cidade} - ${filial.estado}` : "-"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {filial.telefone || filial.email || "-"}
+                    {filial.telefone ? formatPhone(filial.telefone) : filial.email || "-"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={filial.ativo ? "default" : "secondary"}>
