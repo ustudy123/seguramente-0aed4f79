@@ -450,6 +450,16 @@ export function useImportacaoPlanilha() {
     // Log para depuração em caso de falha no preview
     console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}. Ativas: ${empresasAtivas.length}`);
     
+    // Log detalhado para depuração
+    console.log(`[Import] Empresas recuperadas do banco: ${data?.length || 0}`);
+    if (data && data.length > 0) {
+      const campana = data.find((e: any) => String(e.cnpj).includes("55.054.444"));
+      if (campana) {
+        console.log(`[Import] Encontrada Campana:`, campana);
+        console.log(`[Import] Tenant da Campana: ${campana.tenant_id} | Seu Tenant: ${tenantId}`);
+      }
+    }
+
     empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
       if (!doc) return;
