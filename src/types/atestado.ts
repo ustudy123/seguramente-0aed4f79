@@ -312,11 +312,9 @@ export const SUBTIPO_LICENCAS_LABELS: Record<AfastamentoSubtipoLicencas, string>
   outras_licencas: 'Outras Licenças',
 };
 
-export const SUBTIPO_ATESTADOS_LABELS: Record<AfastamentoSubtipoAtestados, string> = {
+export const SUBTIPO_ATESTADOS_LABELS: Record<string, string> = {
   acidente_trabalho: 'Acidente / Doença do trabalho',
-  doenca_trabalho: 'Doença do trabalho',
   acidente_nao_trabalho: 'Acidente / Doença não relacionada ao trabalho',
-  doenca_nao_trabalho: 'Doença não relacionada ao trabalho',
   prorrogacao: 'Prorrogação de afastamento / licença',
   aborto_nao_criminoso: 'Aborto não criminoso',
   aposentadoria_invalidez: 'Aposentadoria por invalidez',
