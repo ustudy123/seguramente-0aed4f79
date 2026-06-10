@@ -282,17 +282,17 @@ INSTRUÇÕES OBRIGATÓRIAS:
 
 Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: "Você é um designer e consultor de RH. Gere apenas HTML completo e profissional para manuais de funções seguindo o modelo de 13 seções. Complete seções marcadas como 'a ser gerado/definido pela IA' com conteúdo relevante. Sem POPs, sem passos detalhados. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
           { role: "user", content: prompt }
@@ -307,7 +307,7 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace Lovable AI. Adicione créditos em Settings → Workspace → Usage." }), {
+        return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace OpenAI. Adicione créditos em Settings → Workspace → Usage." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

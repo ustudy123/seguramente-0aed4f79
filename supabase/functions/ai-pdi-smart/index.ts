@@ -13,8 +13,8 @@ Deno.serve(async (req) => {
   try {
     const { mode, step, titulo, categoria, texto, contexto } = await req.json();
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
     const stepLabels: Record<string, string> = {
       especifica: "S — Específica: O que exatamente será desenvolvido?",
@@ -88,14 +88,14 @@ Retorne APENAS um JSON array com 5 objetos, sem markdown. Exemplo:
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

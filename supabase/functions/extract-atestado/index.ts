@@ -77,9 +77,9 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY não configurada");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY não configurada");
     }
 
     const formData = await req.formData();
@@ -108,22 +108,22 @@ serve(async (req) => {
       );
     }
 
-    // Para imagens, usar Lovable AI Gateway com Gemini
+    // Para imagens, usar OpenAI
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(
       new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
     );
 
-    console.log("Enviando imagem para Lovable AI Gateway (Gemini)...");
+    console.log("Enviando imagem para OpenAI...");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5-nano",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { 

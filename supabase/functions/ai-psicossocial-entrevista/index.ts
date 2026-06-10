@@ -1,7 +1,7 @@
 // Edge function: entrevista guiada psicossocial conduzida por IA
 // Endpoints (via ?action=):
 //   start    -> registra consentimento, devolve mensagem inicial da IA
-//   chat     -> streaming SSE conversacional (Lovable AI Gateway)
+//   chat     -> streaming SSE conversacional (OpenAI)
 //   finalize -> tool calling estruturado: extrai 13 riscos + P/S + trechos anonimizados
 //
 // Modelos:
@@ -17,7 +17,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const AI_GATEWAY = "https://api.openai.com/v1/chat/completions";
 
 // 13 riscos psicossociais do catálogo padrão (espelha psicossocial_riscos onde padrao=true)
 const RISCOS_13 = [
@@ -126,7 +126,7 @@ async function persistMensagem(
 
 // ─── handlers ────────────────────────────────────────────────────────────────
 
-async function handleChat(req: Request, supabase: any, LOVABLE_API_KEY: string) {
+async function handleChat(req: Request, supabase: any, OPENAI_API_KEY: string) {
   const { token, userMessage, origem } = await req.json();
   if (!token || !userMessage) {
     return new Response(JSON.stringify({ error: "token e userMessage obrigatórios" }), {
@@ -157,11 +157,11 @@ async function handleChat(req: Request, supabase: any, LOVABLE_API_KEY: string) 
   const aiResp = await fetch(AI_GATEWAY, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "gpt-4o-mini",
       messages,
       stream: true,
     }),
@@ -298,7 +298,7 @@ async function handleStart(req: Request, supabase: any) {
   );
 }
 
-async function handleFinalize(req: Request, supabase: any, LOVABLE_API_KEY: string) {
+async function handleFinalize(req: Request, supabase: any, OPENAI_API_KEY: string) {
   const { token } = await req.json();
   if (!token) {
     return new Response(JSON.stringify({ error: "token obrigatório" }), {
@@ -366,11 +366,11 @@ async function handleFinalize(req: Request, supabase: any, LOVABLE_API_KEY: stri
   const aiResp = await fetch(AI_GATEWAY, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-5-mini",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: FINALIZE_SYSTEM },
         { role: "user", content: `TRANSCRIPT DA ENTREVISTA:\n\n${transcript}` },
@@ -471,13 +471,13 @@ serve(async (req) => {
 
     const SUPABASE_URL = getEnv("SUPABASE_URL");
     const SERVICE_ROLE = getEnv("SUPABASE_SERVICE_ROLE_KEY");
-    const LOVABLE_API_KEY = getEnv("LOVABLE_API_KEY");
+    const OPENAI_API_KEY = getEnv("OPENAI_API_KEY");
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     if (action === "start") return await handleStart(req, supabase);
-    if (action === "chat") return await handleChat(req, supabase, LOVABLE_API_KEY);
-    if (action === "finalize") return await handleFinalize(req, supabase, LOVABLE_API_KEY);
+    if (action === "chat") return await handleChat(req, supabase, OPENAI_API_KEY);
+    if (action === "finalize") return await handleFinalize(req, supabase, OPENAI_API_KEY);
 
     return new Response(JSON.stringify({ error: "Ação desconhecida" }), {
       status: 400,

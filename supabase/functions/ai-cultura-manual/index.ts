@@ -130,17 +130,17 @@ INSTRUÇÕES OBRIGATÓRIAS PARA O MANUAL:
 
 Retorne APENAS o HTML completo sem explicações, markdown ou code blocks. O HTML deve começar com <!DOCTYPE html>.`;
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: "Você é um designer e consultor de cultura organizacional. Gere apenas HTML completo e profissional. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
           { role: "user", content: prompt }
@@ -156,7 +156,7 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks. O HTM
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
+        return new Response(JSON.stringify({ error: "Limite da API OpenAI atingido. Verifique o saldo/limites da chave." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
