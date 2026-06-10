@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
+  Plus,
   FileText, 
   Calendar, 
   Shield, 
@@ -23,10 +24,12 @@ import { useAtestados } from "@/hooks/useAtestados";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, differenceInDays, addYears, isAfter, isBefore, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 
 const SaudeOcupacional = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { atestados, isLoading } = useAtestados();
+  const [formOpen, setFormOpen] = useState(false);
+  const { atestados, isLoading, createAtestado, creatingAtestado } = useAtestados();
 
   // Filtrar apenas atestados do tipo ocupacional
   const asos = atestados?.filter(a => a.tipo === 'ocupacional') || [];
@@ -103,8 +106,19 @@ const SaudeOcupacional = () => {
             <Download className="h-4 w-4 mr-2" />
             Relatório
           </Button>
+          <Button size="sm" onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo ASO
+          </Button>
         </div>
       </header>
+
+      <AtestadoForm 
+        open={formOpen} 
+        onOpenChange={setFormOpen} 
+        onSubmit={createAtestado}
+        loading={creatingAtestado}
+      />
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
