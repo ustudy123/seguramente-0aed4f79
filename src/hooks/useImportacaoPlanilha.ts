@@ -468,12 +468,14 @@ export function useImportacaoPlanilha() {
         mapa[docLimpo] = emp.id;
         mapa[String(doc).trim()] = emp.id;
         
-        // Adiciona CNPJ sem pontos/barras mas com zeros à esquerda
+        // Adiciona variações comuns de CNPJ formatado/não formatado
+        if (docLimpo.length === 14) {
+          const formatado = `${docLimpo.slice(0, 2)}.${docLimpo.slice(2, 5)}.${docLimpo.slice(5, 8)}/${docLimpo.slice(8, 12)}-${docLimpo.slice(12)}`;
+          mapa[formatado] = emp.id;
+        }
+        
         if (docLimpo.length < 14 && emp.tipo_pessoa !== 'pf') {
           mapa[docLimpo.padStart(14, "0")] = emp.id;
-        }
-        if (docLimpo.length < 11 && emp.tipo_pessoa === 'pf') {
-          mapa[docLimpo.padStart(11, "0")] = emp.id;
         }
       }
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
@@ -577,7 +579,10 @@ export function useImportacaoPlanilha() {
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
             } else {
-              const estaNoMapa = mapaEmpresas[cnpjEmpresa] || mapaEmpresas[cnpjEmpresaOriginal.trim()] || mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || mapaEmpresas[cnpjEmpresa.padStart(11, '0')];
+              const estaNoMapa = mapaEmpresas[cnpjEmpresa] || 
+                                 mapaEmpresas[cnpjEmpresaOriginal.trim()] || 
+                                 mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || 
+                                 mapaEmpresas[formatarDocumento(cnpjEmpresa)];
               
               if (!estaNoMapa) {
                 const estaInativa = mapaInativas[cnpjEmpresa] || mapaInativas[cnpjEmpresaOriginal.trim()];
