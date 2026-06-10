@@ -476,7 +476,7 @@ export function useImportacaoPlanilha() {
           mapa[docLimpo.padStart(14, "0")] = emp.id;
         }
       }
-      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
+      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || emp.nome_fantasia || "Sem razão social" };
     });
 
     // Mapear inativas para dar erro mais claro
@@ -584,22 +584,19 @@ export function useImportacaoPlanilha() {
                                  mapaEmpresas[cnpjLimpoPlanilha.padStart(14, '0')] ||
                                  mapaEmpresas[formatarDocumento(cnpjEmpresa)];
               
-              if (!estaNoMapa) {
-                // FALLBACK RADICAL: Tenta encontrar qualquer empresa se o tenant tiver poucas
-                // ou se o documento limpo bater com qualquer chave do mapa (ignorando formatação da chave)
-                const fallbackId = Object.entries(mapaEmpresas).find(([key]) => key.replace(/\D/g, "") === cnpjLimpoPlanilha)?.[1];
-                
-                if (fallbackId) {
-                   // Encontrou via fallback
+              const finalEmpresaId = estaNoMapa || Object.entries(mapaEmpresas).find(([key]) => key.replace(/\D/g, "") === cnpjLimpoPlanilha)?.[1];
+
+              if (!finalEmpresaId) {
+                const estaInativa = mapaInativas[cnpjLimpoPlanilha] || mapaInativas[originalTrim];
+                if (estaInativa) {
+                  erros.push(`A empresa ${cnpjEmpresaOriginal} está cadastrada mas está INATIVA no sistema.`);
                 } else {
-                  const estaInativa = mapaInativas[cnpjLimpoPlanilha] || mapaInativas[originalTrim];
-                  if (estaInativa) {
-                    erros.push(`A empresa ${cnpjEmpresaOriginal} está cadastrada mas está INATIVA no sistema.`);
-                  } else {
-                    const tipo = cnpjLimpoPlanilha.length <= 11 ? "CPF/CNPJ" : "CNPJ";
-                    erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema.`);
-                  }
+                  const tipo = cnpjLimpoPlanilha.length <= 11 ? "CPF/CNPJ" : "CNPJ";
+                  erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema.`);
                 }
+              } else {
+                // Sucesso: vincula o ID da empresa para uso posterior
+                (l as any).empresaIdVinculada = finalEmpresaId;
               }
             }
             if (!nome) erros.push("Nome é obrigatório");
@@ -613,6 +610,7 @@ export function useImportacaoPlanilha() {
 
             dados.push({
               cnpjEmpresa,
+              empresaId: (l as any).empresaIdVinculada,
               nome,
               cpf,
               sexo: idx["sexo"] != null && idx["sexo"] !== -1 ? parsarSexo(g("sexo")) : "",
