@@ -372,7 +372,7 @@ export function usePonto() {
       colaboradorCpf: string;
       dataReferencia: string;
       tipoAjuste: "inclusao" | "correcao" | "justificativa" | "abono";
-      tipoMarcacao?: "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+      tipoMarcacao?: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida";
       horaOriginal?: string;
       horaSolicitada?: string;
       motivo: string;
