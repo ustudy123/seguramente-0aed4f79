@@ -37,7 +37,10 @@ import autoTable from "jspdf-autotable";
 // Sanitize text for jsPDF
 const sanitize = (text: string): string => {
   if (!text) return "";
-  return text.normalize("NFC");
+  // Remove zero-width spaces and other invisible characters that might confuse jsPDF
+  const cleaned = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
+  // Use NFC normalization to ensure combined characters are represented as single codepoints where possible
+  return cleaned.normalize("NFC");
 };
 
 const MINIMO_ANONIMATO = 5;
