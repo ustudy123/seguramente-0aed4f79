@@ -610,6 +610,7 @@ export function useImportacaoPlanilha() {
 
             dados.push({
               cnpjEmpresa,
+              empresaId: (l as any).empresaIdVinculada,
               nome,
               cpf,
               sexo: idx["sexo"] != null && idx["sexo"] !== -1 ? parsarSexo(g("sexo")) : "",
