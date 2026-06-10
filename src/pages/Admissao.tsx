@@ -492,6 +492,7 @@ export default function Admissao() {
     dataCriacao: new Date(a.created_at),
     dataAtualizacao: new Date(a.updated_at),
     criadoPor: a.criado_por || '',
+    onboardingToken: (a as any).onboarding_token || null,
   }));
 
   const selectedAdmissaoFormatted = selectedId 

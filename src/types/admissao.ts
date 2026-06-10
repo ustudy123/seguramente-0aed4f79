@@ -92,6 +92,7 @@ export interface Admissao {
   dataAtualizacao: Date;
   criadoPor: string;
   fotoUrl?: string;
+  onboardingToken?: string | null;
   onboarding_status?: string;
 }
 

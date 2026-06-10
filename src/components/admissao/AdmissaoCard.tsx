@@ -10,8 +10,10 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  ClipboardCheck
+  ClipboardCheck,
+  Share2
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -99,6 +101,17 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowChecklist(true)}>
                 <ClipboardCheck className="h-4 w-4 mr-2" /> Checklist de Docs
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                if (!admissao.onboardingToken) {
+                  toast.error("Esta admissão não possui link de cadastro gerado.");
+                  return;
+                }
+                const link = `${window.location.origin}/completar-cadastro/${admissao.onboardingToken}`;
+                navigator.clipboard.writeText(link);
+                toast.success("Link copiado! Envie para o colaborador finalizar o cadastro.");
+              }}>
+                <Share2 className="h-4 w-4 mr-2" /> Compartilhar Link
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(admissao.id)}>
                 <FileText className="h-4 w-4 mr-2" /> Editar
