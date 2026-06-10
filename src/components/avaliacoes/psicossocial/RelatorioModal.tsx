@@ -37,7 +37,10 @@ import autoTable from "jspdf-autotable";
 // Sanitize text for jsPDF
 const sanitize = (text: string): string => {
   if (!text) return "";
-  return text.normalize("NFC");
+  // Remove zero-width spaces and other invisible characters that might confuse jsPDF
+  const cleaned = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
+  // Use NFC normalization to ensure combined characters are represented as single codepoints where possible
+  return cleaned.normalize("NFC");
 };
 
 const MINIMO_ANONIMATO = 5;
@@ -267,14 +270,21 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           startY: y,
           margin: { left: ml, right: mr, top: mt, bottom: mb },
           body: sintese,
-          headStyles: { fillColor: [88, 28, 135], fontSize: 8 },
-          bodyStyles: { fontSize: 8, halign: 'justify' },
+          theme: 'plain',
+          bodyStyles: { 
+            fontSize: 9, 
+            cellPadding: 2,
+            font: "helvetica"
+          },
           didParseCell: (data) => {
             const text = String(data.cell.raw);
             if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
             else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
             else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
             else data.cell.styles.textColor = [5, 122, 85];
+            
+            // Background for row even in plain theme
+            data.cell.styles.fillColor = data.row.index % 2 === 0 ? [250, 250, 250] : [255, 255, 255];
           },
         });
         y = (doc as any).lastAutoTable.finalY + 10;
