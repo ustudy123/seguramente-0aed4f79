@@ -539,7 +539,7 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (!mapaEmpresas[cnpjEmpresa]) {
+            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()]) {
               const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
               erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
             }
