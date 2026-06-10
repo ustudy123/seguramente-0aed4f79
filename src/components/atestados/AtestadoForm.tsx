@@ -902,7 +902,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   name="profissional_nome"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>Nome do Médico *</FormLabel>
+                      <FormLabel>{watchTipo === "licencas" ? "Nome do Emissor *" : "Nome do Médico *"}</FormLabel>
                       <FormControl>
                         <Input placeholder="Dr. Nome Completo" {...field} />
                       </FormControl>
