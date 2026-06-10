@@ -527,33 +527,43 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                         <CommandList>
                           <CommandEmpty>Nenhum colaborador encontrado</CommandEmpty>
                           <CommandGroup heading="Colaboradores da Empresa">
-                            {colaboradores.map((c) => (
-                              <CommandItem
-                                key={c.id}
-                                value={c.nome_completo}
-                                onSelect={() => {
-                                  if (editingNode) {
-                                    setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome_completo });
-                                  } else {
-                                    toggleOcupante({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
-                                  }
-                                }}
-                              >
-                                <div className="flex items-center gap-2 flex-1">
-                                  <div className="relative">
-                                    <Check className={cn(
-                                      "mr-2 h-4 w-4 absolute -left-6",
-                                      (editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)) ? "opacity-100" : "opacity-0"
-                                    )} />
+                            {colaboradores.map((c) => {
+                              const isSelected = editingNode
+                                ? form.colaborador_id === c.id
+                                : form.selectedOcupantes.some(o => o.id === c.id);
+                              return (
+                                <CommandItem
+                                  key={c.id}
+                                  value={c.nome_completo}
+                                  className={cn(
+                                    isSelected && "bg-primary/10 data-[selected=true]:bg-primary/15"
+                                  )}
+                                  onSelect={() => {
+                                    if (editingNode) {
+                                      setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome_completo });
+                                    } else {
+                                      toggleOcupante({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
+                                    }
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 flex-1">
                                     <AvatarNode fotoUrl={c.foto_url} size="small" />
+                                    <div className="flex flex-col flex-1 min-w-0">
+                                      <span className={cn("text-sm font-medium truncate", isSelected && "text-primary")}>
+                                        {c.nome_completo}
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground">{c.cargo}</span>
+                                    </div>
+                                    {isSelected && (
+                                      <span className="flex items-center gap-1 text-primary shrink-0">
+                                        <Check className="h-4 w-4" />
+                                        <span className="text-[10px] font-semibold uppercase tracking-wide">Selecionado</span>
+                                      </span>
+                                    )}
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-sm font-medium">{c.nome_completo}</span>
-                                    <span className="text-[10px] text-muted-foreground">{c.cargo}</span>
-                                  </div>
-                                </div>
-                              </CommandItem>
-                            ))}
+                                </CommandItem>
+                              );
+                            })}
                           </CommandGroup>
                         </CommandList>
                       </Command>
