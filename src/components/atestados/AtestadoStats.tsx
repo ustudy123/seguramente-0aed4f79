@@ -10,6 +10,7 @@ import {
   Users
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface AtestadoStatsProps {
   stats: {
