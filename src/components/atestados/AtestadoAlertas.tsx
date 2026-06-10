@@ -114,18 +114,21 @@ export function AtestadoAlertas({
 
   if (sortedAlertas.length === 0) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+      <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-emerald-500/10">
+          <CardTitle className="text-base flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
             <Bell className="h-4 w-4" />
             Alertas de Saúde
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">
-              Nenhum alerta pendente
+          <div className="text-center py-10">
+            <div className="bg-emerald-100 dark:bg-emerald-900/40 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">Tudo em dia!</h4>
+            <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70 mt-1 max-w-[200px] mx-auto">
+              Nenhum alerta crítico ou pendente no momento
             </p>
           </div>
         </CardContent>
@@ -135,12 +138,12 @@ export function AtestadoAlertas({
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
+      <Card className="border-t-4 border-t-destructive shadow-md overflow-hidden bg-card/50">
+        <CardHeader className="pb-3 bg-muted/30 border-b">
           <CardTitle className="text-base flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Alertas de Saúde
-            <Badge variant="destructive" className="ml-auto">
+            <Bell className="h-4 w-4 text-destructive animate-pulse" />
+            <span className="font-bold tracking-tight">Alertas Críticos</span>
+            <Badge variant="destructive" className="ml-auto rounded-full px-2 py-0 h-5 flex items-center justify-center min-w-[20px]">
               {sortedAlertas.length}
             </Badge>
           </CardTitle>
@@ -154,13 +157,13 @@ export function AtestadoAlertas({
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`p-3 rounded-lg border ${alerta.bgColor}`}
+                  className={`p-3.5 rounded-xl border-l-4 transition-all hover:scale-[1.02] duration-200 shadow-sm ${alerta.bgColor} border border-transparent`}
                 >
                   <div className="flex items-start gap-3">
                     <alerta.icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${alerta.color}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium">{alerta.titulo}</p>
+                        <p className="text-sm font-bold tracking-tight">{alerta.titulo}</p>
                         <Badge 
                           variant="outline" 
                           className={`text-[10px] ${
