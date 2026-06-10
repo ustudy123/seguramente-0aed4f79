@@ -105,13 +105,16 @@ export function AtestadoList({
   };
 
   const getSubtipoLabel = (atestado: Atestado) => {
-    if (atestado.tipo === 'assistencial' && atestado.subtipo_assistencial) {
-      return SUBTIPO_ASSISTENCIAL_LABELS[atestado.subtipo_assistencial];
+    if (atestado.tipo === 'licencas' && atestado.subtipo_assistencial) {
+      return SUBTIPO_LICENCAS_LABELS[atestado.subtipo_assistencial as keyof typeof SUBTIPO_LICENCAS_LABELS] || 'Licença';
+    }
+    if (atestado.tipo === 'atestados' && atestado.subtipo_assistencial) {
+      return SUBTIPO_ATESTADOS_LABELS[atestado.subtipo_assistencial as keyof typeof SUBTIPO_ATESTADOS_LABELS] || 'Atestado';
     }
     if (atestado.tipo === 'ocupacional' && atestado.subtipo_ocupacional) {
-      return SUBTIPO_OCUPACIONAL_LABELS[atestado.subtipo_ocupacional];
+      return SUBTIPO_OCUPACIONAL_LABELS[atestado.subtipo_ocupacional as keyof typeof SUBTIPO_OCUPACIONAL_LABELS] || 'Ocupacional';
     }
-    return ATESTADO_TIPO_LABELS[atestado.tipo];
+    return AFASTAMENTO_TIPO_LABELS[atestado.tipo as AfastamentoTipo] || atestado.tipo;
   };
 
   const gruposClinicos = [...new Set(atestados.map(a => a.grupo_clinico).filter(Boolean))] as GrupoClinico[];
@@ -178,7 +181,7 @@ export function AtestadoList({
                   <div className="flex-1 min-w-0 space-y-2">
                     {/* Header */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={atestado.tipo === 'assistencial' ? 'default' : 'secondary'}>
+                      <Badge variant={atestado.tipo === 'atestados' ? 'default' : 'secondary'}>
                         {getSubtipoLabel(atestado)}
                       </Badge>
                       {atestado.grupo_clinico && (

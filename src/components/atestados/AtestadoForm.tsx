@@ -670,7 +670,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Tipo de Atestado
+                Tipo de Afastamento
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
@@ -682,7 +682,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                       <Select 
                         onValueChange={(value) => {
                           field.onChange(value);
-                          setTipoAtestado(value as AtestadoTipo);
+                          setTipoAfastamento(value as AfastamentoTipo);
                         }} 
                         defaultValue={field.value}
                       >
@@ -692,8 +692,11 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="assistencial">Assistencial</SelectItem>
-                          <SelectItem value="ocupacional">Ocupacional (ASO)</SelectItem>
+                          {Object.entries(AFASTAMENTO_TIPO_LABELS).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -701,21 +704,46 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   )}
                 />
 
-                {watchTipo === "assistencial" && (
+                {watchTipo === "licencas" && (
                   <FormField
                     control={form.control}
-                    name="subtipo_assistencial"
+                    name="subtipo_licencas"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Subtipo</FormLabel>
+                        <FormLabel>Subtipo de Licença *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione o subtipo" />
+                              <SelectValue placeholder="Selecione a licença" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.entries(SUBTIPO_ASSISTENCIAL_LABELS).map(([value, label]) => (
+                            {Object.entries(SUBTIPO_LICENCAS_LABELS).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {watchTipo === "atestados" && (
+                  <FormField
+                    control={form.control}
+                    name="subtipo_atestados"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subtipo de Atestado *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o motivo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(SUBTIPO_ATESTADOS_LABELS).map(([value, label]) => (
                               <SelectItem key={value} value={value}>{label}</SelectItem>
                             ))}
                           </SelectContent>
@@ -732,7 +760,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     name="subtipo_ocupacional"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tipo de Exame *</FormLabel>
+                        <FormLabel>Tipo de Exame/Documento *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -928,8 +956,8 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
               />
             </div>
 
-            {/* Afastamento - only for assistencial */}
-            {watchTipo === "assistencial" && (
+            {/* Afastamento - for non-occupational or ASO */}
+            {watchTipo !== "ocupacional" && (
               <div className="space-y-4">
                 <h3 className="text-sm font-medium flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />

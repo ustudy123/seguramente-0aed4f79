@@ -258,8 +258,8 @@ export function useAtestados() {
 
       if (error) throw error;
 
-      // Create/update afastamento if assistencial with dates
-      if (formData.tipo === 'assistencial' && formData.data_inicio_afastamento) {
+      // Create/update afastamento if not occupational and with dates
+      if (formData.tipo !== 'ocupacional' && formData.data_inicio_afastamento) {
         await createOrUpdateAfastamento(data as Atestado);
       }
 
