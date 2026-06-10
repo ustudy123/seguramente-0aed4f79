@@ -126,11 +126,17 @@ const PontoExterno = () => {
   // Próximo tipo a registrar (sequência CLT decidida pelo backend)
   const [proximoTipo, setProximoTipo] = useState<TipoMarcacao>("entrada");
   const [marcacoesDia, setMarcacoesDia] = useState<MarcacaoDia[]>([]);
+  const [afastamento, setAfastamento] = useState<{ desde: string | null; ate: string | null } | null>(null);
 
   const carregarProximoTipo = useCallback(async () => {
     if (!token) return;
     const { data } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
     const r = data as any;
+    if (r?.afastado) {
+      setAfastamento({ desde: r.afastado_desde || null, ate: r.afastado_ate || null });
+      return;
+    }
+    setAfastamento(null);
     if (r?.proximo === "entrada" || r?.proximo === "saida") {
       setProximoTipo(r.proximo);
     }
@@ -297,6 +303,20 @@ const PontoExterno = () => {
               </div>
             )}
 
+            {afastamento ? (
+              <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-center space-y-1">
+                <p className="text-sm font-semibold text-sky-700">🩺 Você está afastado(a)</p>
+                <p className="text-xs text-muted-foreground">
+                  {afastamento.ate
+                    ? `Afastamento de ${afastamento.desde} até ${afastamento.ate}.`
+                    : `Afastamento desde ${afastamento.desde} — em aberto.`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Seus dias ficam <strong>abonados automaticamente</strong> no ponto. Não é necessário registrar marcações nem solicitar ajustes neste período.
+                </p>
+              </div>
+            ) : (
+            <>
             {/* Botão principal: próximo tipo pela alternância entrada/saída */}
             <Button
               className={`${TIPO_LABELS[proximoTipo].color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
@@ -347,15 +367,18 @@ const PontoExterno = () => {
                 )}
               </div>
             )}
+            </>
+            )}
 
             {/* Solicitar Ajuste */}
+            {!afastamento && (
             <Button
               variant="outline"
               className="w-full mt-2 h-10 text-xs"
               onClick={() => setAjusteOpen(true)}
             >
               <FileEdit className="w-4 h-4 mr-2" /> Solicitar Ajuste de Ponto
-            </Button>
+            </Button>)}
 
             {/* Instalar como app (PWA) - só fora do preview/iframe */}
             <PontoPWASetup token={token} />
