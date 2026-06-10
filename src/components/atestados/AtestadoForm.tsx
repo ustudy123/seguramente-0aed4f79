@@ -481,6 +481,38 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Seletor de Tipo (Oculto se for página de ASO ou Afastamentos específicos) */}
+            {!window.location.pathname.includes('saude-ocupacional') && !window.location.pathname.includes('atestados') && (
+              <FormField
+                control={form.control}
+                name="tipo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Lançamento</FormLabel>
+                    <Select 
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                        setTipoAfastamento(v as AfastamentoTipo);
+                      }} 
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(AFASTAMENTO_TIPO_LABELS).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {/* 1. Seleção de Colaborador (PRIMEIRO) */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
