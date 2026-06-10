@@ -957,7 +957,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   name="profissional_registro"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>CRM *</FormLabel>
+                      <FormLabel>CRM {watchTipo !== "licencas" && "*"}</FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
                           <Input placeholder="12345" {...field} />
