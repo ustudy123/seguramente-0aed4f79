@@ -85,9 +85,9 @@ export function MarcacaoBadge({
 
   if (!podeEditar) {
     return (
-      <span className={badgeClasses} title={original ? "Registro Nativo" : "Registro Ajustado"}>
+      <div className={badgeClasses} title={original ? "Registro Nativo" : "Registro Ajustado"}>
         {content}
-      </span>
+      </div>
     );
   }
 

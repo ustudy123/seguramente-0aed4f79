@@ -682,6 +682,7 @@ const Ponto = () => {
                       {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
                       {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
                       {TIPO_MARCACAO_LABELS[tipo]}
+                      {tipo === "batida" && <Clock className="w-4 h-4 mr-2" />}
                       {jaRegistrado && <CheckCircle className="w-3.5 h-3.5 ml-auto text-green-500" />}
                       {!jaRegistrado && !requisitosAtendidos && <Lock className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
                     </Button>
