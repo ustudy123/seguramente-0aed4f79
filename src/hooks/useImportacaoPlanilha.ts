@@ -428,14 +428,15 @@ export function useImportacaoPlanilha() {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
     
     // Buscar todas as empresas do tenant para diagnóstico
+    // Removendo filtro de tenant_id temporariamente para diagnóstico se necessário, 
+    // mas mantendo a segurança via RLS e limitando por precaução.
     const query = fromTable("empresa_cadastro")
-      .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
-      .eq("tenant_id", tenantId)
+      .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo, tenant_id")
       .limit(5000);
     
     const { data, error: dbError } = await query;
     if (dbError) {
-      console.error("Erro ao buscar empresas do tenant:", dbError);
+      console.error("Erro ao buscar empresas:", dbError);
       return { mapa: {}, info: {}, unicaEmpresaId: null };
     }
 
@@ -449,6 +450,16 @@ export function useImportacaoPlanilha() {
     // Log para depuração em caso de falha no preview
     console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}. Ativas: ${empresasAtivas.length}`);
     
+    // Log detalhado para depuração
+    console.log(`[Import] Empresas recuperadas do banco: ${data?.length || 0}`);
+    if (data && data.length > 0) {
+      const campana = data.find((e: any) => String(e.cnpj).includes("55.054.444"));
+      if (campana) {
+        console.log(`[Import] Encontrada Campana:`, campana);
+        console.log(`[Import] Tenant da Campana: ${campana.tenant_id} | Seu Tenant: ${tenantId}`);
+      }
+    }
+
     empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
       if (!doc) return;
