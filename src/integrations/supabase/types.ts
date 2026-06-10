@@ -21983,6 +21983,52 @@ export type Database = {
         Args: { p_modalidade: string; p_token: string }
         Returns: string
       }
+      afastamento_vigente: {
+        Args: { p_cpf: string; p_data: string; p_tenant_id: string }
+        Returns: {
+          alerta_15_dias: boolean | null
+          alerta_30_dias: boolean | null
+          aso_retorno_id: string | null
+          aso_retorno_pendente: boolean | null
+          atualizado_por: string | null
+          beneficio_inss_id: string | null
+          cargo_id: string | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          criado_por: string | null
+          data_atestado: string | null
+          data_fim: string | null
+          data_inicio: string
+          dias_totais: number | null
+          empresa_id: string | null
+          evento_saude_id: string | null
+          gestor_id: string | null
+          id: string
+          motivo_principal: Database["public"]["Enums"]["grupo_clinico"] | null
+          nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes: string | null
+          prazo_indeterminado: boolean | null
+          setor_id: string | null
+          status: Database["public"]["Enums"]["afastamento_status"]
+          status_geral_new:
+            | Database["public"]["Enums"]["afastamento_status_geral"]
+            | null
+          tenant_id: string
+          tipo_principal_new:
+            | Database["public"]["Enums"]["afastamento_tipo_principal"]
+            | null
+          unidade_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "afastamentos"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       assinar_contrato_por_token: {
         Args: {
           p_assinante_ip: string
@@ -22807,6 +22853,22 @@ export type Database = {
         | "comparecimento"
         | "acompanhante"
         | "acidente"
+        | "casamento"
+        | "falecimento"
+        | "militar"
+        | "sindical"
+        | "outras_licencas"
+        | "maternidade"
+        | "paternidade"
+        | "acidente_trabalho"
+        | "doenca_trabalho"
+        | "acidente_nao_trabalho"
+        | "doenca_nao_trabalho"
+        | "prorrogacao"
+        | "aborto_nao_criminoso"
+        | "aposentadoria_invalidez"
+        | "suspensao_contrato"
+        | "outros_motivos"
       atestado_subtipo_ocupacional:
         | "admissional"
         | "periodico"
@@ -23436,6 +23498,22 @@ export const Constants = {
         "comparecimento",
         "acompanhante",
         "acidente",
+        "casamento",
+        "falecimento",
+        "militar",
+        "sindical",
+        "outras_licencas",
+        "maternidade",
+        "paternidade",
+        "acidente_trabalho",
+        "doenca_trabalho",
+        "acidente_nao_trabalho",
+        "doenca_nao_trabalho",
+        "prorrogacao",
+        "aborto_nao_criminoso",
+        "aposentadoria_invalidez",
+        "suspensao_contrato",
+        "outros_motivos",
       ],
       atestado_subtipo_ocupacional: [
         "admissional",
