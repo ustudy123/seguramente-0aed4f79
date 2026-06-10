@@ -22537,18 +22537,30 @@ export type Database = {
             }
             Returns: Json
           }
-      registrar_ponto_externo: {
-        Args: {
-          p_endereco?: string
-          p_latitude?: number
-          p_longitude?: number
-          p_selfie_nome?: string
-          p_selfie_url?: string
-          p_tipo_marcacao?: string
-          p_token: string
-        }
-        Returns: Json
-      }
+      registrar_ponto_externo:
+        | {
+            Args: {
+              p_endereco?: string
+              p_latitude?: number
+              p_longitude?: number
+              p_selfie_nome?: string
+              p_selfie_url?: string
+              p_tipo_marcacao?: string
+              p_token: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_endereco?: string
+              p_latitude?: number
+              p_longitude?: number
+              p_selfie_base64?: string
+              p_tipo_marcacao: string
+              p_token: string
+            }
+            Returns: Json
+          }
       salvar_resposta_anonima_campanha:
         | {
             Args: {
