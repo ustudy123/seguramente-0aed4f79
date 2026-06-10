@@ -10,9 +10,6 @@ export type AfastamentoSubtipoOcupacional =
   | 'demissional';
 
 export type AfastamentoSubtipoLicencas = 
-  | 'maternidade'
-  | 'maternidade_adocao'
-  | 'paternidade'
   | 'casamento'
   | 'falecimento'
   | 'militar'
@@ -20,6 +17,8 @@ export type AfastamentoSubtipoLicencas =
   | 'outras_licencas';
 
 export type AfastamentoSubtipoAtestados = 
+  | 'maternidade'
+  | 'paternidade'
   | 'acidente_trabalho'
   | 'doenca_trabalho'
   | 'acidente_nao_trabalho'
