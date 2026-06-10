@@ -441,7 +441,9 @@ export function useImportacaoPlanilha() {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
       if (!doc) return;
       const docLimpo = String(doc).replace(/\D/g, "");
-      mapa[docLimpo] = emp.id;
+      if (docLimpo) {
+        mapa[docLimpo] = emp.id;
+      }
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
 
