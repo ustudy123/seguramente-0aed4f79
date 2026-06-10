@@ -443,6 +443,12 @@ export function useImportacaoPlanilha() {
     const mapa: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
     
+    // Log para depuração em caso de falha no preview
+    console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}`);
+    if (data?.length) {
+      console.log(`[Import] Documentos encontrados:`, data.map(e => e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj));
+    }
+    
     empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
       if (!doc) return;
