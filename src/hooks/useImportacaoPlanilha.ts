@@ -55,7 +55,7 @@ export interface DadosPlanilha {
 // Mapeamento de colunas possíveis
 const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   cnpjEmpresa: ["cnpj", "cnpj/cpf empresa", "cnpj empresa", "cpf empresa", "cnpj_empresa", "empresa cnpj", "cnpj da empresa", "cnpj/cpf", "documento empresa", "documento da empresa"],
-  nome: ["nome", "nome_completo", "nome completo", "funcionario", "funcionário", "colaborador"],
+  nome: ["colaborador", "nome", "nome_completo", "nome completo", "funcionario", "funcionário"],
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
   dataNascimento: ["data nascimento", "data_nascimento", "datanascimento", "nascimento", "dt nasc", "dt. nasc", "data de nascimento"],
