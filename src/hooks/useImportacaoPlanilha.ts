@@ -423,20 +423,39 @@ export function useImportacaoPlanilha() {
     return doc;
   };
 
+  // Busca TODAS as empresas do tenant com paginação manual.
+  // O PostgREST limita cada resposta a 1000 linhas (max-rows) — tenants
+  // grandes (ex.: consultorias com 1000+ empresas clientes) tinham
+  // empresas fora das primeiras 1000 "invisíveis" para a importação,
+  // gerando "Empresa com CNPJ X não encontrada no sistema" (mesmo bug
+  // já corrigido no seletor de empresas do topo).
+  const fetchTodasEmpresasDoTenant = async (): Promise<any[]> => {
+    if (!tenantId) return [];
+    const PAGE = 1000;
+    let from = 0;
+    const acc: any[] = [];
+    for (let i = 0; i < 50; i++) {
+      const { data, error } = await fromTable("empresa_cadastro")
+        .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo, tenant_id")
+        .eq("tenant_id", tenantId)
+        .order("id")
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      const chunk = data || [];
+      acc.push(...chunk);
+      if (chunk.length < PAGE) break;
+      from += PAGE;
+    }
+    return acc;
+  };
+
   // Helper to get valid empresas for the tenant (indexa por CPF ou CNPJ)
   const getEmpresasValidas = async () => {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
 
-    const query = fromTable("empresa_cadastro")
-      .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo, tenant_id")
-      .eq("tenant_id", tenantId)
-      .range(0, 4999);
-    
-    const { data, error: dbError } = await query;
-    if (dbError) {
-      console.error("Erro ao buscar empresas:", dbError);
-      return { mapa: {}, info: {}, unicaEmpresaId: null };
-    }
+    // Buscar todas as empresas do tenant para diagnóstico (paginado de
+    // verdade — .range(0, 4999) não passa do teto de 1000 por requisição)
+    const data = await fetchTodasEmpresasDoTenant();
 
     const empresasAtivas = (data || []).filter((e: any) => e.ativo);
     const empresasInativas = (data || []).filter((e: any) => !e.ativo);
@@ -919,9 +938,7 @@ export function useImportacaoPlanilha() {
       const infoEmpresas: Record<string, { cnpj: string; razaoSocial: string }> = {}; // empresa_id -> info
 
       if (cnpjsUnicos.length > 0) {
-        const { data: todasEmpresas } = await fromTable("empresa_cadastro")
-          .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
-          .eq("tenant_id", tenantId);
+        const todasEmpresas = await fetchTodasEmpresasDoTenant();
 
         const empresas = (todasEmpresas || []).filter((e: any) => e.ativo);
 
