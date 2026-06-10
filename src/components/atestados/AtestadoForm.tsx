@@ -170,10 +170,42 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       }
       
       const dataFim = new Date(watchDataInicio);
-      dataFim.setDate(dataFim.getDate() + watchDiasAfastamento - 1); // -1 pois o dia inicial conta
+      dataFim.setDate(dataFim.getDate() + Number(watchDiasAfastamento) - 1); // -1 pois o dia inicial conta
       form.setValue("data_fim_afastamento", dataFim);
     }
   }, [watchDataInicio, watchDiasAfastamento, watchUnidade, form]);
+
+  // Função para buscar CID e grupo clínico
+  const handleCidLookup = async (codigo: string) => {
+    if (!codigo || codigo.length < 3) return;
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/consultar-cid`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData?.session?.access_token}`,
+          },
+          body: JSON.stringify({ codigo }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const { descricao, grupo_clinico } = result.data;
+        if (grupo_clinico) {
+          form.setValue("grupo_clinico", grupo_clinico);
+        }
+        toast.success(`CID encontrado: ${descricao}`);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CID:", error);
+    }
+  };
 
   // Preencher dados do colaborador quando selecionado
   const handleColaboradorSelect = (colaborador: Colaborador) => {
