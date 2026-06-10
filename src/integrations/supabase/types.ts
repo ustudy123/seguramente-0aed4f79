@@ -22467,6 +22467,14 @@ export type Database = {
       }
       obter_contrato_publico: { Args: { _token: string }; Returns: Json }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
+      processar_ajuste_ponto: {
+        Args: {
+          p_ajuste_id: string
+          p_aprovado: boolean
+          p_observacao?: string
+        }
+        Returns: Json
+      }
       proximo_tipo_marcacao_externo: {
         Args: { p_token: string }
         Returns: Json
@@ -22534,7 +22542,8 @@ export type Database = {
           p_endereco?: string
           p_latitude?: number
           p_longitude?: number
-          p_selfie_base64?: string
+          p_selfie_nome?: string
+          p_selfie_url?: string
           p_tipo_marcacao?: string
           p_token: string
         }
