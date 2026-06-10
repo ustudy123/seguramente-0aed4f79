@@ -345,7 +345,7 @@ const Ponto = () => {
           <div className="grid grid-cols-2 gap-2">
             {["entrada", "saida", "batida"].map(t => <Button key={t} variant={tipoMarcacao === t ? "default" : "outline"} onClick={() => setTipoMarcacao(t as any)}>{t.toUpperCase()}</Button>)}
           </div>
-          <PontoSelfieCapture onCapture={(file, preview) => { setSelfieFile(file); setSelfiePreview(preview); }} />
+          <PontoSelfieCapture selfieFile={selfieFile} selfiePreview={selfiePreview} onChange={(file, preview) => { setSelfieFile(file); setSelfiePreview(preview); }} />
           <Button onClick={handleRegistrarPonto} disabled={registrandoPonto} className="w-full">Registrar</Button>
         </div>
         </DialogContent>
