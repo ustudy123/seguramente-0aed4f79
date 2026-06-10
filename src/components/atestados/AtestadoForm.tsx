@@ -133,7 +133,7 @@ interface AtestadoFormProps {
 export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: AtestadoFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [tipoAfastamento, setTipoAfastamento] = useState<AfastamentoTipo>("atestados");
+  const [tipoAfastamento, setTipoAfastamento] = useState<AfastamentoTipo>(window.location.pathname.includes('saude-ocupacional') ? "ocupacional" : "atestados");
   const [extracting, setExtracting] = useState(false);
   const [searchingCrm, setSearchingCrm] = useState(false);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
@@ -147,7 +147,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      tipo: "atestados",
+      tipo: window.location.pathname.includes('saude-ocupacional') ? "ocupacional" : "atestados",
       contem_cid: false,
       cid_autorizado: true, // Agora sempre true por padrão, pois o envio ao RH implica autorização
       nexo_trabalho: "nao",
