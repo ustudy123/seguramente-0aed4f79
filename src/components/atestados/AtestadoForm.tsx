@@ -132,6 +132,7 @@ interface AtestadoFormProps {
 
 export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: AtestadoFormProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [tipoAfastamento, setTipoAfastamento] = useState<AfastamentoTipo>("atestados");
   const [extracting, setExtracting] = useState(false);
   const [searchingCrm, setSearchingCrm] = useState(false);
@@ -351,8 +352,17 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
+      const selectedFile = acceptedFiles[0];
+      setFile(selectedFile);
       setExtractionSuccess(false);
+
+      // Gerar preview se for imagem
+      if (selectedFile.type.startsWith('image/')) {
+        const url = URL.createObjectURL(selectedFile);
+        setPreviewUrl(url);
+      } else {
+        setPreviewUrl(null);
+      }
     }
   }, []);
 
@@ -417,6 +427,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
     });
     form.reset();
     setFile(null);
+    setPreviewUrl(null);
     setExtractionSuccess(false);
     setColaboradorSelecionado(null);
     onOpenChange(false);
@@ -546,22 +557,35 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
               >
                 <input {...getInputProps()} />
                 {file ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span className="text-sm">{file.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFile(null);
-                        setExtractionSuccess(false);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <span className="text-sm font-medium">{file.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFile(null);
+                          setPreviewUrl(null);
+                          setExtractionSuccess(false);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {previewUrl && (
+                      <div className="relative mt-2 mx-auto max-w-[200px] rounded-lg border overflow-hidden shadow-sm">
+                        <img 
+                          src={previewUrl} 
+                          alt="Preview do documento" 
+                          className="w-full h-auto object-contain max-h-[300px]"
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-1">
