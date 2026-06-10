@@ -565,21 +565,17 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
-              erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } 
-            
-            const { mapa: mapaEmpresas, mapaInativas } = await getEmpresasValidas();
-            const estaNoMapa = mapaEmpresas[cnpjEmpresa] || mapaEmpresas[cnpjEmpresaOriginal.trim()] || mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || mapaEmpresas[cnpjEmpresa.padStart(11, '0')];
-            const estaNoMapa = mapaEmpresas[cnpjEmpresa] || mapaEmpresas[cnpjEmpresaOriginal.trim()] || mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || mapaEmpresas[cnpjEmpresa.padStart(11, '0')];
-            
-            if (!estaNoMapa) {
-              const estaInativa = mapaInativas[cnpjEmpresa] || mapaInativas[cnpjEmpresaOriginal.trim()];
-              if (estaInativa) {
-                erros.push(`A empresa ${cnpjEmpresaOriginal} está cadastrada mas está INATIVA no sistema.`);
-              } else {
-                const tipo = cnpjEmpresa.length <= 11 ? "CPF/CNPJ" : "CNPJ";
-                erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema.`);
+            } else {
+              const estaNoMapa = mapaEmpresas[cnpjEmpresa] || mapaEmpresas[cnpjEmpresaOriginal.trim()] || mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || mapaEmpresas[cnpjEmpresa.padStart(11, '0')];
+              
+              if (!estaNoMapa) {
+                const estaInativa = mapaInativas[cnpjEmpresa] || mapaInativas[cnpjEmpresaOriginal.trim()];
+                if (estaInativa) {
+                  erros.push(`A empresa ${cnpjEmpresaOriginal} está cadastrada mas está INATIVA no sistema.`);
+                } else {
+                  const tipo = cnpjEmpresa.length <= 11 ? "CPF/CNPJ" : "CNPJ";
+                  erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema.`);
+                }
               }
             }
             if (!nome) erros.push("Nome é obrigatório");
