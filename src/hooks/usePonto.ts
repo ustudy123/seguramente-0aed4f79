@@ -16,7 +16,7 @@ export interface PontoMarcacao {
   colaborador_cpf: string;
   data_marcacao: string;
   hora_marcacao: string;
-  tipo_marcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+  tipo_marcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida";
   ip_origem: string | null;
   user_agent: string | null;
   latitude: number | null;
@@ -57,7 +57,7 @@ export interface PontoAjuste {
   colaborador_cpf: string;
   data_referencia: string;
   tipo_ajuste: "inclusao" | "correcao" | "justificativa" | "abono";
-  tipo_marcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | null;
+  tipo_marcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida" | null;
   hora_original: string | null;
   hora_solicitada: string | null;
   motivo: string;
@@ -93,6 +93,7 @@ export const TIPO_MARCACAO_LABELS: Record<string, string> = {
   saida_almoco: "Saída Almoço",
   retorno_almoco: "Retorno Almoço",
   saida: "Saída",
+  batida: "Batida",
 };
 
 export const STATUS_PONTO_CONFIG: Record<string, { label: string; color: string }> = {
@@ -271,7 +272,7 @@ export function usePonto() {
       colaboradorId: string;
       colaboradorNome: string;
       colaboradorCpf: string;
-      tipoMarcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+      tipoMarcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida";
       latitude?: number;
       longitude?: number;
       enderecoGeolocalizacao?: string;
@@ -371,7 +372,7 @@ export function usePonto() {
       colaboradorCpf: string;
       dataReferencia: string;
       tipoAjuste: "inclusao" | "correcao" | "justificativa" | "abono";
-      tipoMarcacao?: "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+      tipoMarcacao?: "entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida";
       horaOriginal?: string;
       horaSolicitada?: string;
       motivo: string;
