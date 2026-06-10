@@ -153,6 +153,8 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        max_tokens: 8000,
         messages: [
           { role: "system", content: "Você é um especialista em T&D. Gere apenas JSON puro para trilhas de aprendizagem." },
           { role: "user", content: prompt }

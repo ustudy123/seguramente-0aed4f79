@@ -62,6 +62,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        max_tokens: 8000,
         messages: [
           { role: "system", content: `Você é um consultor de cultura organizacional. Responda apenas com o conteúdo solicitado, sem explicações adicionais. 
           

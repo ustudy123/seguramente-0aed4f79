@@ -293,6 +293,8 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        max_tokens: 8000,
         messages: [
           { role: "system", content: "Você é um designer e consultor de RH. Gere apenas HTML completo e profissional para manuais de funções seguindo o modelo de 13 seções. Complete seções marcadas como 'a ser gerado/definido pela IA' com conteúdo relevante. Sem POPs, sem passos detalhados. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
           { role: "user", content: prompt }

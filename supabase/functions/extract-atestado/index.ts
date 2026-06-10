@@ -124,6 +124,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-4o",
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
           { 

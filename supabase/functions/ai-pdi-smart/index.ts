@@ -96,6 +96,7 @@ Retorne APENAS um JSON array com 5 objetos, sem markdown. Exemplo:
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

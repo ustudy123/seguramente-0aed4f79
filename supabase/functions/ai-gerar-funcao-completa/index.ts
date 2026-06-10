@@ -140,6 +140,8 @@ IMPORTANTE: Integre o contexto da empresa (Cultura, Setor, CNAE) para que as ati
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        max_tokens: 8000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
