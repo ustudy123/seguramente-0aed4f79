@@ -656,7 +656,7 @@ export function useImportacaoPlanilha() {
   };
 
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
-    const { mapa: mapaEmpresas, unicaEmpresaId } = await getEmpresasValidas();
+    const { mapa: mapaEmpresas, unicaEmpresaId, mapaInativas } = await getEmpresasValidas();
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
