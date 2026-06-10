@@ -510,7 +510,18 @@ export function usePsicossocial() {
 
   // Calcular estatísticas de uma campanha
   const calcularEstatisticas = async (campanhaId: string): Promise<EstatisticasCampanha> => {
-    const [convites, respostas, participacoesRes, entrevistasRes, campanhaRes] = await Promise.all([
+    // Universo elegível: colaboradores ativos da empresa (admissões concluídas, não inativos).
+    // É a base correta para Pendentes e Taxa de Adesão em campanhas anônimas de Link Geral,
+    // que não têm convites nominais.
+    let elegiveisQuery = supabase
+      .from("admissoes")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("status", "concluido")
+      .or("inativo.is.null,inativo.eq.false");
+    if (empresaAtivaId) elegiveisQuery = elegiveisQuery.eq("empresa_id", empresaAtivaId);
+
+    const [convites, respostas, participacoesRes, entrevistasRes, campanhaRes, elegiveisRes] = await Promise.all([
       buscarConvites(campanhaId),
       buscarRespostas(campanhaId),
       supabase
@@ -526,7 +537,10 @@ export function usePsicossocial() {
         .select("tipo_instrumento")
         .eq("id", campanhaId)
         .single(),
+      elegiveisQuery,
     ]);
+
+    const colaboradoresAtivos = elegiveisRes.count ?? 0;
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
     const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null; resumo_ia: any }>;
@@ -534,7 +548,6 @@ export function usePsicossocial() {
 
     // Convites individuais (campanhas com distribuição nominal — modelo legado)
     const totalConvites = convites.length;
-    const pendentes = convites.filter(c => c.status === 'pendente').length;
     const iniciados = convites.filter(c => c.status === 'iniciado').length;
     const concluidosConvites = convites.filter(c => c.status === 'concluido').length;
     const expirados = convites.filter(c => c.status === 'expirado').length;
@@ -551,8 +564,12 @@ export function usePsicossocial() {
     const totalRespostas = respostas.length;
     // "Concluídos" = max(respostas reais, marcados como respondidos, entrevistas concluídas)
     const concluidos = Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes, entrevistasConcluidas);
-    // "Total elegível" = max(elegíveis nominais, respostas, entrevistas geradas)
-    const total = Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas);
+    // "Total elegível": inclui os colaboradores ativos da empresa — em campanha anônima
+    // de Link Geral (sem convites nominais), eles são o universo real de pendentes.
+    // O max() cobre o caso de haver mais respostas do que cadastros ativos.
+    const total = Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas, colaboradoresAtivos);
+    // Pendentes = quem ainda não respondeu dentro do universo elegível
+    const pendentes = Math.max(0, total - concluidos);
 
     const isEntrevistaGuiada = campanhaRes.data?.tipo_instrumento === "entrevista_guiada";
     const MINIMO_ANONIMATO = isEntrevistaGuiada ? 1 : 5;
@@ -668,7 +685,7 @@ export function usePsicossocial() {
       iniciados,
       concluidos,
       expirados,
-      taxa_participacao: total > 0 ? (totalRespostas / total) * 100 : 0,
+      taxa_participacao: total > 0 ? (concluidos / total) * 100 : 0,
       anonimato_garantido,
       ips,
       ips_classificacao: ips !== undefined ? calcularIPSClassificacao(ips) : undefined,

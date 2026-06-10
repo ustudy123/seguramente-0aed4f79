@@ -279,6 +279,24 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     },
   });
 
+  // Universo elegível para campanhas sem GHE e sem lista nominal (Link Geral):
+  // colaboradores ativos da empresa (admissões concluídas, não inativos)
+  const { data: colaboradoresAtivos = 0 } = useQuery({
+    queryKey: ["psicossocial-colaboradores-ativos", campanha.tenant_id, campanha.empresa_id ?? "all"],
+    queryFn: async () => {
+      let q = supabase
+        .from("admissoes")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", campanha.tenant_id)
+        .eq("status", "concluido")
+        .or("inativo.is.null,inativo.eq.false");
+      if (campanha.empresa_id) q = q.eq("empresa_id", campanha.empresa_id);
+      const { count, error } = await q;
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   // Estatísticas — combina elegíveis individuais + respostas anônimas (Link Geral)
   const elegiveisNominais = participacoes.length;
   const respondidosIndividuais = participacoes.filter(p => p.respondido).length;
@@ -287,13 +305,15 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
   const respElegiveis = respostasBucket?.elig ?? 0;
   const respNaoElegiveis = respostasBucket?.naoElig ?? 0;
 
+  // Sem GHE e sem lista nominal: o universo é o quadro ativo da empresa,
+  // não o número de respostas (que zerava Pendentes e fixava a taxa em 100%)
   const elegiveis = temGHE
     ? elegiveisGHE
-    : (elegiveisNominais > 0 ? elegiveisNominais : responderam);
+    : (elegiveisNominais > 0 ? elegiveisNominais : Math.max(colaboradoresAtivos, responderam));
   const total = Math.max(elegiveis, responderam);
   const pendentes = temGHE
     ? Math.max(0, elegiveisGHE - respElegiveis)
-    : Math.max(0, elegiveisNominais - respondidosIndividuais);
+    : Math.max(0, total - responderam);
   const baseTaxa = temGHE ? elegiveisGHE : total;
   const numTaxa = temGHE ? respElegiveis : responderam;
   const taxa = baseTaxa > 0 ? Math.round((numTaxa / baseTaxa) * 100) : 0;
