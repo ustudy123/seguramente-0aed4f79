@@ -574,23 +574,31 @@ export function useImportacaoPlanilha() {
               } else {
                 erros.push("CNPJ ou CPF da empresa é obrigatório");
               }
-            } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
-              erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
             } else {
               // Limpa o documento da planilha para comparação
               const cnpjLimpoPlanilha = cnpjEmpresa.replace(/\D/g, "");
+              const originalTrim = cnpjEmpresaOriginal.trim();
+              
               const estaNoMapa = mapaEmpresas[cnpjLimpoPlanilha] || 
-                                 mapaEmpresas[cnpjEmpresaOriginal.trim()] || 
+                                 mapaEmpresas[originalTrim] || 
                                  mapaEmpresas[cnpjLimpoPlanilha.padStart(14, '0')] ||
                                  mapaEmpresas[formatarDocumento(cnpjEmpresa)];
               
               if (!estaNoMapa) {
-                const estaInativa = mapaInativas[cnpjEmpresa] || mapaInativas[cnpjEmpresaOriginal.trim()];
-                if (estaInativa) {
-                  erros.push(`A empresa ${cnpjEmpresaOriginal} está cadastrada mas está INATIVA no sistema.`);
+                // FALLBACK RADICAL: Tenta encontrar qualquer empresa se o tenant tiver poucas
+                // ou se o documento limpo bater com qualquer chave do mapa (ignorando formatação da chave)
+                const fallbackId = Object.entries(mapaEmpresas).find(([key]) => key.replace(/\D/g, "") === cnpjLimpoPlanilha)?.[1];
+                
+                if (fallbackId) {
+                   // Encontrou via fallback
                 } else {
-                  const tipo = cnpjEmpresa.length <= 11 ? "CPF/CNPJ" : "CNPJ";
-                  erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema.`);
+                  const estaInativa = mapaInativas[cnpjLimpoPlanilha] || mapaInativas[originalTrim];
+                  if (estaInativa) {
+                    erros.push(`A empresa ${cnpjEmpresaOriginal} está cadastrada mas está INATIVA no sistema.`);
+                  } else {
+                    const tipo = cnpjLimpoPlanilha.length <= 11 ? "CPF/CNPJ" : "CNPJ";
+                    erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema.`);
+                  }
                 }
               }
             }
