@@ -761,7 +761,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 Tipo de Afastamento
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {!window.location.pathname.includes('saude-ocupacional') && !window.location.pathname.includes('atestados') && (
+                {!window.location.pathname.includes('saude-ocupacional') && (
                   <FormField
                     control={form.control}
                     name="tipo"
@@ -773,7 +773,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                             field.onChange(value);
                             setTipoAfastamento(value as AfastamentoTipo);
                           }} 
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -781,11 +781,19 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.entries(AFASTAMENTO_TIPO_LABELS).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
-                              </SelectItem>
-                            ))}
+                            {Object.entries(AFASTAMENTO_TIPO_LABELS)
+                              .filter(([value]) => {
+                                // Se estiver na página de atestados/afastamentos, não mostrar ocupacional
+                                if (window.location.pathname.includes('atestados')) {
+                                  return value !== 'ocupacional';
+                                }
+                                return true;
+                              })
+                              .map(([value, label]) => (
+                                <SelectItem key={value} value={value}>
+                                  {label}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -793,6 +801,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     )}
                   />
                 )}
+
 
 
                 {watchTipo === "licencas" && (
