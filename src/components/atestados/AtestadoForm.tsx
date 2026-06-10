@@ -119,6 +119,14 @@ const formSchema = z.object({
   observacoes_ocupacionais: z.string().optional(),
   
   observacoes: z.string().optional(),
+}).refine((data) => {
+  if (data.tipo !== "licencas") {
+    return !!data.profissional_registro && data.profissional_registro.length > 0;
+  }
+  return true;
+}, {
+  message: "Registro profissional (CRM/RMS) é obrigatório",
+  path: ["profissional_registro"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
