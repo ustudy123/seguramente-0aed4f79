@@ -666,8 +666,9 @@ const Ponto = () => {
                   const ordemRequisitos: Record<string, string[]> = {
                     entrada: [],
                     saida: ["entrada"],
+                    batida: [],
                   };
-                  const requisitosAtendidos = ordemRequisitos[tipo].every(req => tiposJaRegistrados.includes(req));
+                  const requisitosAtendidos = (ordemRequisitos[tipo] ?? []).every(req => tiposJaRegistrados.includes(req));
                   const desabilitado = jaRegistrado || !requisitosAtendidos;
                   
                   return (
