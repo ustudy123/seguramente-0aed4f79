@@ -170,10 +170,42 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       }
       
       const dataFim = new Date(watchDataInicio);
-      dataFim.setDate(dataFim.getDate() + watchDiasAfastamento - 1); // -1 pois o dia inicial conta
+      dataFim.setDate(dataFim.getDate() + Number(watchDiasAfastamento) - 1); // -1 pois o dia inicial conta
       form.setValue("data_fim_afastamento", dataFim);
     }
   }, [watchDataInicio, watchDiasAfastamento, watchUnidade, form]);
+
+  // Função para buscar CID e grupo clínico
+  const handleCidLookup = async (codigo: string) => {
+    if (!codigo || codigo.length < 3) return;
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/consultar-cid`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData?.session?.access_token}`,
+          },
+          body: JSON.stringify({ codigo }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const { descricao, grupo_clinico } = result.data;
+        if (grupo_clinico) {
+          form.setValue("grupo_clinico", grupo_clinico);
+        }
+        toast.success(`CID encontrado: ${descricao}`);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CID:", error);
+    }
+  };
 
   // Preencher dados do colaborador quando selecionado
   const handleColaboradorSelect = (colaborador: Colaborador) => {
@@ -988,7 +1020,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   Período de Afastamento
                 </h3>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="unidade_afastamento"
@@ -1040,7 +1072,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                           <FormControl>
                             <Input 
                               type="number" 
-                              placeholder="Dias (0 = Indeterminado)" 
+                              placeholder="Dias" 
                               {...field}
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
@@ -1084,44 +1116,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="data_fim_afastamento"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data Fim</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Selecione</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
+                              disabled={(date) => date < new Date("1900-01-01")}
                               initialFocus
                             />
                           </PopoverContent>
@@ -1131,6 +1126,15 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     )}
                   />
                 </div>
+
+                {watchUnidadeAfastamento === 'dias' && form.watch("data_fim_afastamento") && (
+                  <div className="mt-2 p-2 bg-muted/50 rounded-md border border-dashed border-muted-foreground/20">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <CalendarIcon className="h-3 w-3" />
+                      Data de término calculada: <span className="font-medium text-foreground">{format(form.watch("data_fim_afastamento")!, "dd/MM/yyyy")}</span>
+                    </p>
+                  </div>
+                )}
 
                 {/* CID */}
                 <div className="space-y-4 pt-2">
@@ -1156,38 +1160,36 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   />
 
                   {watchContemCid && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="cid_codigo"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Código CID</FormLabel>
-                            <FormControl>
-                              <Input placeholder="F32.0" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="grupo_clinico"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Grupo Clínico</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <div className="flex gap-2">
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
+                                <Input 
+                                  placeholder="F32.0" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    const val = e.target.value.toUpperCase();
+                                    field.onChange(val);
+                                    if (val.length >= 3) {
+                                      handleCidLookup(val);
+                                    }
+                                  }}
+                                />
                               </FormControl>
-                              <SelectContent>
-                                {Object.entries(GRUPO_CLINICO_LABELS).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="icon"
+                                onClick={() => handleCidLookup(field.value || "")}
+                              >
+                                <Search className="h-4 w-4" />
+                              </Button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
