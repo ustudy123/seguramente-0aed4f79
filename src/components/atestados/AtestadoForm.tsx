@@ -69,9 +69,11 @@ import { toast } from "sonner";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
-import type { AtestadoFormData, AtestadoTipo, AtestadoExtractedData } from "@/types/atestado";
+import type { AtestadoFormData, AfastamentoTipo, AtestadoExtractedData } from "@/types/atestado";
 import { 
-  SUBTIPO_ASSISTENCIAL_LABELS,
+  AFASTAMENTO_TIPO_LABELS,
+  SUBTIPO_LICENCAS_LABELS,
+  SUBTIPO_ATESTADOS_LABELS,
   SUBTIPO_OCUPACIONAL_LABELS,
   GRUPO_CLINICO_LABELS,
   NEXO_TRABALHO_LABELS,
@@ -85,9 +87,10 @@ const formSchema = z.object({
   colaborador_cargo: z.string().optional(),
   colaborador_departamento: z.string().optional(),
   
-  tipo: z.enum(["assistencial", "ocupacional"]),
-  subtipo_assistencial: z.string().optional(),
+  tipo: z.enum(["ocupacional", "licencas", "atestados"]),
   subtipo_ocupacional: z.string().optional(),
+  subtipo_licencas: z.string().optional(),
+  subtipo_atestados: z.string().optional(),
   
   data_emissao: z.date({ required_error: "Data de emissão é obrigatória" }),
   profissional_nome: z.string().min(1, "Nome do profissional é obrigatório"),
@@ -129,7 +132,7 @@ interface AtestadoFormProps {
 
 export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: AtestadoFormProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [tipoAtestado, setTipoAtestado] = useState<AtestadoTipo>("assistencial");
+  const [tipoAfastamento, setTipoAfastamento] = useState<AfastamentoTipo>("atestados");
   const [extracting, setExtracting] = useState(false);
   const [searchingCrm, setSearchingCrm] = useState(false);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
@@ -143,7 +146,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      tipo: "assistencial",
+      tipo: "atestados",
       contem_cid: false,
       cid_autorizado: true, // Agora sempre true por padrão, pois o envio ao RH implica autorização
       nexo_trabalho: "nao",
@@ -370,14 +373,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       return;
     }
 
-    const formData: AtestadoFormData = {
+    const formData: any = {
       colaborador_nome: values.colaborador_nome,
       colaborador_cpf: values.colaborador_cpf,
       colaborador_cargo: values.colaborador_cargo,
       colaborador_departamento: values.colaborador_departamento,
       tipo: values.tipo,
-      subtipo_assistencial: values.subtipo_assistencial as AtestadoFormData['subtipo_assistencial'],
-      subtipo_ocupacional: values.subtipo_ocupacional as AtestadoFormData['subtipo_ocupacional'],
+      subtipo_ocupacional: values.subtipo_ocupacional,
+      subtipo_assistencial: values.tipo === 'licencas' ? values.subtipo_licencas : values.subtipo_atestados,
       data_emissao: format(values.data_emissao, "yyyy-MM-dd"),
       profissional_nome: values.profissional_nome,
       profissional_registro: values.profissional_registro,
@@ -429,7 +432,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Novo Atestado
+            Novo Afastamento
           </DialogTitle>
         </DialogHeader>
 

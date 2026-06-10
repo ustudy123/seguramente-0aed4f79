@@ -58,14 +58,14 @@ const Atestados = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-xl md:text-2xl font-bold">Gestão de Atestados</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Gestão de Afastamentos</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gerenciamento integrado de atestados e saúde ocupacional
+            Gerenciamento integrado de afastamentos, licenças e saúde ocupacional
           </p>
         </div>
         <Button onClick={() => setFormOpen(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Novo Atestado
+          Novo Afastamento
         </Button>
       </motion.div>
 
