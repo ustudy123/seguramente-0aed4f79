@@ -430,7 +430,7 @@ export function useImportacaoPlanilha() {
     // Buscar todas as empresas do tenant para diagnóstico
     const query = fromTable("empresa_cadastro")
       .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", tenantId.trim())
       .limit(5000);
     
     const { data, error: dbError } = await query;
