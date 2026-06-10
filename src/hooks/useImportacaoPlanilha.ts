@@ -440,15 +440,14 @@ export function useImportacaoPlanilha() {
     }
 
     const empresasAtivas = (data || []).filter((e: any) => e.ativo);
+    const empresasInativas = (data || []).filter((e: any) => !e.ativo);
 
     const mapa: Record<string, string> = {};
+    const mapaInativas: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
     
     // Log para depuração em caso de falha no preview
-    console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}`);
-    if (data?.length) {
-      console.log(`[Import] Documentos encontrados:`, data.map(e => e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj));
-    }
+    console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}. Ativas: ${empresasAtivas.length}`);
     
     empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
@@ -456,11 +455,9 @@ export function useImportacaoPlanilha() {
       const docLimpo = String(doc).replace(/\D/g, "");
       if (docLimpo) {
         mapa[docLimpo] = emp.id;
-        // Adicionamos também o documento original (com formatação) ao mapa
-        // Isso resolve casos onde a planilha traz o CNPJ formatado e o sistema o processa como string
         mapa[String(doc).trim()] = emp.id;
         
-        // NOVO: Adiciona CNPJ sem pontos/barras mas com zeros à esquerda
+        // Adiciona CNPJ sem pontos/barras mas com zeros à esquerda
         if (docLimpo.length < 14 && emp.tipo_pessoa !== 'pf') {
           mapa[docLimpo.padStart(14, "0")] = emp.id;
         }
@@ -471,6 +468,14 @@ export function useImportacaoPlanilha() {
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
 
+    // Mapear inativas para dar erro mais claro
+    empresasInativas.forEach((emp: any) => {
+      const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+      if (!doc) return;
+      const docLimpo = String(doc).replace(/\D/g, "");
+      if (docLimpo) mapaInativas[docLimpo] = emp.id;
+    });
+
     // Quando há apenas uma empresa cadastrada (típico de profissional liberal),
     // permitimos que a coluna de documento fique vazia na planilha.
     const unicaEmpresaId = empresasAtivas.length === 1 ? empresasAtivas[0].id : null;
@@ -478,7 +483,7 @@ export function useImportacaoPlanilha() {
       const e = empresasAtivas[0];
       info[unicaEmpresaId] = { cnpj: e.cnpj || e.cpf || "", razaoSocial: e.razao_social || "Sem razão social" };
     }
-    return { mapa, info, unicaEmpresaId };
+    return { mapa, info, unicaEmpresaId, mapaInativas };
   };
 
   // Read only headers and sample rows for mapping step
