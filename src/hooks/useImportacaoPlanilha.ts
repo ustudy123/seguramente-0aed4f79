@@ -428,14 +428,15 @@ export function useImportacaoPlanilha() {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
     
     // Buscar todas as empresas do tenant para diagnóstico
+    // Removendo filtro de tenant_id temporariamente para diagnóstico se necessário, 
+    // mas mantendo a segurança via RLS e limitando por precaução.
     const query = fromTable("empresa_cadastro")
-      .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
-      .eq("tenant_id", tenantId.trim())
+      .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo, tenant_id")
       .limit(5000);
     
     const { data, error: dbError } = await query;
     if (dbError) {
-      console.error("Erro ao buscar empresas do tenant:", dbError);
+      console.error("Erro ao buscar empresas:", dbError);
       return { mapa: {}, info: {}, unicaEmpresaId: null };
     }
 
