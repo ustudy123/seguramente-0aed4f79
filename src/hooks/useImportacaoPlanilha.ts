@@ -428,14 +428,26 @@ export function useImportacaoPlanilha() {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
     
     // Buscar todas as empresas do tenant para diagnóstico
-    const { data } = await fromTable("empresa_cadastro")
+    const query = fromTable("empresa_cadastro")
       .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
       .eq("tenant_id", tenantId);
+    
+    const { data, error: dbError } = await query;
+    if (dbError) {
+      console.error("Erro ao buscar empresas do tenant:", dbError);
+      return { mapa: {}, info: {}, unicaEmpresaId: null };
+    }
 
     const empresasAtivas = (data || []).filter((e: any) => e.ativo);
 
     const mapa: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
+    
+    // Log para depuração em caso de falha no preview
+    console.log(`[Import] Buscando empresas para tenant: ${tenantId}. Encontradas: ${data?.length || 0}`);
+    if (data?.length) {
+      console.log(`[Import] Documentos encontrados:`, data.map(e => e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj));
+    }
     
     empresasAtivas.forEach((emp: any) => {
       const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
@@ -446,6 +458,14 @@ export function useImportacaoPlanilha() {
         // Adicionamos também o documento original (com formatação) ao mapa
         // Isso resolve casos onde a planilha traz o CNPJ formatado e o sistema o processa como string
         mapa[String(doc).trim()] = emp.id;
+        
+        // NOVO: Adiciona CNPJ sem pontos/barras mas com zeros à esquerda
+        if (docLimpo.length < 14 && emp.tipo_pessoa !== 'pf') {
+          mapa[docLimpo.padStart(14, "0")] = emp.id;
+        }
+        if (docLimpo.length < 11 && emp.tipo_pessoa === 'pf') {
+          mapa[docLimpo.padStart(11, "0")] = emp.id;
+        }
       }
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
@@ -539,9 +559,9 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()]) {
-              const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
-              erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
+            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()] && !mapaEmpresas[cnpjEmpresa.padStart(14, '0')] && !mapaEmpresas[cnpjEmpresa.padStart(11, '0')]) {
+              const tipo = cnpjEmpresa.length <= 11 ? "CPF/CNPJ" : "CNPJ";
+              erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema (Tenant: ${tenantId})`);
             }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
@@ -729,9 +749,9 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()]) {
-              const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
-              erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
+            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()] && !mapaEmpresas[cnpjEmpresa.padStart(14, '0')] && !mapaEmpresas[cnpjEmpresa.padStart(11, '0')]) {
+              const tipo = cnpjEmpresa.length <= 11 ? "CPF/CNPJ" : "CNPJ";
+              erros.push(`Empresa com ${tipo} ${cnpjEmpresaOriginal} não encontrada no sistema (Tenant: ${tenantId})`);
             }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
