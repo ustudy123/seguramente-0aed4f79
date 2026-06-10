@@ -157,9 +157,9 @@ const Ponto = () => {
   // Auto-detect next tipo_marcacao when collaborator changes
   useEffect(() => {
     if (!selectedColaborador) return;
-    const ordem: Array<"entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida"> = ["entrada", "saida_almoco", "retorno_almoco", "saida", "batida"];
+    const ordem: any[] = ["entrada", "saida_almoco", "retorno_almoco", "saida", "batida"];
     const proximo = ordem.find((t) => !tiposJaRegistrados.includes(t));
-    if (proximo) setTipoMarcacao(proximo);
+    if (proximo) setTipoMarcacao(proximo as any);
   }, [selectedColaborador, tiposJaRegistrados.join(",")]);
   const { data: ajustesPendentesRaw = [] } = useAjustesPendentes();
   // Ajustes são escopados por tenant (a tabela não possui empresa_id).
