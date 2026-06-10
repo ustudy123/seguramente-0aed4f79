@@ -10,9 +10,6 @@ export type AfastamentoSubtipoOcupacional =
   | 'demissional';
 
 export type AfastamentoSubtipoLicencas = 
-  | 'maternidade'
-  | 'maternidade_adocao'
-  | 'paternidade'
   | 'casamento'
   | 'falecimento'
   | 'militar'
@@ -20,6 +17,8 @@ export type AfastamentoSubtipoLicencas =
   | 'outras_licencas';
 
 export type AfastamentoSubtipoAtestados = 
+  | 'maternidade'
+  | 'paternidade'
   | 'acidente_trabalho'
   | 'doenca_trabalho'
   | 'acidente_nao_trabalho'
@@ -306,9 +305,6 @@ export const SUBTIPO_OCUPACIONAL_LABELS: Record<string, string> = {
 };
 
 export const SUBTIPO_LICENCAS_LABELS: Record<AfastamentoSubtipoLicencas, string> = {
-  maternidade: 'Licença-Maternidade',
-  maternidade_adocao: 'Licença-Maternidade por adoção ou guarda',
-  paternidade: 'Licença-Paternidade',
   casamento: 'Licença Casamento',
   falecimento: 'Licença Falecimento',
   militar: 'Licença Serviço Militar',
@@ -317,6 +313,8 @@ export const SUBTIPO_LICENCAS_LABELS: Record<AfastamentoSubtipoLicencas, string>
 };
 
 export const SUBTIPO_ATESTADOS_LABELS: Record<string, string> = {
+  maternidade: 'Licença-Maternidade',
+  paternidade: 'Licença-Paternidade',
   acidente_trabalho: 'Acidente / Doença do trabalho',
   acidente_nao_trabalho: 'Acidente / Doença não relacionada ao trabalho',
   prorrogacao: 'Prorrogação de afastamento / licença',

@@ -93,8 +93,8 @@ const formSchema = z.object({
   subtipo_atestados: z.string().optional(),
   
   data_emissao: z.date({ required_error: "Data de emissão é obrigatória" }),
-  profissional_nome: z.string().min(1, "Nome do profissional é obrigatório"),
-  profissional_registro: z.string().min(1, "Registro profissional é obrigatório"),
+  profissional_nome: z.string().min(1, "Nome do emissor é obrigatório"),
+  profissional_registro: z.string().optional(),
   profissional_uf: z.string().optional(),
   profissional_rqe: z.string().optional(),
   profissional_telefone: z.string().optional(),
@@ -119,6 +119,14 @@ const formSchema = z.object({
   observacoes_ocupacionais: z.string().optional(),
   
   observacoes: z.string().optional(),
+}).refine((data) => {
+  if (data.tipo !== "licencas") {
+    return !!data.profissional_registro && data.profissional_registro.length > 0;
+  }
+  return true;
+}, {
+  message: "Registro profissional (CRM/RMS) é obrigatório",
+  path: ["profissional_registro"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -894,7 +902,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   name="profissional_nome"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>Nome do Médico *</FormLabel>
+                      <FormLabel>{watchTipo === "licencas" ? "Nome do Emissor *" : "Nome do Médico *"}</FormLabel>
                       <FormControl>
                         <Input placeholder="Dr. Nome Completo" {...field} />
                       </FormControl>
@@ -949,7 +957,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   name="profissional_registro"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>CRM *</FormLabel>
+                      <FormLabel>CRM {watchTipo !== "licencas" && "*"}</FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
                           <Input placeholder="12345" {...field} />
