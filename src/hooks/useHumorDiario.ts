@@ -190,15 +190,18 @@ export function useHumorDiario() {
       micropergunta_tipo?: string;
       micropergunta_resposta?: string;
     }) => {
-      if (!user?.id || !tenant?.id || !profile?.nome_completo) {
-        throw new Error("Usuário não autenticado");
+      if (!user?.id || !tenant?.id) {
+        throw new Error("Sessão ainda carregando. Tente novamente em instantes.");
       }
+      // Fallback: usuários sem registro em profiles (ou com perfil ainda
+      // carregando) não devem ser impedidos de registrar o humor
+      const nomeUsuario = profile?.nome_completo || user.email || "Colaborador";
 
       const { data, error } = await humorDiarioTable()
         .insert({
           tenant_id: tenant.id,
           user_id: user.id,
-          user_nome: profile.nome_completo,
+          user_nome: nomeUsuario,
           data: today,
           humor,
           emoji,
@@ -214,7 +217,7 @@ export function useHumorDiario() {
       await humorHistoricoTable().insert({
         tenant_id: tenant.id,
         user_id: user.id,
-        user_nome: profile.nome_completo,
+        user_nome: nomeUsuario,
         humor_diario_id: data.id,
         humor_anterior: null,
         humor_novo: humor,
@@ -245,9 +248,10 @@ export function useHumorDiario() {
       micropergunta_tipo?: string;
       micropergunta_resposta?: string;
     }) => {
-      if (!user?.id || !tenant?.id || !profile?.nome_completo || !humorHoje) {
+      if (!user?.id || !tenant?.id || !humorHoje) {
         throw new Error("Dados insuficientes para atualização");
       }
+      const nomeUsuario = profile?.nome_completo || user.email || "Colaborador";
 
       const humorAnterior = humorHoje.humor;
       const emojiAnterior = humorHoje.emoji;
@@ -271,7 +275,7 @@ export function useHumorDiario() {
       await humorHistoricoTable().insert({
         tenant_id: tenant.id,
         user_id: user.id,
-        user_nome: profile.nome_completo,
+        user_nome: nomeUsuario,
         humor_diario_id: humorHoje.id,
         humor_anterior: humorAnterior,
         humor_novo: humor,

@@ -51,8 +51,9 @@ export function HumorCheckInPopup() {
       toast.success("Humor registrado! 💛");
       setOpen(false);
       setForceOpen(false);
-    } catch {
-      toast.error("Erro ao registrar humor");
+    } catch (e: any) {
+      const msg = e?.message || "";
+      toast.error(msg ? `Erro ao registrar humor: ${msg}` : "Erro ao registrar humor");
     } finally {
       setSaving(false);
     }
