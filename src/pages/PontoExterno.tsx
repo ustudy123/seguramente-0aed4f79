@@ -41,6 +41,9 @@ const traduzirErroPonto = (mensagem?: string | null) => {
   if (texto.includes('column "origem"')) return "Não foi possível concluir o registro de ponto agora. Tente novamente em instantes.";
   if (texto.includes("Link inválido") || texto.includes("expirado")) return "Link inválido ou expirado.";
   if (/tipo inválido/i.test(texto)) return "Use apenas Entrada ou Saída.";
+  if (/Aguarde pelo menos 10 minutos/i.test(texto)) {
+    return "Sua marcação anterior já foi registrada com sucesso ✓ Por segurança, aguarde alguns minutos antes da próxima batida.";
+  }
 
   return texto;
 };
@@ -143,13 +146,30 @@ const PontoExterno = () => {
     setError(null);
     setRegistrando(true);
     try {
+      // Sobe a selfie (se capturada) e obtém a URL pública — mesmo padrão do kiosk interno
+      let selfieUrl: string | null = null;
+      let selfieNome: string | null = null;
+      if (selfieFile) {
+        const fileName = `externo/${colaborador.colaborador_id}/${Date.now()}_${proximoTipo}.jpg`;
+        const { data: uploadData, error: uploadError } = await supabasePublic.storage
+          .from("ponto-selfies")
+          .upload(fileName, selfieFile, { contentType: "image/jpeg" });
+        if (!uploadError && uploadData) {
+          const { data: urlData } = supabasePublic.storage.from("ponto-selfies").getPublicUrl(uploadData.path);
+          selfieUrl = urlData.publicUrl;
+          selfieNome = selfieFile.name || `selfie_${proximoTipo}.jpg`;
+        }
+        // Se o upload falhar, o registro segue sem selfie — registrar o ponto é prioridade
+      }
+
       const { data, error } = await supabasePublic.rpc("registrar_ponto_externo", {
         p_token: token,
         p_tipo_marcacao: proximoTipo,
         p_latitude: geo.latitude,
         p_longitude: geo.longitude,
         p_endereco: geo.endereco,
-        p_selfie_base64: null,
+        p_selfie_url: selfieUrl,
+        p_selfie_nome: selfieNome,
       });
       if (error) {
         setError(traduzirErroPonto(error.message));
