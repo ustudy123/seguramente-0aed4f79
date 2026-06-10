@@ -78,7 +78,7 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   estado: ["estado", "uf", "estado uf"],
   situacao: ["situacao", "situação", "status", "ativo", "situaçao"],
   filial: ["filial", "unidade", "estabelecimento"],
-  cargo: ["cargo", "nome cargo", "nome_cargo", "funcao", "função", "ocupacao", "ocupação"],
+  cargo: ["cargo/funcao", "cargo", "nome cargo", "nome_cargo", "funcao", "função", "ocupacao", "ocupação"],
   departamento: ["departamento", "depto", "dept", "setor", "area", "área"],
   nivel: ["nivel", "nível", "senioridade", "level"],
   tipoContrato: ["tipo contrato", "tipo_contrato", "vinculo", "vínculo", "tipo vinculo", "regime"],
