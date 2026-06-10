@@ -186,6 +186,7 @@ const menuSections: MenuSection[] = [
       { title: "Análise de Jornada", icon: BarChart3, path: "/analise-jornada" },
       { title: "Férias", icon: Calendar, path: "/ferias" },
       { title: "Afastamentos", icon: Stethoscope, path: "/atestados" },
+      { title: "Saúde Ocupacional (ASO)", icon: HeartPulse, path: "/saude-ocupacional" },
       { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
     ],
   },

@@ -57,6 +57,7 @@ import Departamentos from "./pages/cadastros/Departamentos";
 import Cargos from "./pages/cadastros/Cargos";
 import Filiais from "./pages/cadastros/Filiais";
 import AnaliseJornada from "./pages/AnaliseJornada";
+import SaudeOcupacional from "./pages/SaudeOcupacional";
 import NotFound from "./pages/NotFound";
 
 // Lazy imports only for rarely accessed / public / admin pages
@@ -180,6 +181,7 @@ const App = () => (
                 <Route path="/avaliacoes" element={<Avaliacoes />} />
                 <Route path="/metas" element={<MetasModule />} />
                 <Route path="/atestados" element={<CentralGaf />} />
+                <Route path="/saude-ocupacional" element={<SaudeOcupacional />} />
                 <Route path="/plano-acao" element={<PlanoAcao />} />
                 <Route path="/plano-acao/:id" element={<PlanoAcaoDetalhe />} />
                 <Route path="/pdi" element={<Pdi />} />
