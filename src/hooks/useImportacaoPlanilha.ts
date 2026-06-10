@@ -443,6 +443,9 @@ export function useImportacaoPlanilha() {
       const docLimpo = String(doc).replace(/\D/g, "");
       if (docLimpo) {
         mapa[docLimpo] = emp.id;
+        // Adicionamos também o documento original (com formatação) ao mapa
+        // Isso resolve casos onde a planilha traz o CNPJ formatado e o sistema o processa como string
+        mapa[String(doc).trim()] = emp.id;
       }
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
@@ -516,7 +519,8 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (key: string) => idx[key] != null && idx[key] !== -1 ? str(l[idx[key]]) : "";
 
-            let cnpjEmpresa = g("cnpjEmpresa").replace(/\D/g, "");
+            let cnpjEmpresaOriginal = g("cnpjEmpresa");
+            let cnpjEmpresa = cnpjEmpresaOriginal.replace(/\D/g, "");
             const nome = g("nome");
             const cpfRaw = g("cpf");
             const cpf = formatarCPF(cpfRaw);
@@ -535,7 +539,7 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (!mapaEmpresas[cnpjEmpresa]) {
+            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()]) {
               const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
               erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
             }
@@ -706,7 +710,8 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (i: number) => i !== -1 ? str(l[i]) : "";
             
-            let cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
+            let cnpjEmpresaOriginal = g(idx.cnpjEmpresa);
+            let cnpjEmpresa = cnpjEmpresaOriginal.replace(/\D/g, "");
             const nome = g(idx.nome);
             const cpfRaw = g(idx.cpf);
             const cpf = formatarCPF(cpfRaw);
@@ -724,7 +729,7 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
-            } else if (!mapaEmpresas[cnpjEmpresa]) {
+            } else if (!mapaEmpresas[cnpjEmpresa] && !mapaEmpresas[cnpjEmpresaOriginal.trim()]) {
               const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
               erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
             }
