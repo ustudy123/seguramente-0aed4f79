@@ -31,9 +31,9 @@ interface AtestadoStatsProps {
 export function AtestadoStats({ stats }: AtestadoStatsProps) {
   const statCards = [
     {
-      title: "Total de Atestados",
+      title: "Total de Registros",
       value: stats.totalAtestados,
-      subtitle: `${stats.atestadosAssistenciais} assistenciais · ${stats.atestadosOcupacionais} ocupacionais`,
+      subtitle: "Afastamentos, Licenças e Ocupacionais",
       icon: FileText,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -63,7 +63,7 @@ export function AtestadoStats({ stats }: AtestadoStatsProps) {
     {
       title: "Saúde Mental",
       value: stats.saudeMental,
-      subtitle: "Atestados com CID mental",
+      subtitle: "Registros com CID mental",
       icon: Brain,
       color: "text-info",
       bgColor: "bg-info/10",

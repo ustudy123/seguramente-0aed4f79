@@ -1,28 +1,38 @@
 // Types for Atestados module
 
-export type AtestadoTipo = 'assistencial' | 'ocupacional';
+export type AfastamentoTipo = 'ocupacional' | 'licencas' | 'atestados';
 
-export type AtestadoSubtipoAssistencial = 
-  | 'medico'
-  | 'odontologico'
-  | 'psicologico'
-  | 'comparecimento'
-  | 'acompanhante'
-  | 'acidente'
-  | 'licenca_maternidade'
-  | 'licenca_paternidade'
-  | 'licenca_obito'
-  | 'licenca_casamento'
-  | 'licenca_amamentacao'
-  | 'afastamento_administrativo'
+export type AfastamentoSubtipoOcupacional = 
+  | 'aso'
+  | 'pcmso'
+  | 'pgr'
+  | 'ltcat';
+
+export type AfastamentoSubtipoLicencas = 
+  | 'maternidade'
+  | 'maternidade_adocao'
+  | 'paternidade'
+  | 'casamento'
+  | 'falecimento'
+  | 'militar'
+  | 'sindical'
   | 'outras_licencas';
 
-export type AtestadoSubtipoOcupacional = 
-  | 'admissional'
-  | 'periodico'
-  | 'retorno_trabalho'
-  | 'mudanca_funcao'
-  | 'demissional';
+export type AfastamentoSubtipoAtestados = 
+  | 'acidente_trabalho'
+  | 'doenca_trabalho'
+  | 'acidente_nao_trabalho'
+  | 'doenca_nao_trabalho'
+  | 'prorrogacao'
+  | 'aborto_nao_criminoso'
+  | 'aposentadoria_invalidez'
+  | 'suspensao_contrato'
+  | 'outros_motivos';
+
+// Manter compatibilidade com interfaces antigas enquanto refatoramos
+export type AtestadoTipo = AfastamentoTipo;
+export type AtestadoSubtipoAssistencial = AfastamentoSubtipoLicencas | AfastamentoSubtipoAtestados;
+export type AtestadoSubtipoOcupacional = AfastamentoSubtipoOcupacional;
 
 export type GrupoClinico = 
   | 'mental'
@@ -280,34 +290,45 @@ export interface AtestadoExtractedData {
 }
 
 // Labels
-export const ATESTADO_TIPO_LABELS: Record<AtestadoTipo, string> = {
-  assistencial: 'Assistencial',
+export const AFASTAMENTO_TIPO_LABELS: Record<AfastamentoTipo, string> = {
   ocupacional: 'Ocupacional (ASO)',
+  licencas: 'Licenças',
+  atestados: 'Atestados Médicos',
 };
 
-export const SUBTIPO_ASSISTENCIAL_LABELS: Record<AtestadoSubtipoAssistencial, string> = {
-  medico: 'Atestado Médico',
-  odontologico: 'Atestado Odontológico',
-  psicologico: 'Atestado Psicológico/Psiquiátrico',
-  comparecimento: 'Atestado de Comparecimento',
-  acompanhante: 'Atestado de Acompanhante',
-  acidente: 'Atestado por Acidente',
-  licenca_maternidade: 'Licença Maternidade',
-  licenca_paternidade: 'Licença Paternidade',
-  licenca_obito: 'Licença Nojo (Óbito)',
-  licenca_casamento: 'Licença Gala (Casamento)',
-  licenca_amamentacao: 'Licença Amamentação',
-  afastamento_administrativo: 'Afastamento Administrativo',
+export const SUBTIPO_OCUPACIONAL_LABELS: Record<AfastamentoSubtipoOcupacional, string> = {
+  aso: 'ASO (Atestado de Saúde Ocupacional)',
+  pcmso: 'PCMSO',
+  pgr: 'PGR',
+  ltcat: 'LTCAT',
+};
+
+export const SUBTIPO_LICENCAS_LABELS: Record<AfastamentoSubtipoLicencas, string> = {
+  maternidade: 'Licença-Maternidade',
+  maternidade_adocao: 'Licença-Maternidade por adoção ou guarda',
+  paternidade: 'Licença-Paternidade',
+  casamento: 'Licença Casamento',
+  falecimento: 'Licença Falecimento',
+  militar: 'Licença Serviço Militar',
+  sindical: 'Licença Mandato Sindical',
   outras_licencas: 'Outras Licenças',
 };
 
-export const SUBTIPO_OCUPACIONAL_LABELS: Record<AtestadoSubtipoOcupacional, string> = {
-  admissional: 'Admissional',
-  periodico: 'Periódico',
-  retorno_trabalho: 'Retorno ao Trabalho',
-  mudanca_funcao: 'Mudança de Função',
-  demissional: 'Demissional',
+export const SUBTIPO_ATESTADOS_LABELS: Record<AfastamentoSubtipoAtestados, string> = {
+  acidente_trabalho: 'Acidente / Doença do trabalho',
+  doenca_trabalho: 'Doença do trabalho',
+  acidente_nao_trabalho: 'Acidente / Doença não relacionada ao trabalho',
+  doenca_nao_trabalho: 'Doença não relacionada ao trabalho',
+  prorrogacao: 'Prorrogação de afastamento / licença',
+  aborto_nao_criminoso: 'Aborto não criminoso',
+  aposentadoria_invalidez: 'Aposentadoria por invalidez',
+  suspensao_contrato: 'Suspensão Contrato de Trabalho (476-A)',
+  outros_motivos: 'Outros motivos de afastamento',
 };
+
+// Aliases para compatibilidade
+export const ATESTADO_TIPO_LABELS = AFASTAMENTO_TIPO_LABELS;
+export const SUBTIPO_ASSISTENCIAL_LABELS = { ...SUBTIPO_LICENCAS_LABELS, ...SUBTIPO_ATESTADOS_LABELS };
 
 export const GRUPO_CLINICO_LABELS: Record<GrupoClinico, string> = {
   mental: 'Saúde Mental',

@@ -258,8 +258,8 @@ export function useAtestados() {
 
       if (error) throw error;
 
-      // Create/update afastamento if assistencial with dates
-      if (formData.tipo === 'assistencial' && formData.data_inicio_afastamento) {
+      // Create/update afastamento if not occupational and with dates
+      if (formData.tipo !== 'ocupacional' && formData.data_inicio_afastamento) {
         await createOrUpdateAfastamento(data as Atestado);
       }
 
@@ -548,7 +548,7 @@ export function useAtestados() {
   // Calculate stats
   const stats = {
     totalAtestados: atestados.length,
-    atestadosAssistenciais: atestados.filter(a => a.tipo === 'assistencial').length,
+    atestadosAssistenciais: atestados.filter(a => a.tipo === 'atestados' || a.tipo === 'licencas').length,
     atestadosOcupacionais: atestados.filter(a => a.tipo === 'ocupacional').length,
     afastamentosAtivos: afastamentos.filter(a => a.status === 'ativo').length,
     afastamentos15Dias: afastamentos.filter(a => a.alerta_15_dias && a.status === 'ativo').length,
