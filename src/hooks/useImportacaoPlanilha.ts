@@ -458,6 +458,14 @@ export function useImportacaoPlanilha() {
         // Adicionamos também o documento original (com formatação) ao mapa
         // Isso resolve casos onde a planilha traz o CNPJ formatado e o sistema o processa como string
         mapa[String(doc).trim()] = emp.id;
+        
+        // NOVO: Adiciona CNPJ sem pontos/barras mas com zeros à esquerda
+        if (docLimpo.length < 14 && emp.tipo_pessoa !== 'pf') {
+          mapa[docLimpo.padStart(14, "0")] = emp.id;
+        }
+        if (docLimpo.length < 11 && emp.tipo_pessoa === 'pf') {
+          mapa[docLimpo.padStart(11, "0")] = emp.id;
+        }
       }
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
