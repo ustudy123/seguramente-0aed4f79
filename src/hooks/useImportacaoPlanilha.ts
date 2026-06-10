@@ -565,7 +565,12 @@ export function useImportacaoPlanilha() {
               }
             } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
               erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
+            } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
+              erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
+            } 
+            
             const { mapa: mapaEmpresas, mapaInativas } = await getEmpresasValidas();
+            const estaNoMapa = mapaEmpresas[cnpjEmpresa] || mapaEmpresas[cnpjEmpresaOriginal.trim()] || mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || mapaEmpresas[cnpjEmpresa.padStart(11, '0')];
             const estaNoMapa = mapaEmpresas[cnpjEmpresa] || mapaEmpresas[cnpjEmpresaOriginal.trim()] || mapaEmpresas[cnpjEmpresa.padStart(14, '0')] || mapaEmpresas[cnpjEmpresa.padStart(11, '0')];
             
             if (!estaNoMapa) {
