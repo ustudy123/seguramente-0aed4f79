@@ -54,11 +54,11 @@ export interface DadosPlanilha {
 
 // Mapeamento de colunas possíveis
 const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
-  cnpjEmpresa: ["cnpj/cpf empresa", "cnpj empresa", "cpf empresa", "cnpj", "cnpj_empresa", "empresa cnpj", "cnpj da empresa", "cnpj/cpf", "documento empresa", "documento da empresa"],
-  nome: ["nome", "nome_completo", "nome completo", "funcionario", "funcionário", "colaborador"],
+  cnpjEmpresa: ["cnpj", "cnpj/cpf empresa", "cnpj empresa", "cpf empresa", "cnpj_empresa", "empresa cnpj", "cnpj da empresa", "cnpj/cpf", "documento empresa", "documento da empresa"],
+  nome: ["colaborador", "nome", "nome_completo", "nome completo", "funcionario", "funcionário"],
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
-  dataNascimento: ["data nascimento", "data_nascimento", "datanascimento", "nascimento", "dt nasc", "dt. nasc", "data de nascimento"],
+  dataNascimento: ["dt. nascimento", "data nascimento", "data_nascimento", "datanascimento", "nascimento", "dt nasc", "dt. nasc", "data de nascimento"],
   estadoCivil: ["estado civil", "estado_civil", "estadocivil", "civil"],
   naturalidade: ["naturalidade", "cidade natal", "cidade_natal"],
   nacionalidade: ["nacionalidade", "pais", "país"],
@@ -78,11 +78,11 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   estado: ["estado", "uf", "estado uf"],
   situacao: ["situacao", "situação", "status", "ativo", "situaçao"],
   filial: ["filial", "unidade", "estabelecimento"],
-  cargo: ["cargo", "nome cargo", "nome_cargo", "funcao", "função", "ocupacao", "ocupação"],
+  cargo: ["cargo/funcao", "cargo", "nome cargo", "nome_cargo", "funcao", "função", "ocupacao", "ocupação"],
   departamento: ["departamento", "depto", "dept", "setor", "area", "área"],
   nivel: ["nivel", "nível", "senioridade", "level"],
   tipoContrato: ["tipo contrato", "tipo_contrato", "vinculo", "vínculo", "tipo vinculo", "regime"],
-  dataAdmissao: ["data admissao", "data_admissao", "dataadmissao", "admissao", "admissão", "data de admissao", "data de admissão"],
+  dataAdmissao: ["admissao", "data admissao", "data_admissao", "dataadmissao", "admissão", "data de admissao", "data de admissão"],
   salario: ["salario", "salário", "remuneracao", "remuneração", "salario base", "salário base"],
   centroCusto: ["centro custo", "centro_custo", "centrocusto", "cc", "cost center"],
   gestorImediato: ["gestor", "gestor imediato", "gestor_imediato", "supervisor", "lider", "líder"],
@@ -229,7 +229,7 @@ function encontrarColuna(headers: string[], campo: string, indicesJaMapeados: nu
     }
   }
 
-  // 2. Segunda Prioridade: Substring, mas com critério de exclusão para evitar colisões entre CPF e CNPJ/CPF Empresa
+  // 2. Segunda Prioridade: Substring, mas com critério de exclusão para evitar colisões
   for (const possibilidade of possibilidades) {
     const possNormalizada = normalizarTexto(possibilidade);
     for (let i = 0; i < headers.length; i++) {
@@ -238,7 +238,7 @@ function encontrarColuna(headers: string[], campo: string, indicesJaMapeados: nu
       const hNorm = headersNormalizados[i];
       if (hNorm.includes(possNormalizada)) {
         // Se estamos procurando 'cpf' e o header contém 'empresa', ignoramos para evitar pegar 'cnpj/cpf empresa'
-        if (campo === "cpf" && hNorm.includes("empresa")) continue;
+        if (campo === "cpf" && (hNorm.includes("empresa") || hNorm.includes("cnpj"))) continue;
         
         // Se estamos procurando 'cnpjEmpresa' e o header for apenas 'cpf', ignoramos para não roubar o CPF do funcionário
         if (campo === "cnpjEmpresa" && hNorm === "cpf") continue;
