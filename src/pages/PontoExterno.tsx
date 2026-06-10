@@ -29,10 +29,16 @@ interface RegistroResult {
   data: string;
 }
 
-const TIPO_LABELS: Record<"entrada" | "saida", { label: string; icon: React.ReactNode; color: string }> = {
+type TipoMarcacao = "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+
+const TIPO_LABELS: Record<TipoMarcacao, { label: string; icon: React.ReactNode; color: string }> = {
   entrada: { label: "Entrada", icon: <LogIn className="w-5 h-5" />, color: "bg-emerald-500 hover:bg-emerald-600" },
+  saida_almoco: { label: "Saída Almoço", icon: <LogOut className="w-5 h-5" />, color: "bg-amber-500 hover:bg-amber-600" },
+  retorno_almoco: { label: "Retorno Almoço", icon: <LogIn className="w-5 h-5" />, color: "bg-sky-500 hover:bg-sky-600" },
   saida: { label: "Saída", icon: <LogOut className="w-5 h-5" />, color: "bg-rose-500 hover:bg-rose-600" },
 };
+
+const SEQUENCIA_CLT: TipoMarcacao[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
 
 const traduzirErroPonto = (mensagem?: string | null) => {
   const texto = (mensagem || "").trim();
@@ -120,15 +126,21 @@ const PontoExterno = () => {
     })();
   }, [token]);
 
-  // Próximo tipo a registrar (decidido pelo backend)
-  const [proximoTipo, setProximoTipo] = useState<"entrada" | "saida">("entrada");
+  // Próximo tipo a registrar (sequência CLT decidida pelo backend)
+  const [proximoTipo, setProximoTipo] = useState<TipoMarcacao | null>("entrada");
+  const [tiposRegistrados, setTiposRegistrados] = useState<TipoMarcacao[]>([]);
 
   const carregarProximoTipo = useCallback(async () => {
     if (!token) return;
     const { data } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
     const r = data as any;
-    if (r?.proximo_tipo === "saida" || r?.proximo_tipo === "entrada") {
+    if (r?.jornada_completa) {
+      setProximoTipo(null);
+    } else if (SEQUENCIA_CLT.includes(r?.proximo_tipo)) {
       setProximoTipo(r.proximo_tipo);
+    }
+    if (Array.isArray(r?.tipos_registrados)) {
+      setTiposRegistrados(r.tipos_registrados.filter((t: string) => SEQUENCIA_CLT.includes(t as TipoMarcacao)));
     }
   }, [token]);
 
@@ -142,7 +154,7 @@ const PontoExterno = () => {
   }, [colaborador]);
 
   const handleRegistrar = useCallback(async () => {
-    if (!token || !colaborador) return;
+    if (!token || !colaborador || !proximoTipo) return;
     setError(null);
     setRegistrando(true);
     try {
@@ -290,20 +302,51 @@ const PontoExterno = () => {
               </div>
             )}
 
-            {/* Botão único: tipo decidido automaticamente */}
-            {(() => {
-              const cfg = TIPO_LABELS[proximoTipo];
-              return (
+            {/* Botão principal: próximo tipo da sequência CLT */}
+            {proximoTipo ? (
+              <>
                 <Button
-                  className={`${cfg.color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
+                  className={`${TIPO_LABELS[proximoTipo].color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
                   disabled={registrando}
                   onClick={handleRegistrar}
                 >
-                  {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : cfg.icon}
-                  Registrar {cfg.label}
+                  {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : TIPO_LABELS[proximoTipo].icon}
+                  Registrar {TIPO_LABELS[proximoTipo].label}
                 </Button>
-              );
-            })()}
+
+                {/* Seletor manual: para quem não marca almoço ou precisa de outro tipo */}
+                <div className="grid grid-cols-2 gap-1.5 pt-1">
+                  {SEQUENCIA_CLT.map((tipo) => {
+                    const jaRegistrado = tiposRegistrados.includes(tipo);
+                    const selecionado = tipo === proximoTipo;
+                    return (
+                      <button
+                        key={tipo}
+                        type="button"
+                        disabled={jaRegistrado || registrando}
+                        onClick={() => setProximoTipo(tipo)}
+                        className={`text-[11px] py-1.5 px-2 rounded-md border transition-colors ${
+                          selecionado
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : jaRegistrado
+                            ? "border-transparent bg-muted text-muted-foreground line-through opacity-60"
+                            : "border-border bg-background text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {jaRegistrado ? "✓ " : ""}{TIPO_LABELS[tipo].label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-sm bg-emerald-500/10 text-emerald-600 rounded-md p-3 font-medium">
+                ✓ Sua jornada de hoje está completa (4 marcações).
+                <p className="text-xs text-muted-foreground mt-1 font-normal">
+                  Precisa registrar hora extra ou corrigir um horário? Use "Solicitar Ajuste de Ponto".
+                </p>
+              </div>
+            )}
 
             {/* Solicitar Ajuste */}
             <Button
