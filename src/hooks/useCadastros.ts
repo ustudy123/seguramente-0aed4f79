@@ -344,6 +344,22 @@ export function useFiliais() {
 
   const deleteFilial = useMutation({
     mutationFn: async (id: string) => {
+      // YOUREYES-149: bloqueia exclusão de estabelecimento/obra com
+      // departamentos vinculados (o FK é ON DELETE SET NULL, então o
+      // banco deixaria passar e os departamentos ficariam órfãos).
+      const { count, error: depError } = await supabase
+        .from("departamentos")
+        .select("id", { count: "exact", head: true })
+        .eq("filial_id", id);
+
+      if (depError) throw depError;
+      if ((count ?? 0) > 0) {
+        throw new Error(
+          `este registro possui ${count} departamento(s) vinculado(s). ` +
+          `Edite o(s) departamento(s) e remova o vínculo antes de excluir.`
+        );
+      }
+
       const { error } = await supabase
         .from("filiais")
         .delete()
