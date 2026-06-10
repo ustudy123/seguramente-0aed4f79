@@ -443,6 +443,9 @@ export function useImportacaoPlanilha() {
       const docLimpo = String(doc).replace(/\D/g, "");
       if (docLimpo) {
         mapa[docLimpo] = emp.id;
+        // Adicionamos também o documento original (com formatação) ao mapa
+        // Isso resolve casos onde a planilha traz o CNPJ formatado e o sistema o processa como string
+        mapa[String(doc).trim()] = emp.id;
       }
       info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
