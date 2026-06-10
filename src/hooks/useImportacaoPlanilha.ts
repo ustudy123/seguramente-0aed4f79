@@ -428,9 +428,15 @@ export function useImportacaoPlanilha() {
     if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
     
     // Buscar todas as empresas do tenant para diagnóstico
-    const { data } = await fromTable("empresa_cadastro")
+    const query = fromTable("empresa_cadastro")
       .select("id, cnpj, cpf, tipo_pessoa, razao_social, ativo")
       .eq("tenant_id", tenantId);
+    
+    const { data, error: dbError } = await query;
+    if (dbError) {
+      console.error("Erro ao buscar empresas do tenant:", dbError);
+      return { mapa: {}, info: {}, unicaEmpresaId: null };
+    }
 
     const empresasAtivas = (data || []).filter((e: any) => e.ativo);
 
