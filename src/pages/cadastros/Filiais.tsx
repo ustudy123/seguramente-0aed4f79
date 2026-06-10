@@ -424,16 +424,6 @@ export default function Filiais() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="endereco">Endereço</Label>
-              <Input
-                id="endereco"
-                value={formData.endereco}
-                onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                placeholder="Rua, número, complemento"
-              />
-            </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cep">CEP</Label>
@@ -460,6 +450,7 @@ export default function Filiais() {
                   placeholder="00000-000"
                   maxLength={9}
                 />
+                <p className="text-[11px] text-muted-foreground">Digite o CEP para preencher o endereço automaticamente</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cidade">Cidade</Label>
@@ -482,6 +473,16 @@ export default function Filiais() {
                   {ESTADOS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
                 </select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="endereco">Endereço</Label>
+              <Input
+                id="endereco"
+                value={formData.endereco}
+                onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                placeholder="Rua, número, complemento"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
