@@ -93,8 +93,8 @@ const formSchema = z.object({
   subtipo_atestados: z.string().optional(),
   
   data_emissao: z.date({ required_error: "Data de emissão é obrigatória" }),
-  profissional_nome: z.string().min(1, "Nome do profissional é obrigatório"),
-  profissional_registro: z.string().min(1, "Registro profissional é obrigatório"),
+  profissional_nome: z.string().min(1, "Nome do emissor é obrigatório"),
+  profissional_registro: z.string().optional(),
   profissional_uf: z.string().optional(),
   profissional_rqe: z.string().optional(),
   profissional_telefone: z.string().optional(),
