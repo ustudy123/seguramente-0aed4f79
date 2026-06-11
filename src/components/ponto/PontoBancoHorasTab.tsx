@@ -387,6 +387,60 @@ export function PontoBancoHorasTab() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog Editar Movimentação */}
+      <Dialog open={!!editMov} onOpenChange={(o) => { if (!o) setEditMov(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar Movimentação</DialogTitle></DialogHeader>
+          {editMov && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={editMov.tipo} onValueChange={v => setEditMov({ ...editMov, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="credito">Crédito (HE)</SelectItem>
+                    <SelectItem value="debito">Débito (Falta/Atraso)</SelectItem>
+                    <SelectItem value="compensacao">Compensação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data Referência</Label>
+                  <Input type="date" value={editMov.data_referencia} onChange={e => setEditMov({ ...editMov, data_referencia: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Minutos</Label>
+                  <Input type="number" value={editMov.minutos} onChange={e => setEditMov({ ...editMov, minutos: +e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Input value={editMov.descricao} onChange={e => setEditMov({ ...editMov, descricao: e.target.value })} placeholder="Opcional" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditMov(null)}>Cancelar</Button>
+            <Button
+              disabled={editandoMovimentacao || !editMov || editMov.minutos <= 0}
+              onClick={async () => {
+                if (!editMov || !selectedBanco) return;
+                await editarMovimentacao({
+                  id: editMov.id,
+                  bancoHorasId: selectedBanco.id,
+                  tipo: editMov.tipo,
+                  minutos: editMov.minutos,
+                  data_referencia: editMov.data_referencia,
+                  descricao: editMov.descricao,
+                });
+                setEditMov(null);
+              }}
+            >{editandoMovimentacao ? "Salvando..." : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Importar */}
       <Dialog open={showImport} onOpenChange={(o) => { setShowImport(o); if (!o) setImportResumo(null); }}>
         <DialogContent className="max-w-lg">
