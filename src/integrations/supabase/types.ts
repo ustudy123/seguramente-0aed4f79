@@ -1708,6 +1708,7 @@ export type Database = {
           grupo_clinico: Database["public"]["Enums"]["grupo_clinico"] | null
           horas_afastamento: number | null
           id: string
+          minutos_afastamento: number | null
           nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes: string | null
           observacoes_ocupacionais: string | null
@@ -1757,6 +1758,7 @@ export type Database = {
           grupo_clinico?: Database["public"]["Enums"]["grupo_clinico"] | null
           horas_afastamento?: number | null
           id?: string
+          minutos_afastamento?: number | null
           nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes?: string | null
           observacoes_ocupacionais?: string | null
@@ -1806,6 +1808,7 @@ export type Database = {
           grupo_clinico?: Database["public"]["Enums"]["grupo_clinico"] | null
           horas_afastamento?: number | null
           id?: string
+          minutos_afastamento?: number | null
           nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes?: string | null
           observacoes_ocupacionais?: string | null
@@ -22518,6 +22521,22 @@ export type Database = {
       obter_contrato_publico: { Args: { _token: string }; Returns: Json }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
       ponto_classifica_tipo: { Args: { p_tipo: string }; Returns: string }
+      ponto_empresa_do_colaborador: {
+        Args: { p_colaborador_id: string }
+        Returns: string
+      }
+      ponto_escala_do_dia: {
+        Args: {
+          p_colaborador_id: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: {
+          hora_entrada: string
+          tolerancia_min: number
+        }[]
+      }
       processar_ajuste_ponto: {
         Args: {
           p_ajuste_id: string
