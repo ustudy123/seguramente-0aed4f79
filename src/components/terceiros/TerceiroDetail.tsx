@@ -214,6 +214,49 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
           />
         </>
       )}
+
+      {/* Visualizador de Documentos In-App */}
+      <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-4 border-b flex-row items-center justify-between space-y-0">
+            <DialogTitle className="text-base truncate pr-4">{viewer?.nome}</DialogTitle>
+            {viewer && (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => window.open(viewer.url, "_blank")}>
+                  <ExternalLink className="w-4 h-4 mr-1" /> Nova aba
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <a href={viewer.url} download={viewer.nome}>
+                    <Download className="w-4 h-4 mr-1" /> Baixar
+                  </a>
+                </Button>
+              </div>
+            )}
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden bg-muted/30">
+            {viewer?.tipo === "image" ? (
+              <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
+                <img src={viewer.url} alt={viewer.nome} className="max-w-full max-h-full object-contain" />
+              </div>
+            ) : viewer?.tipo === "pdf" ? (
+              <iframe src={viewer.url} title={viewer.nome} className="w-full h-full border-0" />
+            ) : viewer ? (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 gap-3">
+                <FileText className="w-12 h-12 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Pré-visualização não suportada para este formato. Use os botões acima para baixar ou abrir em nova aba.
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {loadingView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 pointer-events-none">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
     </div>
   );
 }
