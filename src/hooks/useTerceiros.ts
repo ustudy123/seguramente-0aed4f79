@@ -459,9 +459,9 @@ export function useTerceiros() {
   const getDownloadUrl = async (path: string) => {
     const { data, error } = await supabase.storage
       .from("documentos")
-      .createSignedUrl(path, 60);
+      .download(path);
     if (error) throw error;
-    return data.signedUrl;
+    return URL.createObjectURL(data);
   };
 
   return {
