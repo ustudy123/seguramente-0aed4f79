@@ -23,6 +23,9 @@ export function PontoBancoHorasTab() {
     useMovimentacoes,
     adicionarMovimentacao,
     adicionandoMovimentacao,
+    editarMovimentacao,
+    editandoMovimentacao,
+    excluirMovimentacao,
     criarBancoHoras,
     criandoBancoHoras,
   } = usePontoBancoHoras();
