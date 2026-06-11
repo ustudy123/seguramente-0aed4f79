@@ -123,6 +123,14 @@ const checkIsActive = (path: string, pathname: string, search: string) => {
     const params = new URLSearchParams(search);
     return pathname === "/psicossocial" && !params.get("tab");
   }
+  // Metodologia agrupa sub-abas (?tab=metodologia&sub=...) e os links legados
+  // (?tab=riscos|instrumentos|indicadores) que para ela redirecionam.
+  if (path === "/psicossocial?tab=metodologia") {
+    const params = new URLSearchParams(search);
+    const tab = params.get("tab");
+    return pathname === "/psicossocial" &&
+      (tab === "metodologia" || tab === "riscos" || tab === "instrumentos" || tab === "indicadores");
+  }
   return pathname === path;
 };
 
@@ -204,11 +212,9 @@ const menuSections: MenuSection[] = [
           { title: "Visão Geral", path: "/psicossocial", color: "text-sky-300", dot: "bg-sky-400" },
           { title: "GHE", path: "/psicossocial?tab=ghe", color: "text-cyan-300", dot: "bg-cyan-400" },
           { title: "Campanhas", path: "/psicossocial?tab=campanhas", color: "text-violet-300", dot: "bg-violet-400" },
-          { title: "Fatores de Riscos", path: "/psicossocial?tab=riscos", color: "text-rose-300", dot: "bg-rose-400" },
           { title: "Resultados", path: "/psicossocial?tab=resultados", color: "text-pink-300", dot: "bg-pink-400" },
           { title: "Inventário PGR", path: "/psicossocial?tab=pgr", color: "text-emerald-300", dot: "bg-emerald-400" },
-          { title: "Instrumentos", path: "/psicossocial?tab=instrumentos", color: "text-teal-300", dot: "bg-teal-400" },
-          { title: "Índices", path: "/psicossocial?tab=indicadores", color: "text-fuchsia-300", dot: "bg-fuchsia-400" },
+          { title: "Metodologia", path: "/psicossocial?tab=metodologia", color: "text-amber-300", dot: "bg-amber-400" },
         ],
       },
       { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
