@@ -12,7 +12,7 @@ import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras"
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { format } from "date-fns";
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2 } from "lucide-react";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
