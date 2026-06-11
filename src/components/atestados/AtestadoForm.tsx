@@ -370,7 +370,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
         
         if (data.dias_afastamento) form.setValue("dias_afastamento", data.dias_afastamento);
         if (data.horas_afastamento) form.setValue("horas_afastamento", data.horas_afastamento);
-        if (data.minutos_afastamento) form.setValue("minutos_afastamento", data.minutos_afastamento);
+        if ((data as any).minutos_afastamento) form.setValue("minutos_afastamento", (data as any).minutos_afastamento);
         if (data.unidade_afastamento) form.setValue("unidade_afastamento", data.unidade_afastamento);
         
         if (data.contem_cid !== undefined) form.setValue("contem_cid", data.contem_cid);

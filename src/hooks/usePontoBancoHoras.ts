@@ -139,6 +139,53 @@ export function usePontoBancoHoras() {
     onError: handleMutationError,
   });
 
+  const recalcularSaldo = async (bancoHorasId: string) => {
+    const { data: movs } = await fromTable("ponto_banco_horas_movimentacoes")
+      .select("tipo, minutos")
+      .eq("banco_horas_id", bancoHorasId) as { data: { tipo: string; minutos: number }[] | null };
+    const { data: bh } = await fromTable("ponto_banco_horas")
+      .select("saldo_anterior_minutos")
+      .eq("id", bancoHorasId)
+      .single() as { data: any };
+    const creditos = (movs || []).filter(m => m.tipo === "credito").reduce((s, m) => s + (m.minutos || 0), 0);
+    const debitos = (movs || []).filter(m => m.tipo === "debito").reduce((s, m) => s + (m.minutos || 0), 0);
+    const compensados = (movs || []).filter(m => m.tipo === "compensacao").reduce((s, m) => s + (m.minutos || 0), 0);
+    const saldoAtual = (bh?.saldo_anterior_minutos || 0) + creditos - debitos - compensados;
+    await fromTable("ponto_banco_horas")
+      .update({ creditos_minutos: creditos, debitos_minutos: debitos, compensados_minutos: compensados, saldo_atual_minutos: saldoAtual } as any)
+      .eq("id", bancoHorasId);
+  };
+
+  const editarMovimentacaoMutation = useMutation({
+    mutationFn: async ({ id, bancoHorasId, tipo, minutos, data_referencia, descricao }: { id: string; bancoHorasId: string; tipo: string; minutos: number; data_referencia: string; descricao?: string; }) => {
+      const { error } = await fromTable("ponto_banco_horas_movimentacoes")
+        .update({ tipo, minutos, data_referencia, descricao } as any)
+        .eq("id", id);
+      if (error) throw error;
+      await recalcularSaldo(bancoHorasId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      toast.success("Movimentação atualizada!");
+    },
+    onError: handleMutationError,
+  });
+
+  const excluirMovimentacaoMutation = useMutation({
+    mutationFn: async ({ id, bancoHorasId }: { id: string; bancoHorasId: string }) => {
+      const { error } = await fromTable("ponto_banco_horas_movimentacoes").delete().eq("id", id);
+      if (error) throw error;
+      await recalcularSaldo(bancoHorasId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      toast.success("Movimentação excluída!");
+    },
+    onError: handleMutationError,
+  });
+
   const criarBancoHorasMutation = useMutation({
     mutationFn: async (dados: Partial<BancoHoras>) => {
       if (!tenantId) throw new Error("Não autenticado");
@@ -161,6 +208,10 @@ export function usePontoBancoHoras() {
     useMovimentacoes,
     adicionarMovimentacao: adicionarMovimentacaoMutation.mutateAsync,
     adicionandoMovimentacao: adicionarMovimentacaoMutation.isPending,
+    editarMovimentacao: editarMovimentacaoMutation.mutateAsync,
+    editandoMovimentacao: editarMovimentacaoMutation.isPending,
+    excluirMovimentacao: excluirMovimentacaoMutation.mutateAsync,
+    excluindoMovimentacao: excluirMovimentacaoMutation.isPending,
     criarBancoHoras: criarBancoHorasMutation.mutateAsync,
     criandoBancoHoras: criarBancoHorasMutation.isPending,
   };
