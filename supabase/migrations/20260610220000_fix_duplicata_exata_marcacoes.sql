@@ -29,17 +29,26 @@ BEGIN
   PERFORM set_config('app.allow_ponto_delete', 'false', true);
 END $cleanup$;
 
--- Reconsolida os dias que tinham duplicata (últimos 60 dias)
+-- Reconsolida os dias dos últimos 60 dias, PULANDO períodos
+-- fechados (fechamento de folha bloqueia escrita em ponto_diario)
 DO $reconsolida$
-DECLARE v RECORD;
+DECLARE
+  v RECORD;
+  v_pulados INT := 0;
 BEGIN
   FOR v IN
     SELECT DISTINCT tenant_id, colaborador_cpf, data_marcacao
     FROM public.ponto_marcacoes
     WHERE data_marcacao >= CURRENT_DATE - 60
   LOOP
-    PERFORM public.consolidar_ponto_diario_manual(v.tenant_id, v.colaborador_cpf, v.data_marcacao);
+    BEGIN
+      PERFORM public.consolidar_ponto_diario_manual(v.tenant_id, v.colaborador_cpf, v.data_marcacao);
+    EXCEPTION WHEN OTHERS THEN
+      -- Período fechado ou outra trava: mantém como está e segue
+      v_pulados := v_pulados + 1;
+    END;
   END LOOP;
+  RAISE NOTICE 'Reconsolidação concluída. Dias pulados (período fechado/travas): %', v_pulados;
 END $reconsolida$;
 
 -- 2) Garante no banco: nunca duas marcações idênticas
