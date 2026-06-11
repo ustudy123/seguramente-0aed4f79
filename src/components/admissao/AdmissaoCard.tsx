@@ -100,6 +100,14 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete, onApprove, ca
               <DropdownMenuItem onClick={() => onView(admissao.id)}>
                 <Eye className="h-4 w-4 mr-2" /> Visualizar
               </DropdownMenuItem>
+              {canApprove && onApprove && status === 'em_analise' && (
+                <DropdownMenuItem
+                  onClick={() => onApprove(admissao.id)}
+                  className="text-success focus:text-success"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" /> Aprovar Admissão
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setShowChecklist(true)}>
                 <ClipboardCheck className="h-4 w-4 mr-2" /> Checklist de Docs
               </DropdownMenuItem>
