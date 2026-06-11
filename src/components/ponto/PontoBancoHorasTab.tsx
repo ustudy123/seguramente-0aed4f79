@@ -43,6 +43,7 @@ export function PontoBancoHorasTab() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [criarForm, setCriarForm] = useState({ colaborador_id: "", tipo: "mensal" });
   const [movForm, setMovForm] = useState({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
+  const [editMov, setEditMov] = useState<null | { id: string; tipo: string; minutos: number; data_referencia: string; descricao: string }>(null);
 
   const formatMinutos = (min: number) => {
     const sinal = min < 0 ? "-" : "";
