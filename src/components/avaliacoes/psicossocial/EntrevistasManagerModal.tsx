@@ -262,15 +262,16 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                 const meta = STATUS_META[e.status] || { label: e.status, variant: "secondary" as const };
                 const progresso =
                   e.total_riscos > 0 ? Math.round((e.riscos_cobertos / e.total_riscos) * 100) : 0;
-                // Progresso da conversa pelas 3 fases (1=tarefa real, 2=sondagem,
-                // 3=fechamento). Concluída = 100%; pendente não iniciada = 0%.
-                const TOTAL_FASES = 3;
+                // Progresso da CONVERSA (quanto a pessoa avançou), pelo status.
+                // Obs.: fase_atual NÃO avança durante a entrevista (só é gravado
+                // como 3 no fechamento), então não serve para medir o meio da
+                // conversa — usamos um valor representativo para "em andamento".
                 const progressoConversa =
                   e.status === "concluida"
                     ? 100
-                    : e.status === "pendente"
-                    ? 0
-                    : Math.round((Math.min(e.fase_atual || 0, TOTAL_FASES) / TOTAL_FASES) * 100);
+                    : e.status === "em_andamento"
+                    ? 50
+                    : 0;
                 const podeCancelar = e.status === "pendente" || e.status === "em_andamento";
                 return (
                   <div key={e.id} className="p-3 flex flex-col gap-2 hover:bg-muted/30">
@@ -347,6 +348,7 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                         {linkOf(e.token)}
                       </code>
                     </div>
+                    {e.status !== "cancelada" && (
                     <div className="flex flex-col gap-1.5 pt-0.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-muted-foreground w-28 shrink-0">Progresso da conversa</span>
@@ -361,6 +363,7 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                         </div>
                       )}
                     </div>
+                    )}
                   </div>
                 );
               })}
