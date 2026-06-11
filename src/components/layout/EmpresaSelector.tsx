@@ -114,8 +114,21 @@ export const EmpresaSelector = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[320px] p-0 z-50 bg-popover" align="start">
-        <Command>
-          <CommandInput placeholder="Buscar empresa..." />
+        <Command
+          filter={(value, search) => {
+            // Busca tolerante: ignora acentos e aceita CNPJ com ou sem pontuação.
+            const norm = (s: string) =>
+              s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const v = norm(value);
+            const q = norm(search.trim());
+            if (!q) return 1;
+            if (v.includes(q)) return 1;
+            const qDigits = q.replace(/\D/g, "");
+            if (qDigits.length >= 4 && v.replace(/\D/g, "").includes(qDigits)) return 1;
+            return 0;
+          }}
+        >
+          <CommandInput placeholder="Buscar empresa (nome ou CNPJ)..." />
           <CommandList>
             <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
             <CommandGroup heading="Empresas">
@@ -127,7 +140,7 @@ export const EmpresaSelector = () => {
                 return (
               <CommandItem
                 key={empresa.id}
-                value={`${empresa.id} ${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''}`}
+                value={`${empresa.id} ${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''} ${(empresa.cnpj ?? '').replace(/\D/g, '')}`}
                 onSelect={() => {
                   setEmpresaAtiva(empresa);
                   setOpen(false);
