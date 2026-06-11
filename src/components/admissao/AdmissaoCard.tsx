@@ -36,10 +36,11 @@ interface AdmissaoCardProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  
+  onApprove?: (id: string) => void;
+  canApprove?: boolean;
 }
 
-export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
+export function AdmissaoCard({ admissao, onView, onEdit, onDelete, onApprove, canApprove }: AdmissaoCardProps) {
   const [showChecklist, setShowChecklist] = useState(false);
   const resolvedPhotoUrl = useStorageImageUrl(admissao.fotoUrl, 'documentos');
   const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
