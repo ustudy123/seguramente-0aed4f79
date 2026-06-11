@@ -56,13 +56,14 @@ BEGIN
     RAISE EXCEPTION 'Apenas proprietário/administrador pode excluir colaborador com histórico. Use Inativar.';
   END IF;
 
-  -- ── Ponto (libera a trava de delete das marcações) ──
+  -- ── Ponto: libera a trava de delete (vale para marcacoes,
+  --    ponto_diario e ponto_ajustes) durante toda esta transação ──
   PERFORM set_config('app.allow_ponto_delete', 'true', true);
+
   DELETE FROM public.ponto_marcacoes
    WHERE tenant_id = v_tenant AND (colaborador_id = _admissao_id OR colaborador_cpf = v_cpf);
   GET DIAGNOSTICS v_count = ROW_COUNT;
   IF v_count > 0 THEN v_removidos := v_removidos || jsonb_build_object('ponto_marcacoes', v_count); END IF;
-  PERFORM set_config('app.allow_ponto_delete', 'false', true);
 
   DELETE FROM public.ponto_diario
    WHERE tenant_id = v_tenant AND (colaborador_id = _admissao_id OR colaborador_cpf = v_cpf);
@@ -73,6 +74,8 @@ BEGIN
    WHERE tenant_id = v_tenant AND (colaborador_id = _admissao_id OR colaborador_cpf = v_cpf);
   GET DIAGNOSTICS v_count = ROW_COUNT;
   IF v_count > 0 THEN v_removidos := v_removidos || jsonb_build_object('ponto_ajustes', v_count); END IF;
+
+  PERFORM set_config('app.allow_ponto_delete', 'false', true);
 
   -- ── Demais módulos (coluna UUID) ──
   DELETE FROM public.ferias_solicitacoes WHERE colaborador_id = _admissao_id;
