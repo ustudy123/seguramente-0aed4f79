@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { 
@@ -79,7 +79,7 @@ export function AtestadoAlertas({
         id: `b91-${b.id}`,
         tipo: 'estabilidade',
         titulo: 'Colaborador em Estabilidade',
-        descricao: `${b.colaborador_nome} - Estabilidade até ${format(new Date(b.data_fim_estabilidade!), "dd/MM/yyyy", { locale: ptBR })}`,
+        descricao: `${b.colaborador_nome} - Estabilidade até ${format(parseISO(b.data_fim_estabilidade!), "dd/MM/yyyy", { locale: ptBR })}`,
         prioridade: 'alta' as const,
         colaborador_nome: b.colaborador_nome,
         icon: Shield,

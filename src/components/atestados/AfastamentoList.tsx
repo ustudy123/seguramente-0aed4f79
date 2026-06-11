@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { 
@@ -136,9 +136,9 @@ export function AfastamentoList({ afastamentos, onDelete, deleting }: Afastament
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>
-                      {format(new Date(afastamento.data_inicio), "dd/MM/yyyy", { locale: ptBR })}
+                      {format(parseISO(afastamento.data_inicio), "dd/MM/yyyy", { locale: ptBR })}
                       {afastamento.data_fim && (
-                        <> - {format(new Date(afastamento.data_fim), "dd/MM/yyyy", { locale: ptBR })}</>
+                        <> - {format(parseISO(afastamento.data_fim), "dd/MM/yyyy", { locale: ptBR })}</>
                       )}
                     </span>
                   </div>
