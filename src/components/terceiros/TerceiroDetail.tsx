@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft, Users, FileText, Plus, Trash2, AlertTriangle, CheckCircle, Clock, XCircle,
-  GraduationCap, Eye, Download,
+  GraduationCap, Eye, Download, ExternalLink, Loader2,
 } from "lucide-react";
 import type { Terceiro, TerceiroDocumento, TerceiroTrabalhador, TerceiroTreinamento } from "@/types/terceiros";
 import { useTerceiros } from "@/hooks/useTerceiros";
@@ -16,6 +17,7 @@ import { TreinamentoForm } from "./TreinamentoForm";
 import { format } from "date-fns";
 import { formatCnpj } from "@/lib/brasilapi";
 import { formatCpf } from "@/lib/cpf";
+import { toast } from "sonner";
 
 const statusIcon = (s: string) => {
   switch (s) {
@@ -56,15 +58,27 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
   const [selectedTrab, setSelectedTrab] = useState<TerceiroTrabalhador | null>(null);
   const [showTrabDocForm, setShowTrabDocForm] = useState(false);
   const [showTreinForm, setShowTreinForm] = useState(false);
+  const [viewer, setViewer] = useState<{ url: string; nome: string; tipo: string } | null>(null);
+  const [loadingView, setLoadingView] = useState(false);
 
-  const handleViewFile = async (path: string) => {
+  const handleViewFile = async (path: string, nome = "Documento") => {
     try {
+      setLoadingView(true);
       const url = await getDownloadUrl(path);
       if (url) {
-        window.open(url, "_blank");
+        const ext = (path.split(".").pop() || "").toLowerCase();
+        const tipo = ["png", "jpg", "jpeg", "webp", "gif", "bmp"].includes(ext)
+          ? "image"
+          : ext === "pdf"
+          ? "pdf"
+          : "other";
+        setViewer({ url, nome, tipo });
       }
     } catch (error) {
       console.error("Erro ao abrir arquivo:", error);
+      toast.error("Não foi possível abrir o arquivo.");
+    } finally {
+      setLoadingView(false);
     }
   };
 
@@ -160,7 +174,7 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
           <DocumentosTable 
             docs={docsEmpresa} 
             onDelete={(d) => deleteDocumento.mutate(d)} 
-            onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url)}
+            onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url, d.nome || d.tipo)}
           />
         </TabsContent>
       </Tabs>
@@ -200,6 +214,49 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
           />
         </>
       )}
+
+      {/* Visualizador de Documentos In-App */}
+      <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-4 border-b flex-row items-center justify-between space-y-0">
+            <DialogTitle className="text-base truncate pr-4">{viewer?.nome}</DialogTitle>
+            {viewer && (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => window.open(viewer.url, "_blank")}>
+                  <ExternalLink className="w-4 h-4 mr-1" /> Nova aba
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <a href={viewer.url} download={viewer.nome}>
+                    <Download className="w-4 h-4 mr-1" /> Baixar
+                  </a>
+                </Button>
+              </div>
+            )}
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden bg-muted/30">
+            {viewer?.tipo === "image" ? (
+              <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
+                <img src={viewer.url} alt={viewer.nome} className="max-w-full max-h-full object-contain" />
+              </div>
+            ) : viewer?.tipo === "pdf" ? (
+              <iframe src={viewer.url} title={viewer.nome} className="w-full h-full border-0" />
+            ) : viewer ? (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 gap-3">
+                <FileText className="w-12 h-12 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Pré-visualização não suportada para este formato. Use os botões acima para baixar ou abrir em nova aba.
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {loadingView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 pointer-events-none">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
     </div>
   );
 }
@@ -219,7 +276,7 @@ function TrabalhadorCard({
   onDelete: () => void;
   onUploadDoc: () => void;
   onAddTrein: () => void;
-  onViewDoc: (path: string) => void;
+  onViewDoc: (path: string, nome?: string) => void;
 }) {
   const { useDocumentos, useTreinamentos, deleteDocumento, deleteTreinamento } = useTerceiros();
   const { data: docs = [] } = useDocumentos(terceiroId, t.id);
@@ -265,7 +322,7 @@ function TrabalhadorCard({
                 docs={docs} 
                 onDelete={(d) => deleteDocumento.mutate(d)} 
                 compact 
-                onView={(d) => d.arquivo_url && onViewDoc(d.arquivo_url)}
+                onView={(d) => d.arquivo_url && onViewDoc(d.arquivo_url, d.nome || d.tipo)}
               />
             ) : (
               <p className="text-xs text-muted-foreground">Nenhum documento.</p>
