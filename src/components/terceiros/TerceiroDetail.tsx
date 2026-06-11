@@ -322,7 +322,7 @@ function TrabalhadorCard({
                 docs={docs} 
                 onDelete={(d) => deleteDocumento.mutate(d)} 
                 compact 
-                onView={(d) => d.arquivo_url && onViewDoc(d.arquivo_url)}
+                onView={(d) => d.arquivo_url && onViewDoc(d.arquivo_url, d.nome || d.tipo)}
               />
             ) : (
               <p className="text-xs text-muted-foreground">Nenhum documento.</p>
