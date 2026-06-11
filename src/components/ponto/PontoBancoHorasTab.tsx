@@ -279,11 +279,12 @@ export function PontoBancoHorasTab() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Minutos</TableHead>
                   <TableHead>Descrição</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {movimentacoes.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-4 text-muted-foreground">Sem movimentações</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">Sem movimentações</TableCell></TableRow>
                 ) : movimentacoes.map(m => (
                   <TableRow key={m.id}>
                     <TableCell>{m.data_referencia}</TableCell>
@@ -296,6 +297,19 @@ export function PontoBancoHorasTab() {
                     </TableCell>
                     <TableCell className="font-mono">{formatMinutos(m.minutos)}</TableCell>
                     <TableCell>{m.descricao || "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="icon" variant="ghost" title="Editar" onClick={() => setEditMov({ id: m.id, tipo: m.tipo, minutos: m.minutos, data_referencia: m.data_referencia, descricao: m.descricao || "" })}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" title="Excluir" onClick={async () => {
+                          const ok = await confirm({ title: "Excluir movimentação?", description: "Esta ação recalculará o saldo do banco de horas.", confirmText: "Excluir", variant: "destructive" });
+                          if (ok && selectedBanco) await excluirMovimentacao({ id: m.id, bancoHorasId: selectedBanco.id });
+                        }}>
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
