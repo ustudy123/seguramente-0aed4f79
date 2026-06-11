@@ -58,15 +58,27 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
   const [selectedTrab, setSelectedTrab] = useState<TerceiroTrabalhador | null>(null);
   const [showTrabDocForm, setShowTrabDocForm] = useState(false);
   const [showTreinForm, setShowTreinForm] = useState(false);
+  const [viewer, setViewer] = useState<{ url: string; nome: string; tipo: string } | null>(null);
+  const [loadingView, setLoadingView] = useState(false);
 
-  const handleViewFile = async (path: string) => {
+  const handleViewFile = async (path: string, nome = "Documento") => {
     try {
+      setLoadingView(true);
       const url = await getDownloadUrl(path);
       if (url) {
-        window.open(url, "_blank");
+        const ext = (path.split(".").pop() || "").toLowerCase();
+        const tipo = ["png", "jpg", "jpeg", "webp", "gif", "bmp"].includes(ext)
+          ? "image"
+          : ext === "pdf"
+          ? "pdf"
+          : "other";
+        setViewer({ url, nome, tipo });
       }
     } catch (error) {
       console.error("Erro ao abrir arquivo:", error);
+      toast.error("Não foi possível abrir o arquivo.");
+    } finally {
+      setLoadingView(false);
     }
   };
 
