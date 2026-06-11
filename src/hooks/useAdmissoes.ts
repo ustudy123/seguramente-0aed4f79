@@ -390,8 +390,18 @@ export function useAdmissoes() {
   ): Promise<string> => {
     if (!tenantId || !user) throw new Error('Tenant ou usuário não encontrado');
 
+    // O documento pertence ao tenant DA ADMISSÃO — que pode diferir do
+    // tenant principal do usuário logado (gestores vinculados/multi-conta).
+    // Usar o tenant errado aqui gravava docs invisíveis para a equipe.
+    const { data: admissaoTenant } = await supabase
+      .from('admissoes')
+      .select('tenant_id')
+      .eq('id', admissaoId)
+      .single();
+    const docTenantId = admissaoTenant?.tenant_id || tenantId;
+
     const safeFileName = buildSafeStorageFileName(documentoId, file.name);
-    const filePath = `${tenantId}/admissoes/${admissaoId}/${safeFileName}`;
+    const filePath = `${docTenantId}/admissoes/${admissaoId}/${safeFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('documentos')
@@ -439,13 +449,13 @@ export function useAdmissoes() {
       .from('documentos')
       .select('id')
       .eq('storage_path', filePath)
-      .eq('tenant_id', tenantId)
+      .eq('tenant_id', docTenantId)
       .maybeSingle();
 
     // Inserir na tabela documentos somente se não existir
     if (!existingDoc && admissaoData && documentoData) {
       const { error: insertError } = await supabase.from('documentos').insert({
-        tenant_id: tenantId,
+        tenant_id: docTenantId,
         colaborador_id: null, // Colaborador ainda não tem profile
         colaborador_nome: admissaoData.nome_completo,
         colaborador_cpf: admissaoData.cpf,
