@@ -66,10 +66,13 @@ export function useEntrevistasGuiadasAggregates(campanhaIds: string[] | undefine
       for (const e of entrevistas) {
         const riscos = e.resumo_ia?.riscos ?? [];
         for (const r of riscos) {
-          if (!r.risco_nome || r.presente === false) continue;
-          
-          const probValue = Number(r.probabilidade) || 0;
-          const sevValue = Number(r.severidade) || 0;
+          if (!r.risco_nome) continue;
+          // Riscos AUSENTES também entram no agregado (NR-01 exige avaliar os 13
+          // fatores, inclusive os sem evidência). O finalize grava P=1/S=1 para
+          // ausentes → score baixo (4). Sem isso, campanhas saudáveis ficavam com
+          // radar vazio, ips_score=null e o relatório era bloqueado.
+          const probValue = Number(r.probabilidade) || (r.presente === false ? 1 : 0);
+          const sevValue = Number(r.severidade) || (r.presente === false ? 1 : 0);
           
           // Mapeamento dinâmico: se a escala for 1-5, convertemos proporcionalmente para 0-100
           // prob (1-5) * sev (1-5) -> max 25. 25 * 4 = 100.

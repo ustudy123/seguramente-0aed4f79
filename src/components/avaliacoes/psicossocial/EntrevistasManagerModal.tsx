@@ -331,7 +331,7 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                       <div className="flex items-center gap-2">
                         <Progress value={progresso} className="h-1.5 flex-1 max-w-xs" />
                         <span className="text-xs text-muted-foreground">
-                          {e.riscos_cobertos}/{e.total_riscos} temas
+                          {e.riscos_cobertos}/{e.total_riscos} riscos identificados
                         </span>
                       </div>
                     )}
