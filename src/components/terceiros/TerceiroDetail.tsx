@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +61,14 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
   const [viewer, setViewer] = useState<{ url: string; nome: string; tipo: string } | null>(null);
   const [loadingView, setLoadingView] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (viewer?.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(viewer.url);
+      }
+    };
+  }, [viewer]);
+
   const handleViewFile = async (path: string, nome = "Documento") => {
     try {
       setLoadingView(true);
@@ -72,6 +80,9 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
           : ext === "pdf"
           ? "pdf"
           : "other";
+        if (viewer?.url?.startsWith("blob:")) {
+          URL.revokeObjectURL(viewer.url);
+        }
         setViewer({ url, nome, tipo });
       }
     } catch (error) {
@@ -216,7 +227,14 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
       )}
 
       {/* Visualizador de Documentos In-App */}
-      <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
+      <Dialog open={!!viewer} onOpenChange={(o) => {
+        if (!o) {
+          if (viewer?.url?.startsWith("blob:")) {
+            URL.revokeObjectURL(viewer.url);
+          }
+          setViewer(null);
+        }
+      }}>
         <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
           <DialogHeader className="p-4 border-b flex-row items-center justify-between space-y-0">
             <DialogTitle className="text-base truncate pr-4">{viewer?.nome}</DialogTitle>
