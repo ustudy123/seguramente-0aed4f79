@@ -104,11 +104,20 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
       const tenantId = (tenantRes.data as any)?.tenant_id;
       if (!tenantId) throw new Error("Tenant não encontrado");
 
-      // Mapa de entrevistas pendentes já existentes por colaborador
-      const pendentePorColab = new Map<string, string>();
-      for (const e of entrevistas) {
-        if (e.status === "pendente" && (e as any).colaborador_id) {
-          pendentePorColab.set((e as any).colaborador_id, e.token);
+      // Regra: UM link por colaborador por campanha (qualquer status).
+      // A entrevista é retomável de onde parou, então um link existente —
+      // pendente, em andamento ou concluída — é sempre reaproveitado em vez
+      // de gerar um novo. Prioriza o link mais recente quando há histórico.
+      const linkPorColab = new Map<string, string>();
+      const ordenadas = [...entrevistas].sort((a, b) => {
+        const ta = new Date((a as any).created_at ?? 0).getTime();
+        const tb = new Date((b as any).created_at ?? 0).getTime();
+        return tb - ta; // mais recente primeiro
+      });
+      for (const e of ordenadas) {
+        const cid = (e as any).colaborador_id;
+        if (cid && !linkPorColab.has(cid)) {
+          linkPorColab.set(cid, e.token);
         }
       }
 
@@ -116,7 +125,7 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
       const novas: any[] = [];
 
       for (const c of colaboradores) {
-        const existente = pendentePorColab.get(c.id);
+        const existente = linkPorColab.get(c.id);
         if (existente) {
           itens.push({ nome: c.nome_completo, cpf: c.cpf, cargo: c.cargo, link: linkOf(existente) });
           continue;
@@ -153,8 +162,10 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
       });
 
       qc.invalidateQueries({ queryKey: ["psicossocial-entrevistas", campanhaId] });
+      const reaproveitados = itens.length - novas.length;
       toast.success(
-        `Documento gerado com ${itens.length} link(s) — ${novas.length} novo(s) criado(s).`
+        `Documento gerado com ${itens.length} link(s) — ${novas.length} novo(s)` +
+        (reaproveitados > 0 ? `, ${reaproveitados} reaproveitado(s)` : "") + "."
       );
     } catch (e: any) {
       console.error(e);
