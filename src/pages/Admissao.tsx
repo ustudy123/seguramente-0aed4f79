@@ -530,7 +530,15 @@ export default function Admissao() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onNew={handleNew}
-            
+            canApprove={isAdmin}
+            onApprove={async (id) => {
+              try {
+                await atualizarStatus({ id, status: 'aprovado' });
+                toast.success('Admissão aprovada com sucesso!');
+              } catch (e: any) {
+                toast.error(e.message || 'Erro ao aprovar admissão');
+              }
+            }}
           />
         </>
       )}
