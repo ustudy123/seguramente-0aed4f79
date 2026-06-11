@@ -177,7 +177,8 @@ export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew, onApp
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                
+                onApprove={onApprove}
+                canApprove={canApprove}
               />
             </motion.div>
           ))}
