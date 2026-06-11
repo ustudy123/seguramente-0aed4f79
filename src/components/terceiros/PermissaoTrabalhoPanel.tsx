@@ -13,6 +13,7 @@ import { usePermissaoTrabalho, PermissaoTrabalho, PermissaoTrabalhador } from "@
 import { useTerceiros } from "@/hooks/useTerceiros";
 import { PermissaoTrabalhoForm } from "./PermissaoTrabalhoForm";
 import type { Terceiro } from "@/types/terceiros";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   rascunho: { label: "Rascunho", color: "bg-muted text-muted-foreground", icon: Clock },
@@ -127,7 +128,7 @@ export function PermissaoTrabalhoPanel() {
                         <TableCell className="text-sm max-w-[200px] truncate">{pt.atividade}</TableCell>
                         <TableCell className="text-sm">{pt.local}</TableCell>
                         <TableCell className="text-sm text-nowrap">
-                          {format(new Date(pt.data_inicio), "dd/MM")} – {format(new Date(pt.data_fim), "dd/MM/yy")}
+                          {formatDateBR(pt.data_inicio, "dd/MM")} – {formatDateBR(pt.data_fim, "dd/MM/yy")}
                         </TableCell>
                         <TableCell>
                           <Badge className={cfg.color}>

@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface ReciboData {
   colaboradorNome: string;
@@ -104,7 +105,7 @@ export const EpiEntregaRecibo = forwardRef<HTMLDivElement, EpiEntregaReciboProps
                 </td>
                 <td className="py-1 text-center">
                   {data.dataValidade
-                    ? format(new Date(data.dataValidade), "dd/MM/yyyy")
+                    ? formatDateBR(data.dataValidade, "dd/MM/yyyy")
                     : "N/A"}
                 </td>
               </tr>

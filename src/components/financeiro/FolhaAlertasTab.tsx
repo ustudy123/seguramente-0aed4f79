@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCircle, AlertTriangle, Clock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { format, addMonths, endOfMonth, setDate, isBefore, differenceInDays } from "date-fns";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface AlertaPrazo {
   id: string;
@@ -213,7 +214,7 @@ export function FolhaAlertasTab() {
                   <TableCell className="text-xl">{TIPO_ICONS[a.tipo] || "📌"}</TableCell>
                   <TableCell className="font-medium text-sm">{TIPO_LABELS[a.tipo] || a.tipo}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{a.descricao}</TableCell>
-                  <TableCell className="text-sm">{format(new Date(a.data_limite), "dd/MM/yyyy")}</TableCell>
+                  <TableCell className="text-sm">{formatDateBR(a.data_limite, "dd/MM/yyyy")}</TableCell>
                   <TableCell className="text-center">{statusBadge(a)}</TableCell>
                   <TableCell>
                     {a.status !== "concluido" && (

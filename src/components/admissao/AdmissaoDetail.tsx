@@ -27,6 +27,7 @@ import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useStorageImageUrl } from '@/hooks/useStorageImageUrl';
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface AdmissaoDetailProps {
   admissao: Admissao;
@@ -199,7 +200,7 @@ export function AdmissaoDetail({
               <InfoCard icon={Briefcase} label="Cargo" value={dadosProfissionais.cargo} />
               <InfoCard icon={Building} label="Departamento" value={dadosProfissionais.departamento} />
               <InfoCard icon={Building} label="Filial" value={dadosProfissionais.filial} />
-              <InfoCard icon={Calendar} label="Data de Admissão" value={format(new Date(dadosProfissionais.dataAdmissao), 'dd/MM/yyyy')} />
+              <InfoCard icon={Calendar} label="Data de Admissão" value={formatDateBR(dadosProfissionais.dataAdmissao, 'dd/MM/yyyy')} />
               <InfoCard icon={Briefcase} label="Tipo de Contrato" value={dadosProfissionais.tipoContrato} />
               <InfoCard icon={Briefcase} label="Jornada" value={dadosProfissionais.jornadaTrabalho} />
               <InfoCard icon={DollarSign} label="Salário" value={dadosProfissionais.salario} />

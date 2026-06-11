@@ -8,6 +8,7 @@ import type { DesvioSeguranca } from "@/hooks/useDesviosSeguranca";
 import type { EventoSST } from "@/types/eventoSST";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface Props {
   open: boolean;
@@ -195,7 +196,7 @@ export const PyramidLevelSheet = ({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono text-muted-foreground">{e.codigo}</span>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(e.data_evento), "dd/MM/yyyy", { locale: ptBR })}
+                        {formatDateBR(e.data_evento, "dd/MM/yyyy")}
                       </span>
                     </div>
                     <p className="text-sm font-medium">{e.colaborador_nome || "Colaborador não informado"}</p>

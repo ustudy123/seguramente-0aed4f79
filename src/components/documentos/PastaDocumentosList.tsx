@@ -28,6 +28,7 @@ import {
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 import type { Documento } from "@/hooks/useDocumentos";
 import { DocumentoVersoesModal } from "./DocumentoVersoesModal";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const statusConfig = {
   valido: {
@@ -185,7 +186,7 @@ export function PastaDocumentosList({
                       <div className="text-right hidden md:block">
                         <p className="text-xs text-muted-foreground">Validade</p>
                         <p className="text-sm font-medium">
-                          {new Date(doc.data_validade).toLocaleDateString("pt-BR")}
+                          {formatDateBR(doc.data_validade)}
                         </p>
                       </div>
                     )}

@@ -77,6 +77,7 @@ import { RescisaoTab } from "@/components/financeiro/RescisaoTab";
 import { ProvisoesTab } from "@/components/financeiro/ProvisoesTab";
 import { TabelasLegaisTab } from "@/components/financeiro/TabelasLegaisTab";
 import type { FolhaItem } from "@/hooks/useFinanceiro";
+import { formatDateBR } from "@/lib/dataLocal";
 
 // ==========================================
 // SUB-COMPONENTS
@@ -297,7 +298,7 @@ const BeneficiosTab = () => {
                       <td className="p-3">{v.beneficio_tipo?.nome || "—"}</td>
                       <td className="p-3 text-right">R$ {v.valor?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
                       <td className="p-3 text-right">R$ {v.valor_desconto?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
-                      <td className="p-3">{new Date(v.data_inicio).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3">{formatDateBR(v.data_inicio)}</td>
                       <td className="p-3 text-center"><Badge className="bg-success/10 text-success text-xs">Ativo</Badge></td>
                     </tr>
                   ))}

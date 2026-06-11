@@ -3,9 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, AlertTriangle, Shield, FileText, CheckCircle2, Printer } from "lucide-react";
 import type { EventoSST } from "@/types/eventoSST";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface Props {
   eventos: EventoSST[];
@@ -89,7 +88,7 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
               <TableRow key={e.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onSelect(e)}>
                 <TableCell className="font-mono text-xs">{e.codigo}</TableCell>
                 <TableCell className="text-sm">
-                  {format(new Date(e.data_evento), "dd/MM/yyyy", { locale: ptBR })}
+                  {formatDateBR(e.data_evento, "dd/MM/yyyy")}
                 </TableCell>
                 <TableCell>
                   {e.tipo === "acidente" ?

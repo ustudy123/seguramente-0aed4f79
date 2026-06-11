@@ -19,6 +19,7 @@ import { PdiEditModal } from "./PdiEditModal";
 import { PdiDocumentoModal } from "./PdiDocumentoModal";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface PdiDetailProps {
   pdi: Pdi;
@@ -67,7 +68,7 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
           <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {pdi.colaborador_nome}</span>
             <AfastadoBadge afastamento={getAfastamento({ nome: pdi.colaborador_nome })} compact />
-            <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {format(new Date(pdi.data_inicio), "dd/MM/yy", { locale: ptBR })} — {format(new Date(pdi.data_fim), "dd/MM/yy", { locale: ptBR })}</span>
+            <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(pdi.data_inicio, "dd/MM/yy")} — {format(new Date(pdi.data_fim), "dd/MM/yy", { locale: ptBR })}</span>
             <Badge variant="outline">{PDI_PERIODO_LABELS[pdi.periodo]}</Badge>
           </div>
         </div>

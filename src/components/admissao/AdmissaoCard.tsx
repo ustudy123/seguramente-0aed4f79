@@ -30,6 +30,7 @@ import { ptBR } from 'date-fns/locale';
 import { DocumentChecklistModal } from './DocumentChecklistModal';
 import { useState } from 'react';
 import { useStorageImageUrl } from '@/hooks/useStorageImageUrl';
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface AdmissaoCardProps {
   admissao: Admissao;
@@ -145,7 +146,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete, onApprove, ca
           <Calendar className="h-4 w-4" />
           <span>
             {dadosProfissionais?.dataAdmissao 
-              ? format(new Date(dadosProfissionais.dataAdmissao), "dd/MM/yyyy")
+              ? formatDateBR(dadosProfissionais.dataAdmissao, "dd/MM/yyyy")
               : 'Data não definida'}
           </span>
         </div>
