@@ -106,6 +106,7 @@ const formSchema = z.object({
   data_fim_afastamento: z.date().optional(),
   dias_afastamento: z.number().optional(),
   horas_afastamento: z.number().optional(),
+  minutos_afastamento: z.number().min(0).max(59).optional(),
   unidade_afastamento: z.string().optional(),
   
   contem_cid: z.boolean().optional(),
@@ -369,6 +370,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
         
         if (data.dias_afastamento) form.setValue("dias_afastamento", data.dias_afastamento);
         if (data.horas_afastamento) form.setValue("horas_afastamento", data.horas_afastamento);
+        if (data.minutos_afastamento) form.setValue("minutos_afastamento", data.minutos_afastamento);
         if (data.unidade_afastamento) form.setValue("unidade_afastamento", data.unidade_afastamento);
         
         if (data.contem_cid !== undefined) form.setValue("contem_cid", data.contem_cid);
@@ -448,6 +450,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
         : undefined,
       dias_afastamento: values.dias_afastamento,
       horas_afastamento: values.horas_afastamento,
+      minutos_afastamento: values.minutos_afastamento,
       unidade_afastamento: values.unidade_afastamento,
       contem_cid: values.contem_cid,
       cid_codigo: values.cid_codigo,
@@ -1096,24 +1099,48 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   />
                   
                   {watchUnidadeAfastamento === "horas" ? (
-                    <FormField
-                      control={form.control}
-                      name="horas_afastamento"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Horas</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="Horas" 
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="horas_afastamento"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Horas</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min={0}
+                                max={23}
+                                placeholder="Ex: 4" 
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="minutos_afastamento"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Minutos</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min={0}
+                                max={59}
+                                placeholder="Ex: 8" 
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   ) : (
                     <FormField
                       control={form.control}
