@@ -22309,6 +22309,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      excluir_colaborador_forcado: {
+        Args: { _admissao_id: string }
+        Returns: Json
+      }
       excluir_colaborador_seguro: {
         Args: { _admissao_id: string }
         Returns: Json
@@ -22775,6 +22779,7 @@ export type Database = {
         Args: { _empresa_id: string }
         Returns: boolean
       }
+      user_tenant_ids: { Args: never; Returns: string[] }
       validar_cpf_colaborador_campanha: {
         Args: { p_campanha_id: string; p_cpf: string; p_hash: string }
         Returns: Json
