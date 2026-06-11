@@ -174,7 +174,7 @@ export function TerceiroDetail({ terceiro, onBack }: Props) {
           <DocumentosTable 
             docs={docsEmpresa} 
             onDelete={(d) => deleteDocumento.mutate(d)} 
-            onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url)}
+            onView={(d) => d.arquivo_url && handleViewFile(d.arquivo_url, d.nome || d.tipo)}
           />
         </TabsContent>
       </Tabs>
