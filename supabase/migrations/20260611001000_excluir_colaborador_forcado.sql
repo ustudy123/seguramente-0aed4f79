@@ -44,13 +44,13 @@ BEGIN
 
   -- Papel alto obrigatório para apagar histórico
   v_is_admin :=
-    public.has_role(v_uid, 'admin'::public.app_role)
-    OR public.has_role(v_uid, 'owner'::public.app_role)
-    OR public.has_role(v_uid, 'superadmin'::public.app_role)
+    public.has_role(v_uid, 'owner'::public.app_role)
+    OR public.has_role(v_uid, 'admin'::public.app_role)
+    OR public.is_superadmin(v_uid)
     OR EXISTS (
       SELECT 1 FROM public.usuarios_base ub
       WHERE ub.auth_user_id = v_uid
-        AND ub.tipo_usuario IN ('proprietario', 'administrador')
+        AND ub.tipo_usuario = 'administrador'::public.usuario_tipo
     );
   IF NOT v_is_admin THEN
     RAISE EXCEPTION 'Apenas proprietário/administrador pode excluir colaborador com histórico. Use Inativar.';
