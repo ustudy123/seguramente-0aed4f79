@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import { ptBR } from "date-fns/locale";
@@ -240,7 +240,7 @@ export function AtestadoList({
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5" />
                         <span>
-                          Emissão: {format(new Date(atestado.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
+                          Emissão: {format(parseISO(atestado.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
                         </span>
                       </div>
                       {atestado.dias_afastamento && atestado.dias_afastamento > 0 && (
