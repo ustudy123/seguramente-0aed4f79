@@ -621,9 +621,12 @@ export function usePsicossocial() {
           risco_nome?: string; presente?: boolean; probabilidade?: number; severidade?: number;
         }>;
         for (const r of riscos) {
-          if (!r.risco_nome || r.presente === false) continue;
-          const prob = Number(r.probabilidade) || 0;
-          const sev = Number(r.severidade) || 0;
+          if (!r.risco_nome) continue;
+          // Inclui riscos ausentes com score baixo (P=1/S=1 gravados pelo finalize),
+          // garantindo radar completo dos 13 fatores e IPS calculável mesmo em
+          // campanhas saudáveis (sem riscos presentes).
+          const prob = Number(r.probabilidade) || (r.presente === false ? 1 : 0);
+          const sev = Number(r.severidade) || (r.presente === false ? 1 : 0);
           const score = Math.min(100, Math.max(0, prob * sev * 4));
           const acc = riscoAcc.get(r.risco_nome) ?? { soma: 0, n: 0 };
           acc.soma += score;
