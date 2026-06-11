@@ -253,9 +253,13 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
     if (!excluirColab) return;
     setActionLoading(true);
     try {
-      const { error } = await (supabase as any).rpc("excluir_colaborador_seguro", { _admissao_id: excluirColab.id });
+      const forcado = !!excluirVinculos?.tem;
+      const { data, error } = await (supabase as any).rpc(
+        forcado ? "excluir_colaborador_forcado" : "excluir_colaborador_seguro",
+        { _admissao_id: excluirColab.id }
+      );
       if (error) throw error;
-      toast.success("Colaborador excluído");
+      toast.success(forcado ? "Colaborador e todo o histórico excluídos" : "Colaborador excluído");
       setExcluirColab(null);
       setExcluirText("");
       refetch();
@@ -853,16 +857,27 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 {excluirChecking && <p>Verificando vínculos no sistema...</p>}
                 {!excluirChecking && excluirVinculos?.tem && (
                   <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 space-y-2">
-                    <p className="font-medium text-destructive">Não é possível excluir.</p>
+                    <p className="font-medium text-destructive">⚠️ Colaborador com histórico no sistema</p>
                     <p className="text-sm">
-                      O colaborador <strong>{excluirColab?.nome_completo}</strong> possui registros vinculados nos módulos:
+                      <strong>{excluirColab?.nome_completo}</strong> possui registros vinculados nos módulos:
                     </p>
                     <ul className="text-xs list-disc pl-5 text-muted-foreground">
                       {Object.entries(excluirVinculos.detalhes || {}).map(([k, v]) => (
                         <li key={k}>{k.replace(/_/g, " ")}: {String(v)}</li>
                       ))}
                     </ul>
-                    <p className="text-sm">Use a opção <strong>Inativar</strong> para preservar o histórico.</p>
+                    <p className="text-sm">
+                      Para colaboradores reais, prefira <strong>Inativar</strong> (preserva o histórico).
+                      A exclusão forçada apaga <strong>todos os registros acima permanentemente</strong> — use
+                      apenas para cadastros de teste. Requer perfil de proprietário/administrador.
+                    </p>
+                    <p className="text-sm">Para confirmar a exclusão com histórico, digite <strong>EXCLUIR TUDO</strong>:</p>
+                    <Input
+                      autoFocus
+                      value={excluirText}
+                      onChange={(e) => setExcluirText(e.target.value)}
+                      placeholder="Digite EXCLUIR TUDO"
+                    />
                   </div>
                 )}
                 {!excluirChecking && excluirVinculos && !excluirVinculos.tem && (
@@ -887,10 +902,19 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              disabled={actionLoading || excluirChecking || !excluirVinculos || excluirVinculos.tem || excluirText.trim() !== "EXCLUIR"}
+              disabled={
+                actionLoading || excluirChecking || !excluirVinculos ||
+                (excluirVinculos.tem
+                  ? excluirText.trim() !== "EXCLUIR TUDO"
+                  : excluirText.trim() !== "EXCLUIR")
+              }
               onClick={handleConfirmExcluir}
             >
-              {actionLoading ? "Excluindo..." : "Excluir definitivamente"}
+              {actionLoading
+                ? "Excluindo..."
+                : excluirVinculos?.tem
+                ? "Excluir com todo o histórico"
+                : "Excluir definitivamente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
