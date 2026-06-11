@@ -1305,7 +1305,7 @@ function AdmissoesTab() {
       {viewMode === "list" && (
         <>
           <AdmissaoStats admissoes={admissoesFormatted as any} />
-          <AdmissaoList admissoes={admissoesFormatted as any} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onNew={handleNew} />
+          <AdmissaoList admissoes={admissoesFormatted as any} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onNew={handleNew} canApprove={isAdmin} onApprove={async (id) => { try { await atualizarStatus({ id, status: 'aprovado' }); toast.success('Admissão aprovada com sucesso!'); } catch (e: any) { toast.error(e.message || 'Erro ao aprovar admissão'); } }} />
         </>
       )}
 

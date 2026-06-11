@@ -36,10 +36,11 @@ interface AdmissaoCardProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  
+  onApprove?: (id: string) => void;
+  canApprove?: boolean;
 }
 
-export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
+export function AdmissaoCard({ admissao, onView, onEdit, onDelete, onApprove, canApprove }: AdmissaoCardProps) {
   const [showChecklist, setShowChecklist] = useState(false);
   const resolvedPhotoUrl = useStorageImageUrl(admissao.fotoUrl, 'documentos');
   const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
@@ -99,6 +100,14 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
               <DropdownMenuItem onClick={() => onView(admissao.id)}>
                 <Eye className="h-4 w-4 mr-2" /> Visualizar
               </DropdownMenuItem>
+              {canApprove && onApprove && status === 'em_analise' && (
+                <DropdownMenuItem
+                  onClick={() => onApprove(admissao.id)}
+                  className="text-success focus:text-success"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" /> Aprovar Admissão
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setShowChecklist(true)}>
                 <ClipboardCheck className="h-4 w-4 mr-2" /> Checklist de Docs
               </DropdownMenuItem>

@@ -20,9 +20,11 @@ interface AdmissaoListProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onNew: () => void;
+  onApprove?: (id: string) => void;
+  canApprove?: boolean;
 }
 
-export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew }: AdmissaoListProps) {
+export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew, onApprove, canApprove }: AdmissaoListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [departamentoFilter, setDepartamentoFilter] = useState<string>('todos');
@@ -175,7 +177,8 @@ export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew }: Adm
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                
+                onApprove={onApprove}
+                canApprove={canApprove}
               />
             </motion.div>
           ))}
