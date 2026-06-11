@@ -117,10 +117,20 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
   const isEntrevista = (campanha as any)?.tipo_instrumento === "entrevista_guiada";
   const isSipro = (campanha?.instrumento === 'sipro' && !isEntrevista) || isEntrevista;
-  const isEntrevistaOnly = isEntrevista || (!campanhasValidas.length && temEvidenciasQualitativas);
+  // Entrevista guiada com agregados (ips_score/radar derivados das entrevistas
+  // concluídas) exibe o relatório completo (síntese + 13 fatores). Só cai no modo
+  // "apenas evidências" quando os agregados não existem.
+  const temAgregadosEntrevista =
+    isEntrevista &&
+    campanha?.ips_score != null &&
+    Array.isArray(campanha?.radar_data) &&
+    (campanha.radar_data?.length ?? 0) > 0;
+  const isEntrevistaOnly = (isEntrevista && !temAgregadosEntrevista) || (!campanhasValidas.length && temEvidenciasQualitativas);
   const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
   const rawScore = campanha?.ips_score ?? 0;
-  const ipsScore = isSipro ? 100 - rawScore : rawScore;
+  // Para entrevista guiada, o ips_score do agregado JÁ está em escala protetiva
+  // (alto = saudável); aplicar 100 - raw aqui inverteria para "crítico" indevidamente.
+  const ipsScore = isEntrevista ? rawScore : isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
   const radar = (campanha?.radar_data ?? []) as RadarDimensao[];
   // Agrega dimensões do instrumento por Fator de Risco Psicossocial (catálogo 13 fatores NR-01/ISO 45003)
@@ -229,6 +239,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             ["Razao Social", sanitize(empresaAtiva?.razao_social ?? "N/D")],
             ["CNPJ", empresaAtiva?.cnpj ?? "N/D"],
             ["Data de Emissao", dataGeracao],
+            ...(temAgregadosEntrevista ? [["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`]] : []),
           ]
         : [
             ["Campanha", sanitize(campanha.nome)],
@@ -711,7 +722,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                       <span className="text-muted-foreground">Campanha:</span><span className="font-medium">{campanha.nome}</span>
                       <span className="text-muted-foreground">Modalidade:</span>
                       <span className="font-medium">
-                        {isEntrevistaOnly ? "Entrevista Guiada por IA (qualitativa)" : (isSipro ? "SIPRO (quantitativa)" : campanha.instrumento?.toUpperCase())}
+                        {isEntrevista ? "Entrevista Guiada por IA (qualitativa)" : (isSipro ? "SIPRO (quantitativa)" : campanha.instrumento?.toUpperCase())}
                       </span>
                       {!isEntrevistaOnly && (
                         <>
