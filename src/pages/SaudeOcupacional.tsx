@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, differenceInDays, addYears, isAfter, isBefore, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AtestadoForm } from "@/components/atestados/AtestadoForm";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const SaudeOcupacional = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -227,7 +228,7 @@ const SaudeOcupacional = () => {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                          {format(new Date(aso.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
+                          {formatDateBR(aso.data_emissao, "dd/MM/yyyy")}
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                           {dataVencimento ? format(dataVencimento, "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}

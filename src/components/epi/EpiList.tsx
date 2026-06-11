@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   Edit,
   Trash2,
@@ -40,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { EpiCompleto } from "@/types/epi";
 import { EPI_STATUS_LABELS, EPI_STATUS_COLORS } from "@/types/epi";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface EpiListProps {
   epis: EpiCompleto[];
@@ -189,9 +188,7 @@ export function EpiList({
                               : ""
                           }
                         >
-                          {format(new Date(epi.data_validade), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })}
+                          {formatDateBR(epi.data_validade, "dd/MM/yyyy")}
                         </span>
                       </div>
                     ) : (

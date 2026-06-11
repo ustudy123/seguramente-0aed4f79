@@ -14,10 +14,10 @@ import { useTerceiros } from "@/hooks/useTerceiros";
 import { TrabalhadorForm } from "./TrabalhadorForm";
 import { DocumentoUploadForm } from "./DocumentoUploadForm";
 import { TreinamentoForm } from "./TreinamentoForm";
-import { format } from "date-fns";
 import { formatCnpj } from "@/lib/brasilapi";
 import { formatCpf } from "@/lib/cpf";
 import { toast } from "sonner";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const statusIcon = (s: string) => {
   switch (s) {
@@ -368,8 +368,8 @@ function TrabalhadorCard({
                   {treins.map((tr) => (
                     <TableRow key={tr.id}>
                       <TableCell className="text-sm">{tr.tipo}</TableCell>
-                      <TableCell className="text-sm">{tr.data_realizacao ? format(new Date(tr.data_realizacao), "dd/MM/yyyy") : "—"}</TableCell>
-                      <TableCell className="text-sm">{tr.data_validade ? format(new Date(tr.data_validade), "dd/MM/yyyy") : "—"}</TableCell>
+                      <TableCell className="text-sm">{tr.data_realizacao ? formatDateBR(tr.data_realizacao, "dd/MM/yyyy") : "—"}</TableCell>
+                      <TableCell className="text-sm">{tr.data_validade ? formatDateBR(tr.data_validade, "dd/MM/yyyy") : "—"}</TableCell>
                       <TableCell>{statusIcon(tr.status)}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" onClick={() => deleteTreinamento.mutate(tr)}>
@@ -425,8 +425,8 @@ function DocumentosTable({
           <TableRow key={d.id}>
             <TableCell className="text-sm font-medium">{d.tipo}</TableCell>
             {!compact && <TableCell className="text-sm">{d.nome}</TableCell>}
-            <TableCell className="text-sm">{d.data_emissao ? format(new Date(d.data_emissao), "dd/MM/yyyy") : "—"}</TableCell>
-            <TableCell className="text-sm">{d.data_validade ? format(new Date(d.data_validade), "dd/MM/yyyy") : "—"}</TableCell>
+            <TableCell className="text-sm">{d.data_emissao ? formatDateBR(d.data_emissao, "dd/MM/yyyy") : "—"}</TableCell>
+            <TableCell className="text-sm">{d.data_validade ? formatDateBR(d.data_validade, "dd/MM/yyyy") : "—"}</TableCell>
             <TableCell>{statusIcon(d.status)}</TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1">

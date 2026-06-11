@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import type { EventoSST } from "@/types/eventoSST";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const lesaoLabels: Record<string, string> = {
   sem_lesao: "Sem lesão aparente",
@@ -80,7 +81,7 @@ export const gerarRelatorioCATpdf = (evento: EventoSST) => {
   // Section 1: Event data
   addSection("1. DADOS DO EVENTO");
   addLine("Tipo:", evento.tipo === "acidente" ? "Acidente de Trabalho" : "Incidente");
-  addLine("Data:", format(new Date(evento.data_evento), "dd/MM/yyyy", { locale: ptBR }));
+  addLine("Data:", formatDateBR(evento.data_evento, "dd/MM/yyyy"));
   addLine("Hora:", evento.hora_evento || "Não informada");
   addLine("Unidade:", evento.unidade || "-");
   addLine("Setor / Área:", evento.setor || "-");

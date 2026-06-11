@@ -55,13 +55,14 @@ import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
 import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
-import { format, addDays } from "date-fns";
+import { addDays } from "date-fns";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useQuery } from "@tanstack/react-query";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const POLITICA_USO_DADOS_PADRAO = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
 
@@ -664,7 +665,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                           <SelectContent>
                             {campanhasAnteriores.map(c => (
                               <SelectItem key={c.id} value={c.id}>
-                                {c.nome} ({format(new Date(c.data_fim), 'dd/MM/yyyy')})
+                                {c.nome} ({formatDateBR(c.data_fim, 'dd/MM/yyyy')})
                               </SelectItem>
                             ))}
                           </SelectContent>

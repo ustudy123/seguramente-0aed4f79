@@ -47,6 +47,7 @@ import { type Documento } from "@/hooks/useDocumentos";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import { DocumentosCategorias } from "./DocumentosCategorias";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const statusConfig = {
   valido: {
@@ -352,7 +353,7 @@ export function ColaboradorFolderView({
                             <div className="text-right hidden md:block">
                               <p className="text-xs text-muted-foreground">Validade</p>
                               <p className="text-sm font-medium">
-                                {new Date(doc.data_validade).toLocaleDateString("pt-BR")}
+                                {formatDateBR(doc.data_validade)}
                               </p>
                             </div>
                           )}

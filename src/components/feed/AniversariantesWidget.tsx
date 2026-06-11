@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAniversariantes } from "@/hooks/useFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface AniversariantesWidgetProps {
   onFelicitar?: (mensagem: string) => void;
@@ -123,9 +124,7 @@ export function AniversariantesWidget({ onFelicitar }: AniversariantesWidgetProp
                 <p className="text-xs text-muted-foreground">
                   {isBirthdayToday
                     ? "Hoje! 🎂"
-                    : format(new Date(pessoa.data_nascimento), "dd 'de' MMMM", {
-                        locale: ptBR,
-                      })}
+                    : formatDateBR(pessoa.data_nascimento, "dd 'de' MMMM")}
                 </p>
               </div>
               {isBirthdayToday && onFelicitar && (

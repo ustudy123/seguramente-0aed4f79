@@ -15,8 +15,7 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSColor } from "@/types/psicossocial";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface IPSHistoricoChartProps {
   campanhas: CampanhaPsicossocial[];
@@ -89,7 +88,7 @@ export function IPSHistoricoChart({ campanhas }: IPSHistoricoChartProps) {
         return {
           nome: c.nome.length > 18 ? c.nome.slice(0, 18) + "…" : c.nome,
           nomeCompleto: c.nome,
-          data: format(new Date(c.data_inicio), "MMM/yy", { locale: ptBR }),
+          data: formatDateBR(c.data_inicio, "MMM/yy"),
           ips: valorIPS,
           respostas: c.total_respostas || 0,
         };

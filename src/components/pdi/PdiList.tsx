@@ -4,12 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Trash2, ChevronRight, Calendar, User } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import type { Pdi, PdiStatus } from "@/types/pdi";
 import { PDI_STATUS_LABELS, PDI_PERIODO_LABELS } from "@/types/pdi";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface PdiListProps {
   pdis: Pdi[];
@@ -103,7 +102,7 @@ export const PdiList = ({ pdis, isLoading, onSelect, onDelete }: PdiListProps) =
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                 <Calendar className="w-3.5 h-3.5" />
-                {format(new Date(pdi.data_inicio), "dd/MM/yy", { locale: ptBR })} — {format(new Date(pdi.data_fim), "dd/MM/yy", { locale: ptBR })}
+                {formatDateBR(pdi.data_inicio, "dd/MM/yy")} — {formatDateBR(pdi.data_fim, "dd/MM/yy")}
                 <Badge variant="outline" className="text-[10px] ml-auto bg-background/60">{PDI_PERIODO_LABELS[pdi.periodo]}</Badge>
               </div>
 

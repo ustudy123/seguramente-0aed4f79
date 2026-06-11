@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface FeriasItem {
   id: number;
@@ -247,8 +248,8 @@ export function FeriasCalendario({ ferias, onNewSolicitacao }: FeriasCalendarioP
                   <div className="space-y-3">
                     {entries.map((e) => {
                       const colors = statusColors[e.status];
-                      const startDate = new Date(e.dataInicio).toLocaleDateString("pt-BR");
-                      const endDate = new Date(e.dataFim).toLocaleDateString("pt-BR");
+                      const startDate = formatDateBR(e.dataInicio);
+                      const endDate = formatDateBR(e.dataFim);
                       return (
                         <div
                           key={e.id}

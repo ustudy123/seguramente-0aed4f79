@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
 import { InvestigacaoAssistidaIA } from "./InvestigacaoAssistidaIA";
 import { EsocialTransmissao } from "@/components/esocial/EsocialTransmissao";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface Props {
   evento: EventoSST;
@@ -224,7 +225,7 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Data</p>
-                  <p>{format(new Date(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}</p>
+                  <p>{formatDateBR(evento.data_evento, "dd/MM/yyyy")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

@@ -10,6 +10,7 @@ import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 import { AtestadoAlertas } from "@/components/atestados/AtestadoAlertas";
 import { AfastamentoList } from "@/components/atestados/AfastamentoList";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const Atestados = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -142,7 +143,7 @@ const Atestados = () => {
                         <div className="text-right">
                           {beneficio.gera_estabilidade && beneficio.data_fim_estabilidade && (
                             <p className="text-xs text-primary font-medium">
-                              Estabilidade até {new Date(beneficio.data_fim_estabilidade).toLocaleDateString('pt-BR')}
+                              Estabilidade até {formatDateBR(beneficio.data_fim_estabilidade)}
                             </p>
                           )}
                         </div>

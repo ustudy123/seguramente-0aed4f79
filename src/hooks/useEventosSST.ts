@@ -6,6 +6,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
 import type { EventoSST, EventoSSTAnexo } from "@/types/eventoSST";
+import { formatDateBR } from "@/lib/dataLocal";
 
 export const useEventosSST = () => {
   const { user, profile } = useAuth();
@@ -57,7 +58,7 @@ export const useEventosSST = () => {
 
       const codigo = evento.codigo || `EVT-${Date.now()}`;
       const label = evento.tipo === "acidente" ? "Acidente" : "Incidente";
-      const dataStr = new Date(evento.data_evento).toLocaleDateString("pt-BR");
+      const dataStr = formatDateBR(evento.data_evento);
 
       // Criar pasta principal do evento
       const { data: novaPasta, error: errPasta } = await supabase

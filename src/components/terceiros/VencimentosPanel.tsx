@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, CheckCircle, Clock, XCircle, FileText, GraduationCap } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { differenceInDays } from "date-fns";
+import { formatDateBR } from "@/lib/dataLocal";
 
 interface VencimentoItem {
   id: string;
@@ -175,7 +176,7 @@ export function VencimentosPanel() {
                     <TableCell className="text-sm">{v.terceiro_nome}</TableCell>
                     <TableCell className="text-sm">{v.trabalhador_nome || "Empresa"}</TableCell>
                     <TableCell className="text-sm">
-                      {format(new Date(v.data_validade), "dd/MM/yyyy")}
+                      {formatDateBR(v.data_validade, "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell className="text-sm font-mono">
                       {v.dias_restantes < 0 ? `${Math.abs(v.dias_restantes)}d atrás` : `${v.dias_restantes}d`}

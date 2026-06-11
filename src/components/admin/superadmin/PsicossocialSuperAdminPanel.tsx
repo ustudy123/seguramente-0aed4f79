@@ -23,9 +23,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area,
 } from "recharts";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const STATUS_STYLE: Record<string, string> = {
   rascunho: "bg-slate-500/10 text-slate-600 border-slate-500/30 font-medium",
@@ -652,9 +653,9 @@ export function PsicossocialSuperAdminPanel() {
                           ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
                         <TableCell className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
-                          {c.data_inicio ? format(new Date(c.data_inicio), "dd/MM/yy") : "—"}
+                          {c.data_inicio ? formatDateBR(c.data_inicio, "dd/MM/yy") : "—"}
                           <span className="mx-1 text-muted-foreground/30">/</span>
-                          {c.data_fim ? format(new Date(c.data_fim), "dd/MM/yy") : "—"}
+                          {c.data_fim ? formatDateBR(c.data_fim, "dd/MM/yy") : "—"}
                         </TableCell>
                       </TableRow>
                     );

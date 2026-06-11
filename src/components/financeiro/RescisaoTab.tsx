@@ -15,6 +15,7 @@ import { Plus, Calculator, Eye } from "lucide-react";
 import { useFolhaCalculo } from "@/hooks/useFolhaCalculo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
+import { formatDateBR } from "@/lib/dataLocal";
 
 const TIPOS_RESCISAO = [
   { value: "PEDIDO_DEMISSAO", label: "Pedido de Demissão" },
@@ -121,7 +122,7 @@ export function RescisaoTab() {
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.colaborador_nome}</TableCell>
                     <TableCell className="text-sm">{tipo?.label || r.tipo_rescisao}</TableCell>
-                    <TableCell>{new Date(r.data_desligamento).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell>{formatDateBR(r.data_desligamento)}</TableCell>
                     <TableCell className="text-right">R$ {fmtMoeda(r.total_bruto)}</TableCell>
                     <TableCell className="text-right text-destructive">R$ {fmtMoeda(r.total_descontos)}</TableCell>
                     <TableCell className="text-right font-bold">R$ {fmtMoeda(r.total_liquido)}</TableCell>
@@ -217,7 +218,7 @@ export function RescisaoTab() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-muted-foreground">Tipo:</span> <span className="font-medium">{TIPOS_RESCISAO.find(t => t.value === showDetalhe.tipo_rescisao)?.label}</span></div>
-                <div><span className="text-muted-foreground">Data:</span> <span className="font-medium">{new Date(showDetalhe.data_desligamento).toLocaleDateString("pt-BR")}</span></div>
+                <div><span className="text-muted-foreground">Data:</span> <span className="font-medium">{formatDateBR(showDetalhe.data_desligamento)}</span></div>
                 <div><span className="text-muted-foreground">Prazo Legal:</span> <span className="font-medium">{showDetalhe.prazo_legal ? new Date(showDetalhe.prazo_legal).toLocaleDateString("pt-BR") : "—"}</span></div>
                 <div><span className="text-muted-foreground">Aviso:</span> <span className="font-medium">{showDetalhe.aviso_tipo || "—"}</span></div>
               </div>
