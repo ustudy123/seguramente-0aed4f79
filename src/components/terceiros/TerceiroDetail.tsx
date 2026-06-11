@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft, Users, FileText, Plus, Trash2, AlertTriangle, CheckCircle, Clock, XCircle,
-  GraduationCap, Eye, Download,
+  GraduationCap, Eye, Download, ExternalLink, Loader2,
 } from "lucide-react";
 import type { Terceiro, TerceiroDocumento, TerceiroTrabalhador, TerceiroTreinamento } from "@/types/terceiros";
 import { useTerceiros } from "@/hooks/useTerceiros";
@@ -16,6 +17,7 @@ import { TreinamentoForm } from "./TreinamentoForm";
 import { format } from "date-fns";
 import { formatCnpj } from "@/lib/brasilapi";
 import { formatCpf } from "@/lib/cpf";
+import { toast } from "sonner";
 
 const statusIcon = (s: string) => {
   switch (s) {
