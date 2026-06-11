@@ -303,7 +303,7 @@ export function PontoBancoHorasTab() {
                           <Pencil className="w-4 h-4" />
                         </Button>
                         <Button size="icon" variant="ghost" title="Excluir" onClick={async () => {
-                          const ok = await confirm({ title: "Excluir movimentação?", description: "Esta ação recalculará o saldo do banco de horas.", confirmText: "Excluir", variant: "destructive" });
+                          const ok = await confirm({ title: "Excluir movimentação?", description: "Esta ação recalculará o saldo do banco de horas.", confirmLabel: "Excluir", variant: "destructive" });
                           if (ok && selectedBanco) await excluirMovimentacao({ id: m.id, bancoHorasId: selectedBanco.id });
                         }}>
                           <Trash2 className="w-4 h-4 text-red-600" />
