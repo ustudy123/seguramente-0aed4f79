@@ -276,7 +276,7 @@ function TrabalhadorCard({
   onDelete: () => void;
   onUploadDoc: () => void;
   onAddTrein: () => void;
-  onViewDoc: (path: string) => void;
+  onViewDoc: (path: string, nome?: string) => void;
 }) {
   const { useDocumentos, useTreinamentos, deleteDocumento, deleteTreinamento } = useTerceiros();
   const { data: docs = [] } = useDocumentos(terceiroId, t.id);
