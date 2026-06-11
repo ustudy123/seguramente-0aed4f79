@@ -31,6 +31,7 @@ export interface PontoMarcacao {
 export interface PontoDiario {
   id: string;
   tenant_id: string;
+  empresa_id: string | null;
   colaborador_id: string;
   colaborador_nome: string;
   colaborador_cpf: string;

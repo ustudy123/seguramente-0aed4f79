@@ -223,8 +223,16 @@ const Ponto = () => {
 
   const filteredPontos = pontosDiarios.filter((ponto) => {
     // Garante que o espelho mostre apenas colaboradores da empresa ativa (e que batem ponto).
+    // Um registro pertence ao espelho se:
+    //  (a) o colaborador está na lista da empresa ativa (por id ou CPF); OU
+    //  (b) o próprio registro de ponto está explicitamente vinculado à empresa ativa —
+    //      cobre cadastros divergentes (empresa trocada, admissão pendente, bate_ponto
+    //      desmarcado), em que a pessoa registra ponto normalmente mas sumia do espelho.
     const cpfDig = (ponto.colaborador_cpf || "").replace(/\D/g, "");
-    const pertence = colabIds.has(ponto.colaborador_id) || (cpfDig && colabCpfs.has(cpfDig));
+    const pertence =
+      colabIds.has(ponto.colaborador_id) ||
+      (cpfDig && colabCpfs.has(cpfDig)) ||
+      (!!empresaAtivaId && ponto.empresa_id === empresaAtivaId);
     if (!pertence) return false;
 
     const matchesStatus = statusFilter === "all" || ponto.status === statusFilter;
