@@ -116,10 +116,9 @@ export default function Terceiros() {
         initial={editing}
         onSubmit={async (data) => {
           if (editing) {
-            await updateTerceiro.mutateAsync({ ...data, id: editing.id } as any);
-          } else {
-            await createTerceiro.mutateAsync(data);
+            return await updateTerceiro.mutateAsync({ ...data, id: editing.id } as any);
           }
+          return await createTerceiro.mutateAsync(data);
         }}
         isPending={createTerceiro.isPending || updateTerceiro.isPending}
       />
