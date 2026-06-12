@@ -17,14 +17,19 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
-import { 
-  scoreToProbabilidade, 
-  scoreToSeveridade, 
-  calcularNivelGRO, 
-  GRO_NIVEL_RISCO_LABELS,
-  GRO_PROBABILIDADE_LABELS,
-  GRO_SEVERIDADE_LABELS
-} from "@/types/gro";
+import {
+  scoreToProb15,
+  sevFallbackFromScore,
+  nivelGRO15,
+  normalizarNomeFator,
+  probDisplay,
+  sevDisplay,
+  NIVEL15_TOKENS,
+  NIVEL15_LABELS,
+  NIVEL15_ORDEM,
+  NIVEL15_BADGE,
+} from "@/lib/groPsicossocial15";
+import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
 import { resolverFatorPorSubject } from "@/data/catalogoRiscosPsicossociais";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
@@ -53,12 +58,7 @@ interface RelatorioModalProps {
   campanhaIdInicial?: string;
 }
 
-const NIVEL_BADGE: Record<string, string> = {
-  critico: "bg-red-50 text-red-700 border-red-200",
-  alto: "bg-orange-50 text-orange-700 border-orange-200",
-  medio: "bg-amber-50 text-amber-700 border-amber-200",
-  baixo: "bg-emerald-50 text-emerald-700 border-emerald-200",
-};
+const NIVEL_BADGE = NIVEL15_BADGE;
 
 export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanhaIdInicial }: RelatorioModalProps) {
   const [exportando, setExportando] = useState(false);
@@ -133,7 +133,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
   const ipsScore = isEntrevista ? rawScore : isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
   const radar = (campanha?.radar_data ?? []) as RadarDimensao[];
-  // Agrega dimensões do instrumento por Fator de Risco Psicossocial (catálogo 13 fatores NR-01/ISO 45003)
+  const { data: sevCatalogo } = useSeveridadesCatalogo();
+  // Agrega dimensões do instrumento por Fator de Risco Psicossocial (catálogo 13 fatores NR-01/ISO 45003).
+  // Metodologia P x S (tabelas 4.1-4.3 do relatório):
+  //  - Probabilidade: VARIÁVEL, derivada do score apurado nas respostas.
+  //  - Severidade: FIXA por fator, atribuída no catálogo de riscos.
+  //  - Nível de GRO: cruzamento P x S na matriz (TRIVIAL..CRÍTICO).
   const fatoresAvaliados = useMemo(() => {
     type Agg = { fator: string; dimensoes: string[]; soma: number; n: number };
     const porFator: Record<string, Agg> = {};
@@ -148,17 +153,18 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     return Object.values(porFator).map(a => {
       const scoreMedio = a.n > 0 ? a.soma / a.n : 0;
       const risco = isSipro ? Math.round(scoreMedio) : Math.round(100 - scoreMedio);
-      const prob = scoreToProbabilidade(scoreMedio, isSipro);
-      const sev = scoreToSeveridade(scoreMedio, isSipro);
-      const nivel = calcularNivelGRO(prob, sev);
+      const prob = scoreToProb15(risco);
+      const sev = sevCatalogo?.get(normalizarNomeFator(a.fator)) ?? sevFallbackFromScore(risco);
+      const nivel = nivelGRO15(prob, sev);
       return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel, prob, sev };
-    }).sort((a, b) => b.risco - a.risco);
-  }, [radar, isSipro]);
+    }).sort((a, b) => (NIVEL15_ORDEM[a.nivel] - NIVEL15_ORDEM[b.nivel]) || (b.risco - a.risco));
+  }, [radar, isSipro, sevCatalogo]);
 
   const criticos = fatoresAvaliados.filter(d => d.nivel === 'critico');
   const altos = fatoresAvaliados.filter(d => d.nivel === 'alto');
   const medios = fatoresAvaliados.filter(d => d.nivel === 'medio');
   const baixos = fatoresAvaliados.filter(d => d.nivel === 'baixo');
+  const triviais = fatoresAvaliados.filter(d => d.nivel === 'trivial');
 
   const { resultadosPorGHE = [] } = usePsicossocialResultadosGHE(campanhasValidas.map(c => c.id));
 
@@ -276,6 +282,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           [`${altos.length} dimensão(ões) em nível ALTO — Ação preventiva prioritária (prazo: até 60 dias)`],
           [`${medios.length} dimensão(ões) em nível MÉDIO — Monitoramento e melhorias contínuas (prazo: até 90 dias)`],
           [`${baixos.length} dimensão(ões) em nível BAIXO — Manter vigilância (prazo: até 180 dias)`],
+          [`${triviais.length} dimensão(ões) em nível TRIVIAL — Risco desprezível; manter registro documental`],
         ];
         autoTable(doc, {
           startY: y,
@@ -292,6 +299,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             if (text.includes("CRÍTICO")) data.cell.styles.textColor = [185, 28, 28];
             else if (text.includes("ALTO")) data.cell.styles.textColor = [194, 65, 12];
             else if (text.includes("MÉDIO")) data.cell.styles.textColor = [180, 83, 9];
+            else if (text.includes("TRIVIAL")) data.cell.styles.textColor = [100, 116, 139];
             else data.cell.styles.textColor = [5, 122, 85];
             
             // Background for row even in plain theme
@@ -343,24 +351,24 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
               return Object.values(porFator).map(a => {
                 const scoreMedio = a.n > 0 ? a.soma / a.n : 0;
                 const risco = isSipro ? Math.round(scoreMedio) : Math.round(100 - scoreMedio);
-                const prob = scoreToProbabilidade(scoreMedio, isSipro);
-                const sev = scoreToSeveridade(scoreMedio, isSipro);
-                const nivel = calcularNivelGRO(prob, sev);
+                const prob = scoreToProb15(risco);
+                const sev = sevCatalogo?.get(normalizarNomeFator(a.fator)) ?? sevFallbackFromScore(risco);
+                const nivel = nivelGRO15(prob, sev);
                 return { fator: a.fator, dimensoes: a.dimensoes, risco, nivel, prob, sev };
-              }).sort((a, b) => b.risco - a.risco);
+              }).sort((a, b) => (NIVEL15_ORDEM[a.nivel] - NIVEL15_ORDEM[b.nivel]) || (b.risco - a.risco));
             })();
 
             autoTable(doc, {
               startY: y,
               margin: { left: ml, right: mr, top: mt, bottom: mb },
-              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível GRO", "Base Normativa"]],
+              head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível de GRO", "Base Normativa"]],
               body: fatoresGHE.map(d => [
                 sanitize(d.fator),
                 sanitize(d.dimensoes.join(", ")),
                 `${d.risco}%`,
-                sanitize(GRO_PROBABILIDADE_LABELS[d.prob]),
-                sanitize(GRO_SEVERIDADE_LABELS[d.sev]),
-                GRO_NIVEL_RISCO_LABELS[d.nivel],
+                sanitize(probDisplay(d.prob)),
+                sanitize(sevDisplay(d.sev)),
+                NIVEL15_TOKENS[d.nivel],
                 "NR-01 / NR-17 / ISO 45003",
               ]),
               headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
@@ -369,10 +377,11 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
               didParseCell: (data) => {
                 if (data.section === "body" && data.column.index === 5) {
                   const v = String(data.cell.raw);
-                  if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
-                  else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-                  else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
-                  else data.cell.styles.textColor = [5, 122, 85];
+                  if (v === "CRÍTICO") data.cell.styles.textColor = [185, 28, 28];
+                  else if (v === "ALTO") data.cell.styles.textColor = [194, 65, 12];
+                  else if (v === "MÉDIO") data.cell.styles.textColor = [180, 83, 9];
+                  else if (v === "BAIXO") data.cell.styles.textColor = [30, 64, 175];
+                  else data.cell.styles.textColor = [22, 101, 52];
                 }
               },
             });
@@ -382,14 +391,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           autoTable(doc, {
             startY: y,
             margin: { left: ml, right: mr, top: mt, bottom: mb },
-            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível GRO", "Base Normativa"]],
+            head: [["Fator de Risco", "Dimensões equivalentes", "Score Risco", "Prob.", "Sev.", "Nível de GRO", "Base Normativa"]],
             body: fatoresAvaliados.map(d => [
               sanitize(d.fator),
               sanitize(d.dimensoes.join(", ")),
               `${d.risco}%`,
-              sanitize(GRO_PROBABILIDADE_LABELS[d.prob]),
-              sanitize(GRO_SEVERIDADE_LABELS[d.sev]),
-              GRO_NIVEL_RISCO_LABELS[d.nivel],
+              sanitize(probDisplay(d.prob)),
+              sanitize(sevDisplay(d.sev)),
+              NIVEL15_TOKENS[d.nivel],
               "NR-01 / NR-17 / ISO 45003",
             ]),
             headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
@@ -398,10 +407,11 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             didParseCell: (data) => {
               if (data.section === "body" && data.column.index === 5) {
                 const v = String(data.cell.raw);
-                if (v.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
-                else if (v.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
-                else if (v.includes("Médio")) data.cell.styles.textColor = [180, 83, 9];
-                else data.cell.styles.textColor = [5, 122, 85];
+                if (v === "CRÍTICO") data.cell.styles.textColor = [185, 28, 28];
+                else if (v === "ALTO") data.cell.styles.textColor = [194, 65, 12];
+                else if (v === "MÉDIO") data.cell.styles.textColor = [180, 83, 9];
+                else if (v === "BAIXO") data.cell.styles.textColor = [30, 64, 175];
+                else data.cell.styles.textColor = [22, 101, 52];
               }
             },
           });
@@ -488,7 +498,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       checkPageOverflow(80);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.text("4.3. Matriz de Graduação de Risco", ml, y);
+      doc.text("4.3. Nível de GRO", ml, y);
       y += 4;
 
       const matrizData = [
@@ -520,27 +530,19 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       });
       y = (doc as any).lastAutoTable.finalY + 12;
 
-      // ── 5. Metodologia (Original) ─────────────────────────────────────
+      // ── 4.4/4.5 Continuação da metodologia ────────────────────────────
       checkPageOverflow(40);
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("5. METODOLOGIA E CRITÉRIOS DE AVALIAÇÃO", ml, y);
-      y += 8;
 
       const metodologiaBlocks = [
         {
-          titulo: "4.1 Instrumento Utilizado",
+          titulo: "4.4 Instrumento Utilizado",
           corpo: isSipro
             ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Score calculado por dimensão em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
             : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliação de riscos psicossociais.`,
         },
         {
-          titulo: "4.2 Cálculo do IPS (Índice Psicossocial YourEyes)",
+          titulo: "4.5 Cálculo do IPS (Índice Psicossocial YourEyes)",
           corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: >=80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para questionários (ISO 45003 §6.1.2); entrevistas guiadas são isentas deste mínimo por natureza qualitativa.",
-        },
-        {
-          titulo: "4.3 Conversão para Nível GRO (NR-01)",
-          corpo: "Cada dimensão psicossocial é convertida para perigo ocupacional via matriz PxS:\n• Score >=75: Probabilidade Muito Alta + Severidade Grave -> Risco CRÍTICO\n• Score 55-74: Probabilidade Alta + Severidade Moderada -> Risco ALTO\n• Score 35-54: Probabilidade Moderada + Severidade Moderada -> Risco MÉDIO\n• Score <35: Probabilidade Baixa + Severidade Leve -> Risco BAIXO",
         },
       ];
 
@@ -557,12 +559,16 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         y += lines.length * 4.5 + 6;
       }
 
-      // ── 5. Conformidade ───────────────────────────────────────────────
+      // ── Seções finais com numeração dinâmica ─────────────────────────
+      let numSecao = 5;
+
+      // ── Conformidade ──────────────────────────────────────────────────
       checkPageOverflow(30);
       y += 5;
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text("5. CONFORMIDADE NORMATIVA", ml, y);
+      doc.text(`${numSecao}. CONFORMIDADE NORMATIVA`, ml, y);
+      numSecao += 1;
       y += 6;
       autoTable(doc, {
         startY: y,
@@ -578,14 +584,18 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         bodyStyles: { fontSize: 8, halign: 'justify' },
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
+      // Atualiza a posição após a tabela — sem isto, a seção seguinte era
+      // desenhada por cima da tabela de conformidade (layout quebrado).
+      y = (doc as any).lastAutoTable.finalY + 10;
 
-      // ── 6. Analise por GHE ────────────────────────────────────────────
+      // ── Análise por GHE ───────────────────────────────────────────────
       if (!isEntrevistaOnly && resultadosPorGHE.length > 0) {
         checkPageOverflow(50);
         y += 2;
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("6. ESTRATIFICAÇÃO E ANÁLISE POR GHE", ml, y);
+        doc.text(`${numSecao}. ESTRATIFICAÇÃO E ANÁLISE POR GHE`, ml, y);
+        numSecao += 1;
         y += 6;
         autoTable(doc, {
           startY: y,
@@ -603,13 +613,14 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
         y = (doc as any).lastAutoTable.finalY + 10;
       }
 
-      // ── 7. Evidencias Qualitativas ────────────────────────────────────
+      // ── Evidencias Qualitativas ───────────────────────────────────────
       if (temEvidenciasQualitativas) {
         checkPageOverflow(60);
         y += 2;
-        doc.setFontSize(13);
+        doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("7. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS", ml, y);
+        doc.text(`${numSecao}. EVIDÊNCIAS QUALITATIVAS — ENTREVISTAS GUIADAS`, ml, y);
+        numSecao += 1;
         y += 8;
         
         for (const ev of evidenciasQualitativas) {
@@ -750,12 +761,13 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                   {!isEntrevistaOnly && (
                     <>
                       {/* Síntese */}
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-5 gap-2">
                         {[
                           { label: "Crítico", count: criticos.length, cls: "bg-red-50 border-red-200 text-red-700" },
                           { label: "Alto", count: altos.length, cls: "bg-orange-50 border-orange-200 text-orange-700" },
                           { label: "Médio", count: medios.length, cls: "bg-amber-50 border-amber-200 text-amber-700" },
                           { label: "Baixo", count: baixos.length, cls: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+                          { label: "Trivial", count: triviais.length, cls: "bg-slate-50 border-slate-200 text-slate-600" },
                         ].map(({ label, count, cls }) => (
                           <div key={label} className={cn("rounded-lg border p-3 text-center", cls)}>
                             <p className="text-2xl font-bold">{count}</p>
@@ -782,7 +794,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                               <div className="flex flex-col items-end">
                                 <span className="text-[10px] text-muted-foreground leading-none mb-1">P{d.prob} · S{d.sev}</span>
                                 <Badge variant="outline" className={cn("text-[10px] h-5 py-0", NIVEL_BADGE[d.nivel])}>
-                                  {GRO_NIVEL_RISCO_LABELS[d.nivel]}
+                                  {NIVEL15_LABELS[d.nivel]}
                                 </Badge>
                               </div>
                             </div>
@@ -806,7 +818,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">P{ev.p_max} × S{ev.s_max} · {ev.count} menção(ões)</span>
                               <Badge variant="outline" className={cn("text-xs", NIVEL_BADGE[ev.nivel])}>
-                                {GRO_NIVEL_RISCO_LABELS[ev.nivel as keyof typeof GRO_NIVEL_RISCO_LABELS] ?? ev.nivel}
+                                {NIVEL15_LABELS[ev.nivel as keyof typeof NIVEL15_LABELS] ?? ev.nivel}
                               </Badge>
                             </div>
                           </div>

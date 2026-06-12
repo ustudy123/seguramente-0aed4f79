@@ -35,13 +35,17 @@ import {
   MINIMO_RESPONDENTES_GRUPO,
 } from "@/lib/psicossocial-privacy";
 import {
-  GRO_NIVEL_RISCO_LABELS,
-  scoreToProbabilidade,
-  scoreToSeveridade,
-  calcularNivelGRO,
-  GRO_PROBABILIDADE_LABELS,
-  GRO_SEVERIDADE_LABELS,
-} from "@/types/gro";
+  scoreToProb15,
+  sevFallbackFromScore,
+  nivelGRO15,
+  normalizarNomeFator,
+  PROB15_LABELS,
+  NIVEL15_LABELS,
+  NIVEL15_ORDEM,
+  type NivelGRO15,
+} from "@/lib/groPsicossocial15";
+import { getSeveridadeInfo } from "@/lib/psicossocial-severidade";
+import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
 import {
   resolverFatorPorSubject,
   CATEGORIA_LABELS,
@@ -101,7 +105,7 @@ interface InventarioItem {
   probabilidadeLabel: string;
   severidadeLabel: string;
   nivelLabel: string;
-  nivelKey: 'baixo' | 'medio' | 'alto' | 'critico';
+  nivelKey: NivelGRO15;
   fonteCampanhas: number; // quantas campanhas contribuíram com score para esse fator
 }
 
@@ -109,6 +113,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
+  const { data: sevCatalogo } = useSeveridadesCatalogo();
   // Campanhas válidas (mín. anonimato para questionário, 1 para entrevista guiada)
   const campanhasValidas = useMemo(() =>
     campanhas.filter(c => {
@@ -257,9 +262,13 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
 
     const items: InventarioItem[] = Object.values(porFator).map(agg => {
       const scoreReal = Math.round(agg.somaScore / agg.pesoTotal);
-      const prob = scoreToProbabilidade(scoreReal, isSipro);
-      const sev = scoreToSeveridade(scoreReal, isSipro);
-      const nivel = calcularNivelGRO(prob, sev);
+      // Metodologia P x S: probabilidade variável (score) + severidade FIXA do
+      // catálogo de riscos; nível pelo cruzamento na matriz (inclui TRIVIAL).
+      // Instrumentos não-SIPRO usam escala protetiva — converte para risco.
+      const scoreRisco = isSipro ? scoreReal : 100 - scoreReal;
+      const prob = scoreToProb15(scoreRisco);
+      const sev = sevCatalogo?.get(normalizarNomeFator(agg.normativa.fator)) ?? sevFallbackFromScore(scoreRisco);
+      const nivel = nivelGRO15(prob, sev);
 
       return {
         fatorId: agg.fatorId,
@@ -270,17 +279,16 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
         categoriaLabel: agg.normativa.categoriaLabel,
         manifestacoes: agg.normativa.manifestacoes,
         scoreReal,
-        probabilidadeLabel: GRO_PROBABILIDADE_LABELS[prob],
-        severidadeLabel: GRO_SEVERIDADE_LABELS[sev],
-        nivelLabel: GRO_NIVEL_RISCO_LABELS[nivel],
+        probabilidadeLabel: PROB15_LABELS[prob],
+        severidadeLabel: getSeveridadeInfo(sev)?.label ?? String(sev),
+        nivelLabel: NIVEL15_LABELS[nivel],
         nivelKey: nivel,
         fonteCampanhas: agg.campanhas,
       };
     });
 
-    const ordem: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
-    return items.sort((a, b) => (ordem[a.nivelKey] ?? 4) - (ordem[b.nivelKey] ?? 4));
-  }, [campanhasValidas, isSipro, filtroCampanha, gheSelecionado, bloqueadoPorAnonimatoGHE]);
+    return items.sort((a, b) => (NIVEL15_ORDEM[a.nivelKey] ?? 5) - (NIVEL15_ORDEM[b.nivelKey] ?? 5));
+  }, [campanhasValidas, isSipro, filtroCampanha, gheSelecionado, bloqueadoPorAnonimatoGHE, sevCatalogo]);
 
 
 
@@ -288,6 +296,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const altos = inventario.filter(i => i.nivelKey === 'alto').length;
   const medios = inventario.filter(i => i.nivelKey === 'medio').length;
   const baixos = inventario.filter(i => i.nivelKey === 'baixo').length;
+  const triviais = inventario.filter(i => i.nivelKey === 'trivial').length;
 
   const handleImportarGRO = async () => {
     if (campanhasValidas.length === 0) return;
@@ -389,6 +398,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           ["Risco Alto", String(altos), "Implementar medidas preventivas prioritárias", "60 dias"],
           ["Risco Médio", String(medios), "Monitoramento e ações de melhoria contínua", "90 dias"],
           ["Risco Baixo", String(baixos), "Manter vigilância e registrar evidências", "180 dias"],
+          ["Risco Trivial", String(triviais), "Risco desprezível — manter registro documental", "—"],
         ],
         headStyles: { fillColor: [88, 28, 135], textColor: 255, fontSize: 8 },
         bodyStyles: { fontSize: 8 },
@@ -433,6 +443,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     alto: "border-l-orange-500",
     medio: "border-l-amber-500",
     baixo: "border-l-emerald-500",
+    trivial: "border-l-slate-300",
   };
 
   const nivelBadgeColors: Record<string, string> = {
@@ -440,6 +451,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     alto: "bg-orange-50 text-orange-700 border-orange-200",
     medio: "bg-amber-50 text-amber-700 border-amber-200",
     baixo: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    trivial: "bg-slate-50 text-slate-600 border-slate-200",
   };
 
   // IDs de campanhas com modalidade entrevista guiada (evidências qualitativas, fora do critério de radar)
@@ -591,12 +603,13 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
         )}
 
         {/* Matriz resumida */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {[
             { label: "Crítico", count: criticos, bg: "bg-red-50 border-red-200", text: "text-red-700" },
             { label: "Alto", count: altos, bg: "bg-orange-50 border-orange-200", text: "text-orange-700" },
             { label: "Médio", count: medios, bg: "bg-amber-50 border-amber-200", text: "text-amber-700" },
             { label: "Baixo", count: baixos, bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700" },
+            { label: "Trivial", count: triviais, bg: "bg-slate-50 border-slate-200", text: "text-slate-600" },
           ].map(({ label, count, bg, text }) => (
             <div key={label} className={cn("p-3 rounded-lg border text-center", bg)}>
               <p className={cn("text-xl font-bold", text)}>{count}</p>
@@ -658,6 +671,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
                             "bg-orange-500": item.nivelKey === 'alto',
                             "bg-amber-500": item.nivelKey === 'medio',
                             "bg-emerald-500": item.nivelKey === 'baixo',
+                            "bg-slate-400": item.nivelKey === 'trivial',
                           })}
                           style={{ width: `${item.scoreReal}%` }}
                         />
