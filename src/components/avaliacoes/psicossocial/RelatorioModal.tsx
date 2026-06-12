@@ -330,8 +330,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
-            doc.text(`FUNÇÃO/DEPARTAMENTO: ${sanitize(funcDepto)}`, ml, y);
-            y += 4;
+            const funcDeptoLines = doc.splitTextToSize(
+              `FUNÇÃO/DEPARTAMENTO: ${sanitize(funcDepto)}`,
+              pageW - ml - mr
+            );
+            doc.text(funcDeptoLines, ml, y);
+            y += funcDeptoLines.length * 4;
             
             doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, ml, y);
             y += 5;
@@ -601,12 +605,18 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           startY: y,
           margin: { left: ml, right: mr, top: mt, bottom: mb },
           head: [["GHE", "Respondentes", "IPS Médio", "Situação"]],
-          body: resultadosPorGHE.map(g => [
-            sanitize(g.ghe_nome),
-            String(g.count),
-            `${g.ipsMedio || 0}/100`,
-            getIPSLabel(calcularIPSClassificacao(g.ipsMedio || 0))
-          ]),
+          body: resultadosPorGHE.map(g => {
+            // SIPRO armazena score de risco (alto = pior); IPS = 100 - risco
+            const ipsGhe = g.ipsMedio != null
+              ? (isSipro ? 100 - g.ipsMedio : g.ipsMedio)
+              : 0;
+            return [
+              sanitize(g.ghe_nome),
+              String(g.count),
+              `${ipsGhe}/100`,
+              getIPSLabel(calcularIPSClassificacao(ipsGhe))
+            ];
+          }),
           headStyles: { fillColor: [88, 28, 135], fontSize: 8, textColor: 255 },
           bodyStyles: { fontSize: 8, halign: 'justify' },
         });
