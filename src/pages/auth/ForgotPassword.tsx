@@ -39,13 +39,17 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.functions.invoke("send-recovery-email", {
+      const { data: resp, error } = await supabase.functions.invoke("send-recovery-email", {
         body: { email: data.email },
       });
 
-      if (error) {
+      // A função retorna { error } com status 4xx/5xx quando o envio falha de
+      // verdade (Resend rejeitou, rede caiu). Tratamos como falha real em vez
+      // de mostrar "E-mail enviado!" para um e-mail que nunca sairá.
+      const erroFuncao = (resp as any)?.error;
+      if (error || erroFuncao) {
         toast.error("Erro ao enviar e-mail", {
-          description: translateError(error.message),
+          description: translateError(erroFuncao || error?.message || ""),
         });
         setLoading(false);
         return;

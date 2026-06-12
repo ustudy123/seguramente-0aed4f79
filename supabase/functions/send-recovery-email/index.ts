@@ -47,22 +47,23 @@ serve(async (req) => {
   });
 
   if (linkError) {
-    console.error("generateLink error:", linkError.message);
-    // Don't reveal if user exists or not
+    // Usuário inexistente cai aqui. Por segurança NÃO revelamos isso ao
+    // cliente — respondemos ok. Mas logamos com marcador para diagnóstico.
+    console.warn("[recovery] generateLink falhou (provável usuário inexistente):", linkError.message, "email:", email);
     return json({ ok: true });
   }
 
   const recoveryUrl = linkData?.properties?.action_link;
   if (!recoveryUrl) {
-    console.error("No action_link returned");
+    console.error("[recovery] generateLink OK porém sem action_link. email:", email);
     return json({ ok: true });
   }
 
   // Send branded email via Resend
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) {
-    console.error("RESEND_API_KEY not configured");
-    return json({ error: "Email service not configured" }, 500);
+    console.error("[recovery] RESEND_API_KEY não configurada");
+    return json({ error: "Serviço de e-mail não configurado" }, 500);
   }
 
   const userName = linkData?.user?.user_metadata?.nome_completo || "";
@@ -98,7 +99,10 @@ serve(async (req) => {
                 Redefinir Minha Senha
               </a>
             </div>
-            <p style="font-size: 12px; color: #999999; margin: 24px 0 0;">
+            <p style="font-size: 12px; color: #999999; margin: 24px 0 0; word-break: break-all;">
+              Se o botão não funcionar, copie e cole este endereço no navegador:<br/>${recoveryUrl}
+            </p>
+            <p style="font-size: 12px; color: #999999; margin: 16px 0 0;">
               Se você não solicitou a recuperação de senha, ignore este e-mail.
             </p>
             <hr style="border-color: #e8e5f0; margin: 16px 0;" />
@@ -109,13 +113,20 @@ serve(async (req) => {
     });
 
     if (!resendRes.ok) {
-      const err = await resendRes.json();
-      console.error("Resend error:", err);
+      const err = await resendRes.text();
+      console.error("[recovery] Resend rejeitou o envio. status:", resendRes.status, "body:", err);
+      // ANTES: retornava ok mesmo com falha, e o front mostrava "E-mail enviado!".
+      // Agora informamos a falha real para o usuário poder reagir (tentar de novo,
+      // avisar o suporte) em vez de esperar um e-mail que nunca chega.
+      return json({ error: "Não foi possível enviar o e-mail no momento. Tente novamente em instantes." }, 502);
     }
+
+    const okData = await resendRes.json().catch(() => ({}));
+    console.log("[recovery] e-mail enviado. id:", (okData as any)?.id ?? "-", "email:", email);
   } catch (e) {
-    console.error("Email send error:", e);
+    console.error("[recovery] erro de rede ao enviar e-mail:", e);
+    return json({ error: "Falha de comunicação com o serviço de e-mail. Tente novamente." }, 502);
   }
 
-  // Always return ok (don't reveal if user exists)
   return json({ ok: true });
 });
