@@ -82,6 +82,7 @@ export function SolicitarAjusteFolhaInterno({
   const [colaboradorId, setColaboradorId] = useState<string>(colaboradorIdInicial || "");
   const [loading, setLoading] = useState(false);
   const [marcsPorDia, setMarcsPorDia] = useState<Record<string, Partial<Record<TipoMarc, string>>>>({});
+  const [marcsRawPorDia, setMarcsRawPorDia] = useState<Record<string, Partial<Record<TipoMarc, string>>>>({});
   const [pendentesPorDia, setPendentesPorDia] = useState<Record<string, number>>({});
   const [mesAtivo, setMesAtivo] = useState(() => `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`);
   const [edits, setEdits] = useState<Record<string, DiaEdit>>({});
@@ -123,16 +124,44 @@ export function SolicitarAjusteFolhaInterno({
           .lte("data_referencia", fim),
       ]);
 
+      // Reconstrói os 4 slots do formulário pela POSIÇÃO CRONOLÓGICA das
+      // marcações do dia (mesma lógica do espelho). O banco normaliza os
+      // tipos para apenas entrada/saida, então mapear por tipo cru fazia o
+      // form divergir do espelho quando o dia tinha 3+ marcações
+      // (YOUREYES-160). Também guardamos a hora crua (com segundos) para a
+      // correção apagar a marcação original exata.
       const map: Record<string, Partial<Record<TipoMarc, string>>> = {};
+      const rawMap: Record<string, Partial<Record<TipoMarc, string>>> = {};
+      const porDia: Record<string, { hora: string }[]> = {};
       ((marcRes.data as any[]) || []).forEach((m) => {
-        if (!map[m.data_marcacao]) map[m.data_marcacao] = {};
-        const tipo = m.tipo_marcacao as TipoMarc;
-        // Se houver mais de uma marcação do mesmo tipo, pegamos a primeira
-        if (!map[m.data_marcacao][tipo]) {
-          map[m.data_marcacao][tipo] = fmtHora(m.hora_marcacao);
+        (porDia[m.data_marcacao] ||= []).push({ hora: m.hora_marcacao });
+      });
+      Object.entries(porDia).forEach(([data, marcas]) => {
+        marcas.sort((a, b) => String(a.hora).localeCompare(String(b.hora)));
+        map[data] = {};
+        rawMap[data] = {};
+        const setSlot = (slot: TipoMarc, hora: string) => {
+          map[data][slot] = fmtHora(hora);
+          rawMap[data][slot] = hora;
+        };
+        if (marcas.length === 1) {
+          setSlot("entrada", marcas[0].hora);
+        } else if (marcas.length === 2) {
+          setSlot("entrada", marcas[0].hora);
+          setSlot("saida", marcas[1].hora);
+        } else if (marcas.length === 3) {
+          setSlot("entrada", marcas[0].hora);
+          setSlot("saida_almoco", marcas[1].hora);
+          setSlot("retorno_almoco", marcas[2].hora);
+        } else if (marcas.length >= 4) {
+          setSlot("entrada", marcas[0].hora);
+          setSlot("saida_almoco", marcas[1].hora);
+          setSlot("retorno_almoco", marcas[2].hora);
+          setSlot("saida", marcas[marcas.length - 1].hora);
         }
       });
       setMarcsPorDia(map);
+      setMarcsRawPorDia(rawMap);
 
       const pend: Record<string, number> = {};
       ((ajRes.data as any[]) || []).forEach((a) => {
@@ -183,15 +212,16 @@ export function SolicitarAjusteFolhaInterno({
     const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       const original = marcsPorDia[data] || {};
+      const raw = marcsRawPorDia[data] || {};
       ORDEM_TIPOS.forEach((t) => {
         const novo = (ed.horarios[t] || "").trim();
         if (!novo) return;
         if (novo === original[t]) return;
-        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || "" });
+        out.push({ data, tipo: t, hora: novo, horaOriginal: raw[t] || original[t] || "" });
       });
     });
     return out;
-  }, [edits, marcsPorDia]);
+  }, [edits, marcsPorDia, marcsRawPorDia]);
 
   // Dias com alguma intervenção (horário ou abono > 0)
   const diasComAlteracao = useMemo(() => {
@@ -296,7 +326,9 @@ export function SolicitarAjusteFolhaInterno({
               dataReferencia: it.data,
               tipoAjuste: it.horaOriginal ? "correcao" : "inclusao",
               tipoMarcacao: it.tipo,
-              horaOriginal: it.horaOriginal ? `${it.horaOriginal}:00` : undefined,
+              horaOriginal: it.horaOriginal
+                ? (it.horaOriginal.length >= 8 ? it.horaOriginal : `${it.horaOriginal}:00`)
+                : undefined,
               horaSolicitada: `${it.hora}:00`,
               motivo,
               justificativaId: justId || undefined,
