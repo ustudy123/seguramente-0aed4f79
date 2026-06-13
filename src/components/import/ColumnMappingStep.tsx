@@ -280,9 +280,15 @@ function MappingRow({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__none__">— Não mapeado —</SelectItem>
-          {fileHeaders.map(h => (
-            <SelectItem key={h} value={h}>{h}</SelectItem>
-          ))}
+          {fileHeaders
+            // Colunas sem cabeçalho (vazias) não podem virar <SelectItem value="">
+            // — o Radix Select quebra com value vazio. Como não há nome para
+            // mapear, simplesmente não as oferecemos. O array fileHeaders
+            // permanece intacto, preservando o mapeamento por índice.
+            .filter(h => h != null && String(h).trim() !== "")
+            .map((h, i) => (
+              <SelectItem key={`${h}-${i}`} value={h}>{h}</SelectItem>
+            ))}
         </SelectContent>
       </Select>
       {sampleValue && (
