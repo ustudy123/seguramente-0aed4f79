@@ -12,6 +12,28 @@ interface State {
   error: Error | null;
 }
 
+/**
+ * Traduz mensagens de erro técnicas (geralmente em inglês) para uma
+ * explicação clara em português, compreensível por usuário leigo.
+ * Retorna null quando não há tradução conhecida.
+ */
+export function explicarErro(message: string): string | null {
+  const m = (message || "").toLowerCase();
+  if (m.includes("select.item") && m.includes("empty string")) {
+    return "A planilha tem uma coluna sem nome no cabeçalho. Dê um nome a todas as colunas (ou remova as colunas vazias) e tente importar novamente.";
+  }
+  if (m.includes("planilha vazia")) {
+    return "A planilha está vazia ou não tem linhas de dados. Verifique o arquivo e tente novamente.";
+  }
+  if (m.includes("network") || m.includes("failed to fetch")) {
+    return "Falha de conexão. Verifique sua internet e tente novamente.";
+  }
+  if (m.includes("chunk") && m.includes("load")) {
+    return "Uma atualização do sistema foi publicada. Recarregue a página para carregar a versão mais recente.";
+  }
+  return null;
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -34,6 +56,8 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 
+      const amigavel = this.state.error ? explicarErro(this.state.error.message) : null;
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-6">
           <div className="max-w-md w-full text-center space-y-6">
@@ -45,13 +69,18 @@ export class ErrorBoundary extends Component<Props, State> {
                 Algo deu errado
               </h1>
               <p className="text-muted-foreground text-sm">
-                Ocorreu um erro inesperado. Tente recarregar a página.
+                {amigavel || "Ocorreu um erro inesperado. Tente recarregar a página."}
               </p>
             </div>
             {this.state.error && (
-              <pre className="text-xs text-left bg-muted p-3 rounded-lg overflow-auto max-h-32 text-muted-foreground">
-                {this.state.error.message}
-              </pre>
+              <details className="text-left">
+                <summary className="text-xs text-muted-foreground cursor-pointer select-none">
+                  Detalhes técnicos
+                </summary>
+                <pre className="text-xs text-left bg-muted p-3 rounded-lg overflow-auto max-h-32 text-muted-foreground mt-2">
+                  {this.state.error.message}
+                </pre>
+              </details>
             )}
             <div className="flex gap-3 justify-center">
               <Button variant="outline" onClick={this.handleReset}>

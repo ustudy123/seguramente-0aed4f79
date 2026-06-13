@@ -153,6 +153,10 @@ export function ColumnMappingStep({ fileHeaders, sampleRows, onConfirm, onBack }
   const optionalFields = SYSTEM_FIELDS.filter(f => !f.required);
   const unmappedRequired = requiredFields.filter(f => !mapping[f.key]);
   const mappedCount = Object.values(mapping).filter(Boolean).length;
+  // Posições (1-indexed) das colunas sem cabeçalho — base do aviso amigável.
+  const colunasSemNome = fileHeaders
+    .map((h, i) => (!h || String(h).trim() === "" ? i + 1 : null))
+    .filter((x): x is number => x !== null);
 
   const handleChange = (fieldKey: string, headerValue: string) => {
     setMapping(prev => {
@@ -190,6 +194,23 @@ export function ColumnMappingStep({ fileHeaders, sampleRows, onConfirm, onBack }
       </div>
 
       {/* Alerts */}
+      {colunasSemNome.length > 0 && (
+        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg shrink-0">
+          <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-700">
+              {colunasSemNome.length === 1
+                ? "Há 1 coluna sem nome no cabeçalho da planilha"
+                : `Há ${colunasSemNome.length} colunas sem nome no cabeçalho da planilha`}
+              {" "}(posição: {colunasSemNome.join(", ")}).
+            </p>
+            <p className="text-xs text-amber-700/80 mt-0.5">
+              Essas colunas não aparecem na lista para mapear. Se precisar usá-las, dê um nome a elas na primeira linha da planilha e importe novamente. Caso contrário, é só ignorar este aviso.
+            </p>
+          </div>
+        </div>
+      )}
+
       {unmappedRequired.length > 0 && (
         <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg shrink-0">
           <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
