@@ -41,7 +41,8 @@ import { toast } from "sonner";
 interface ImportPlanilhaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (resultado: ResultadoImportacao) => void;
+  onViewEmpresa?: (empresaId: string) => void;
   titulo?: string;
   descricao?: string;
 }
@@ -52,6 +53,7 @@ export function ImportPlanilhaModal({
   open,
   onOpenChange,
   onSuccess,
+  onViewEmpresa,
   titulo = "Importar Planilha",
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
@@ -201,7 +203,7 @@ export function ImportPlanilhaModal({
         toast.warning(`Importação concluída com ${result.erros.length} erros.`);
       }
       
-      onSuccess?.();
+      onSuccess?.(result);
     } catch (error: any) {
       setErro(error.message);
       setEtapa("preview");
