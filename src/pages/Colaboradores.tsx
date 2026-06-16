@@ -1461,6 +1461,8 @@ const Colaboradores = () => {
   const { temPermissao, isOwner } = usePerfilPermissions();
   const podeCriar = isOwner || temPermissao("colaboradores", "criar");
 
+  const [activeTab, setActiveTab] = useState("ativos");
+
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
     window.addEventListener('open-import-colaboradores', handleOpenImport);
