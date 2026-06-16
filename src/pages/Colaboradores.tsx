@@ -441,9 +441,11 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Departamentos</SelectItem>
-              {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-              ))}
+              {departments
+                .filter((dept) => dept != null && String(dept).trim() !== "")
+                .map((dept) => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
             </SelectContent>
           </Select>
           <Select value={vinculoFilter} onValueChange={(v) => setVinculoFilter(v as "clt" | "pj" | "todos")}>
