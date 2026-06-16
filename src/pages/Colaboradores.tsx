@@ -67,6 +67,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { ColaboradorForm, ColaboradorEditData } from "@/components/colaboradores/ColaboradorForm";
 import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
+import type { ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
 import { DesligamentoForm } from "@/components/admissao/DesligamentoForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -1469,11 +1470,21 @@ const Colaboradores = () => {
     return () => window.removeEventListener('open-import-colaboradores', handleOpenImport);
   }, []);
 
-  const handleImportSuccess = () => {
+  const handleImportSuccess = (resultado?: ResultadoImportacao) => {
     queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
     queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
     queryClient.invalidateQueries({ queryKey: ["cargos"] });
     queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+    queryClient.invalidateQueries({ queryKey: ["admissoes"] });
+    if (resultado && resultado.colaboradoresInseridos + resultado.colaboradoresAtualizados > 0) {
+      setActiveTab("ativos");
+    }
+  };
+
+  const handleViewImportedEmpresa = () => {
+    setActiveTab("ativos");
+    setShowImport(false);
+    queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
     queryClient.invalidateQueries({ queryKey: ["admissoes"] });
   };
 
@@ -1550,6 +1561,7 @@ const Colaboradores = () => {
         open={showImport}
         onOpenChange={setShowImport}
         onSuccess={handleImportSuccess}
+        onViewEmpresa={handleViewImportedEmpresa}
         titulo="Importar Colaboradores"
         descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
       />
