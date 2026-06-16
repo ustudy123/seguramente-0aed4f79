@@ -792,6 +792,7 @@ export function ImportPlanilhaModal({
                                       const target = empresas.find((e) => e.id === emp.empresaId);
                                       if (target) {
                                         setEmpresaAtiva(target);
+                                        onViewEmpresa?.(emp.empresaId);
                                         toast.success(`Empresa ativa: ${target.razao_social}`);
                                       }
                                     }}
