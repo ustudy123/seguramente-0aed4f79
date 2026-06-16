@@ -1461,6 +1461,8 @@ const Colaboradores = () => {
   const { temPermissao, isOwner } = usePerfilPermissions();
   const podeCriar = isOwner || temPermissao("colaboradores", "criar");
 
+  const [activeTab, setActiveTab] = useState("ativos");
+
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
     window.addEventListener('open-import-colaboradores', handleOpenImport);
@@ -1508,7 +1510,14 @@ const Colaboradores = () => {
               <Button 
                 className="gradient-primary shadow-glow" 
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                  if (activeTab !== "ativos") {
+                    setActiveTab("ativos");
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                    }, 60);
+                  } else {
+                    window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                  }
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -1519,7 +1528,7 @@ const Colaboradores = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="ativos" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
           <TabsTrigger value="ativos">Ativos</TabsTrigger>
           <TabsTrigger value="admissoes">Admissões</TabsTrigger>
