@@ -28,6 +28,19 @@ const formatCnpj = (cnpj: string | null) => {
   return clean.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
 };
 
+const formatCpf = (cpf: string | null | undefined) => {
+  if (!cpf) return "";
+  const clean = cpf.replace(/\D/g, "");
+  if (clean.length !== 11) return cpf;
+  return clean.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+};
+
+const formatDoc = (empresa: { cnpj?: string | null; cpf?: string | null }) => {
+  if (empresa.cnpj) return formatCnpj(empresa.cnpj);
+  if (empresa.cpf) return `CPF ${formatCpf(empresa.cpf)}`;
+  return "";
+};
+
 export const EmpresaSelector = () => {
   const [open, setOpen] = useState(false);
   const { empresaAtiva, setEmpresaAtiva, empresas, isLoading, initialized, isProfissional, semVinculos } = useEmpresaAtiva();
