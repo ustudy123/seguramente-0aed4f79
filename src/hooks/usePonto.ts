@@ -130,6 +130,7 @@ export function usePonto() {
             queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
             queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
             queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+            queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-hoje"] });
           }
         )
         .on(
@@ -465,10 +466,17 @@ export function usePonto() {
       return result;
     },
     onSuccess: (_, variables) => {
+      // Invalida TODAS as queries que alimentam o espelho, para que a
+      // marcação recém-aprovada apareça sem precisar de F5. A query
+      // "ponto-marcacoes-dia" (coluna "Marcações do dia") faltava aqui,
+      // por isso o status mudava na hora mas a batida só surgia após
+      // recarregar a página.
       queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
-      
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-hoje"] });
+
       if (!variables.multiple) {
         toast.success(`Ajuste ${variables.aprovado ? "aprovado" : "rejeitado"} com sucesso!`);
       }
