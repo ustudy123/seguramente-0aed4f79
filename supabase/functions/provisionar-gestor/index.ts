@@ -22,10 +22,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // 1. Buscar admissão
+    // 1. Buscar admissão (dados de identidade)
     const { data: adm, error: errAdm } = await supabase
       .from("admissoes")
-      .select("id, tenant_id, empresa_id, nome_completo, cpf, email, login_interno")
+      .select("id, tenant_id, empresa_id, nome_completo, cpf, email")
       .eq("id", admissao_id)
       .maybeSingle();
 
@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    let login = adm.login_interno as string | null;
     const cpfLimpo = (adm.cpf || "").replace(/\D/g, "");
     if (!cpfLimpo || cpfLimpo.length < 11) {
       return new Response(JSON.stringify({ error: "CPF do colaborador é inválido" }), {
@@ -44,6 +43,17 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Login existente fica em usuarios_base.email_principal (a tabela
+    // admissoes não armazena login). Reaproveita se já houver.
+    const { data: ubExistente } = await supabase
+      .from("usuarios_base")
+      .select("email_principal")
+      .eq("tenant_id", adm.tenant_id)
+      .eq("cpf", adm.cpf)
+      .maybeSingle();
+
+    let login = (ubExistente?.email_principal as string | null) || null;
 
     // 2. Gerar login se ainda não existir
     if (!login) {
@@ -55,7 +65,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({
             error:
-              "Não foi possível gerar login automático (conflito). Defina manualmente o login_interno.",
+              "Não foi possível gerar login automático (conflito). Defina o login manualmente.",
           }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
@@ -75,7 +85,11 @@ Deno.serve(async (req) => {
         email: login,
         password: cpfLimpo,
         email_confirm: true,
-        user_metadata: { nome_completo: adm.nome_completo, origem: "gestor_departamento" },
+        user_metadata: {
+          nome_completo: adm.nome_completo,
+          origem: "gestor_departamento",
+          precisa_redefinir_senha: true,
+        },
       });
       if (errCreate || !created.user) {
         return new Response(JSON.stringify({ error: errCreate?.message || "Falha ao criar auth user" }), {
@@ -118,11 +132,8 @@ Deno.serve(async (req) => {
         .eq("id", ub.id);
     }
 
-    // 5. Atualizar admissoes
-    await supabase
-      .from("admissoes")
-      .update({ login_interno: login, precisa_redefinir_senha: true })
-      .eq("id", admissao_id);
+    // 5. (O login fica em usuarios_base.email_principal — já gravado no
+    // passo 4. A tabela admissoes não possui colunas de login/senha.)
 
     // 6. Vincular perfil "Gestor de Departamento"
     const { data: perfil } = await supabase

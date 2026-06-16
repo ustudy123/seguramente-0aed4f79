@@ -14,10 +14,10 @@
 -- Esta migration cria a função. Ela gera um login no formato
 -- "<primeiro>.<ultimo>@youreyes.local" (e-mail-shaped, pois o
 -- login é usado como e-mail no auth.admin.createUser), sem
--- acentos, e garante unicidade contra admissoes.login_interno e
--- usuarios_base.email_principal, adicionando sufixo numérico em
--- caso de conflito. Retorna NULL apenas se não conseguir um login
--- único após várias tentativas (a Edge Function trata como 409).
+-- acentos, e garante unicidade contra usuarios_base.email_principal,
+-- adicionando sufixo numérico em caso de conflito. Retorna NULL apenas
+-- se não conseguir um login único após várias tentativas (a Edge
+-- Function trata como 409).
 -- =========================================================
 
 CREATE OR REPLACE FUNCTION public.gerar_login_youreyes(p_nome_completo text)
@@ -75,8 +75,7 @@ BEGIN
     END IF;
 
     SELECT
-      EXISTS (SELECT 1 FROM public.admissoes a WHERE lower(a.login_interno) = v_candidato)
-      OR EXISTS (SELECT 1 FROM public.usuarios_base ub WHERE lower(ub.email_principal) = v_candidato)
+      EXISTS (SELECT 1 FROM public.usuarios_base ub WHERE lower(ub.email_principal) = v_candidato)
     INTO v_existe;
 
     IF NOT v_existe THEN

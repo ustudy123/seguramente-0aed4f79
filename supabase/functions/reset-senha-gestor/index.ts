@@ -24,11 +24,27 @@ Deno.serve(async (req) => {
 
     const { data: adm } = await supabase
       .from("admissoes")
-      .select("id, login_interno, nome_completo")
+      .select("id, tenant_id, cpf, nome_completo")
       .eq("id", admissao_id)
       .maybeSingle();
 
-    if (!adm?.login_interno) {
+    if (!adm) {
+      return new Response(JSON.stringify({ error: "Colaborador não encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // O login do gestor fica em usuarios_base.email_principal
+    const { data: ub } = await supabase
+      .from("usuarios_base")
+      .select("email_principal")
+      .eq("tenant_id", adm.tenant_id)
+      .eq("cpf", adm.cpf)
+      .maybeSingle();
+
+    const loginInterno = ub?.email_principal as string | null;
+    if (!loginInterno) {
       return new Response(JSON.stringify({ error: "Colaborador não possui login interno provisionado" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -38,7 +54,7 @@ Deno.serve(async (req) => {
     const redirectTo = `https://youreyes.com.br/reset-password`;
     const { data: link, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
-      email: adm.login_interno,
+      email: loginInterno,
       options: { redirectTo },
     });
 
@@ -49,14 +65,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    await supabase
-      .from("admissoes")
-      .update({ precisa_redefinir_senha: true, senha_resetada_em: new Date().toISOString() })
-      .eq("id", admissao_id);
-
     return new Response(
       JSON.stringify({
-        login: adm.login_interno,
+        login: loginInterno,
         action_link: link.properties?.action_link,
         nome: adm.nome_completo,
       }),
