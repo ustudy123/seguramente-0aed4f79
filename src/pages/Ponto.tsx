@@ -121,7 +121,13 @@ const Ponto = () => {
         .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,endereco_geolocalizacao,selfie_url")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
-      if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+      // NÃO filtramos por empresa_id aqui de propósito. As marcações são
+      // casadas por CPF com a lista de ponto_diario já escopada por
+      // empresa (filteredPontos), então só aparecem as dos colaboradores
+      // exibidos. Filtrar empresa_id aqui escondia marcações cujo
+      // empresa_id divergia do ativo (ex.: inserida por aprovação de
+      // ajuste, admissão duplicada) — a linha mostrava status
+      // "Entrada Registrada" mas "Sem marcações" no espelho.
       const { data, error } = await q.order("hora_marcacao", { ascending: true }) as { data: any[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
