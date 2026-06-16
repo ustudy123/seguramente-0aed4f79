@@ -309,12 +309,11 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
   const asoObrigatorioNaoPreenchido = useMemo(() => {
     // Se está usando ASO anterior válido, não bloqueia
     if (usarAsoAnterior && asoValidacao.asoValido) return false;
-    // Se não tem ASO anterior válido, exame demissional é obrigatório
-    if (!asoValidacao.asoValido && !form.data_exame_demissional) return true;
-    // Se não está usando ASO anterior e não preencheu o exame
-    if (!usarAsoAnterior && !form.data_exame_demissional) return true;
-    return false;
-  }, [usarAsoAnterior, asoValidacao.asoValido, form.data_exame_demissional]);
+    // Anexou o arquivo do ASO demissional OU preencheu a data → cumpre NR-7
+    if (asoFile || form.data_exame_demissional) return false;
+    return true;
+  }, [usarAsoAnterior, asoValidacao.asoValido, form.data_exame_demissional, asoFile]);
+
 
   // RNDES25 – Estabilidade ativa bloqueia (a menos que justa causa)
   const bloqueioEstabilidade = useMemo(() => {
