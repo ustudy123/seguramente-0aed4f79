@@ -53,6 +53,55 @@ const CentralGaf = () => {
     }
   };
 
+  const handleExportar = () => {
+    const csvEscape = (v: any) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const rows: string[] = [];
+    rows.push(["Tipo","Colaborador","CID","Data Início","Data Fim","Dias","Motivo/Tipo","Status"].map(csvEscape).join(";"));
+
+    (atestados || []).forEach((a: any) => {
+      rows.push([
+        "Atestado",
+        a.colaborador?.nome_completo || a.colaborador_nome || "",
+        a.cid || "",
+        a.data_inicio || "",
+        a.data_fim || "",
+        a.dias_afastamento ?? "",
+        a.tipo || a.motivo || "",
+        a.status || "",
+      ].map(csvEscape).join(";"));
+    });
+
+    (afastamentos || []).forEach((af: any) => {
+      rows.push([
+        "Afastamento",
+        af.colaborador?.nome_completo || af.colaborador_nome || "",
+        af.cid || "",
+        af.data_inicio || "",
+        af.data_fim || "",
+        af.dias ?? af.total_dias ?? "",
+        af.tipo || af.motivo || "",
+        af.status || "",
+      ].map(csvEscape).join(";"));
+    });
+
+    const csv = "\uFEFF" + rows.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mod-gaf-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -76,10 +125,11 @@ const CentralGaf = () => {
           <p className="text-muted-foreground">Gestão Inteligente de Atestados e Afastamentos</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExportar}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
+
           <Button size="sm" onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Afastamento
