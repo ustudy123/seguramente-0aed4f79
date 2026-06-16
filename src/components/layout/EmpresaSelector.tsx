@@ -170,9 +170,9 @@ export const EmpresaSelector = () => {
                         {empresa.tipo_unidade === "matriz" ? "Matriz" : "Filial"}
                       </Badge>
                     </div>
-                    {empresa.cnpj &&
+                    {(empresa.cnpj || empresa.cpf) &&
                   <span className="text-xs text-muted-foreground">
-                        {formatCnpj(empresa.cnpj)}
+                        {formatDoc(empresa)}
                       </span>
                   }
                   </div>
