@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { fromTable } from "@/integrations/supabase/untypedClient";
-import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Settings2 } from "lucide-react";
+import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Settings2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
@@ -23,19 +23,24 @@ interface Props {
   colaboradorIdInicial?: string;
 }
 
-type TipoMarc = "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
+// Modelo de alternância livre entrada↔saída (igual ao banco — ver
+// migration 20260610180000_ponto_alternancia_entrada_saida): a posição
+// na sequência cronológica define o tipo. Índice par = ENTRADA, índice
+// ímpar = SAÍDA. O dia pode ter quantos pares forem necessários.
+type TipoMarc = "entrada" | "saida";
 
 const MAX_FILE_MB = 5;
 const MAX_ITENS = 60;
+/** Limite de marcações por dia no formulário (8 pares entrada/saída). */
+const MAX_MARCS_DIA = 16;
 
-const TIPO_LABEL: Record<TipoMarc, string> = {
-  entrada: "Entrada",
-  saida_almoco: "Saída Almoço",
-  retorno_almoco: "Retorno Almoço",
-  saida: "Saída",
-};
-
-const ORDEM_TIPOS: TipoMarc[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
+/** Tipo de uma marcação pela posição: par = entrada, ímpar = saída. */
+function tipoPorIndice(i: number): TipoMarc {
+  return i % 2 === 0 ? "entrada" : "saida";
+}
+function tipoLabel(i: number): string {
+  return tipoPorIndice(i) === "entrada" ? "Entrada" : "Saída";
+}
 
 const OUTRO_VALUE = "__outro__";
 
@@ -50,25 +55,30 @@ function toMin(s?: string): number | null {
   if (!s || !/^\d{2}:\d{2}/.test(s)) return null;
   return Number(s.slice(0,2)) * 60 + Number(s.slice(3,5));
 }
-/** Horas trabalhadas (em horas decimais) a partir das 4 marcações. */
-function horasTrabalhadasDia(h: Partial<Record<TipoMarc, string>>): number {
-  const e = toMin(h.entrada), sa = toMin(h.saida_almoco), ra = toMin(h.retorno_almoco), s = toMin(h.saida);
+/**
+ * Horas trabalhadas (decimais) somando cada par entrada→saída da
+ * sequência. Marcações sem par (saída pendente) são ignoradas.
+ */
+function horasTrabalhadasDia(marcs: string[]): number {
   let total = 0;
-  if (e != null && sa != null && sa > e) total += sa - e;
-  if (ra != null && s != null && s > ra) total += s - ra;
-  if (total === 0 && e != null && s != null && s > e) total = s - e;
+  for (let i = 0; i + 1 < marcs.length; i += 2) {
+    const e = toMin(marcs[i]), s = toMin(marcs[i + 1]);
+    if (e != null && s != null && s > e) total += s - e;
+  }
   return Math.max(0, total / 60);
 }
 
 interface DiaEdit {
-  horarios: Partial<Record<TipoMarc, string>>;
+  // undefined = não editado (usa as marcações originais).
+  // array = sequência cronológica de horários "HH:MM" que substitui o dia.
+  marcacoes?: string[];
   justificativaId: string;
   outroTexto: string;
   horasAbono: string;     // string para input livre; convertido em number ao enviar
   anexo: File | null;
 }
 
-const EMPTY_EDIT: DiaEdit = { horarios: {}, justificativaId: "", outroTexto: "", horasAbono: "", anexo: null };
+const EMPTY_EDIT: DiaEdit = { justificativaId: "", outroTexto: "", horasAbono: "", anexo: null };
 
 export function SolicitarAjusteFolhaInterno({
   open, onOpenChange, colaboradores, tenantId, empresaAtivaId, colaboradorIdInicial,
@@ -81,8 +91,11 @@ export function SolicitarAjusteFolhaInterno({
 
   const [colaboradorId, setColaboradorId] = useState<string>(colaboradorIdInicial || "");
   const [loading, setLoading] = useState(false);
-  const [marcsPorDia, setMarcsPorDia] = useState<Record<string, Partial<Record<TipoMarc, string>>>>({});
-  const [marcsRawPorDia, setMarcsRawPorDia] = useState<Record<string, Partial<Record<TipoMarc, string>>>>({});
+  // Marcações originais por dia: lista de horas "HH:MM" em ordem cronológica.
+  const [marcsPorDia, setMarcsPorDia] = useState<Record<string, string[]>>({});
+  // Mesma lista, mas com a hora crua do banco (com segundos) para casar a
+  // marcação original exata no momento da correção (YOUREYES-160).
+  const [marcsRawPorDia, setMarcsRawPorDia] = useState<Record<string, string[]>>({});
   const [pendentesPorDia, setPendentesPorDia] = useState<Record<string, number>>({});
   const [mesAtivo, setMesAtivo] = useState(() => `${hojeDate.getFullYear()}-${pad(hojeDate.getMonth()+1)}`);
   const [edits, setEdits] = useState<Record<string, DiaEdit>>({});
@@ -124,41 +137,21 @@ export function SolicitarAjusteFolhaInterno({
           .lte("data_referencia", fim),
       ]);
 
-      // Reconstrói os 4 slots do formulário pela POSIÇÃO CRONOLÓGICA das
-      // marcações do dia (mesma lógica do espelho). O banco normaliza os
-      // tipos para apenas entrada/saida, então mapear por tipo cru fazia o
-      // form divergir do espelho quando o dia tinha 3+ marcações
-      // (YOUREYES-160). Também guardamos a hora crua (com segundos) para a
-      // correção apagar a marcação original exata.
-      const map: Record<string, Partial<Record<TipoMarc, string>>> = {};
-      const rawMap: Record<string, Partial<Record<TipoMarc, string>>> = {};
+      // Reconstrói as marcações do dia como uma SEQUÊNCIA cronológica
+      // simples (igual ao espelho). O tipo é dado pela posição
+      // (par=entrada, ímpar=saída), no mesmo modelo de alternância do
+      // banco. Guardamos também a hora crua (com segundos) para a
+      // correção apagar a marcação original exata (YOUREYES-160).
+      const map: Record<string, string[]> = {};
+      const rawMap: Record<string, string[]> = {};
       const porDia: Record<string, { hora: string }[]> = {};
       ((marcRes.data as any[]) || []).forEach((m) => {
         (porDia[m.data_marcacao] ||= []).push({ hora: m.hora_marcacao });
       });
       Object.entries(porDia).forEach(([data, marcas]) => {
         marcas.sort((a, b) => String(a.hora).localeCompare(String(b.hora)));
-        map[data] = {};
-        rawMap[data] = {};
-        const setSlot = (slot: TipoMarc, hora: string) => {
-          map[data][slot] = fmtHora(hora);
-          rawMap[data][slot] = hora;
-        };
-        if (marcas.length === 1) {
-          setSlot("entrada", marcas[0].hora);
-        } else if (marcas.length === 2) {
-          setSlot("entrada", marcas[0].hora);
-          setSlot("saida", marcas[1].hora);
-        } else if (marcas.length === 3) {
-          setSlot("entrada", marcas[0].hora);
-          setSlot("saida_almoco", marcas[1].hora);
-          setSlot("retorno_almoco", marcas[2].hora);
-        } else if (marcas.length >= 4) {
-          setSlot("entrada", marcas[0].hora);
-          setSlot("saida_almoco", marcas[1].hora);
-          setSlot("retorno_almoco", marcas[2].hora);
-          setSlot("saida", marcas[marcas.length - 1].hora);
-        }
+        map[data] = marcas.map((m) => fmtHora(m.hora));
+        rawMap[data] = marcas.map((m) => m.hora);
       });
       setMarcsPorDia(map);
       setMarcsRawPorDia(rawMap);
@@ -188,9 +181,47 @@ export function SolicitarAjusteFolhaInterno({
     setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), ...patch } }));
   };
 
-  const setHorario = (data: string, tipo: TipoMarc, valor: string) => {
-    const cur = editDia(data);
-    patchDia(data, { horarios: { ...cur.horarios, [tipo]: valor } });
+  /** Marcações efetivas do dia = edição (se houver) ou as originais. */
+  const marcacoesEfetivas = (data: string): string[] => {
+    const ed = editDia(data);
+    if (ed.marcacoes !== undefined) return ed.marcacoes;
+    return marcsPorDia[data] || [];
+  };
+
+  /** Garante que o dia está em modo de edição (clona as originais). */
+  const ensureEdicao = (data: string): string[] => {
+    const ed = editDia(data);
+    if (ed.marcacoes !== undefined) return [...ed.marcacoes];
+    return [...(marcsPorDia[data] || [])];
+  };
+
+  const setMarcacao = (data: string, idx: number, valor: string) => {
+    const lista = ensureEdicao(data);
+    lista[idx] = valor;
+    patchDia(data, { marcacoes: lista });
+  };
+
+  const addMarcacao = (data: string) => {
+    const lista = ensureEdicao(data);
+    if (lista.length >= MAX_MARCS_DIA) {
+      toast.error(`Máximo de ${MAX_MARCS_DIA} marcações por dia.`);
+      return;
+    }
+    lista.push("");
+    patchDia(data, { marcacoes: lista });
+  };
+
+  const removeMarcacao = (data: string, idx: number) => {
+    const original = marcsPorDia[data] || [];
+    // Só pode remover marcação recém-adicionada (não existente no banco);
+    // exclusão de marcação já registrada não é suportada pelo ajuste.
+    if (idx < original.length) {
+      toast.error("Não é possível excluir uma marcação já registrada. Para anular um horário, ajuste-o ou registre uma justificativa.");
+      return;
+    }
+    const lista = ensureEdicao(data);
+    lista.splice(idx, 1);
+    patchDia(data, { marcacoes: lista });
   };
 
   const resolverMotivo = (ed: DiaEdit): { motivo: string; justId: string | null } => {
@@ -200,30 +231,38 @@ export function SolicitarAjusteFolhaInterno({
     return { motivo: j.nome, justId: j.id };
   };
 
-  /** Horários efetivos do dia = marcação original mesclada com edição. */
-  const horariosEfetivos = (data: string): Partial<Record<TipoMarc, string>> => {
-    const orig = marcsPorDia[data] || {};
-    const ed = editDia(data);
-    return { ...orig, ...ed.horarios };
-  };
-
-  // Lista de alterações de horários
+  // Lista de alterações de horários. Compara posição a posição: cada
+  // marcação editada na posição i vs a original na mesma posição.
+  // - mudou e havia original na posição  -> correção (horaOriginal = raw[i])
+  // - posição nova (além das originais)   -> inclusão (horaOriginal vazio)
+  // O tipo (entrada/saída) vem da POSIÇÃO (par/ímpar), igual ao banco.
   const itensAlterados = useMemo(() => {
     const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
-      const original = marcsPorDia[data] || {};
-      const raw = marcsRawPorDia[data] || {};
-      ORDEM_TIPOS.forEach((t) => {
-        const novo = (ed.horarios[t] || "").trim();
+      if (ed.marcacoes === undefined) return;
+      const original = marcsPorDia[data] || [];
+      const raw = marcsRawPorDia[data] || [];
+      ed.marcacoes.forEach((novoRaw, i) => {
+        const novo = (novoRaw || "").trim();
         if (!novo) return;
-        if (novo === original[t]) return;
-        out.push({ data, tipo: t, hora: novo, horaOriginal: raw[t] || original[t] || "" });
+        const orig = original[i] || "";
+        if (novo === orig) return;
+        out.push({
+          data,
+          tipo: tipoPorIndice(i),
+          hora: novo,
+          horaOriginal: raw[i] || orig || "",
+        });
       });
     });
     return out;
   }, [edits, marcsPorDia, marcsRawPorDia]);
 
-  // Dias com alguma intervenção (horário ou abono > 0)
+  // Marcações removidas no formulário: o banco NÃO suporta ajuste de
+  // exclusão (processar_ajuste_ponto trata só inclusão/correção). Por
+  // isso só permitimos remover marcações que foram ADICIONADAS agora e
+  // ainda não existem no banco (posição >= nº de originais). Tentar
+  // remover uma marcação já existente é bloqueado na UI/validação.
   const diasComAlteracao = useMemo(() => {
     const set = new Set<string>();
     itensAlterados.forEach((i) => set.add(i.data));
@@ -262,21 +301,27 @@ export function SolicitarAjusteFolhaInterno({
       if (!motivo || motivo.length < 3) return `Selecione uma justificativa para ${isoToBR(data)}.`;
       const abono = Number(ed.horasAbono) || 0;
       if (abono < 0 || abono > 24) return `Horas de abono inválidas em ${isoToBR(data)} (0 a 24).`;
+
+      // Sequência efetiva do dia (ignora marcações vazias do form)
+      const seq = marcacoesEfetivas(data).map((m) => (m || "").trim()).filter(Boolean);
+
       if (abono > 0) {
-        const horas = horasTrabalhadasDia(horariosEfetivos(data));
+        const horas = horasTrabalhadasDia(seq);
         if (abono > horas + 0.001) {
           return `Em ${isoToBR(data)}: o abono (${abono.toFixed(1)}h) é maior que as horas registradas/ajustadas no dia (${horas.toFixed(1)}h). Ajuste os horários do dia ou reduza o abono.`;
         }
       }
 
-      // Validação de ordem cronológica dos horários
-      const h = horariosEfetivos(data);
-      const e = toMin(h.entrada), sa = toMin(h.saida_almoco), ra = toMin(h.retorno_almoco), s = toMin(h.saida);
-      
-      if (e !== null && sa !== null && sa <= e) return `Em ${isoToBR(data)}, a Saída Almoço deve ser após a Entrada.`;
-      if (sa !== null && ra !== null && ra <= sa) return `Em ${isoToBR(data)}, o Retorno Almoço deve ser após a Saída Almoço.`;
-      if (ra !== null && s !== null && s <= ra) return `Em ${isoToBR(data)}, a Saída deve ser após o Retorno Almoço.`;
-      if (e !== null && s !== null && s <= e) return `Em ${isoToBR(data)}, a Saída deve ser após a Entrada.`;
+      // Ordem cronológica estritamente crescente ao longo da sequência
+      // (entrada < saída < entrada < saída ...). Cada marcação deve ser
+      // posterior à anterior.
+      for (let i = 1; i < seq.length; i++) {
+        const ant = toMin(seq[i - 1]);
+        const cur = toMin(seq[i]);
+        if (ant !== null && cur !== null && cur <= ant) {
+          return `Em ${isoToBR(data)}, a ${tipoLabel(i)} (${seq[i]}) deve ser após a marcação anterior (${seq[i - 1]}).`;
+        }
+      }
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";
@@ -434,14 +479,11 @@ export function SolicitarAjusteFolhaInterno({
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <table className="w-full text-xs min-w-[900px] table-fixed">
+                <table className="w-full text-xs min-w-[760px] table-fixed">
                   <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr className="text-left">
                       <th className="px-2 py-2 font-medium w-[80px]">Dia</th>
-                      <th className="px-2 py-2 font-medium w-[100px]">Entrada</th>
-                      <th className="px-2 py-2 font-medium w-[100px]">Saída Almoço</th>
-                      <th className="px-2 py-2 font-medium w-[100px]">Retorno Almoço</th>
-                      <th className="px-2 py-2 font-medium w-[100px]">Saída</th>
+                      <th className="px-2 py-2 font-medium w-[260px]">Marcações (Entrada / Saída)</th>
                       <th className="px-2 py-2 font-medium w-[180px]">Justificativa</th>
                       <th className="px-2 py-2 font-medium w-[70px]">Abono (h)</th>
                       <th className="px-2 py-2 font-medium w-[140px]">Anexo</th>
@@ -449,18 +491,19 @@ export function SolicitarAjusteFolhaInterno({
                   </thead>
                   <tbody>
                     {diasMes.map((data) => {
-                      const original = marcsPorDia[data] || {};
+                      const original = marcsPorDia[data] || [];
                       const pendentes = pendentesPorDia[data] || 0;
                       const ed = editDia(data);
-                      const temAlteracaoHora = ORDEM_TIPOS.some((t) => {
-                        const v = ed.horarios[t];
-                        return v !== undefined && v !== original[t];
-                      });
+                      const marcs = marcacoesEfetivas(data);
+                      const temAlteracaoHora = ed.marcacoes !== undefined && (
+                        ed.marcacoes.length !== original.length ||
+                        ed.marcacoes.some((v, i) => (v || "") !== (original[i] || ""))
+                      );
                       const temAbono = (Number(ed.horasAbono) || 0) > 0;
                       const ativo = temAlteracaoHora || temAbono;
                       const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
                       const futuro = data > today;
-                      const horasEfetiv = horasTrabalhadasDia(horariosEfetivos(data));
+                      const horasEfetiv = horasTrabalhadasDia(marcs.map((m) => (m || "").trim()).filter(Boolean));
                       return (
                         <tr
                           key={data}
@@ -475,31 +518,60 @@ export function SolicitarAjusteFolhaInterno({
                               </Badge>
                             )}
                           </td>
-                          {ORDEM_TIPOS.map((t) => {
-                            const orig = original[t] || "";
-                            const valor = ed.horarios[t] ?? orig;
-                            const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
-                            const incluido = alterado && !orig;
-                            return (
-                              <td key={t} className="px-2 py-1.5 align-top">
-                                <Input
-                                  type="time"
-                                  value={valor}
-                                  disabled={futuro}
-                                  onChange={(e) => setHorario(data, t, e.target.value)}
-                                  className={`h-8 text-xs font-mono ${
-                                    incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                    : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                    : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
-                                    : ""
-                                  }`}
-                                />
-                                {orig && alterado && (
-                                  <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
-                                )}
-                              </td>
-                            );
-                          })}
+                          <td className="px-2 py-1.5 align-top">
+                            <div className="space-y-1">
+                              {marcs.length === 0 && (
+                                <div className="text-[10px] text-muted-foreground italic">Sem marcações</div>
+                              )}
+                              {marcs.map((valor, i) => {
+                                const orig = original[i] || "";
+                                const novaMarc = i >= original.length;
+                                const alterado = ed.marcacoes !== undefined && (valor || "") !== orig && !novaMarc;
+                                const tipo = tipoPorIndice(i);
+                                return (
+                                  <div key={i} className="flex items-center gap-1">
+                                    <span className={`text-[9px] font-semibold w-12 shrink-0 ${tipo === "entrada" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                      {tipoLabel(i)}
+                                    </span>
+                                    <Input
+                                      type="time"
+                                      value={valor || ""}
+                                      disabled={futuro}
+                                      onChange={(e) => setMarcacao(data, i, e.target.value)}
+                                      className={`h-7 text-xs font-mono ${
+                                        novaMarc ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                        : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                        : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
+                                        : ""
+                                      }`}
+                                    />
+                                    {novaMarc && !futuro && (
+                                      <button
+                                        type="button"
+                                        onClick={() => removeMarcacao(data, i)}
+                                        className="text-destructive shrink-0"
+                                        title="Remover marcação adicionada"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                    {orig && alterado && (
+                                      <span className="text-[9px] text-muted-foreground line-through ml-0.5">{orig}</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {!futuro && marcs.length < MAX_MARCS_DIA && (
+                                <button
+                                  type="button"
+                                  onClick={() => addMarcacao(data)}
+                                  className="flex items-center gap-1 text-[10px] text-primary hover:underline mt-0.5"
+                                >
+                                  <Plus className="w-3 h-3" /> Adicionar {marcs.length % 2 === 0 ? "entrada" : "saída"}
+                                </button>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-2 py-1.5 align-top">
                             {ativo ? (
                               <div className="space-y-1">
