@@ -174,15 +174,16 @@ export default function Departamentos() {
     setIsDeleteOpen(true);
   };
 
-  const provisionarGestor = async (admissaoId: string) => {
+  const provisionarGestor = async (admissaoId: string): Promise<boolean> => {
     const { data, error } = await supabase.functions.invoke("provisionar-gestor", {
       body: { admissao_id: admissaoId },
     });
     if (error || (data as any)?.error) {
       toast.error(`Falha ao provisionar gestor: ${(data as any)?.error || error?.message}`);
-      return;
+      return false;
     }
     toast.success(`Login criado: ${(data as any).login} — senha inicial: CPF do gestor.`);
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,20 +201,27 @@ export default function Departamentos() {
       await createDepartamento.mutateAsync(payload as any);
     }
 
-    // Provisionar novos gestores
+    // Provisionar novos gestores. O departamento já foi salvo; se o
+    // provisionamento falhar, mantemos o formulário aberto para retry
+    // em vez de fechar como se tudo tivesse dado certo.
     setProvisioning(true);
+    let provisionamentoOk = true;
     try {
       if (formData.gestor_admissao_id && formData.gestor_admissao_id !== previousGestor) {
-        await provisionarGestor(formData.gestor_admissao_id);
+        const ok = await provisionarGestor(formData.gestor_admissao_id);
+        provisionamentoOk = provisionamentoOk && ok;
       }
       if (formData.gestor_substituto_admissao_id && formData.gestor_substituto_admissao_id !== previousSub) {
-        await provisionarGestor(formData.gestor_substituto_admissao_id);
+        const ok = await provisionarGestor(formData.gestor_substituto_admissao_id);
+        provisionamentoOk = provisionamentoOk && ok;
       }
     } finally {
       setProvisioning(false);
     }
 
-    setIsFormOpen(false);
+    if (provisionamentoOk) {
+      setIsFormOpen(false);
+    }
   };
 
   const handleDelete = async () => {
