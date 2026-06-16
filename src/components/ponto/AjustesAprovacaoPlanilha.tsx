@@ -22,13 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PontoAjuste } from "@/hooks/usePonto";
 
-const SLOTS: Array<{ key: "entrada" | "saida_almoco" | "retorno_almoco" | "saida"; label: string; short: string }> = [
-  { key: "entrada", label: "Entrada", short: "Entrada" },
-  { key: "saida_almoco", label: "Saída Almoço", short: "S. Almoço" },
-  { key: "retorno_almoco", label: "Retorno Almoço", short: "R. Almoço" },
-  { key: "saida", label: "Saída", short: "Saída" },
-];
-
 const MOTIVOS_REJEICAO = [
   "Horário incoerente com a jornada",
   "Informação divergente do comprovante",
@@ -108,16 +101,10 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     const pendentesRaw = items.filter((a) => a.status === "pendente");
     if (pendentesRaw.length === 0) return;
 
-    // Ordena por sequência cronológica do tipo_marcacao para respeitar a trigger
-    // validar_sequencia_marcacao (retorno_almoco exige saida_almoco prévia).
-    const ORDEM_TIPO: Record<string, number> = {
-      entrada: 1,
-      saida_almoco: 2,
-      retorno_almoco: 3,
-      saida: 4,
-    };
+    // Ordena por horário solicitado para respeitar a sequência cronológica
+    // (a trigger de validação exige marcações em ordem crescente no tempo).
     const pendentes = [...pendentesRaw].sort(
-      (a, b) => (ORDEM_TIPO[a.tipo_marcacao ?? ""] ?? 99) - (ORDEM_TIPO[b.tipo_marcacao ?? ""] ?? 99)
+      (a, b) => String(a.hora_solicitada || "").localeCompare(String(b.hora_solicitada || ""))
     );
 
     // Processa todos menos o último silenciosamente
@@ -280,9 +267,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                           <thead className="bg-muted/40">
                             <tr>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left w-28">Data</th>
-                              {SLOTS.map((s) => (
-                                <th key={s.key} className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center">{s.short}</th>
-                              ))}
+                              <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left min-w-[260px]">Marcações (Entrada / Saída)</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left min-w-[180px]">Motivo</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center w-16">Anexos</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center w-20">Status</th>
@@ -304,49 +289,67 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                     {formatDate(date)}
                                   </td>
 
-                                  {SLOTS.map((slot) => {
-                                    const ajuste = items.find((a) => a.tipo_marcacao === slot.key);
-                                    if (!ajuste) {
-                                      return (
-                                        <td key={slot.key} className="py-2.5 px-3 text-center align-top">
-                                          <span className="inline-block w-full text-xs text-muted-foreground/60 bg-slate-50 border border-slate-200 rounded px-2 py-1.5">—</span>
-                                        </td>
-                                      );
-                                    }
-                                    const isInclusao = ajuste.tipo_ajuste === "inclusao";
-                                    const isCorrecao = ajuste.tipo_ajuste === "correcao";
-                                    const isJust = ajuste.tipo_ajuste === "justificativa";
+                                  {(() => {
+                                    // Ordena os ajustes do dia por horário; o tipo
+                                    // (entrada/saída) é dado pela POSIÇÃO na sequência —
+                                    // mesmo modelo de pares da folha do colaborador.
+                                    const ordenados = [...items]
+                                      .filter((a) => a.tipo_ajuste !== "justificativa")
+                                      .sort((a, b) => String(a.hora_solicitada || "").localeCompare(String(b.hora_solicitada || "")));
+                                    const justificativas = items.filter((a) => a.tipo_ajuste === "justificativa");
                                     return (
-                                      <td key={slot.key} className="py-2.5 px-3 text-center align-top">
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div
-                                              className={cn(
-                                                "rounded border px-2 py-1.5 font-mono text-sm font-semibold cursor-help",
-                                                isInclusao && "bg-emerald-50 border-emerald-300 text-emerald-900",
-                                                isCorrecao && "bg-amber-50 border-amber-300 text-amber-900",
-                                                isJust && "bg-indigo-50 border-indigo-300 text-indigo-900",
-                                              )}
-                                            >
-                                              {isJust ? "JUST" : ajuste.hora_solicitada || "—"}
-                                              {isCorrecao && ajuste.hora_original && (
-                                                <div className="text-[10px] font-normal text-muted-foreground line-through mt-0.5">
-                                                  {ajuste.hora_original}
-                                                </div>
-                                              )}
+                                      <td className="py-2.5 px-3 align-top">
+                                        <div className="flex flex-wrap items-start gap-2">
+                                          {ordenados.length === 0 && justificativas.length === 0 && (
+                                            <span className="text-xs text-muted-foreground/60">—</span>
+                                          )}
+                                          {ordenados.map((ajuste, i) => {
+                                            const isInclusao = ajuste.tipo_ajuste === "inclusao";
+                                            const isCorrecao = ajuste.tipo_ajuste === "correcao";
+                                            const ehEntrada = i % 2 === 0;
+                                            return (
+                                              <div key={ajuste.id} className="flex flex-col gap-0.5">
+                                                <span className={cn("text-[9px] font-semibold", ehEntrada ? "text-emerald-600" : "text-rose-600")}>
+                                                  {ehEntrada ? "Entrada" : "Saída"}
+                                                </span>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <div
+                                                      className={cn(
+                                                        "rounded border px-2 py-1.5 font-mono text-sm font-semibold cursor-help text-center min-w-[78px]",
+                                                        isInclusao && "bg-emerald-50 border-emerald-300 text-emerald-900",
+                                                        isCorrecao && "bg-amber-50 border-amber-300 text-amber-900",
+                                                      )}
+                                                    >
+                                                      {ajuste.hora_solicitada || "—"}
+                                                      {isCorrecao && ajuste.hora_original && (
+                                                        <div className="text-[10px] font-normal text-muted-foreground line-through mt-0.5">
+                                                          {ajuste.hora_original}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="max-w-xs">
+                                                    <p className="font-semibold mb-1">{ehEntrada ? "Entrada" : "Saída"} — {isInclusao ? "Inclusão" : "Alteração"}</p>
+                                                    <p className="text-xs">Motivo: {ajuste.motivo}</p>
+                                                    {isCorrecao && ajuste.hora_original && (
+                                                      <p className="text-xs mt-1">Original: <span className="line-through">{ajuste.hora_original}</span> → Solicitado: <strong>{ajuste.hora_solicitada}</strong></p>
+                                                    )}
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </div>
+                                            );
+                                          })}
+                                          {justificativas.map((aj) => (
+                                            <div key={aj.id} className="flex flex-col gap-0.5">
+                                              <span className="text-[9px] font-semibold text-indigo-600">Justif.</span>
+                                              <div className="rounded border px-2 py-1.5 font-mono text-sm font-semibold bg-indigo-50 border-indigo-300 text-indigo-900 text-center min-w-[78px]">JUST</div>
                                             </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="top" className="max-w-xs">
-                                            <p className="font-semibold mb-1">{slot.label} — {isInclusao ? "Inclusão" : isCorrecao ? "Alteração" : "Justificativa"}</p>
-                                            <p className="text-xs">Motivo: {ajuste.motivo}</p>
-                                            {isCorrecao && ajuste.hora_original && (
-                                              <p className="text-xs mt-1">Original: <span className="line-through">{ajuste.hora_original}</span> → Solicitado: <strong>{ajuste.hora_solicitada}</strong></p>
-                                            )}
-                                          </TooltipContent>
-                                        </Tooltip>
+                                          ))}
+                                        </div>
                                       </td>
                                     );
-                                  })}
+                                  })()}
 
                                   <td className="py-2.5 px-3 align-top">
                                     <p className="text-xs leading-snug line-clamp-2">
