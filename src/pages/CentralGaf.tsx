@@ -125,10 +125,11 @@ const CentralGaf = () => {
           <p className="text-muted-foreground">Gestão Inteligente de Atestados e Afastamentos</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExportar}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
+
           <Button size="sm" onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Afastamento
