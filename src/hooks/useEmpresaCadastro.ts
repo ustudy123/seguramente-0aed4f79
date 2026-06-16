@@ -167,6 +167,8 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro'] });
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list_ativa'] });
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
       
       // Se não for um salvamento manual (detectado pela ausência de algum flag ou apenas por ser upsert sem toast extra),
       // podemos decidir não mostrar o toast. Mas para simplificar e atender o pedido do usuário
