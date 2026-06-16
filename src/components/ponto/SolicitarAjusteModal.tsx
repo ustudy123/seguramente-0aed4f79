@@ -26,15 +26,6 @@ const MAX_FILE_MB = 5;
 const MAX_FILES = 3;
 const MAX_ITENS = 40;
 
-const TIPO_LABEL: Record<TipoMarc, string> = {
-  entrada: "Entrada",
-  saida_almoco: "Saída Almoço",
-  retorno_almoco: "Retorno Almoço",
-  saida: "Saída",
-};
-
-const ORDEM_TIPOS: TipoMarc[] = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
-
 const JUSTIFICATIVAS_PRESET = [
   "Esqueci de registrar o ponto",
   "Falha no equipamento / aplicativo",
@@ -59,9 +50,20 @@ function diaSemana(iso: string) {
   return ds[new Date(iso + "T12:00:00").getDay()];
 }
 
-// edited[tipo] = "" significa "limpar/sem alteração ainda";  string com hora = ajuste
+// Tipo de uma marcação pela POSIÇÃO na sequência do dia:
+// par (0,2,4...) = entrada; ímpar (1,3,5...) = saída.
+// Modelo de alternância livre — comporta múltiplos ciclos por dia.
+function tipoPorIndice(i: number): "entrada" | "saida" {
+  return i % 2 === 0 ? "entrada" : "saida";
+}
+function tipoLabelIndice(i: number): string {
+  return tipoPorIndice(i) === "entrada" ? "Entrada" : "Saída";
+}
+
+// edited.marcacoes = lista cronológica de horários "HH:MM" do dia
+// (undefined = sem alteração; usa as originais). horas em pares.
 interface DiaEdit {
-  horarios: Partial<Record<TipoMarc, string>>; // novos horários propostos
+  marcacoes?: string[];          // novos horários propostos (sequência)
   justificativaPreset: string;
   justificativaOutro: string;
 }
@@ -110,11 +112,16 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   }, [mesAtivo, today]);
 
   const marcsPorDia = useMemo(() => {
-    const map: Record<string, Partial<Record<TipoMarc, string>>> = {};
+    // Sequência cronológica de horários por dia (alternância entrada/saída).
+    // Reúne TODAS as marcações do dia (não descarta repetidas por tipo).
+    const map: Record<string, string[]> = {};
+    const porDia: Record<string, { hora: string }[]> = {};
     marcacoes.forEach((m) => {
-      if (!map[m.data]) map[m.data] = {};
-      // mantém a primeira hora vista por tipo (ordenado desc na RPC, então a mais recente vence — ajustar para primeira)
-      if (!map[m.data][m.tipo]) map[m.data][m.tipo] = fmtHora(m.hora);
+      (porDia[m.data] ||= []).push({ hora: m.hora });
+    });
+    Object.entries(porDia).forEach(([data, lista]) => {
+      lista.sort((a, b) => String(a.hora).localeCompare(String(b.hora)));
+      map[data] = lista.map((x) => fmtHora(x.hora));
     });
     return map;
   }, [marcacoes]);
@@ -131,16 +138,44 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   // Helpers de edição
   const editDia = (data: string): DiaEdit =>
-    edits[data] || { horarios: {}, justificativaPreset: "", justificativaOutro: "" };
+    edits[data] || { justificativaPreset: "", justificativaOutro: "" };
 
-  const setHorario = (data: string, tipo: TipoMarc, valor: string) => {
+  // Lista efetiva de marcações do dia (edição ou originais)
+  const marcacoesEfetivas = (data: string): string[] => {
+    const ed = editDia(data);
+    if (ed.marcacoes !== undefined) return ed.marcacoes;
+    return marcsPorDia[data] || [];
+  };
+
+  // Define a hora de uma posição
+  const setMarcacao = (data: string, idx: number, valor: string) => {
     setEdits((prev) => {
-      const cur = editDia(data);
-      const novosHorarios = { ...cur.horarios, [tipo]: valor };
-      return { ...prev, [data]: { ...cur, horarios: novosHorarios } };
+      const cur = prev[data] || editDia(data);
+      const base = cur.marcacoes !== undefined ? [...cur.marcacoes] : [...(marcsPorDia[data] || [])];
+      base[idx] = valor;
+      return { ...prev, [data]: { ...cur, marcacoes: base } };
     });
   };
 
+  // Adiciona um par (entrada + saída vazios) ou uma marcação avulsa ao fim
+  const adicionarMarcacao = (data: string) => {
+    setEdits((prev) => {
+      const cur = prev[data] || editDia(data);
+      const base = cur.marcacoes !== undefined ? [...cur.marcacoes] : [...(marcsPorDia[data] || [])];
+      base.push("");
+      return { ...prev, [data]: { ...cur, marcacoes: base } };
+    });
+  };
+
+  // Remove a última marcação da sequência
+  const removerMarcacao = (data: string, idx: number) => {
+    setEdits((prev) => {
+      const cur = prev[data] || editDia(data);
+      const base = cur.marcacoes !== undefined ? [...cur.marcacoes] : [...(marcsPorDia[data] || [])];
+      base.splice(idx, 1);
+      return { ...prev, [data]: { ...cur, marcacoes: base } };
+    });
+  };
   const setJustificativaPreset = (data: string, v: string) => {
     setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaPreset: v } }));
   };
@@ -148,23 +183,31 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     setEdits((prev) => ({ ...prev, [data]: { ...editDia(data), justificativaOutro: v } }));
   };
 
-  // Itens efetivamente alterados (vs marcações originais)
+  // Itens efetivamente alterados, comparando POSIÇÃO a posição:
+  // - mudou e havia original na posição i  -> correção (horaOriginal = original[i])
+  // - posição nova (i >= nº de originais)   -> inclusão (sem horaOriginal)
+  // O tipo (entrada/saida) é dado pela posição (par/ímpar).
   const itensAlterados = useMemo(() => {
-    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal?: string; motivo: string }[] = [];
+    const out: { data: string; tipo: "entrada" | "saida"; hora: string; horaOriginal?: string; motivo: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
-      const original = marcsPorDia[data] || {};
+      if (ed.marcacoes === undefined) return;
+      const original = marcsPorDia[data] || [];
       const motivoFinal =
         ed.justificativaPreset === "Outro (descrever)"
           ? ed.justificativaOutro.trim()
           : ed.justificativaPreset.trim();
-      ORDEM_TIPOS.forEach((t) => {
-        const novo = (ed.horarios[t] || "").trim();
+      ed.marcacoes.forEach((novoRaw, i) => {
+        const novo = (novoRaw || "").trim();
         if (!novo) return;
-        if (novo === original[t]) return; // sem alteração
-        // Havia marcação original nesse tipo => é correção (substitui a antiga).
-        // Sem original => inclusão. A hora_original permite à aprovação remover
-        // a marcação antiga, evitando que ela sobreviva no espelho.
-        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || undefined, motivo: motivoFinal });
+        const orig = original[i] || "";
+        if (novo === orig) return; // sem alteração nessa posição
+        out.push({
+          data,
+          tipo: tipoPorIndice(i),
+          hora: novo,
+          horaOriginal: orig || undefined, // havia original => correção
+          motivo: motivoFinal,
+        });
       });
     });
     return out;
@@ -196,14 +239,30 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
           : ed.justificativaPreset.trim();
       if (!motivo || motivo.length < 5) return `Selecione uma justificativa para ${isoToBR(data)}.`;
 
-      // Validação de ordem cronológica dos horários
-      const h = { ...marcsPorDia[data], ...ed.horarios };
-      const e = toMin(h.entrada), sa = toMin(h.saida_almoco), ra = toMin(h.retorno_almoco), s = toMin(h.saida);
-      
-      if (e !== null && sa !== null && sa <= e) return `Em ${isoToBR(data)}, a Saída Almoço deve ser após a Entrada.`;
-      if (sa !== null && ra !== null && ra <= sa) return `Em ${isoToBR(data)}, o Retorno Almoço deve ser após a Saída Almoço.`;
-      if (ra !== null && s !== null && s <= ra) return `Em ${isoToBR(data)}, a Saída deve ser após o Retorno Almoço.`;
-      if (e !== null && s !== null && s <= e) return `Em ${isoToBR(data)}, a Saída deve ser após a Entrada.`;
+      // Validação cronológica da sequência de marcações (pares entrada/saída).
+      const seq = marcacoesEfetivas(data).map((x) => (x || "").trim());
+      const preenchidas = seq.map((h, i) => ({ h, i, min: toMin(h) })).filter((x) => x.h !== "");
+      // Toda marcação preenchida precisa ser horário válido
+      for (const x of preenchidas) {
+        if (x.min === null) return `Em ${isoToBR(data)}, há um horário inválido. Use o formato HH:MM.`;
+      }
+      // Cada SAÍDA (posição ímpar) deve vir depois da ENTRADA do par (posição par anterior)
+      for (let i = 1; i < seq.length; i += 2) {
+        const entrada = toMin(seq[i - 1]);
+        const saida = toMin(seq[i]);
+        if (entrada !== null && saida !== null && saida <= entrada) {
+          const par = Math.floor(i / 2) + 1;
+          return `Em ${isoToBR(data)}, a Saída do ${par}º par deve ser após a Entrada.`;
+        }
+      }
+      // A sequência inteira deve ser crescente (uma marcação após a anterior)
+      for (let i = 1; i < seq.length; i++) {
+        const ant = toMin(seq[i - 1]);
+        const atual = toMin(seq[i]);
+        if (ant !== null && atual !== null && atual <= ant) {
+          return `Em ${isoToBR(data)}, os horários devem estar em ordem crescente (${tipoLabelIndice(i)} após a marcação anterior).`;
+        }
+      }
     }
     for (const it of itensAlterados) {
       if (it.data > today) return "Não é permitido ajustar data futura.";
@@ -329,22 +388,20 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                     <thead className="bg-muted/50 sticky top-0 z-10">
                       <tr className="text-left">
                         <th className="px-2 py-2 font-medium w-[10%]">Dia</th>
-                        <th className="px-1.5 py-2 font-medium w-[18%]">Entrada</th>
-                        <th className="px-1.5 py-2 font-medium w-[18%]">S.Alm.</th>
-                        <th className="px-1.5 py-2 font-medium w-[18%]">R.Alm.</th>
-                        <th className="px-1.5 py-2 font-medium w-[18%]">Saída</th>
+                        <th className="px-1.5 py-2 font-medium w-[72%]">Marcações (Entrada / Saída)</th>
                         <th className="px-2 py-2 font-medium w-[18%]">Justificativa</th>
                       </tr>
                     </thead>
                     <tbody>
                       {diasMes.map((data) => {
-                        const original = marcsPorDia[data] || {};
+                        const original = marcsPorDia[data] || [];
                         const pendentes = pendentesPorDia[data] || [];
                         const ed = editDia(data);
-                        const temAlteracao = ORDEM_TIPOS.some((t) => {
-                          const v = ed.horarios[t];
-                          return v && v !== original[t];
-                        });
+                        const marcs = marcacoesEfetivas(data);
+                        const temAlteracao = ed.marcacoes !== undefined && (
+                          ed.marcacoes.length !== original.length ||
+                          ed.marcacoes.some((v, i) => (v || "") !== (original[i] || ""))
+                        );
                         const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
                         return (
                           <tr
@@ -360,29 +417,60 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                                 </Badge>
                               )}
                             </td>
-                            {ORDEM_TIPOS.map((t) => {
-                              const orig = original[t] || "";
-                              const valor = ed.horarios[t] ?? orig;
-                              const alterado = (ed.horarios[t] !== undefined) && ed.horarios[t] !== orig;
-                              const incluido = alterado && !orig;
-                              return (
-                                <td key={t} className="px-1.5 py-1.5 align-top">
-                                  <Input
-                                    type="time"
-                                    value={valor}
-                                    onChange={(e) => setHorario(data, t, e.target.value)}
-                                    className={`h-8 text-xs font-mono px-1 ${
-                                      incluido ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                      : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                      : ""
-                                    }`}
-                                  />
-                                  {orig && alterado && (
-                                    <div className="text-[9px] text-muted-foreground mt-0.5 line-through">orig: {orig}</div>
-                                  )}
-                                </td>
-                              );
-                            })}
+                            <td className="px-1.5 py-1.5 align-top">
+                              <div className="flex flex-wrap items-start gap-2">
+                                {marcs.length === 0 && (
+                                  <span className="text-[10px] text-muted-foreground italic py-1.5">Sem marcações</span>
+                                )}
+                                {marcs.map((valor, i) => {
+                                  const orig = original[i] || "";
+                                  const novaMarc = i >= original.length;
+                                  const alterado = ed.marcacoes !== undefined && (valor || "") !== orig && !novaMarc;
+                                  const tipo = tipoPorIndice(i);
+                                  const ehUltima = i === marcs.length - 1;
+                                  return (
+                                    <div key={i} className="flex flex-col gap-0.5">
+                                      <span className={`text-[9px] font-semibold ${tipo === "entrada" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                        {tipoLabelIndice(i)}
+                                      </span>
+                                      <div className="flex items-center gap-1">
+                                        <Input
+                                          type="time"
+                                          value={valor || ""}
+                                          onChange={(e) => setMarcacao(data, i, e.target.value)}
+                                          className={`h-8 text-xs font-mono px-1 w-[92px] ${
+                                            novaMarc ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                            : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                            : ""
+                                          }`}
+                                        />
+                                        {ehUltima && (
+                                          <button
+                                            type="button"
+                                            onClick={() => removerMarcacao(data, i)}
+                                            className="text-muted-foreground hover:text-destructive shrink-0"
+                                            title="Remover marcação"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </div>
+                                      {orig && alterado && (
+                                        <div className="text-[9px] text-muted-foreground line-through">orig: {orig}</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                <button
+                                  type="button"
+                                  onClick={() => adicionarMarcacao(data)}
+                                  className="h-8 mt-[14px] px-2 text-[10px] rounded border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary shrink-0"
+                                  title="Adicionar marcação"
+                                >
+                                  + marcação
+                                </button>
+                              </div>
+                            </td>
                             <td className="px-2 py-1.5 align-top">
                               {temAlteracao ? (
                                 <div className="space-y-1.5">
