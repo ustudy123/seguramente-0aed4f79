@@ -22338,6 +22338,10 @@ export type Database = {
         }
         Returns: number
       }
+      gerar_login_youreyes: {
+        Args: { p_nome_completo: string }
+        Returns: string
+      }
       get_admissao_by_token: {
         Args: { _token: string }
         Returns: {

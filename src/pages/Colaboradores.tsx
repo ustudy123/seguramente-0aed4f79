@@ -67,6 +67,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { ColaboradorForm, ColaboradorEditData } from "@/components/colaboradores/ColaboradorForm";
 import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
+import type { ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
 import { DesligamentoForm } from "@/components/admissao/DesligamentoForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -1461,17 +1462,29 @@ const Colaboradores = () => {
   const { temPermissao, isOwner } = usePerfilPermissions();
   const podeCriar = isOwner || temPermissao("colaboradores", "criar");
 
+  const [activeTab, setActiveTab] = useState("ativos");
+
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
     window.addEventListener('open-import-colaboradores', handleOpenImport);
     return () => window.removeEventListener('open-import-colaboradores', handleOpenImport);
   }, []);
 
-  const handleImportSuccess = () => {
+  const handleImportSuccess = (resultado?: ResultadoImportacao) => {
     queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
     queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
     queryClient.invalidateQueries({ queryKey: ["cargos"] });
     queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+    queryClient.invalidateQueries({ queryKey: ["admissoes"] });
+    if (resultado && resultado.colaboradoresInseridos + resultado.colaboradoresAtualizados > 0) {
+      setActiveTab("ativos");
+    }
+  };
+
+  const handleViewImportedEmpresa = () => {
+    setActiveTab("ativos");
+    setShowImport(false);
+    queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
     queryClient.invalidateQueries({ queryKey: ["admissoes"] });
   };
 
@@ -1508,7 +1521,14 @@ const Colaboradores = () => {
               <Button 
                 className="gradient-primary shadow-glow" 
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                  if (activeTab !== "ativos") {
+                    setActiveTab("ativos");
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                    }, 60);
+                  } else {
+                    window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                  }
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -1519,7 +1539,7 @@ const Colaboradores = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="ativos" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
           <TabsTrigger value="ativos">Ativos</TabsTrigger>
           <TabsTrigger value="admissoes">Admissões</TabsTrigger>
@@ -1541,6 +1561,7 @@ const Colaboradores = () => {
         open={showImport}
         onOpenChange={setShowImport}
         onSuccess={handleImportSuccess}
+        onViewEmpresa={handleViewImportedEmpresa}
         titulo="Importar Colaboradores"
         descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
       />
