@@ -140,7 +140,7 @@ export const EmpresaSelector = () => {
                 return (
               <CommandItem
                 key={empresa.id}
-                value={`${empresa.id} ${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''}`}
+                value={`${empresa.id} ${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''} ${(empresa.cnpj ?? '').replace(/\D/g,'')} ${empresa.cpf ?? ''} ${(empresa.cpf ?? '').replace(/\D/g,'')}`}
                 onSelect={() => {
                   setEmpresaAtiva(empresa);
                   setOpen(false);
