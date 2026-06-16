@@ -150,7 +150,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
 
   // Itens efetivamente alterados (vs marcações originais)
   const itensAlterados = useMemo(() => {
-    const out: { data: string; tipo: TipoMarc; hora: string; motivo: string }[] = [];
+    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal?: string; motivo: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       const original = marcsPorDia[data] || {};
       const motivoFinal =
@@ -161,7 +161,10 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
         const novo = (ed.horarios[t] || "").trim();
         if (!novo) return;
         if (novo === original[t]) return; // sem alteração
-        out.push({ data, tipo: t, hora: novo, motivo: motivoFinal });
+        // Havia marcação original nesse tipo => é correção (substitui a antiga).
+        // Sem original => inclusão. A hora_original permite à aprovação remover
+        // a marcação antiga, evitando que ela sobreviva no espelho.
+        out.push({ data, tipo: t, hora: novo, horaOriginal: original[t] || undefined, motivo: motivoFinal });
       });
     });
     return out;
@@ -230,6 +233,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
       const payload = itensAlterados.map((it) => ({
         data: it.data,
         hora: `${it.hora}:00`,
+        hora_original: it.horaOriginal ? `${it.horaOriginal}:00` : null,
         tipo: it.tipo,
         motivo: it.motivo,
       }));
