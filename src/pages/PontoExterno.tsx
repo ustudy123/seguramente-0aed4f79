@@ -196,6 +196,17 @@ const PontoExterno = () => {
         return;
       }
       setResultado(result);
+      // Atualiza o próximo tipo IMEDIATAMENTE com base no que acabou de
+      // ser registrado (entrada→saída, saída→entrada), sem depender da
+      // segunda chamada assíncrona nem de timing/replicação. Isso evita
+      // o bug do botão continuar como "Entrada" após registrar a entrada.
+      if (result.tipo_marcacao === "entrada") {
+        setProximoTipo("saida");
+      } else if (result.tipo_marcacao === "saida") {
+        setProximoTipo("entrada");
+      }
+      // Recarrega o estado completo do servidor (lista de marcações do
+      // dia, afastamento) para manter tudo consistente.
       carregarProximoTipo();
     } catch (e: any) {
       setError(traduzirErroPonto(e.message));
