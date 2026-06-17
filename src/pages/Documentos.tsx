@@ -96,6 +96,7 @@ const Documentos = () => {
   const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadForPastaId, setUploadForPastaId] = useState<string | undefined>(undefined);
+  const [uploadPastaColaboradorId, setUploadPastaColaboradorId] = useState<string | undefined>(undefined);
   const [novaVersaoDocId, setNovaVersaoDocId] = useState<string | undefined>(undefined);
   const [showCreatePasta, setShowCreatePasta] = useState(false);
   const [createPastaParentId, setCreatePastaParentId] = useState<string | null>(null);
@@ -185,8 +186,21 @@ const Documentos = () => {
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
+    // Descobre se a pasta de destino é de um colaborador. Se for, o
+    // colaborador é exigido e pré-selecionado. Se for pasta da empresa
+    // (unidade/categoria/etc.), o colaborador não é obrigatório.
+    const buscar = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
+      for (const node of nodes) {
+        if (node.id === pastaId) return node;
+        const found = buscar(node.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    const pasta = pastaId ? buscar(tree) : null;
+    setUploadPastaColaboradorId(pasta?.colaborador_id || undefined);
     setShowUploadForm(true);
-  }, []);
+  }, [tree]);
 
   const handleCreateSubfolder = useCallback((parentId: string) => {
     const findPasta = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
@@ -761,7 +775,8 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
       <DocumentoUploadForm
         open={showUploadForm}
         onOpenChange={(v) => { setShowUploadForm(v); if (!v) setNovaVersaoDocId(undefined); }}
-        preSelectedColaboradorId={undefined}
+        preSelectedColaboradorId={uploadPastaColaboradorId}
+        colaboradorObrigatorio={!!uploadPastaColaboradorId}
         documentoExistenteId={novaVersaoDocId}
         pastaId={uploadForPastaId}
       />

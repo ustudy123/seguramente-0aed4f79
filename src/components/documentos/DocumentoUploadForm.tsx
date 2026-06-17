@@ -43,7 +43,7 @@ const ACCEPTED_FILE_TYPES = [
 ];
 
 const formSchema = z.object({
-  colaboradorId: z.string().min(1, "Selecione um colaborador"),
+  colaboradorId: z.string().optional(),
   tipo: z.string().min(1, "Selecione um tipo"),
   dataValidade: z.string().optional(),
   observacoes: z.string().optional(),
@@ -55,11 +55,12 @@ interface DocumentoUploadFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preSelectedColaboradorId?: string;
+  colaboradorObrigatorio?: boolean;
   documentoExistenteId?: string;
   pastaId?: string;
 }
 
-export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, documentoExistenteId, pastaId }: DocumentoUploadFormProps) {
+export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, colaboradorObrigatorio = false, documentoExistenteId, pastaId }: DocumentoUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -128,15 +129,22 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
       return;
     }
 
-    const colaborador = colaboradores.find((c) => c.id === data.colaboradorId);
-    if (!colaborador) return;
+    const colaborador = data.colaboradorId
+      ? colaboradores.find((c) => c.id === data.colaboradorId)
+      : undefined;
+
+    // Colaborador é exigido apenas em pastas de colaborador.
+    if (colaboradorObrigatorio && !colaborador) {
+      form.setError("colaboradorId", { message: "Selecione um colaborador" });
+      return;
+    }
 
     try {
       await upload({
         file: selectedFile,
-        colaboradorNome: colaborador.nome_completo,
-        colaboradorCpf: colaborador.cpf,
-        colaboradorId: colaborador.id,
+        colaboradorNome: colaborador?.nome_completo || "Documento da empresa",
+        colaboradorCpf: colaborador?.cpf,
+        colaboradorId: colaborador?.id,
         tipo: data.tipo,
         dataValidade: data.dataValidade || undefined,
         observacoes: data.observacoes || undefined,
@@ -230,6 +238,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
               <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
             )}
 
+            {colaboradorObrigatorio && (
             <FormField
               control={form.control}
               name="colaboradorId"
@@ -254,6 +263,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                 </FormItem>
               )}
             />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
