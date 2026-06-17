@@ -299,44 +299,53 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                     const justificativas = items.filter((a) => a.tipo_ajuste === "justificativa");
                                     return (
                                       <td className="py-2.5 px-3 align-top">
-                                        <div className="flex flex-wrap items-start gap-2">
+                                        <div className="flex flex-col gap-1.5">
                                           {ordenados.length === 0 && justificativas.length === 0 && (
                                             <span className="text-xs text-muted-foreground/60">—</span>
                                           )}
-                                          {ordenados.map((ajuste, i) => {
-                                            const isInclusao = ajuste.tipo_ajuste === "inclusao";
-                                            const isCorrecao = ajuste.tipo_ajuste === "correcao";
-                                            const ehEntrada = i % 2 === 0;
+                                          {/* Agrupa em pares Entrada+Saída: cada par em sua própria linha */}
+                                          {Array.from({ length: Math.ceil(ordenados.length / 2) }).map((_, par) => {
+                                            const doPar = ordenados.slice(par * 2, par * 2 + 2);
                                             return (
-                                              <div key={ajuste.id} className="flex flex-col gap-0.5">
-                                                <span className={cn("text-[9px] font-semibold", ehEntrada ? "text-emerald-600" : "text-rose-600")}>
-                                                  {ehEntrada ? "Entrada" : "Saída"}
-                                                </span>
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
-                                                    <div
-                                                      className={cn(
-                                                        "rounded border px-2 py-1.5 font-mono text-sm font-semibold cursor-help text-center min-w-[78px]",
-                                                        isInclusao && "bg-emerald-50 border-emerald-300 text-emerald-900",
-                                                        isCorrecao && "bg-amber-50 border-amber-300 text-amber-900",
-                                                      )}
-                                                    >
-                                                      {ajuste.hora_solicitada || "—"}
-                                                      {isCorrecao && ajuste.hora_original && (
-                                                        <div className="text-[10px] font-normal text-muted-foreground line-through mt-0.5">
-                                                          {ajuste.hora_original}
-                                                        </div>
-                                                      )}
+                                              <div key={`par-${par}`} className="flex items-start gap-2">
+                                                {doPar.map((ajuste, j) => {
+                                                  const i = par * 2 + j;
+                                                  const isInclusao = ajuste.tipo_ajuste === "inclusao";
+                                                  const isCorrecao = ajuste.tipo_ajuste === "correcao";
+                                                  const ehEntrada = i % 2 === 0;
+                                                  return (
+                                                    <div key={ajuste.id} className="flex flex-col gap-0.5">
+                                                      <span className={cn("text-[9px] font-semibold", ehEntrada ? "text-emerald-600" : "text-rose-600")}>
+                                                        {ehEntrada ? "Entrada" : "Saída"}
+                                                      </span>
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <div
+                                                            className={cn(
+                                                              "rounded border px-2 py-1.5 font-mono text-sm font-semibold cursor-help text-center min-w-[78px]",
+                                                              isInclusao && "bg-emerald-50 border-emerald-300 text-emerald-900",
+                                                              isCorrecao && "bg-amber-50 border-amber-300 text-amber-900",
+                                                            )}
+                                                          >
+                                                            {ajuste.hora_solicitada || "—"}
+                                                            {isCorrecao && ajuste.hora_original && (
+                                                              <div className="text-[10px] font-normal text-muted-foreground line-through mt-0.5">
+                                                                {ajuste.hora_original}
+                                                              </div>
+                                                            )}
+                                                          </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top" className="max-w-xs">
+                                                          <p className="font-semibold mb-1">{ehEntrada ? "Entrada" : "Saída"} — {isInclusao ? "Inclusão" : "Alteração"}</p>
+                                                          <p className="text-xs">Motivo: {ajuste.motivo}</p>
+                                                          {isCorrecao && ajuste.hora_original && (
+                                                            <p className="text-xs mt-1">Original: <span className="line-through">{ajuste.hora_original}</span> → Solicitado: <strong>{ajuste.hora_solicitada}</strong></p>
+                                                          )}
+                                                        </TooltipContent>
+                                                      </Tooltip>
                                                     </div>
-                                                  </TooltipTrigger>
-                                                  <TooltipContent side="top" className="max-w-xs">
-                                                    <p className="font-semibold mb-1">{ehEntrada ? "Entrada" : "Saída"} — {isInclusao ? "Inclusão" : "Alteração"}</p>
-                                                    <p className="text-xs">Motivo: {ajuste.motivo}</p>
-                                                    {isCorrecao && ajuste.hora_original && (
-                                                      <p className="text-xs mt-1">Original: <span className="line-through">{ajuste.hora_original}</span> → Solicitado: <strong>{ajuste.hora_solicitada}</strong></p>
-                                                    )}
-                                                  </TooltipContent>
-                                                </Tooltip>
+                                                  );
+                                                })}
                                               </div>
                                             );
                                           })}
