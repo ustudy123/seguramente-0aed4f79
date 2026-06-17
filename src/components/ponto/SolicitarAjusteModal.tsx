@@ -136,14 +136,9 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     return map;
   }, [ajustesPend]);
 
-  // Enquanto houver QUALQUER ajuste pendente de aprovação, a folha inteira
-  // fica bloqueada para novos envios — evita empilhar ajustes sobre o que
-  // ainda está em análise pelo gestor.
-  const totalPendentes = useMemo(
-    () => ajustesPend.filter((a) => a.status === "pendente").length,
-    [ajustesPend]
-  );
-  const temPendencia = totalPendentes > 0;
+  // Um dia está BLOQUEADO para ajuste enquanto tiver marcação pendente de
+  // aprovação. O bloqueio é por dia: dias sem pendência seguem editáveis.
+  const diaBloqueado = (data: string): boolean => (pendentesPorDia[data]?.length ?? 0) > 0;
 
   // Helpers de edição
   const editDia = (data: string): DiaEdit =>
@@ -200,6 +195,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     const out: { data: string; tipo: "entrada" | "saida"; hora: string; horaOriginal?: string; motivo: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       if (ed.marcacoes === undefined) return;
+      if (diaBloqueado(data)) return; // dia com pendência não gera novo ajuste
       const original = marcsPorDia[data] || [];
       const motivoFinal =
         ed.justificativaPreset === "Outro (descrever)"
@@ -220,7 +216,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
       });
     });
     return out;
-  }, [edits, marcsPorDia]);
+  }, [edits, marcsPorDia, pendentesPorDia]);
 
   const totalAlteracoes = itensAlterados.length;
 
@@ -286,10 +282,6 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   };
 
   const handleSubmit = async () => {
-    if (temPendencia) {
-      toast.error("Ajuste ainda pendente — aguarde a aprovação do gestor antes de enviar um novo.");
-      return;
-    }
     const erro = validar();
     if (erro) { toast.error(erro); return; }
     setEnviando(true);
@@ -366,18 +358,6 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
               </DialogDescription>
             </DialogHeader>
 
-            {temPendencia && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg shrink-0">
-                <Clock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800">Ajuste ainda pendente — aguarde a aprovação.</p>
-                  <p className="text-xs text-amber-700/80 mt-0.5">
-                    Você tem {totalPendentes} marcação(ões) aguardando aprovação do gestor. Não é possível enviar um novo ajuste até que os pendentes sejam aprovados ou rejeitados.
-                  </p>
-                </div>
-              </div>
-            )}
-
             <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
               {/* Navegação de mês */}
               <div className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2 shrink-0">
@@ -443,6 +423,17 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                               )}
                             </td>
                             <td className="px-1.5 py-1.5 align-top">
+                              {diaBloqueado(data) ? (
+                                <div className="flex items-start gap-2 py-1.5">
+                                  <Clock className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                  <div>
+                                    <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">Ajuste ainda pendente — aguarde a aprovação.</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                      Este dia tem {pendentes.length} marcação(ões) aguardando o gestor. Não é possível alterar até ser aprovado ou rejeitado.
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
                               <div className="flex flex-wrap items-start gap-2">
                                 {marcs.length === 0 && (
                                   <span className="text-[10px] text-muted-foreground italic py-1.5">Sem marcações</span>
@@ -495,6 +486,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                                   + marcação
                                 </button>
                               </div>
+                              )}
                             </td>
                             <td className="px-2 py-1.5 align-top">
                               {temAlteracao ? (
@@ -577,7 +569,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-2 mt-auto">
                 <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || temPendencia}>
+                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
                   {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes (${totalAlteracoes || 0})`}
                 </Button>
               </div>

@@ -269,18 +269,15 @@ export function SolicitarAjusteFolhaInterno({
     Object.entries(edits).forEach(([data, ed]) => {
       if ((Number(ed.horasAbono) || 0) > 0) set.add(data);
     });
-    return Array.from(set);
-  }, [itensAlterados, edits]);
+    // Dias com marcação pendente de aprovação não entram (bloqueio por dia)
+    return Array.from(set).filter((data) => (pendentesPorDia[data] ?? 0) === 0);
+  }, [itensAlterados, edits, pendentesPorDia]);
 
   const totalAlteracoes = diasComAlteracao.length;
 
-  // Bloqueio: enquanto houver QUALQUER ajuste pendente do colaborador, a folha
-  // inteira fica travada para novos envios até aprovação/rejeição pelo gestor.
-  const totalPendentes = useMemo(
-    () => Object.values(pendentesPorDia).reduce((s, n) => s + n, 0),
-    [pendentesPorDia]
-  );
-  const temPendencia = totalPendentes > 0;
+  // Bloqueio POR DIA: um dia com marcação pendente de aprovação não pode
+  // receber novo ajuste; dias sem pendência seguem editáveis.
+  const diaBloqueado = (data: string): boolean => (pendentesPorDia[data] ?? 0) > 0;
 
   const handleAnexoDia = (data: string, file: File | null) => {
     if (!file) { patchDia(data, { anexo: null }); return; }
@@ -344,10 +341,6 @@ export function SolicitarAjusteFolhaInterno({
   };
 
   const handleSubmit = async () => {
-    if (temPendencia) {
-      toast.error("Ajuste ainda pendente — aguarde a aprovação do gestor antes de enviar um novo.");
-      return;
-    }
     const erro = validar();
     if (erro) { toast.error(erro); return; }
     if (!colaborador) return;
@@ -449,18 +442,6 @@ export function SolicitarAjusteFolhaInterno({
               </div>
             </DialogHeader>
 
-            {temPendencia && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800">Ajuste ainda pendente — aguarde a aprovação.</p>
-                  <p className="text-xs text-amber-700/80 mt-0.5">
-                    Este colaborador tem {totalPendentes} marcação(ões) aguardando aprovação. Não é possível enviar um novo ajuste até que os pendentes sejam aprovados ou rejeitados.
-                  </p>
-                </div>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Colaborador</Label>
@@ -543,6 +524,17 @@ export function SolicitarAjusteFolhaInterno({
                             )}
                           </td>
                           <td className="px-2 py-1.5 align-top">
+                            {diaBloqueado(data) ? (
+                              <div className="flex items-start gap-2 py-1">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                <div>
+                                  <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">Ajuste ainda pendente — aguarde a aprovação.</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {pendentes} marcação(ões) deste dia aguardam o gestor. Não é possível alterar até aprovar/rejeitar.
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
                             <div className="space-y-1">
                               {marcs.length === 0 && (
                                 <div className="text-[10px] text-muted-foreground italic">Sem marcações</div>
@@ -595,6 +587,7 @@ export function SolicitarAjusteFolhaInterno({
                                 </button>
                               )}
                             </div>
+                            )}
                           </td>
                           <td className="px-2 py-1.5 align-top">
                             {ativo ? (
@@ -635,7 +628,7 @@ export function SolicitarAjusteFolhaInterno({
                             <Input
                               type="number"
                               step="0.5" min="0" max="24"
-                              disabled={futuro}
+                              disabled={futuro || diaBloqueado(data)}
                               value={ed.horasAbono}
                               onChange={(e) => patchDia(data, { horasAbono: e.target.value })}
                               placeholder="0"
@@ -697,7 +690,7 @@ export function SolicitarAjusteFolhaInterno({
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="flex-1" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || !colaboradorId || temPendencia}>
+                <Button className="flex-1" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || !colaboradorId}>
                   {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes${totalAlteracoes ? ` (${totalAlteracoes} dia${totalAlteracoes !== 1 ? "s" : ""})` : ""}`}
                 </Button>
               </div>
