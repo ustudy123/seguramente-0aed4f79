@@ -129,8 +129,11 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
       return;
     }
 
-    const colaborador = data.colaboradorId
-      ? colaboradores.find((c) => c.id === data.colaboradorId)
+    const colaboradorIdSel = data.colaboradorId && data.colaboradorId !== "__nenhum__"
+      ? data.colaboradorId
+      : undefined;
+    const colaborador = colaboradorIdSel
+      ? colaboradores.find((c) => c.id === colaboradorIdSel)
       : undefined;
 
     // Colaborador é exigido apenas em pastas de colaborador.
@@ -238,20 +241,22 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
               <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
             )}
 
-            {colaboradorObrigatorio && (
             <FormField
               control={form.control}
               name="colaboradorId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Colaborador *</FormLabel>
+                  <FormLabel>Colaborador {colaboradorObrigatorio ? "*" : "(opcional)"}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o colaborador" />
+                        <SelectValue placeholder={colaboradorObrigatorio ? "Selecione o colaborador" : "Nenhum — documento da empresa"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {!colaboradorObrigatorio && (
+                        <SelectItem value="__nenhum__">Nenhum — documento da empresa</SelectItem>
+                      )}
                       {colaboradores.map((colab) => (
                         <SelectItem key={colab.id} value={colab.id}>
                           {colab.nome_completo}
@@ -263,7 +268,6 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                 </FormItem>
               )}
             />
-            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
