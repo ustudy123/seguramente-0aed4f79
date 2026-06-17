@@ -228,6 +228,7 @@ const Ferias = () => {
   const [comboOpen, setComboOpen] = useState(false);
   const [newSolicitacao, setNewSolicitacao] = useState({
     colaborador: "", colaboradorCpf: "", colaboradorId: "", departamento: "", dataInicio: "", dataFim: "",
+    periodoAquisitivoInicio: "", periodoAquisitivoFim: "",
     abonoPecuniario: false, diasAbono: 10, salarioBase: 0,
   });
   const [linkAssinaturaDialog, setLinkAssinaturaDialog] = useState<{ url: string; colaborador: string } | null>(null);
@@ -441,10 +442,12 @@ const Ferias = () => {
       abono_pecuniario: newSolicitacao.abonoPecuniario,
       dias_abono: newSolicitacao.abonoPecuniario ? newSolicitacao.diasAbono : 0,
       salario_base: newSolicitacao.salarioBase,
+      periodo_aquisitivo_inicio: newSolicitacao.periodoAquisitivoInicio || null,
+      periodo_aquisitivo_fim: newSolicitacao.periodoAquisitivoFim || null,
       inr_score_momento: inrColab?.score,
       inr_nivel_momento: inrColab?.nivel,
     });
-    setNewSolicitacao({ colaborador: "", colaboradorCpf: "", colaboradorId: "", departamento: "", dataInicio: "", dataFim: "", abonoPecuniario: false, diasAbono: 10, salarioBase: 0 });
+    setNewSolicitacao({ colaborador: "", colaboradorCpf: "", colaboradorId: "", departamento: "", dataInicio: "", dataFim: "", periodoAquisitivoInicio: "", periodoAquisitivoFim: "", abonoPecuniario: false, diasAbono: 10, salarioBase: 0 });
     setIsModalOpen(false);
   };
 
@@ -634,15 +637,42 @@ const Ferias = () => {
               <Label>Departamento</Label>
               <Input placeholder="Preenchido automaticamente" value={newSolicitacao.departamento} readOnly className="bg-muted/50" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Data Início *</Label>
-                <Input type="date" value={newSolicitacao.dataInicio} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataInicio: e.target.value }))} />
+            {/* Período de Gozo (quando o colaborador sai de férias) */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Período de Gozo *</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Data Início</Label>
+                  <Input type="date" value={newSolicitacao.dataInicio} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataInicio: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Data Fim</Label>
+                  <Input type="date" value={newSolicitacao.dataFim} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataFim: e.target.value }))} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Data Fim *</Label>
-                <Input type="date" value={newSolicitacao.dataFim} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataFim: e.target.value }))} />
+              {newSolicitacao.dataInicio && newSolicitacao.dataFim && (() => {
+                const ini = new Date(newSolicitacao.dataInicio);
+                const fim = new Date(newSolicitacao.dataFim);
+                if (fim < ini) return <p className="text-xs text-destructive">A data fim não pode ser antes do início.</p>;
+                const dias = Math.ceil((fim.getTime() - ini.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                return <p className="text-xs text-muted-foreground">Total: <span className="font-semibold text-foreground">{dias}</span> dia{dias !== 1 ? "s" : ""} de férias</p>;
+              })()}
+            </div>
+
+            {/* Período Aquisitivo (intervalo de trabalho que dá direito às férias) */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Período Aquisitivo</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Início</Label>
+                  <Input type="date" value={newSolicitacao.periodoAquisitivoInicio} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, periodoAquisitivoInicio: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Fim</Label>
+                  <Input type="date" value={newSolicitacao.periodoAquisitivoFim} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, periodoAquisitivoFim: e.target.value }))} />
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground">Intervalo de 12 meses de trabalho que garante o direito às férias.</p>
             </div>
             <div className="space-y-2">
               <Label>Salário Base (R$)</Label>
