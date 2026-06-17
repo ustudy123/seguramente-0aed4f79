@@ -540,26 +540,47 @@ const Ponto = () => {
                         {marcs.length === 0 ? (
                           <span className="text-xs text-muted-foreground">Sem marcações</span>
                         ) : (
-                          <div className="flex flex-wrap gap-1.5">
-                            {marcs.map((m, idx) => {
-                              // Usar tipo real da marcação, não a posição
-                              const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
-                              return (
-                                <MarcacaoBadge
-                                  key={m.id || idx}
-                                  id={m.id}
-                                  hora={m.hora}
-                                  isEntry={isEntry}
-                                  original={m.original}
-                                  podeEditar={podeEditarMarcacao}
-                                  editando={editandoMarcacao}
-                                  onSalvar={editarMarcacao}
-                                  onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
-                                  excluindo={excluindoMarcacao}
-                                />
-
-                              );
-                            })}
+                          <div className="flex flex-col gap-1.5">
+                            {(() => {
+                              // Agrupa em pares: uma ENTRADA abre uma nova linha; a
+                              // marcação seguinte (saída) fecha o par na mesma linha.
+                              // Saídas órfãs (sem entrada antes) ficam em linha própria.
+                              const linhas: typeof marcs[] = [];
+                              let atual: typeof marcs = [];
+                              for (const m of marcs) {
+                                const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
+                                if (isEntry) {
+                                  if (atual.length > 0) linhas.push(atual);
+                                  atual = [m];
+                                } else {
+                                  atual.push(m);
+                                  linhas.push(atual);
+                                  atual = [];
+                                }
+                              }
+                              if (atual.length > 0) linhas.push(atual);
+                              return linhas.map((linha, li) => (
+                                <div key={li} className="flex flex-wrap gap-1.5">
+                                  {linha.map((m, idx) => {
+                                    const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
+                                    return (
+                                      <MarcacaoBadge
+                                        key={m.id || `${li}-${idx}`}
+                                        id={m.id}
+                                        hora={m.hora}
+                                        isEntry={isEntry}
+                                        original={m.original}
+                                        podeEditar={podeEditarMarcacao}
+                                        editando={editandoMarcacao}
+                                        onSalvar={editarMarcacao}
+                                        onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
+                                        excluindo={excluindoMarcacao}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              ));
+                            })()}
                           </div>
                         )}
                       </TableCell>
