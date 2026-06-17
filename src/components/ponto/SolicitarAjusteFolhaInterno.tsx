@@ -274,6 +274,14 @@ export function SolicitarAjusteFolhaInterno({
 
   const totalAlteracoes = diasComAlteracao.length;
 
+  // Bloqueio: enquanto houver QUALQUER ajuste pendente do colaborador, a folha
+  // inteira fica travada para novos envios até aprovação/rejeição pelo gestor.
+  const totalPendentes = useMemo(
+    () => Object.values(pendentesPorDia).reduce((s, n) => s + n, 0),
+    [pendentesPorDia]
+  );
+  const temPendencia = totalPendentes > 0;
+
   const handleAnexoDia = (data: string, file: File | null) => {
     if (!file) { patchDia(data, { anexo: null }); return; }
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
@@ -336,6 +344,10 @@ export function SolicitarAjusteFolhaInterno({
   };
 
   const handleSubmit = async () => {
+    if (temPendencia) {
+      toast.error("Ajuste ainda pendente — aguarde a aprovação do gestor antes de enviar um novo.");
+      return;
+    }
     const erro = validar();
     if (erro) { toast.error(erro); return; }
     if (!colaborador) return;
@@ -436,6 +448,18 @@ export function SolicitarAjusteFolhaInterno({
                 )}
               </div>
             </DialogHeader>
+
+            {temPendencia && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Ajuste ainda pendente — aguarde a aprovação.</p>
+                  <p className="text-xs text-amber-700/80 mt-0.5">
+                    Este colaborador tem {totalPendentes} marcação(ões) aguardando aprovação. Não é possível enviar um novo ajuste até que os pendentes sejam aprovados ou rejeitados.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
@@ -673,7 +697,7 @@ export function SolicitarAjusteFolhaInterno({
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="flex-1" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || !colaboradorId}>
+                <Button className="flex-1" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || !colaboradorId || temPendencia}>
                   {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes${totalAlteracoes ? ` (${totalAlteracoes} dia${totalAlteracoes !== 1 ? "s" : ""})` : ""}`}
                 </Button>
               </div>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabasePublic } from "@/lib/supabasePublic";
-import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -135,6 +135,15 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     });
     return map;
   }, [ajustesPend]);
+
+  // Enquanto houver QUALQUER ajuste pendente de aprovação, a folha inteira
+  // fica bloqueada para novos envios — evita empilhar ajustes sobre o que
+  // ainda está em análise pelo gestor.
+  const totalPendentes = useMemo(
+    () => ajustesPend.filter((a) => a.status === "pendente").length,
+    [ajustesPend]
+  );
+  const temPendencia = totalPendentes > 0;
 
   // Helpers de edição
   const editDia = (data: string): DiaEdit =>
@@ -277,6 +286,10 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
   };
 
   const handleSubmit = async () => {
+    if (temPendencia) {
+      toast.error("Ajuste ainda pendente — aguarde a aprovação do gestor antes de enviar um novo.");
+      return;
+    }
     const erro = validar();
     if (erro) { toast.error(erro); return; }
     setEnviando(true);
@@ -352,6 +365,18 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
                 Edite ou inclua os horários direto na folha. Para cada dia alterado, escolha uma justificativa. Todos os pedidos são enviados ao gestor de uma única vez.
               </DialogDescription>
             </DialogHeader>
+
+            {temPendencia && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg shrink-0">
+                <Clock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Ajuste ainda pendente — aguarde a aprovação.</p>
+                  <p className="text-xs text-amber-700/80 mt-0.5">
+                    Você tem {totalPendentes} marcação(ões) aguardando aprovação do gestor. Não é possível enviar um novo ajuste até que os pendentes sejam aprovados ou rejeitados.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
               {/* Navegação de mês */}
@@ -552,7 +577,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-2 mt-auto">
                 <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
+                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0 || temPendencia}>
                   {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes (${totalAlteracoes || 0})`}
                 </Button>
               </div>
