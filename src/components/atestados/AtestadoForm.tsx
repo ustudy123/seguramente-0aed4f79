@@ -960,7 +960,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   name="profissional_registro"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>CRM {watchTipo !== "licencas" && "*"}</FormLabel>
+                      <FormLabel>CRM / CRO {watchTipo !== "licencas" && "*"}</FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
                           <Input placeholder="12345" {...field} />
@@ -990,7 +990,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   name="profissional_uf"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>UF do CRM</FormLabel>
+                      <FormLabel>UF</FormLabel>
                       <FormControl>
                         <Input placeholder="SP" maxLength={2} {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
                       </FormControl>
