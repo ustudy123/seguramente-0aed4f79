@@ -434,7 +434,6 @@ const Ferias = () => {
     criarSolicitacao.mutate({
       colaborador_nome: newSolicitacao.colaborador,
       colaborador_cpf: newSolicitacao.colaboradorCpf || null,
-      colaborador_id: newSolicitacao.colaboradorId || null,
       departamento: newSolicitacao.departamento,
       data_inicio: newSolicitacao.dataInicio,
       data_fim: newSolicitacao.dataFim,
