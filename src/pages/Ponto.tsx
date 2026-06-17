@@ -571,7 +571,7 @@ const Ponto = () => {
                               }
                               if (atual.length > 0) linhas.push(atual);
                               return linhas.map((linha, li) => (
-                                <div key={li} className="flex flex-wrap gap-1.5">
+                                <div key={li} className="grid grid-cols-2 gap-1.5">
                                   {linha.map((m, idx) => {
                                     const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
                                     return (
