@@ -502,6 +502,17 @@ const Ponto = () => {
                 ) : filteredPontos.map((ponto) => {
                   const pontoStatus = ponto.status === 'pendente' ? 'ajuste_pendente' : ponto.status;
                   const statusConfig = STATUS_PONTO_CONFIG[pontoStatus] || STATUS_PONTO_CONFIG.pendente;
+                  // Quando justificado, o tipo específico vem do prefixo da
+                  // observação gravada pela consolidação (Férias/Atestado/Afastamento),
+                  // exibindo um badge mais informativo que o genérico "Justificado".
+                  const obs = ponto.observacao || "";
+                  const badge = (() => {
+                    if (pontoStatus !== "justificado") return statusConfig;
+                    if (/^Férias/i.test(obs)) return { label: "Férias", color: "bg-sky-100 text-sky-800" };
+                    if (/^Atestado/i.test(obs)) return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
+                    if (/^Afastamento/i.test(obs)) return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
+                    return statusConfig;
+                  })();
                   const cpfKey = onlyDigits(ponto.colaborador_cpf);
                   const marcs = marcacoesPorCpf.get(cpfKey) || [];
                   // Calcula total a partir dos pares (entrada → saída), independente do label
@@ -604,7 +615,7 @@ const Ponto = () => {
                           title="Clique para solicitar/ajustar"
                           className="inline-flex"
                         >
-                          <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", statusConfig.color)}>{statusConfig.label}</Badge>
+                          <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={obs || undefined}>{badge.label}</Badge>
                         </button>
                       </TableCell>
                     </TableRow>
