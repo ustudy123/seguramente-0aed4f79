@@ -601,8 +601,8 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                     
                     {/* Tree */}
                     <div className="flex-1 min-h-0 relative">
-                      <ScrollArea className="absolute inset-0">
-                        <div className="p-2">
+                      <div className="absolute inset-0 overflow-y-scroll overflow-x-hidden documentos-folder-tree-scroll">
+                        <div className="p-2 pr-3">
                       {loading ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -620,7 +620,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                         />
                       )}
                         </div>
-                      </ScrollArea>
+                      </div>
                     </div>
                   </div>
                 </ResizablePanel>
