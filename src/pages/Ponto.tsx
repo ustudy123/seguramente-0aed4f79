@@ -191,6 +191,10 @@ const Ponto = () => {
       );
       
       return ajustesPendentesRaw.filter((a: any) => {
+        // PENDENTES nunca são escondidos: se a aprovação filtrasse por
+        // empresa, um pendente de outra empresa ficaria invisível e o
+        // colaborador (bloqueado pela folha) não teria como ser destravado.
+        if (a.status === "pendente") return true;
         // Se o ajuste já tem empresa_id e ele bate com a ativa, mantém
         if (a.empresa_id && a.empresa_id === empresaAtivaId) return true;
         
@@ -201,7 +205,7 @@ const Ponto = () => {
     }
 
     // Se não houver colaboradores carregados ainda mas houver empresaId, filtramos apenas pelo ID da empresa
-    return ajustesPendentesRaw.filter((a: any) => a.empresa_id === empresaAtivaId);
+    return ajustesPendentesRaw.filter((a: any) => a.status === "pendente" || a.empresa_id === empresaAtivaId);
   }, [ajustesPendentesRaw, colaboradores, empresaAtivaId]);
 
   // Auto-capture geolocation when modal opens

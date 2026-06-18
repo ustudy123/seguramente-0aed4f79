@@ -215,24 +215,40 @@ export function usePonto() {
 
         const desde = new Date();
         desde.setDate(desde.getDate() - 90);
+        const desdeISO = desde.toISOString();
 
-        let query = fromTable("ponto_ajustes")
+        // PENDENTES: traz TODOS do tenant, sem filtrar por empresa.
+        // Motivo: a folha do colaborador bloqueia novo ajuste quando há
+        // pendência (por colaborador_id, sem empresa). Se a aprovação
+        // filtrasse por empresa ativa, um ajuste de outra empresa ficaria
+        // invisível ao gestor — colaborador travado e ninguém pra aprovar.
+        // Mostrar todo pendente do tenant elimina esse beco sem saída.
+        const pendentesQuery = fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
-          .gte("created_at", desde.toISOString());
+          .eq("status", "pendente");
 
-        // Empresa ativa OU registros sem empresa atribuída (histórico) OU registros do tenant base
+        // HISTÓRICO (aprovado/rejeitado): mantém o escopo por empresa ativa
+        // (não trava ninguém; é só conferência) e a janela de 90 dias.
+        let histQuery = fromTable("ponto_ajustes")
+          .select("*")
+          .eq("tenant_id", tenantId)
+          .neq("status", "pendente")
+          .gte("created_at", desdeISO);
         if (empresaAtivaId) {
-          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null,empresa_id.eq.${tenantId}`);
+          histQuery = histQuery.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null,empresa_id.eq.${tenantId}`);
         } else {
-          // Se não houver empresa ativa, mostra apenas o que é do tenant base ou nulo (ajustes globais)
-          query = query.or(`empresa_id.is.null,empresa_id.eq.${tenantId}`);
+          histQuery = histQuery.or(`empresa_id.is.null,empresa_id.eq.${tenantId}`);
         }
 
-        const { data, error } = await query.order("created_at", { ascending: false }) as { data: PontoAjuste[] | null; error: Error | null };
+        const [pendRes, histRes] = await Promise.all([
+          pendentesQuery.order("created_at", { ascending: false }) as Promise<{ data: PontoAjuste[] | null; error: Error | null }>,
+          histQuery.order("created_at", { ascending: false }) as Promise<{ data: PontoAjuste[] | null; error: Error | null }>,
+        ]);
 
-        if (error) throw error;
-        return data || [];
+        if (pendRes.error) throw pendRes.error;
+        if (histRes.error) throw histRes.error;
+        return [...(pendRes.data || []), ...(histRes.data || [])];
       },
       enabled: !!tenantId,
     });
