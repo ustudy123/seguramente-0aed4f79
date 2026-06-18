@@ -188,7 +188,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Upload de Documento</DialogTitle>
           <DialogDescription>
@@ -197,7 +197,8 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto pr-1 flex-1 min-h-0">
+
             {/* Drop Zone */}
             <div
               className={cn(
