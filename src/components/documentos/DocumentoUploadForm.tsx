@@ -50,7 +50,7 @@ const ACCEPTED_FILE_TYPES = [
 ];
 
 const formSchema = z.object({
-  pastaId: z.string().optional(),
+  pastaId: z.string().min(1, "Selecione uma pasta ou subpasta"),
   tipo: z.string().min(1, "Informe um tipo"),
   dataValidade: z.string().optional(),
   observacoes: z.string().optional(),
@@ -259,7 +259,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
               name="pastaId"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Pasta / Subpasta (opcional)</FormLabel>
+                  <FormLabel>Pasta / Subpasta *</FormLabel>
                   <Popover open={pastaOpen} onOpenChange={setPastaOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -270,7 +270,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                           className={cn("justify-between font-normal", !field.value && "text-muted-foreground")}
                         >
                           <span className="truncate">
-                            {selectedPasta ? selectedPasta.path : "Raiz (sem pasta)"}
+                            {selectedPasta ? selectedPasta.path : "Selecione uma pasta"}
                           </span>
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -282,13 +282,6 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                         <CommandList>
                           <CommandEmpty>Nenhuma pasta encontrada.</CommandEmpty>
                           <CommandGroup>
-                            <CommandItem
-                              value="raiz sem pasta"
-                              onSelect={() => { field.onChange(""); setPastaOpen(false); }}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", !field.value ? "opacity-100" : "opacity-0")} />
-                              Raiz (sem pasta)
-                            </CommandItem>
                             {pastasFlat.map((p) => (
                               <CommandItem
                                 key={p.id}
