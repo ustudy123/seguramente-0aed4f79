@@ -29,8 +29,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDocumentos, TIPOS_DOCUMENTO } from "@/hooks/useDocumentos";
+import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
@@ -44,6 +46,7 @@ const ACCEPTED_FILE_TYPES = [
 
 const formSchema = z.object({
   colaboradorId: z.string().optional(),
+  pastaId: z.string().optional(),
   tipo: z.string().min(1, "Selecione um tipo"),
   dataValidade: z.string().optional(),
   observacoes: z.string().optional(),
@@ -67,16 +70,40 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
   
   const { upload, uploading } = useDocumentos();
   const { colaboradores } = useColaboradores();
+  const { pastas } = useDocumentoPastas();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       colaboradorId: preSelectedColaboradorId || "",
+      pastaId: pastaId || "",
       tipo: "",
       dataValidade: "",
       observacoes: "",
     },
   });
+
+  // Lista achatada de pastas com indentação por nível
+  const pastasFlat = useMemo(() => {
+    const byParent = new Map<string | null, typeof pastas>();
+    pastas.forEach((p) => {
+      const key = p.pasta_pai_id;
+      if (!byParent.has(key)) byParent.set(key, []);
+      byParent.get(key)!.push(p);
+    });
+    byParent.forEach((arr) =>
+      arr.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.nome.localeCompare(b.nome))
+    );
+    const out: Array<{ id: string; label: string; depth: number }> = [];
+    const walk = (parentId: string | null, depth: number) => {
+      (byParent.get(parentId) || []).forEach((p) => {
+        out.push({ id: p.id, label: p.nome, depth });
+        walk(p.id, depth + 1);
+      });
+    };
+    walk(null, 0);
+    return out;
+  }, [pastas]);
 
   // Atualizar quando preSelectedColaboradorId mudar
   const { setValue } = form;
@@ -148,7 +175,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
         observacoes: data.observacoes || undefined,
         documentoExistenteId: documentoExistenteId,
         motivoRevisao: documentoExistenteId ? "Nova versão enviada pelo usuário" : undefined,
-        pastaId: pastaId,
+        pastaId: data.pastaId || pastaId || undefined,
       });
       
       // Reset form
@@ -236,6 +263,37 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
             {form.formState.errors.root && (
               <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
             )}
+
+            <FormField
+              control={form.control}
+              name="pastaId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pasta / Subpasta (opcional)</FormLabel>
+                  <Select
+                    onValueChange={(v) => field.onChange(v === "__root__" ? "" : v)}
+                    value={field.value || "__root__"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Raiz (sem pasta)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-72">
+                      <SelectItem value="__root__">Raiz (sem pasta)</SelectItem>
+                      {pastasFlat.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          <span style={{ paddingLeft: `${p.depth * 12}px` }}>
+                            {p.depth > 0 ? "└ " : ""}{p.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
