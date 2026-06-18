@@ -67,6 +67,7 @@ interface PastaDocumentosListProps {
 export function PastaDocumentosList({
   pasta,
   onUpload,
+  onCreateSubfolder,
   onView,
   onDownload,
   onDelete,
@@ -75,6 +76,7 @@ export function PastaDocumentosList({
   onDragStart,
   documentosCompletos = [],
 }: PastaDocumentosListProps) {
+
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
   const [versoesDoc, setVersoesDoc] = useState<Documento | null>(null);
 
