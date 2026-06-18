@@ -543,7 +543,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
         </motion.div>
 
         {/* Tree View Tab */}
-        <TabsContent value="arvore" className="flex-1 mt-4">
+        <TabsContent value="arvore" className="flex-1 min-h-0 mt-4 flex flex-col">
           {showEmptyState ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -560,7 +560,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex-1 h-full"
+              className="flex-1 min-h-0"
             >
               <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl border border-border">
                 {/* Tree Panel */}
