@@ -131,6 +131,13 @@ export function PastaDocumentosList({
             </p>
           </div>
         </div>
+        {onCreateSubfolder && (
+          <Button variant="outline" size="sm" onClick={() => onCreateSubfolder(pasta.id)}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            Nova Subpasta
+          </Button>
+        )}
+
 
 
       </div>
