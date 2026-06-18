@@ -13,7 +13,9 @@ import {
   Loader2,
   Upload,
   FolderOpen,
+  FolderPlus,
   History,
+
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,7 @@ const statusConfig = {
 interface PastaDocumentosListProps {
   pasta: DocumentoPastaNode | null;
   onUpload: (pastaId: string) => void;
+  onCreateSubfolder?: (parentId: string) => void;
   onView: (doc: DocumentoItem) => void;
   onDownload: (doc: DocumentoItem) => void;
   onDelete: (doc: DocumentoItem) => void;
@@ -60,9 +63,11 @@ interface PastaDocumentosListProps {
   documentosCompletos?: Documento[];
 }
 
+
 export function PastaDocumentosList({
   pasta,
   onUpload,
+  onCreateSubfolder,
   onView,
   onDownload,
   onDelete,
@@ -71,6 +76,7 @@ export function PastaDocumentosList({
   onDragStart,
   documentosCompletos = [],
 }: PastaDocumentosListProps) {
+
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
   const [versoesDoc, setVersoesDoc] = useState<Documento | null>(null);
 
@@ -125,6 +131,13 @@ export function PastaDocumentosList({
             </p>
           </div>
         </div>
+        {onCreateSubfolder && (
+          <Button variant="outline" size="sm" onClick={() => onCreateSubfolder(pasta.id)}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            Nova Subpasta
+          </Button>
+        )}
+
 
 
       </div>
