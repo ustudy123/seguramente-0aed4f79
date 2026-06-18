@@ -133,11 +133,9 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
       ? colaboradores.find((c) => c.id === data.colaboradorId)
       : undefined;
 
-    // Colaborador é exigido apenas em pastas de colaborador.
-    if (colaboradorObrigatorio && !colaborador) {
-      form.setError("colaboradorId", { message: "Selecione um colaborador" });
-      return;
-    }
+    // Colaborador é sempre opcional — o usuário pode anexar por pasta
+    // (documento da empresa) ou vincular a um colaborador, conforme preferir.
+
 
     try {
       await upload({
