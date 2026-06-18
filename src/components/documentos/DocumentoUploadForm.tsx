@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Upload, FileText, X } from "lucide-react";
+import { Loader2, Upload, FileText, X, Check, ChevronsUpDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,17 +22,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { useDocumentos, TIPOS_DOCUMENTO } from "@/hooks/useDocumentos";
 import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
@@ -45,9 +50,8 @@ const ACCEPTED_FILE_TYPES = [
 ];
 
 const formSchema = z.object({
-  colaboradorId: z.string().optional(),
   pastaId: z.string().optional(),
-  tipo: z.string().min(1, "Selecione um tipo"),
+  tipo: z.string().min(1, "Informe um tipo"),
   dataValidade: z.string().optional(),
   observacoes: z.string().optional(),
 });
@@ -63,11 +67,13 @@ interface DocumentoUploadFormProps {
   pastaId?: string;
 }
 
-export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, colaboradorObrigatorio = false, documentoExistenteId, pastaId }: DocumentoUploadFormProps) {
+export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, documentoExistenteId, pastaId }: DocumentoUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [pastaOpen, setPastaOpen] = useState(false);
+  const [tipoOpen, setTipoOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { upload, uploading } = useDocumentos();
   const { colaboradores } = useColaboradores();
   const { pastas } = useDocumentoPastas();
@@ -75,7 +81,6 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      colaboradorId: preSelectedColaboradorId || "",
       pastaId: pastaId || "",
       tipo: "",
       dataValidade: "",
@@ -94,55 +99,48 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
     byParent.forEach((arr) =>
       arr.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.nome.localeCompare(b.nome))
     );
-    const out: Array<{ id: string; label: string; depth: number }> = [];
-    const walk = (parentId: string | null, depth: number) => {
+    const out: Array<{ id: string; label: string; depth: number; path: string }> = [];
+    const walk = (parentId: string | null, depth: number, parentPath: string) => {
       (byParent.get(parentId) || []).forEach((p) => {
-        out.push({ id: p.id, label: p.nome, depth });
-        walk(p.id, depth + 1);
+        const path = parentPath ? `${parentPath} / ${p.nome}` : p.nome;
+        out.push({ id: p.id, label: p.nome, depth, path });
+        walk(p.id, depth + 1, path);
       });
     };
-    walk(null, 0);
+    walk(null, 0, "");
     return out;
   }, [pastas]);
 
-  // Atualizar quando preSelectedColaboradorId mudar
-  const { setValue } = form;
-  if (preSelectedColaboradorId && form.getValues("colaboradorId") !== preSelectedColaboradorId) {
-    setValue("colaboradorId", preSelectedColaboradorId);
-  }
-
   const handleFileSelect = (file: File | null) => {
     if (!file) return;
-    
     if (file.size > MAX_FILE_SIZE) {
       form.setError("root", { message: "Arquivo muito grande. Máximo 50MB." });
       return;
     }
-    
     if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
       form.setError("root", { message: "Tipo de arquivo não suportado. Use PDF, imagens ou documentos Word." });
       return;
     }
-    
     setSelectedFile(file);
+    form.clearErrors("root");
+  };
+
+  const handleRemoveFile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     form.clearErrors("root");
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    handleFileSelect(file);
+    handleFileSelect(e.dataTransfer.files[0]);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragOver(false);
-  };
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true); };
+  const handleDragLeave = () => setDragOver(false);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
@@ -155,14 +153,9 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
       form.setError("root", { message: "Selecione um arquivo para enviar" });
       return;
     }
-
-    const colaborador = data.colaboradorId
-      ? colaboradores.find((c) => c.id === data.colaboradorId)
+    const colaborador = preSelectedColaboradorId
+      ? colaboradores.find((c) => c.id === preSelectedColaboradorId)
       : undefined;
-
-    // Colaborador é sempre opcional — o usuário pode anexar por pasta
-    // (documento da empresa) ou vincular a um colaborador, conforme preferir.
-
 
     try {
       await upload({
@@ -177,13 +170,11 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
         motivoRevisao: documentoExistenteId ? "Nova versão enviada pelo usuário" : undefined,
         pastaId: data.pastaId || pastaId || undefined,
       });
-      
-      // Reset form
       form.reset();
       setSelectedFile(null);
       onOpenChange(false);
-    } catch (error) {
-      // Error handled by mutation
+    } catch {
+      // handled by mutation
     }
   };
 
@@ -192,6 +183,8 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
     setSelectedFile(null);
     onOpenChange(false);
   };
+
+  const selectedPasta = pastasFlat.find((p) => p.id === form.watch("pastaId"));
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -208,14 +201,15 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
             {/* Drop Zone */}
             <div
               className={cn(
-                "border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer",
+                "border-2 border-dashed rounded-lg p-6 transition-colors",
+                !selectedFile && "cursor-pointer",
                 dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50",
                 selectedFile && "border-success bg-success/5"
               )}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => { if (!selectedFile) fileInputRef.current?.click(); }}
             >
               <input
                 ref={fileInputRef}
@@ -224,7 +218,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                 accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
                 onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
               />
-              
+
               {selectedFile ? (
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="p-2 rounded-lg bg-success/10 shrink-0">
@@ -232,19 +226,14 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{selectedFile.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatFileSize(selectedFile.size)}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFile(null);
-                    }}
+                    onClick={handleRemoveFile}
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -264,90 +253,123 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
               <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
             )}
 
+            {/* Pasta combobox com busca */}
             <FormField
               control={form.control}
               name="pastaId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Pasta / Subpasta (opcional)</FormLabel>
-                  <Select
-                    onValueChange={(v) => field.onChange(v === "__root__" ? "" : v)}
-                    value={field.value || "__root__"}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Raiz (sem pasta)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-72">
-                      <SelectItem value="__root__">Raiz (sem pasta)</SelectItem>
-                      {pastasFlat.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          <span style={{ paddingLeft: `${p.depth * 12}px` }}>
-                            {p.depth > 0 ? "└ " : ""}{p.label}
+                  <Popover open={pastaOpen} onOpenChange={setPastaOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className={cn("justify-between font-normal", !field.value && "text-muted-foreground")}
+                        >
+                          <span className="truncate">
+                            {selectedPasta ? selectedPasta.path : "Raiz (sem pasta)"}
                           </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar pasta..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhuma pasta encontrada.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="raiz sem pasta"
+                              onSelect={() => { field.onChange(""); setPastaOpen(false); }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", !field.value ? "opacity-100" : "opacity-0")} />
+                              Raiz (sem pasta)
+                            </CommandItem>
+                            {pastasFlat.map((p) => (
+                              <CommandItem
+                                key={p.id}
+                                value={p.path}
+                                onSelect={() => { field.onChange(p.id); setPastaOpen(false); }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", field.value === p.id ? "opacity-100" : "opacity-0")} />
+                                <span style={{ paddingLeft: `${p.depth * 12}px` }}>
+                                  {p.depth > 0 ? "└ " : ""}{p.label}
+                                </span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="colaboradorId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Colaborador {colaboradorObrigatorio ? "(recomendado)" : "(opcional)"}
-                  </FormLabel>
-                  <Select
-                    onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
-                    value={field.value || "__none__"}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Documento da empresa (sem colaborador)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="__none__">Documento da empresa (sem colaborador)</SelectItem>
-                      {colaboradores.map((colab) => (
-                        <SelectItem key={colab.id} value={colab.id}>
-                          {colab.nome_completo}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Tipo: combobox com digitação livre */}
               <FormField
                 control={form.control}
                 name="tipo"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Tipo de Documento *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {TIPOS_DOCUMENTO.map((tipo) => (
-                          <SelectItem key={tipo} value={tipo}>
-                            {tipo}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={tipoOpen} onOpenChange={setTipoOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            className={cn("justify-between font-normal", !field.value && "text-muted-foreground")}
+                          >
+                            <span className="truncate">{field.value || "Selecione ou digite"}</span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                        <Command>
+                          <CommandInput
+                            placeholder="Buscar ou digitar tipo..."
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v)}
+                          />
+                          <CommandList>
+                            <CommandEmpty>
+                              {field.value ? (
+                                <button
+                                  type="button"
+                                  className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded"
+                                  onClick={() => setTipoOpen(false)}
+                                >
+                                  Usar "{field.value}"
+                                </button>
+                              ) : (
+                                "Digite um tipo..."
+                              )}
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {TIPOS_DOCUMENTO.map((tipo) => (
+                                <CommandItem
+                                  key={tipo}
+                                  value={tipo}
+                                  onSelect={() => { field.onChange(tipo); setTipoOpen(false); }}
+                                >
+                                  <Check className={cn("mr-2 h-4 w-4", field.value === tipo ? "opacity-100" : "opacity-0")} />
+                                  {tipo}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -375,11 +397,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Observações opcionais..."
-                      rows={2}
-                      {...field}
-                    />
+                    <Textarea placeholder="Observações opcionais..." rows={2} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -387,12 +405,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
             />
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={uploading}
-              >
+              <Button type="button" variant="outline" onClick={handleClose} disabled={uploading}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={!selectedFile || uploading}>
