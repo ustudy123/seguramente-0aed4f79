@@ -29,8 +29,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDocumentos, TIPOS_DOCUMENTO } from "@/hooks/useDocumentos";
+import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
