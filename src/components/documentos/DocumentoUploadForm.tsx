@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -87,6 +87,14 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
       observacoes: "",
     },
   });
+
+  // Pré-seleciona a pasta quando o diálogo abrir com pastaId
+  useEffect(() => {
+    if (open && pastaId) {
+      form.setValue("pastaId", pastaId, { shouldValidate: true });
+    }
+  }, [open, pastaId, form]);
+
 
   // Lista achatada de pastas com indentação por nível
   const pastasFlat = useMemo(() => {
