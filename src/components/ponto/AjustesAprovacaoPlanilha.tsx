@@ -66,7 +66,14 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
 
     const map = new Map<string, { nome: string; cpf: string; days: Map<string, PontoAjuste[]> }>();
     for (const a of filtered) {
-      const colabId = a.colaborador_id;
+      // Agrupa por uma chave ESTÁVEL por pessoa. colaborador_id costuma vir
+      // NULL (cadastro), o que misturava vários colaboradores numa única
+      // chave nula e fazia ajustes "sumirem" da tela. Usa CPF e, na falta
+      // dele, o nome — garantindo um grupo por colaborador.
+      const cpfKey = (a.colaborador_cpf || "").toString().replace(/\D/g, "");
+      const colabId = cpfKey
+        ? `cpf:${cpfKey}`
+        : `nome:${(a.colaborador_nome || "").trim().toLowerCase()}`;
       if (!map.has(colabId)) {
         map.set(colabId, { nome: a.colaborador_nome, cpf: a.colaborador_cpf, days: new Map() });
       }
