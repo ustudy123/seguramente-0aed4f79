@@ -88,6 +88,14 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
     },
   });
 
+  // Pré-seleciona a pasta quando o diálogo abrir com pastaId
+  useEffect(() => {
+    if (open && pastaId) {
+      form.setValue("pastaId", pastaId, { shouldValidate: true });
+    }
+  }, [open, pastaId, form]);
+
+
   // Lista achatada de pastas com indentação por nível
   const pastasFlat = useMemo(() => {
     const byParent = new Map<string | null, typeof pastas>();
