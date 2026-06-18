@@ -199,8 +199,8 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
               />
               
               {selectedFile ? (
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-success/10">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 rounded-lg bg-success/10 shrink-0">
                     <FileText className="w-6 h-6 text-success" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -213,6 +213,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                     type="button"
                     variant="ghost"
                     size="icon"
+                    className="shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedFile(null);
