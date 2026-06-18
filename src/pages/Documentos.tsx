@@ -600,7 +600,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                     </div>
                     
                     {/* Tree */}
-                    <ScrollArea className="flex-1 p-2">
+                    <ScrollArea className="flex-1 min-h-0 p-2 [&>[data-radix-scroll-area-viewport]]:max-h-full">
                       {loading ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="w-6 h-6 animate-spin text-primary" />
