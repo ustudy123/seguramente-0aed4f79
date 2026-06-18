@@ -450,7 +450,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
             <FolderPlus className="w-4 h-4 mr-2" />
             Nova Pasta
           </Button>
-          <Button onClick={() => handleOpenUpload()}>
+          <Button onClick={() => handleOpenUpload(selectedPasta?.id)}>
             <Upload className="w-4 h-4 mr-2" />
             Upload
           </Button>
