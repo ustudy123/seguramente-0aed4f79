@@ -125,10 +125,8 @@ export function PastaDocumentosList({
             </p>
           </div>
         </div>
-        <Button onClick={() => onUpload(pasta.id)}>
-          <Upload className="w-4 h-4 mr-2" />
-          Upload
-        </Button>
+
+
       </div>
 
       {/* Documents list */}
