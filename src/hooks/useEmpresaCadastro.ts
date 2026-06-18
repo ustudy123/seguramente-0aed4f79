@@ -161,8 +161,38 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         } catch (e) {
           console.error('Erro ao gerar estrutura de pastas:', e);
         }
+        // Auto-vincular o criador à empresa (garante que gestores/usuários restritos
+        // enxerguem no seletor a empresa que acabaram de cadastrar)
+        try {
+          if (user?.id && tenantId) {
+            const { data: ub } = await (supabase as any)
+              .from('usuarios_base')
+              .select('id, nome_completo, tipo_usuario')
+              .eq('auth_user_id', user.id)
+              .maybeSingle();
+            if (ub?.id) {
+              const tipoVinc = ub.tipo_usuario === 'gestor' ? 'gestor' : 'colaborador';
+              await (supabase as any)
+                .from('usuario_vinculos')
+                .insert({
+                  usuario_id: ub.id,
+                  empresa_id: data.id,
+                  tenant_id: tenantId,
+                  tipo_vinculo: tipoVinc,
+                  status: 'ativo',
+                  data_inicio: new Date().toISOString().split('T')[0],
+                  aprovado_por_user_id: user.id,
+                  aprovado_por_nome: ub.nome_completo || user.email || 'Criador da empresa',
+                  observacoes: 'Vínculo criado automaticamente ao cadastrar a empresa',
+                });
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao criar vínculo automático do criador:', e);
+        }
         return data;
       }
+
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro'] });
