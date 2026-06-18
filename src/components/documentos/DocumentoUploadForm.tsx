@@ -133,11 +133,9 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
       ? colaboradores.find((c) => c.id === data.colaboradorId)
       : undefined;
 
-    // Colaborador é exigido apenas em pastas de colaborador.
-    if (colaboradorObrigatorio && !colaborador) {
-      form.setError("colaboradorId", { message: "Selecione um colaborador" });
-      return;
-    }
+    // Colaborador é sempre opcional — o usuário pode anexar por pasta
+    // (documento da empresa) ou vincular a um colaborador, conforme preferir.
+
 
     try {
       await upload({
@@ -238,20 +236,25 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
               <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
             )}
 
-            {colaboradorObrigatorio && (
             <FormField
               control={form.control}
               name="colaboradorId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Colaborador *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <FormLabel>
+                    Colaborador {colaboradorObrigatorio ? "(recomendado)" : "(opcional)"}
+                  </FormLabel>
+                  <Select
+                    onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                    value={field.value || "__none__"}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o colaborador" />
+                        <SelectValue placeholder="Documento da empresa (sem colaborador)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="__none__">Documento da empresa (sem colaborador)</SelectItem>
                       {colaboradores.map((colab) => (
                         <SelectItem key={colab.id} value={colab.id}>
                           {colab.nome_completo}
@@ -263,7 +266,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                 </FormItem>
               )}
             />
-            )}
+
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
