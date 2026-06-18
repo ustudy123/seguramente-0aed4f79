@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Hard cap to prevent memory/CPU exhaustion on edge runtime (status 546)
-const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
+const MAX_PDF_BYTES = 50 * 1024 * 1024; // 50 MB
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
