@@ -13,7 +13,9 @@ import {
   Loader2,
   Upload,
   FolderOpen,
+  FolderPlus,
   History,
+
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
