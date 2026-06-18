@@ -53,6 +53,7 @@ const statusConfig = {
 interface PastaDocumentosListProps {
   pasta: DocumentoPastaNode | null;
   onUpload: (pastaId: string) => void;
+  onCreateSubfolder?: (parentId: string) => void;
   onView: (doc: DocumentoItem) => void;
   onDownload: (doc: DocumentoItem) => void;
   onDelete: (doc: DocumentoItem) => void;
@@ -61,6 +62,7 @@ interface PastaDocumentosListProps {
   onDragStart?: (documentoId: string, documentoNome: string, pastaOrigemId: string, pastaOrigemNome: string) => void;
   documentosCompletos?: Documento[];
 }
+
 
 export function PastaDocumentosList({
   pasta,
