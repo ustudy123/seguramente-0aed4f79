@@ -266,6 +266,37 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
 
             <FormField
               control={form.control}
+              name="pastaId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pasta / Subpasta (opcional)</FormLabel>
+                  <Select
+                    onValueChange={(v) => field.onChange(v === "__root__" ? "" : v)}
+                    value={field.value || "__root__"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Raiz (sem pasta)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-72">
+                      <SelectItem value="__root__">Raiz (sem pasta)</SelectItem>
+                      {pastasFlat.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          <span style={{ paddingLeft: `${p.depth * 12}px` }}>
+                            {p.depth > 0 ? "└ " : ""}{p.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="colaboradorId"
               render={({ field }) => (
                 <FormItem>
