@@ -600,14 +600,9 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                     </div>
                     
                     {/* Tree */}
-                    <div
-                      className="flex-1 min-h-0 overflow-y-scroll overflow-x-hidden p-2"
-                      style={{
-                        scrollbarGutter: "stable",
-                        scrollbarWidth: "thin",
-                        scrollbarColor: "hsl(var(--muted-foreground) / 0.5) transparent",
-                      }}
-                    >
+                    <div className="flex-1 min-h-0 relative">
+                      <ScrollArea className="absolute inset-0">
+                        <div className="p-2">
                       {loading ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -624,6 +619,8 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                           expandAllSignal={expandAllSignal}
                         />
                       )}
+                        </div>
+                      </ScrollArea>
                     </div>
                   </div>
                 </ResizablePanel>
