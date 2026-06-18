@@ -70,16 +70,40 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
   
   const { upload, uploading } = useDocumentos();
   const { colaboradores } = useColaboradores();
+  const { pastas } = useDocumentoPastas();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       colaboradorId: preSelectedColaboradorId || "",
+      pastaId: pastaId || "",
       tipo: "",
       dataValidade: "",
       observacoes: "",
     },
   });
+
+  // Lista achatada de pastas com indentação por nível
+  const pastasFlat = useMemo(() => {
+    const byParent = new Map<string | null, typeof pastas>();
+    pastas.forEach((p) => {
+      const key = p.pasta_pai_id;
+      if (!byParent.has(key)) byParent.set(key, []);
+      byParent.get(key)!.push(p);
+    });
+    byParent.forEach((arr) =>
+      arr.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.nome.localeCompare(b.nome))
+    );
+    const out: Array<{ id: string; label: string; depth: number }> = [];
+    const walk = (parentId: string | null, depth: number) => {
+      (byParent.get(parentId) || []).forEach((p) => {
+        out.push({ id: p.id, label: p.nome, depth });
+        walk(p.id, depth + 1);
+      });
+    };
+    walk(null, 0);
+    return out;
+  }, [pastas]);
 
   // Atualizar quando preSelectedColaboradorId mudar
   const { setValue } = form;
