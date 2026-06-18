@@ -175,7 +175,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
         observacoes: data.observacoes || undefined,
         documentoExistenteId: documentoExistenteId,
         motivoRevisao: documentoExistenteId ? "Nova versão enviada pelo usuário" : undefined,
-        pastaId: pastaId,
+        pastaId: data.pastaId || pastaId || undefined,
       });
       
       // Reset form
