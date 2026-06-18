@@ -46,6 +46,7 @@ const ACCEPTED_FILE_TYPES = [
 
 const formSchema = z.object({
   colaboradorId: z.string().optional(),
+  pastaId: z.string().optional(),
   tipo: z.string().min(1, "Selecione um tipo"),
   dataValidade: z.string().optional(),
   observacoes: z.string().optional(),
