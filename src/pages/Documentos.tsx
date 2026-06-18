@@ -629,6 +629,8 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                     <PastaDocumentosList
                       pasta={selectedPasta}
                       onUpload={handleOpenUpload}
+                      onCreateSubfolder={handleCreateSubfolder}
+
                       onView={handleViewDoc}
                       onDownload={handleDownload}
                       onDelete={handleDeleteDoc}
