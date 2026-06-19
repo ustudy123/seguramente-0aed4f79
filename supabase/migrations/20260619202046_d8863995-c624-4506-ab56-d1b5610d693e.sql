@@ -1,0 +1,3 @@
+DELETE FROM ferias_historico WHERE solicitacao_id IN ('4c3fdab2-5b62-442a-9de9-d0673022b583','e49a37cd-885a-4c40-98c3-ca1d9c868e0b');
+DELETE FROM ferias_assinatura_links WHERE id IN (SELECT assinatura_link_id FROM ferias_solicitacoes WHERE id IN ('4c3fdab2-5b62-442a-9de9-d0673022b583','e49a37cd-885a-4c40-98c3-ca1d9c868e0b') AND assinatura_link_id IS NOT NULL);
+DELETE FROM ferias_solicitacoes WHERE id IN ('4c3fdab2-5b62-442a-9de9-d0673022b583','e49a37cd-885a-4c40-98c3-ca1d9c868e0b');
