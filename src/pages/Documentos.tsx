@@ -645,7 +645,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                 <ResizablePanel defaultSize={70}>
                   <div className="h-full p-4 bg-background">
                     <PastaDocumentosList
-                      pasta={selectedPasta}
+                      pasta={livePasta}
                       onUpload={handleOpenUpload}
                       onCreateSubfolder={handleCreateSubfolder}
 
