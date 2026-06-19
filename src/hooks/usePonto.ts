@@ -217,29 +217,36 @@ export function usePonto() {
         desde.setDate(desde.getDate() - 90);
         const desdeISO = desde.toISOString();
 
-        // PENDENTES: traz TODOS do tenant, sem filtrar por empresa.
-        // Motivo: a folha do colaborador bloqueia novo ajuste quando há
-        // pendência (por colaborador_id, sem empresa). Se a aprovação
-        // filtrasse por empresa ativa, um ajuste de outra empresa ficaria
-        // invisível ao gestor — colaborador travado e ninguém pra aprovar.
-        // Mostrar todo pendente do tenant elimina esse beco sem saída.
+        // Conjunto de colaboradores da empresa/unidade ativa (fonte da
+        // verdade = admissão). Usamos isso para filtrar os ajustes pela
+        // empresa REAL do colaborador, não pelo empresa_id gravado no
+        // ajuste — que pode ter sido carimbado errado por versões antigas
+        // (ajuste criado com a empresa ativa do gestor, não a do colab).
+        let idsDaEmpresa: Set<string> | null = null;
+        if (empresaAtivaId) {
+          const { data: colabs } = await fromTable("admissoes")
+            .select("id")
+            .eq("tenant_id", tenantId)
+            .eq("empresa_id", empresaAtivaId) as { data: { id: string }[] | null };
+          idsDaEmpresa = new Set((colabs || []).map((c) => c.id));
+        }
+
+        // PENDENTES: todos do tenant; o filtro por empresa é aplicado
+        // abaixo pela empresa real do colaborador. (A folha do colaborador
+        // bloqueia novo ajuste quando há pendência, então não podemos
+        // perder pendentes por empresa_id divergente.)
         const pendentesQuery = fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("status", "pendente");
 
-        // HISTÓRICO (aprovado/rejeitado): mantém o escopo por empresa ativa
-        // (não trava ninguém; é só conferência) e a janela de 90 dias.
-        let histQuery = fromTable("ponto_ajustes")
+        // HISTÓRICO (aprovado/rejeitado): janela de 90 dias, mesmo critério
+        // de empresa aplicado abaixo.
+        const histQuery = fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
           .neq("status", "pendente")
           .gte("created_at", desdeISO);
-        if (empresaAtivaId) {
-          histQuery = histQuery.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null,empresa_id.eq.${tenantId}`);
-        } else {
-          histQuery = histQuery.or(`empresa_id.is.null,empresa_id.eq.${tenantId}`);
-        }
 
         const [pendRes, histRes] = await Promise.all([
           pendentesQuery.order("created_at", { ascending: false }) as Promise<{ data: PontoAjuste[] | null; error: Error | null }>,
@@ -248,7 +255,21 @@ export function usePonto() {
 
         if (pendRes.error) throw pendRes.error;
         if (histRes.error) throw histRes.error;
-        return [...(pendRes.data || []), ...(histRes.data || [])];
+
+        // Filtra pela empresa real do colaborador. Sem empresa ativa
+        // (visão consolidada), mostra tudo do tenant.
+        const noEscopo = (a: PontoAjuste) => {
+          if (!idsDaEmpresa) return true;
+          if (a.colaborador_id && idsDaEmpresa.has(a.colaborador_id)) return true;
+          // Fallback: ajuste sem colaborador_id resolvível cai no critério
+          // antigo de empresa_id (não trava quem não tem admissão casável).
+          return a.empresa_id === empresaAtivaId || a.empresa_id === null || a.empresa_id === tenantId;
+        };
+
+        return [
+          ...(pendRes.data || []).filter(noEscopo),
+          ...(histRes.data || []).filter(noEscopo),
+        ];
       },
       enabled: !!tenantId,
     });
@@ -400,6 +421,19 @@ export function usePonto() {
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
+      // Empresa/unidade vem da ADMISSÃO do colaborador, não da empresa
+      // ativa de quem cria. Sem isso, ajustes de colaboradores de outras
+      // unidades eram carimbados com a empresa ativa do gestor e
+      // apareciam na empresa errada na Folha de Aprovação.
+      let empresaIdAjuste: string | null = empresaAtivaId || null;
+      if (colaboradorId) {
+        const { data: adm } = await fromTable("admissoes")
+          .select("empresa_id")
+          .eq("id", colaboradorId)
+          .maybeSingle() as { data: { empresa_id: string | null } | null };
+        if (adm?.empresa_id) empresaIdAjuste = adm.empresa_id;
+      }
+
       // Upload de anexos (se houver)
       const anexosUploaded: Array<{ nome: string; url: string; tamanho: number; tipo: string }> = [];
       if (anexos && anexos.length > 0) {
@@ -416,7 +450,7 @@ export function usePonto() {
       const { data, error } = await fromTable("ponto_ajustes")
         .insert({
           tenant_id: tenantId,
-          empresa_id: empresaAtivaId || null,
+          empresa_id: empresaIdAjuste,
           colaborador_id: colaboradorId,
           colaborador_nome: colaboradorNome,
           colaborador_cpf: colaboradorCpf,

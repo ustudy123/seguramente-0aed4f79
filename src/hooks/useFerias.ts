@@ -62,6 +62,7 @@ export interface CriarFeriasInput {
   colaborador_nome: string;
   colaborador_cpf?: string | null;
   colaborador_id?: string | null;
+  empresa_id?: string | null;
   departamento?: string;
   cargo?: string;
   data_inicio: string;
@@ -113,9 +114,14 @@ export function useFerias() {
         .from("ferias_solicitacoes" as any)
         .insert({
           tenant_id: tenantId,
-          empresa_id: empresaAtivaId || null,
+          // Empresa/unidade vem do COLABORADOR selecionado, não da empresa
+          // ativa de quem cria. Sem isso, solicitações de colaboradores de
+          // outras unidades eram carimbadas com a empresa ativa do gestor e
+          // apareciam na empresa errada.
+          empresa_id: input.empresa_id || empresaAtivaId || null,
           colaborador_nome: input.colaborador_nome,
           colaborador_cpf: input.colaborador_cpf || null,
+          colaborador_id: input.colaborador_id || null,
           departamento: input.departamento || null,
           cargo: input.cargo || null,
           data_inicio: input.data_inicio,

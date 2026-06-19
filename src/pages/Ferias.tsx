@@ -227,7 +227,7 @@ const Ferias = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
   const [newSolicitacao, setNewSolicitacao] = useState({
-    colaborador: "", colaboradorCpf: "", colaboradorId: "", departamento: "", dataInicio: "", dataFim: "",
+    colaborador: "", colaboradorCpf: "", colaboradorId: "", colaboradorEmpresaId: "", departamento: "", dataInicio: "", dataFim: "",
     periodoAquisitivoInicio: "", periodoAquisitivoFim: "",
     abonoPecuniario: false, diasAbono: 10, salarioBase: 0,
   });
@@ -434,6 +434,8 @@ const Ferias = () => {
     criarSolicitacao.mutate({
       colaborador_nome: newSolicitacao.colaborador,
       colaborador_cpf: newSolicitacao.colaboradorCpf || null,
+      colaborador_id: newSolicitacao.colaboradorId || null,
+      empresa_id: newSolicitacao.colaboradorEmpresaId || null,
       departamento: newSolicitacao.departamento,
       data_inicio: newSolicitacao.dataInicio,
       data_fim: newSolicitacao.dataFim,
@@ -446,7 +448,7 @@ const Ferias = () => {
       inr_score_momento: inrColab?.score,
       inr_nivel_momento: inrColab?.nivel,
     });
-    setNewSolicitacao({ colaborador: "", colaboradorCpf: "", colaboradorId: "", departamento: "", dataInicio: "", dataFim: "", periodoAquisitivoInicio: "", periodoAquisitivoFim: "", abonoPecuniario: false, diasAbono: 10, salarioBase: 0 });
+    setNewSolicitacao({ colaborador: "", colaboradorCpf: "", colaboradorId: "", colaboradorEmpresaId: "", departamento: "", dataInicio: "", dataFim: "", periodoAquisitivoInicio: "", periodoAquisitivoFim: "", abonoPecuniario: false, diasAbono: 10, salarioBase: 0 });
     setIsModalOpen(false);
   };
 
@@ -615,6 +617,7 @@ const Ferias = () => {
                             setNewSolicitacao(prev => ({
                               ...prev, colaborador: c.nome_completo,
                               colaboradorCpf: c.cpf || "", colaboradorId: c.id || "",
+                              colaboradorEmpresaId: c.empresa_id || "",
                               departamento: c.departamento || "", salarioBase: (c as any).salario || 0,
                             }));
                             setComboOpen(false);
