@@ -217,16 +217,25 @@ export function usePonto() {
         desde.setDate(desde.getDate() - 90);
         const desdeISO = desde.toISOString();
 
-        // PENDENTES: traz TODOS do tenant, sem filtrar por empresa.
-        // Motivo: a folha do colaborador bloqueia novo ajuste quando há
-        // pendência (por colaborador_id, sem empresa). Se a aprovação
-        // filtrasse por empresa ativa, um ajuste de outra empresa ficaria
-        // invisível ao gestor — colaborador travado e ninguém pra aprovar.
-        // Mostrar todo pendente do tenant elimina esse beco sem saída.
-        const pendentesQuery = fromTable("ponto_ajustes")
+        // PENDENTES: respeita a empresa ativa (isolamento de unidade).
+        // O ajuste é criado com empresa_id = empresaAtivaId do colaborador
+        // (ver mutações abaixo), então o gestor da unidade do colaborador
+        // sempre verá a pendência. Registros legados sem empresa_id
+        // (empresa_id IS NULL) continuam visíveis para qualquer empresa
+        // ativa para não ficarem órfãos.
+        let pendentesQuery = fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("status", "pendente");
+        if (empresaAtivaId) {
+          pendentesQuery = pendentesQuery.or(
+            `empresa_id.eq.${empresaAtivaId},empresa_id.is.null,empresa_id.eq.${tenantId}`
+          );
+        } else {
+          pendentesQuery = pendentesQuery.or(
+            `empresa_id.is.null,empresa_id.eq.${tenantId}`
+          );
+        }
 
         // HISTÓRICO (aprovado/rejeitado): mantém o escopo por empresa ativa
         // (não trava ninguém; é só conferência) e a janela de 90 dias.
