@@ -90,8 +90,9 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
 
   // Pré-seleciona a pasta quando o diálogo abrir com pastaId
   useEffect(() => {
-    if (open && pastaId) {
-      form.setValue("pastaId", pastaId, { shouldValidate: true });
+    if (!open) return;
+    if (pastaId) {
+      form.setValue("pastaId", pastaId, { shouldValidate: true, shouldDirty: false });
     }
   }, [open, pastaId, form]);
 
