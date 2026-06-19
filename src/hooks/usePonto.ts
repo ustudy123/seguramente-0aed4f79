@@ -232,9 +232,10 @@ export function usePonto() {
         }
 
         // PENDENTES: todos do tenant; o filtro por empresa é aplicado
-        // abaixo pela empresa real do colaborador. (A folha do colaborador
-        // bloqueia novo ajuste quando há pendência, então não podemos
-        // perder pendentes por empresa_id divergente.)
+        // abaixo (noEscopo) pela empresa real do colaborador. NÃO
+        // filtramos por empresa_id na query porque ajustes legados podem
+        // ter empresa_id errado — o casamento por colaborador_id os
+        // recupera na unidade certa sem travar ninguém.
         const pendentesQuery = fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
