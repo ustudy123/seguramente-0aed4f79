@@ -140,6 +140,20 @@ const Documentos = () => {
     getSignedUrl,
   } = useDocumentos();
 
+  // Mantém o nó selecionado sincronizado com a árvore (após upload, mover, etc.).
+  const livePasta = useMemo(() => {
+    if (!selectedPasta) return null;
+    const find = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
+      for (const n of nodes) {
+        if (n.id === selectedPasta.id) return n;
+        const f = find(n.children);
+        if (f) return f;
+      }
+      return null;
+    };
+    return find(tree) || selectedPasta;
+  }, [tree, selectedPasta]);
+
   // Reset estado ao trocar empresa ativa (evita exibir pasta/upload da empresa anterior)
   useEffect(() => {
     setSelectedPasta(null);
