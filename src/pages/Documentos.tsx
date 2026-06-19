@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { motion } from "framer-motion";
@@ -139,6 +139,20 @@ const Documentos = () => {
     deleting,
     getSignedUrl,
   } = useDocumentos();
+
+  // Mantém o nó selecionado sincronizado com a árvore (após upload, mover, etc.).
+  const livePasta = useMemo(() => {
+    if (!selectedPasta) return null;
+    const find = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
+      for (const n of nodes) {
+        if (n.id === selectedPasta.id) return n;
+        const f = find(n.children);
+        if (f) return f;
+      }
+      return null;
+    };
+    return find(tree) || selectedPasta;
+  }, [tree, selectedPasta]);
 
   // Reset estado ao trocar empresa ativa (evita exibir pasta/upload da empresa anterior)
   useEffect(() => {
@@ -631,7 +645,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                 <ResizablePanel defaultSize={70}>
                   <div className="h-full p-4 bg-background">
                     <PastaDocumentosList
-                      pasta={selectedPasta}
+                      pasta={livePasta}
                       onUpload={handleOpenUpload}
                       onCreateSubfolder={handleCreateSubfolder}
 
