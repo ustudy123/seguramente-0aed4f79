@@ -147,6 +147,7 @@ export function PontoEscalasTab() {
     percentual_hora_extra_100: 100,
     percentual_adicional_noturno: 20,
     usa_hora_ficta_noturna: true,
+    comportamento_feriado: "folga" as "folga" | "trabalha",
   });
 
   // Cálculo automático de jornadas a partir da configuração
