@@ -264,6 +264,7 @@ export function PontoEscalasTab() {
       hora_entrada_padrao: "08:00", hora_saida_padrao: "17:00", sabado_util: false, domingo_util: false,
       percentual_hora_extra_50: 50, percentual_hora_extra_100: 100, percentual_adicional_noturno: 20,
       usa_hora_ficta_noturna: true,
+      comportamento_feriado: "folga",
     });
     setShowCriar(true);
   };
