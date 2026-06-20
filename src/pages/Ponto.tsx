@@ -506,17 +506,25 @@ const Ponto = () => {
                 ) : filteredPontos.map((ponto) => {
                   const pontoStatus = ponto.status === 'pendente' ? 'ajuste_pendente' : ponto.status;
                   const statusConfig = STATUS_PONTO_CONFIG[pontoStatus] || STATUS_PONTO_CONFIG.pendente;
-                  // Quando justificado, o tipo específico vem do prefixo da
-                  // observação gravada pela consolidação (Férias/Atestado/Afastamento),
-                  // exibindo um badge mais informativo que o genérico "Justificado".
+                  // Deriva badge a partir de tipo_dia (preferencial) e cai
+                  // para o status genérico quando não há classificação especial.
                   const obs = ponto.observacao || "";
+                  const tipoDia = ponto.tipo_dia;
+                  const feriadoNome = ponto.feriado_nome || "";
                   const badge = (() => {
-                    if (pontoStatus !== "justificado") return statusConfig;
-                    if (/^Férias/i.test(obs)) return { label: "Férias", color: "bg-sky-100 text-sky-800" };
-                    if (/^Atestado/i.test(obs)) return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
-                    if (/^Afastamento/i.test(obs)) return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
+                    if (tipoDia === "feriado") {
+                      return ponto.feriado_trabalhado
+                        ? { label: "Feriado trabalhado", color: "bg-amber-100 text-amber-800" }
+                        : { label: "Feriado", color: "bg-teal-100 text-teal-800" };
+                    }
+                    if (tipoDia === "ferias") return { label: "Férias", color: "bg-sky-100 text-sky-800" };
+                    if (tipoDia === "atestado") return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
+                    if (tipoDia === "afastamento") return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
                     return statusConfig;
                   })();
+                  const badgeTooltip = tipoDia === "feriado"
+                    ? (feriadoNome || "Feriado")
+                    : (obs || undefined);
                   const cpfKey = onlyDigits(ponto.colaborador_cpf);
                   const marcs = marcacoesPorCpf.get(cpfKey) || [];
                   // Calcula total a partir dos pares (entrada → saída), independente do label
