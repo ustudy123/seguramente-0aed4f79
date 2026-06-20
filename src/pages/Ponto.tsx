@@ -51,6 +51,7 @@ import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 import { PontoFeriadosTab } from "@/components/ponto/PontoFeriadosTab";
+import { PontoFeriadoExcecoesTab } from "@/components/ponto/PontoFeriadoExcecoesTab";
 import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
 import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 import { AjustesAprovacaoPlanilha } from "@/components/ponto/AjustesAprovacaoPlanilha";
