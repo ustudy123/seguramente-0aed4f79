@@ -627,7 +627,7 @@ const Ponto = () => {
                           title="Clique para solicitar/ajustar"
                           className="inline-flex"
                         >
-                          <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={obs || undefined}>{badge.label}</Badge>
+                          <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={badgeTooltip}>{badge.label}</Badge>
                         </button>
                       </TableCell>
                     </TableRow>
