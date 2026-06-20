@@ -147,6 +147,7 @@ export function PontoEscalasTab() {
     percentual_hora_extra_100: 100,
     percentual_adicional_noturno: 20,
     usa_hora_ficta_noturna: true,
+    comportamento_feriado: "folga" as "folga" | "trabalha",
   });
 
   // Cálculo automático de jornadas a partir da configuração
@@ -263,6 +264,7 @@ export function PontoEscalasTab() {
       hora_entrada_padrao: "08:00", hora_saida_padrao: "17:00", sabado_util: false, domingo_util: false,
       percentual_hora_extra_50: 50, percentual_hora_extra_100: 100, percentual_adicional_noturno: 20,
       usa_hora_ficta_noturna: true,
+      comportamento_feriado: "folga",
     });
     setShowCriar(true);
   };
@@ -293,6 +295,7 @@ export function PontoEscalasTab() {
       percentual_hora_extra_100: e.percentual_hora_extra_100,
       percentual_adicional_noturno: e.percentual_adicional_noturno,
       usa_hora_ficta_noturna: e.usa_hora_ficta_noturna,
+      comportamento_feriado: (anyE.comportamento_feriado === "trabalha" ? "trabalha" : "folga"),
     });
     setShowCriar(true);
   };
@@ -757,6 +760,23 @@ export function PontoEscalasTab() {
             <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-4 py-3">
               <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
               <Label className="cursor-pointer">Hora ficta noturna (52m30s)</Label>
+            </div>
+
+            <div className="space-y-2 rounded-md border bg-muted/30 px-4 py-3">
+              <Label>Comportamento em feriado</Label>
+              <Select
+                value={escalaForm.comportamento_feriado}
+                onValueChange={(v) => setEscalaForm({ ...escalaForm, comportamento_feriado: v as "folga" | "trabalha" })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="folga">Folga (não trabalha no feriado)</SelectItem>
+                  <SelectItem value="trabalha">Trabalha no feriado</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Define se quem está nesta escala folga ou trabalha nos feriados. Exceções individuais podem ser configuradas na tela de Feriados.
+              </p>
             </div>
 
             {editando && <DetalhesEscalaPanel escalaId={editando.id} />}
