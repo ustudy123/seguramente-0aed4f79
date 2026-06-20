@@ -191,7 +191,7 @@ export function PontoFeriadosTab() {
     },
     onSuccess: async (data) => {
       toast({ title: "Feriado excluído" });
-      setConfirmDel(null);
+      
       queryClient.invalidateQueries({ queryKey: ["feriados", tenantId] });
       await reconsolidarDia(data);
     },
