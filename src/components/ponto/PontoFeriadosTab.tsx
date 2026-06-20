@@ -314,7 +314,15 @@ export function PontoFeriadosTab() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                onClick={() => setConfirmDel(f)}
+                                onClick={async () => {
+                                  const ok = await confirm({
+                                    title: "Excluir feriado?",
+                                    description: `Esta ação remove "${f.nome}" (${new Date(f.data + "T00:00:00").toLocaleDateString("pt-BR")}) e reconsolida o espelho do dia.`,
+                                    confirmLabel: "Excluir",
+                                    variant: "destructive",
+                                  });
+                                  if (ok) excluirMutation.mutate(f);
+                                }}
                                 aria-label="Excluir"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
