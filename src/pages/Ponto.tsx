@@ -51,6 +51,7 @@ import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 import { PontoFeriadosTab } from "@/components/ponto/PontoFeriadosTab";
+import { PontoFeriadoExcecoesTab } from "@/components/ponto/PontoFeriadoExcecoesTab";
 import { PontoAcordosTab } from "@/components/ponto/PontoAcordosTab";
 import { PontoBancoHorasConfigTab } from "@/components/ponto/PontoBancoHorasConfigTab";
 import { AjustesAprovacaoPlanilha } from "@/components/ponto/AjustesAprovacaoPlanilha";
@@ -700,7 +701,16 @@ const Ponto = () => {
             <TabsContent value="config"><PontoConfigTab /></TabsContent>
             <TabsContent value="links"><PontoLinksTab /></TabsContent>
             <TabsContent value="repc"><PontoRepCTab /></TabsContent>
-            <TabsContent value="feriados"><PontoFeriadosTab /></TabsContent>
+            <TabsContent value="feriados">
+              <Tabs defaultValue="lista" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="lista" className="text-xs"><CalendarDays className="h-3.5 w-3.5 mr-1" />Lista</TabsTrigger>
+                  <TabsTrigger value="excecoes" className="text-xs"><UserCheck className="h-3.5 w-3.5 mr-1" />Exceções por colaborador</TabsTrigger>
+                </TabsList>
+                <TabsContent value="lista"><PontoFeriadosTab /></TabsContent>
+                <TabsContent value="excecoes"><PontoFeriadoExcecoesTab /></TabsContent>
+              </Tabs>
+            </TabsContent>
           </Tabs>
         </TabsContent>
       </Tabs>
