@@ -23,7 +23,7 @@ RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO 'public'
-AS $$
+AS $fn_proximo$
 DECLARE
   v_link RECORD;
   v_data DATE;
@@ -82,7 +82,7 @@ BEGIN
     'marcacoes', v_marcacoes
   );
 END;
-$$;
+$fn_proximo$;
 
 REVOKE EXECUTE ON FUNCTION public.proximo_tipo_marcacao_externo(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.proximo_tipo_marcacao_externo(text) TO anon, authenticated;
@@ -101,7 +101,7 @@ DROP FUNCTION IF EXISTS public.registrar_ponto_externo(
 --    soma 24h (turno que cruza a meia-noite) em vez de zerar.
 -- ─────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.consolidar_ponto_diario_manual(p_tenant_id UUID, p_colaborador_cpf TEXT, p_data DATE)
-RETURNS VOID AS $$
+RETURNS VOID AS $fn_consolidar$
 DECLARE
   v_afast public.afastamentos;
   v_ferias public.ferias_solicitacoes;
@@ -359,7 +359,7 @@ BEGIN
       updated_at = now();
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$fn_consolidar$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- ─────────────────────────────────────────────────────────
 -- 4) Helper: materializa o dia para TODOS os colaboradores ativos
@@ -371,7 +371,7 @@ RETURNS INT
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO 'public'
-AS $$
+AS $fn_dia_todos$
 DECLARE
   v_colab RECORD;
   v_n INT := 0;
@@ -390,7 +390,7 @@ BEGIN
   END LOOP;
   RETURN v_n;
 END;
-$$;
+$fn_dia_todos$;
 
 REVOKE EXECUTE ON FUNCTION public.consolidar_ponto_dia_todos(uuid, date) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.consolidar_ponto_dia_todos(uuid, date) TO authenticated;
