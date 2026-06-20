@@ -438,16 +438,6 @@ export function PontoFeriadosTab() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={!!confirmDel}
-        onOpenChange={(v) => { if (!v) setConfirmDel(null); }}
-        title="Excluir feriado?"
-        description={confirmDel ? `Esta ação remove "${confirmDel.nome}" (${new Date(confirmDel.data + "T00:00:00").toLocaleDateString("pt-BR")}) e reconsolida o espelho do dia.` : ""}
-        confirmText="Excluir"
-        variant="destructive"
-        onConfirm={() => confirmDel && excluirMutation.mutate(confirmDel)}
-        loading={excluirMutation.isPending}
-      />
     </motion.div>
   );
 }
