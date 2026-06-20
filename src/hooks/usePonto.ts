@@ -45,6 +45,9 @@ export interface PontoDiario {
   horas_faltantes: string | null;
   status: "pendente" | "regular" | "atraso" | "falta" | "incompleto" | "ajuste_pendente" | "justificado";
   observacao: string | null;
+  tipo_dia: "normal" | "feriado" | "ferias" | "atestado" | "afastamento" | null;
+  feriado_nome: string | null;
+  feriado_trabalhado: boolean | null;
   created_at: string;
   updated_at: string;
 }
