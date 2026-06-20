@@ -60,7 +60,7 @@ export function PontoFeriadosTab() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Feriado | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
-  const [confirmDel, setConfirmDel] = useState<Feriado | null>(null);
+  
   const [reconsolidando, setReconsolidando] = useState(false);
 
   const inicio = `${ano}-01-01`;
