@@ -691,14 +691,16 @@ const Ponto = () => {
         {/* Configurações */}
         <TabsContent value="configuracoes">
           <Tabs value={configTab} onValueChange={setConfigTab} className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-3 mb-4">
+            <TabsList className="grid w-full max-w-xl grid-cols-4 mb-4">
               <TabsTrigger value="config" className="text-xs"><Settings className="h-3.5 w-3.5 mr-1" />Geral</TabsTrigger>
               <TabsTrigger value="links" className="text-xs"><Link2 className="h-3.5 w-3.5 mr-1" />Links</TabsTrigger>
               <TabsTrigger value="repc" className="text-xs"><HardDrive className="h-3.5 w-3.5 mr-1" />REP-C</TabsTrigger>
+              <TabsTrigger value="feriados" className="text-xs"><CalendarDays className="h-3.5 w-3.5 mr-1" />Feriados</TabsTrigger>
             </TabsList>
             <TabsContent value="config"><PontoConfigTab /></TabsContent>
             <TabsContent value="links"><PontoLinksTab /></TabsContent>
             <TabsContent value="repc"><PontoRepCTab /></TabsContent>
+            <TabsContent value="feriados"><PontoFeriadosTab /></TabsContent>
           </Tabs>
         </TabsContent>
       </Tabs>
