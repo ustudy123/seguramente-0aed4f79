@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, LogIn, LogOut, Coffee, Utensils,
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
-  MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon,
+  MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon, CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 import { GuiaRapidoPonto } from "@/components/ponto/GuiaRapidoPonto";
