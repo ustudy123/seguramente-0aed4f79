@@ -295,6 +295,7 @@ export function PontoEscalasTab() {
       percentual_hora_extra_100: e.percentual_hora_extra_100,
       percentual_adicional_noturno: e.percentual_adicional_noturno,
       usa_hora_ficta_noturna: e.usa_hora_ficta_noturna,
+      comportamento_feriado: (anyE.comportamento_feriado === "trabalha" ? "trabalha" : "folga"),
     });
     setShowCriar(true);
   };
