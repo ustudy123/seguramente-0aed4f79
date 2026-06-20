@@ -7327,6 +7327,81 @@ export type Database = {
           },
         ]
       }
+      feriado_excecao: {
+        Row: {
+          colaborador_id: string
+          comportamento: string
+          created_at: string
+          data: string | null
+          id: string
+          observacao: string | null
+          tenant_id: string
+        }
+        Insert: {
+          colaborador_id: string
+          comportamento: string
+          created_at?: string
+          data?: string | null
+          id?: string
+          observacao?: string | null
+          tenant_id: string
+        }
+        Update: {
+          colaborador_id?: string
+          comportamento?: string
+          created_at?: string
+          data?: string | null
+          id?: string
+          observacao?: string | null
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      feriados: {
+        Row: {
+          abrangencia: string
+          ativo: boolean
+          codigo_ibge: string | null
+          created_at: string
+          data: string
+          id: string
+          municipio: string | null
+          nome: string
+          observacao: string | null
+          tenant_id: string | null
+          tipo: string
+          uf: string | null
+        }
+        Insert: {
+          abrangencia: string
+          ativo?: boolean
+          codigo_ibge?: string | null
+          created_at?: string
+          data: string
+          id?: string
+          municipio?: string | null
+          nome: string
+          observacao?: string | null
+          tenant_id?: string | null
+          tipo?: string
+          uf?: string | null
+        }
+        Update: {
+          abrangencia?: string
+          ativo?: boolean
+          codigo_ibge?: string | null
+          created_at?: string
+          data?: string
+          id?: string
+          municipio?: string | null
+          nome?: string
+          observacao?: string | null
+          tenant_id?: string | null
+          tipo?: string
+          uf?: string | null
+        }
+        Relationships: []
+      }
       ferias_assinatura_links: {
         Row: {
           abono_pecuniario: boolean | null
@@ -17426,6 +17501,8 @@ export type Database = {
           empresa_id: string | null
           entrada: string | null
           escala_id: string | null
+          feriado_nome: string | null
+          feriado_trabalhado: boolean
           he_intervalo_suprimido_minutos: number | null
           horas_extras: string | null
           horas_extras_100_minutos: number | null
@@ -17440,6 +17517,7 @@ export type Database = {
           saida_almoco: string | null
           status: string
           tenant_id: string
+          tipo_dia: string
           tolerancia_aplicada: boolean | null
           updated_at: string
         }
@@ -17454,6 +17532,8 @@ export type Database = {
           empresa_id?: string | null
           entrada?: string | null
           escala_id?: string | null
+          feriado_nome?: string | null
+          feriado_trabalhado?: boolean
           he_intervalo_suprimido_minutos?: number | null
           horas_extras?: string | null
           horas_extras_100_minutos?: number | null
@@ -17468,6 +17548,7 @@ export type Database = {
           saida_almoco?: string | null
           status?: string
           tenant_id: string
+          tipo_dia?: string
           tolerancia_aplicada?: boolean | null
           updated_at?: string
         }
@@ -17482,6 +17563,8 @@ export type Database = {
           empresa_id?: string | null
           entrada?: string | null
           escala_id?: string | null
+          feriado_nome?: string | null
+          feriado_trabalhado?: boolean
           he_intervalo_suprimido_minutos?: number | null
           horas_extras?: string | null
           horas_extras_100_minutos?: number | null
@@ -17496,6 +17579,7 @@ export type Database = {
           saida_almoco?: string | null
           status?: string
           tenant_id?: string
+          tipo_dia?: string
           tolerancia_aplicada?: boolean | null
           updated_at?: string
         }
@@ -17798,6 +17882,7 @@ export type Database = {
           ciclo_inicio_data: string | null
           ciclo_inicio_hora: string | null
           compensacoes_mensais: Json | null
+          comportamento_feriado: string
           created_at: string | null
           descricao_contratual: string | null
           descricao_original: string | null
@@ -17841,6 +17926,7 @@ export type Database = {
           ciclo_inicio_data?: string | null
           ciclo_inicio_hora?: string | null
           compensacoes_mensais?: Json | null
+          comportamento_feriado?: string
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
@@ -17884,6 +17970,7 @@ export type Database = {
           ciclo_inicio_data?: string | null
           ciclo_inicio_hora?: string | null
           compensacoes_mensais?: Json | null
+          comportamento_feriado?: string
           created_at?: string | null
           descricao_contratual?: string | null
           descricao_original?: string | null
@@ -21982,6 +22069,42 @@ export type Database = {
       }
     }
     Functions: {
+      _add_feriado_nacional: {
+        Args: { p_data: string; p_nome: string; p_tipo: string }
+        Returns: undefined
+      }
+      _ponto_calc_dia: {
+        Args: {
+          p_cid: string
+          p_colaborador_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: Record<string, unknown>
+      }
+      _ponto_class_feriado: {
+        Args: {
+          p_calc_obs: string
+          p_calc_status: string
+          p_cid: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: Record<string, unknown>
+      }
+      _ponto_grava_abono: {
+        Args: {
+          p_colaborador_cpf: string
+          p_colaborador_id: string
+          p_colaborador_nome: string
+          p_data: string
+          p_observacao: string
+          p_tenant_id: string
+          p_tipo_dia: string
+        }
+        Returns: undefined
+      }
       aceitar_consentimento_entrevista: {
         Args: { p_modalidade: string; p_token: string }
         Returns: string
@@ -22274,6 +22397,10 @@ export type Database = {
         Args: { _admissao_id: string }
         Returns: Json
       }
+      consolidar_ponto_dia_todos: {
+        Args: { p_data: string; p_tenant_id: string }
+        Returns: number
+      }
       consolidar_ponto_diario_manual: {
         Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
         Returns: undefined
@@ -22321,6 +22448,19 @@ export type Database = {
         Returns: Json
       }
       excluir_marcacao_ponto: { Args: { p_marcacao_id: string }; Returns: Json }
+      feriado_comportamento: {
+        Args: {
+          p_colaborador_id: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      feriado_do_dia: {
+        Args: { p_colaborador_id: string; p_data: string; p_tenant_id: string }
+        Returns: string
+      }
       finalizar_admissao_by_token: {
         Args: { _token: string }
         Returns: undefined
@@ -22338,6 +22478,7 @@ export type Database = {
         }
         Returns: number
       }
+      gerar_feriados_nacionais: { Args: { p_ano: number }; Returns: undefined }
       gerar_login_youreyes: {
         Args: { p_nome_completo: string }
         Returns: string
