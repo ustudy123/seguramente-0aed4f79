@@ -573,6 +573,21 @@ export function usePonto() {
         } as any)
         .eq("id", marcacaoId);
       if (error) throw error;
+
+      // Reconsolida o dia para recalcular total de horas e status no
+      // espelho. Sem isso, a hora mudava na tabela mas o ponto_diario
+      // (total/status) ficava desatualizado até a próxima consolidação.
+      const { data: marc } = await fromTable("ponto_marcacoes")
+        .select("colaborador_cpf, data_marcacao")
+        .eq("id", marcacaoId)
+        .maybeSingle() as { data: { colaborador_cpf: string; data_marcacao: string } | null };
+      if (marc?.colaborador_cpf && marc?.data_marcacao) {
+        await (supabase as any).rpc("consolidar_ponto_diario_manual", {
+          p_tenant_id: tenantId,
+          p_colaborador_cpf: marc.colaborador_cpf,
+          p_data: marc.data_marcacao,
+        });
+      }
       return marcacaoId;
     },
     onSuccess: () => {
