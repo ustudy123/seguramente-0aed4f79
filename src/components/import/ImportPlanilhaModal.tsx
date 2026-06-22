@@ -22,7 +22,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -613,8 +612,8 @@ export function ImportPlanilhaModal({
                 )}
 
                 {/* Preview da tabela */}
-                <ScrollArea className="flex-1 border rounded-lg min-h-0">
-                  <Table>
+                <div className="flex-1 min-h-0 overflow-auto border rounded-lg">
+                  <table className="w-full caption-bottom text-sm min-w-[760px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">Linha</TableHead>
@@ -660,8 +659,8 @@ export function ImportPlanilhaModal({
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
-                </ScrollArea>
+                  </table>
+                </div>
 
                 {/* Ações — sempre visíveis no rodapé */}
                 <div className="flex justify-end gap-3 pt-2 shrink-0 border-t">
