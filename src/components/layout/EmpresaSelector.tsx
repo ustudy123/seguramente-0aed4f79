@@ -140,7 +140,10 @@ export const EmpresaSelector = () => {
                 return (
               <CommandItem
                 key={empresa.id}
-                value={`${empresa.id} ${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''} ${(empresa.cnpj ?? '').replace(/\D/g,'')} ${empresa.cpf ?? ''} ${(empresa.cpf ?? '').replace(/\D/g,'')}`}
+                // O id fica no FIM do value (apenas para unicidade). No início ele
+                // poluía o fuzzy-score do cmdk (hex do UUID gerava matches falsos e
+                // escondia o resultado real). Texto pesquisável vem primeiro.
+                value={`${empresa.razao_social ?? ''} ${empresa.nome_fantasia ?? ''} ${empresa.cnpj ?? ''} ${(empresa.cnpj ?? '').replace(/\D/g,'')} ${empresa.cpf ?? ''} ${(empresa.cpf ?? '').replace(/\D/g,'')} ${empresa.id}`}
                 onSelect={() => {
                   setEmpresaAtiva(empresa);
                   setOpen(false);
