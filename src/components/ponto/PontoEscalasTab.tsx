@@ -519,6 +519,8 @@ export function PontoEscalasTab() {
                         const seg = escalaForm.dias_config.segunda as DiaConfig;
                         const nova = { ...escalaForm.dias_config };
                         ["terca","quarta","quinta","sexta"].forEach(k => { nova[k] = { ...seg }; });
+                        nova.sabado = { ...(nova.sabado as DiaConfig), trabalha: false };
+                        nova.domingo = { ...(nova.domingo as DiaConfig), trabalha: false };
                         setEscalaForm({ ...escalaForm, dias_config: nova });
                       }}>
                       <Copy className="w-3 h-3 mr-1" /> Seg→Sex iguais
@@ -528,6 +530,7 @@ export function PontoEscalasTab() {
                         const seg = escalaForm.dias_config.segunda as DiaConfig;
                         const nova = { ...escalaForm.dias_config };
                         ["terca","quarta","quinta","sexta","sabado"].forEach(k => { nova[k] = { ...seg }; });
+                        nova.domingo = { ...(nova.domingo as DiaConfig), trabalha: false };
                         setEscalaForm({ ...escalaForm, dias_config: nova });
                       }}>
                       <Copy className="w-3 h-3 mr-1" /> Seg→Sáb iguais
