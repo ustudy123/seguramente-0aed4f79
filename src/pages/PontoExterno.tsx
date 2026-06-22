@@ -130,8 +130,16 @@ const PontoExterno = () => {
 
   const carregarProximoTipo = useCallback(async () => {
     if (!token) return;
-    const { data } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
+    const { data, error: rpcError } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
+    if (rpcError) {
+      setError(`Não foi possível atualizar o status do ponto: ${rpcError.message}`);
+      return;
+    }
     const r = data as any;
+    if (r?.error) {
+      setError(traduzirErroPonto(r.error));
+      return;
+    }
     if (r?.afastado) {
       setAfastamento({ desde: r.afastado_desde || null, ate: r.afastado_ate || null });
       return;
@@ -153,6 +161,21 @@ const PontoExterno = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colaborador]);
+
+  // Revalida o próximo tipo ao voltar para o app (PWA reaberto / foco)
+  useEffect(() => {
+    if (!colaborador) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") carregarProximoTipo();
+    };
+    const onFocus = () => carregarProximoTipo();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [colaborador, carregarProximoTipo]);
 
   const handleRegistrar = useCallback(async () => {
     if (!token || !colaborador || !proximoTipo) return;
