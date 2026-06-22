@@ -229,7 +229,7 @@ BEGIN
   WHERE a.tenant_id = p_tenant_id AND a.colaborador_cpf = p_colaborador_cpf
     AND a.data_inicio_afastamento IS NOT NULL
     AND a.data_inicio_afastamento <= p_data
-    AND (a.data_fim_afastamento IS NULL OR a.data_fim_afastamento >= p_data)
+    AND COALESCE(a.data_fim_afastamento, a.data_inicio_afastamento) >= p_data
   ORDER BY a.data_inicio_afastamento DESC LIMIT 1;
   IF v_atest.id IS NOT NULL THEN
     v_cid := COALESCE(v_cid, v_atest.colaborador_id);
