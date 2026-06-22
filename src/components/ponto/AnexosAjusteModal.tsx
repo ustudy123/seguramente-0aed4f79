@@ -39,26 +39,34 @@ export function AnexosAjusteModal({ ajuste, onOpenChange }: Props) {
     (async () => {
       const resolved: AnexoComUrl[] = [];
       for (const a of lista) {
-        const isImage = (a.tipo || "").startsWith("image/") ||
+        // Compat: envio externo grava `path`; interno grava `url` — aceita os dois.
+        const storagePath = (a as any).url ?? (a as any).path ?? "";
+        const tipo = a.tipo || "";
+        const isImage = tipo.startsWith("image/") ||
           /\.(png|jpe?g|webp|gif|bmp)$/i.test(a.nome);
-        const { data, error } = await supabase.storage
-          .from("ponto-ajustes-anexos")
-          .createSignedUrl(a.url, 60 * 60); // 1 hora
-        if (error) {
-          console.error("Falha signed URL", a.url, error);
+        let signedUrl: string | undefined;
+        if (storagePath) {
+          try {
+            const { data, error } = await supabase.storage
+              .from("ponto-ajustes-anexos")
+              .createSignedUrl(storagePath, 60 * 60); // 1 hora
+            if (error) console.error("Falha signed URL", storagePath, error);
+            signedUrl = data?.signedUrl;
+          } catch (e) {
+            console.error("Erro ao gerar signed URL", storagePath, e);
+          }
         }
         resolved.push({
           nome: a.nome,
-          url: a.url,
+          url: storagePath,
           tamanho: a.tamanho,
-          tipo: a.tipo,
+          tipo,
           isImage,
-          signedUrl: data?.signedUrl,
+          signedUrl,
         });
       }
       setAnexos(resolved);
-      setLoading(false);
-    })();
+    })().finally(() => setLoading(false));
   }, [ajuste]);
 
   const formatBytes = (b: number) => {

@@ -286,12 +286,12 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     if (erro) { toast.error(erro); return; }
     setEnviando(true);
     try {
-      const anexos: { path: string; nome: string; tamanho: number }[] = [];
+      const anexos: { nome: string; url: string; tamanho: number; tipo: string }[] = [];
       for (const f of files) {
         const path = `externo/${token}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-        const { error: upErr } = await supabasePublic.storage.from("ponto-ajustes-anexos").upload(path, f);
+        const { error: upErr } = await supabasePublic.storage.from("ponto-ajustes-anexos").upload(path, f, { contentType: f.type });
         if (upErr) { toast.error(`Falha no upload de ${f.name}: ${upErr.message}`); setEnviando(false); return; }
-        anexos.push({ path, nome: f.name, tamanho: f.size });
+        anexos.push({ nome: f.name, url: path, tamanho: f.size, tipo: f.type });
       }
 
       const payload = itensAlterados.map((it) => ({

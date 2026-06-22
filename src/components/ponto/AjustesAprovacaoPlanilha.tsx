@@ -279,7 +279,9 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                               const hasPendente = items.some((a) => a.status === "pendente");
                               const allApr = items.every((a) => a.status === "aprovado");
                               const allRej = items.every((a) => a.status === "rejeitado");
-                              const totalAnexos = items.reduce((s, a) => s + (a.anexos?.length ?? 0), 0);
+                              const totalAnexos = new Set(
+                                items.flatMap((a) => a.anexos ?? []).map((x: any) => x.url ?? x.path ?? x.nome)
+                              ).size;
                               const firstAjusteAnexo = items.find((a) => (a.anexos?.length ?? 0) > 0);
                               const motivos = Array.from(new Set(items.map((a) => a.motivo).filter(Boolean)));
 
