@@ -256,19 +256,59 @@ export function useCargos(options?: { skipEmpresaFilter?: boolean }) {
 
   const deleteCargo = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const nome = cargos.find((c) => c.id === id)?.nome?.trim();
+      if (!nome) throw new Error("Função não encontrada.");
+
+      // Vínculo cargo↔colaborador é por NOME (não há FK): bloqueia a exclusão
+      // se algum colaborador (admissoes / usuarios_base) usa esta função.
+      const [adm, usr] = await Promise.all([
+        supabase
+          .from("admissoes")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId!)
+          .eq("cargo", nome),
+        supabase
+          .from("usuarios_base")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId!)
+          .eq("cargo_funcao", nome),
+      ]);
+      if (adm.error) throw adm.error;
+      if (usr.error) throw usr.error;
+      const vinculados = (adm.count ?? 0) + (usr.count ?? 0);
+      if (vinculados > 0) {
+        throw new Error(
+          `Não é possível excluir a função "${nome}": há ${vinculados} colaborador(es) vinculado(s). Reatribua ou desvincule antes de excluir.`,
+        );
+      }
+
+      // Confirma que a linha foi realmente removida (evita falso sucesso por RLS).
+      const { data, error } = await supabase
         .from("cargos")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .select("id");
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23503") {
+          throw new Error(
+            "Não é possível excluir: a função está vinculada a outros registros do sistema.",
+          );
+        }
+        throw error;
+      }
+      if (!data?.length) {
+        throw new Error(
+          "A função não foi excluída (verifique permissões) — atualize a página e tente novamente.",
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cargos"] });
       toast.success("Função excluída com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir função: " + error.message);
+      toast.error(error.message);
     },
   });
 
