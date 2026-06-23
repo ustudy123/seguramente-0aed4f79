@@ -241,6 +241,20 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     };
 
     let remaining = ocupantes.length;
+    let erros = 0;
+    const finalizarTentativa = () => {
+      remaining--;
+      if (remaining === 0) {
+        if (erros > 0) {
+          toast.error(
+            erros === ocupantes.length
+              ? "Erro ao adicionar posição"
+              : `${erros} de ${ocupantes.length} posições não foram adicionadas`
+          );
+        }
+        resetForm();
+      }
+    };
     ocupantes.forEach((colab) => {
       createOrgNode.mutate(
         { 
@@ -267,9 +281,12 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
               }
               setInsertingBetweenId(null);
             }
-            remaining--; 
-            if (remaining === 0) resetForm(); 
-          } 
+            finalizarTentativa();
+          },
+          onError: () => {
+            erros++;
+            finalizarTentativa();
+          },
         },
       );
     });
