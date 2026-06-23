@@ -226,13 +226,16 @@ export function usePonto() {
         // empresa REAL do colaborador, não pelo empresa_id gravado no
         // ajuste — que pode ter sido carimbado errado por versões antigas
         // (ajuste criado com a empresa ativa do gestor, não a do colab).
-        let idsDaEmpresa: Set<string> | null = null;
+        // Mapa colaborador (admissão.id) -> empresa REAL, de todo o tenant.
+        // Resolve a empresa do colaborador pelo cadastro, independente da
+        // empresa ativa, para que cada ajuste apareça só na unidade dona do
+        // colaborador (e não em todas, como acontecia com empresa_id nulo).
+        let empresaDoColab: Map<string, string | null> | null = null;
         if (empresaAtivaId) {
           const { data: colabs } = await fromTable("admissoes")
-            .select("id")
-            .eq("tenant_id", tenantId)
-            .eq("empresa_id", empresaAtivaId) as { data: { id: string }[] | null };
-          idsDaEmpresa = new Set((colabs || []).map((c) => c.id));
+            .select("id, empresa_id")
+            .eq("tenant_id", tenantId) as { data: { id: string; empresa_id: string | null }[] | null };
+          empresaDoColab = new Map((colabs || []).map((c) => [c.id, c.empresa_id]));
         }
 
         // PENDENTES: todos do tenant; o filtro por empresa é aplicado
@@ -264,11 +267,14 @@ export function usePonto() {
         // Filtra pela empresa real do colaborador. Sem empresa ativa
         // (visão consolidada), mostra tudo do tenant.
         const noEscopo = (a: PontoAjuste) => {
-          if (!idsDaEmpresa) return true;
-          if (a.colaborador_id && idsDaEmpresa.has(a.colaborador_id)) return true;
-          // Fallback: ajuste sem colaborador_id resolvível cai no critério
-          // antigo de empresa_id (não trava quem não tem admissão casável).
-          return a.empresa_id === empresaAtivaId || a.empresa_id === null || a.empresa_id === tenantId;
+          if (!empresaDoColab) return true; // visão consolidada: tudo do tenant
+          // Empresa real do colaborador (cadastro). Se o colaborador não tem
+          // admissão casável, usa o empresa_id gravado no próprio ajuste.
+          // NÃO tratamos empresa_id nulo como "aparece em todas".
+          const real = (a.colaborador_id && empresaDoColab.has(a.colaborador_id))
+            ? empresaDoColab.get(a.colaborador_id)
+            : a.empresa_id;
+          return real === empresaAtivaId;
         };
 
         return [
