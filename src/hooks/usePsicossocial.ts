@@ -534,13 +534,75 @@ export function usePsicossocial() {
         .eq("campanha_id", campanhaId),
       supabase
         .from("questionario_psicossocial_campanhas")
-        .select("tipo_instrumento")
+        .select("tipo_instrumento, ghe_ids")
         .eq("id", campanhaId)
         .single(),
       elegiveisQuery,
     ]);
 
     const colaboradoresAtivos = elegiveisRes.count ?? 0;
+    const campanhaData = campanhaRes.data as { tipo_instrumento?: string; ghe_ids?: string[] } | null;
+
+    // ── Universo via GHE ──────────────────────────────────────────────
+    // Quando a campanha está vinculada a um/mais GHE, o universo elegível
+    // (denominador da taxa) deve ser o nº de funcionários DESSES GHE, e não
+    // o quadro inteiro da empresa. GHE agrupa cargos (psicossocial_ghe_cargos);
+    // o colaborador pertence ao GHE pelo cargo que ocupa em admissoes.
+    // Como ninguém está em mais de um GHE, a soma é direta (sem dedupe).
+    const gheIds = (campanhaData?.ghe_ids || []) as string[];
+    const temGHE = gheIds.length > 0;
+    let elegiveisGHE = 0;
+    let respondidosGHE = 0;
+    if (temGHE) {
+      const { data: ghePairsData } = await supabase
+        .from("psicossocial_ghe_cargos")
+        .select("cargo_id, departamento_id")
+        .in("ghe_id", gheIds);
+      const ghePairs = (ghePairsData || []) as { cargo_id: string | null; departamento_id: string | null }[];
+
+      const cargoIds = Array.from(new Set(ghePairs.map(p => p.cargo_id).filter(Boolean) as string[]));
+      const deptoIds = Array.from(new Set(ghePairs.map(p => p.departamento_id).filter(Boolean) as string[]));
+
+      const [cargosRes, deptosRes] = await Promise.all([
+        cargoIds.length > 0
+          ? supabase.from("cargos").select("id, nome").in("id", cargoIds)
+          : Promise.resolve({ data: [] as { id: string; nome: string }[] }),
+        deptoIds.length > 0
+          ? supabase.from("departamentos").select("id, nome").in("id", deptoIds)
+          : Promise.resolve({ data: [] as { id: string; nome: string }[] }),
+      ]);
+      const cargosMap = Object.fromEntries(((cargosRes.data || []) as { id: string; nome: string }[]).map(c => [c.id, c.nome]));
+      const deptosMap = Object.fromEntries(((deptosRes.data || []) as { id: string; nome: string }[]).map(d => [d.id, d.nome]));
+
+      // Conjunto de chaves "cargo|departamento" normalizadas
+      const pairsKey = new Set(
+        ghePairs.map(p => {
+          const c = p.cargo_id ? (cargosMap[p.cargo_id] || "") : "";
+          const d = p.departamento_id ? (deptosMap[p.departamento_id] || "") : "";
+          return `${c.trim().toLowerCase()}|${d.trim().toLowerCase()}`;
+        })
+      );
+
+      // Denominador: admissões ativas da empresa cujo (cargo|depto) pertence ao GHE
+      let admQuery = supabase
+        .from("admissoes")
+        .select("cargo, departamento, status, inativo")
+        .eq("tenant_id", tenantId)
+        .or("inativo.is.null,inativo.eq.false");
+      if (empresaAtivaId) admQuery = admQuery.eq("empresa_id", empresaAtivaId);
+      const { data: admData } = await admQuery;
+      elegiveisGHE = ((admData || []) as { cargo: string | null; departamento: string | null }[]).filter(a => {
+        const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+        return pairsKey.has(key);
+      }).length;
+
+      // Numerador (A): respostas de quem é elegível ao GHE (via snapshot da resposta)
+      respondidosGHE = (respostas as any[]).filter((r: any) => {
+        if (r.ghe_id_snapshot && gheIds.includes(r.ghe_id_snapshot)) return true;
+        const key = `${(r.cargo_snapshot || "").trim().toLowerCase()}|${(r.setor_snapshot || "").trim().toLowerCase()}`;
+        return pairsKey.has(key);
+      }).length;
+    }
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
     const entrevistas = (entrevistasRes.data || []) as Array<{ id: string; status: string | null; resumo_ia: any }>;
@@ -562,12 +624,17 @@ export function usePsicossocial() {
 
     // Fonte de verdade para "concluídas" = respostas reais salvas (cobre Link Geral anônimo)
     const totalRespostas = respostas.length;
-    // "Concluídos" = max(respostas reais, marcados como respondidos, entrevistas concluídas)
-    const concluidos = Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes, entrevistasConcluidas);
-    // "Total elegível": inclui os colaboradores ativos da empresa — em campanha anônima
-    // de Link Geral (sem convites nominais), eles são o universo real de pendentes.
-    // O max() cobre o caso de haver mais respostas do que cadastros ativos.
-    const total = Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas, colaboradoresAtivos);
+    // "Concluídos" e "Total elegível" dependem do escopo da campanha:
+    // • Com GHE vinculado → universo = funcionários do GHE; concluídos = respostas
+    //   de elegíveis ao GHE (mesmo universo no numerador e no denominador).
+    // • Sem GHE → comportamento legado: convites nominais ou quadro ativo da empresa
+    //   (Link Geral anônimo). O max() cobre haver mais respostas que cadastros ativos.
+    const concluidos = temGHE
+      ? Math.min(respondidosGHE, Math.max(elegiveisGHE, respondidosGHE))
+      : Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes, entrevistasConcluidas);
+    const total = temGHE
+      ? Math.max(elegiveisGHE, respondidosGHE)
+      : Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas, colaboradoresAtivos);
     // Pendentes = quem ainda não respondeu dentro do universo elegível
     const pendentes = Math.max(0, total - concluidos);
 

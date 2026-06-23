@@ -82,6 +82,10 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
   const isLoading = loadingStats || loadingRespostas;
 
   const isSipro = campanha.instrumento === 'sipro';
+  // Quando a campanha está vinculada a GHE, a base da taxa é o GHE (não o setor).
+  const temGHE = (campanha.ghe_ids?.length ?? 0) > 0;
+  const baseLabel = temGHE ? "GHE" : "Setor";
+  const baseLabelInline = temGHE ? "GHE" : "setor";
 
   // IPS e classificação a partir das estatísticas reais
   const ips = stats?.ips;
@@ -601,12 +605,12 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                 </Card>
                 <Card className="border-primary/30 bg-primary/5">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Total no Setor</CardTitle>
+                    <CardTitle className="text-sm">Total no {baseLabel}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-primary">{stats?.total_convites || 0}</div>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      {stats?.concluidos || 0} de {stats?.total_convites || 0} colaboradores do setor responderam
+                      {stats?.concluidos || 0} de {stats?.total_convites || 0} colaboradores do {baseLabelInline} responderam
                     </p>
                     <Progress
                       value={stats?.total_convites ? ((stats.concluidos || 0) / stats.total_convites) * 100 : 0}
