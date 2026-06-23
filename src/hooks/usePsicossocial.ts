@@ -596,12 +596,12 @@ export function usePsicossocial() {
         return pairsKey.has(key);
       }).length;
 
-      // Numerador (A): respostas de quem é elegível ao GHE (via snapshot da resposta)
-      respondidosGHE = (respostas as any[]).filter((r: any) => {
-        if (r.ghe_id_snapshot && gheIds.includes(r.ghe_id_snapshot)) return true;
-        const key = `${(r.cargo_snapshot || "").trim().toLowerCase()}|${(r.setor_snapshot || "").trim().toLowerCase()}`;
-        return pairsKey.has(key);
-      }).length;
+      // Numerador: toda resposta de uma campanha vinculada a GHE é, por definição,
+      // de alguém do GHE (a campanha é direcionada e o link é exclusivo dela).
+      // Por isso contamos o total de respostas da campanha — isso cobre tanto
+      // respostas anônimas de Link Geral (sem snapshot de cargo/setor) quanto
+      // respostas antigas, gravadas antes de o GHE ser vinculado.
+      respondidosGHE = respostas.length;
     }
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
@@ -625,12 +625,12 @@ export function usePsicossocial() {
     // Fonte de verdade para "concluídas" = respostas reais salvas (cobre Link Geral anônimo)
     const totalRespostas = respostas.length;
     // "Concluídos" e "Total elegível" dependem do escopo da campanha:
-    // • Com GHE vinculado → universo = funcionários do GHE; concluídos = respostas
-    //   de elegíveis ao GHE (mesmo universo no numerador e no denominador).
+    // • Com GHE vinculado → denominador = funcionários do GHE; concluídos = total de
+    //   respostas da campanha (toda resposta é de alguém do GHE, por construção).
     // • Sem GHE → comportamento legado: convites nominais ou quadro ativo da empresa
     //   (Link Geral anônimo). O max() cobre haver mais respostas que cadastros ativos.
     const concluidos = temGHE
-      ? Math.min(respondidosGHE, Math.max(elegiveisGHE, respondidosGHE))
+      ? respondidosGHE
       : Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes, entrevistasConcluidas);
     const total = temGHE
       ? Math.max(elegiveisGHE, respondidosGHE)
