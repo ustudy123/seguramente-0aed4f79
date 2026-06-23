@@ -516,6 +516,40 @@ export function useImportacaoPlanilha() {
     return { mapa, info, unicaEmpresaId, mapaInativas };
   };
 
+  // Detecta o codepage correto: 65001 (UTF-8) quando o arquivo tem BOM UTF-8
+  // ou é UTF-8 válido; senão 1252 (Latin-1/Windows, padrão de CSV salvo no Excel).
+  // Evita "OperaÃ§Ãµes" (UTF-8 lido como Latin-1) sem quebrar arquivos do Excel.
+  const detectarCodepage = (bytes: Uint8Array): number => {
+    // BOM UTF-8 (EF BB BF)
+    if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+      return 65001;
+    }
+    // Validação de sequências UTF-8 (amostra dos primeiros ~64KB)
+    const limite = Math.min(bytes.length, 65536);
+    let i = 0;
+    let temMultibyte = false;
+    while (i < limite) {
+      const b = bytes[i];
+      if (b < 0x80) { i++; continue; }
+      let n: number;
+      if (b >= 0xc2 && b <= 0xdf) n = 1;
+      else if (b >= 0xe0 && b <= 0xef) n = 2;
+      else if (b >= 0xf0 && b <= 0xf4) n = 3;
+      else return 1252; // byte de início inválido em UTF-8 → provavelmente Latin-1
+      // bytes de continuação devem ser 10xxxxxx
+      for (let j = 1; j <= n; j++) {
+        if (i + j >= limite) break;
+        if ((bytes[i + j] & 0xc0) !== 0x80) return 1252;
+      }
+      temMultibyte = true;
+      i += n + 1;
+    }
+    // Chegou aqui sem byte inválido: é UTF-8 (com acentos) ou ASCII puro.
+    // ASCII puro decodifica igual nos dois codepages, então 65001 é seguro.
+    void temMultibyte;
+    return 65001;
+  };
+
   // Read only headers and sample rows for mapping step
   const lerArquivoHeaders = async (file: File): Promise<{ headers: string[]; sampleRows: any[][] }> => {
     return new Promise((resolve, reject) => {
@@ -523,7 +557,7 @@ export function useImportacaoPlanilha() {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array", cellDates: false });
+          const workbook = XLSX.read(data, { type: "array", cellDates: false, codepage: detectarCodepage(data) });
           const planilha = workbook.Sheets[workbook.SheetNames[0]];
           
           // Clear any internal cache by using a fresh sheet object
@@ -555,7 +589,7 @@ export function useImportacaoPlanilha() {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array", cellDates: false });
+          const workbook = XLSX.read(data, { type: "array", cellDates: false, codepage: detectarCodepage(data) });
           const freshPlanilha = workbook.Sheets[workbook.SheetNames[0]];
           recortarRangePlanilha(freshPlanilha);
           const jsonData = XLSX.utils.sheet_to_json(freshPlanilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
@@ -705,7 +739,7 @@ export function useImportacaoPlanilha() {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array", cellDates: false });
+          const workbook = XLSX.read(data, { type: "array", cellDates: false, codepage: detectarCodepage(data) });
           const primeiraAba = workbook.SheetNames[0];
           const freshPlanilha = workbook.Sheets[primeiraAba];
           recortarRangePlanilha(freshPlanilha);
