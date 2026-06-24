@@ -376,14 +376,22 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
           .eq("tenant_id", tenantId)
           .eq("status", "concluido");
         if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
-        const { data, error } = await q.order("nome_completo").range(from, from + PAGE - 1);
+        // Ordenação determinística: nome_completo pode ter homônimos (vários
+        // "Tavares"), e sem desempate por uma coluna única o .range() entre
+        // páginas pode repetir/pular linhas. Desempata por id.
+        const { data, error } = await q
+          .order("nome_completo")
+          .order("id")
+          .range(from, from + PAGE - 1);
         if (error) throw error;
         const chunk = data || [];
         acc.push(...chunk);
         if (chunk.length < PAGE) break;
         from += PAGE;
       }
-      return acc;
+      // Blindagem extra: remove eventuais ids repetidos antes de renderizar.
+      const vistos = new Set<string>();
+      return acc.filter((c) => (vistos.has(c.id) ? false : (vistos.add(c.id), true)));
     },
     enabled: !!tenantId,
   });

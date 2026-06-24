@@ -52,6 +52,7 @@ export function useAdmissoes() {
         if (empresaAtivaId) q = q.eq('empresa_id', empresaAtivaId);
         const { data, error: admissoesError } = await q
           .order('created_at', { ascending: false })
+          .order('id')
           .range(from, from + PAGE - 1);
         if (admissoesError) throw admissoesError;
         const chunk = data || [];
