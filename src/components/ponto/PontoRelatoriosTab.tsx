@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoFechamento } from "@/hooks/usePontoFechamento";
+import { usePontoBancoHoras } from "@/hooks/usePontoBancoHoras";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { format } from "date-fns";
@@ -34,6 +35,7 @@ export function PontoRelatoriosTab() {
 
   const { usePontoDiario } = usePonto();
   const { useEspelhos } = usePontoFechamento();
+  const { useBancoHorasPorCompetencia } = usePontoBancoHoras();
 
   const year = parseInt(competencia.split("-")[0]);
   const month = parseInt(competencia.split("-")[1]);
@@ -41,6 +43,7 @@ export function PontoRelatoriosTab() {
   const endDate = new Date(year, month, 0);
 
   const { data: espelhos = [] } = useEspelhos(competencia);
+  const { data: bancosHoras = [] } = useBancoHorasPorCompetencia(competencia);
   const { data: registrosMes = [], isLoading: carregandoRegistros } = usePontoDiario(startDate, endDate);
 
   const formatMinutos = (min: number) => {
@@ -49,6 +52,9 @@ export function PontoRelatoriosTab() {
     const m = totalMinutos % 60;
     return `${h}h ${m.toString().padStart(2, "0")}min`;
   };
+
+  // Saldo com sinal (negativo = devendo horas).
+  const formatSaldo = (min: number) => `${(min || 0) < 0 ? "-" : ""}${formatMinutos(min)}`;
 
   const gerarRelatorio = async () => {
     setGerando(true);
@@ -253,18 +259,21 @@ export function PontoRelatoriosTab() {
         margin: { top: 70 }
       });
     } else if (tipoRelatorio === "banco_horas") {
-      const head = [["Colaborador", "Saldo Anterior", "Créditos", "Débitos", "Saldo Atual"]];
-      const body = espelhos.map(e => [
-        e.colaborador_nome,
-        formatMinutos(0), // Placeholder for previous balance
-        formatMinutos(e.total_horas_extras_50_minutos + e.total_horas_extras_100_minutos),
-        formatMinutos(e.total_atrasos_minutos),
-        formatMinutos(e.total_horas_extras_50_minutos + e.total_horas_extras_100_minutos - e.total_atrasos_minutos)
+      // Usa o saldo REAL apurado/lançado em ponto_banco_horas (não mais o
+      // placeholder com saldo anterior zerado).
+      const head = [["Colaborador", "Saldo Anterior", "Créditos", "Débitos", "Compensados", "Saldo Atual"]];
+      const body = bancosHoras.map(b => [
+        b.colaborador_nome,
+        formatSaldo(b.saldo_anterior_minutos),
+        "+" + formatMinutos(b.creditos_minutos),
+        "-" + formatMinutos(b.debitos_minutos),
+        formatMinutos(b.compensados_minutos),
+        formatSaldo(b.saldo_atual_minutos),
       ]);
 
       autoTable(doc, {
         head: head,
-        body: body.length > 0 ? body : [["Nenhum dado de banco de horas", "", "", "", ""]],
+        body: body.length > 0 ? body : [["Nenhum saldo apurado nesta competência. Use \"Apurar agora\" no Banco de Horas.", "", "", "", "", ""]],
         startY: 70,
         theme: 'striped',
         headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
@@ -290,7 +299,18 @@ export function PontoRelatoriosTab() {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
     let dados: any[] = [];
 
-    if (espelhos.length > 0) {
+    if (tipoRelatorio === "banco_horas") {
+      dados = bancosHoras.map(b => ({
+        Colaborador: b.colaborador_nome,
+        CPF: b.colaborador_cpf,
+        "Saldo Anterior (min)": b.saldo_anterior_minutos,
+        "Créditos (min)": b.creditos_minutos,
+        "Débitos (min)": b.debitos_minutos,
+        "Compensados (min)": b.compensados_minutos,
+        "Saldo Atual (min)": b.saldo_atual_minutos,
+        Competência: b.competencia,
+      }));
+    } else if (espelhos.length > 0) {
       dados = espelhos.map(e => ({
         Colaborador: e.colaborador_nome,
         CPF: e.colaborador_cpf,

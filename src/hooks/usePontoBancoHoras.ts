@@ -34,6 +34,7 @@ export interface BancoHorasMovimentacao {
   tipo: string;
   minutos: number;
   descricao: string | null;
+  origem?: string | null;
   created_at: string;
 }
 
@@ -203,6 +204,33 @@ export function usePontoBancoHoras() {
     onError: handleMutationError,
   });
 
+  // Apuração automática (on-demand): calcula créditos/débitos a partir do
+  // ponto_diario (horas trabalhadas x jornada da escala) e grava no banco de
+  // horas da competência, preservando lançamentos manuais.
+  const apurarBancoHorasMutation = useMutation({
+    mutationFn: async (competencia: string) => {
+      if (!tenantId) throw new Error("Não autenticado");
+      const { data, error } = await (supabase.rpc as any)("apurar_banco_horas", {
+        p_tenant_id: tenantId,
+        p_competencia: competencia,
+        p_empresa_id: empresaAtivaId || null,
+      });
+      if (error) throw error;
+      const result = data as { success?: boolean; colaboradores?: number; error?: string } | null;
+      if (result && result.success !== true) {
+        throw new Error(result?.error || "Não foi possível apurar o banco de horas.");
+      }
+      return result;
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      const n = result?.colaboradores ?? 0;
+      toast.success(`Banco de horas apurado para ${n} colaborador(es).`);
+    },
+    onError: handleMutationError,
+  });
+
   return {
     useBancoHorasPorCompetencia,
     useMovimentacoes,
@@ -214,5 +242,7 @@ export function usePontoBancoHoras() {
     excluindoMovimentacao: excluirMovimentacaoMutation.isPending,
     criarBancoHoras: criarBancoHorasMutation.mutateAsync,
     criandoBancoHoras: criarBancoHorasMutation.isPending,
+    apurarBancoHoras: apurarBancoHorasMutation.mutateAsync,
+    apurandoBancoHoras: apurarBancoHorasMutation.isPending,
   };
 }
