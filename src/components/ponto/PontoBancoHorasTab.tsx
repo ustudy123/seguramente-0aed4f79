@@ -28,6 +28,8 @@ export function PontoBancoHorasTab() {
     excluirMovimentacao,
     criarBancoHoras,
     criandoBancoHoras,
+    apurarBancoHoras,
+    apurandoBancoHoras,
   } = usePontoBancoHoras();
   const { colaboradores } = useColaboradores();
 
@@ -62,6 +64,17 @@ export function PontoBancoHorasTab() {
       competencia,
     });
     setShowCriar(false);
+  };
+
+  const handleApurar = async () => {
+    const ok = await confirm({
+      title: `Apurar banco de horas — ${competencia}`,
+      description:
+        "O sistema vai calcular créditos (horas além da jornada) e débitos (atrasos, faltas e saídas antecipadas) a partir do ponto de cada colaborador, comparando com a jornada da escala. Lançamentos manuais são preservados; apenas os valores apurados anteriores são substituídos.",
+      confirmLabel: "Apurar agora",
+    });
+    if (!ok) return;
+    await apurarBancoHoras(competencia);
   };
 
   const handleMovimentacao = async () => {
@@ -181,10 +194,14 @@ export function PontoBancoHorasTab() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
+          <Button onClick={handleApurar} disabled={apurandoBancoHoras}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${apurandoBancoHoras ? "animate-spin" : ""}`} />
+            {apurandoBancoHoras ? "Apurando..." : "Apurar agora"}
+          </Button>
           <Button variant="outline" onClick={() => setShowImport(true)}>
             <Upload className="w-4 h-4 mr-2" /> Importar
           </Button>
-          <Button onClick={() => setShowCriar(true)}>
+          <Button variant="outline" onClick={() => setShowCriar(true)}>
             <Plus className="w-4 h-4 mr-2" /> Novo Banco
           </Button>
         </div>
@@ -296,7 +313,14 @@ export function PontoBancoHorasTab() {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono">{formatMinutos(m.minutos)}</TableCell>
-                    <TableCell>{m.descricao || "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {m.origem === "apuracao"
+                          ? <Badge variant="secondary" className="text-[10px]">Apurado</Badge>
+                          : <Badge variant="outline" className="text-[10px]">Manual</Badge>}
+                        <span>{m.descricao || "-"}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" title="Editar" onClick={() => setEditMov({ id: m.id, tipo: m.tipo, minutos: m.minutos, data_referencia: m.data_referencia, descricao: m.descricao || "" })}>

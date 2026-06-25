@@ -226,35 +226,75 @@ const Ponto = () => {
   const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const handleToday = () => setSelectedDate(new Date());
 
-  // Conjunto de CPFs/IDs válidos para a empresa ativa (após filtros CLT e bate_ponto).
-  const colabIds = useMemo(() => new Set(colaboradores.map(c => c.id)), [colaboradores]);
-  const colabCpfs = useMemo(
-    () => new Set(colaboradores.map(c => (c.cpf || "").replace(/\D/g, "")).filter(Boolean)),
-    [colaboradores]
-  );
+  // Monta as linhas do espelho a partir da lista COMPLETA de colaboradores
+  // da empresa ativa (fonte da verdade de quem bate ponto), anexando o
+  // registro de ponto_diario quando existir. Colaboradores sem registro no
+  // dia passam a aparecer como "Sem marcações / Pendente". Antes a tabela
+  // iterava apenas ponto_diario, então quem ainda não tinha linha consolidada
+  // (sem escala atribuída, admissão recente, consolidação não executada ou
+  // que ainda não bateu o ponto no dia) simplesmente sumia do espelho.
+  type EspelhoRow = PontoDiario & { __virtual?: boolean };
+  const espelhoRows = useMemo<EspelhoRow[]>(() => {
+    // Indexa o ponto_diario do dia por colaborador (id e CPF só-dígitos).
+    const pontoPorColabId = new Map<string, PontoDiario>();
+    const pontoPorCpf = new Map<string, PontoDiario>();
+    for (const p of pontosDiarios) {
+      if (p.colaborador_id) pontoPorColabId.set(p.colaborador_id, p);
+      const cpf = (p.colaborador_cpf || "").replace(/\D/g, "");
+      if (cpf) pontoPorCpf.set(cpf, p);
+    }
 
-  const filteredPontos = pontosDiarios.filter((ponto) => {
-    // Garante que o espelho mostre apenas colaboradores da empresa ativa (e que batem ponto).
-    // Um registro pertence ao espelho se:
-    //  (a) o colaborador está na lista da empresa ativa (por id ou CPF); OU
-    //  (b) o próprio registro de ponto está explicitamente vinculado à empresa ativa —
-    //      cobre cadastros divergentes (empresa trocada, admissão pendente, bate_ponto
-    //      desmarcado), em que a pessoa registra ponto normalmente mas sumia do espelho.
-    const cpfDig = (ponto.colaborador_cpf || "").replace(/\D/g, "");
-    const pertence =
-      colabIds.has(ponto.colaborador_id) ||
-      (cpfDig && colabCpfs.has(cpfDig)) ||
-      (!!empresaAtivaId && ponto.empresa_id === empresaAtivaId);
-    if (!pertence) return false;
+    const usados = new Set<string>(); // ids de ponto_diario já anexados
+    const rows: EspelhoRow[] = [];
 
+    // 1) Uma linha por colaborador da empresa ativa (registro real ou virtual).
+    for (const colab of colaboradores) {
+      const cpfDig = (colab.cpf || "").replace(/\D/g, "");
+      const ponto = pontoPorColabId.get(colab.id) || (cpfDig ? pontoPorCpf.get(cpfDig) : undefined);
+      if (ponto) {
+        usados.add(ponto.id);
+        rows.push(ponto);
+      } else {
+        rows.push({
+          id: `virtual-${colab.id}`,
+          tenant_id: tenantIdAtivo || "",
+          empresa_id: colab.empresa_id ?? null,
+          colaborador_id: colab.id,
+          colaborador_nome: colab.nome_completo,
+          colaborador_cpf: colab.cpf || "",
+          data: dataSelStr,
+          entrada: null, saida_almoco: null, retorno_almoco: null, saida: null,
+          horas_trabalhadas: null, horas_extras: null, horas_faltantes: null,
+          status: "pendente",
+          observacao: null,
+          tipo_dia: null, feriado_nome: null, feriado_trabalhado: null,
+          created_at: "", updated_at: "",
+          __virtual: true,
+        });
+      }
+    }
+
+    // 2) Mantém registros de ponto_diario da empresa ativa que NÃO casaram
+    //    com nenhum colaborador da lista (cadastro divergente: empresa
+    //    trocada, admissão pendente, bate_ponto desmarcado). Sem isso, uma
+    //    batida real cujo cadastro diverge sumiria do espelho.
+    for (const p of pontosDiarios) {
+      if (usados.has(p.id)) continue;
+      if (!!empresaAtivaId && p.empresa_id === empresaAtivaId) rows.push(p);
+    }
+
+    return rows.sort((a, b) =>
+      (a.colaborador_nome || "").localeCompare(b.colaborador_nome || "", "pt-BR", { sensitivity: "base" })
+    );
+  }, [colaboradores, pontosDiarios, empresaAtivaId, tenantIdAtivo, dataSelStr]);
+
+  const filteredPontos = espelhoRows.filter((ponto) => {
     const matchesStatus = statusFilter === "all" || ponto.status === statusFilter;
-    const matchesSearch = ponto.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = ponto.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ponto.colaborador_cpf.includes(searchTerm);
-    
-    // Para filtrar por departamento, precisamos cruzar com a lista de colaboradores
+    // Para filtrar por departamento, cruzamos com a lista de colaboradores.
     const colab = colaboradores.find(c => c.id === ponto.colaborador_id);
     const matchesDept = deptFilter === "all" || (colab && colab.departamento === deptFilter);
-
     return matchesStatus && matchesSearch && matchesDept;
   });
 
@@ -506,7 +546,11 @@ const Ponto = () => {
                 ) : filteredPontos.length === 0 ? (
                   <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
                 ) : filteredPontos.map((ponto) => {
-                  const pontoStatus = ponto.status === 'pendente' ? 'ajuste_pendente' : ponto.status;
+                  // Linha virtual (colaborador sem registro no dia) mostra
+                  // "Pendente"; só registros reais com status pendente viram
+                  // "Ajuste Pendente".
+                  const isVirtual = ponto.__virtual === true;
+                  const pontoStatus = (ponto.status === 'pendente' && !isVirtual) ? 'ajuste_pendente' : ponto.status;
                   const statusConfig = STATUS_PONTO_CONFIG[pontoStatus] || STATUS_PONTO_CONFIG.pendente;
                   // Deriva badge a partir de tipo_dia (preferencial) e cai
                   // para o status genérico quando não há classificação especial.
