@@ -14,6 +14,7 @@ import { formatDateBR } from "@/lib/dataLocal";
 
 const Atestados = () => {
   const [formOpen, setFormOpen] = useState(false);
+  const [editingAtestado, setEditingAtestado] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("atestados");
   
   const {
@@ -24,6 +25,7 @@ const Atestados = () => {
     stats,
     isLoading,
     createAtestado,
+    updateAtestado,
     creatingAtestado,
     deleteAtestado,
     deletingAtestado,
@@ -32,6 +34,20 @@ const Atestados = () => {
     resolveAlerta,
     getSignedUrl,
   } = useAtestados();
+
+  // Roteia o submit do formulário: com id = edição (update); sem id = criação.
+  const handleFormSubmit = async (data: { formData: any; file?: File; colaboradorId?: string; id?: string }) => {
+    if (data.id) {
+      await updateAtestado({ id: data.id, data: data.formData });
+    } else {
+      await createAtestado(data);
+    }
+  };
+
+  const handleFormOpenChange = (o: boolean) => {
+    setFormOpen(o);
+    if (!o) setEditingAtestado(null);
+  };
 
   if (isLoading) {
     return (
@@ -64,7 +80,7 @@ const Atestados = () => {
             Gerenciamento integrado de afastamentos, licenças e saúde ocupacional
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)} className="w-full sm:w-auto">
+        <Button onClick={() => { setEditingAtestado(null); setFormOpen(true); }} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Afastamento
         </Button>
@@ -97,6 +113,7 @@ const Atestados = () => {
               <AtestadoList
                 atestados={atestados}
                 onDelete={deleteAtestado}
+                onEdit={(a) => { setEditingAtestado(a); setFormOpen(true); }}
                 onDownload={getSignedUrl}
                 deleting={deletingAtestado}
               />
@@ -170,9 +187,10 @@ const Atestados = () => {
       {/* Form modal */}
       <AtestadoForm
         open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmit={createAtestado}
+        onOpenChange={handleFormOpenChange}
+        onSubmit={handleFormSubmit}
         loading={creatingAtestado}
+        atestadoEdit={editingAtestado}
       />
     </div>
   );

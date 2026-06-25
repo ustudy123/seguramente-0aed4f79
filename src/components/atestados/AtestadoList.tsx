@@ -13,6 +13,7 @@ import {
   Download,
   Trash2,
   Eye,
+  Pencil,
   Stethoscope
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,6 +64,7 @@ interface AtestadoListProps {
   atestados: Atestado[];
   onDelete: (atestado: Atestado) => Promise<void>;
   onView?: (atestado: Atestado) => void;
+  onEdit?: (atestado: Atestado) => void;
   onDownload: (storagePath: string) => Promise<string | null>;
   deleting?: boolean;
 }
@@ -71,6 +73,7 @@ export function AtestadoList({
   atestados, 
   onDelete, 
   onView,
+  onEdit,
   onDownload,
   deleting 
 }: AtestadoListProps) {
@@ -269,6 +272,12 @@ export function AtestadoList({
                         <DropdownMenuItem onClick={() => onView(atestado)}>
                           <Eye className="h-4 w-4 mr-2" />
                           Ver detalhes
+                        </DropdownMenuItem>
+                      )}
+                      {onEdit && (
+                        <DropdownMenuItem onClick={() => onEdit(atestado)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Ver / Editar registro
                         </DropdownMenuItem>
                       )}
                       {atestado.arquivo_url && (

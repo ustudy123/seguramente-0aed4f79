@@ -135,11 +135,12 @@ type FormValues = z.infer<typeof formSchema>;
 interface AtestadoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { formData: AtestadoFormData; file?: File; colaboradorId?: string }) => Promise<void>;
+  onSubmit: (data: { formData: AtestadoFormData; file?: File; colaboradorId?: string; id?: string }) => Promise<void>;
   loading?: boolean;
+  atestadoEdit?: any | null;
 }
 
-export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: AtestadoFormProps) {
+export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEdit }: AtestadoFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [tipoAfastamento, setTipoAfastamento] = useState<AfastamentoTipo>(window.location.pathname.includes('saude-ocupacional') ? "ocupacional" : "atestados");
@@ -163,6 +164,64 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       unidade_afastamento: "dias",
     },
   });
+
+  // Pré-preenche o formulário quando aberto em modo EDIÇÃO (atestadoEdit).
+  // parseDateLocal evita o off-by-one de fuso ao ler datas 'YYYY-MM-DD'.
+  useEffect(() => {
+    if (!open) return;
+    const parseDateLocal = (v?: string | null) => {
+      if (!v) return undefined;
+      const [y, m, d] = String(v).slice(0, 10).split("-").map(Number);
+      if (!y || !m || !d) return undefined;
+      return new Date(y, m - 1, d);
+    };
+    if (atestadoEdit) {
+      const a = atestadoEdit;
+      form.reset({
+        colaborador_id: a.colaborador_id ?? undefined,
+        colaborador_nome: a.colaborador_nome ?? "",
+        colaborador_cpf: a.colaborador_cpf ?? undefined,
+        colaborador_cargo: a.colaborador_cargo ?? undefined,
+        colaborador_departamento: a.colaborador_departamento ?? undefined,
+        tipo: a.tipo ?? "atestados",
+        subtipo_ocupacional: a.subtipo_ocupacional ?? undefined,
+        subtipo_licencas: a.subtipo_licencas ?? undefined,
+        subtipo_atestados: a.subtipo_atestados ?? undefined,
+        data_emissao: parseDateLocal(a.data_emissao),
+        profissional_nome: a.profissional_nome ?? "",
+        profissional_registro: a.profissional_registro ?? undefined,
+        profissional_uf: a.profissional_uf ?? undefined,
+        profissional_rqe: a.profissional_rqe ?? undefined,
+        profissional_telefone: a.profissional_telefone ?? undefined,
+        profissional_email: a.profissional_email ?? undefined,
+        profissional_endereco: a.profissional_endereco ?? undefined,
+        profissional_tipo: a.profissional_tipo ?? undefined,
+        data_inicio_afastamento: parseDateLocal(a.data_inicio_afastamento),
+        data_fim_afastamento: parseDateLocal(a.data_fim_afastamento),
+        dias_afastamento: a.dias_afastamento ?? undefined,
+        horas_afastamento: a.horas_afastamento ?? undefined,
+        minutos_afastamento: a.minutos_afastamento ?? undefined,
+        unidade_afastamento: a.unidade_afastamento ?? "dias",
+        contem_cid: a.contem_cid ?? false,
+        cid_codigo: a.cid_codigo ?? undefined,
+        cid_autorizado: a.cid_autorizado ?? true,
+        grupo_clinico: a.grupo_clinico ?? undefined,
+        nexo_trabalho: a.nexo_trabalho ?? "nao",
+        aptidao: a.aptidao ?? undefined,
+        restricoes: a.restricoes ?? undefined,
+        observacoes_ocupacionais: a.observacoes_ocupacionais ?? undefined,
+        observacoes: a.observacoes ?? undefined,
+      });
+      setTipoAfastamento((a.tipo ?? "atestados") as AfastamentoTipo);
+      setColaboradorSelecionado({
+        id: a.colaborador_id,
+        nome_completo: a.colaborador_nome,
+        cpf: a.colaborador_cpf,
+        cargo: a.colaborador_cargo,
+        departamento: a.colaborador_departamento,
+      } as any);
+    }
+  }, [open, atestadoEdit]);
 
   // Efeito para calcular automaticamente a data de fim
   const watchDataInicio = form.watch("data_inicio_afastamento");
@@ -466,7 +525,8 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
     await onSubmit({ 
       formData, 
       file: file || undefined,
-      colaboradorId: colaboradorSelecionado.id 
+      colaboradorId: colaboradorSelecionado.id,
+      id: atestadoEdit?.id,
     });
     form.reset();
     setFile(null);
@@ -486,7 +546,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Novo Afastamento
+            {atestadoEdit ? "Editar Afastamento" : "Novo Afastamento"}
           </DialogTitle>
         </DialogHeader>
 
@@ -1394,7 +1454,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 Cancelar
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Salvando..." : "Salvar Atestado"}
+                {loading ? "Salvando..." : (atestadoEdit ? "Salvar alterações" : "Salvar Atestado")}
               </Button>
             </div>
           </form>
