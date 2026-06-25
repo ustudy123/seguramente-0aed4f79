@@ -28,6 +28,7 @@ import { Calendar } from "lucide-react";
 const CentralGaf = () => {
   const [activeTab, setActiveTab] = useState("absenteismo");
   const [formOpen, setFormOpen] = useState(false);
+  const [editingAtestado, setEditingAtestado] = useState<any | null>(null);
   
   const { 
     atestados, 
@@ -37,6 +38,7 @@ const CentralGaf = () => {
     loadingAfastamentos,
     getSignedUrl,
     createAtestado,
+    updateAtestado,
     deleteAfastamento
   } = useAtestados();
   const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
@@ -44,12 +46,17 @@ const CentralGaf = () => {
 
   const isLoading = loadingStats || loadingPerms || loadingAtestados || loadingAfastamentos;
 
-  const handleCreateAtestado = async (data: { formData: any; file?: File; colaboradorId?: string }) => {
+  const handleCreateAtestado = async (data: { formData: any; file?: File; colaboradorId?: string; id?: string }) => {
     try {
-      await createAtestado(data);
+      if (data.id || editingAtestado) {
+        await updateAtestado({ id: data.id || editingAtestado.id, data: data.formData });
+      } else {
+        await createAtestado(data);
+      }
       setFormOpen(false);
+      setEditingAtestado(null);
     } catch (error) {
-      console.error("Erro ao criar atestado:", error);
+      console.error("Erro ao salvar atestado:", error);
     }
   };
 
@@ -139,8 +146,9 @@ const CentralGaf = () => {
 
       <AtestadoForm 
         open={formOpen} 
-        onOpenChange={setFormOpen} 
+        onOpenChange={(v) => { setFormOpen(v); if (!v) setEditingAtestado(null); }} 
         onSubmit={handleCreateAtestado}
+        atestadoEdit={editingAtestado}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -195,6 +203,7 @@ const CentralGaf = () => {
             atestados={atestados} 
             onDelete={deleteAtestado} 
             onDownload={getSignedUrl}
+            onEdit={(a) => { setEditingAtestado(a); setFormOpen(true); }}
           />
         </TabsContent>
 
