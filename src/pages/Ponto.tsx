@@ -289,6 +289,14 @@ const Ponto = () => {
   }, [colaboradores, pontosDiarios, empresaAtivaId, tenantIdAtivo, dataSelStr]);
 
   const filteredPontos = espelhoRows.filter((ponto) => {
+    // Só lista no espelho quem tem ao menos uma marcação no dia. Some quem
+    // está sem batida (linhas virtuais "Pendente", além de Falta/Atestado/
+    // Justificado/Férias/Feriado) — essas situações ficam visíveis em
+    // Apuração/Fechamento/Compliance. Quem bate ponto gera linha em
+    // ponto_diario via trigger, então continua aparecendo.
+    const temMarcacao = (marcacoesPorCpf.get(onlyDigits(ponto.colaborador_cpf))?.length ?? 0) > 0;
+    if (!temMarcacao) return false;
+
     const matchesStatus = statusFilter === "all" || ponto.status === statusFilter;
     const matchesSearch = ponto.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ponto.colaborador_cpf.includes(searchTerm);
