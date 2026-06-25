@@ -292,77 +292,92 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                   </td>
 
                                   {(() => {
-                                    // Ordena os ajustes do dia por horário; o tipo
-                                    // (entrada/saída) é dado pela POSIÇÃO na sequência —
-                                    // mesmo modelo de pares da folha do colaborador.
+                                    // Ordena os ajustes do dia por horário.
                                     const ordenados = [...items]
                                       .filter((a) => a.tipo_ajuste !== "justificativa")
                                       .sort((a, b) => String(a.hora_solicitada || "").localeCompare(String(b.hora_solicitada || "")));
                                     const justificativas = items.filter((a) => a.tipo_ajuste === "justificativa");
+
+                                    // Monta linhas Entrada|Saída pelo TIPO salvo (não pela
+                                    // posição): cada linha = uma Entrada (coluna esquerda) +
+                                    // uma Saída (coluna direita). Uma Saída "solta" (a Entrada
+                                    // do dia é uma marcação real, não um ajuste) vira uma linha
+                                    // só com Saída, com a Entrada vazia. batida/sem tipo: alterna.
+                                    const ehEntradaTipo = (c: PontoAjuste["tipo_marcacao"]) =>
+                                      c === "entrada" || c === "retorno_almoco";
+                                    const ehSaidaTipo = (c: PontoAjuste["tipo_marcacao"]) =>
+                                      c === "saida" || c === "saida_almoco";
+                                    const linhas: { entrada: PontoAjuste | null; saida: PontoAjuste | null }[] = [];
+                                    for (const ajuste of ordenados) {
+                                      const c = ajuste.tipo_marcacao;
+                                      const aberta = linhas[linhas.length - 1];
+                                      const temAberta = !!(aberta && aberta.entrada && !aberta.saida);
+                                      const ehEntrada = ehEntradaTipo(c) ? true : ehSaidaTipo(c) ? false : !temAberta;
+                                      if (ehEntrada) linhas.push({ entrada: ajuste, saida: null });
+                                      else if (temAberta) aberta!.saida = ajuste;
+                                      else linhas.push({ entrada: null, saida: ajuste });
+                                    }
+
+                                    const renderBox = (ajuste: PontoAjuste, ehEntrada: boolean) => {
+                                      const isInclusao = ajuste.tipo_ajuste === "inclusao";
+                                      const isCorrecao = ajuste.tipo_ajuste === "correcao";
+                                      return (
+                                        <div className="flex flex-col gap-0.5">
+                                          <span className={cn("text-[9px] font-semibold", ehEntrada ? "text-emerald-600" : "text-rose-600")}>
+                                            {ehEntrada ? "Entrada" : "Saída"}
+                                          </span>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <div
+                                                className={cn(
+                                                  "rounded border px-2 py-1.5 font-mono text-sm font-semibold cursor-help text-center min-w-[78px]",
+                                                  isInclusao && "bg-emerald-50 border-emerald-300 text-emerald-900",
+                                                  isCorrecao && "bg-amber-50 border-amber-300 text-amber-900",
+                                                )}
+                                              >
+                                                {ajuste.hora_solicitada || "—"}
+                                                {isCorrecao && ajuste.hora_original && (
+                                                  <div className="text-[10px] font-normal text-muted-foreground line-through mt-0.5">
+                                                    {ajuste.hora_original}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" className="max-w-xs">
+                                              <p className="font-semibold mb-1">{ehEntrada ? "Entrada" : "Saída"} — {isInclusao ? "Inclusão" : "Alteração"}</p>
+                                              <p className="text-xs">Motivo: {ajuste.motivo}</p>
+                                              {isCorrecao && ajuste.hora_original && (
+                                                <p className="text-xs mt-1">Original: <span className="line-through">{ajuste.hora_original}</span> → Solicitado: <strong>{ajuste.hora_solicitada}</strong></p>
+                                              )}
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </div>
+                                      );
+                                    };
+
+                                    // Slot vazio: placeholder discreto p/ manter o grid alinhado.
+                                    const slotVazio = (ehEntrada: boolean) => (
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-semibold text-muted-foreground/40">
+                                          {ehEntrada ? "Entrada" : "Saída"}
+                                        </span>
+                                        <div className="rounded border border-dashed border-muted-foreground/20 px-2 py-1.5 text-sm text-muted-foreground/40 text-center min-w-[78px]">—</div>
+                                      </div>
+                                    );
+
                                     return (
                                       <td className="py-2.5 px-3 align-top">
                                         <div className="flex flex-col gap-1.5">
                                           {ordenados.length === 0 && justificativas.length === 0 && (
                                             <span className="text-xs text-muted-foreground/60">—</span>
                                           )}
-                                          {/* Agrupa em pares Entrada+Saída: cada par em sua própria linha */}
-                                          {Array.from({ length: Math.ceil(ordenados.length / 2) }).map((_, par) => {
-                                            const doPar = ordenados.slice(par * 2, par * 2 + 2);
-                                            return (
-                                              <div key={`par-${par}`} className="flex items-start gap-2">
-                                                {doPar.map((ajuste, j) => {
-                                                  const i = par * 2 + j;
-                                                  const isInclusao = ajuste.tipo_ajuste === "inclusao";
-                                                  const isCorrecao = ajuste.tipo_ajuste === "correcao";
-                                                  // O rótulo deve refletir o tipo_marcacao SALVO no ajuste
-                                                  // (é o que será efetivamente gravado na aprovação por
-                                                  // processar_ajuste_ponto), não a posição entre os ajustes
-                                                  // do dia — que ignora marcações reais já existentes e
-                                                  // desloca os rótulos (off-by-one). Fallback por posição
-                                                  // só para batida/sem tipo.
-                                                  const cls = ajuste.tipo_marcacao;
-                                                  const ehEntrada =
-                                                    cls === "entrada" || cls === "retorno_almoco"
-                                                      ? true
-                                                      : cls === "saida" || cls === "saida_almoco"
-                                                        ? false
-                                                        : i % 2 === 0;
-                                                  return (
-                                                    <div key={ajuste.id} className="flex flex-col gap-0.5">
-                                                      <span className={cn("text-[9px] font-semibold", ehEntrada ? "text-emerald-600" : "text-rose-600")}>
-                                                        {ehEntrada ? "Entrada" : "Saída"}
-                                                      </span>
-                                                      <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <div
-                                                            className={cn(
-                                                              "rounded border px-2 py-1.5 font-mono text-sm font-semibold cursor-help text-center min-w-[78px]",
-                                                              isInclusao && "bg-emerald-50 border-emerald-300 text-emerald-900",
-                                                              isCorrecao && "bg-amber-50 border-amber-300 text-amber-900",
-                                                            )}
-                                                          >
-                                                            {ajuste.hora_solicitada || "—"}
-                                                            {isCorrecao && ajuste.hora_original && (
-                                                              <div className="text-[10px] font-normal text-muted-foreground line-through mt-0.5">
-                                                                {ajuste.hora_original}
-                                                              </div>
-                                                            )}
-                                                          </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="top" className="max-w-xs">
-                                                          <p className="font-semibold mb-1">{ehEntrada ? "Entrada" : "Saída"} — {isInclusao ? "Inclusão" : "Alteração"}</p>
-                                                          <p className="text-xs">Motivo: {ajuste.motivo}</p>
-                                                          {isCorrecao && ajuste.hora_original && (
-                                                            <p className="text-xs mt-1">Original: <span className="line-through">{ajuste.hora_original}</span> → Solicitado: <strong>{ajuste.hora_solicitada}</strong></p>
-                                                          )}
-                                                        </TooltipContent>
-                                                      </Tooltip>
-                                                    </div>
-                                                  );
-                                                })}
-                                              </div>
-                                            );
-                                          })}
+                                          {/* Cada linha = um par Entrada (esquerda) + Saída (direita) */}
+                                          {linhas.map((linha, idx) => (
+                                            <div key={`linha-${idx}`} className="grid grid-cols-2 gap-2 w-fit">
+                                              {linha.entrada ? renderBox(linha.entrada, true) : slotVazio(true)}
+                                              {linha.saida ? renderBox(linha.saida, false) : slotVazio(false)}
+                                            </div>
+                                          ))}
                                           {justificativas.map((aj) => (
                                             <div key={aj.id} className="flex flex-col gap-0.5">
                                               <span className="text-[9px] font-semibold text-indigo-600">Justif.</span>
