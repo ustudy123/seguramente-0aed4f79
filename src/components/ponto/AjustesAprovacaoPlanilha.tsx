@@ -314,7 +314,19 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                                   const i = par * 2 + j;
                                                   const isInclusao = ajuste.tipo_ajuste === "inclusao";
                                                   const isCorrecao = ajuste.tipo_ajuste === "correcao";
-                                                  const ehEntrada = i % 2 === 0;
+                                                  // O rótulo deve refletir o tipo_marcacao SALVO no ajuste
+                                                  // (é o que será efetivamente gravado na aprovação por
+                                                  // processar_ajuste_ponto), não a posição entre os ajustes
+                                                  // do dia — que ignora marcações reais já existentes e
+                                                  // desloca os rótulos (off-by-one). Fallback por posição
+                                                  // só para batida/sem tipo.
+                                                  const cls = ajuste.tipo_marcacao;
+                                                  const ehEntrada =
+                                                    cls === "entrada" || cls === "retorno_almoco"
+                                                      ? true
+                                                      : cls === "saida" || cls === "saida_almoco"
+                                                        ? false
+                                                        : i % 2 === 0;
                                                   return (
                                                     <div key={ajuste.id} className="flex flex-col gap-0.5">
                                                       <span className={cn("text-[9px] font-semibold", ehEntrada ? "text-emerald-600" : "text-rose-600")}>
