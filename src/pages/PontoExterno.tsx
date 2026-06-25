@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield, FileEdit, IdCard, ArrowLeft } from "lucide-react";
@@ -194,10 +194,13 @@ const PontoExterno = () => {
     };
   }, [colaborador, carregarProximoTipo]);
 
-  // Identificação por CPF (modo compartilhado)
-  const identificarPorCpf = useCallback(async () => {
+  // Identificação por CPF (modo compartilhado). Aceita um CPF opcional para a
+  // identificação automática (CPF lembrado do aparelho).
+  const CPF_STORAGE_KEY = token ? `ponto-cpf-${token}` : null;
+  const identificarPorCpf = useCallback(async (cpfArg?: string) => {
     if (!token) return;
-    if (cleanCpf(cpf).length !== 11) {
+    const digits = cleanCpf(cpfArg ?? cpf);
+    if (digits.length !== 11) {
       setError("Digite um CPF válido (11 dígitos).");
       return;
     }
@@ -205,7 +208,7 @@ const PontoExterno = () => {
     setError(null);
     const { data, error: rpcError } = await supabasePublic.rpc("buscar_colaborador_por_cpf" as any, {
       p_token: token,
-      p_cpf: cleanCpf(cpf),
+      p_cpf: digits,
     });
     setIdentificando(false);
     if (rpcError) {
@@ -217,11 +220,30 @@ const PontoExterno = () => {
       setError(r?.error || "CPF não encontrado. Confira os números e tente novamente.");
       return;
     }
+    // Lembra o CPF neste aparelho para não precisar redigitar nas próximas vezes.
+    try { if (CPF_STORAGE_KEY) localStorage.setItem(CPF_STORAGE_KEY, digits); } catch { /* storage indisponível */ }
     setColaborador(r as ColaboradorData);
-  }, [token, cpf]);
+  }, [token, cpf, CPF_STORAGE_KEY]);
 
-  // Volta para a etapa de CPF (aparelho compartilhado: próxima pessoa)
+  // Ao abrir no modo compartilhado, se houver um CPF lembrado neste aparelho,
+  // pré-preenche e identifica automaticamente (1x por carregamento).
+  const autoIdentRef = useRef(false);
+  useEffect(() => {
+    if (modo !== "compartilhado" || colaborador || autoIdentRef.current || !CPF_STORAGE_KEY) return;
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(CPF_STORAGE_KEY); } catch { /* storage indisponível */ }
+    if (saved && cleanCpf(saved).length === 11) {
+      autoIdentRef.current = true;
+      setCpf(formatCpf(saved));
+      identificarPorCpf(saved);
+    }
+  }, [modo, colaborador, CPF_STORAGE_KEY, identificarPorCpf]);
+
+  // Volta para a etapa de CPF (aparelho compartilhado: próxima pessoa).
+  // Esquece o CPF lembrado para não auto-identificar a pessoa anterior.
   const trocarColaborador = useCallback(() => {
+    autoIdentRef.current = true;
+    try { if (CPF_STORAGE_KEY) localStorage.removeItem(CPF_STORAGE_KEY); } catch { /* storage indisponível */ }
     setColaborador(null);
     setCpf("");
     setResultado(null);
@@ -231,7 +253,7 @@ const PontoExterno = () => {
     setProximoTipo("entrada");
     setSelfieFile(null);
     setSelfiePreview(null);
-  }, []);
+  }, [CPF_STORAGE_KEY]);
 
   const selfieObrigatoriaFaltando = modo === "compartilhado" && !selfieFile;
 
@@ -377,7 +399,7 @@ const PontoExterno = () => {
               <Button
                 className="w-full h-12 text-base font-semibold"
                 disabled={identificando || cleanCpf(cpf).length !== 11}
-                onClick={identificarPorCpf}
+                onClick={() => identificarPorCpf()}
               >
                 {identificando ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
                 Continuar
