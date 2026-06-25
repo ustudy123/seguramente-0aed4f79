@@ -220,6 +220,19 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
         cargo: a.colaborador_cargo,
         departamento: a.colaborador_departamento,
       } as any);
+    } else {
+      // Modo NOVO: limpa todos os campos para não herdar o último registro.
+      form.reset({
+        tipo: "atestados",
+        colaborador_nome: "",
+        profissional_nome: "",
+        unidade_afastamento: "dias",
+        contem_cid: false,
+        cid_autorizado: true,
+        nexo_trabalho: "nao",
+      });
+      setTipoAfastamento("atestados");
+      setColaboradorSelecionado(null);
     }
   }, [open, atestadoEdit]);
 
