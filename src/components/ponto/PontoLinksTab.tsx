@@ -1,17 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Link2, Copy, Send, ToggleLeft, ToggleRight, Search, Plus, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
+import { Link2, Copy, Send, ToggleLeft, ToggleRight, Loader2, ExternalLink, RefreshCw, ShieldCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
-import { useColaboradores } from "@/hooks/useColaboradores";
 import { useToast } from "@/hooks/use-toast";
+import { confirm } from "@/components/ui/confirm-dialog";
+
+const SENTINELA_COLAB_ID = "00000000-0000-0000-0000-000000000000";
 
 function generateToken(): string {
   return crypto.randomUUID().replace(/-/g, "").substring(0, 16);
@@ -19,265 +18,183 @@ function generateToken(): string {
 
 function getPontoExternoUrl(token: string): string {
   const customDomain = "https://youreyes.com.br";
-  // Se estiver em desenvolvimento/preview, mantém o origin atual, senão usa o novo domínio
-  const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
-    ? window.location.origin 
-    : customDomain;
-    
+  const baseUrl =
+    window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+      ? window.location.origin
+      : customDomain;
   return `${baseUrl}/ponto-externo/${token}`;
 }
 
 export function PontoLinksTab() {
   const { tenantId } = useAuth();
-  const { empresaAtivaId } = useEmpresaAtiva();
-  const { colaboradores } = useColaboradores({ excluirInativos: true, apenasBatePonto: true });
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  // CPFs válidos da empresa ativa (para filtrar links)
-  const cpfsAtivos = useMemo(
-    () => new Set(colaboradores.map(c => (c.cpf || "").replace(/\D/g, ""))),
-    [colaboradores]
-  );
-
-  // Fetch existing links
-  const { data: linksRaw = [], isLoading } = useQuery({
-    queryKey: ["ponto-links", tenantId, empresaAtivaId],
+  // Link compartilhado (único por tenant)
+  const { data: link, isLoading } = useQuery({
+    queryKey: ["ponto-link-compartilhado", tenantId],
     queryFn: async () => {
-      if (!tenantId) return [];
+      if (!tenantId) return null;
       const { data, error } = await supabase
         .from("ponto_links" as any)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
+        .eq("tipo", "compartilhado")
+        .maybeSingle();
       if (error) throw error;
-      return (data || []) as any[];
+      return (data || null) as any;
     },
     enabled: !!tenantId,
   });
 
-  // Filtra links apenas dos colaboradores da empresa ativa
-  const links = useMemo(
-    () => linksRaw.filter((l: any) => cpfsAtivos.has((l.colaborador_cpf || "").replace(/\D/g, ""))),
-    [linksRaw, cpfsAtivos]
-  );
-
-  // Map of CPF -> link
-  const linksByCpf = useMemo(() => {
-    const map: Record<string, any> = {};
-    links.forEach((l: any) => { map[l.colaborador_cpf] = l; });
-    return map;
-  }, [links]);
-
-  // Filtered collaborators
-  const filtered = useMemo(() => {
-    if (!search) return colaboradores;
-    const s = search.toLowerCase();
-    return colaboradores.filter(c =>
-      c.nome_completo.toLowerCase().includes(s) ||
-      c.cpf.includes(s) ||
-      (c.cargo && c.cargo.toLowerCase().includes(s))
-    );
-  }, [colaboradores, search]);
-
-  // Generate link mutation
   const gerarLink = useMutation({
-    mutationFn: async (colab: { id: string; nome_completo: string; cpf: string }) => {
+    mutationFn: async () => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const token = generateToken();
       const { error } = await supabase.from("ponto_links" as any).insert({
         tenant_id: tenantId,
-        colaborador_id: colab.id,
-        colaborador_nome: colab.nome_completo,
-        colaborador_cpf: colab.cpf,
-        token,
+        tipo: "compartilhado",
+        colaborador_id: SENTINELA_COLAB_ID,
+        colaborador_nome: "Link compartilhado",
+        colaborador_cpf: "",
+        token: generateToken(),
         ativo: true,
       } as any);
       if (error) throw error;
-      return token;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ponto-links"] });
-      toast({ title: "Link gerado com sucesso!" });
+      queryClient.invalidateQueries({ queryKey: ["ponto-link-compartilhado"] });
+      toast({ title: "Link compartilhado gerado!" });
     },
     onError: (e: any) => toast({ title: "Erro ao gerar link", description: e.message, variant: "destructive" }),
   });
 
-  // Toggle active mutation
   const toggleAtivo = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
       const { error } = await supabase.from("ponto_links" as any).update({ ativo } as any).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ponto-links"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-link-compartilhado"] });
       toast({ title: "Status atualizado!" });
     },
   });
 
-  // Batch generate
-  const gerarEmLote = useMutation({
-    mutationFn: async () => {
-      if (!tenantId) throw new Error("Tenant não encontrado");
-      const semLink = colaboradores.filter(c => !linksByCpf[c.cpf]);
-      if (semLink.length === 0) throw new Error("Todos os colaboradores já possuem link");
-      const inserts = semLink.map(c => ({
-        tenant_id: tenantId,
-        colaborador_id: c.id,
-        colaborador_nome: c.nome_completo,
-        colaborador_cpf: c.cpf,
-        token: generateToken(),
-        ativo: true,
-      }));
-      const { error } = await supabase.from("ponto_links" as any).insert(inserts as any);
+  const regerar = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("ponto_links" as any)
+        .update({ token: generateToken(), ativo: true } as any)
+        .eq("id", id);
       if (error) throw error;
-      return semLink.length;
     },
-    onSuccess: (count) => {
-      queryClient.invalidateQueries({ queryKey: ["ponto-links"] });
-      toast({ title: `${count} links gerados com sucesso!` });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-link-compartilhado"] });
+      toast({ title: "Novo link gerado!", description: "O link anterior deixou de funcionar." });
     },
-    onError: (e: any) => toast({ title: "Erro ao gerar links", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: "Erro ao regerar", description: e.message, variant: "destructive" }),
   });
 
-  const copyLink = (token: string) => {
-    navigator.clipboard.writeText(getPontoExternoUrl(token));
+  const url = link ? getPontoExternoUrl(link.token) : "";
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(url);
     toast({ title: "Link copiado!" });
   };
 
-  const sendWhatsApp = (telefone: string | null, nome: string, token: string) => {
-    const url = getPontoExternoUrl(token);
-    const msg = encodeURIComponent(`Olá ${nome}! 👋\n\nAcesse seu link de registro de ponto:\n${url}\n\nUse este link para registrar entrada, saída e intervalos.`);
-    const phone = telefone?.replace(/\D/g, "") || "";
-    window.open(`https://wa.me/${phone.startsWith("55") ? phone : "55" + phone}?text=${msg}`, "_blank");
+  const sendWhatsApp = () => {
+    const msg = encodeURIComponent(
+      `Olá! 👋\n\nRegistre seu ponto pelo link da empresa:\n${url}\n\nBasta informar o seu CPF e tirar a selfie para registrar entrada e saída.`
+    );
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
-  const semLink = colaboradores.filter(c => !linksByCpf[c.cpf]).length;
+  const handleRegerar = async (id: string) => {
+    const ok = await confirm({
+      title: "Gerar um novo link?",
+      description:
+        "O link atual deixará de funcionar e os atalhos (PWA) já instalados precisarão ser reinstalados com o novo link. Use isto se o link vazou.",
+      confirmLabel: "Gerar novo link",
+      variant: "destructive",
+    });
+    if (ok) {
+      setBusy(true);
+      try {
+        await regerar.mutateAsync(id);
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Total de Links</p>
-                <p className="text-2xl font-bold">{links.length}</p>
-              </div>
-              <Link2 className="w-8 h-8 text-primary opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Links Ativos</p>
-                <p className="text-2xl font-bold text-emerald-600">{links.filter((l: any) => l.ativo).length}</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-emerald-500 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Sem Link</p>
-                <p className="text-2xl font-bold text-amber-600">{semLink}</p>
-              </div>
-              <Plus className="w-8 h-8 text-amber-500 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 max-w-2xl">
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Link2 className="w-5 h-5 text-primary" /> Link de ponto compartilhado
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Um único link para toda a empresa. O colaborador informa o <strong>CPF</strong> e tira a <strong>selfie</strong> para registrar.
+        </p>
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar colaborador..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <Button onClick={() => gerarEmLote.mutate()} disabled={gerarEmLote.isPending || semLink === 0} variant="outline">
-          {gerarEmLote.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-          Gerar Links em Lote ({semLink})
-        </Button>
-      </div>
+      {isLoading ? (
+        <Card><CardContent className="py-10 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></CardContent></Card>
+      ) : !link ? (
+        <Card>
+          <CardContent className="py-10 text-center space-y-4">
+            <Link2 className="w-10 h-10 text-muted-foreground/50 mx-auto" />
+            <div>
+              <p className="font-medium">Nenhum link compartilhado ainda</p>
+              <p className="text-sm text-muted-foreground">Gere um link único para distribuir a todos os colaboradores.</p>
+            </div>
+            <Button onClick={() => gerarLink.mutate()} disabled={gerarLink.isPending}>
+              {gerarLink.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              Gerar link compartilhado
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>Link da empresa</span>
+              <Badge variant={link.ativo ? "default" : "secondary"}>{link.ativo ? "Ativo" : "Inativo"}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2.5">
+              <code className="text-xs sm:text-sm break-all flex-1">{url}</code>
+            </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>Colaborador</TableHead>
-                <TableHead>CPF</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum colaborador encontrado.</TableCell></TableRow>
-              ) : filtered.map(colab => {
-                const link = linksByCpf[colab.cpf];
-                return (
-                  <TableRow key={colab.id}>
-                    <TableCell className="font-medium">{colab.nome_completo}</TableCell>
-                    <TableCell className="font-mono text-xs">{colab.cpf}</TableCell>
-                    <TableCell className="text-sm">{colab.cargo || "-"}</TableCell>
-                    <TableCell className="text-center">
-                      {link ? (
-                        <Badge variant={link.ativo ? "default" : "secondary"}>
-                          {link.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-muted-foreground">Sem link</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-1">
-                        {link ? (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Copiar link" onClick={() => copyLink(link.token)}>
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Enviar via WhatsApp"
-                              onClick={() => sendWhatsApp(colab.celular, colab.nome_completo, link.token)}>
-                              <Send className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Abrir link"
-                              onClick={() => window.open(getPontoExternoUrl(link.token), "_blank")}>
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8"
-                              title={link.ativo ? "Desativar" : "Ativar"}
-                              onClick={() => toggleAtivo.mutate({ id: link.id, ativo: !link.ativo })}>
-                              {link.ativo ? <ToggleRight className="w-4 h-4 text-emerald-500" /> : <ToggleLeft className="w-4 h-4 text-muted-foreground" />}
-                            </Button>
-                          </>
-                        ) : (
-                          <Button size="sm" variant="outline" className="text-xs h-7"
-                            disabled={gerarLink.isPending}
-                            onClick={() => gerarLink.mutate({ id: colab.id, nome_completo: colab.nome_completo, cpf: colab.cpf })}>
-                            {gerarLink.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />}
-                            Gerar Link
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={copyLink}><Copy className="w-3.5 h-3.5 mr-1.5" /> Copiar</Button>
+              <Button variant="outline" size="sm" onClick={sendWhatsApp}><Send className="w-3.5 h-3.5 mr-1.5" /> WhatsApp</Button>
+              <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")}><ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Abrir</Button>
+              <Button variant="outline" size="sm" onClick={() => toggleAtivo.mutate({ id: link.id, ativo: !link.ativo })}>
+                {link.ativo ? <ToggleRight className="w-4 h-4 mr-1.5 text-emerald-500" /> : <ToggleLeft className="w-4 h-4 mr-1.5" />}
+                {link.ativo ? "Desativar" : "Ativar"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleRegerar(link.id)} disabled={busy}>
+                {busy ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
+                Gerar novo link
+              </Button>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-md border border-sky-500/30 bg-sky-500/5 p-3 text-xs text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <span>
+                A identificação é por CPF e a <strong>selfie é obrigatória</strong> no registro — a foto é a prova de quem bateu o ponto.
+                Geolocalização e horário são capturados automaticamente. Se o link vazar, use “Gerar novo link”.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        Links antigos por colaborador (se existirem) continuam funcionando normalmente.
+      </p>
     </motion.div>
   );
 }
