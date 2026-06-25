@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield, FileEdit } from "lucide-react";
+import { motion } from "framer-motion";
+import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield, FileEdit, IdCard, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { formatCpf, cleanCpf } from "@/lib/cpf";
 import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
 import { SolicitarAjusteModal } from "@/components/ponto/SolicitarAjusteModal";
 import { PontoPWASetup } from "@/components/ponto/PontoPWASetup";
@@ -31,6 +33,7 @@ interface RegistroResult {
 
 type TipoMarcacao = "entrada" | "saida";
 type MarcacaoDia = { tipo: string; classe: "in" | "out"; hora: string };
+type Modo = "colaborador" | "compartilhado" | null;
 
 const TIPO_LABELS: Record<TipoMarcacao, { label: string; icon: React.ReactNode; color: string }> = {
   entrada: { label: "Entrada", icon: <LogIn className="w-5 h-5" />, color: "bg-emerald-500 hover:bg-emerald-600" },
@@ -57,9 +60,14 @@ const PontoExterno = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modo, setModo] = useState<Modo>(null);
   const [colaborador, setColaborador] = useState<ColaboradorData | null>(null);
   const [registrando, setRegistrando] = useState(false);
   const [resultado, setResultado] = useState<RegistroResult | null>(null);
+
+  // Identificação por CPF (modo compartilhado)
+  const [cpf, setCpf] = useState("");
+  const [identificando, setIdentificando] = useState(false);
 
   // Selfie
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
@@ -101,7 +109,7 @@ const PontoExterno = () => {
     }
   }, [token]);
 
-  // Load collaborator data
+  // Resolve o link: por-colaborador (legado) ou compartilhado (etapa CPF)
   useEffect(() => {
     if (!token) return;
     (async () => {
@@ -113,11 +121,17 @@ const PontoExterno = () => {
         return;
       }
       const result = data as any;
+      if (result.compartilhado) {
+        setModo("compartilhado");
+        setLoading(false);
+        return;
+      }
       if (result.error) {
         setError(result.error);
         setLoading(false);
         return;
       }
+      setModo("colaborador");
       setColaborador(result);
       setLoading(false);
     })();
@@ -129,8 +143,11 @@ const PontoExterno = () => {
   const [afastamento, setAfastamento] = useState<{ desde: string | null; ate: string | null } | null>(null);
 
   const carregarProximoTipo = useCallback(async () => {
-    if (!token) return;
-    const { data, error: rpcError } = await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
+    if (!token || !colaborador) return;
+    const { data, error: rpcError } =
+      modo === "compartilhado"
+        ? await supabasePublic.rpc("proximo_tipo_marcacao_externo_cpf" as any, { p_token: token, p_cpf: cleanCpf(cpf) })
+        : await supabasePublic.rpc("proximo_tipo_marcacao_externo", { p_token: token });
     if (rpcError) {
       setError(`Não foi possível atualizar o status do ponto: ${rpcError.message}`);
       return;
@@ -151,9 +168,9 @@ const PontoExterno = () => {
     if (Array.isArray(r?.marcacoes)) {
       setMarcacoesDia(r.marcacoes);
     }
-  }, [token]);
+  }, [token, colaborador, modo, cpf]);
 
-  // Auto-capture geolocation + carrega próximo tipo
+  // Auto-capture geolocation + carrega próximo tipo quando há colaborador
   useEffect(() => {
     if (colaborador) {
       geo.capturarLocalizacao();
@@ -177,8 +194,53 @@ const PontoExterno = () => {
     };
   }, [colaborador, carregarProximoTipo]);
 
+  // Identificação por CPF (modo compartilhado)
+  const identificarPorCpf = useCallback(async () => {
+    if (!token) return;
+    if (cleanCpf(cpf).length !== 11) {
+      setError("Digite um CPF válido (11 dígitos).");
+      return;
+    }
+    setIdentificando(true);
+    setError(null);
+    const { data, error: rpcError } = await supabasePublic.rpc("buscar_colaborador_por_cpf" as any, {
+      p_token: token,
+      p_cpf: cleanCpf(cpf),
+    });
+    setIdentificando(false);
+    if (rpcError) {
+      setError(traduzirErroPonto(rpcError.message));
+      return;
+    }
+    const r = data as any;
+    if (!r || r.error) {
+      setError(r?.error || "CPF não encontrado. Confira os números e tente novamente.");
+      return;
+    }
+    setColaborador(r as ColaboradorData);
+  }, [token, cpf]);
+
+  // Volta para a etapa de CPF (aparelho compartilhado: próxima pessoa)
+  const trocarColaborador = useCallback(() => {
+    setColaborador(null);
+    setCpf("");
+    setResultado(null);
+    setError(null);
+    setAfastamento(null);
+    setMarcacoesDia([]);
+    setProximoTipo("entrada");
+    setSelfieFile(null);
+    setSelfiePreview(null);
+  }, []);
+
+  const selfieObrigatoriaFaltando = modo === "compartilhado" && !selfieFile;
+
   const handleRegistrar = useCallback(async () => {
     if (!token || !colaborador || !proximoTipo) return;
+    if (selfieObrigatoriaFaltando) {
+      setError("Tire a selfie para registrar o ponto.");
+      return;
+    }
     setError(null);
     setRegistrando(true);
     try {
@@ -195,18 +257,31 @@ const PontoExterno = () => {
           selfieUrl = urlData.publicUrl;
           selfieNome = selfieFile.name || `selfie_${proximoTipo}.jpg`;
         }
-        // Se o upload falhar, o registro segue sem selfie — registrar o ponto é prioridade
+        // Se o upload falhar, segue sem selfie no modo colaborador; no modo
+        // compartilhado a selfie é obrigatória e o backend rejeita sem ela.
       }
 
-      const { data, error } = await supabasePublic.rpc("registrar_ponto_externo", {
-        p_token: token,
-        p_tipo_marcacao: proximoTipo,
-        p_latitude: geo.latitude,
-        p_longitude: geo.longitude,
-        p_endereco: geo.endereco,
-        p_selfie_url: selfieUrl,
-        p_selfie_nome: selfieNome,
-      });
+      const { data, error } =
+        modo === "compartilhado"
+          ? await supabasePublic.rpc("registrar_ponto_externo_cpf" as any, {
+              p_token: token,
+              p_cpf: cleanCpf(cpf),
+              p_tipo_marcacao: proximoTipo,
+              p_latitude: geo.latitude,
+              p_longitude: geo.longitude,
+              p_endereco: geo.endereco,
+              p_selfie_url: selfieUrl,
+              p_selfie_nome: selfieNome,
+            })
+          : await supabasePublic.rpc("registrar_ponto_externo", {
+              p_token: token,
+              p_tipo_marcacao: proximoTipo,
+              p_latitude: geo.latitude,
+              p_longitude: geo.longitude,
+              p_endereco: geo.endereco,
+              p_selfie_url: selfieUrl,
+              p_selfie_nome: selfieNome,
+            });
       if (error) {
         setError(traduzirErroPonto(error.message));
         setRegistrando(false);
@@ -219,23 +294,20 @@ const PontoExterno = () => {
         return;
       }
       setResultado(result);
-      // Atualiza o próximo tipo IMEDIATAMENTE com base no que acabou de
-      // ser registrado (entrada→saída, saída→entrada), sem depender da
-      // segunda chamada assíncrona nem de timing/replicação. Isso evita
-      // o bug do botão continuar como "Entrada" após registrar a entrada.
+      // Atualiza o próximo tipo IMEDIATAMENTE com base no que acabou de ser
+      // registrado (entrada→saída, saída→entrada), sem depender da segunda
+      // chamada assíncrona nem de timing/replicação.
       if (result.tipo_marcacao === "entrada") {
         setProximoTipo("saida");
       } else if (result.tipo_marcacao === "saida") {
         setProximoTipo("entrada");
       }
-      // Recarrega o estado completo do servidor (lista de marcações do
-      // dia, afastamento) para manter tudo consistente.
       carregarProximoTipo();
     } catch (e: any) {
       setError(traduzirErroPonto(e.message));
     }
     setRegistrando(false);
-  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco, selfieFile, proximoTipo]);
+  }, [token, colaborador, modo, cpf, geo.latitude, geo.longitude, geo.endereco, selfieFile, proximoTipo, selfieObrigatoriaFaltando, carregarProximoTipo]);
 
   if (loading) {
     return (
@@ -245,7 +317,8 @@ const PontoExterno = () => {
     );
   }
 
-  if (error && !colaborador) {
+  // Erro de link só bloqueia quando NÃO é o passo de CPF do modo compartilhado
+  if (error && !colaborador && modo !== "compartilhado") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
         <Card className="w-full max-w-md">
@@ -255,6 +328,68 @@ const PontoExterno = () => {
             <p className="text-muted-foreground">{error}</p>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // Modo compartilhado: etapa de identificação por CPF (antes do registro)
+  if (modo === "compartilhado" && !colaborador) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 flex flex-col items-center justify-start pt-10 gap-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+            <Clock className="w-6 h-6 text-primary" /> Registro de Ponto
+          </h1>
+          <p className="text-slate-400 text-sm">Informe seu CPF para continuar</p>
+        </div>
+        <div className="text-center">
+          <div className="text-4xl font-mono font-bold text-white tracking-wider">{format(currentTime, "HH:mm:ss")}</div>
+          <p className="text-slate-400 text-sm mt-1">{format(currentTime, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <IdCard className="w-5 h-5 text-primary" /> Identificação
+              </div>
+              <div className="space-y-1.5">
+                <Input
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={(e) => { setCpf(formatCpf(e.target.value)); if (error) setError(null); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") identificarPorCpf(); }}
+                  className="text-center text-lg font-mono h-12"
+                  maxLength={14}
+                />
+                <p className="text-[11px] text-muted-foreground text-center">Use o CPF cadastrado na empresa.</p>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 p-2 rounded-md">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <Button
+                className="w-full h-12 text-base font-semibold"
+                disabled={identificando || cleanCpf(cpf).length !== 11}
+                onClick={identificarPorCpf}
+              >
+                {identificando ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
+                Continuar
+              </Button>
+            </CardContent>
+          </Card>
+          <PontoPWASetup token={token} />
+        </motion.div>
+
+        <p className="text-slate-500 text-[10px] text-center max-w-xs">
+          Identificação por CPF • Selfie obrigatória no registro • Geolocalização e horário capturados automaticamente
+        </p>
       </div>
     );
   }
@@ -273,7 +408,6 @@ const PontoExterno = () => {
                 <p><span className="text-muted-foreground">Hora:</span> <strong className="font-mono text-lg">{resultado.hora?.substring(0, 5)}</strong></p>
                 <p><span className="text-muted-foreground">Data:</span> {resultado.data}</p>
               </div>
-              {/* Location captured silently for RH only */}
               <div className="pt-2">
                 <Badge variant="outline" className="text-xs">
                   <Shield className="w-3 h-3 mr-1" /> Registro auditável • Link externo
@@ -282,6 +416,11 @@ const PontoExterno = () => {
               <Button variant="outline" onClick={() => { setResultado(null); setError(null); setSelfieFile(null); setSelfiePreview(null); carregarProximoTipo(); }} className="w-full mt-4">
                 Registrar outra marcação
               </Button>
+              {modo === "compartilhado" && (
+                <Button variant="ghost" onClick={trocarColaborador} className="w-full text-xs">
+                  <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Trocar colaborador
+                </Button>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -319,8 +458,6 @@ const PontoExterno = () => {
               <p className="text-xs text-muted-foreground font-mono">{colaborador?.colaborador_cpf_parcial}</p>
             </div>
 
-            {/* Geolocation captured silently for RH only */}
-
             {/* Selfie */}
             <PontoSelfieCapture
               selfieFile={selfieFile}
@@ -351,10 +488,15 @@ const PontoExterno = () => {
               </div>
             ) : (
             <>
+            {/* Selfie obrigatória no modo compartilhado */}
+            {selfieObrigatoriaFaltando && (
+              <p className="text-[11px] text-amber-600 text-center">Tire a selfie acima para liberar o registro.</p>
+            )}
+
             {/* Botão principal: próximo tipo pela alternância entrada/saída */}
             <Button
               className={`${TIPO_LABELS[proximoTipo].color} text-white h-16 w-full flex items-center justify-center gap-2 text-base font-semibold`}
-              disabled={registrando}
+              disabled={registrando || selfieObrigatoriaFaltando}
               onClick={handleRegistrar}
             >
               {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : TIPO_LABELS[proximoTipo].icon}
@@ -414,6 +556,13 @@ const PontoExterno = () => {
               <FileEdit className="w-4 h-4 mr-2" /> Solicitar Ajuste de Ponto
             </Button>)}
 
+            {/* Trocar colaborador (aparelho compartilhado) */}
+            {modo === "compartilhado" && (
+              <Button variant="ghost" className="w-full h-9 text-xs" onClick={trocarColaborador}>
+                <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Não sou eu / trocar colaborador
+              </Button>
+            )}
+
             {/* Instalar como app (PWA) - só fora do preview/iframe */}
             <PontoPWASetup token={token} />
           </CardContent>
@@ -429,6 +578,7 @@ const PontoExterno = () => {
           open={ajusteOpen}
           onOpenChange={setAjusteOpen}
           token={token!}
+          cpf={modo === "compartilhado" ? cleanCpf(cpf) : undefined}
           colaboradorNome={colaborador.colaborador_nome}
         />
       )}

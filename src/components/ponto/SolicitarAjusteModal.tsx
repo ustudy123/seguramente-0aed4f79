@@ -14,6 +14,8 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   token: string;
+  /** CPF (apenas dígitos) quando o acesso é via link compartilhado. */
+  cpf?: string;
   colaboradorNome: string;
 }
 
@@ -68,7 +70,7 @@ interface DiaEdit {
   justificativaOutro: string;
 }
 
-export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
+export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) {
   const today = new Date().toISOString().slice(0, 10);
   const hojeDate = new Date();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -89,7 +91,9 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
     (async () => {
       setLoading(true);
       // Pede 45 dias para cobrir mês atual + anterior
-      const { data, error } = await supabasePublic.rpc("listar_ponto_externo" as any, { p_token: token, p_dias: 45 });
+      const { data, error } = cpf
+        ? await supabasePublic.rpc("listar_ponto_externo_cpf" as any, { p_token: token, p_cpf: cpf, p_dias: 45 })
+        : await supabasePublic.rpc("listar_ponto_externo" as any, { p_token: token, p_dias: 45 });
       if (error) { toast.error(error.message); setLoading(false); return; }
       const r = data as any;
       if (r?.error) { toast.error(r.error); setLoading(false); return; }
@@ -97,7 +101,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
       setAjustesPend((r?.ajustes || []) as AjustePend[]);
       setLoading(false);
     })();
-  }, [open, token]);
+  }, [open, token, cpf]);
 
   // Gera lista de dias do mês ativo (limitado ao hoje)
   const diasMes = useMemo(() => {
@@ -302,12 +306,20 @@ export function SolicitarAjusteModal({ open, onOpenChange, token }: Props) {
         motivo: it.motivo,
       }));
 
-      const { data: resp, error } = await supabasePublic.rpc("solicitar_ajustes_ponto_externo_batch" as any, {
-        p_token: token,
-        p_itens: payload as any,
-        p_motivo: "Ajustes da folha de ponto",
-        p_anexos: anexos as any,
-      });
+      const { data: resp, error } = cpf
+        ? await supabasePublic.rpc("solicitar_ajustes_ponto_externo_cpf_batch" as any, {
+            p_token: token,
+            p_cpf: cpf,
+            p_itens: payload as any,
+            p_motivo: "Ajustes da folha de ponto",
+            p_anexos: anexos as any,
+          })
+        : await supabasePublic.rpc("solicitar_ajustes_ponto_externo_batch" as any, {
+            p_token: token,
+            p_itens: payload as any,
+            p_motivo: "Ajustes da folha de ponto",
+            p_anexos: anexos as any,
+          });
       if (error) { toast.error(error.message); setEnviando(false); return; }
       const r = resp as any;
       if (r?.error) { toast.error(r.error); setEnviando(false); return; }
