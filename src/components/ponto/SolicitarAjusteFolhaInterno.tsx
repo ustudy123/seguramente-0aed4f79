@@ -13,6 +13,7 @@ import { usePonto } from "@/hooks/usePonto";
 import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
 import { ConfigJustificativasModal } from "@/components/ponto/ConfigJustificativasModal";
 import type { Colaborador } from "@/hooks/useColaboradores";
+import { cleanCpf, formatCpf } from "@/lib/cpf";
 
 interface Props {
   open: boolean;
@@ -120,21 +121,35 @@ export function SolicitarAjusteFolhaInterno({
       const last = new Date(y, m, 0).getDate();
       const fim = `${y}-${pad(m)}-${pad(last)}`;
 
+      // Casa as marcações/ajustes por CPF (resiliente a divergência de
+      // colaborador_id — ex.: admissão recriada gera novo id, mas o CPF é o
+      // mesmo), exatamente como o Espelho. Cobre variações de formatação do
+      // CPF. Sem CPF válido, cai no filtro por colaborador_id.
+      const cpfDigits = cleanCpf(colaborador?.cpf || "");
+      const cpfVars = cpfDigits.length === 11
+        ? Array.from(new Set([colaborador?.cpf || "", cpfDigits, formatCpf(cpfDigits)].filter(Boolean)))
+        : null;
+
+      const marcQuery = fromTable("ponto_marcacoes")
+        .select("data_marcacao, hora_marcacao, tipo_marcacao")
+        .eq("tenant_id", tenantId)
+        .gte("data_marcacao", ini)
+        .lte("data_marcacao", fim);
+      const ajQuery = fromTable("ponto_ajustes")
+        .select("data_referencia, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "pendente")
+        .gte("data_referencia", ini)
+        .lte("data_referencia", fim);
+
       const [marcRes, ajRes] = await Promise.all([
-        fromTable("ponto_marcacoes")
-          .select("data_marcacao, hora_marcacao, tipo_marcacao")
-          .eq("tenant_id", tenantId)
-          .eq("colaborador_id", colaboradorId)
-          .gte("data_marcacao", ini)
-          .lte("data_marcacao", fim)
-          .order("hora_marcacao", { ascending: true }),
-        fromTable("ponto_ajustes")
-          .select("data_referencia, status")
-          .eq("tenant_id", tenantId)
-          .eq("colaborador_id", colaboradorId)
-          .eq("status", "pendente")
-          .gte("data_referencia", ini)
-          .lte("data_referencia", fim),
+        (cpfVars
+          ? marcQuery.in("colaborador_cpf", cpfVars)
+          : marcQuery.eq("colaborador_id", colaboradorId)
+        ).order("hora_marcacao", { ascending: true }),
+        cpfVars
+          ? ajQuery.in("colaborador_cpf", cpfVars)
+          : ajQuery.eq("colaborador_id", colaboradorId),
       ]);
 
       // Reconstrói as marcações do dia como uma SEQUÊNCIA cronológica
@@ -164,7 +179,7 @@ export function SolicitarAjusteFolhaInterno({
 
       setLoading(false);
     })();
-  }, [open, colaboradorId, tenantId, mesAtivo]);
+  }, [open, colaboradorId, tenantId, mesAtivo, colaborador]);
 
   // Dias do mês ativo — do dia 01 em diante (ascendente)
   const diasMes = useMemo(() => {
