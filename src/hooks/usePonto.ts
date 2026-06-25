@@ -6,6 +6,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useEffect } from "react";
+import { cleanCpf } from "@/lib/cpf";
 
 // Tipos
 export interface PontoMarcacao {
@@ -231,11 +232,20 @@ export function usePonto() {
         // empresa ativa, para que cada ajuste apareça só na unidade dona do
         // colaborador (e não em todas, como acontecia com empresa_id nulo).
         let empresaDoColab: Map<string, string | null> | null = null;
+        // Mapa auxiliar por CPF (dígitos) -> empresa. Necessário porque o
+        // colaborador_id gravado no ajuste pode estar defasado (ex.: admissão
+        // recriada gera novo id); o CPF é estável e recupera a empresa real.
+        let empresaDoCpf: Map<string, string | null> | null = null;
         if (empresaAtivaId) {
           const { data: colabs } = await fromTable("admissoes")
-            .select("id, empresa_id")
-            .eq("tenant_id", tenantId) as { data: { id: string; empresa_id: string | null }[] | null };
+            .select("id, empresa_id, cpf")
+            .eq("tenant_id", tenantId) as { data: { id: string; empresa_id: string | null; cpf: string | null }[] | null };
           empresaDoColab = new Map((colabs || []).map((c) => [c.id, c.empresa_id]));
+          empresaDoCpf = new Map(
+            (colabs || [])
+              .map((c) => [cleanCpf(c.cpf || ""), c.empresa_id] as [string, string | null])
+              .filter(([cpf]) => cpf.length === 11)
+          );
         }
 
         // PENDENTES: todos do tenant; o filtro por empresa é aplicado
@@ -268,12 +278,19 @@ export function usePonto() {
         // (visão consolidada), mostra tudo do tenant.
         const noEscopo = (a: PontoAjuste) => {
           if (!empresaDoColab) return true; // visão consolidada: tudo do tenant
-          // Empresa real do colaborador (cadastro). Se o colaborador não tem
-          // admissão casável, usa o empresa_id gravado no próprio ajuste.
+          // Empresa real do colaborador (cadastro). Resolve nesta ordem:
+          //  1) pelo colaborador_id (caminho normal);
+          //  2) pelo CPF, quando o colaborador_id do ajuste está defasado
+          //     (admissão recriada → novo id), evitando que o ajuste suma da
+          //     aprovação do gestor;
+          //  3) pelo empresa_id gravado no próprio ajuste.
           // NÃO tratamos empresa_id nulo como "aparece em todas".
+          const cpfDig = (a.colaborador_cpf || "").replace(/\D/g, "");
           const real = (a.colaborador_id && empresaDoColab.has(a.colaborador_id))
             ? empresaDoColab.get(a.colaborador_id)
-            : a.empresa_id;
+            : (cpfDig && empresaDoCpf && empresaDoCpf.has(cpfDig))
+              ? empresaDoCpf.get(cpfDig)
+              : a.empresa_id;
           return real === empresaAtivaId;
         };
 
