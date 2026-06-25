@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useToast } from "@/hooks/use-toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 
@@ -27,32 +28,38 @@ function getPontoExternoUrl(token: string): string {
 
 export function PontoLinksTab() {
   const { tenantId } = useAuth();
+  const { empresaAtivaId, empresaAtiva } = useEmpresaAtiva();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
-  // Link compartilhado (único por tenant)
+  const empresaNome = empresaAtiva?.nome_fantasia || empresaAtiva?.razao_social || "";
+
+  // Link compartilhado (um por empresa do seletor)
   const { data: link, isLoading } = useQuery({
-    queryKey: ["ponto-link-compartilhado", tenantId],
+    queryKey: ["ponto-link-compartilhado", tenantId, empresaAtivaId],
     queryFn: async () => {
-      if (!tenantId) return null;
+      if (!tenantId || !empresaAtivaId) return null;
       const { data, error } = await supabase
         .from("ponto_links" as any)
         .select("*")
         .eq("tenant_id", tenantId)
+        .eq("empresa_id", empresaAtivaId)
         .eq("tipo", "compartilhado")
         .maybeSingle();
       if (error) throw error;
       return (data || null) as any;
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId && !!empresaAtivaId,
   });
 
   const gerarLink = useMutation({
     mutationFn: async () => {
       if (!tenantId) throw new Error("Tenant não encontrado");
+      if (!empresaAtivaId) throw new Error("Selecione uma empresa no seletor.");
       const { error } = await supabase.from("ponto_links" as any).insert({
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId,
         tipo: "compartilhado",
         colaborador_id: SENTINELA_COLAB_ID,
         colaborador_nome: "Link compartilhado",
@@ -134,11 +141,19 @@ export function PontoLinksTab() {
           <Link2 className="w-5 h-5 text-primary" /> Link de ponto compartilhado
         </h3>
         <p className="text-sm text-muted-foreground">
-          Um único link para toda a empresa. O colaborador informa o <strong>CPF</strong> e tira a <strong>selfie</strong> para registrar.
+          Um link por empresa{empresaNome ? <> — <strong>{empresaNome}</strong></> : ""}. O colaborador informa o <strong>CPF</strong> e tira a <strong>selfie</strong> para registrar.
         </p>
       </div>
 
-      {isLoading ? (
+      {!empresaAtivaId ? (
+        <Card>
+          <CardContent className="py-10 text-center space-y-2">
+            <Link2 className="w-10 h-10 text-muted-foreground/50 mx-auto" />
+            <p className="font-medium">Selecione uma empresa</p>
+            <p className="text-sm text-muted-foreground">Escolha a empresa no seletor do topo para gerar/ver o link de ponto dela.</p>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <Card><CardContent className="py-10 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></CardContent></Card>
       ) : !link ? (
         <Card>
@@ -157,8 +172,8 @@ export function PontoLinksTab() {
       ) : (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span>Link da empresa</span>
+            <CardTitle className="text-base flex items-center justify-between gap-2">
+              <span className="truncate">Link de {empresaNome || "empresa"}</span>
               <Badge variant={link.ativo ? "default" : "secondary"}>{link.ativo ? "Ativo" : "Inativo"}</Badge>
             </CardTitle>
           </CardHeader>
