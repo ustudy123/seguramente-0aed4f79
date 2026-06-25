@@ -248,6 +248,8 @@ export interface AtestadoFormData {
   
   data_inicio_afastamento?: string;
   data_fim_afastamento?: string;
+  hora_inicio_afastamento?: string;
+  hora_fim_afastamento?: string;
   dias_afastamento?: number;
   horas_afastamento?: number;
   unidade_afastamento?: string;
@@ -283,6 +285,8 @@ export interface AtestadoExtractedData {
   unidade_afastamento?: 'dias' | 'horas';
   data_inicio_afastamento?: string;
   data_fim_afastamento?: string;
+  hora_inicio_afastamento?: string;
+  hora_fim_afastamento?: string;
   contem_cid?: boolean;
   cid_codigo?: string;
   cid_autorizado?: boolean;

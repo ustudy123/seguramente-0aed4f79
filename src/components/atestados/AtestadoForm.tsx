@@ -104,6 +104,8 @@ const formSchema = z.object({
   
   data_inicio_afastamento: z.date().optional(),
   data_fim_afastamento: z.date().optional(),
+  hora_inicio_afastamento: z.string().optional(),
+  hora_fim_afastamento: z.string().optional(),
   dias_afastamento: z.number().optional(),
   horas_afastamento: z.number().optional(),
   minutos_afastamento: z.number().min(0).max(59).optional(),
@@ -198,6 +200,8 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
         profissional_tipo: a.profissional_tipo ?? undefined,
         data_inicio_afastamento: parseDateLocal(a.data_inicio_afastamento),
         data_fim_afastamento: parseDateLocal(a.data_fim_afastamento),
+        hora_inicio_afastamento: a.hora_inicio_afastamento ? String(a.hora_inicio_afastamento).slice(0, 5) : undefined,
+        hora_fim_afastamento: a.hora_fim_afastamento ? String(a.hora_fim_afastamento).slice(0, 5) : undefined,
         dias_afastamento: a.dias_afastamento ?? undefined,
         horas_afastamento: a.horas_afastamento ?? undefined,
         minutos_afastamento: a.minutos_afastamento ?? undefined,
@@ -225,23 +229,32 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
 
   // Efeito para calcular automaticamente a data de fim
   const watchDataInicio = form.watch("data_inicio_afastamento");
-  const watchDiasAfastamento = form.watch("dias_afastamento");
+  const watchDataFim = form.watch("data_fim_afastamento");
   const watchUnidade = form.watch("unidade_afastamento");
+  const watchHoraInicio = form.watch("hora_inicio_afastamento");
+  const watchHoraFim = form.watch("hora_fim_afastamento");
 
   useEffect(() => {
-    // Só calcula se for em dias e tiver data de início e quantidade de dias
-    if (watchDataInicio && watchDiasAfastamento !== undefined && watchUnidade === "dias") {
-      // Se dias for 0 ou negativo (prazo indeterminado ou apenas comparecimento), não gera data fim automática
-      if (watchDiasAfastamento <= 0) {
-        form.setValue("data_fim_afastamento", undefined);
-        return;
-      }
-      
-      const dataFim = new Date(watchDataInicio);
-      dataFim.setDate(dataFim.getDate() + Number(watchDiasAfastamento) - 1); // -1 pois o dia inicial conta
-      form.setValue("data_fim_afastamento", dataFim);
+    // Agora o usuário informa data início E fim. Derivamos a quantidade de
+    // dias a partir delas (para preencher dias_afastamento gravado no banco).
+    if (watchUnidade === "dias" && watchDataInicio && watchDataFim) {
+      const ms = watchDataFim.getTime() - watchDataInicio.getTime();
+      const dias = Math.max(1, Math.round(ms / 86400000) + 1); // inclui o dia inicial
+      form.setValue("dias_afastamento", dias);
     }
-  }, [watchDataInicio, watchDiasAfastamento, watchUnidade, form]);
+  }, [watchDataInicio, watchDataFim, watchUnidade, form]);
+
+  useEffect(() => {
+    // Para horas: deriva horas/minutos da diferença (fim - início) no mesmo dia.
+    if (watchUnidade === "horas" && watchHoraInicio && watchHoraFim) {
+      const [hi, mi] = watchHoraInicio.split(":").map(Number);
+      const [hf, mf] = watchHoraFim.split(":").map(Number);
+      let total = (hf * 60 + mf) - (hi * 60 + mi);
+      if (total < 0) total = 0; // fim antes do início → inválido, zera
+      form.setValue("horas_afastamento", Math.floor(total / 60));
+      form.setValue("minutos_afastamento", total % 60);
+    }
+  }, [watchHoraInicio, watchHoraFim, watchUnidade, form]);
 
   // Função para buscar CID e grupo clínico
   const handleCidLookup = async (codigo: string) => {
@@ -504,9 +517,11 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
       data_inicio_afastamento: values.data_inicio_afastamento 
         ? format(values.data_inicio_afastamento, "yyyy-MM-dd") 
         : undefined,
-      data_fim_afastamento: values.data_fim_afastamento 
-        ? format(values.data_fim_afastamento, "yyyy-MM-dd") 
-        : undefined,
+      data_fim_afastamento: values.unidade_afastamento === "horas"
+        ? (values.data_inicio_afastamento ? format(values.data_inicio_afastamento, "yyyy-MM-dd") : undefined)
+        : (values.data_fim_afastamento ? format(values.data_fim_afastamento, "yyyy-MM-dd") : undefined),
+      hora_inicio_afastamento: values.unidade_afastamento === "horas" ? (values.hora_inicio_afastamento || undefined) : undefined,
+      hora_fim_afastamento: values.unidade_afastamento === "horas" ? (values.hora_fim_afastamento || undefined) : undefined,
       dias_afastamento: values.dias_afastamento,
       horas_afastamento: values.horas_afastamento,
       minutos_afastamento: values.minutos_afastamento,
@@ -1157,80 +1172,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
                       </FormItem>
                     )}
                   />
-                  
-                  {watchUnidadeAfastamento === "horas" ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <FormField
-                        control={form.control}
-                        name="horas_afastamento"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Horas</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                min={0}
-                                max={23}
-                                placeholder="Ex: 4" 
-                                {...field}
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="minutos_afastamento"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Minutos</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                min={0}
-                                max={59}
-                                placeholder="Ex: 8" 
-                                {...field}
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  ) : (
-                    <FormField
-                      control={form.control}
-                      name="dias_afastamento"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Dias</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="Dias" 
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                            />
-                          </FormControl>
-                          <FormDescription className="text-[10px]">
-                            Use 0 para prazo indeterminado.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                  
+
+                  {/* Data Início (sempre presente) */}
                   <FormField
                     control={form.control}
                     name="data_inicio_afastamento"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data Início</FormLabel>
+                        <FormLabel>{watchUnidadeAfastamento === "horas" ? "Data" : "Data Início"}</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -1264,13 +1213,92 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
                       </FormItem>
                     )}
                   />
+
+                  {watchUnidadeAfastamento === "horas" ? (
+                    <FormField
+                      control={form.control}
+                      name="data_fim_afastamento"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Horário</FormLabel>
+                          <div className="grid grid-cols-2 gap-2">
+                            <FormField
+                              control={form.control}
+                              name="hora_inicio_afastamento"
+                              render={({ field }) => (
+                                <FormControl>
+                                  <Input type="time" placeholder="Início" {...field} value={field.value || ""} />
+                                </FormControl>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hora_fim_afastamento"
+                              render={({ field }) => (
+                                <FormControl>
+                                  <Input type="time" placeholder="Fim" {...field} value={field.value || ""} />
+                                </FormControl>
+                              )}
+                            />
+                          </div>
+                          <FormDescription className="text-[10px]">Início e fim no mesmo dia.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormField
+                      control={form.control}
+                      name="data_fim_afastamento"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data Fim</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "dd/MM/yyyy")
+                                  ) : (
+                                    <span>Selecione</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => {
+                                  const ini = form.watch("data_inicio_afastamento");
+                                  return date < new Date("1900-01-01") || (ini ? date < ini : false);
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
 
-                {watchUnidadeAfastamento === 'dias' && form.watch("data_fim_afastamento") && (
+                {watchUnidadeAfastamento === 'dias' && form.watch("data_inicio_afastamento") && form.watch("data_fim_afastamento") && (
                   <div className="mt-2 p-2 bg-muted/50 rounded-md border border-dashed border-muted-foreground/20">
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <CalendarIcon className="h-3 w-3" />
-                      Data de término calculada: <span className="font-medium text-foreground">{format(form.watch("data_fim_afastamento")!, "dd/MM/yyyy")}</span>
+                      Duração: <span className="font-medium text-foreground">
+                        {Math.max(1, Math.round((form.watch("data_fim_afastamento")!.getTime() - form.watch("data_inicio_afastamento")!.getTime()) / 86400000) + 1)} dia(s)
+                      </span>
                     </p>
                   </div>
                 )}
