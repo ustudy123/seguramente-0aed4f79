@@ -94,16 +94,21 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
         }
       }
       if (search) {
-        const q = search.toLowerCase();
+        // Normaliza para busca tolerante: minúsculas + sem acentos/diacríticos.
+        // Assim "grafica" acha "Gráfica", "vere" acha "Verê", etc.
+        const norm = (s?: string | null) =>
+          (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        const q = norm(search);
         const qDigits = search.replace(/\D/g, '');
         const doc = e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj;
         const docDigits = (doc || '').replace(/\D/g, '');
+        // Acha por QUALQUER um: razão social, nome fantasia, documento ou cidade.
         return (
-          e.razao_social?.toLowerCase().includes(q) ||
-          e.nome_fantasia?.toLowerCase().includes(q) ||
-          doc?.toLowerCase().includes(q) ||
+          norm(e.razao_social).includes(q) ||
+          norm(e.nome_fantasia).includes(q) ||
+          norm(doc).includes(q) ||
           (qDigits.length > 0 && docDigits.includes(qDigits)) ||
-          e.cidade?.toLowerCase().includes(q)
+          norm(e.cidade).includes(q)
         );
       }
       return true;
@@ -271,7 +276,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar razão social, CNPJ/CPF..."
+              placeholder="Buscar por razão social, nome fantasia ou CNPJ/CPF..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
