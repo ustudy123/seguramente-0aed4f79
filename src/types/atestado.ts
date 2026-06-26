@@ -297,6 +297,15 @@ export interface AtestadoFormData {
   // Tarefa 1: tipo de lançamento e mapeamento para o motor de inteligência
   lancamento_tipo?: LancamentoTipo;
   tipo_principal_new?: AfastamentoTipoPrincipal;
+
+  // Tarefa 4: dados do acidente de trabalho (CAT)
+  numero_cat?: string;
+  data_acidente?: string;
+  hora_acidente?: string;
+  local_acidente?: string;
+  parte_corpo?: string;
+  agente_causador?: string;
+  descricao_acidente?: string;
 }
 
 // Extracted data from AI

@@ -260,7 +260,12 @@ export function useAtestados() {
 
       // Create/update afastamento if not occupational and with dates
       if (formData.tipo !== 'ocupacional' && formData.data_inicio_afastamento) {
-        await createOrUpdateAfastamento(data as Atestado, formData.tipo_principal_new);
+        const afastamentoId = await createOrUpdateAfastamento(data as Atestado, formData.tipo_principal_new);
+
+        // Tarefa 4: registrar dados do acidente (CAT) e reconciliar pendência no RH
+        if (formData.lancamento_tipo === 'acidente_trabalho' && afastamentoId) {
+          await registrarCatEpendencia(afastamentoId, formData);
+        }
       }
 
       // Check INSS referral suggestion (>15 days single or accumulated in 90 days)
@@ -274,6 +279,7 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["pendencias-dashboard"] });
       toast.success("Atestado cadastrado com sucesso!");
     },
     onError: (error: Error) => {
@@ -285,8 +291,8 @@ export function useAtestados() {
   const createOrUpdateAfastamento = async (
     atestado: Atestado,
     tipoPrincipalNew?: AtestadoFormData['tipo_principal_new']
-  ) => {
-    if (!tenantId || !atestado.data_inicio_afastamento) return;
+  ): Promise<string | null> => {
+    if (!tenantId || !atestado.data_inicio_afastamento) return null;
 
     // Check for existing active afastamento for this colaborador
     const { data: existingAfastamentos } = await fromTable("afastamentos")
@@ -314,6 +320,8 @@ export function useAtestados() {
       await fromTable("atestados")
         .update({ afastamento_id: existing.id } as any)
         .eq("id", atestado.id);
+
+      return existing.id;
     } else {
       // Create new afastamento
       const { data: newAfastamento } = await fromTable("afastamentos")
@@ -337,7 +345,93 @@ export function useAtestados() {
         await fromTable("atestados")
           .update({ afastamento_id: (newAfastamento as Afastamento).id } as any)
           .eq("id", atestado.id);
+
+        return (newAfastamento as Afastamento).id;
       }
+
+      return null;
+    }
+  };
+
+  // Tarefa 4: persiste os dados da CAT e reconcilia a pendência de CAT no RH.
+  // Salvar é permitido SEM o número da CAT; nesse caso garante-se uma pendência
+  // aberta. Ao informar o número, a pendência é resolvida.
+  const registrarCatEpendencia = async (
+    afastamentoId: string,
+    formData: AtestadoFormData
+  ) => {
+    if (!tenantId) return;
+
+    try {
+      const numeroCat = formData.numero_cat?.trim();
+
+      // Upsert manual em afastamentos_cat (sem unique em afastamento_id)
+      const { data: existingCat } = await fromTable("afastamentos_cat")
+        .select("id")
+        .eq("afastamento_id", afastamentoId)
+        .limit(1)
+        .maybeSingle() as { data: { id: string } | null };
+
+      const catPayload = {
+        cat_aplicavel: true,
+        numero_cat: numeroCat || null,
+        data_acidente: formData.data_acidente || null,
+        hora_acidente: formData.hora_acidente || null,
+        local_acidente: formData.local_acidente || null,
+        parte_corpo: formData.parte_corpo || null,
+        agente_causador: formData.agente_causador || null,
+        descricao_acidente: formData.descricao_acidente || null,
+        status_cat: numeroCat ? 'emitida' : 'pendente',
+      };
+
+      if (existingCat) {
+        await fromTable("afastamentos_cat")
+          .update(catPayload as any)
+          .eq("id", existingCat.id);
+      } else {
+        await fromTable("afastamentos_cat")
+          .insert({
+            tenant_id: tenantId,
+            afastamento_id: afastamentoId,
+            ...catPayload,
+          } as any);
+      }
+
+      // Reconciliar pendência de CAT no RH
+      if (numeroCat) {
+        // CAT informada → resolve a pendência aberta (se houver)
+        await fromTable("afastamentos_pendencias")
+          .update({
+            status: 'resolvido',
+            resolvido_em: new Date().toISOString(),
+          } as any)
+          .eq("afastamento_id", afastamentoId)
+          .eq("tipo_pendencia", "cat")
+          .eq("status", "pendente");
+      } else {
+        // Sem CAT → garante uma pendência aberta (evita violar índice único)
+        const { data: existingPend } = await fromTable("afastamentos_pendencias")
+          .select("id")
+          .eq("afastamento_id", afastamentoId)
+          .eq("tipo_pendencia", "cat")
+          .eq("status", "pendente")
+          .limit(1)
+          .maybeSingle() as { data: { id: string } | null };
+
+        if (!existingPend) {
+          await fromTable("afastamentos_pendencias")
+            .insert({
+              tenant_id: tenantId,
+              afastamento_id: afastamentoId,
+              tipo_pendencia: "cat",
+              descricao: "Número da CAT pendente de preenchimento",
+              prioridade: "critica",
+              status: "pendente",
+            } as any);
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao registrar CAT/pendência do afastamento:", err);
     }
   };
 

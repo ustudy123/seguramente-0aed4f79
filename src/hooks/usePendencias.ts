@@ -30,7 +30,7 @@ export function usePendencias() {
 
       const empresaFilter = empresaAtivaId ? { empresa_id: empresaAtivaId } : {};
 
-      const [feriasRes, docRes, ajustesRes, avalRes, desligRes, impEmpRes] = await Promise.all([
+      const [feriasRes, docRes, ajustesRes, avalRes, desligRes, impEmpRes, afastPendRes] = await Promise.all([
         // Férias pendentes de aprovação
         supabase
           .from("ferias_solicitacoes")
@@ -85,6 +85,15 @@ export function usePendencias() {
           .eq("status", "pendente")
           .order("created_at", { ascending: false })
           .limit(50),
+
+        // Pendências de afastamentos / CAT
+        (supabase as any)
+          .from("afastamentos_pendencias")
+          .select("id, tipo_pendencia, descricao, prioridade, status, afastamentos!inner(colaborador_nome, empresa_id, tenant_id)")
+          .eq("tenant_id", tenantId)
+          .eq("status", "pendente")
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
 
       const ferias = feriasRes.data || [];
@@ -93,12 +102,24 @@ export function usePendencias() {
       const avals = avalRes.data || [];
       const desligs = desligRes.data || [];
       const impEmps = (impEmpRes as any).data || [];
+      const afastPends = (afastPendRes as any).data || [];
 
       const tipoAvaliadorLabel: Record<string, string> = {
         gestor: "Avaliação do Gestor",
         auto: "Autoavaliação",
         par: "Avaliação de Par",
         cliente_interno: "Avaliação de Cliente Interno",
+      };
+
+      const tipoPendenciaLabel: Record<string, string> = {
+        cat: "CAT pendente",
+        inss: "Encaminhamento INSS",
+        s2210: "Evento eSocial S-2210",
+        s2230: "Evento eSocial S-2230",
+        aso_retorno: "ASO de retorno",
+        ntep: "Análise NTEP",
+        entrevista_retorno: "Entrevista de retorno",
+        revisao_sst: "Revisão SST",
       };
 
       return [
@@ -180,6 +201,19 @@ export function usePendencias() {
               ? `Repetido na planilha${p.arquivo_nome ? ` • ${p.arquivo_nome}` : ''}${p.linha_planilha ? ` • linha ${p.linha_planilha}` : ''}`
               : `Já cadastrado como "${p.razao_social_existente || '—'}"${p.arquivo_nome ? ` • ${p.arquivo_nome}` : ''}${p.linha_planilha ? ` • linha ${p.linha_planilha}` : ''}`,
             acao: "Revisar duplicidade na importação de empresas",
+          })),
+        },
+        {
+          key: "afastamentos",
+          title: "Afastamentos / CAT",
+          count: afastPends.length,
+          path: "/atestados",
+          priority: "high" as const,
+          items: afastPends.map((r: any) => ({
+            id: r.id,
+            label: r.afastamentos?.colaborador_nome || "Colaborador",
+            sublabel: tipoPendenciaLabel[r.tipo_pendencia] || r.tipo_pendencia,
+            acao: "Tratar pendência do afastamento",
           })),
         },
       ];

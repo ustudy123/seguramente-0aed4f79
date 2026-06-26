@@ -94,6 +94,13 @@ const formSchema = z.object({
   
   lancamento_tipo: z.enum(["atestado_medico", "acidente_trabalho", "afastamento_inss", "licenca_legal", "licenca_nr"]).optional(),
   tipo_principal_new: z.string().optional(),
+  numero_cat: z.string().optional(),
+  data_acidente: z.string().optional(),
+  hora_acidente: z.string().optional(),
+  local_acidente: z.string().optional(),
+  parte_corpo: z.string().optional(),
+  agente_causador: z.string().optional(),
+  descricao_acidente: z.string().optional(),
   tipo: z.enum(["ocupacional", "licencas", "atestados"]),
   subtipo_ocupacional: z.string().optional(),
   subtipo_licencas: z.string().optional(),
@@ -502,6 +509,13 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
       tipo: values.tipo,
       lancamento_tipo: values.lancamento_tipo,
       tipo_principal_new: values.tipo_principal_new,
+      numero_cat: values.numero_cat,
+      data_acidente: values.data_acidente,
+      hora_acidente: values.hora_acidente,
+      local_acidente: values.local_acidente,
+      parte_corpo: values.parte_corpo,
+      agente_causador: values.agente_causador,
+      descricao_acidente: values.descricao_acidente,
       subtipo_ocupacional: values.subtipo_ocupacional,
       // Com o novo "Tipo de Lançamento", o subtipo vem do tipo_principal_new
       // (mapeado para o enum de subtipo_assistencial); senão, mantém o legado.
@@ -633,6 +647,119 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
                     )}
                   />
                 )}
+              </div>
+            )}
+
+            {/* Tarefa 4: Dados do Acidente (CAT) — apenas para Acidente de Trabalho */}
+            {watchLancamentoTipo === 'acidente_trabalho' && (
+              <div className="space-y-4 rounded-lg border border-warning/40 bg-warning/5 p-4">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Dados do Acidente (CAT)
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="numero_cat"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número da CAT</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Número/registro da CAT" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Se vazio, será gerada uma pendência no RH.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="data_acidente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data do acidente</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="hora_acidente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="local_acidente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Local</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Local do acidente" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="parte_corpo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parte do corpo atingida</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Mão direita" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="agente_causador"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Agente causador</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Máquina, queda" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="descricao_acidente"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descrição</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descreva como ocorreu o acidente..."
+                          className="min-h-[80px]"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             )}
 
