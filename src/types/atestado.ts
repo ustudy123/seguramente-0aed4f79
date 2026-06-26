@@ -29,6 +29,35 @@ export type AfastamentoSubtipoAtestados =
   | 'suspensao_contrato'
   | 'outros_motivos';
 
+// Novo conceito de UI: tipo de lançamento (Tarefa 1)
+export type LancamentoTipo =
+  | 'atestado_medico'
+  | 'acidente_trabalho'
+  | 'afastamento_inss'
+  | 'licenca_legal'
+  | 'licenca_nr';
+
+// Enum afastamento_tipo_principal (já existe no banco)
+export type AfastamentoTipoPrincipal =
+  | 'doenca_comum'
+  | 'doenca_ocupacional'
+  | 'acidente_tipico'
+  | 'acidente_trajeto'
+  | 'atestado_odontologico'
+  | 'licenca_maternidade'
+  | 'licenca_paternidade'
+  | 'aborto_nao_criminoso'
+  | 'beneficio_b31'
+  | 'beneficio_b91'
+  | 'reabilitacao_b92'
+  | 'auxilio_acidente_b94'
+  | 'licenca_nao_remunerada'
+  | 'suspensao_disciplinar'
+  | 'falta_justificada_legal'
+  | 'mandato_sindical'
+  | 'determinacao_judicial_legal'
+  | 'outro_cct_act_politica_interna';
+
 // Manter compatibilidade com interfaces antigas enquanto refatoramos
 export type AtestadoTipo = AfastamentoTipo;
 export type AtestadoSubtipoAssistencial = AfastamentoSubtipoLicencas | AfastamentoSubtipoAtestados;
@@ -264,6 +293,10 @@ export interface AtestadoFormData {
   
   observacoes?: string;
   evento_saude_id?: string;
+
+  // Tarefa 1: tipo de lançamento e mapeamento para o motor de inteligência
+  lancamento_tipo?: LancamentoTipo;
+  tipo_principal_new?: AfastamentoTipoPrincipal;
 }
 
 // Extracted data from AI
@@ -294,6 +327,78 @@ export const AFASTAMENTO_TIPO_LABELS: Record<AfastamentoTipo, string> = {
   ocupacional: 'Ocupacional (ASO)',
   licencas: 'Licenças',
   atestados: 'Atestados Médicos',
+};
+
+// Tarefa 1: labels e mapeamentos do tipo de lançamento
+export const LANCAMENTO_TIPO_LABELS: Record<LancamentoTipo, string> = {
+  atestado_medico: 'Atestado Médico',
+  acidente_trabalho: 'Acidente de Trabalho',
+  afastamento_inss: 'Afastamento INSS',
+  licenca_legal: 'Licença Legal',
+  licenca_nr: 'Licença Não Remunerada',
+};
+
+export const LANCAMENTO_TIPO_PRINCIPAL_OPCOES: Record<
+  LancamentoTipo,
+  { value: AfastamentoTipoPrincipal; label: string }[]
+> = {
+  atestado_medico: [
+    { value: 'doenca_comum', label: 'Doença comum' },
+    { value: 'atestado_odontologico', label: 'Odontológico' },
+  ],
+  acidente_trabalho: [
+    { value: 'acidente_tipico', label: 'Acidente típico' },
+    { value: 'acidente_trajeto', label: 'Acidente de trajeto' },
+    { value: 'doenca_ocupacional', label: 'Doença ocupacional' },
+  ],
+  afastamento_inss: [
+    { value: 'beneficio_b31', label: 'B31 - Auxílio-doença' },
+    { value: 'beneficio_b91', label: 'B91 - Acidentário' },
+    { value: 'reabilitacao_b92', label: 'B92 - Reabilitação' },
+    { value: 'auxilio_acidente_b94', label: 'B94 - Auxílio-acidente' },
+  ],
+  licenca_legal: [
+    { value: 'licenca_maternidade', label: 'Maternidade' },
+    { value: 'licenca_paternidade', label: 'Paternidade' },
+    { value: 'falta_justificada_legal', label: 'Falta justificada legal' },
+    { value: 'mandato_sindical', label: 'Mandato sindical' },
+    { value: 'determinacao_judicial_legal', label: 'Determinação judicial' },
+  ],
+  licenca_nr: [
+    { value: 'licenca_nao_remunerada', label: 'Licença não remunerada' },
+  ],
+};
+
+export const LANCAMENTO_TIPO_TO_ATESTADO_TIPO: Record<LancamentoTipo, AtestadoTipo> = {
+  atestado_medico: 'atestados',
+  acidente_trabalho: 'atestados',
+  afastamento_inss: 'atestados',
+  licenca_legal: 'licencas',
+  licenca_nr: 'licencas',
+};
+
+// Mapeia o tipo_principal_new (motor) de volta para um subtipo_assistencial
+// (coluna em atestados, enum atestado_subtipo_assistencial) — mantém um rótulo
+// legível nas listagens que ainda usam subtipo_assistencial. Best-effort.
+export const TIPO_PRINCIPAL_TO_SUBTIPO_ASSISTENCIAL: Record<AfastamentoTipoPrincipal, string> = {
+  doenca_comum: 'doenca_nao_trabalho',
+  doenca_ocupacional: 'doenca_trabalho',
+  acidente_tipico: 'acidente_trabalho',
+  acidente_trajeto: 'acidente_trabalho',
+  atestado_odontologico: 'odontologico',
+  licenca_maternidade: 'maternidade',
+  licenca_paternidade: 'paternidade',
+  aborto_nao_criminoso: 'aborto_nao_criminoso',
+  beneficio_b31: 'doenca_nao_trabalho',
+  beneficio_b91: 'acidente_trabalho',
+  reabilitacao_b92: 'outros_motivos',
+  auxilio_acidente_b94: 'outros_motivos',
+  licenca_nao_remunerada: 'outras_licencas',
+  suspensao_disciplinar: 'outros_motivos',
+  falta_justificada_legal: 'outras_licencas',
+  mandato_sindical: 'sindical',
+  determinacao_judicial_legal: 'outras_licencas',
+  outro_cct_act_politica_interna: 'outros_motivos',
 };
 
 export const SUBTIPO_OCUPACIONAL_LABELS: Record<string, string> = {
