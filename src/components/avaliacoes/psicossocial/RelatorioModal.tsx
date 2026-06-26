@@ -96,6 +96,22 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     return campanhasEntrevista[0];
   }, [filtroCampanhaId, campanhasEntrevista, campanhasValidas]);
 
+  // Campanhas que compõem o relatório conforme a SELEÇÃO:
+  //  - "todos" (Média Consolidada Geral) -> todas as válidas (agregadas);
+  //  - campanha específica -> apenas ela.
+  // Antes o relatório ignorava a seleção e usava sempre a última campanha.
+  const campanhasParaProcessar = useMemo(
+    () => (filtroCampanhaId === "todos"
+      ? campanhasValidas
+      : campanhasValidas.filter(c => c.id === filtroCampanhaId)),
+    [filtroCampanhaId, campanhasValidas],
+  );
+
+  // Rótulo da campanha exibido (não usa o nome da última quando é consolidado).
+  const tituloCampanha = filtroCampanhaId === "todos"
+    ? "Média Consolidada (Geral)"
+    : (campanha?.nome ?? "—");
+
   const campanhaEntrevistaIds = useMemo(() => {
     // Se uma campanha específica está selecionada e é de entrevista, buscamos evidências apenas dela
     if (campanha && (campanha as any).tipo_instrumento === "entrevista_guiada") {
@@ -126,13 +142,44 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
     Array.isArray(campanha?.radar_data) &&
     (campanha.radar_data?.length ?? 0) > 0;
   const isEntrevistaOnly = (isEntrevista && !temAgregadosEntrevista) || (!campanhasValidas.length && temEvidenciasQualitativas);
-  const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
-  const rawScore = campanha?.ips_score ?? 0;
-  // Para entrevista guiada, o ips_score do agregado JÁ está em escala protetiva
-  // (alto = saudável); aplicar 100 - raw aqui inverteria para "crítico" indevidamente.
+  // Respondentes refletem a seleção (só a campanha escolhida, ou a soma no consolidado).
+  const totalRespondentes = campanhasParaProcessar.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
+
+  // Radar: campanha específica usa o radar dela; consolidado é a MÉDIA PONDERADA
+  // por respondentes entre as campanhas válidas (mesmo critério do Inventário PGR).
+  const radar = useMemo<RadarDimensao[]>(() => {
+    if (campanhasParaProcessar.length <= 1) {
+      return (((campanhasParaProcessar[0] ?? campanha)?.radar_data) ?? []) as RadarDimensao[];
+    }
+    const porSubject: Record<string, { soma: number; peso: number; fullMark?: number }> = {};
+    campanhasParaProcessar.forEach(c => {
+      const peso = c.total_respostas ?? 1;
+      (((c.radar_data) ?? []) as RadarDimensao[]).forEach(dim => {
+        const cur = porSubject[dim.subject] ?? { soma: 0, peso: 0, fullMark: (dim as any).fullMark };
+        cur.soma += dim.value * peso;
+        cur.peso += peso;
+        porSubject[dim.subject] = cur;
+      });
+    });
+    return Object.entries(porSubject).map(([subject, v]) => ({
+      subject,
+      value: v.peso > 0 ? Math.round(v.soma / v.peso) : 0,
+      ...(v.fullMark != null ? { fullMark: v.fullMark } : {}),
+    })) as RadarDimensao[];
+  }, [campanhasParaProcessar, campanha]);
+
+  // IPS: campanha específica usa o ips dela; consolidado é a média ponderada
+  // por respondentes. Para entrevista guiada o ips_score já está em escala
+  // protetiva (alto = saudável); aplicar 100 - raw inverteria indevidamente.
+  const rawScore = useMemo(() => {
+    if (campanhasParaProcessar.length <= 1) return (campanhasParaProcessar[0] ?? campanha)?.ips_score ?? 0;
+    const tot = campanhasParaProcessar.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
+    if (tot === 0) return campanha?.ips_score ?? 0;
+    const soma = campanhasParaProcessar.reduce((s, c) => s + (c.ips_score ?? 0) * (c.total_respostas ?? 0), 0);
+    return Math.round(soma / tot);
+  }, [campanhasParaProcessar, campanha]);
   const ipsScore = isEntrevista ? rawScore : isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
-  const radar = (campanha?.radar_data ?? []) as RadarDimensao[];
   const { data: sevCatalogo } = useSeveridadesCatalogo();
   // Agrega dimensões do instrumento por Fator de Risco Psicossocial (catálogo 13 fatores NR-01/ISO 45003).
   // Metodologia P x S (tabelas 4.1-4.3 do relatório):
@@ -166,7 +213,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
   const baixos = fatoresAvaliados.filter(d => d.nivel === 'baixo');
   const triviais = fatoresAvaliados.filter(d => d.nivel === 'trivial');
 
-  const { resultadosPorGHE = [] } = usePsicossocialResultadosGHE(campanhasValidas.map(c => c.id));
+  // GHE também respeita a seleção (antes trazia GHEs de todas as campanhas).
+  const { resultadosPorGHE = [] } = usePsicossocialResultadosGHE(campanhasParaProcessar.map(c => c.id));
 
   const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -193,7 +241,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           doc.setPage(i);
           doc.setFontSize(8);
           doc.setTextColor(140, 140, 140);
-          const footerText = `YourEyes — Relatório Psicossocial | ${sanitize(campanha.nome)} | Página ${i}/${totalPages}`;
+          const footerText = `YourEyes — Relatório Psicossocial | ${sanitize(tituloCampanha)} | Página ${i}/${totalPages}`;
           const tw = doc.getTextWidth(footerText);
           // Position footer inside bottom margin
           doc.text(footerText, (pageW / 2), pageH - (mb / 2), { align: "center" });
@@ -236,7 +284,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
       doc.setFont("helvetica", "normal");
       const identificacao = isEntrevista
         ? [
-            ["Campanha", sanitize(campanha.nome)],
+            ["Campanha", sanitize(tituloCampanha)],
             ["Modalidade", "Entrevista Guiada por IA (qualitativa)"],
             ["Periodo", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
             ["Respondentes", String(campanha.total_respostas ?? 0)],
@@ -248,10 +296,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             ...(temAgregadosEntrevista ? [["IPS Global", `${ipsScore}/100 — ${getIPSLabel(ipsClass)}`]] : []),
           ]
         : [
-            ["Campanha", sanitize(campanha.nome)],
+            ["Campanha", sanitize(tituloCampanha)],
             ["Instrumento", isSipro ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
             ["Periodo", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
-            ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
+            ["Total de Respondentes", String(totalRespondentes)],
             ["Razao Social", sanitize(empresaAtiva?.razao_social ?? "N/D")],
             ["CNPJ", empresaAtiva?.cnpj ?? "N/D"],
             ["Data de Emissao", dataGeracao],
@@ -674,7 +722,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           file: blob,
           fileName: pdfFileName,
           tipo: "Relatório Psicossocial",
-          observacoes: `Relatório psicossocial - ${campanha.nome}`,
+          observacoes: `Relatório psicossocial - ${tituloCampanha}`,
           pastaCategoria: "Psicossocial",
         });
       }
@@ -740,7 +788,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                   <div className="rounded-lg border p-4 space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Identificação</p>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                      <span className="text-muted-foreground">Campanha:</span><span className="font-medium">{campanha.nome}</span>
+                      <span className="text-muted-foreground">Campanha:</span><span className="font-medium">{tituloCampanha}</span>
                       <span className="text-muted-foreground">Modalidade:</span>
                       <span className="font-medium">
                         {isEntrevista ? "Entrevista Guiada por IA (qualitativa)" : (isSipro ? "SIPRO (quantitativa)" : campanha.instrumento?.toUpperCase())}
