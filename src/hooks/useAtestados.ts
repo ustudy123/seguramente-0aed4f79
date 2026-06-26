@@ -266,10 +266,19 @@ export function useAtestados() {
         if (formData.lancamento_tipo === 'acidente_trabalho' && afastamentoId) {
           await registrarCatEpendencia(afastamentoId, formData);
         }
+
+        // Tarefa 2: persistir o benefício INSS no mesmo registro (sem lançamento separado)
+        if (afastamentoId && formData.beneficio_especie) {
+          await registrarBeneficioInss(afastamentoId, data as Atestado, formData);
+        }
       }
 
       // Check INSS referral suggestion (>15 days single or accumulated in 90 days)
-      await checkINSSReferral(data as Atestado, dias_afastamento || 0);
+      // No novo fluxo dinâmico (com lancamento_tipo), o motor do banco + a seção de
+      // benefício cuidam disso; evita-se o alerta duplicado no front-end.
+      if (!formData.lancamento_tipo) {
+        await checkINSSReferral(data as Atestado, dias_afastamento || 0);
+      }
 
       return data;
     },
@@ -280,6 +289,8 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       queryClient.invalidateQueries({ queryKey: ["documentos"] });
       queryClient.invalidateQueries({ queryKey: ["pendencias-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["beneficios_inss"] });
+      queryClient.invalidateQueries({ queryKey: ["beneficios"] });
       toast.success("Atestado cadastrado com sucesso!");
     },
     onError: (error: Error) => {
@@ -432,6 +443,72 @@ export function useAtestados() {
       }
     } catch (err) {
       console.error("Erro ao registrar CAT/pendência do afastamento:", err);
+    }
+  };
+
+  // Tarefa 2: persiste o benefício INSS no MESMO registro do afastamento.
+  // Faz upsert manual em beneficios_inss (sem unique em afastamento_id) e
+  // vincula o afastamento de volta ao benefício. Não-bloqueante.
+  const registrarBeneficioInss = async (
+    afastamentoId: string,
+    atestado: Atestado,
+    formData: AtestadoFormData
+  ) => {
+    if (!tenantId) return;
+
+    try {
+      // data_inicio é NOT NULL: usa a data informada ou a do afastamento.
+      const data_inicio = formData.beneficio_data_inicio || atestado.data_inicio_afastamento;
+      if (!data_inicio) {
+        console.warn("Benefício INSS não registrado: data de início ausente.");
+        return;
+      }
+
+      const payload = {
+        especie: formData.beneficio_especie,
+        numero_beneficio: formData.beneficio_numero || null,
+        data_inicio,
+        data_alta: formData.beneficio_data_alta || null,
+        colaborador_id: atestado.colaborador_id,
+        colaborador_nome: atestado.colaborador_nome,
+        colaborador_cpf: atestado.colaborador_cpf,
+      };
+
+      const { data: existing } = await fromTable("beneficios_inss")
+        .select("id")
+        .eq("afastamento_id", afastamentoId)
+        .limit(1)
+        .maybeSingle() as { data: { id: string } | null };
+
+      let beneficioId: string | null = existing?.id ?? null;
+
+      if (existing) {
+        await fromTable("beneficios_inss")
+          .update(payload as any)
+          .eq("id", existing.id);
+      } else {
+        const { data: novoBeneficio } = await fromTable("beneficios_inss")
+          .insert({
+            tenant_id: tenantId,
+            afastamento_id: afastamentoId,
+            ...payload,
+            criado_por: user?.id,
+            criado_por_nome: profile?.nome_completo,
+          } as any)
+          .select("id")
+          .single() as { data: { id: string } | null };
+
+        beneficioId = novoBeneficio?.id ?? null;
+      }
+
+      // Vincula o afastamento de volta ao benefício
+      if (beneficioId) {
+        await fromTable("afastamentos")
+          .update({ beneficio_inss_id: beneficioId } as any)
+          .eq("id", afastamentoId);
+      }
+    } catch (err) {
+      console.error("Erro ao registrar benefício INSS do afastamento:", err);
     }
   };
 

@@ -78,6 +78,7 @@ import {
   GRUPO_CLINICO_LABELS,
   NEXO_TRABALHO_LABELS,
   APTIDAO_LABELS,
+  BENEFICIO_ESPECIE_LABELS,
   LANCAMENTO_TIPO_LABELS,
   LANCAMENTO_TIPO_PRINCIPAL_OPCOES,
   LANCAMENTO_TIPO_TO_ATESTADO_TIPO,
@@ -101,6 +102,10 @@ const formSchema = z.object({
   parte_corpo: z.string().optional(),
   agente_causador: z.string().optional(),
   descricao_acidente: z.string().optional(),
+  beneficio_especie: z.enum(["b31", "b91"]).optional(),
+  beneficio_numero: z.string().optional(),
+  beneficio_data_inicio: z.string().optional(),
+  beneficio_data_alta: z.string().optional(),
   tipo: z.enum(["ocupacional", "licencas", "atestados"]),
   subtipo_ocupacional: z.string().optional(),
   subtipo_licencas: z.string().optional(),
@@ -516,6 +521,10 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
       parte_corpo: values.parte_corpo,
       agente_causador: values.agente_causador,
       descricao_acidente: values.descricao_acidente,
+      beneficio_especie: values.beneficio_especie,
+      beneficio_numero: values.beneficio_numero,
+      beneficio_data_inicio: values.beneficio_data_inicio,
+      beneficio_data_alta: values.beneficio_data_alta,
       subtipo_ocupacional: values.subtipo_ocupacional,
       // Com o novo "Tipo de Lançamento", o subtipo vem do tipo_principal_new
       // (mapeado para o enum de subtipo_assistencial); senão, mantém o legado.
@@ -570,6 +579,9 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
   const watchLancamentoTipo = form.watch("lancamento_tipo");
   const watchContemCid = form.watch("contem_cid");
   const watchUnidadeAfastamento = form.watch("unidade_afastamento");
+  // Tarefa 2: mostra a seção de Benefício INSS quando o lançamento é Afastamento INSS
+  // ou quando o afastamento ultrapassa 15 dias.
+  const mostraInss = watchLancamentoTipo === 'afastamento_inss' || (Number(watchDiasAfastamento) > 15);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -760,6 +772,84 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
                     </FormItem>
                   )}
                 />
+              </div>
+            )}
+
+            {/* Tarefa 2: Benefício INSS — auto-habilitado ao ultrapassar 15 dias ou no tipo Afastamento INSS.
+                Não aparece na rota de saúde ocupacional (ASO). */}
+            {mostraInss && !window.location.pathname.includes('saude-ocupacional') && (
+              <div className="space-y-4 rounded-lg border border-primary/40 bg-primary/5 p-4">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Benefício INSS
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Habilitado automaticamente ao ultrapassar 15 dias de afastamento — preencha aqui para não abrir um lançamento separado.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="beneficio_especie"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Espécie</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a espécie" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(BENEFICIO_ESPECIE_LABELS).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="beneficio_numero"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número do benefício</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Número do benefício" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="beneficio_data_inicio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de início do benefício</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="beneficio_data_alta"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data da alta</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             )}
 
