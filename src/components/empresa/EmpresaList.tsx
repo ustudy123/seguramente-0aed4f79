@@ -97,19 +97,22 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
         // Normaliza para busca tolerante: minúsculas + sem acentos/diacríticos.
         // Assim "grafica" acha "Gráfica", "vere" acha "Verê", etc.
         const norm = (s?: string | null) =>
-          (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-        const q = norm(search);
-        const qDigits = search.replace(/\D/g, '');
+          (s || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/&/g, ' e ')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
         const doc = e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj;
         const docDigits = (doc || '').replace(/\D/g, '');
-        // Acha por QUALQUER um: razão social, nome fantasia, documento ou cidade.
-        return (
-          norm(e.razao_social).includes(q) ||
-          norm(e.nome_fantasia).includes(q) ||
-          norm(doc).includes(q) ||
-          (qDigits.length > 0 && docDigits.includes(qDigits)) ||
-          norm(e.cidade).includes(q)
-        );
+        const qDigits = search.replace(/\D/g, '');
+        // Casa por PALAVRAS (todas precisam existir) em razao social + nome fantasia + cidade.
+        const haystack = [e.razao_social, e.nome_fantasia, e.cidade].map(norm).join(' ');
+        const tokens = norm(search).split(' ').filter(Boolean);
+        const textMatch = tokens.length > 0 && tokens.every(t => haystack.includes(t));
+        const docMatch = qDigits.length > 0 && docDigits.includes(qDigits);
+        return textMatch || docMatch;
       }
       return true;
     });
