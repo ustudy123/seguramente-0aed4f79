@@ -307,6 +307,12 @@ export interface AtestadoFormData {
   parte_corpo?: string;
   agente_causador?: string;
   descricao_acidente?: string;
+
+  // Tarefa 2: benefício INSS no mesmo lançamento (>15 dias ou Afastamento INSS)
+  beneficio_especie?: BeneficioINSSEspecie;
+  beneficio_numero?: string;
+  beneficio_data_inicio?: string;
+  beneficio_data_alta?: string;
 }
 
 // Extracted data from AI
