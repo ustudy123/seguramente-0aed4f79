@@ -30,7 +30,7 @@ export function usePendencias() {
 
       const empresaFilter = empresaAtivaId ? { empresa_id: empresaAtivaId } : {};
 
-      const [feriasRes, docRes, ajustesRes, avalRes, desligRes, impEmpRes, afastPendRes] = await Promise.all([
+      const [feriasRes, docRes, ajustesRes, avalRes, desligRes, impEmpRes, afastPendRes, alertaSaudeRes] = await Promise.all([
         // Férias pendentes de aprovação
         supabase
           .from("ferias_solicitacoes")
@@ -94,6 +94,15 @@ export function usePendencias() {
           .eq("status", "pendente")
           .order("created_at", { ascending: false })
           .limit(50),
+
+        // Alertas de saúde não resolvidos (ex.: estabilidade vencendo, encaminhamento INSS)
+        (supabase as any)
+          .from("alertas_saude")
+          .select("id, tipo, titulo, descricao, colaborador_nome, prioridade, resolvido")
+          .eq("tenant_id", tenantId)
+          .eq("resolvido", false)
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
 
       const ferias = feriasRes.data || [];
@@ -103,6 +112,7 @@ export function usePendencias() {
       const desligs = desligRes.data || [];
       const impEmps = (impEmpRes as any).data || [];
       const afastPends = (afastPendRes as any).data || [];
+      const alertasSaude = (alertaSaudeRes as any).data || [];
 
       const tipoAvaliadorLabel: Record<string, string> = {
         gestor: "Avaliação do Gestor",
@@ -214,6 +224,19 @@ export function usePendencias() {
             label: r.afastamentos?.colaborador_nome || "Colaborador",
             sublabel: tipoPendenciaLabel[r.tipo_pendencia] || r.tipo_pendencia,
             acao: "Tratar pendência do afastamento",
+          })),
+        },
+        {
+          key: "alertas_saude",
+          title: "Alertas de Saúde",
+          count: alertasSaude.length,
+          path: "/atestados",
+          priority: "high" as const,
+          items: alertasSaude.map((a: any) => ({
+            id: a.id,
+            label: a.colaborador_nome || "Colaborador",
+            sublabel: a.titulo || a.descricao || a.tipo,
+            acao: "Revisar alerta de saúde",
           })),
         },
       ];

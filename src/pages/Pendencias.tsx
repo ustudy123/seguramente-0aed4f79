@@ -36,6 +36,7 @@ const iconMap: Record<string, React.ElementType> = {
   avaliacoes: AlertCircle,
   desligamentos: UserX,
   afastamentos: ShieldAlert,
+  alertas_saude: AlertCircle,
 };
 
 const priorityDot: Record<string, string> = {
@@ -67,7 +68,7 @@ const Pendencias = () => {
     
     // Simple mapping for demonstration purposes
     if (activeTab === "rh") {
-      return ["documentos", "desligamentos", "ferias", "ajustes", "afastamentos"].includes(task.key);
+      return ["documentos", "desligamentos", "ferias", "ajustes", "afastamentos", "alertas_saude"].includes(task.key);
     }
     if (activeTab === "gestor") {
       return ["ferias", "ajustes", "avaliacoes"].includes(task.key);
