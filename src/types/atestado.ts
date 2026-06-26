@@ -56,6 +56,7 @@ export type AfastamentoTipoPrincipal =
   | 'falta_justificada_legal'
   | 'mandato_sindical'
   | 'determinacao_judicial_legal'
+  | 'licenca_adocao'
   | 'outro_cct_act_politica_interna';
 
 // Manter compatibilidade com interfaces antigas enquanto refatoramos
@@ -369,6 +370,7 @@ export const LANCAMENTO_TIPO_PRINCIPAL_OPCOES: Record<
   licenca_legal: [
     { value: 'licenca_maternidade', label: 'Maternidade' },
     { value: 'licenca_paternidade', label: 'Paternidade' },
+    { value: 'licenca_adocao', label: 'Adoção' },
     { value: 'falta_justificada_legal', label: 'Falta justificada legal' },
     { value: 'mandato_sindical', label: 'Mandato sindical' },
     { value: 'determinacao_judicial_legal', label: 'Determinação judicial' },
@@ -407,6 +409,7 @@ export const TIPO_PRINCIPAL_TO_SUBTIPO_ASSISTENCIAL: Record<AfastamentoTipoPrinc
   falta_justificada_legal: 'outras_licencas',
   mandato_sindical: 'sindical',
   determinacao_judicial_legal: 'outras_licencas',
+  licenca_adocao: 'adocao',
   outro_cct_act_politica_interna: 'outros_motivos',
 };
 
@@ -429,6 +432,7 @@ export const SUBTIPO_LICENCAS_LABELS: Record<AfastamentoSubtipoLicencas, string>
 export const SUBTIPO_ATESTADOS_LABELS: Record<string, string> = {
   maternidade: 'Licença-Maternidade',
   paternidade: 'Licença-Paternidade',
+  adocao: 'Licença-Adoção',
   acidente_trabalho: 'Acidente / Doença do trabalho',
   acidente_nao_trabalho: 'Acidente / Doença não relacionada ao trabalho',
   prorrogacao: 'Prorrogação de afastamento / licença',
