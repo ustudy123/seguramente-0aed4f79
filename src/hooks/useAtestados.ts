@@ -260,7 +260,7 @@ export function useAtestados() {
 
       // Create/update afastamento if not occupational and with dates
       if (formData.tipo !== 'ocupacional' && formData.data_inicio_afastamento) {
-        await createOrUpdateAfastamento(data as Atestado);
+        await createOrUpdateAfastamento(data as Atestado, formData.tipo_principal_new);
       }
 
       // Check INSS referral suggestion (>15 days single or accumulated in 90 days)
@@ -282,7 +282,10 @@ export function useAtestados() {
   });
 
   // Helper function to create/update afastamento
-  const createOrUpdateAfastamento = async (atestado: Atestado) => {
+  const createOrUpdateAfastamento = async (
+    atestado: Atestado,
+    tipoPrincipalNew?: AtestadoFormData['tipo_principal_new']
+  ) => {
     if (!tenantId || !atestado.data_inicio_afastamento) return;
 
     // Check for existing active afastamento for this colaborador
@@ -299,9 +302,10 @@ export function useAtestados() {
       
       if (new Date(newEndDate) > new Date(existing.data_fim || existing.data_inicio)) {
         await fromTable("afastamentos")
-          .update({ 
+          .update({
             data_fim: newEndDate,
             motivo_principal: atestado.grupo_clinico || existing.motivo_principal,
+            ...(tipoPrincipalNew ? { tipo_principal_new: tipoPrincipalNew } : {}),
           } as any)
           .eq("id", existing.id);
       }
@@ -323,6 +327,8 @@ export function useAtestados() {
           data_fim: atestado.data_fim_afastamento,
           motivo_principal: atestado.grupo_clinico,
           nexo_trabalho: atestado.nexo_trabalho,
+          tipo_principal_new: tipoPrincipalNew ?? null,
+          status_geral_new: 'registrado',
         } as any)
         .select()
         .single();

@@ -70,7 +70,7 @@ import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import type { AtestadoFormData, AfastamentoTipo, AtestadoExtractedData } from "@/types/atestado";
-import { 
+import {
   AFASTAMENTO_TIPO_LABELS,
   SUBTIPO_LICENCAS_LABELS,
   SUBTIPO_ATESTADOS_LABELS,
@@ -78,7 +78,12 @@ import {
   GRUPO_CLINICO_LABELS,
   NEXO_TRABALHO_LABELS,
   APTIDAO_LABELS,
+  LANCAMENTO_TIPO_LABELS,
+  LANCAMENTO_TIPO_PRINCIPAL_OPCOES,
+  LANCAMENTO_TIPO_TO_ATESTADO_TIPO,
+  TIPO_PRINCIPAL_TO_SUBTIPO_ASSISTENCIAL,
 } from "@/types/atestado";
+import type { LancamentoTipo } from "@/types/atestado";
 
 const formSchema = z.object({
   colaborador_id: z.string().optional(),
@@ -87,6 +92,8 @@ const formSchema = z.object({
   colaborador_cargo: z.string().optional(),
   colaborador_departamento: z.string().optional(),
   
+  lancamento_tipo: z.enum(["atestado_medico", "acidente_trabalho", "afastamento_inss", "licenca_legal", "licenca_nr"]).optional(),
+  tipo_principal_new: z.string().optional(),
   tipo: z.enum(["ocupacional", "licencas", "atestados"]),
   subtipo_ocupacional: z.string().optional(),
   subtipo_licencas: z.string().optional(),
@@ -157,6 +164,9 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
     resolver: zodResolver(formSchema),
     defaultValues: {
       tipo: window.location.pathname.includes('saude-ocupacional') ? "ocupacional" : "atestados",
+      ...(window.location.pathname.includes('saude-ocupacional')
+        ? {}
+        : { lancamento_tipo: "atestado_medico" as LancamentoTipo, tipo_principal_new: "doenca_comum" }),
       contem_cid: false,
       cid_autorizado: true, // Agora sempre true por padrão, pois o envio ao RH implica autorização
       nexo_trabalho: "nao",
@@ -431,8 +441,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       colaborador_cargo: values.colaborador_cargo,
       colaborador_departamento: values.colaborador_departamento,
       tipo: values.tipo,
+      lancamento_tipo: values.lancamento_tipo,
+      tipo_principal_new: values.tipo_principal_new,
       subtipo_ocupacional: values.subtipo_ocupacional,
-      subtipo_assistencial: values.tipo === 'licencas' ? values.subtipo_licencas : values.subtipo_atestados,
+      // Com o novo "Tipo de Lançamento", o subtipo vem do tipo_principal_new
+      // (mapeado para o enum de subtipo_assistencial); senão, mantém o legado.
+      subtipo_assistencial: values.lancamento_tipo && values.tipo_principal_new
+        ? (TIPO_PRINCIPAL_TO_SUBTIPO_ASSISTENCIAL[values.tipo_principal_new as keyof typeof TIPO_PRINCIPAL_TO_SUBTIPO_ASSISTENCIAL] as AtestadoFormData['subtipo_assistencial'])
+        : (values.tipo === 'licencas' ? values.subtipo_licencas : values.subtipo_atestados),
       data_emissao: format(values.data_emissao, "yyyy-MM-dd"),
       profissional_nome: values.profissional_nome,
       profissional_registro: values.profissional_registro,
@@ -477,6 +493,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   };
 
   const watchTipo = form.watch("tipo");
+  const watchLancamentoTipo = form.watch("lancamento_tipo");
   const watchContemCid = form.watch("contem_cid");
   const watchUnidadeAfastamento = form.watch("unidade_afastamento");
 
@@ -492,8 +509,76 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Seletor de Tipo (Oculto se for página de ASO ou Afastamentos específicos) */}
-            {!window.location.pathname.includes('saude-ocupacional') && !window.location.pathname.includes('atestados') && (
+            {/* Tarefa 1: Tipo de Lançamento (PRIMEIRO campo) — apenas fora da rota saude-ocupacional */}
+            {!window.location.pathname.includes('saude-ocupacional') && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="lancamento_tipo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Lançamento</FormLabel>
+                      <Select
+                        onValueChange={(v) => {
+                          const lt = v as LancamentoTipo;
+                          field.onChange(lt);
+                          const atestadoTipo = LANCAMENTO_TIPO_TO_ATESTADO_TIPO[lt];
+                          form.setValue("tipo", atestadoTipo);
+                          setTipoAfastamento(atestadoTipo);
+                          const primeiraOpcao = LANCAMENTO_TIPO_PRINCIPAL_OPCOES[lt][0];
+                          form.setValue("tipo_principal_new", primeiraOpcao.value);
+                          if (lt === "acidente_trabalho") {
+                            form.setValue("nexo_trabalho", "sim");
+                          }
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo de lançamento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(LANCAMENTO_TIPO_LABELS).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {watchLancamentoTipo && LANCAMENTO_TIPO_PRINCIPAL_OPCOES[watchLancamentoTipo].length > 1 && (
+                  <FormField
+                    control={form.control}
+                    name="tipo_principal_new"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subtipo</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o subtipo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {LANCAMENTO_TIPO_PRINCIPAL_OPCOES[watchLancamentoTipo].map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Seletor de Tipo legado (3 opções) — substituído pelo "Tipo de Lançamento" (5 opções).
+                Mantido só como fallback quando o novo campo não está ativo, para não duplicar o seletor. */}
+            {!window.location.pathname.includes('saude-ocupacional') && !window.location.pathname.includes('atestados') && !watchLancamentoTipo && (
               <FormField
                 control={form.control}
                 name="tipo"
@@ -766,6 +851,9 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 </div>
               </div>
             )}
+            {/* Seção legada de Tipo/Subtipo — oculta quando o novo "Tipo de Lançamento"
+                está ativo (fora da rota de ASO), para não duplicar os seletores. */}
+            {(window.location.pathname.includes('saude-ocupacional') || !watchLancamentoTipo) && (
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -891,6 +979,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 )}
               </div>
             </div>
+            )}
 
             {/* Profissional Emissor */}
             <div className="space-y-4">
