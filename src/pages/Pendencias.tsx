@@ -18,6 +18,7 @@ import {
   User,
   Users,
   ShieldCheck,
+  ShieldAlert,
   CheckCircle2,
   Clock3
 } from "lucide-react";
@@ -34,6 +35,7 @@ const iconMap: Record<string, React.ElementType> = {
   ajustes: Clock,
   avaliacoes: AlertCircle,
   desligamentos: UserX,
+  afastamentos: ShieldAlert,
 };
 
 const priorityDot: Record<string, string> = {
@@ -65,7 +67,7 @@ const Pendencias = () => {
     
     // Simple mapping for demonstration purposes
     if (activeTab === "rh") {
-      return ["documentos", "desligamentos", "ferias", "ajustes"].includes(task.key);
+      return ["documentos", "desligamentos", "ferias", "ajustes", "afastamentos"].includes(task.key);
     }
     if (activeTab === "gestor") {
       return ["ferias", "ajustes", "avaliacoes"].includes(task.key);
