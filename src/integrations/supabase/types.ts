@@ -17257,6 +17257,7 @@ export type Database = {
           descricao: string | null
           id: string
           minutos: number
+          origem: string
           tenant_id: string
           tipo: string
         }
@@ -17269,6 +17270,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           minutos: number
+          origem?: string
           tenant_id: string
           tipo: string
         }
@@ -17281,6 +17283,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           minutos?: number
+          origem?: string
           tenant_id?: string
           tipo?: string
         }
@@ -18319,6 +18322,7 @@ export type Database = {
           data_expiracao: string | null
           id: string
           tenant_id: string
+          tipo: string
           token: string
           updated_at: string
         }
@@ -18331,6 +18335,7 @@ export type Database = {
           data_expiracao?: string | null
           id?: string
           tenant_id: string
+          tipo?: string
           token: string
           updated_at?: string
         }
@@ -18343,6 +18348,7 @@ export type Database = {
           data_expiracao?: string | null
           id?: string
           tenant_id?: string
+          tipo?: string
           token?: string
           updated_at?: string
         }
@@ -22093,17 +22099,37 @@ export type Database = {
         }
         Returns: Record<string, unknown>
       }
-      _ponto_grava_abono: {
-        Args: {
-          p_colaborador_cpf: string
-          p_colaborador_id: string
-          p_colaborador_nome: string
-          p_data: string
-          p_observacao: string
-          p_tenant_id: string
-          p_tipo_dia: string
-        }
-        Returns: undefined
+      _ponto_grava_abono:
+        | {
+            Args: {
+              p_colaborador_cpf: string
+              p_colaborador_id: string
+              p_colaborador_nome: string
+              p_data: string
+              p_observacao: string
+              p_tenant_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_colaborador_cpf: string
+              p_colaborador_id: string
+              p_colaborador_nome: string
+              p_data: string
+              p_observacao: string
+              p_tenant_id: string
+              p_tipo_dia: string
+            }
+            Returns: undefined
+          }
+      _ponto_resolver_colaborador_cpf: {
+        Args: { p_cpf: string; p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+        }[]
       }
       aceitar_consentimento_entrevista: {
         Args: { p_modalidade: string; p_token: string }
@@ -22154,6 +22180,23 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      apurar_banco_horas: {
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      apurar_banco_horas_colaborador: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: undefined
       }
       assinar_contrato_por_token: {
         Args: {
@@ -22256,6 +22299,10 @@ export type Database = {
           poc_nome: string
           tenant_id: string
         }[]
+      }
+      buscar_colaborador_por_cpf: {
+        Args: { p_cpf: string; p_token: string }
+        Returns: Json
       }
       buscar_contrato_por_token: {
         Args: { p_token: string }
@@ -22655,8 +22702,16 @@ export type Database = {
           role: string
         }[]
       }
+      listar_justificativas_externo: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       listar_ponto_externo: {
         Args: { p_dias?: number; p_token: string }
+        Returns: Json
+      }
+      listar_ponto_externo_cpf: {
+        Args: { p_cpf: string; p_dias?: number; p_token: string }
         Returns: Json
       }
       obter_assinatura_manual_publica: {
@@ -22682,6 +22737,18 @@ export type Database = {
           tolerancia_min: number
         }[]
       }
+      ponto_jornada_do_dia: {
+        Args: {
+          p_colaborador_id: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: {
+          jornada_min: number
+          tol_min: number
+        }[]
+      }
       processar_ajuste_ponto: {
         Args: {
           p_ajuste_id: string
@@ -22692,6 +22759,10 @@ export type Database = {
       }
       proximo_tipo_marcacao_externo: {
         Args: { p_token: string }
+        Returns: Json
+      }
+      proximo_tipo_marcacao_externo_cpf: {
+        Args: { p_cpf: string; p_token: string }
         Returns: Json
       }
       recalcular_status_terceiro: {
@@ -22776,6 +22847,19 @@ export type Database = {
             }
             Returns: Json
           }
+      registrar_ponto_externo_cpf: {
+        Args: {
+          p_cpf: string
+          p_endereco?: string
+          p_latitude?: number
+          p_longitude?: number
+          p_selfie_nome?: string
+          p_selfie_url?: string
+          p_tipo_marcacao?: string
+          p_token: string
+        }
+        Returns: Json
+      }
       salvar_resposta_anonima_campanha:
         | {
             Args: {
@@ -22849,6 +22933,16 @@ export type Database = {
       solicitar_ajustes_ponto_externo_batch: {
         Args: {
           p_anexos?: Json
+          p_itens: Json
+          p_motivo?: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      solicitar_ajustes_ponto_externo_cpf_batch: {
+        Args: {
+          p_anexos?: Json
+          p_cpf: string
           p_itens: Json
           p_motivo?: string
           p_token: string
