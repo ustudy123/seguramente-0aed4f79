@@ -234,6 +234,11 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
   // - mudou e havia original na posição i  -> correção (horaOriginal = original[i])
   // - posição nova (i >= nº de originais)   -> inclusão (sem horaOriginal)
   // O tipo (entrada/saida) é dado pela posição (par/ímpar).
+  // Diferença POR HORÁRIO (não por posição): mantém as marcações que já
+  // existem, trata horários novos como INCLUSÃO (sem apagar nada) e só usa
+  // CORREÇÃO quando um horário original foi de fato trocado por outro. O tipo
+  // (entrada/saída) vem da posição cronológica do dia inteiro — assim adicionar
+  // a entrada da manhã não vira "correção" que sobrescreve a marcação da tarde.
   const itensAlterados = useMemo(() => {
     const out: { data: string; tipo: "entrada" | "saida"; hora: string; horaOriginal?: string; motivo: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
@@ -244,19 +249,22 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
         ed.justificativaPreset === "Outro (descrever)"
           ? ed.justificativaOutro.trim()
           : ed.justificativaPreset.trim();
-      ed.marcacoes.forEach((novoRaw, i) => {
-        const novo = (novoRaw || "").trim();
-        if (!novo) return;
-        const orig = original[i] || "";
-        if (novo === orig) return; // sem alteração nessa posição
-        out.push({
-          data,
-          tipo: tipoPorIndice(i),
-          hora: novo,
-          horaOriginal: orig || undefined, // havia original => correção
-          motivo: motivoFinal,
-        });
-      });
+      const novas = ed.marcacoes.map((s) => (s || "").trim()).filter(Boolean);
+      const origSet = new Set(original);
+      const novasSet = new Set(novas);
+      const ordenadas = [...novas].sort((a, b) => (toMin(a) ?? 0) - (toMin(b) ?? 0));
+      const tipoDe = (hora: string) => tipoPorIndice(ordenadas.indexOf(hora));
+      const removidos = original.filter((o) => !novasSet.has(o));
+      const adicionados = novas.filter((n) => !origSet.has(n));
+      let r = 0;
+      for (const hora of adicionados) {
+        if (r < removidos.length) {
+          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: removidos[r], motivo: motivoFinal });
+          r++;
+        } else {
+          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: undefined, motivo: motivoFinal });
+        }
+      }
     });
     return out;
   }, [edits, marcsPorDia, pendentesPorDia]);

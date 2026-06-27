@@ -268,24 +268,41 @@ export function SolicitarAjusteFolhaInterno({
   // - mudou e havia original na posição  -> correção (horaOriginal = raw[i])
   // - posição nova (além das originais)   -> inclusão (horaOriginal vazio)
   // O tipo (entrada/saída) vem da POSIÇÃO (par/ímpar), igual ao banco.
+  // Diferença POR HORÁRIO (não por posição): mantém as marcações que já
+  // existem, trata horários novos como INCLUSÃO (sem apagar nada) e só usa
+  // CORREÇÃO quando um horário original foi de fato trocado por outro. O tipo
+  // (entrada/saída) vem da POSIÇÃO CRONOLÓGICA do dia inteiro (ordenado por
+  // horário), igual ao espelho — assim adicionar a entrada da manhã não vira
+  // "correção" que sobrescreve a marcação da tarde.
   const itensAlterados = useMemo(() => {
     const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       if (ed.marcacoes === undefined) return;
       const original = marcsPorDia[data] || [];
       const raw = marcsRawPorDia[data] || [];
-      ed.marcacoes.forEach((novoRaw, i) => {
-        const novo = (novoRaw || "").trim();
-        if (!novo) return;
-        const orig = original[i] || "";
-        if (novo === orig) return;
-        out.push({
-          data,
-          tipo: tipoPorIndice(i),
-          hora: novo,
-          horaOriginal: raw[i] || orig || "",
-        });
-      });
+      const rawByHora: Record<string, string> = {};
+      original.forEach((o, i) => { if (!(o in rawByHora)) rawByHora[o] = raw[i] || o; });
+
+      const novas = ed.marcacoes.map((s) => (s || "").trim()).filter(Boolean);
+      const origSet = new Set(original);
+      const novasSet = new Set(novas);
+      // Tipo pela posição cronológica do dia completo (ordenado por horário).
+      const ordenadas = [...novas].sort((a, b) => (toMin(a) ?? 0) - (toMin(b) ?? 0));
+      const tipoDe = (hora: string): TipoMarc => tipoPorIndice(ordenadas.indexOf(hora));
+
+      const removidos = original.filter((o) => !novasSet.has(o)); // originais que saíram
+      const adicionados = novas.filter((n) => !origSet.has(n));    // horários novos
+      let r = 0;
+      for (const hora of adicionados) {
+        if (r < removidos.length) {
+          // um horário original foi trocado por outro -> correção
+          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: rawByHora[removidos[r]] || removidos[r] });
+          r++;
+        } else {
+          // horário novo -> inclusão (mantém os já existentes)
+          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: "" });
+        }
+      }
     });
     return out;
   }, [edits, marcsPorDia, marcsRawPorDia]);
