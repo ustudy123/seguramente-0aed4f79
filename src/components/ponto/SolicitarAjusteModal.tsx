@@ -86,14 +86,15 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
   // Justificativas cadastradas pelo RH (ponto_justificativas), carregadas via RPC pública.
   const [justCadastradas, setJustCadastradas] = useState<string[]>([]);
 
-  // Lista exibida no select: as cadastradas (se houver) + "Outro" no fim.
-  // Fallback para a lista interna caso a RPC falhe/retorne vazio.
+  // Lista exibida no select: presets fixos + cadastradas (RH) + "Outro" no fim.
   const OUTRO_LABEL = "Outro (descrever)";
   const opcoesJustificativa = useMemo(() => {
-    const base = justCadastradas.length
-      ? justCadastradas
-      : JUSTIFICATIVAS_PRESET.filter((x) => x !== OUTRO_LABEL);
-    return [...base, OUTRO_LABEL];
+    const presets = JUSTIFICATIVAS_PRESET.filter((x) => x !== OUTRO_LABEL);
+    const merged: string[] = [];
+    for (const item of [...presets, ...justCadastradas]) {
+      if (item && item.trim() && !merged.includes(item)) merged.push(item);
+    }
+    return [...merged, OUTRO_LABEL];
   }, [justCadastradas]);
 
   const reset = () => { setEdits({}); setFiles([]); setDone(false); };

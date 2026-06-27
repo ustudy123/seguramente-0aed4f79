@@ -45,6 +45,20 @@ function tipoLabel(i: number): string {
 
 const OUTRO_VALUE = "__outro__";
 
+// Justificativas fixas (mesmas do ponto externo), sempre disponíveis.
+// Prefixo "preset:" no value para diferenciar das cadastradas (que usam o id do banco).
+const PRESETS_FIXOS = [
+  "Esqueci de registrar o ponto",
+  "Falha no equipamento / aplicativo",
+  "Sem sinal de internet no momento",
+  "Atraso por trânsito / transporte público",
+  "Saída antecipada autorizada pelo gestor",
+  "Reunião externa / atendimento em cliente",
+  "Atestado médico / consulta",
+  "Erro ao registrar (horário incorreto)",
+];
+const PRESET_PREFIX = "preset:";
+
 function fmtHora(h: string) { return (h || "").slice(0, 5); }
 function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
 function isoToBR(iso: string) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
@@ -241,6 +255,9 @@ export function SolicitarAjusteFolhaInterno({
 
   const resolverMotivo = (ed: DiaEdit): { motivo: string; justId: string | null } => {
     if (ed.justificativaId === OUTRO_VALUE) return { motivo: ed.outroTexto.trim(), justId: null };
+    if (ed.justificativaId.startsWith(PRESET_PREFIX)) {
+      return { motivo: ed.justificativaId.slice(PRESET_PREFIX.length), justId: null };
+    }
     const j = justAtivas.find((x) => x.id === ed.justificativaId);
     if (!j) return { motivo: "", justId: null };
     return { motivo: j.nome, justId: j.id };
@@ -618,11 +635,11 @@ export function SolicitarAjusteFolhaInterno({
                                     <SelectValue placeholder="Selecione…" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {justAtivas.length === 0 && (
-                                      <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
-                                        Nenhuma justificativa cadastrada. Peça ao RH para configurar.
-                                      </div>
-                                    )}
+                                    {PRESETS_FIXOS.map((p) => (
+                                      <SelectItem key={p} value={`${PRESET_PREFIX}${p}`} className="text-xs">
+                                        {p}
+                                      </SelectItem>
+                                    ))}
                                     {justAtivas.map((j) => (
                                       <SelectItem key={j.id} value={j.id} className="text-xs">
                                         {j.nome}
