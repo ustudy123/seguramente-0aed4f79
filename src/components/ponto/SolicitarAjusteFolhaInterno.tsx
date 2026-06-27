@@ -332,14 +332,16 @@ export function SolicitarAjusteFolhaInterno({
         }
       }
 
-      // Ordem cronológica estritamente crescente ao longo da sequência
-      // (entrada < saída < entrada < saída ...). Cada marcação deve ser
-      // posterior à anterior.
-      for (let i = 1; i < seq.length; i++) {
-        const ant = toMin(seq[i - 1]);
-        const cur = toMin(seq[i]);
-        if (ant !== null && cur !== null && cur <= ant) {
-          return `Em ${isoToBR(data)}, a ${tipoLabel(i)} (${seq[i]}) deve ser após a marcação anterior (${seq[i - 1]}).`;
+      // Permite lançar FORA DE ORDEM: o dia é ordenado cronologicamente na
+      // consolidação/espelho, então não exigimos sequência crescente aqui.
+      // Só bloqueia o erro real de duas marcações no MESMO horário.
+      const minsOrdenados = seq
+        .map((h) => toMin(h))
+        .filter((m): m is number => m !== null)
+        .sort((a, b) => a - b);
+      for (let i = 1; i < minsOrdenados.length; i++) {
+        if (minsOrdenados[i] === minsOrdenados[i - 1]) {
+          return `Em ${isoToBR(data)}, há duas marcações no mesmo horário. Remova a duplicada.`;
         }
       }
     }
