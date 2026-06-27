@@ -450,7 +450,11 @@ export function SolicitarAjusteFolhaInterno({
                   </DialogDescription>
                 </div>
                 {podeGerenciar && (
-                  <Button variant="outline" size="sm" onClick={() => setShowConfigJust(true)} className="shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowConfigJust(true)}
+                    className="shrink-0 bg-amber-500 text-white hover:bg-amber-600 border border-amber-600 font-semibold shadow-sm"
+                  >
                     <Settings2 className="w-4 h-4 mr-1" /> Justificativas
                   </Button>
                 )}
