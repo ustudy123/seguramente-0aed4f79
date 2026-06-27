@@ -83,8 +83,46 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
   const [files, setFiles] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
+  // Justificativas cadastradas pelo RH (ponto_justificativas), carregadas via RPC pública.
+  const [justCadastradas, setJustCadastradas] = useState<string[]>([]);
+
+  // Lista exibida no select: as cadastradas (se houver) + "Outro" no fim.
+  // Fallback para a lista interna caso a RPC falhe/retorne vazio.
+  const OUTRO_LABEL = "Outro (descrever)";
+  const opcoesJustificativa = useMemo(() => {
+    const base = justCadastradas.length
+      ? justCadastradas
+      : JUSTIFICATIVAS_PRESET.filter((x) => x !== OUTRO_LABEL);
+    return [...base, OUTRO_LABEL];
+  }, [justCadastradas]);
 
   const reset = () => { setEdits({}); setFiles([]); setDone(false); };
+
+  // Carrega as justificativas cadastradas (mesmas da folha interna) via RPC pública.
+  useEffect(() => {
+    if (!open || !token) return;
+    let cancel = false;
+    (async () => {
+      try {
+        const { data, error } = await supabasePublic.rpc(
+          "listar_justificativas_externo" as any,
+          { p_token: token }
+        );
+        if (cancel) return;
+        const arr = (data as any)?.justificativas;
+        if (!error && Array.isArray(arr) && arr.length > 0) {
+          setJustCadastradas(
+            arr.map((j: any) => String(j.nome)).filter((n: string) => n.trim().length > 0)
+          );
+        } else {
+          setJustCadastradas([]); // mantém fallback interno
+        }
+      } catch {
+        if (!cancel) setJustCadastradas([]);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [open, token]);
 
   useEffect(() => {
     if (!open) return;
@@ -508,7 +546,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
                                       <SelectValue placeholder="Selecione o motivo..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {JUSTIFICATIVAS_PRESET.map((j) => (
+                                      {opcoesJustificativa.map((j) => (
                                         <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
                                       ))}
                                     </SelectContent>
