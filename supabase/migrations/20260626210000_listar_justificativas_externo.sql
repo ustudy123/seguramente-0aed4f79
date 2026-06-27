@@ -1,11 +1,12 @@
--- RPC pública: lista as justificativas de ponto ATIVAS do tenant do link externo.
+-- RPC pública: lista TODAS as justificativas de ponto ATIVAS do tenant do link externo.
 -- Usada na tela de Ponto Externo (sem login) para exibir as MESMAS justificativas
 -- cadastradas pelo RH (ponto_justificativas), em vez de uma lista fixa no código.
 -- SECURITY DEFINER + validação por token (mesmo padrão das demais RPCs externas).
 --
--- Observação: ponto_links NÃO possui empresa_id (só tenant_id + colaborador_cpf).
--- A empresa do colaborador é resolvida via admissões pelo CPF, para incluir também
--- justificativas específicas da empresa dele (além das globais do tenant).
+-- Decisão de produto: no link externo (compartilhado, vários colaboradores de
+-- empresas diferentes) mostramos TODAS as justificativas ativas do tenant,
+-- independente de empresa. Justificativas com mesmo nome em empresas diferentes
+-- aparecem uma única vez (DISTINCT por nome).
 
 CREATE OR REPLACE FUNCTION public.listar_justificativas_externo(
   p_token TEXT
@@ -17,7 +18,6 @@ SET search_path TO 'public'
 AS $$
 DECLARE
   v_link RECORD;
-  v_empresa_id UUID;
   v_result JSONB;
 BEGIN
   -- Validar token (mesma checagem das outras funções externas)
@@ -31,18 +31,7 @@ BEGIN
     RETURN json_build_object('error', 'Link inválido ou expirado.');
   END IF;
 
-  -- Tentar resolver a empresa do colaborador (pelo CPF) dentro do tenant do link.
-  SELECT a.empresa_id
-  INTO v_empresa_id
-  FROM public.admissoes a
-  WHERE a.tenant_id = v_link.tenant_id
-    AND regexp_replace(a.cpf, '\D', '', 'g') = regexp_replace(v_link.colaborador_cpf, '\D', '', 'g')
-    AND COALESCE(a.inativo, false) = false
-  ORDER BY a.data_admissao DESC NULLS LAST
-  LIMIT 1;
-
-  -- Justificativas ativas do tenant: globais (empresa_id IS NULL) +
-  -- as especificas da empresa do colaborador (se resolvida). Sem duplicar por nome.
+  -- TODAS as justificativas ativas do tenant (qualquer empresa), sem duplicar por nome.
   SELECT COALESCE(jsonb_agg(j ORDER BY j.ordem ASC, j.nome ASC), '[]'::jsonb)
   INTO v_result
   FROM (
@@ -56,11 +45,7 @@ BEGIN
     FROM public.ponto_justificativas pj
     WHERE pj.tenant_id = v_link.tenant_id
       AND pj.ativo = true
-      AND (
-        pj.empresa_id IS NULL
-        OR (v_empresa_id IS NOT NULL AND pj.empresa_id = v_empresa_id)
-      )
-    ORDER BY pj.nome, pj.empresa_id NULLS LAST
+    ORDER BY pj.nome, pj.ordem ASC
   ) j;
 
   RETURN json_build_object('justificativas', v_result);
