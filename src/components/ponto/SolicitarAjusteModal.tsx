@@ -255,21 +255,16 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
       for (const x of preenchidas) {
         if (x.min === null) return `Em ${isoToBR(data)}, há um horário inválido. Use o formato HH:MM.`;
       }
-      // Cada SAÍDA (posição ímpar) deve vir depois da ENTRADA do par (posição par anterior)
-      for (let i = 1; i < seq.length; i += 2) {
-        const entrada = toMin(seq[i - 1]);
-        const saida = toMin(seq[i]);
-        if (entrada !== null && saida !== null && saida <= entrada) {
-          const par = Math.floor(i / 2) + 1;
-          return `Em ${isoToBR(data)}, a Saída do ${par}º par deve ser após a Entrada.`;
-        }
-      }
-      // A sequência inteira deve ser crescente (uma marcação após a anterior)
-      for (let i = 1; i < seq.length; i++) {
-        const ant = toMin(seq[i - 1]);
-        const atual = toMin(seq[i]);
-        if (ant !== null && atual !== null && atual <= ant) {
-          return `Em ${isoToBR(data)}, os horários devem estar em ordem crescente (${tipoLabelIndice(i)} após a marcação anterior).`;
+      // Permite lançar FORA DE ORDEM: o dia é ordenado cronologicamente na
+      // consolidação/espelho, então não exigimos sequência crescente nem que a
+      // saída venha após a entrada do par. Só bloqueia o erro real de duas
+      // marcações no MESMO horário.
+      const minsOrdenados = preenchidas
+        .map((x) => x.min as number)
+        .sort((a, b) => a - b);
+      for (let i = 1; i < minsOrdenados.length; i++) {
+        if (minsOrdenados[i] === minsOrdenados[i - 1]) {
+          return `Em ${isoToBR(data)}, há duas marcações no mesmo horário. Remova a duplicada.`;
         }
       }
     }
