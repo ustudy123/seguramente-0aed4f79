@@ -242,8 +242,8 @@ function DocumentItem({
           <div>
             <div className="flex items-center gap-2">
               {editableObrigatorio ? (
-                <div className="flex items-center gap-2">
-                  <Checkbox 
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
                     id={`obrigatorio-${documento.id}`}
                     checked={documento.obrigatorio}
                     onCheckedChange={(checked) => onToggleObrigatorio?.(checked === true)}
@@ -296,10 +296,10 @@ function DocumentItem({
                 className="hidden"
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
               />
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="outline"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               >
                 <Upload className="h-4 w-4 mr-1" />
                 Enviar
