@@ -137,6 +137,24 @@ const Ponto = () => {
     enabled: !!tenantIdAtivo,
   });
 
+  // Atestados que cobrem o dia selecionado — para exibir o selo "ATESTADO" no
+  // espelho, mesmo quando a pessoa trabalhou parte do dia (atestado de horas).
+  const { data: atestadosDoDia = [] } = useQuery({
+    queryKey: ["ponto-atestados-dia", tenantIdAtivo, dataSelStr],
+    queryFn: async () => {
+      if (!tenantIdAtivo) return [] as any[];
+      const { data, error } = await fromTable("atestados")
+        .select("colaborador_cpf, unidade_afastamento, horas_afastamento, minutos_afastamento, data_inicio_afastamento, data_fim_afastamento")
+        .eq("tenant_id", tenantIdAtivo)
+        .not("data_inicio_afastamento", "is", null)
+        .lte("data_inicio_afastamento", dataSelStr) as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      // Mantém os que cobrem a data (fim >= data; fim nulo = só o dia início)
+      return (data || []).filter((a) => (a.data_fim_afastamento || a.data_inicio_afastamento) >= dataSelStr);
+    },
+    enabled: !!tenantIdAtivo,
+  });
+
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
   const marcacoesPorCpf = useMemo(() => {
@@ -155,6 +173,16 @@ const Ponto = () => {
     }
     return map;
   }, [marcacoesDoDia]);
+
+  // Atestado por CPF (dígitos) do dia selecionado.
+  const atestadosPorCpf = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const a of atestadosDoDia) {
+      const k = onlyDigits(a.colaborador_cpf);
+      if (k && !map.has(k)) map.set(k, a);
+    }
+    return map;
+  }, [atestadosDoDia]);
   
   // Determine which markings the selected collaborator already has today
   const marcacoesColaboradorHoje = marcacoesHoje.filter(
@@ -595,6 +623,21 @@ const Ponto = () => {
                     : (obs || undefined);
                   const cpfKey = onlyDigits(ponto.colaborador_cpf);
                   const marcs = marcacoesPorCpf.get(cpfKey) || [];
+                  const atestadoRaw = atestadosPorCpf.get(cpfKey);
+                  const atestadoInfo = atestadoRaw ? (() => {
+                    const unidade = (atestadoRaw.unidade_afastamento || "dias");
+                    let label = "";
+                    if (unidade === "horas") {
+                      const h = Number(atestadoRaw.horas_afastamento) || 0;
+                      const mm = Number(atestadoRaw.minutos_afastamento) || 0;
+                      label = mm > 0 ? `${h}h${String(mm).padStart(2, "0")}` : `${h}h`;
+                    }
+                    const di = (atestadoRaw.data_inicio_afastamento || "").split("-").reverse().join("/");
+                    const df = atestadoRaw.data_fim_afastamento
+                      ? String(atestadoRaw.data_fim_afastamento).split("-").reverse().join("/") : "";
+                    const tooltip = `Atestado${label ? ` (${label})` : ""}: ${di}${df && df !== di ? ` a ${df}` : ""}`;
+                    return { label, tooltip };
+                  })() : null;
                   // Calcula total a partir dos pares (entrada → saída), independente do label
                   let totalMin = 0;
                   let pendingEntry: string | null = null;
@@ -628,10 +671,19 @@ const Ponto = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {marcs.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">Sem marcações</span>
-                        ) : (
-                          <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
+                          {atestadoInfo && (
+                            <span
+                              className="inline-flex items-center gap-1 self-start rounded-md bg-violet-100 text-violet-800 px-2 py-0.5 text-[11px] font-semibold"
+                              title={atestadoInfo.tooltip}
+                            >
+                              <FileText className="w-3 h-3" /> ATESTADO{atestadoInfo.label ? ` · ${atestadoInfo.label}` : ""}
+                            </span>
+                          )}
+                          {marcs.length === 0 ? (
+                            !atestadoInfo && <span className="text-xs text-muted-foreground">Sem marcações</span>
+                          ) : (
+                            <div className="flex flex-col gap-1.5">
                             {(() => {
                               // Agrupa em pares: uma ENTRADA abre uma nova linha; a
                               // marcação seguinte (saída) fecha o par na mesma linha.
@@ -672,8 +724,9 @@ const Ponto = () => {
                                 </div>
                               ));
                             })()}
-                          </div>
-                        )}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="font-mono text-[11px]">
