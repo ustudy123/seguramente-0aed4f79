@@ -600,6 +600,14 @@ const Ponto = () => {
                   const tipoDia = ponto.tipo_dia;
                   const feriadoNome = ponto.feriado_nome || "";
                   const badge = (() => {
+                    // Atestado no dia tem precedência no selo de status, para
+                    // consistência: trabalhando ou não o resto do dia, o selo
+                    // mostra "Atestado" (as horas trabalhadas seguem na coluna
+                    // Total). Evita divergência tipo "Regular" x "Justificado"
+                    // entre colaboradores com a mesma situação de atestado.
+                    if (atestadosPorCpf.get(onlyDigits(ponto.colaborador_cpf))) {
+                      return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
+                    }
                     if (tipoDia === "feriado") {
                       return ponto.feriado_trabalhado
                         ? { label: "Feriado trabalhado", color: "bg-amber-100 text-amber-800" }
