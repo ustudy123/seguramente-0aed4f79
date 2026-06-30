@@ -193,7 +193,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [vinculoFilter, setVinculoFilter] = useState<"clt" | "pj" | "todos">("clt");
+  const [vinculoFilter, setVinculoFilter] = useState<"clt" | "pj" | "todos">("todos");
 
   const [showForm, setShowForm] = useState(false);
   const [showNovoChoice, setShowNovoChoice] = useState(false);
@@ -499,6 +499,28 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
           <Button onClick={() => setShowNovoChoice(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Cadastrar Primeiro Colaborador
+          </Button>
+        </div>
+      ) : filteredColaboradores.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-xl border border-border">
+          <p className="text-muted-foreground mb-1">
+            Nenhum colaborador corresponde aos filtros atuais.
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            {vinculoFilter !== "todos"
+              ? `O filtro de vínculo "${vinculoFilter === "clt" ? "CLT" : "PJ / CNPJ"}" pode estar ocultando colaboradores. Há ${colaboradores.length} cadastrado${colaboradores.length !== 1 ? "s" : ""} nesta empresa.`
+              : `Há ${colaboradores.length} colaborador${colaboradores.length !== 1 ? "es" : ""} cadastrado${colaboradores.length !== 1 ? "s" : ""} nesta empresa.`}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm("");
+              setDepartmentFilter("all");
+              setStatusFilter("all");
+              setVinculoFilter("todos");
+            }}
+          >
+            Limpar filtros
           </Button>
         </div>
       ) : viewMode === "cards" ? (
