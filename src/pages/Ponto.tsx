@@ -295,7 +295,13 @@ const Ponto = () => {
     // Apuração/Fechamento/Compliance. Quem bate ponto gera linha em
     // ponto_diario via trigger, então continua aparecendo.
     const temMarcacao = (marcacoesPorCpf.get(onlyDigits(ponto.colaborador_cpf))?.length ?? 0) > 0;
-    if (!temMarcacao) return false;
+    // Mostra também dias COM situação abonada sem batida (atestado, férias,
+    // afastamento): o backend consolida esses dias em ponto_diario com
+    // status 'justificado' justamente "para aparecerem no espelho mesmo sem
+    // batida" (ver migration ferias_atestado_integra_ponto). Sem isto, um
+    // atestado de dia inteiro sumia do espelho mesmo lançado.
+    const temAbono = !ponto.__virtual && ponto.status === "justificado";
+    if (!temMarcacao && !temAbono) return false;
 
     const matchesStatus = statusFilter === "all" || ponto.status === statusFilter;
     const matchesSearch = ponto.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -574,6 +580,14 @@ const Ponto = () => {
                     if (tipoDia === "ferias") return { label: "Férias", color: "bg-sky-100 text-sky-800" };
                     if (tipoDia === "atestado") return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
                     if (tipoDia === "afastamento") return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
+                    // Dias abonados (status 'justificado') vindos da consolidação de
+                    // atestado/férias/afastamento NÃO setam tipo_dia — deriva o rótulo
+                    // pelo prefixo da observação ('Atestado: ...', 'Férias: ...').
+                    if (ponto.status === "justificado") {
+                      if (/^Atestado/i.test(obs)) return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
+                      if (/^Férias/i.test(obs)) return { label: "Férias", color: "bg-sky-100 text-sky-800" };
+                      if (/^Afastamento/i.test(obs)) return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
+                    }
                     return statusConfig;
                   })();
                   const badgeTooltip = tipoDia === "feriado"
