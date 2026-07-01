@@ -7,11 +7,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { fromTable } from "@/integrations/supabase/untypedClient";
-import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Settings2, Plus } from "lucide-react";
+import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
-import { ConfigJustificativasModal } from "@/components/ponto/ConfigJustificativasModal";
 import type { Colaborador } from "@/hooks/useColaboradores";
 import { cleanCpf, formatCpf } from "@/lib/cpf";
 
@@ -81,7 +80,7 @@ export function SolicitarAjusteFolhaInterno({
   const today = new Date().toISOString().slice(0, 10);
   const hojeDate = new Date();
   const { solicitarAjuste } = usePonto();
-  const { justificativas, podeGerenciar } = usePontoJustificativas();
+  const { justificativas } = usePontoJustificativas();
   const justAtivas = useMemo(() => justificativas.filter((j) => j.ativo), [justificativas]);
   const justById = useMemo(() => {
     const m: Record<string, typeof justAtivas[number]> = {};
@@ -98,7 +97,6 @@ export function SolicitarAjusteFolhaInterno({
   const [edits, setEdits] = useState<Record<string, DiaEdit>>({});
   const [enviando, setEnviando] = useState(false);
   const [done, setDone] = useState(false);
-  const [showConfigJust, setShowConfigJust] = useState(false);
 
   const colaborador = useMemo(
     () => colaboradores.find((c) => c.id === colaboradorId) || null,
@@ -508,15 +506,6 @@ export function SolicitarAjusteFolhaInterno({
                     A folha mostra o mês todo. Edite horários e informe a justificativa de cada período (o abono é aplicado automaticamente pela justificativa na aprovação). Use "Dia Inteiro" para lançar o dia pela escala.
                   </DialogDescription>
                 </div>
-                {podeGerenciar && (
-                  <Button
-                    size="sm"
-                    onClick={() => setShowConfigJust(true)}
-                    className="shrink-0 bg-amber-500 text-white hover:bg-amber-600 border border-amber-600 font-semibold shadow-sm"
-                  >
-                    <Settings2 className="w-4 h-4 mr-1" /> Justificativas
-                  </Button>
-                )}
               </div>
             </DialogHeader>
 
@@ -768,7 +757,6 @@ export function SolicitarAjusteFolhaInterno({
           </>
         )}
       </DialogContent>
-      <ConfigJustificativasModal open={showConfigJust} onOpenChange={setShowConfigJust} />
     </Dialog>
   );
 }
