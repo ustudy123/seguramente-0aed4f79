@@ -224,9 +224,23 @@ export function SolicitarAjusteFolhaInterno({
       toast.error("Não é possível excluir uma marcação já registrada. Para anular um horário, ajuste-o ou registre uma justificativa.");
       return;
     }
-    const lista = ensureEdicao(data);
+    const ed = editDia(data);
+    const lista = ed.marcacoes !== undefined ? [...ed.marcacoes] : [...(marcsPorDia[data] || [])];
     lista.splice(idx, 1);
-    patchDia(data, { marcacoes: lista });
+    // Remover uma marcação reagrupa os pares seguintes (uma saída pode virar
+    // entrada, e vice-versa), então a justificativa por par (chave = índice do
+    // par) deixaria de corresponder ao par exibido. Para NÃO enviar a
+    // justificativa errada silenciosamente, limpamos as justificativas do par
+    // afetado em diante — o gestor reescolhe. Pares anteriores (não afetados)
+    // são preservados. A validação já exige uma justificativa por par ativo.
+    const parAfetado = Math.floor(idx / 2);
+    const just: Record<string, PeriodoJust> = {};
+    Object.entries(ed.just).forEach(([k, v]) => {
+      if (k === DIA_KEY) { just[k] = v; return; }
+      const p = Number(k);
+      if (!Number.isNaN(p) && p < parAfetado) just[k] = v;
+    });
+    patchDia(data, { marcacoes: lista, just });
   };
 
   const toggleDiaInteiro = (data: string, v: boolean) => {
