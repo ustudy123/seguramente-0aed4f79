@@ -200,6 +200,15 @@ export function SolicitarAjusteFolhaInterno({
   };
 
   const setMarcacao = (data: string, idx: number, valor: string) => {
+    const original = marcsPorDia[data] || [];
+    // Esvaziar uma marcação JÁ REGISTRADA não tem efeito no sistema (só marcaria
+    // a linha como "alterada" sem gerar ajuste, podendo sumir silenciosamente no
+    // envio). Bloqueia, na mesma filosofia de removeMarcacao: para anular um
+    // horário registrado, use uma justificativa ou "Dia inteiro".
+    if (idx < original.length && !valor.trim()) {
+      toast.error("Para anular um horário já registrado, use uma justificativa ou marque \"Dia inteiro\".");
+      return;
+    }
     const ed = editDia(data);
     const lista = ed.marcacoes !== undefined ? [...ed.marcacoes] : [...(marcsPorDia[data] || [])];
     lista[idx] = valor;
@@ -247,8 +256,18 @@ export function SolicitarAjusteFolhaInterno({
     patchDia(data, { diaInteiro: v });
   };
 
-  // Diferença POR HORÁRIO (mantém marcações existentes; novo = inclusão;
-  // troca de horário = correção). Dias com "Dia Inteiro" não geram itens.
+  // Diferença POR POSIÇÃO (a posição na lista define tudo, batendo com os
+  // rótulos da tela): índice par = Entrada, ímpar = Saída; período = índice/2.
+  // Como as marcações originais mantêm suas posições (novas entram no fim e só
+  // novas podem ser removidas), comparar por posição é seguro e evita três
+  // defeitos do diff cronológico/por-conjunto anterior:
+  //   1) Turno que vira a meia-noite (Entrada 22:00 / Saída 02:00) não tem mais
+  //      entrada/saída invertidas — o tipo segue o rótulo, não a ordem do relógio.
+  //   2) Editar um horário para um valor que já existe em outra marcação do dia
+  //      deixa de ser silenciosamente descartado (antes o Set "engolia" a edição).
+  //   3) horaOriginal passa a ser sempre a marcação da MESMA posição editada.
+  // Uma marcação alterada de volta ao valor original não gera item. Dias com
+  // "Dia Inteiro" não geram itens.
   const itensAlterados = useMemo(() => {
     const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; par: number }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
@@ -256,32 +275,21 @@ export function SolicitarAjusteFolhaInterno({
       if (ed.marcacoes === undefined) return;
       const original = marcsPorDia[data] || [];
       const raw = marcsRawPorDia[data] || [];
-      const rawByHora: Record<string, string> = {};
-      original.forEach((o, i) => { if (!(o in rawByHora)) rawByHora[o] = raw[i] || o; });
 
-      const novas = ed.marcacoes.map((s) => (s || "").trim()).filter(Boolean);
-      const origSet = new Set(original);
-      const novasSet = new Set(novas);
-      const ordenadas = [...novas].sort((a, b) => (toMin(a) ?? 0) - (toMin(b) ?? 0));
-      const tipoDe = (hora: string): TipoMarc => tipoPorIndice(ordenadas.indexOf(hora));
-      // Período (par) = posição VISUAL na lista exibida: (0,1)=par 0, (2,3)=par 1…
-      // A justificativa é agrupada por par, então alinha ao lado do par mostrado.
-      const parDe = (hora: string): number => {
-        const arrIdx = (ed.marcacoes || []).findIndex((v) => (v || "").trim() === hora);
-        return arrIdx >= 0 ? Math.floor(arrIdx / 2) : 0;
-      };
-
-      const removidos = original.filter((o) => !novasSet.has(o));
-      const adicionados = novas.filter((n) => !origSet.has(n));
-      let r = 0;
-      for (const hora of adicionados) {
-        if (r < removidos.length) {
-          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: rawByHora[removidos[r]] || removidos[r], par: parDe(hora) });
-          r++;
-        } else {
-          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: "", par: parDe(hora) });
-        }
-      }
+      ed.marcacoes.forEach((bruto, i) => {
+        const hora = (bruto || "").trim();
+        if (!hora) return;                    // marcação vazia (nova ainda não preenchida)
+        const orig = original[i] || "";
+        if (hora === orig) return;            // posição inalterada
+        const ehCorrecao = i < original.length;
+        out.push({
+          data,
+          tipo: tipoPorIndice(i),
+          hora,
+          horaOriginal: ehCorrecao ? (raw[i] || orig) : "",
+          par: Math.floor(i / 2),
+        });
+      });
     });
     return out;
   }, [edits, marcsPorDia, marcsRawPorDia]);
