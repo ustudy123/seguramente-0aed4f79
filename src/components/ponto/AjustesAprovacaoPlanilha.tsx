@@ -287,7 +287,6 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left w-[260px] min-w-[260px]">Marcações (Entrada / Saída)</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left min-w-[180px]">Motivo</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center w-16">Anexos</th>
-                              <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center w-20">Status</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-right w-52">Ações do Dia</th>
                             </tr>
                           </thead>
@@ -458,13 +457,6 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                     )}
                                   </td>
 
-                                  <td className="py-2.5 px-3 text-center align-top">
-                                    {hasPendente && <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px]">Pendente</Badge>}
-                                    {!hasPendente && allApr && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-[10px]">Aprovado</Badge>}
-                                    {!hasPendente && allRej && <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100 text-[10px]">Rejeitado</Badge>}
-                                    {!hasPendente && !allApr && !allRej && <Badge variant="outline" className="text-[10px]">Misto</Badge>}
-                                  </td>
-
                                   <td className="py-2.5 px-3 text-right align-top">
                                     <div className="flex items-center justify-end gap-1.5 flex-wrap">
                                       {hasPendente ? (
@@ -489,9 +481,16 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                           </Button>
                                         </>
                                       ) : (
-                                        <span className="text-[11px] text-muted-foreground mr-1">
-                                          {items[0].aprovado_por_nome ? `por ${items[0].aprovado_por_nome}` : "—"}
-                                        </span>
+                                        <>
+                                          {/* Sem a coluna Status, o selo do dia já processado
+                                              vem inline aqui (Aprovado/Rejeitado/Misto). */}
+                                          {allApr && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-[10px]">Aprovado</Badge>}
+                                          {allRej && <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100 text-[10px]">Rejeitado</Badge>}
+                                          {!allApr && !allRej && <Badge variant="outline" className="text-[10px]">Misto</Badge>}
+                                          <span className="text-[11px] text-muted-foreground mr-1">
+                                            {items[0].aprovado_por_nome ? `por ${items[0].aprovado_por_nome}` : "—"}
+                                          </span>
+                                        </>
                                       )}
                                       {excluirAjuste && (
                                         <Tooltip>
