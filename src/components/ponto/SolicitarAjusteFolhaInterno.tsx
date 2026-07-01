@@ -33,7 +33,7 @@ const MAX_ITENS = 60;
 /** Limite de marcações por dia no formulário (8 pares entrada/saída). */
 const MAX_MARCS_DIA = 16;
 
-/** Chave da justificativa de "Dia Inteiro" dentro do mapa por horário. */
+/** Chave da justificativa de "Dia Inteiro" dentro do mapa por período. */
 const DIA_KEY = "__dia__";
 
 function tipoPorIndice(i: number): TipoMarc {
@@ -67,7 +67,8 @@ interface DiaEdit {
   // undefined = não editado (usa as marcações originais).
   marcacoes?: string[];
   diaInteiro: boolean;
-  // Justificativa por horário "HH:MM" (ou DIA_KEY para o dia inteiro).
+  // Justificativa por PERÍODO (par entrada+saída). Chave = índice do par
+  // ("0", "1", …) na lista de marcações; DIA_KEY para o dia inteiro.
   just: Record<string, PeriodoJust>;
   anexo: File | null;
 }
@@ -201,16 +202,10 @@ export function SolicitarAjusteFolhaInterno({
   const setMarcacao = (data: string, idx: number, valor: string) => {
     const ed = editDia(data);
     const lista = ed.marcacoes !== undefined ? [...ed.marcacoes] : [...(marcsPorDia[data] || [])];
-    const antigo = (lista[idx] || "").trim();
     lista[idx] = valor;
-    // Migra a justificativa do horário antigo para o novo (a chave é a hora).
-    let just = ed.just;
-    if (antigo && antigo !== valor && just[antigo]) {
-      just = { ...just };
-      just[valor] = just[antigo];
-      delete just[antigo];
-    }
-    patchDia(data, { marcacoes: lista, just });
+    // A justificativa é chaveada pelo índice do período (par), não pelo horário:
+    // editar o horário não move a chave, então não há nada a migrar aqui.
+    patchDia(data, { marcacoes: lista });
   };
 
   const addMarcacao = (data: string) => {
@@ -241,7 +236,7 @@ export function SolicitarAjusteFolhaInterno({
   // Diferença POR HORÁRIO (mantém marcações existentes; novo = inclusão;
   // troca de horário = correção). Dias com "Dia Inteiro" não geram itens.
   const itensAlterados = useMemo(() => {
-    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string }[] = [];
+    const out: { data: string; tipo: TipoMarc; hora: string; horaOriginal: string; par: number }[] = [];
     Object.entries(edits).forEach(([data, ed]) => {
       if (ed.diaInteiro) return;
       if (ed.marcacoes === undefined) return;
@@ -255,16 +250,22 @@ export function SolicitarAjusteFolhaInterno({
       const novasSet = new Set(novas);
       const ordenadas = [...novas].sort((a, b) => (toMin(a) ?? 0) - (toMin(b) ?? 0));
       const tipoDe = (hora: string): TipoMarc => tipoPorIndice(ordenadas.indexOf(hora));
+      // Período (par) = posição VISUAL na lista exibida: (0,1)=par 0, (2,3)=par 1…
+      // A justificativa é agrupada por par, então alinha ao lado do par mostrado.
+      const parDe = (hora: string): number => {
+        const arrIdx = (ed.marcacoes || []).findIndex((v) => (v || "").trim() === hora);
+        return arrIdx >= 0 ? Math.floor(arrIdx / 2) : 0;
+      };
 
       const removidos = original.filter((o) => !novasSet.has(o));
       const adicionados = novas.filter((n) => !origSet.has(n));
       let r = 0;
       for (const hora of adicionados) {
         if (r < removidos.length) {
-          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: rawByHora[removidos[r]] || removidos[r] });
+          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: rawByHora[removidos[r]] || removidos[r], par: parDe(hora) });
           r++;
         } else {
-          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: "" });
+          out.push({ data, tipo: tipoDe(hora), hora, horaOriginal: "", par: parDe(hora) });
         }
       }
     });
@@ -310,10 +311,11 @@ export function SolicitarAjusteFolhaInterno({
       }
 
       const itensDia = itensAlterados.filter((i) => i.data === data);
-      for (const it of itensDia) {
-        const pj = getPJ(data, it.hora);
+      const paresDia = [...new Set(itensDia.map((i) => i.par))].sort((a, b) => a - b);
+      for (const par of paresDia) {
+        const pj = getPJ(data, String(par));
         const just = justById[pj.justificativaId];
-        if (!just) return `Selecione a justificativa do horário ${it.hora} em ${isoToBR(data)}.`;
+        if (!just) return `Selecione a justificativa do ${par + 1}º período em ${isoToBR(data)}.`;
         if (just.requer_anexo && !ed.anexo) return `O anexo é obrigatório para a justificativa "${just.nome}" em ${isoToBR(data)}.`;
       }
 
@@ -375,7 +377,8 @@ export function SolicitarAjusteFolhaInterno({
         const itensDia = itensAlterados.filter((i) => i.data === data);
         for (let i = 0; i < itensDia.length; i++) {
           const it = itensDia[i];
-          const pj = getPJ(data, it.hora);
+          // As duas marcações do período (par) compartilham a mesma justificativa.
+          const pj = getPJ(data, String(it.par));
           const just = justById[pj.justificativaId];
           // O anexo do dia acompanha o 1º item E qualquer período cuja
           // justificativa exija anexo — senão um período que exige comprovante
@@ -660,7 +663,17 @@ export function SolicitarAjusteFolhaInterno({
                               renderJustBlock(data, DIA_KEY, "Dia inteiro")
                             ) : itensDia.length > 0 ? (
                               <div className="space-y-1.5">
-                                {itensDia.map((it) => renderJustBlock(data, it.hora, `${it.tipo === "entrada" ? "Entrada" : "Saída"} ${it.hora}`))}
+                                {[...new Set(itensDia.map((i) => i.par))]
+                                  .sort((a, b) => a - b)
+                                  .map((par) => (
+                                    <div key={par}>
+                                      {renderJustBlock(
+                                        data,
+                                        String(par),
+                                        `Entrada ${marcs[2 * par] || "—"} · Saída ${marcs[2 * par + 1] || "—"}`
+                                      )}
+                                    </div>
+                                  ))}
                               </div>
                             ) : (
                               <span className="text-[10px] text-muted-foreground italic">— altere um horário ou marque "Dia inteiro"</span>
