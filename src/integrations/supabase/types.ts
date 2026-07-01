@@ -22750,6 +22750,10 @@ export type Database = {
       }
       obter_contrato_publico: { Args: { _token: string }; Returns: Json }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
+      pode_excluir_registro_ponto: {
+        Args: { _tenant_id: string }
+        Returns: boolean
+      }
       ponto_classifica_tipo: { Args: { p_tipo: string }; Returns: string }
       ponto_empresa_do_colaborador: {
         Args: { p_colaborador_id: string }
