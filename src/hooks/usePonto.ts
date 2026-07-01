@@ -76,6 +76,11 @@ export interface PontoAjuste {
   created_by_nome: string | null;
   empresa_id?: string | null;
   anexos?: Array<{ nome: string; url: string; tamanho: number; tipo: string }>;
+  justificativa_id?: string | null;
+  horas_abonadas?: number | null;
+  dia_inteiro?: boolean | null;
+  abonar_se_aprovado?: boolean | null;
+  observacao?: string | null;
 }
 
 export interface PontoAuditLog {

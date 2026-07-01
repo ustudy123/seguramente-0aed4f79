@@ -53,7 +53,6 @@ export function usePontoJustificativas() {
       if (!tenantId || !user) throw new Error("Não autenticado");
       const payload: any = {
         tenant_id: tenantId,
-        empresa_id: empresaAtivaId || null,
         nome: j.nome.trim(),
         descricao: j.descricao?.trim() || null,
         horas_abono: Number(j.horas_abono) || 0,
@@ -61,13 +60,16 @@ export function usePontoJustificativas() {
         ativo: j.ativo !== false,
         ordem: j.ordem ?? 0,
         tipo_abono: (j.tipo_abono as TipoAbono) || "nao",
-        created_by: user.id,
       };
       if (j.id) {
+        // NÃO sobrescreve empresa_id de uma justificativa existente: as padrão
+        // do sistema são semeadas com empresa_id NULL e devem continuar assim
+        // (senão o "Restaurar padrões" não as encontra e cria duplicatas).
         const { error } = await fromTable("ponto_justificativas").update(payload).eq("id", j.id);
         if (error) throw error;
       } else {
-        const { error } = await fromTable("ponto_justificativas").insert(payload);
+        const { error } = await fromTable("ponto_justificativas")
+          .insert({ ...payload, empresa_id: empresaAtivaId || null, created_by: user.id });
         if (error) throw error;
       }
     },

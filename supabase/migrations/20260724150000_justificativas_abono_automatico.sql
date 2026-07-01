@@ -58,16 +58,19 @@ BEGIN
       (12, 'HORA IN ITINERE',                'HORA_IN_ITINERE',               'sim')
     ) AS t(ordem, nome, codigo, tipo_abono)
   LOOP
+    -- Casa apenas por CÓDIGO (idempotente em reexecuções). Não casa por nome
+    -- para NÃO "adotar"/converter uma justificativa manual do tenant que por
+    -- acaso tenha o mesmo nome (ela não deve virar do sistema nem ter o abono
+    -- sobrescrito).
     UPDATE public.ponto_justificativas
       SET tipo_abono = rec.tipo_abono,
-          codigo = rec.codigo,
           sistema = true,
           ativo = true,
           ordem = rec.ordem,
           updated_at = now()
     WHERE tenant_id = p_tenant_id
       AND empresa_id IS NULL
-      AND (codigo = rec.codigo OR nome = rec.nome);
+      AND codigo = rec.codigo;
     IF NOT FOUND THEN
       INSERT INTO public.ponto_justificativas
         (tenant_id, empresa_id, nome, codigo, tipo_abono, sistema, ativo, ordem, requer_anexo, horas_abono)

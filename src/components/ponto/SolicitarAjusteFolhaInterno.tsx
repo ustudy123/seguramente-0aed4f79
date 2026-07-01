@@ -377,6 +377,10 @@ export function SolicitarAjusteFolhaInterno({
           const it = itensDia[i];
           const pj = getPJ(data, it.hora);
           const just = justById[pj.justificativaId];
+          // O anexo do dia acompanha o 1º item E qualquer período cuja
+          // justificativa exija anexo — senão um período que exige comprovante
+          // (mas não é o 1º) ficaria sem anexo, apesar da validação passar.
+          const anexarNesteItem = i === 0 || !!just?.requer_anexo;
           await solicitarAjuste({
             colaboradorId: colaborador.id,
             colaboradorNome: colaborador.nome_completo,
@@ -392,8 +396,7 @@ export function SolicitarAjusteFolhaInterno({
             justificativaId: pj.justificativaId,
             observacao: pj.observacao || undefined,
             abonarSeAprovado: just?.tipo_abono === "configuravel" ? pj.abonarSeAprovado : undefined,
-            // anexo só no primeiro item do dia
-            anexos: i === 0 ? anexos : undefined,
+            anexos: anexarNesteItem ? anexos : undefined,
           });
         }
       }
@@ -549,7 +552,6 @@ export function SolicitarAjusteFolhaInterno({
                       const pendentes = pendentesPorDia[data] || 0;
                       const ed = editDia(data);
                       const marcs = marcacoesEfetivas(data);
-                      const origSet = new Set(original);
                       const temAlteracaoHora = ed.marcacoes !== undefined && (
                         ed.marcacoes.length !== original.length ||
                         ed.marcacoes.some((v, i) => (v || "") !== (original[i] || ""))
@@ -658,9 +660,7 @@ export function SolicitarAjusteFolhaInterno({
                               renderJustBlock(data, DIA_KEY, "Dia inteiro")
                             ) : itensDia.length > 0 ? (
                               <div className="space-y-1.5">
-                                {itensDia
-                                  .filter((it) => !origSet.has(it.hora))
-                                  .map((it) => renderJustBlock(data, it.hora, `${it.tipo === "entrada" ? "Entrada" : "Saída"} ${it.hora}`))}
+                                {itensDia.map((it) => renderJustBlock(data, it.hora, `${it.tipo === "entrada" ? "Entrada" : "Saída"} ${it.hora}`))}
                               </div>
                             ) : (
                               <span className="text-[10px] text-muted-foreground italic">— altere um horário ou marque "Dia inteiro"</span>

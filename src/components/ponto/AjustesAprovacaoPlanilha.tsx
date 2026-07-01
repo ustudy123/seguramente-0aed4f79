@@ -21,6 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PontoAjuste } from "@/hooks/usePonto";
+import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
 
 const MOTIVOS_REJEICAO = [
   "Horário incoerente com a jornada",
@@ -55,6 +56,19 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
   const [rejeitarObservacao, setRejeitarObservacao] = useState("");
   const [rejeitarMotivoPredefinido, setRejeitarMotivoPredefinido] = useState("");
   const [itemsParaRejeitar, setItemsParaRejeitar] = useState<PontoAjuste[]>([]);
+
+  // Regra de abono por justificativa (para sinalizar ao aprovador que aprovar
+  // aquele item vai abonar o dia).
+  const { justificativas } = usePontoJustificativas();
+  const abonoPorId = useMemo(() => {
+    const m: Record<string, string> = {};
+    justificativas.forEach((j) => { m[j.id] = j.tipo_abono; });
+    return m;
+  }, [justificativas]);
+  const ajusteAbona = (aj: PontoAjuste): boolean => {
+    const ta = aj.justificativa_id ? abonoPorId[aj.justificativa_id] : undefined;
+    return ta === "sim" || (ta === "configuravel" && !!aj.abonar_se_aprovado);
+  };
 
   // Group: colaborador_id -> data_referencia -> ajustes[]
   const grouped = useMemo(() => {
@@ -284,6 +298,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                               ).size;
                               const firstAjusteAnexo = items.find((a) => (a.anexos?.length ?? 0) > 0);
                               const motivos = Array.from(new Set(items.map((a) => a.motivo).filter(Boolean)));
+                              const observacoes = Array.from(new Set(items.map((a) => a.observacao).filter(Boolean)));
 
                               return (
                                 <tr key={date} className={cn("border-t hover:bg-muted/20", !hasPendente && "opacity-90")}>
@@ -378,12 +393,32 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                               {linha.saida ? renderBox(linha.saida, false) : slotVazio(false)}
                                             </div>
                                           ))}
-                                          {justificativas.map((aj) => (
-                                            <div key={aj.id} className="flex flex-col gap-0.5">
-                                              <span className="text-[9px] font-semibold text-indigo-600">Justif.</span>
-                                              <div className="rounded border px-2 py-1.5 font-mono text-sm font-semibold bg-indigo-50 border-indigo-300 text-indigo-900 text-center min-w-[78px]">JUST</div>
-                                            </div>
-                                          ))}
+                                          {justificativas.map((aj) => {
+                                            const abona = ajusteAbona(aj);
+                                            return (
+                                              <div key={aj.id} className="flex flex-col gap-0.5">
+                                                <span className="text-[9px] font-semibold text-indigo-600">
+                                                  {aj.dia_inteiro ? "Dia inteiro" : "Justif."}
+                                                </span>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <div className="rounded border px-2 py-1 text-[11px] font-semibold bg-indigo-50 border-indigo-300 text-indigo-900 text-center min-w-[78px] cursor-help">
+                                                      <span className="block truncate max-w-[140px]">{aj.motivo || "Justificativa"}</span>
+                                                      {abona && <span className="block text-[9px] font-normal text-emerald-700">abona ✓</span>}
+                                                    </div>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="max-w-xs">
+                                                    <p className="font-semibold mb-1">{aj.dia_inteiro ? "Dia inteiro" : "Justificativa"}</p>
+                                                    <p className="text-xs">Motivo: {aj.motivo}</p>
+                                                    {aj.observacao && <p className="text-xs mt-1">Obs.: {aj.observacao}</p>}
+                                                    <p className="text-xs mt-1 text-muted-foreground">
+                                                      {abona ? "Ao aprovar, o dia fica Justificado (abonado)." : "Não abona o dia."}
+                                                    </p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </div>
+                                            );
+                                          })}
                                         </div>
                                       </td>
                                     );
@@ -393,6 +428,11 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                     <p className="text-xs leading-snug line-clamp-2">
                                       {motivos.join(" • ") || "—"}
                                     </p>
+                                    {observacoes.length > 0 && (
+                                      <p className="text-[11px] text-muted-foreground italic leading-snug line-clamp-2 mt-0.5">
+                                        {observacoes.join(" • ")}
+                                      </p>
+                                    )}
                                   </td>
 
                                   <td className="py-2.5 px-3 text-center align-top">
