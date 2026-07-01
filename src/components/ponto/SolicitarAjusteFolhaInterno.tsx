@@ -577,6 +577,47 @@ export function SolicitarAjusteFolhaInterno({
                       const isWeekend = [0, 6].includes(new Date(data + "T12:00:00").getDay());
                       const futuro = data > today;
                       const itensDia = itensAlterados.filter((i) => i.data === data);
+                      const paresAlterados = new Set(itensDia.map((i) => i.par));
+                      // Renderiza a linha de UMA marcação (entrada/saída) pelo índice i.
+                      const renderMarcInput = (i: number) => {
+                        const valor = marcs[i];
+                        const orig = original[i] || "";
+                        const novaMarc = i >= original.length;
+                        const alterado = ed.marcacoes !== undefined && (valor || "") !== orig && !novaMarc;
+                        const tipo = tipoPorIndice(i);
+                        return (
+                          <div key={i} className="flex items-center gap-1">
+                            <span className={`text-[9px] font-semibold w-12 shrink-0 ${tipo === "entrada" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                              {tipoLabel(i)}
+                            </span>
+                            <Input
+                              type="time"
+                              value={valor || ""}
+                              disabled={futuro}
+                              onChange={(e) => setMarcacao(data, i, e.target.value)}
+                              className={`h-7 text-xs font-mono ${
+                                novaMarc ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                  : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                    : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
+                                      : ""
+                              }`}
+                            />
+                            {novaMarc && !futuro && (
+                              <button
+                                type="button"
+                                onClick={() => removeMarcacao(data, i)}
+                                className="text-destructive shrink-0"
+                                title="Remover marcação adicionada"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                            {orig && alterado && (
+                              <span className="text-[9px] text-muted-foreground line-through ml-0.5">{orig}</span>
+                            )}
+                          </div>
+                        );
+                      };
                       return (
                         <tr
                           key={data}
@@ -600,7 +641,7 @@ export function SolicitarAjusteFolhaInterno({
                               </label>
                             )}
                           </td>
-                          <td className="px-2 py-1.5 align-top">
+                          <td className="px-2 py-1.5 align-top" colSpan={2}>
                             {diaBloqueado(data) ? (
                               <div className="flex items-start gap-2 py-1">
                                 <AlertCircle className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
@@ -612,49 +653,39 @@ export function SolicitarAjusteFolhaInterno({
                                 </div>
                               </div>
                             ) : ed.diaInteiro ? (
-                              <div className="text-[10px] text-muted-foreground italic py-1">
-                                Dia inteiro pela escala do colaborador (horários não editáveis).
+                              <div className="grid grid-cols-[240fr_280fr] gap-2 items-start">
+                                <div className="text-[10px] text-muted-foreground italic py-1">
+                                  Dia inteiro pela escala do colaborador (horários não editáveis).
+                                </div>
+                                <div>{renderJustBlock(data, DIA_KEY, "Dia inteiro")}</div>
                               </div>
                             ) : (
-                              <div className="space-y-1">
+                              <div className="space-y-1.5">
                                 {marcs.length === 0 && (
                                   <div className="text-[10px] text-muted-foreground italic">Sem marcações</div>
                                 )}
-                                {marcs.map((valor, i) => {
-                                  const orig = original[i] || "";
-                                  const novaMarc = i >= original.length;
-                                  const alterado = ed.marcacoes !== undefined && (valor || "") !== orig && !novaMarc;
-                                  const tipo = tipoPorIndice(i);
+                                {/* Uma faixa por PERÍODO (par): marcações à esquerda, */}
+                                {/* justificativa à direita, sempre alinhadas ao lado do par. */}
+                                {Array.from({ length: Math.ceil(marcs.length / 2) }).map((_, p) => {
+                                  const iEnt = 2 * p;
+                                  const iSai = 2 * p + 1;
                                   return (
-                                    <div key={i} className="flex items-center gap-1">
-                                      <span className={`text-[9px] font-semibold w-12 shrink-0 ${tipo === "entrada" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                                        {tipoLabel(i)}
-                                      </span>
-                                      <Input
-                                        type="time"
-                                        value={valor || ""}
-                                        disabled={futuro}
-                                        onChange={(e) => setMarcacao(data, i, e.target.value)}
-                                        className={`h-7 text-xs font-mono ${
-                                          novaMarc ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                            : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                              : orig ? "border-sky-300 bg-sky-50/40 dark:bg-sky-950/20"
-                                                : ""
-                                        }`}
-                                      />
-                                      {novaMarc && !futuro && (
-                                        <button
-                                          type="button"
-                                          onClick={() => removeMarcacao(data, i)}
-                                          className="text-destructive shrink-0"
-                                          title="Remover marcação adicionada"
-                                        >
-                                          <X className="w-3 h-3" />
-                                        </button>
-                                      )}
-                                      {orig && alterado && (
-                                        <span className="text-[9px] text-muted-foreground line-through ml-0.5">{orig}</span>
-                                      )}
+                                    <div key={p} className="grid grid-cols-[240fr_280fr] gap-2 items-start">
+                                      <div className="space-y-1">
+                                        {renderMarcInput(iEnt)}
+                                        {iSai < marcs.length && renderMarcInput(iSai)}
+                                      </div>
+                                      <div>
+                                        {paresAlterados.has(p) ? (
+                                          renderJustBlock(
+                                            data,
+                                            String(p),
+                                            `Entrada ${marcs[iEnt] || "—"} · Saída ${marcs[iSai] || "—"}`
+                                          )
+                                        ) : (
+                                          <span className="text-[10px] text-muted-foreground italic">—</span>
+                                        )}
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -667,30 +698,12 @@ export function SolicitarAjusteFolhaInterno({
                                     <Plus className="w-3 h-3" /> Adicionar {marcs.length % 2 === 0 ? "entrada" : "saída"}
                                   </button>
                                 )}
+                                {marcs.length > 0 && itensDia.length === 0 && (
+                                  <div className="text-[10px] text-muted-foreground italic">
+                                    Altere um horário ou marque "Dia inteiro" para justificar.
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </td>
-                          <td className="px-2 py-1.5 align-top">
-                            {diaBloqueado(data) ? (
-                              <span className="text-[10px] text-muted-foreground italic">—</span>
-                            ) : ed.diaInteiro ? (
-                              renderJustBlock(data, DIA_KEY, "Dia inteiro")
-                            ) : itensDia.length > 0 ? (
-                              <div className="space-y-1.5">
-                                {[...new Set(itensDia.map((i) => i.par))]
-                                  .sort((a, b) => a - b)
-                                  .map((par) => (
-                                    <div key={par}>
-                                      {renderJustBlock(
-                                        data,
-                                        String(par),
-                                        `Entrada ${marcs[2 * par] || "—"} · Saída ${marcs[2 * par + 1] || "—"}`
-                                      )}
-                                    </div>
-                                  ))}
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground italic">— altere um horário ou marque "Dia inteiro"</span>
                             )}
                           </td>
                           <td className="px-2 py-1.5 align-top">
