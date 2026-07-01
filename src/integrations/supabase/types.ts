@@ -16855,6 +16855,7 @@ export type Database = {
       }
       ponto_ajustes: {
         Row: {
+          abonar_se_aprovado: boolean
           anexos: Json
           aprovado_por: string | null
           aprovado_por_nome: string | null
@@ -16866,6 +16867,7 @@ export type Database = {
           created_by_nome: string | null
           data_aprovacao: string | null
           data_referencia: string
+          dia_inteiro: boolean
           empresa_id: string | null
           hora_original: string | null
           hora_solicitada: string | null
@@ -16873,6 +16875,7 @@ export type Database = {
           id: string
           justificativa_id: string | null
           motivo: string
+          observacao: string | null
           observacao_aprovador: string | null
           ponto_diario_id: string | null
           status: string
@@ -16881,6 +16884,7 @@ export type Database = {
           tipo_marcacao: string | null
         }
         Insert: {
+          abonar_se_aprovado?: boolean
           anexos?: Json
           aprovado_por?: string | null
           aprovado_por_nome?: string | null
@@ -16892,6 +16896,7 @@ export type Database = {
           created_by_nome?: string | null
           data_aprovacao?: string | null
           data_referencia: string
+          dia_inteiro?: boolean
           empresa_id?: string | null
           hora_original?: string | null
           hora_solicitada?: string | null
@@ -16899,6 +16904,7 @@ export type Database = {
           id?: string
           justificativa_id?: string | null
           motivo: string
+          observacao?: string | null
           observacao_aprovador?: string | null
           ponto_diario_id?: string | null
           status?: string
@@ -16907,6 +16913,7 @@ export type Database = {
           tipo_marcacao?: string | null
         }
         Update: {
+          abonar_se_aprovado?: boolean
           anexos?: Json
           aprovado_por?: string | null
           aprovado_por_nome?: string | null
@@ -16918,6 +16925,7 @@ export type Database = {
           created_by_nome?: string | null
           data_aprovacao?: string | null
           data_referencia?: string
+          dia_inteiro?: boolean
           empresa_id?: string | null
           hora_original?: string | null
           hora_solicitada?: string | null
@@ -16925,6 +16933,7 @@ export type Database = {
           id?: string
           justificativa_id?: string | null
           motivo?: string
+          observacao?: string | null
           observacao_aprovador?: string | null
           ponto_diario_id?: string | null
           status?: string
@@ -18270,6 +18279,7 @@ export type Database = {
       ponto_justificativas: {
         Row: {
           ativo: boolean
+          codigo: string | null
           created_at: string
           created_by: string | null
           descricao: string | null
@@ -18279,11 +18289,14 @@ export type Database = {
           nome: string
           ordem: number
           requer_anexo: boolean
+          sistema: boolean
           tenant_id: string
+          tipo_abono: string
           updated_at: string
         }
         Insert: {
           ativo?: boolean
+          codigo?: string | null
           created_at?: string
           created_by?: string | null
           descricao?: string | null
@@ -18293,11 +18306,14 @@ export type Database = {
           nome: string
           ordem?: number
           requer_anexo?: boolean
+          sistema?: boolean
           tenant_id: string
+          tipo_abono?: string
           updated_at?: string
         }
         Update: {
           ativo?: boolean
+          codigo?: string | null
           created_at?: string
           created_by?: string | null
           descricao?: string | null
@@ -18307,7 +18323,9 @@ export type Database = {
           nome?: string
           ordem?: number
           requer_anexo?: boolean
+          sistema?: boolean
           tenant_id?: string
+          tipo_abono?: string
           updated_at?: string
         }
         Relationships: []
@@ -22099,6 +22117,18 @@ export type Database = {
         }
         Returns: Record<string, unknown>
       }
+      _ponto_gera_batidas_dia_inteiro: {
+        Args: {
+          p_ajuste_id: string
+          p_colaborador_cpf: string
+          p_colaborador_id: string
+          p_colaborador_nome: string
+          p_created_by: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       _ponto_grava_abono:
         | {
             Args: {
@@ -22913,6 +22943,10 @@ export type Database = {
           p_token: string
           p_user_agent: string
         }
+        Returns: undefined
+      }
+      seed_justificativas_padrao: {
+        Args: { p_tenant_id: string }
         Returns: undefined
       }
       seed_psicossocial_riscos_padrao: {
