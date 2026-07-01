@@ -200,6 +200,15 @@ export function SolicitarAjusteFolhaInterno({
   };
 
   const setMarcacao = (data: string, idx: number, valor: string) => {
+    const original = marcsPorDia[data] || [];
+    // Esvaziar uma marcação JÁ REGISTRADA não tem efeito no sistema (só marcaria
+    // a linha como "alterada" sem gerar ajuste, podendo sumir silenciosamente no
+    // envio). Bloqueia, na mesma filosofia de removeMarcacao: para anular um
+    // horário registrado, use uma justificativa ou "Dia inteiro".
+    if (idx < original.length && !valor.trim()) {
+      toast.error("Para anular um horário já registrado, use uma justificativa ou marque \"Dia inteiro\".");
+      return;
+    }
     const ed = editDia(data);
     const lista = ed.marcacoes !== undefined ? [...ed.marcacoes] : [...(marcsPorDia[data] || [])];
     lista[idx] = valor;
