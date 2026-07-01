@@ -297,8 +297,6 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                 items.flatMap((a) => a.anexos ?? []).map((x: any) => x.url ?? x.path ?? x.nome)
                               ).size;
                               const firstAjusteAnexo = items.find((a) => (a.anexos?.length ?? 0) > 0);
-                              const motivos = Array.from(new Set(items.map((a) => a.motivo).filter(Boolean)));
-                              const observacoes = Array.from(new Set(items.map((a) => a.observacao).filter(Boolean)));
 
                               return (
                                 <tr key={date} className={cn("border-t hover:bg-muted/20", !hasPendente && "opacity-90")}>
@@ -380,42 +378,64 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                       </div>
                                     );
 
+                                    // Motivo/observação do PERÍODO: cada par mostra a SUA
+                                    // justificativa ao lado, em vez de juntar as do dia todo.
+                                    const renderMotivoPeriodo = (ajustes: (PontoAjuste | null)[]) => {
+                                      const ms = Array.from(new Set(ajustes.map((a) => a?.motivo).filter((x): x is string => !!x)));
+                                      const obs = Array.from(new Set(ajustes.map((a) => a?.observacao).filter((x): x is string => !!x)));
+                                      return (
+                                        <div className="min-w-0 pt-4">
+                                          <p className="text-xs font-medium leading-snug">{ms.join(" • ") || "—"}</p>
+                                          {obs.length > 0 && (
+                                            <p className="text-[11px] text-muted-foreground italic leading-snug mt-0.5">{obs.join(" • ")}</p>
+                                          )}
+                                        </div>
+                                      );
+                                    };
+
                                     return (
-                                      <td className="py-2.5 px-3 align-top">
+                                      <td className="py-2.5 px-3 align-top" colSpan={2}>
                                         <div className="flex flex-col gap-1.5">
                                           {ordenados.length === 0 && justificativas.length === 0 && (
                                             <span className="text-xs text-muted-foreground/60">—</span>
                                           )}
-                                          {/* Cada linha = um par Entrada (esquerda) + Saída (direita) */}
+                                          {/* Cada linha = um PERÍODO: par Entrada+Saída à esquerda,
+                                              motivo/observação DESSE período à direita. */}
                                           {linhas.map((linha, idx) => (
-                                            <div key={`linha-${idx}`} className="grid grid-cols-2 gap-2 w-fit">
-                                              {linha.entrada ? renderBox(linha.entrada, true) : slotVazio(true)}
-                                              {linha.saida ? renderBox(linha.saida, false) : slotVazio(false)}
+                                            <div key={`linha-${idx}`} className="grid grid-cols-[minmax(190px,auto)_1fr] gap-3 items-start">
+                                              <div className="grid grid-cols-2 gap-2 w-fit">
+                                                {linha.entrada ? renderBox(linha.entrada, true) : slotVazio(true)}
+                                                {linha.saida ? renderBox(linha.saida, false) : slotVazio(false)}
+                                              </div>
+                                              {renderMotivoPeriodo([linha.entrada, linha.saida])}
                                             </div>
                                           ))}
                                           {justificativas.map((aj) => {
                                             const abona = ajusteAbona(aj);
                                             return (
-                                              <div key={aj.id} className="flex flex-col gap-0.5">
-                                                <span className="text-[9px] font-semibold text-indigo-600">
-                                                  {aj.dia_inteiro ? "Dia inteiro" : "Justif."}
-                                                </span>
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
-                                                    <div className="rounded border px-2 py-1 text-[11px] font-semibold bg-indigo-50 border-indigo-300 text-indigo-900 text-center min-w-[78px] cursor-help">
-                                                      <span className="block truncate max-w-[140px]">{aj.motivo || "Justificativa"}</span>
-                                                      {abona && <span className="block text-[9px] font-normal text-emerald-700">abona ✓</span>}
-                                                    </div>
-                                                  </TooltipTrigger>
-                                                  <TooltipContent side="top" className="max-w-xs">
-                                                    <p className="font-semibold mb-1">{aj.dia_inteiro ? "Dia inteiro" : "Justificativa"}</p>
-                                                    <p className="text-xs">Motivo: {aj.motivo}</p>
-                                                    {aj.observacao && <p className="text-xs mt-1">Obs.: {aj.observacao}</p>}
-                                                    <p className="text-xs mt-1 text-muted-foreground">
-                                                      {abona ? "Ao aprovar, o dia fica Justificado (abonado)." : "Não abona o dia."}
-                                                    </p>
-                                                  </TooltipContent>
-                                                </Tooltip>
+                                              <div key={aj.id} className="grid grid-cols-[minmax(190px,auto)_1fr] gap-3 items-start">
+                                                <div className="flex flex-col gap-0.5">
+                                                  <span className="text-[9px] font-semibold text-indigo-600">
+                                                    {aj.dia_inteiro ? "Dia inteiro" : "Justif."}
+                                                  </span>
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <div className="rounded border px-2 py-1 text-[11px] font-semibold bg-indigo-50 border-indigo-300 text-indigo-900 text-center min-w-[78px] cursor-help">
+                                                        <span className="block truncate max-w-[140px]">{aj.motivo || "Justificativa"}</span>
+                                                        {abona && <span className="block text-[9px] font-normal text-emerald-700">abona ✓</span>}
+                                                      </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" className="max-w-xs">
+                                                      <p className="font-semibold mb-1">{aj.dia_inteiro ? "Dia inteiro" : "Justificativa"}</p>
+                                                      <p className="text-xs">Motivo: {aj.motivo}</p>
+                                                      {aj.observacao && <p className="text-xs mt-1">Obs.: {aj.observacao}</p>}
+                                                      <p className="text-xs mt-1 text-muted-foreground">
+                                                        {abona ? "Ao aprovar, o dia fica Justificado (abonado)." : "Não abona o dia."}
+                                                      </p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </div>
+                                                {renderMotivoPeriodo([aj])}
                                               </div>
                                             );
                                           })}
@@ -423,17 +443,6 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                       </td>
                                     );
                                   })()}
-
-                                  <td className="py-2.5 px-3 align-top">
-                                    <p className="text-xs leading-snug line-clamp-2">
-                                      {motivos.join(" • ") || "—"}
-                                    </p>
-                                    {observacoes.length > 0 && (
-                                      <p className="text-[11px] text-muted-foreground italic leading-snug line-clamp-2 mt-0.5">
-                                        {observacoes.join(" • ")}
-                                      </p>
-                                    )}
-                                  </td>
 
                                   <td className="py-2.5 px-3 text-center align-top">
                                     {totalAnexos > 0 && firstAjusteAnexo ? (
