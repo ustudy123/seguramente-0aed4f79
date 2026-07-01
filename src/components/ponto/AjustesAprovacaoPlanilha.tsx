@@ -281,7 +281,10 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                           <thead className="bg-muted/40">
                             <tr>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left w-28">Data</th>
-                              <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left min-w-[260px]">Marcações (Entrada / Saída)</th>
+                              {/* Largura FIXA: a folga da tabela vai para a coluna Motivo, e o
+                                  título "Motivo" fica cravado na fronteira dos 260px — alinhado
+                                  com os blocos de motivo do corpo (grid 248px + gap 12px). */}
+                              <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left w-[260px] min-w-[260px]">Marcações (Entrada / Saída)</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-left min-w-[180px]">Motivo</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center w-16">Anexos</th>
                               <th className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground py-2 px-3 text-center w-20">Status</th>
@@ -402,7 +405,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                           {/* Cada linha = um PERÍODO: par Entrada+Saída à esquerda,
                                               motivo/observação DESSE período à direita. */}
                                           {linhas.map((linha, idx) => (
-                                            <div key={`linha-${idx}`} className="grid grid-cols-[minmax(190px,auto)_1fr] gap-3 items-start">
+                                            <div key={`linha-${idx}`} className="grid grid-cols-[248px_1fr] gap-3 items-start">
                                               <div className="grid grid-cols-2 gap-2 w-fit">
                                                 {linha.entrada ? renderBox(linha.entrada, true) : slotVazio(true)}
                                                 {linha.saida ? renderBox(linha.saida, false) : slotVazio(false)}
@@ -413,7 +416,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                           {justificativas.map((aj) => {
                                             const abona = ajusteAbona(aj);
                                             return (
-                                              <div key={aj.id} className="grid grid-cols-[minmax(190px,auto)_1fr] gap-3 items-start">
+                                              <div key={aj.id} className="grid grid-cols-[248px_1fr] gap-3 items-start">
                                                 <div className="flex flex-col gap-0.5">
                                                   <span className="text-[9px] font-semibold text-indigo-600">
                                                     {aj.dia_inteiro ? "Dia inteiro" : "Justif."}
