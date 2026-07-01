@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Save, X, Pencil, Clock, Paperclip, ShieldAlert } from "lucide-react";
-import { usePontoJustificativas, type PontoJustificativa } from "@/hooks/usePontoJustificativas";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, Save, X, Pencil, Clock, Paperclip, ShieldAlert, RotateCcw } from "lucide-react";
+import { usePontoJustificativas, type PontoJustificativa, type TipoAbono } from "@/hooks/usePontoJustificativas";
 
 interface Props {
   open: boolean;
@@ -16,10 +17,17 @@ interface Props {
 
 type FormState = Partial<PontoJustificativa> & { nome: string; horas_abono: number };
 
-const EMPTY: FormState = { nome: "", descricao: "", horas_abono: 0, requer_anexo: false, ativo: true, ordem: 0 };
+const EMPTY: FormState = { nome: "", descricao: "", horas_abono: 0, requer_anexo: false, ativo: true, ordem: 0, tipo_abono: "nao" };
+
+const ABONO_LABEL: Record<TipoAbono, string> = { sim: "Abona", nao: "Não abona", configuravel: "Configurável" };
+const ABONO_BADGE: Record<TipoAbono, string> = {
+  sim: "border-emerald-500 text-emerald-700 dark:text-emerald-400",
+  nao: "border-rose-400 text-rose-700 dark:text-rose-400",
+  configuravel: "border-amber-500 text-amber-700 dark:text-amber-400",
+};
 
 export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
-  const { justificativas, loading, podeGerenciar, salvar, salvando, remover } = usePontoJustificativas();
+  const { justificativas, loading, podeGerenciar, salvar, salvando, remover, restaurarPadroes, restaurando } = usePontoJustificativas();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -35,6 +43,9 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
       requer_anexo: j.requer_anexo,
       ativo: j.ativo,
       ordem: j.ordem,
+      tipo_abono: j.tipo_abono || "nao",
+      codigo: j.codigo,
+      sistema: j.sistema,
     });
   };
 
@@ -44,10 +55,14 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
     reset();
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (j: PontoJustificativa) => {
+    if (j.sistema) {
+      alert("Esta é uma justificativa padrão do sistema e não pode ser excluída. Você pode inativá-la ou ajustar o abono.");
+      return;
+    }
     if (!confirm("Remover esta justificativa?")) return;
-    await remover(id);
-    if (editId === id) reset();
+    await remover(j.id);
+    if (editId === j.id) reset();
   };
 
   return (
@@ -58,9 +73,17 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
             <Clock className="w-5 h-5" /> Justificativas de Ponto
           </DialogTitle>
           <DialogDescription>
-            Cadastre os motivos que o colaborador pode escolher ao pedir ajuste de ponto. As horas de abono são informadas pelo próprio colaborador em cada dia, conforme o caso (atestado, feriado, etc.).
+            Cadastre os motivos que o gestor pode escolher ao ajustar o ponto. Cada justificativa tem uma regra de <strong>abono automático</strong> (Sim / Não / Configurável), aplicada na aprovação do ajuste — não é mais preciso informar horas de abono manualmente.
           </DialogDescription>
         </DialogHeader>
+
+        {podeGerenciar && (
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => restaurarPadroes()} disabled={restaurando}>
+              <RotateCcw className="w-3.5 h-3.5 mr-1" /> {restaurando ? "Restaurando…" : "Restaurar padrões"}
+            </Button>
+          </div>
+        )}
 
         {!podeGerenciar && (
           <div className="flex items-center gap-2 text-sm bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 rounded-md p-3">
@@ -83,7 +106,18 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-4 text-sm flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Abono automático</Label>
+                  <Select value={(form.tipo_abono as TipoAbono) || "nao"} onValueChange={(v) => setForm({ ...form, tipo_abono: v as TipoAbono })}>
+                    <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sim">Sim (abona)</SelectItem>
+                      <SelectItem value="nao">Não abona</SelectItem>
+                      <SelectItem value="configuravel">Configurável</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <label className="flex items-center gap-2">
                   <Switch checked={!!form.requer_anexo} onCheckedChange={(v) => setForm({ ...form, requer_anexo: v })} />
                   <span className="flex items-center gap-1"><Paperclip className="w-3 h-3" /> Exigir anexo</span>
@@ -115,7 +149,8 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
               <thead className="bg-muted/50 sticky top-0">
                 <tr className="text-left">
                   <th className="px-3 py-2 font-medium">Nome</th>
-                  <th className="px-3 py-2 font-medium w-32">Anexo</th>
+                  <th className="px-3 py-2 font-medium w-28">Abono</th>
+                  <th className="px-3 py-2 font-medium w-24">Anexo</th>
                   <th className="px-3 py-2 font-medium w-24">Status</th>
                   {podeGerenciar && <th className="px-3 py-2 w-24"></th>}
                 </tr>
@@ -124,8 +159,16 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
                 {justificativas.map((j) => (
                   <tr key={j.id} className={`border-t ${editId === j.id ? "bg-primary/5" : ""}`}>
                     <td className="px-3 py-2">
-                      <div className="font-medium">{j.nome}</div>
+                      <div className="font-medium flex items-center gap-1.5">
+                        {j.nome}
+                        {j.sistema && <Badge variant="secondary" className="text-[9px] px-1 py-0">padrão</Badge>}
+                      </div>
                       {j.descricao && <div className="text-xs text-muted-foreground">{j.descricao}</div>}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge variant="outline" className={`text-[10px] ${ABONO_BADGE[j.tipo_abono || "nao"]}`}>
+                        {ABONO_LABEL[j.tipo_abono || "nao"]}
+                      </Badge>
                     </td>
                     <td className="px-3 py-2 text-xs">{j.requer_anexo ? "Obrigatório" : "Opcional"}</td>
                     <td className="px-3 py-2">
@@ -136,7 +179,9 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
                     {podeGerenciar && (
                       <td className="px-3 py-2 text-right">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleEdit(j)}><Pencil className="w-3.5 h-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleRemove(j.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                        {!j.sistema && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleRemove(j)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                        )}
                       </td>
                     )}
                   </tr>

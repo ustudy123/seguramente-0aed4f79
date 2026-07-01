@@ -433,6 +433,9 @@ export function usePonto() {
       anexos,
       justificativaId,
       horasAbonadas,
+      diaInteiro,
+      observacao,
+      abonarSeAprovado,
     }: {
       colaboradorId: string;
       colaboradorNome: string;
@@ -446,6 +449,9 @@ export function usePonto() {
       anexos?: File[];
       justificativaId?: string;
       horasAbonadas?: number;
+      diaInteiro?: boolean;
+      observacao?: string;
+      abonarSeAprovado?: boolean;
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
@@ -491,6 +497,9 @@ export function usePonto() {
           anexos: anexosUploaded,
           justificativa_id: justificativaId || null,
           horas_abonadas: horasAbonadas ?? 0,
+          dia_inteiro: diaInteiro ?? false,
+          observacao: observacao || null,
+          abonar_se_aprovado: abonarSeAprovado ?? false,
           created_by: user.id,
           created_by_nome: profile?.nome_completo,
         } as any)
