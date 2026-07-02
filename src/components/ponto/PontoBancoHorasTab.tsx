@@ -754,31 +754,48 @@ export function PontoBancoHorasTab() {
                           <TableHead className="h-8">Entrada</TableHead>
                           <TableHead className="h-8">Saída</TableHead>
                           <TableHead className="h-8 text-right">Trabalhado</TableHead>
+                          <TableHead className="h-8 text-center">Tipo</TableHead>
+                          <TableHead className="h-8 text-right">Valor</TableHead>
                           <TableHead className="h-8 text-right">Saldo</TableHead>
                           <TableHead className="h-8 text-right">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {carregandoDias ? (
-                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Carregando dias…</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={8} className="text-center py-3 text-xs text-muted-foreground">Carregando dias…</TableCell></TableRow>
                         ) : diasBanco.length === 0 ? (
-                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Nenhum ponto registrado nesta competência.</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={8} className="text-center py-3 text-xs text-muted-foreground">Nenhum ponto registrado nesta competência.</TableCell></TableRow>
                         ) : diasBanco.map(d => {
                           const [y, m, dd] = d.data.split("-");
+                          const saldoDia = d.saldo_minutos || 0;
+                          const isCredito = saldoDia > 0;
+                          const isDebito = saldoDia < 0;
+                          const isNeutro = saldoDia === 0;
                           return (
                             <TableRow key={d.id}>
                               <TableCell className="py-1.5 text-xs">{dd}/{m}/{y}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono">{d.entrada?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono">{d.saida?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
-                              <TableCell className={`py-1.5 text-xs font-mono text-right ${(d.saldo_minutos || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(d.saldo_minutos || 0)}</TableCell>
+                              <TableCell className="py-1.5 text-center">
+                                {isNeutro ? (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">—</Badge>
+                                ) : isCredito ? (
+                                  <Badge className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Crédito</Badge>
+                                ) : (
+                                  <Badge className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 hover:bg-red-100 border-red-200">Débito</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className={`py-1.5 text-xs font-mono text-right ${isCredito ? "text-green-600" : isDebito ? "text-red-600" : "text-muted-foreground"}`}>
+                                {isNeutro ? "0h 0min" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
+                              </TableCell>
+                              <TableCell className={`py-1.5 text-xs font-mono text-right ${saldoDia >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(saldoDia)}</TableCell>
                               <TableCell className="py-1.5 text-right">
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   className="h-6 px-2 text-xs"
                                   onClick={() => {
-                                    // pré-preenche a movimentação para este dia e abre o dialog
                                     const saldo = d.saldo_minutos || 0;
                                     setSelectedBanco(bancos.find(b => b.id === editBanco.id) || null);
                                     setMovForm({
@@ -797,6 +814,7 @@ export function PontoBancoHorasTab() {
                             </TableRow>
                           );
                         })}
+
                       </TableBody>
                     </Table>
                   </div>
