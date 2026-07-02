@@ -192,8 +192,49 @@ const Ponto = () => {
     enabled: !!tenantIdAtivo,
   });
 
+  // Escala prevista do dia — blocos (hora_inicio/hora_fim) da escala ativa de
+  // cada colaborador, para sinalizar SAÍDA ANTECIPADA por período no espelho
+  // (ex.: previsto 07:52–12:00, saiu 11:03 → selo "Saída antec. 57min").
+  const { data: escalaDia } = useQuery({
+    queryKey: ["ponto-escala-dia", tenantIdAtivo, dataSelStr],
+    queryFn: async () => {
+      if (!tenantIdAtivo) return { atribuicoes: [] as any[], periodos: [] as any[] };
+      const { data: atribuicoes, error: e1 } = await fromTable("ponto_escala_atribuicoes")
+        .select("escala_id, colaborador_cpf, data_inicio, ativa")
+        .eq("tenant_id", tenantIdAtivo)
+        .lte("data_inicio", dataSelStr)
+        .or(`data_fim.is.null,data_fim.gte.${dataSelStr}`) as { data: any[] | null; error: Error | null };
+      if (e1) throw e1;
+      const ativas = (atribuicoes || []).filter((a: any) => a.ativa !== false);
+      const escalaIds = [...new Set(ativas.map((a: any) => a.escala_id).filter(Boolean))];
+      if (escalaIds.length === 0) return { atribuicoes: ativas, periodos: [] as any[] };
+      const DIAS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+      const [y, mo, d] = dataSelStr.split("-").map(Number);
+      const diaSemana = DIAS[new Date(y, (mo || 1) - 1, d || 1).getDay()];
+      const { data: periodos, error: e2 } = await fromTable("ponto_escala_periodos")
+        .select("escala_id, ordem_bloco, hora_inicio, hora_fim")
+        .eq("tenant_id", tenantIdAtivo)
+        .eq("dia_semana", diaSemana)
+        .in("escala_id", escalaIds) as { data: any[] | null; error: Error | null };
+      if (e2) throw e2;
+      return { atribuicoes: ativas, periodos: periodos || [] };
+    },
+    enabled: !!tenantIdAtivo,
+  });
+
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
+  /** 'HH:MM[:SS]' → minutos desde 00:00. */
+  const hmToMin = (s: string | null | undefined) => {
+    const [h, m] = String(s || "").slice(0, 5).split(":").map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  // Justificativas de AUSÊNCIA/ABONO viram o selo do período (com o próprio
+  // motivo). Justificativas de mera correção (esqueci de registrar, erro no
+  // sistema, falha no equipamento...) NÃO casam e o período segue "Regular".
+  const AUSENCIA_RE = /atestado|falta\s+(justificada|n[ãa]o\s+justificada)|licen[çc]a|feriado|folga|home\s*office|afastament/i;
+  /** Tolerância (min) antes de sinalizar saída antecipada no período. */
+  const TOLERANCIA_SAIDA_MIN = 5;
 
   // CPF (dígitos) → data_desligamento (ou null quando não informada).
   const desligadosPorCpf = useMemo(() => {
@@ -255,6 +296,30 @@ const Ponto = () => {
     }
     return map;
   }, [atestadosDoDia]);
+
+  // Blocos previstos da escala (em minutos) por CPF — a atribuição mais
+  // recente do colaborador vence; blocos ordenados por ordem_bloco.
+  const blocosPrevistosPorCpf = useMemo(() => {
+    const map = new Map<string, Array<{ ini: number; fim: number; ordem: number }>>();
+    const atribs = (escalaDia?.atribuicoes || []) as any[];
+    const periodos = (escalaDia?.periodos || []) as any[];
+    if (!atribs.length || !periodos.length) return map;
+    const blocosPorEscala = new Map<string, Array<{ ini: number; fim: number; ordem: number }>>();
+    for (const p of periodos) {
+      const k = String(p.escala_id);
+      if (!blocosPorEscala.has(k)) blocosPorEscala.set(k, []);
+      blocosPorEscala.get(k)!.push({ ini: hmToMin(p.hora_inicio), fim: hmToMin(p.hora_fim), ordem: p.ordem_bloco ?? 0 });
+    }
+    for (const arr of blocosPorEscala.values()) arr.sort((a, b) => a.ordem - b.ordem);
+    const ordenadas = [...atribs].sort((a, b) => String(b.data_inicio || "").localeCompare(String(a.data_inicio || "")));
+    for (const a of ordenadas) {
+      const cpf = onlyDigits(a.colaborador_cpf);
+      if (!cpf || map.has(cpf)) continue;
+      const blocos = blocosPorEscala.get(String(a.escala_id));
+      if (blocos?.length) map.set(cpf, blocos);
+    }
+    return map;
+  }, [escalaDia]);
   
   // Determine which markings the selected collaborator already has today
   const marcacoesColaboradorHoje = marcacoesHoje.filter(
@@ -862,12 +927,37 @@ const Ponto = () => {
                                 // Motivo do período: justificativa do ajuste aprovado
                                 // que criou qualquer marcação do par.
                                 const motivoPar = linha.map((m) => motivoDaMarcacao(cpfKey, m)).find(Boolean);
-                                const ehAtestadoPar = /atestado/i.test(motivoPar || "");
-                                const parStatus = ehAtestadoPar
-                                  ? { label: "Atestado", color: "bg-violet-100 text-violet-800" }
+                                // Justificativa de AUSÊNCIA/ABONO (falta justificada,
+                                // atestado, licença, folga...) vira o selo do período,
+                                // exibindo o próprio motivo escolhido no ajuste.
+                                const ehAusenciaPar = AUSENCIA_RE.test(motivoPar || "");
+                                const parStatus = ehAusenciaPar
+                                  ? { label: motivoPar as string, color: "bg-violet-100 text-violet-800" }
                                   : !parCompleto
                                     ? { label: "Incompleto", color: "bg-orange-100 text-orange-800" }
                                     : STATUS_PONTO_CONFIG.regular;
+                                // Saída antecipada: compara a saída real do par com o fim
+                                // do bloco previsto na escala (o de maior sobreposição).
+                                let saidaAntecipada: string | null = null;
+                                if (parCompleto && !ehAusenciaPar) {
+                                  const blocos = blocosPrevistosPorCpf.get(cpfKey);
+                                  if (blocos?.length) {
+                                    const pIni = hmToMin(linha[0].hora);
+                                    const pFim = hmToMin(linha[1].hora);
+                                    let melhor: { fim: number } | null = null;
+                                    let melhorOv = 0;
+                                    for (const b of blocos) {
+                                      const ov = Math.min(b.fim, pFim) - Math.max(b.ini, pIni);
+                                      if (ov > melhorOv) { melhorOv = ov; melhor = b; }
+                                    }
+                                    const dif = melhor ? melhor.fim - pFim : 0;
+                                    if (melhor && dif > TOLERANCIA_SAIDA_MIN) {
+                                      saidaAntecipada = dif >= 60
+                                        ? `${Math.floor(dif / 60)}h${String(dif % 60).padStart(2, "0")}`
+                                        : `${dif}min`;
+                                    }
+                                  }
+                                }
                                 return (
                                   <div key={li} className={gridCols}>
                                     <div className="grid grid-cols-2 gap-1.5">
@@ -896,8 +986,16 @@ const Ponto = () => {
                                       </Badge>
                                     </div>
                                     <div className="text-center font-medium font-mono text-sm">{parLabel}</div>
-                                    <div className="text-center">
-                                      <Badge className={cn("text-xs", parStatus.color)} title={motivoPar || undefined}>{parStatus.label}</Badge>
+                                    <div className="text-center flex flex-col items-center gap-0.5">
+                                      <Badge className={cn("text-xs max-w-full truncate", parStatus.color)} title={motivoPar || undefined}>{parStatus.label}</Badge>
+                                      {saidaAntecipada && (
+                                        <span
+                                          className="inline-flex items-center rounded bg-amber-100 text-amber-800 px-1.5 py-0.5 text-[10px] font-semibold"
+                                          title={`Saída antes do horário previsto na escala (${saidaAntecipada} antes)`}
+                                        >
+                                          Saída antec. {saidaAntecipada}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 );
