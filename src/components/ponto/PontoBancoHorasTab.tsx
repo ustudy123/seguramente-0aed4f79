@@ -237,6 +237,11 @@ export function PontoBancoHorasTab() {
         let saldoDia = (extras || faltantes)
           ? (extras - faltantes)
           : (esperado > 0 ? trab - esperado : 0);
+        // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui
+        const tipoDia = String(d.tipo_dia || "").toLowerCase();
+        if (["atestado", "ferias", "afastamento", "feriado"].includes(tipoDia)) {
+          saldoDia = 0;
+        }
         // Aplica tolerância diária: dentro da tolerância = 0
         if (tol > 0 && Math.abs(saldoDia) <= tol) saldoDia = 0;
         return {
@@ -246,14 +251,16 @@ export function PontoBancoHorasTab() {
           saida: d.saida,
           status: d.status,
           observacao: d.observacao,
+          tipo_dia: tipoDia,
           horas_trabalhadas_minutos: trab,
           jornada_esperada_minutos: esperado,
           saldo_minutos: saldoDia,
         };
       }) as Array<{
         id: string; data: string; horas_trabalhadas_minutos: number; jornada_esperada_minutos: number; saldo_minutos: number;
-        entrada: string | null; saida: string | null; status: string | null; observacao: string | null;
+        entrada: string | null; saida: string | null; status: string | null; observacao: string | null; tipo_dia: string;
       }>;
+
     },
   });
 
