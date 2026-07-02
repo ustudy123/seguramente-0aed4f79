@@ -994,20 +994,7 @@ const Ponto = () => {
                                   </div>
                                 );
                               })}
-                              {/* Rodapé: apenas o selo do dia quando não há atestado (evita duplicidade) */}
-                              {!atestadoInfo && (
-                                <div className={cn(gridCols, "border-t pt-1.5 mt-0.5")}>
-                                  <span className="text-[11px] text-muted-foreground font-medium">Total do dia</span>
-                                  <div className="text-center">
-                                    <Badge variant="outline" className="font-mono text-[11px]">
-                                      {marcs.length}
-                                      {marcs.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
-                                    </Badge>
-                                  </div>
-                                  <div className="text-center font-medium font-mono text-sm">{totalLabel}</div>
-                                  <div className="text-center">{statusDia}</div>
-                                </div>
-                              )}
+                              {/* Apenas linhas de cada período — sem rodapé de total do dia */}
                             </div>
                           </TableCell>
                         );
