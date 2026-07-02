@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { GuiaRapidoPonto } from "@/components/ponto/GuiaRapidoPonto";
 import { AnexosAjusteModal } from "@/components/ponto/AnexosAjusteModal";
-import { LancarFolgaCompensadaModal } from "@/components/ponto/LancarFolgaCompensadaModal";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -92,7 +92,6 @@ const Ponto = () => {
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
   const [showGuia, setShowGuia] = useState(false);
   const [showAjusteModal, setShowAjusteModal] = useState(false);
-  const [folgaTarget, setFolgaTarget] = useState<{ id: string; nome: string; cpf: string } | null>(null);
   const [anexosModalAjuste, setAnexosModalAjuste] = useState<PontoAjuste | null>(null);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida">("entrada");
@@ -824,7 +823,7 @@ const Ponto = () => {
                         </div>
                       </TableCell>
                       {(() => {
-                        // Selo do DIA (clicável, abre o modal de ajuste) + Folga comp.
+                        // Selo do DIA (clicável, abre o modal de ajuste)
                         const statusDia = (
                           <div className="flex flex-col items-center gap-1">
                             <button
@@ -841,19 +840,6 @@ const Ponto = () => {
                             >
                               <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={badgeTooltip}>{badge.label}</Badge>
                             </button>
-                            {podeEditarMarcacao && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
-                                  setFolgaTarget({ id: colab?.id || "", nome: ponto.colaborador_nome, cpf: ponto.colaborador_cpf || "" });
-                                }}
-                                title="Lançar folga compensada no banco de horas"
-                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
-                              >
-                                <Wallet className="w-3 h-3" /> Folga comp.
-                              </button>
-                            )}
                           </div>
                         );
 
@@ -1000,7 +986,7 @@ const Ponto = () => {
                                   </div>
                                 );
                               })}
-                              {/* Rodapé: consolidado do dia + selo do dia (clicável) + Folga comp. */}
+                              {/* Rodapé: consolidado do dia + selo do dia (clicável) */}
                               <div className={cn(gridCols, "border-t pt-1.5 mt-0.5")}>
                                 <span className="text-[11px] text-muted-foreground font-medium">Total do dia</span>
                                 <div className="text-center">
@@ -1222,12 +1208,6 @@ const Ponto = () => {
 
       <GuiaRapidoPonto open={showGuia} onOpenChange={setShowGuia} />
       <AnexosAjusteModal ajuste={anexosModalAjuste} onOpenChange={(o) => !o && setAnexosModalAjuste(null)} />
-      <LancarFolgaCompensadaModal
-        open={!!folgaTarget}
-        onOpenChange={(o) => !o && setFolgaTarget(null)}
-        colaborador={folgaTarget}
-        dataInicial={format(selectedDate, "yyyy-MM-dd")}
-      />
     </div>
   );
 };
