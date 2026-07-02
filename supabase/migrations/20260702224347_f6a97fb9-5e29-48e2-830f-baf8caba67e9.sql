@@ -1,0 +1,2 @@
+ALTER TABLE public.ponto_audit_log DROP CONSTRAINT ponto_audit_log_acao_check;
+ALTER TABLE public.ponto_audit_log ADD CONSTRAINT ponto_audit_log_acao_check CHECK (acao = ANY (ARRAY['INSERT'::text,'UPDATE'::text,'DELETE'::text,'AJUSTE'::text,'APROVACAO'::text,'REJEICAO'::text,'TENTATIVA_DELETE'::text,'EXCLUSAO_AJUSTE'::text]));
