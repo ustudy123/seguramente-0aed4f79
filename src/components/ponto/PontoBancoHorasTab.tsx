@@ -295,10 +295,20 @@ export function PontoBancoHorasTab() {
                       </Button>
                       <Button size="icon" variant="ghost" title="Editar banco" onClick={e => {
                         e.stopPropagation();
+                        const sa = b.saldo_anterior_minutos || 0;
+                        const abs = Math.abs(sa);
                         setEditBanco({
                           id: b.id,
+                          colaborador_nome: b.colaborador_nome,
                           tipo: b.tipo,
-                          saldo_anterior_minutos: b.saldo_anterior_minutos || 0,
+                          competencia: b.competencia || competencia,
+                          saldo_anterior_minutos: sa,
+                          saldo_anterior_horas: Math.floor(abs / 60),
+                          saldo_anterior_mins: abs % 60,
+                          saldo_anterior_negativo: sa < 0,
+                          creditos_minutos: b.creditos_minutos || 0,
+                          debitos_minutos: b.debitos_minutos || 0,
+                          compensados_minutos: b.compensados_minutos || 0,
                           prazo_compensacao: (b as any).prazo_compensacao || "",
                           observacoes: (b as any).observacoes || "",
                         });
