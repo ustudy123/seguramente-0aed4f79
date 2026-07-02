@@ -118,24 +118,52 @@ export function PontoBancoHorasTab() {
     ? { ini: `${editComp}-01`, fim: `${editComp}-31` }
     : null;
   const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
-    queryKey: ["banco-horas-dias", editBanco?.colaborador_id, editComp],
+    queryKey: ["banco-horas-dias", editBanco?.colaborador_cpf, editComp],
     enabled: !!editBanco && !!editIniFim,
     queryFn: async () => {
       if (!editBanco || !editIniFim) return [];
-      const { data, error } = await (supabase as any)
+      const cpfDigits = (editBanco.colaborador_cpf || "").replace(/\D/g, "");
+      let query = (supabase as any)
         .from("ponto_diario")
-        .select("id, data, horas_trabalhadas_minutos, saldo_minutos, entrada, saida, status, observacao")
-        .eq("colaborador_id", editBanco.colaborador_id)
+        .select("id, data, horas_trabalhadas, horas_extras, horas_faltantes, entrada, saida, status, observacao, colaborador_cpf, colaborador_id")
         .gte("data", editIniFim.ini)
         .lte("data", editIniFim.fim)
         .order("data", { ascending: true });
+      if (cpfDigits) {
+        query = query.eq("colaborador_cpf", cpfDigits);
+      } else {
+        query = query.eq("colaborador_id", editBanco.colaborador_id);
+      }
+      const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as Array<{
-        id: string; data: string; horas_trabalhadas_minutos: number | null; saldo_minutos: number | null;
+      const intervalToMin = (v: any): number => {
+        if (!v) return 0;
+        if (typeof v === "number") return Math.round(v);
+        if (typeof v === "object" && v !== null) {
+          const h = v.hours || 0, m = v.minutes || 0, s = v.seconds || 0;
+          return h * 60 + m + Math.round(s / 60);
+        }
+        const s = String(v);
+        const parts = s.split(":");
+        if (parts.length >= 2) return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+        return 0;
+      };
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        data: d.data,
+        entrada: d.entrada,
+        saida: d.saida,
+        status: d.status,
+        observacao: d.observacao,
+        horas_trabalhadas_minutos: intervalToMin(d.horas_trabalhadas),
+        saldo_minutos: intervalToMin(d.horas_extras) - intervalToMin(d.horas_faltantes),
+      })) as Array<{
+        id: string; data: string; horas_trabalhadas_minutos: number; saldo_minutos: number;
         entrada: string | null; saida: string | null; status: string | null; observacao: string | null;
       }>;
     },
   });
+
 
   const totalCreditos = bancos.reduce((s, b) => s + b.creditos_minutos, 0);
   const totalDebitos = bancos.reduce((s, b) => s + b.debitos_minutos, 0);
