@@ -28,6 +28,9 @@ export function PontoBancoHorasTab() {
     excluirMovimentacao,
     criarBancoHoras,
     criandoBancoHoras,
+    editarBancoHoras,
+    editandoBancoHoras,
+    excluirBancoHoras,
     apurarBancoHoras,
     apurandoBancoHoras,
   } = usePontoBancoHoras();
@@ -46,6 +49,7 @@ export function PontoBancoHorasTab() {
   const [criarForm, setCriarForm] = useState({ colaborador_id: "", tipo: "mensal" });
   const [movForm, setMovForm] = useState({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
   const [editMov, setEditMov] = useState<null | { id: string; tipo: string; minutos: number; data_referencia: string; descricao: string }>(null);
+  const [editBanco, setEditBanco] = useState<null | { id: string; tipo: string; saldo_anterior_minutos: number; prazo_compensacao: string; observacoes: string }>(null);
 
   const formatMinutos = (min: number) => {
     const sinal = min < 0 ? "-" : "";
