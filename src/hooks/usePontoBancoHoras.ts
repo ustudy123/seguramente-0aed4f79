@@ -291,6 +291,10 @@ export function usePontoBancoHoras() {
     excluindoMovimentacao: excluirMovimentacaoMutation.isPending,
     criarBancoHoras: criarBancoHorasMutation.mutateAsync,
     criandoBancoHoras: criarBancoHorasMutation.isPending,
+    editarBancoHoras: editarBancoHorasMutation.mutateAsync,
+    editandoBancoHoras: editarBancoHorasMutation.isPending,
+    excluirBancoHoras: excluirBancoHorasMutation.mutateAsync,
+    excluindoBancoHoras: excluirBancoHorasMutation.isPending,
     apurarBancoHoras: apurarBancoHorasMutation.mutateAsync,
     apurandoBancoHoras: apurarBancoHorasMutation.isPending,
   };
