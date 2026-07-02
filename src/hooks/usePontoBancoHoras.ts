@@ -204,6 +204,55 @@ export function usePontoBancoHoras() {
     onError: handleMutationError,
   });
 
+  const editarBancoHorasMutation = useMutation({
+    mutationFn: async ({
+      id,
+      tipo,
+      saldo_anterior_minutos,
+      prazo_compensacao,
+      observacoes,
+    }: {
+      id: string;
+      tipo?: string;
+      saldo_anterior_minutos?: number;
+      prazo_compensacao?: string | null;
+      observacoes?: string | null;
+    }) => {
+      const { data: bh } = await fromTable("ponto_banco_horas")
+        .select("saldo_anterior_minutos, creditos_minutos, debitos_minutos, compensados_minutos")
+        .eq("id", id)
+        .single() as { data: any };
+      const novoSaldoAnterior = saldo_anterior_minutos ?? bh?.saldo_anterior_minutos ?? 0;
+      const saldoAtual = novoSaldoAnterior + (bh?.creditos_minutos || 0) - (bh?.debitos_minutos || 0) - (bh?.compensados_minutos || 0);
+      const payload: any = { saldo_atual_minutos: saldoAtual };
+      if (tipo !== undefined) payload.tipo = tipo;
+      if (saldo_anterior_minutos !== undefined) payload.saldo_anterior_minutos = saldo_anterior_minutos;
+      if (prazo_compensacao !== undefined) payload.prazo_compensacao = prazo_compensacao;
+      if (observacoes !== undefined) payload.observacoes = observacoes;
+      const { error } = await fromTable("ponto_banco_horas").update(payload).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      toast.success("Banco de horas atualizado!");
+    },
+    onError: handleMutationError,
+  });
+
+  const excluirBancoHorasMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await fromTable("ponto_banco_horas_movimentacoes").delete().eq("banco_horas_id", id);
+      const { error } = await fromTable("ponto_banco_horas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      toast.success("Banco de horas excluído!");
+    },
+    onError: handleMutationError,
+  });
+
   // Apuração automática (on-demand): calcula créditos/débitos a partir do
   // ponto_diario (horas trabalhadas x jornada da escala) e grava no banco de
   // horas da competência, preservando lançamentos manuais.
