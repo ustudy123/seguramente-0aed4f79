@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
