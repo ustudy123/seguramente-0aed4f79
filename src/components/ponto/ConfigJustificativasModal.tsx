@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Save, X, Pencil, Clock, Paperclip, ShieldAlert } from "lucide-react";
 import { usePontoJustificativas, type PontoJustificativa, type TipoAbono } from "@/hooks/usePontoJustificativas";
+import { confirm } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -56,10 +58,17 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
 
   const handleRemove = async (j: PontoJustificativa) => {
     if (j.sistema) {
-      alert("Esta é uma justificativa padrão do sistema e não pode ser excluída. Você pode inativá-la ou ajustar o abono.");
+      toast.warning("Esta é uma justificativa padrão do sistema e não pode ser excluída. Você pode inativá-la ou ajustar o abono.");
       return;
     }
-    if (!confirm("Remover esta justificativa?")) return;
+    const ok = await confirm({
+      title: "Remover justificativa",
+      description: `Tem certeza que deseja remover "${j.nome}"? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Remover",
+      cancelLabel: "Cancelar",
+      variant: "destructive",
+    });
+    if (!ok) return;
     await remover(j.id);
     if (editId === j.id) reset();
   };
