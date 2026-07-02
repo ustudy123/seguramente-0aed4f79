@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Save, X, Pencil, Clock, Paperclip, ShieldAlert } from "lucide-react";
 import { usePontoJustificativas, type PontoJustificativa, type TipoAbono } from "@/hooks/usePontoJustificativas";
+import { confirm } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
