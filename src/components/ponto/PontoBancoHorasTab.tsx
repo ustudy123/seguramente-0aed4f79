@@ -541,6 +541,77 @@ export function PontoBancoHorasTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Dialog Editar Banco de Horas */}
+      <Dialog open={!!editBanco} onOpenChange={(o) => { if (!o) setEditBanco(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Banco de Horas</DialogTitle>
+            <DialogDescription>
+              Ajuste o tipo, saldo anterior e demais dados. O saldo atual será recalculado automaticamente
+              (saldo anterior + créditos − débitos − compensados).
+            </DialogDescription>
+          </DialogHeader>
+          {editBanco && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={editBanco.tipo} onValueChange={v => setEditBanco({ ...editBanco, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mensal">Mensal</SelectItem>
+                    <SelectItem value="semestral">Semestral</SelectItem>
+                    <SelectItem value="anual">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Saldo Anterior (minutos)</Label>
+                  <Input
+                    type="number"
+                    value={editBanco.saldo_anterior_minutos}
+                    onChange={e => setEditBanco({ ...editBanco, saldo_anterior_minutos: parseInt(e.target.value || "0", 10) })}
+                  />
+                  <p className="text-xs text-muted-foreground">Use valores negativos para saldo devedor.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Prazo de Compensação</Label>
+                  <Input
+                    type="date"
+                    value={editBanco.prazo_compensacao}
+                    onChange={e => setEditBanco({ ...editBanco, prazo_compensacao: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Input
+                  value={editBanco.observacoes}
+                  onChange={e => setEditBanco({ ...editBanco, observacoes: e.target.value })}
+                  placeholder="Opcional"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditBanco(null)}>Cancelar</Button>
+            <Button
+              disabled={editandoBancoHoras || !editBanco}
+              onClick={async () => {
+                if (!editBanco) return;
+                await editarBancoHoras({
+                  id: editBanco.id,
+                  tipo: editBanco.tipo,
+                  saldo_anterior_minutos: editBanco.saldo_anterior_minutos,
+                  prazo_compensacao: editBanco.prazo_compensacao || null,
+                  observacoes: editBanco.observacoes || null,
+                });
+                setEditBanco(null);
+              }}
+            >{editandoBancoHoras ? "Salvando..." : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
