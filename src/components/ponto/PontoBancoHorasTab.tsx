@@ -38,6 +38,7 @@ export function PontoBancoHorasTab() {
     apurandoBancoHoras,
   } = usePontoBancoHoras();
   const { colaboradores } = useColaboradores();
+  const { tenantId } = useAuth();
 
   const { data: bancos = [], isLoading } = useBancoHorasPorCompetencia(competencia);
   const [selectedBanco, setSelectedBanco] = useState<BancoHoras | null>(null);
