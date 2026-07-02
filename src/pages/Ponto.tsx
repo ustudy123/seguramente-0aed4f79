@@ -994,7 +994,15 @@ const Ponto = () => {
                                   </div>
                                 );
                               })}
-                              {/* Apenas linhas de cada período — sem rodapé de total do dia */}
+                              {/* Rodapé de total do dia */}
+                              <div className={cn(gridCols, "pt-1 mt-1 border-t border-border")}>
+                                <div className="text-xs font-medium text-muted-foreground">Total do dia</div>
+                                <div className="text-center">
+                                  <Badge variant="outline" className="font-mono text-[11px]">{marcs.length}</Badge>
+                                </div>
+                                <div className="text-center font-medium font-mono text-sm">{totalLabel}</div>
+                                <div className="text-center" />
+                              </div>
                             </div>
                           </TableCell>
                         );
