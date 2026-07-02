@@ -133,7 +133,7 @@ export function PontoBancoHorasTab() {
       const cpfDigits = (editBanco.colaborador_cpf || "").replace(/\D/g, "");
       let query = (supabase as any)
         .from("ponto_diario")
-        .select("id, data, horas_trabalhadas, horas_extras, horas_faltantes, entrada, saida, status, observacao, colaborador_cpf, colaborador_id")
+        .select("id, data, horas_trabalhadas, horas_extras, horas_faltantes, entrada, saida, status, observacao, colaborador_cpf, colaborador_id, tipo_dia")
         .gte("data", editIniFim.ini)
         .lte("data", editIniFim.fim)
         .order("data", { ascending: true });
