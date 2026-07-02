@@ -235,7 +235,7 @@ export function PontoBancoHorasTab() {
           .select("data_inicio_afastamento, data_fim_afastamento")
           .eq("tenant_id", tenantId)
           .lte("data_inicio_afastamento", editIniFim.fim)
-          .gte("data_fim_afastamento", editIniFim.ini);
+          .or(`data_fim_afastamento.gte.${editIniFim.ini},data_fim_afastamento.is.null`);
 
         if (cpfDigits) atestadosQuery = atestadosQuery.eq("colaborador_cpf", cpfDigits);
         else atestadosQuery = atestadosQuery.eq("colaborador_id", editBanco.colaborador_id);
