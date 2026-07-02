@@ -228,6 +228,28 @@ export function PontoBancoHorasTab() {
         })
       );
 
+      const atestadoDatas = new Set<string>();
+      try {
+        let atestadosQuery = (supabase as any)
+          .from("atestados")
+          .select("data_inicio_afastamento, data_fim_afastamento")
+          .eq("tenant_id", tenantId)
+          .lte("data_inicio_afastamento", editIniFim.fim)
+          .or(`data_fim_afastamento.gte.${editIniFim.ini},data_fim_afastamento.is.null`);
+
+        if (cpfDigits) atestadosQuery = atestadosQuery.eq("colaborador_cpf", cpfDigits);
+        else atestadosQuery = atestadosQuery.eq("colaborador_id", editBanco.colaborador_id);
+
+        const { data: atestados } = await atestadosQuery;
+        for (const atestado of atestados || []) {
+          const inicio = String(atestado.data_inicio_afastamento || "");
+          const fim = String(atestado.data_fim_afastamento || inicio);
+          for (const row of rows) {
+            if (row.data >= inicio && row.data <= fim) atestadoDatas.add(row.data);
+          }
+        }
+      } catch { /* ignore */ }
+
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
         const esperado = jornadasETol[idx]?.jornada || 0;
@@ -237,9 +259,15 @@ export function PontoBancoHorasTab() {
         let saldoDia = (extras || faltantes)
           ? (extras - faltantes)
           : (esperado > 0 ? trab - esperado : 0);
-        // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui
-        const tipoDia = String(d.tipo_dia || "").toLowerCase();
-        if (["atestado", "ferias", "afastamento", "feriado"].includes(tipoDia)) {
+        // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui.
+        // Alguns registros antigos ficaram como tipo_dia="normal"; por isso a tela
+        // também cruza com a tabela de atestados e com a observação do dia.
+        const tipoDia = String(d.tipo_dia || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const observacaoDia = String(d.observacao || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const diaProtegido = ["atestado", "ferias", "afastamento", "feriado"].some(tipo => tipoDia.includes(tipo))
+          || observacaoDia.includes("atestado")
+          || atestadoDatas.has(d.data);
+        if (diaProtegido) {
           saldoDia = 0;
         }
         // Aplica tolerância diária: dentro da tolerância = 0
