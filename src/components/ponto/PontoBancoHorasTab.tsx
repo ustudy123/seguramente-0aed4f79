@@ -126,7 +126,7 @@ export function PontoBancoHorasTab() {
     return { ini: `${editComp}-01`, fim: `${editComp}-${dd}` };
   })();
   const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
-    queryKey: ["banco-horas-dias", editBanco?.colaborador_cpf, editComp],
+    queryKey: ["banco-horas-dias", editBanco?.colaborador_cpf, editComp, tenantId],
     enabled: !!editBanco && !!editIniFim,
     queryFn: async () => {
       if (!editBanco || !editIniFim) return [];
@@ -156,17 +156,48 @@ export function PontoBancoHorasTab() {
         if (parts.length >= 2) return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
         return 0;
       };
-      return (data || []).map((d: any) => ({
-        id: d.id,
-        data: d.data,
-        entrada: d.entrada,
-        saida: d.saida,
-        status: d.status,
-        observacao: d.observacao,
-        horas_trabalhadas_minutos: intervalToMin(d.horas_trabalhadas),
-        saldo_minutos: intervalToMin(d.horas_extras) - intervalToMin(d.horas_faltantes),
-      })) as Array<{
-        id: string; data: string; horas_trabalhadas_minutos: number; saldo_minutos: number;
+
+      // Busca a jornada esperada por dia via RPC (respeita escala + compensações mensais)
+      const rows = data || [];
+      const jornadas = await Promise.all(
+        rows.map(async (d: any) => {
+          if (!tenantId) return 0;
+          try {
+            const { data: j } = await (supabase.rpc as any)("ponto_jornada_do_dia", {
+              p_tenant_id: tenantId,
+              p_cpf: d.colaborador_cpf || cpfDigits || null,
+              p_colaborador_id: d.colaborador_id ? String(d.colaborador_id) : null,
+              p_data: d.data,
+            });
+            return typeof j === "number" ? j : Number(j) || 0;
+          } catch {
+            return 0;
+          }
+        })
+      );
+
+      return rows.map((d: any, idx: number) => {
+        const trab = intervalToMin(d.horas_trabalhadas);
+        const esperado = jornadas[idx] || 0;
+        // Se o campo horas_extras/horas_faltantes já veio preenchido, usa como fonte primária.
+        const extras = intervalToMin(d.horas_extras);
+        const faltantes = intervalToMin(d.horas_faltantes);
+        const saldoDia = (extras || faltantes)
+          ? (extras - faltantes)
+          : (esperado > 0 ? trab - esperado : 0);
+        return {
+          id: d.id,
+          data: d.data,
+          entrada: d.entrada,
+          saida: d.saida,
+          status: d.status,
+          observacao: d.observacao,
+          horas_trabalhadas_minutos: trab,
+          jornada_esperada_minutos: esperado,
+          saldo_minutos: saldoDia,
+        };
+      }) as Array<{
+        id: string; data: string; horas_trabalhadas_minutos: number; jornada_esperada_minutos: number; saldo_minutos: number;
         entrada: string | null; saida: string | null; status: string | null; observacao: string | null;
       }>;
     },
