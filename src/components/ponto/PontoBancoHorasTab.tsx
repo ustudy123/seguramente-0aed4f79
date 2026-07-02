@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { format } from "date-fns";
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2 } from "lucide-react";
+import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
