@@ -697,6 +697,70 @@ export function PontoBancoHorasTab() {
                   />
                 </div>
 
+                {/* Lista de dias com ponto na competência */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" /> Dias com ponto na competência
+                  </Label>
+                  <div className="rounded-md border max-h-64 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background">
+                        <TableRow>
+                          <TableHead className="h-8">Data</TableHead>
+                          <TableHead className="h-8">Entrada</TableHead>
+                          <TableHead className="h-8">Saída</TableHead>
+                          <TableHead className="h-8 text-right">Trabalhado</TableHead>
+                          <TableHead className="h-8 text-right">Saldo</TableHead>
+                          <TableHead className="h-8 text-right">Ação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {carregandoDias ? (
+                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Carregando dias…</TableCell></TableRow>
+                        ) : diasBanco.length === 0 ? (
+                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Nenhum ponto registrado nesta competência.</TableCell></TableRow>
+                        ) : diasBanco.map(d => {
+                          const [y, m, dd] = d.data.split("-");
+                          return (
+                            <TableRow key={d.id}>
+                              <TableCell className="py-1.5 text-xs">{dd}/{m}/{y}</TableCell>
+                              <TableCell className="py-1.5 text-xs font-mono">{d.entrada?.slice(0, 5) || "-"}</TableCell>
+                              <TableCell className="py-1.5 text-xs font-mono">{d.saida?.slice(0, 5) || "-"}</TableCell>
+                              <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
+                              <TableCell className={`py-1.5 text-xs font-mono text-right ${(d.saldo_minutos || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(d.saldo_minutos || 0)}</TableCell>
+                              <TableCell className="py-1.5 text-right">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => {
+                                    // pré-preenche a movimentação para este dia e abre o dialog
+                                    const saldo = d.saldo_minutos || 0;
+                                    setSelectedBanco(bancos.find(b => b.id === editBanco.id) || null);
+                                    setMovForm({
+                                      tipo: saldo >= 0 ? "credito" : "debito",
+                                      minutos: Math.abs(saldo) || 0,
+                                      data_referencia: d.data,
+                                      descricao: `Ajuste referente a ${dd}/${m}/${y}`,
+                                    });
+                                    setEditBanco(null);
+                                    setShowMovimentacao(true);
+                                  }}
+                                >
+                                  <Pencil className="w-3 h-3 mr-1" /> Ajustar dia
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Clique em "Ajustar dia" para lançar uma movimentação (crédito, débito ou compensação) referente àquele dia específico.
+                  </p>
+                </div>
+
                 <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-4 gap-3 text-center">
                   <div>
                     <p className="text-[11px] text-muted-foreground">Créditos</p>
