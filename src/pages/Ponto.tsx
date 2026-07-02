@@ -92,7 +92,6 @@ const Ponto = () => {
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
   const [showGuia, setShowGuia] = useState(false);
   const [showAjusteModal, setShowAjusteModal] = useState(false);
-  const [folgaTarget, setFolgaTarget] = useState<{ id: string; nome: string; cpf: string } | null>(null);
   const [anexosModalAjuste, setAnexosModalAjuste] = useState<PontoAjuste | null>(null);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida" | "batida">("entrada");
