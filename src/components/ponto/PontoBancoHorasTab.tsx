@@ -842,17 +842,15 @@ export function PontoBancoHorasTab() {
                           <TableHead className="h-8">Entrada</TableHead>
                           <TableHead className="h-8">Saída</TableHead>
                           <TableHead className="h-8 text-right">Trabalhado</TableHead>
-                          <TableHead className="h-8 text-center">Tipo</TableHead>
                           <TableHead className="h-8 text-right">Valor</TableHead>
-                          <TableHead className="h-8 text-right">Saldo</TableHead>
                           <TableHead className="h-8 text-right">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {carregandoDias ? (
-                          <TableRow><TableCell colSpan={8} className="text-center py-3 text-xs text-muted-foreground">Carregando dias…</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Carregando dias…</TableCell></TableRow>
                         ) : diasBanco.length === 0 ? (
-                          <TableRow><TableCell colSpan={8} className="text-center py-3 text-xs text-muted-foreground">Nenhum ponto registrado nesta competência.</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Nenhum ponto registrado nesta competência.</TableCell></TableRow>
                         ) : diasBanco.map(d => {
                           const [y, m, dd] = d.data.split("-");
                           const saldoDia = d.saldo_minutos || 0;
@@ -865,19 +863,10 @@ export function PontoBancoHorasTab() {
                               <TableCell className="py-1.5 text-xs font-mono">{d.entrada?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono">{d.saida?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
-                              <TableCell className="py-1.5 text-center">
-                                {isNeutro ? (
-                                  <span className="text-xs text-muted-foreground">—</span>
-                                ) : isCredito ? (
-                                  <span className="text-xs font-semibold uppercase text-green-600">CRÉDITO</span>
-                                ) : (
-                                  <span className="text-xs font-semibold uppercase text-red-600">DÉBITO</span>
-                                )}
+                              <TableCell className={`py-1.5 text-xs font-mono text-right font-semibold ${isCredito ? "text-green-600" : isDebito ? "text-red-600" : "text-muted-foreground"}`}>
+                                {isNeutro ? "—" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
                               </TableCell>
-                              <TableCell className={`py-1.5 text-xs font-mono text-right ${isCredito ? "text-green-600" : isDebito ? "text-red-600" : "text-muted-foreground"}`}>
-                                {isNeutro ? "0h 0min" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
-                              </TableCell>
-                              <TableCell className={`py-1.5 text-xs font-mono text-right ${saldoDia >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(saldoDia)}</TableCell>
+
                               <TableCell className="py-1.5 text-right">
                                 <Button
                                   size="sm"
