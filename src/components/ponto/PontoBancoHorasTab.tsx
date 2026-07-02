@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { format } from "date-fns";
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2 } from "lucide-react";
+import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -51,6 +53,7 @@ export function PontoBancoHorasTab() {
   const [editMov, setEditMov] = useState<null | { id: string; tipo: string; minutos: number; data_referencia: string; descricao: string }>(null);
   const [editBanco, setEditBanco] = useState<null | {
     id: string;
+    colaborador_id: string;
     colaborador_nome: string;
     tipo: string;
     competencia: string;
@@ -108,6 +111,31 @@ export function PontoBancoHorasTab() {
     setShowMovimentacao(false);
     setMovForm({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
   };
+
+  // Dias do colaborador em edição (ponto_diario da competência)
+  const editComp = editBanco?.competencia || "";
+  const editIniFim = editComp && /^\d{4}-\d{2}$/.test(editComp)
+    ? { ini: `${editComp}-01`, fim: `${editComp}-31` }
+    : null;
+  const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
+    queryKey: ["banco-horas-dias", editBanco?.colaborador_id, editComp],
+    enabled: !!editBanco && !!editIniFim,
+    queryFn: async () => {
+      if (!editBanco || !editIniFim) return [];
+      const { data, error } = await (supabase as any)
+        .from("ponto_diario")
+        .select("id, data, horas_trabalhadas_minutos, saldo_minutos, entrada, saida, status, observacao")
+        .eq("colaborador_id", editBanco.colaborador_id)
+        .gte("data", editIniFim.ini)
+        .lte("data", editIniFim.fim)
+        .order("data", { ascending: true });
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string; data: string; horas_trabalhadas_minutos: number | null; saldo_minutos: number | null;
+        entrada: string | null; saida: string | null; status: string | null; observacao: string | null;
+      }>;
+    },
+  });
 
   const totalCreditos = bancos.reduce((s, b) => s + b.creditos_minutos, 0);
   const totalDebitos = bancos.reduce((s, b) => s + b.debitos_minutos, 0);
@@ -299,6 +327,7 @@ export function PontoBancoHorasTab() {
                         const abs = Math.abs(sa);
                         setEditBanco({
                           id: b.id,
+                          colaborador_id: b.colaborador_id,
                           colaborador_nome: b.colaborador_nome,
                           tipo: b.tipo,
                           competencia: b.competencia || competencia,
@@ -567,7 +596,7 @@ export function PontoBancoHorasTab() {
       </Dialog>
       {/* Dialog Editar Banco de Horas */}
       <Dialog open={!!editBanco} onOpenChange={(o) => { if (!o) setEditBanco(null); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Editar Banco de Horas — {editBanco?.colaborador_nome}
@@ -666,6 +695,70 @@ export function PontoBancoHorasTab() {
                     onChange={e => setEditBanco({ ...editBanco, observacoes: e.target.value })}
                     placeholder="Ex.: ajuste manual referente a acordo XYZ"
                   />
+                </div>
+
+                {/* Lista de dias com ponto na competência */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" /> Dias com ponto na competência
+                  </Label>
+                  <div className="rounded-md border max-h-64 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background">
+                        <TableRow>
+                          <TableHead className="h-8">Data</TableHead>
+                          <TableHead className="h-8">Entrada</TableHead>
+                          <TableHead className="h-8">Saída</TableHead>
+                          <TableHead className="h-8 text-right">Trabalhado</TableHead>
+                          <TableHead className="h-8 text-right">Saldo</TableHead>
+                          <TableHead className="h-8 text-right">Ação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {carregandoDias ? (
+                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Carregando dias…</TableCell></TableRow>
+                        ) : diasBanco.length === 0 ? (
+                          <TableRow><TableCell colSpan={6} className="text-center py-3 text-xs text-muted-foreground">Nenhum ponto registrado nesta competência.</TableCell></TableRow>
+                        ) : diasBanco.map(d => {
+                          const [y, m, dd] = d.data.split("-");
+                          return (
+                            <TableRow key={d.id}>
+                              <TableCell className="py-1.5 text-xs">{dd}/{m}/{y}</TableCell>
+                              <TableCell className="py-1.5 text-xs font-mono">{d.entrada?.slice(0, 5) || "-"}</TableCell>
+                              <TableCell className="py-1.5 text-xs font-mono">{d.saida?.slice(0, 5) || "-"}</TableCell>
+                              <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
+                              <TableCell className={`py-1.5 text-xs font-mono text-right ${(d.saldo_minutos || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(d.saldo_minutos || 0)}</TableCell>
+                              <TableCell className="py-1.5 text-right">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => {
+                                    // pré-preenche a movimentação para este dia e abre o dialog
+                                    const saldo = d.saldo_minutos || 0;
+                                    setSelectedBanco(bancos.find(b => b.id === editBanco.id) || null);
+                                    setMovForm({
+                                      tipo: saldo >= 0 ? "credito" : "debito",
+                                      minutos: Math.abs(saldo) || 0,
+                                      data_referencia: d.data,
+                                      descricao: `Ajuste referente a ${dd}/${m}/${y}`,
+                                    });
+                                    setEditBanco(null);
+                                    setShowMovimentacao(true);
+                                  }}
+                                >
+                                  <Pencil className="w-3 h-3 mr-1" /> Ajustar dia
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Clique em "Ajustar dia" para lançar uma movimentação (crédito, débito ou compensação) referente àquele dia específico.
+                  </p>
                 </div>
 
                 <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-4 gap-3 text-center">
