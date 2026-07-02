@@ -275,9 +275,38 @@ export function PontoBancoHorasTab() {
                     {formatMinutos(b.saldo_atual_minutos)}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); setSelectedBanco(b); setShowMovimentacao(true); }}>
-                      <RefreshCw className="w-3 h-3 mr-1" /> Movimentar
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); setSelectedBanco(b); setShowMovimentacao(true); }}>
+                        <RefreshCw className="w-3 h-3 mr-1" /> Movimentar
+                      </Button>
+                      <Button size="icon" variant="ghost" title="Editar banco" onClick={e => {
+                        e.stopPropagation();
+                        setEditBanco({
+                          id: b.id,
+                          tipo: b.tipo,
+                          saldo_anterior_minutos: b.saldo_anterior_minutos || 0,
+                          prazo_compensacao: (b as any).prazo_compensacao || "",
+                          observacoes: (b as any).observacoes || "",
+                        });
+                      }}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" title="Excluir banco" onClick={async e => {
+                        e.stopPropagation();
+                        const ok = await confirm({
+                          title: "Excluir banco de horas?",
+                          description: `Todas as movimentações de ${b.colaborador_nome} nesta competência serão removidas. Esta ação não pode ser desfeita.`,
+                          confirmLabel: "Excluir",
+                          variant: "destructive",
+                        });
+                        if (ok) {
+                          await excluirBancoHoras(b.id);
+                          if (selectedBanco?.id === b.id) setSelectedBanco(null);
+                        }
+                      }}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
