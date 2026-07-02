@@ -302,6 +302,7 @@ export function PontoBancoHorasTab() {
                         const abs = Math.abs(sa);
                         setEditBanco({
                           id: b.id,
+                          colaborador_id: b.colaborador_id,
                           colaborador_nome: b.colaborador_nome,
                           tipo: b.tipo,
                           competencia: b.competencia || competencia,
