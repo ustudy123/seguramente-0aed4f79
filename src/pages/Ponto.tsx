@@ -976,7 +976,7 @@ const Ponto = () => {
                                       <Badge className={cn("text-xs max-w-full truncate", parStatus.color)} title={motivoPar || undefined}>{parStatus.label}</Badge>
                                       {motivoPar && !ehAusenciaPar && (
                                         <span
-                                          className="inline-flex items-center rounded bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide max-w-[180px] text-center leading-tight"
+                                          className="inline-flex items-center rounded bg-emerald-50 text-emerald-700 px-1.5 py-0.5 text-[9px] font-medium max-w-[180px] text-center leading-tight"
                                           title={motivoPar}
                                         >
                                           {motivoPar}
@@ -994,18 +994,20 @@ const Ponto = () => {
                                   </div>
                                 );
                               })}
-                              {/* Rodapé: consolidado do dia + selo do dia (clicável) */}
-                              <div className={cn(gridCols, "border-t pt-1.5 mt-0.5")}>
-                                <span className="text-[11px] text-muted-foreground font-medium">Total do dia</span>
-                                <div className="text-center">
-                                  <Badge variant="outline" className="font-mono text-[11px]">
-                                    {marcs.length}
-                                    {marcs.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
-                                  </Badge>
+                              {/* Rodapé: apenas o selo do dia quando não há atestado (evita duplicidade) */}
+                              {!atestadoInfo && (
+                                <div className={cn(gridCols, "border-t pt-1.5 mt-0.5")}>
+                                  <span className="text-[11px] text-muted-foreground font-medium">Total do dia</span>
+                                  <div className="text-center">
+                                    <Badge variant="outline" className="font-mono text-[11px]">
+                                      {marcs.length}
+                                      {marcs.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-center font-medium font-mono text-sm">{totalLabel}</div>
+                                  <div className="text-center">{statusDia}</div>
                                 </div>
-                                <div className="text-center font-medium font-mono text-sm">{totalLabel}</div>
-                                <div className="text-center">{statusDia}</div>
-                              </div>
+                              )}
                             </div>
                           </TableCell>
                         );
