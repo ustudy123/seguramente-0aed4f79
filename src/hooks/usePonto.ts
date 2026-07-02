@@ -567,6 +567,7 @@ export function usePonto() {
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-dia"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-hoje"] });
 
       if (!variables.multiple) {

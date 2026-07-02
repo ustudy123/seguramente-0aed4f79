@@ -122,7 +122,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,endereco_geolocalizacao,selfie_url")
+        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,hash_marcacao,endereco_geolocalizacao,selfie_url")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       // NÃO filtramos por empresa_id aqui de propósito. As marcações são
@@ -157,24 +157,67 @@ const Ponto = () => {
     enabled: !!tenantIdAtivo,
   });
 
+  // Ajustes APROVADOS do dia — para descobrir o MOTIVO (justificativa) de cada
+  // período criado por ajuste (ex.: par 09:41–12:00 com "Atestado de
+  // acompanhamento" → selo Atestado naquela linha do espelho).
+  const { data: ajustesDoDia = [] } = useQuery({
+    queryKey: ["ponto-ajustes-dia", tenantIdAtivo, dataSelStr],
+    queryFn: async () => {
+      if (!tenantIdAtivo) return [] as any[];
+      const { data, error } = await fromTable("ponto_ajustes")
+        .select("id,colaborador_cpf,hora_solicitada,tipo_marcacao,motivo,justificativa_id,status")
+        .eq("tenant_id", tenantIdAtivo)
+        .eq("data_referencia", dataSelStr)
+        .eq("status", "aprovado") as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantIdAtivo,
+  });
+
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; endereco?: string; selfieUrl?: string }>>();
+    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; hash?: string; endereco?: string; selfieUrl?: string }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push({ 
+      map.get(k)!.push({
         id: m.id,
-        hora: m.hora_marcacao, 
+        hora: m.hora_marcacao,
         tipo: m.tipo_marcacao,
         original: m.marcacao_original ?? true,
+        hash: m.hash_marcacao || undefined,
         endereco: m.endereco_geolocalizacao,
         selfieUrl: m.selfie_url
       });
     }
     return map;
   }, [marcacoesDoDia]);
+
+  // Motivo do ajuste por id (via hash 'AJUSTE-<id>') e, como fallback, por
+  // cpf|HH:MM (marcações antigas/hashes com sufixo diferente).
+  const motivoAjuste = useMemo(() => {
+    const porId = new Map<string, string>();
+    const porCpfHora = new Map<string, string>();
+    for (const a of ajustesDoDia) {
+      if (!a.motivo) continue;
+      porId.set(String(a.id), a.motivo);
+      const hhmm = String(a.hora_solicitada || "").slice(0, 5);
+      if (hhmm) porCpfHora.set(`${onlyDigits(a.colaborador_cpf)}|${hhmm}`, a.motivo);
+    }
+    return { porId, porCpfHora };
+  }, [ajustesDoDia]);
+
+  /** Motivo (justificativa) da marcação, se ela veio de um ajuste aprovado. */
+  const motivoDaMarcacao = (cpfDigits: string, m: { hora: string; hash?: string }): string | undefined => {
+    const idMatch = /^AJUSTE-([0-9a-f-]{36})/i.exec(m.hash || "");
+    if (idMatch) {
+      const via = motivoAjuste.porId.get(idMatch[1]);
+      if (via) return via;
+    }
+    return motivoAjuste.porCpfHora.get(`${cpfDigits}|${String(m.hora).slice(0, 5)}`);
+  };
 
   // Atestado por CPF (dígitos) do dia selecionado.
   const atestadosPorCpf = useMemo(() => {
@@ -680,102 +723,166 @@ const Ponto = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1.5">
-                          {atestadoInfo && (
-                            <span
-                              className="inline-flex items-center gap-1 self-start rounded-md bg-violet-100 text-violet-800 px-2 py-0.5 text-[11px] font-semibold"
-                              title={atestadoInfo.tooltip}
-                            >
-                              <FileText className="w-3 h-3" /> ATESTADO{atestadoInfo.label ? ` · ${atestadoInfo.label}` : ""}
-                            </span>
-                          )}
-                          {marcs.length === 0 ? (
-                            !atestadoInfo && <span className="text-xs text-muted-foreground">Sem marcações</span>
-                          ) : (
-                            <div className="flex flex-col gap-1.5">
-                            {(() => {
-                              // Agrupa em pares: uma ENTRADA abre uma nova linha; a
-                              // marcação seguinte (saída) fecha o par na mesma linha.
-                              // Saídas órfãs (sem entrada antes) ficam em linha própria.
-                              const linhas: typeof marcs[] = [];
-                              let atual: typeof marcs = [];
-                              for (const m of marcs) {
-                                const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
-                                if (isEntry) {
-                                  if (atual.length > 0) linhas.push(atual);
-                                  atual = [m];
-                                } else {
-                                  atual.push(m);
-                                  linhas.push(atual);
-                                  atual = [];
-                                }
-                              }
-                              if (atual.length > 0) linhas.push(atual);
-                              return linhas.map((linha, li) => (
-                                <div key={li} className="grid grid-cols-2 gap-1.5">
-                                  {linha.map((m, idx) => {
-                                    const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
-                                    return (
-                                      <MarcacaoBadge
-                                        key={m.id || `${li}-${idx}`}
-                                        id={m.id}
-                                        hora={m.hora}
-                                        isEntry={isEntry}
-                                        original={m.original}
-                                        podeEditar={podeEditarMarcacao}
-                                        editando={editandoMarcacao}
-                                        onSalvar={editarMarcacao}
-                                        onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
-                                        excluindo={excluindoMarcacao}
-                                      />
-                                    );
-                                  })}
-                                </div>
-                              ));
-                            })()}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline" className="font-mono text-[11px]">
-                          {marcs.length}
-                          {marcs.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
-                              if (colab) setAjusteColaborador(colab.id);
-                              setAjusteData(format(selectedDate, "yyyy-MM-dd"));
-                              setAjusteTipo(ponto.status === "ajuste_pendente" ? "correcao" : "inclusao");
-                              setShowAjusteModal(true);
-                            }}
-                            title="Clique para solicitar/ajustar"
-                            className="inline-flex"
-                          >
-                            <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={badgeTooltip}>{badge.label}</Badge>
-                          </button>
-                          {podeEditarMarcacao && (
+                      {(() => {
+                        // Selo do DIA (clicável, abre o modal de ajuste) + Folga comp.
+                        const statusDia = (
+                          <div className="flex flex-col items-center gap-1">
                             <button
                               type="button"
                               onClick={() => {
                                 const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
-                                setFolgaTarget({ id: colab?.id || "", nome: ponto.colaborador_nome, cpf: ponto.colaborador_cpf || "" });
+                                if (colab) setAjusteColaborador(colab.id);
+                                setAjusteData(format(selectedDate, "yyyy-MM-dd"));
+                                setAjusteTipo(ponto.status === "ajuste_pendente" ? "correcao" : "inclusao");
+                                setShowAjusteModal(true);
                               }}
-                              title="Lançar folga compensada no banco de horas"
-                              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                              title="Clique para solicitar/ajustar"
+                              className="inline-flex"
                             >
-                              <Wallet className="w-3 h-3" /> Folga comp.
+                              <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={badgeTooltip}>{badge.label}</Badge>
                             </button>
-                          )}
-                        </div>
-                      </TableCell>
+                            {podeEditarMarcacao && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
+                                  setFolgaTarget({ id: colab?.id || "", nome: ponto.colaborador_nome, cpf: ponto.colaborador_cpf || "" });
+                                }}
+                                title="Lançar folga compensada no banco de horas"
+                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                              >
+                                <Wallet className="w-3 h-3" /> Folga comp.
+                              </button>
+                            )}
+                          </div>
+                        );
+
+                        // Dia SEM marcações: layout de células únicas (como antes).
+                        if (marcs.length === 0) {
+                          return (
+                            <>
+                              <TableCell>
+                                <div className="flex flex-col gap-1.5">
+                                  {atestadoInfo && (
+                                    <span
+                                      className="inline-flex items-center gap-1 self-start rounded-md bg-violet-100 text-violet-800 px-2 py-0.5 text-[11px] font-semibold"
+                                      title={atestadoInfo.tooltip}
+                                    >
+                                      <FileText className="w-3 h-3" /> ATESTADO{atestadoInfo.label ? ` · ${atestadoInfo.label}` : ""}
+                                    </span>
+                                  )}
+                                  {!atestadoInfo && <span className="text-xs text-muted-foreground">Sem marcações</span>}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant="outline" className="font-mono text-[11px]">0</Badge>
+                              </TableCell>
+                              <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
+                              <TableCell className="text-center">{statusDia}</TableCell>
+                            </>
+                          );
+                        }
+
+                        // Dia COM marcações: uma linha por PERÍODO (par entrada+saída)
+                        // com Registros/Total/Status do PRÓPRIO período, + rodapé do dia.
+                        // Agrupa em pares: uma ENTRADA abre uma nova linha; a marcação
+                        // seguinte (saída) fecha o par. Saídas órfãs ficam em linha própria.
+                        const linhas: typeof marcs[] = [];
+                        let atual: typeof marcs = [];
+                        for (const m of marcs) {
+                          const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
+                          if (isEntry) {
+                            if (atual.length > 0) linhas.push(atual);
+                            atual = [m];
+                          } else {
+                            atual.push(m);
+                            linhas.push(atual);
+                            atual = [];
+                          }
+                        }
+                        if (atual.length > 0) linhas.push(atual);
+
+                        const gridCols = "grid grid-cols-[1fr_7rem_7rem_8rem] gap-2 items-center";
+                        return (
+                          <TableCell colSpan={4}>
+                            <div className="flex flex-col gap-1.5">
+                              {atestadoInfo && (
+                                <span
+                                  className="inline-flex items-center gap-1 self-start rounded-md bg-violet-100 text-violet-800 px-2 py-0.5 text-[11px] font-semibold"
+                                  title={atestadoInfo.tooltip}
+                                >
+                                  <FileText className="w-3 h-3" /> ATESTADO{atestadoInfo.label ? ` · ${atestadoInfo.label}` : ""}
+                                </span>
+                              )}
+                              {linhas.map((linha, li) => {
+                                const primeiroEhEntrada = linha[0].tipo === "entrada" || linha[0].tipo === "retorno_almoco";
+                                const parCompleto = linha.length === 2 && primeiroEhEntrada;
+                                let parLabel = "—";
+                                if (parCompleto) {
+                                  const [h1, mi1] = linha[0].hora.split(":").map(Number);
+                                  const [h2, mi2] = linha[1].hora.split(":").map(Number);
+                                  const min = Math.max(0, (h2 * 60 + mi2) - (h1 * 60 + mi1));
+                                  parLabel = `${Math.floor(min / 60).toString().padStart(2, "0")}h ${(min % 60).toString().padStart(2, "0")}min`;
+                                }
+                                // Motivo do período: justificativa do ajuste aprovado
+                                // que criou qualquer marcação do par.
+                                const motivoPar = linha.map((m) => motivoDaMarcacao(cpfKey, m)).find(Boolean);
+                                const ehAtestadoPar = /atestado/i.test(motivoPar || "");
+                                const parStatus = ehAtestadoPar
+                                  ? { label: "Atestado", color: "bg-violet-100 text-violet-800" }
+                                  : !parCompleto
+                                    ? { label: "Incompleto", color: "bg-orange-100 text-orange-800" }
+                                    : STATUS_PONTO_CONFIG.regular;
+                                return (
+                                  <div key={li} className={gridCols}>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                      {linha.map((m, idx) => {
+                                        const isEntry = m.tipo === "entrada" || m.tipo === "retorno_almoco";
+                                        return (
+                                          <MarcacaoBadge
+                                            key={m.id || `${li}-${idx}`}
+                                            id={m.id}
+                                            hora={m.hora}
+                                            isEntry={isEntry}
+                                            original={m.original}
+                                            podeEditar={podeEditarMarcacao}
+                                            editando={editandoMarcacao}
+                                            onSalvar={editarMarcacao}
+                                            onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
+                                            excluindo={excluindoMarcacao}
+                                          />
+                                        );
+                                      })}
+                                    </div>
+                                    <div className="text-center">
+                                      <Badge variant="outline" className="font-mono text-[11px]">
+                                        {linha.length}
+                                        {linha.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
+                                      </Badge>
+                                    </div>
+                                    <div className="text-center font-medium font-mono text-sm">{parLabel}</div>
+                                    <div className="text-center">
+                                      <Badge className={cn("text-xs", parStatus.color)} title={motivoPar || undefined}>{parStatus.label}</Badge>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {/* Rodapé: consolidado do dia + selo do dia (clicável) + Folga comp. */}
+                              <div className={cn(gridCols, "border-t pt-1.5 mt-0.5")}>
+                                <span className="text-[11px] text-muted-foreground font-medium">Total do dia</span>
+                                <div className="text-center">
+                                  <Badge variant="outline" className="font-mono text-[11px]">
+                                    {marcs.length}
+                                    {marcs.length % 2 !== 0 && <span className="ml-1 text-amber-600">⚠</span>}
+                                  </Badge>
+                                </div>
+                                <div className="text-center font-medium font-mono text-sm">{totalLabel}</div>
+                                <div className="text-center">{statusDia}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        );
+                      })()}
                     </TableRow>
                   );
                 })}
