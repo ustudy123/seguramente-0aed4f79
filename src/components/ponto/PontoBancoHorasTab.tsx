@@ -115,9 +115,14 @@ export function PontoBancoHorasTab() {
 
   // Dias do colaborador em edição (ponto_diario da competência)
   const editComp = editBanco?.competencia || "";
-  const editIniFim = editComp && /^\d{4}-\d{2}$/.test(editComp)
-    ? { ini: `${editComp}-01`, fim: `${editComp}-31` }
-    : null;
+  const editIniFim = (() => {
+    if (!editComp || !/^\d{4}-\d{2}$/.test(editComp)) return null;
+    const [y, m] = editComp.split("-").map(Number);
+    const lastDay = new Date(y, m, 0).getDate(); // dia 0 do mês seguinte = último dia do mês atual
+    const mm = String(m).padStart(2, "0");
+    const dd = String(lastDay).padStart(2, "0");
+    return { ini: `${editComp}-01`, fim: `${editComp}-${dd}` };
+  })();
   const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
     queryKey: ["banco-horas-dias", editBanco?.colaborador_cpf, editComp],
     enabled: !!editBanco && !!editIniFim,
