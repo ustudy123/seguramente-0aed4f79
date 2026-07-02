@@ -567,66 +567,141 @@ export function PontoBancoHorasTab() {
       </Dialog>
       {/* Dialog Editar Banco de Horas */}
       <Dialog open={!!editBanco} onOpenChange={(o) => { if (!o) setEditBanco(null); }}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Editar Banco de Horas</DialogTitle>
+            <DialogTitle>
+              Editar Banco de Horas — {editBanco?.colaborador_nome}
+            </DialogTitle>
             <DialogDescription>
-              Ajuste o tipo, saldo anterior e demais dados. O saldo atual será recalculado automaticamente
+              Ajuste tipo, competência, saldo anterior e prazo de compensação. O saldo atual é recalculado automaticamente
               (saldo anterior + créditos − débitos − compensados).
             </DialogDescription>
           </DialogHeader>
-          {editBanco && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={editBanco.tipo} onValueChange={v => setEditBanco({ ...editBanco, tipo: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mensal">Mensal</SelectItem>
-                    <SelectItem value="semestral">Semestral</SelectItem>
-                    <SelectItem value="anual">Anual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Saldo Anterior (minutos)</Label>
-                  <Input
-                    type="number"
-                    value={editBanco.saldo_anterior_minutos}
-                    onChange={e => setEditBanco({ ...editBanco, saldo_anterior_minutos: parseInt(e.target.value || "0", 10) })}
-                  />
-                  <p className="text-xs text-muted-foreground">Use valores negativos para saldo devedor.</p>
+          {editBanco && (() => {
+            const sinal = editBanco.saldo_anterior_negativo ? -1 : 1;
+            const saldoAnteriorMin = sinal * (editBanco.saldo_anterior_horas * 60 + editBanco.saldo_anterior_mins);
+            const saldoAtual = saldoAnteriorMin + editBanco.creditos_minutos - editBanco.debitos_minutos - editBanco.compensados_minutos;
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Colaborador</Label>
+                    <Input value={editBanco.colaborador_nome} disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Competência (mês/ano)</Label>
+                    <CompetenciaInput
+                      value={editBanco.competencia}
+                      onChange={v => setEditBanco({ ...editBanco, competencia: v })}
+                    />
+                  </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Prazo de Compensação</Label>
+                  <Label>Tipo de banco</Label>
+                  <Select value={editBanco.tipo} onValueChange={v => setEditBanco({ ...editBanco, tipo: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mensal">Mensal</SelectItem>
+                      <SelectItem value="semestral">Semestral</SelectItem>
+                      <SelectItem value="anual">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Saldo Anterior</Label>
+                  <div className="grid grid-cols-[110px_1fr_1fr] gap-2">
+                    <Select
+                      value={editBanco.saldo_anterior_negativo ? "neg" : "pos"}
+                      onValueChange={v => setEditBanco({ ...editBanco, saldo_anterior_negativo: v === "neg" })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pos">+ Crédito</SelectItem>
+                        <SelectItem value="neg">− Débito</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={editBanco.saldo_anterior_horas}
+                        onChange={e => setEditBanco({ ...editBanco, saldo_anterior_horas: Math.max(0, parseInt(e.target.value || "0", 10)) })}
+                        placeholder="Horas"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">Horas</p>
+                    </div>
+                    <div>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={59}
+                        value={editBanco.saldo_anterior_mins}
+                        onChange={e => setEditBanco({ ...editBanco, saldo_anterior_mins: Math.min(59, Math.max(0, parseInt(e.target.value || "0", 10))) })}
+                        placeholder="Minutos"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">Minutos</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Equivalente a <span className="font-mono">{formatMinutos(saldoAnteriorMin)}</span>.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Prazo de Compensação (dia / mês / ano)</Label>
                   <Input
                     type="date"
                     value={editBanco.prazo_compensacao}
                     onChange={e => setEditBanco({ ...editBanco, prazo_compensacao: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground">Data limite para compensar o saldo (opcional).</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Observações</Label>
+                  <Input
+                    value={editBanco.observacoes}
+                    onChange={e => setEditBanco({ ...editBanco, observacoes: e.target.value })}
+                    placeholder="Ex.: ajuste manual referente a acordo XYZ"
+                  />
+                </div>
+
+                <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-4 gap-3 text-center">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Créditos</p>
+                    <p className="font-mono text-sm text-green-600">+{formatMinutos(editBanco.creditos_minutos)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Débitos</p>
+                    <p className="font-mono text-sm text-red-600">-{formatMinutos(editBanco.debitos_minutos)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Compensados</p>
+                    <p className="font-mono text-sm">{formatMinutos(editBanco.compensados_minutos)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Saldo Atual</p>
+                    <p className={`font-mono text-sm font-bold ${saldoAtual >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(saldoAtual)}</p>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Observações</Label>
-                <Input
-                  value={editBanco.observacoes}
-                  onChange={e => setEditBanco({ ...editBanco, observacoes: e.target.value })}
-                  placeholder="Opcional"
-                />
-              </div>
-            </div>
-          )}
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditBanco(null)}>Cancelar</Button>
             <Button
               disabled={editandoBancoHoras || !editBanco}
               onClick={async () => {
                 if (!editBanco) return;
+                const sinal = editBanco.saldo_anterior_negativo ? -1 : 1;
+                const saldoAnteriorMin = sinal * (editBanco.saldo_anterior_horas * 60 + editBanco.saldo_anterior_mins);
                 await editarBancoHoras({
                   id: editBanco.id,
                   tipo: editBanco.tipo,
-                  saldo_anterior_minutos: editBanco.saldo_anterior_minutos,
+                  competencia: editBanco.competencia,
+                  saldo_anterior_minutos: saldoAnteriorMin,
                   prazo_compensacao: editBanco.prazo_compensacao || null,
                   observacoes: editBanco.observacoes || null,
                 });
