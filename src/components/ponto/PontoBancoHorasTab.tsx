@@ -53,6 +53,7 @@ export function PontoBancoHorasTab() {
   const [editMov, setEditMov] = useState<null | { id: string; tipo: string; minutos: number; data_referencia: string; descricao: string }>(null);
   const [editBanco, setEditBanco] = useState<null | {
     id: string;
+    colaborador_id: string;
     colaborador_nome: string;
     tipo: string;
     competencia: string;
