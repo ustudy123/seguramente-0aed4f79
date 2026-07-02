@@ -986,7 +986,7 @@ const Ponto = () => {
                                   </div>
                                 );
                               })}
-                              {/* Rodapé: consolidado do dia + selo do dia (clicável) + Folga comp. */}
+                              {/* Rodapé: consolidado do dia + selo do dia (clicável) */}
                               <div className={cn(gridCols, "border-t pt-1.5 mt-0.5")}>
                                 <span className="text-[11px] text-muted-foreground font-medium">Total do dia</span>
                                 <div className="text-center">
