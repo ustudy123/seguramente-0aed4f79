@@ -23592,6 +23592,8 @@ export type Database = {
         | "suporte_autorizado"
         | "corporativo_multiempresa"
         | "colaborador"
+        | "proprietario"
+        | "rh"
       vinculo_status:
         | "ativo"
         | "pendente"
@@ -24283,6 +24285,8 @@ export const Constants = {
         "suporte_autorizado",
         "corporativo_multiempresa",
         "colaborador",
+        "proprietario",
+        "rh",
       ],
       vinculo_status: [
         "ativo",
