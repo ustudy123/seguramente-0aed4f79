@@ -976,7 +976,7 @@ const Ponto = () => {
                                       <Badge className={cn("text-xs max-w-full truncate", parStatus.color)} title={motivoPar || undefined}>{parStatus.label}</Badge>
                                       {motivoPar && !ehAusenciaPar && (
                                         <span
-                                          className="inline-flex items-center rounded bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide max-w-[180px] text-center leading-tight"
+                                          className="inline-flex items-center rounded bg-emerald-50 text-emerald-700 px-1.5 py-0.5 text-[9px] font-medium max-w-[180px] text-center leading-tight"
                                           title={motivoPar}
                                         >
                                           {motivoPar}
