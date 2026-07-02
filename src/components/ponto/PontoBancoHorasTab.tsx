@@ -157,8 +157,47 @@ export function PontoBancoHorasTab() {
         return 0;
       };
 
-      // Busca a jornada esperada por dia via RPC (respeita escala + compensações mensais)
+      // Busca a jornada esperada por dia via RPC (respeita escala + compensações mensais).
+      // A RPC retorna TABLE(jornada_min int, tol_min int) => vem como array no client.
       const rows = data || [];
+      const extractJornada = (j: any): number => {
+        if (j == null) return 0;
+        if (typeof j === "number") return j;
+        if (Array.isArray(j)) return Number(j[0]?.jornada_min) || 0;
+        if (typeof j === "object") return Number(j.jornada_min) || 0;
+        return Number(j) || 0;
+      };
+
+      // Fallback: se não houver atribuição vigente na data (ex.: dia anterior ao
+      // data_inicio da escala atual), usa a atribuição mais próxima do colaborador
+      // para derivar a jornada esperada — assim a UI mostra crédito/débito real.
+      let fallbackEscalaId: string | null = null;
+      try {
+        let atribQuery = (supabase as any)
+          .from("ponto_escala_atribuicoes")
+          .select("escala_id, data_inicio")
+          .eq("tenant_id", tenantId)
+          .eq("ativa", true)
+          .order("data_inicio", { ascending: true })
+          .limit(1);
+        if (cpfDigits) atribQuery = atribQuery.eq("colaborador_cpf", cpfDigits);
+        else atribQuery = atribQuery.eq("colaborador_id", editBanco.colaborador_id);
+        const { data: atrib } = await atribQuery;
+        fallbackEscalaId = atrib?.[0]?.escala_id || null;
+      } catch { /* ignore */ }
+
+      let fallbackJornadaMin = 0;
+      if (fallbackEscalaId) {
+        try {
+          const { data: esc } = await (supabase as any)
+            .from("ponto_escalas")
+            .select("jornada_diaria_minutos, dias_config")
+            .eq("id", fallbackEscalaId)
+            .maybeSingle();
+          fallbackJornadaMin = Number(esc?.jornada_diaria_minutos) || 0;
+        } catch { /* ignore */ }
+      }
+
       const jornadas = await Promise.all(
         rows.map(async (d: any) => {
           if (!tenantId) return 0;
@@ -169,7 +208,13 @@ export function PontoBancoHorasTab() {
               p_colaborador_id: d.colaborador_id ? String(d.colaborador_id) : null,
               p_data: d.data,
             });
-            return typeof j === "number" ? j : Number(j) || 0;
+            const val = extractJornada(j);
+            if (val > 0) return val;
+            // Sem atribuição vigente nesse dia -> assume jornada da escala mais próxima,
+            // exceto em fins de semana (deixa 0 para não gerar débito indevido).
+            const dow = new Date(d.data + "T00:00:00").getDay();
+            if (dow === 0 || dow === 6) return 0;
+            return fallbackJornadaMin;
           } catch {
             return 0;
           }
