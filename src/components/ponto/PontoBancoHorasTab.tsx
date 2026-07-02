@@ -779,11 +779,11 @@ export function PontoBancoHorasTab() {
                               <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
                               <TableCell className="py-1.5 text-center">
                                 {isNeutro ? (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">—</Badge>
+                                  <span className="text-xs text-muted-foreground">—</span>
                                 ) : isCredito ? (
-                                  <Badge className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Crédito</Badge>
+                                  <span className="text-xs font-semibold uppercase text-green-600">CRÉDITO</span>
                                 ) : (
-                                  <Badge className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 hover:bg-red-100 border-red-200">Débito</Badge>
+                                  <span className="text-xs font-semibold uppercase text-red-600">DÉBITO</span>
                                 )}
                               </TableCell>
                               <TableCell className={`py-1.5 text-xs font-mono text-right ${isCredito ? "text-green-600" : isDebito ? "text-red-600" : "text-muted-foreground"}`}>
