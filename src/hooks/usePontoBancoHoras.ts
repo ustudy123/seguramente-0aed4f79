@@ -208,12 +208,14 @@ export function usePontoBancoHoras() {
     mutationFn: async ({
       id,
       tipo,
+      competencia,
       saldo_anterior_minutos,
       prazo_compensacao,
       observacoes,
     }: {
       id: string;
       tipo?: string;
+      competencia?: string;
       saldo_anterior_minutos?: number;
       prazo_compensacao?: string | null;
       observacoes?: string | null;
@@ -226,6 +228,7 @@ export function usePontoBancoHoras() {
       const saldoAtual = novoSaldoAnterior + (bh?.creditos_minutos || 0) - (bh?.debitos_minutos || 0) - (bh?.compensados_minutos || 0);
       const payload: any = { saldo_atual_minutos: saldoAtual };
       if (tipo !== undefined) payload.tipo = tipo;
+      if (competencia !== undefined) payload.competencia = competencia;
       if (saldo_anterior_minutos !== undefined) payload.saldo_anterior_minutos = saldo_anterior_minutos;
       if (prazo_compensacao !== undefined) payload.prazo_compensacao = prazo_compensacao;
       if (observacoes !== undefined) payload.observacoes = observacoes;
