@@ -1208,12 +1208,6 @@ const Ponto = () => {
 
       <GuiaRapidoPonto open={showGuia} onOpenChange={setShowGuia} />
       <AnexosAjusteModal ajuste={anexosModalAjuste} onOpenChange={(o) => !o && setAnexosModalAjuste(null)} />
-      <LancarFolgaCompensadaModal
-        open={!!folgaTarget}
-        onOpenChange={(o) => !o && setFolgaTarget(null)}
-        colaborador={folgaTarget}
-        dataInicial={format(selectedDate, "yyyy-MM-dd")}
-      />
     </div>
   );
 };
