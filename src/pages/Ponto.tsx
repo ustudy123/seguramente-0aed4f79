@@ -823,7 +823,7 @@ const Ponto = () => {
                         </div>
                       </TableCell>
                       {(() => {
-                        // Selo do DIA (clicável, abre o modal de ajuste) + Folga comp.
+                        // Selo do DIA (clicável, abre o modal de ajuste)
                         const statusDia = (
                           <div className="flex flex-col items-center gap-1">
                             <button
@@ -840,19 +840,6 @@ const Ponto = () => {
                             >
                               <Badge className={cn("text-xs cursor-pointer hover:opacity-80 transition", badge.color)} title={badgeTooltip}>{badge.label}</Badge>
                             </button>
-                            {podeEditarMarcacao && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const colab = colaboradores.find(c => (c.cpf || "").replace(/\D/g, "") === onlyDigits(ponto.colaborador_cpf));
-                                  setFolgaTarget({ id: colab?.id || "", nome: ponto.colaborador_nome, cpf: ponto.colaborador_cpf || "" });
-                                }}
-                                title="Lançar folga compensada no banco de horas"
-                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
-                              >
-                                <Wallet className="w-3 h-3" /> Folga comp.
-                              </button>
-                            )}
                           </div>
                         );
 
