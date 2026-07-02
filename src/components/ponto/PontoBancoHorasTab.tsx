@@ -907,24 +907,34 @@ export function PontoBancoHorasTab() {
                   </p>
                 </div>
 
-                <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-4 gap-3 text-center">
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">Créditos</p>
-                    <p className="font-mono text-sm text-green-600">+{formatMinutos(editBanco.creditos_minutos)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">Débitos</p>
-                    <p className="font-mono text-sm text-red-600">-{formatMinutos(editBanco.debitos_minutos)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">Compensados</p>
-                    <p className="font-mono text-sm">{formatMinutos(editBanco.compensados_minutos)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">Saldo Atual</p>
-                    <p className={`font-mono text-sm font-bold ${saldoAtual >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(saldoAtual)}</p>
-                  </div>
-                </div>
+                {(() => {
+                  const cred = diasBanco.reduce((s, d) => s + (d.saldo_minutos > 0 ? d.saldo_minutos : 0), 0);
+                  const deb = diasBanco.reduce((s, d) => s + (d.saldo_minutos < 0 ? -d.saldo_minutos : 0), 0);
+                  const saldoAnt = editBanco.saldo_anterior_minutos || 0;
+                  const comp = editBanco.compensados_minutos || 0;
+                  const saldoCalc = saldoAnt + cred - deb - comp;
+                  return (
+                    <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-4 gap-3 text-center">
+                      <div>
+                        <p className="text-[11px] text-muted-foreground">Créditos</p>
+                        <p className="font-mono text-sm text-green-600">+{formatMinutos(cred)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-muted-foreground">Débitos</p>
+                        <p className="font-mono text-sm text-red-600">-{formatMinutos(deb)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-muted-foreground">Compensados</p>
+                        <p className="font-mono text-sm">{formatMinutos(comp)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-muted-foreground">Saldo Atual</p>
+                        <p className={`font-mono text-sm font-bold ${saldoCalc >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(saldoCalc)}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
               </div>
             );
           })()}
