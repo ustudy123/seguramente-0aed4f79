@@ -346,9 +346,9 @@ export function PontoBancoHorasTab() {
             <TableBody>
               {isLoading ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
-              ) : bancos.length === 0 ? (
+              ) : bancosVisiveis.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum banco de horas para esta competência.</TableCell></TableRow>
-              ) : bancos.map(b => (
+              ) : bancosVisiveis.map(b => (
                 <TableRow key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedBanco(b)}>
                   <TableCell className="font-medium">{b.colaborador_nome}</TableCell>
                   <TableCell><Badge variant="outline">{b.tipo}</Badge></TableCell>
