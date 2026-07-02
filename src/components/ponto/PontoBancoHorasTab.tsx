@@ -167,6 +167,12 @@ export function PontoBancoHorasTab() {
         if (typeof j === "object") return Number(j.jornada_min) || 0;
         return Number(j) || 0;
       };
+      const extractTol = (j: any): number => {
+        if (j == null) return 0;
+        if (Array.isArray(j)) return Number(j[0]?.tol_min) || 0;
+        if (typeof j === "object") return Number(j.tol_min) || 0;
+        return 0;
+      };
 
       // Fallback: se não houver atribuição vigente na data (ex.: dia anterior ao
       // data_inicio da escala atual), usa a atribuição mais próxima do colaborador
@@ -187,20 +193,22 @@ export function PontoBancoHorasTab() {
       } catch { /* ignore */ }
 
       let fallbackJornadaMin = 0;
+      let fallbackTolMin = 0;
       if (fallbackEscalaId) {
         try {
           const { data: esc } = await (supabase as any)
             .from("ponto_escalas")
-            .select("jornada_diaria_minutos, dias_config")
+            .select("jornada_diaria_minutos, dias_config, tolerancia_diaria_minutos")
             .eq("id", fallbackEscalaId)
             .maybeSingle();
           fallbackJornadaMin = Number(esc?.jornada_diaria_minutos) || 0;
+          fallbackTolMin = Number(esc?.tolerancia_diaria_minutos) || 0;
         } catch { /* ignore */ }
       }
 
-      const jornadas = await Promise.all(
+      const jornadasETol = await Promise.all(
         rows.map(async (d: any) => {
-          if (!tenantId) return 0;
+          if (!tenantId) return { jornada: 0, tol: fallbackTolMin };
           try {
             const { data: j } = await (supabase.rpc as any)("ponto_jornada_do_dia", {
               p_tenant_id: tenantId,
@@ -209,27 +217,28 @@ export function PontoBancoHorasTab() {
               p_data: d.data,
             });
             const val = extractJornada(j);
-            if (val > 0) return val;
-            // Sem atribuição vigente nesse dia -> assume jornada da escala mais próxima,
-            // exceto em fins de semana (deixa 0 para não gerar débito indevido).
+            const tol = extractTol(j) || fallbackTolMin;
+            if (val > 0) return { jornada: val, tol };
             const dow = new Date(d.data + "T00:00:00").getDay();
-            if (dow === 0 || dow === 6) return 0;
-            return fallbackJornadaMin;
+            if (dow === 0 || dow === 6) return { jornada: 0, tol };
+            return { jornada: fallbackJornadaMin, tol };
           } catch {
-            return 0;
+            return { jornada: 0, tol: fallbackTolMin };
           }
         })
       );
 
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
-        const esperado = jornadas[idx] || 0;
-        // Se o campo horas_extras/horas_faltantes já veio preenchido, usa como fonte primária.
+        const esperado = jornadasETol[idx]?.jornada || 0;
+        const tol = jornadasETol[idx]?.tol || 0;
         const extras = intervalToMin(d.horas_extras);
         const faltantes = intervalToMin(d.horas_faltantes);
-        const saldoDia = (extras || faltantes)
+        let saldoDia = (extras || faltantes)
           ? (extras - faltantes)
           : (esperado > 0 ? trab - esperado : 0);
+        // Aplica tolerância diária: dentro da tolerância = 0
+        if (tol > 0 && Math.abs(saldoDia) <= tol) saldoDia = 0;
         return {
           id: d.id,
           data: d.data,
@@ -247,6 +256,7 @@ export function PontoBancoHorasTab() {
       }>;
     },
   });
+
 
   const onlyDigits = (s: string) => (s || "").toString().replace(/\D/g, "");
 
