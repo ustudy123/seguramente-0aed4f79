@@ -28,6 +28,9 @@ export function PontoBancoHorasTab() {
     excluirMovimentacao,
     criarBancoHoras,
     criandoBancoHoras,
+    editarBancoHoras,
+    editandoBancoHoras,
+    excluirBancoHoras,
     apurarBancoHoras,
     apurandoBancoHoras,
   } = usePontoBancoHoras();
@@ -46,6 +49,7 @@ export function PontoBancoHorasTab() {
   const [criarForm, setCriarForm] = useState({ colaborador_id: "", tipo: "mensal" });
   const [movForm, setMovForm] = useState({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
   const [editMov, setEditMov] = useState<null | { id: string; tipo: string; minutos: number; data_referencia: string; descricao: string }>(null);
+  const [editBanco, setEditBanco] = useState<null | { id: string; tipo: string; saldo_anterior_minutos: number; prazo_compensacao: string; observacoes: string }>(null);
 
   const formatMinutos = (min: number) => {
     const sinal = min < 0 ? "-" : "";
@@ -271,9 +275,38 @@ export function PontoBancoHorasTab() {
                     {formatMinutos(b.saldo_atual_minutos)}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); setSelectedBanco(b); setShowMovimentacao(true); }}>
-                      <RefreshCw className="w-3 h-3 mr-1" /> Movimentar
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); setSelectedBanco(b); setShowMovimentacao(true); }}>
+                        <RefreshCw className="w-3 h-3 mr-1" /> Movimentar
+                      </Button>
+                      <Button size="icon" variant="ghost" title="Editar banco" onClick={e => {
+                        e.stopPropagation();
+                        setEditBanco({
+                          id: b.id,
+                          tipo: b.tipo,
+                          saldo_anterior_minutos: b.saldo_anterior_minutos || 0,
+                          prazo_compensacao: (b as any).prazo_compensacao || "",
+                          observacoes: (b as any).observacoes || "",
+                        });
+                      }}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" title="Excluir banco" onClick={async e => {
+                        e.stopPropagation();
+                        const ok = await confirm({
+                          title: "Excluir banco de horas?",
+                          description: `Todas as movimentações de ${b.colaborador_nome} nesta competência serão removidas. Esta ação não pode ser desfeita.`,
+                          confirmLabel: "Excluir",
+                          variant: "destructive",
+                        });
+                        if (ok) {
+                          await excluirBancoHoras(b.id);
+                          if (selectedBanco?.id === b.id) setSelectedBanco(null);
+                        }
+                      }}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -505,6 +538,77 @@ export function PontoBancoHorasTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowImport(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Dialog Editar Banco de Horas */}
+      <Dialog open={!!editBanco} onOpenChange={(o) => { if (!o) setEditBanco(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Banco de Horas</DialogTitle>
+            <DialogDescription>
+              Ajuste o tipo, saldo anterior e demais dados. O saldo atual será recalculado automaticamente
+              (saldo anterior + créditos − débitos − compensados).
+            </DialogDescription>
+          </DialogHeader>
+          {editBanco && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={editBanco.tipo} onValueChange={v => setEditBanco({ ...editBanco, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mensal">Mensal</SelectItem>
+                    <SelectItem value="semestral">Semestral</SelectItem>
+                    <SelectItem value="anual">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Saldo Anterior (minutos)</Label>
+                  <Input
+                    type="number"
+                    value={editBanco.saldo_anterior_minutos}
+                    onChange={e => setEditBanco({ ...editBanco, saldo_anterior_minutos: parseInt(e.target.value || "0", 10) })}
+                  />
+                  <p className="text-xs text-muted-foreground">Use valores negativos para saldo devedor.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Prazo de Compensação</Label>
+                  <Input
+                    type="date"
+                    value={editBanco.prazo_compensacao}
+                    onChange={e => setEditBanco({ ...editBanco, prazo_compensacao: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Input
+                  value={editBanco.observacoes}
+                  onChange={e => setEditBanco({ ...editBanco, observacoes: e.target.value })}
+                  placeholder="Opcional"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditBanco(null)}>Cancelar</Button>
+            <Button
+              disabled={editandoBancoHoras || !editBanco}
+              onClick={async () => {
+                if (!editBanco) return;
+                await editarBancoHoras({
+                  id: editBanco.id,
+                  tipo: editBanco.tipo,
+                  saldo_anterior_minutos: editBanco.saldo_anterior_minutos,
+                  prazo_compensacao: editBanco.prazo_compensacao || null,
+                  observacoes: editBanco.observacoes || null,
+                });
+                setEditBanco(null);
+              }}
+            >{editandoBancoHoras ? "Salvando..." : "Salvar"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
