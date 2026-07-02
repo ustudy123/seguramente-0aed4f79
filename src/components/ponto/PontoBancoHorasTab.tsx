@@ -54,6 +54,7 @@ export function PontoBancoHorasTab() {
   const [editBanco, setEditBanco] = useState<null | {
     id: string;
     colaborador_id: string;
+    colaborador_cpf: string;
     colaborador_nome: string;
     tipo: string;
     competencia: string;
