@@ -175,8 +175,35 @@ const Ponto = () => {
     enabled: !!tenantIdAtivo,
   });
 
+  // Colaboradores DESLIGADOS do tenant — usados para NÃO exibi-los no espelho
+  // a partir da data de desligamento (dias anteriores, em que trabalharam,
+  // continuam visíveis para rescisão/auditoria).
+  const { data: desligados = [] } = useQuery({
+    queryKey: ["ponto-desligados", tenantIdAtivo],
+    queryFn: async () => {
+      if (!tenantIdAtivo) return [] as any[];
+      const { data, error } = await fromTable("admissoes")
+        .select("cpf, data_desligamento")
+        .eq("tenant_id", tenantIdAtivo)
+        .eq("status", "desligado") as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantIdAtivo,
+  });
+
   // Agrupa por CPF (apenas dígitos para evitar divergências de máscara)
   const onlyDigits = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
+
+  // CPF (dígitos) → data_desligamento (ou null quando não informada).
+  const desligadosPorCpf = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const d of desligados) {
+      const k = onlyDigits(d.cpf);
+      if (k) map.set(k, d.data_desligamento || null);
+    }
+    return map;
+  }, [desligados]);
   const marcacoesPorCpf = useMemo(() => {
     const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; hash?: string; endereco?: string; selfieUrl?: string }>>();
     for (const m of marcacoesDoDia) {
@@ -351,15 +378,23 @@ const Ponto = () => {
     //    com nenhum colaborador da lista (cadastro divergente: empresa
     //    trocada, admissão pendente, bate_ponto desmarcado). Sem isso, uma
     //    batida real cujo cadastro diverge sumiria do espelho.
+    //    EXCEÇÃO: colaboradores DESLIGADOS não voltam por aqui a partir da
+    //    data de desligamento (sem data informada, nunca voltam) — antes,
+    //    o ponto_diario deles reentrava no espelho por este passo.
     for (const p of pontosDiarios) {
       if (usados.has(p.id)) continue;
+      const cpfDig = (p.colaborador_cpf || "").replace(/\D/g, "");
+      if (cpfDig && desligadosPorCpf.has(cpfDig)) {
+        const dataDeslig = desligadosPorCpf.get(cpfDig);
+        if (!dataDeslig || dataSelStr >= dataDeslig) continue;
+      }
       if (!!empresaAtivaId && p.empresa_id === empresaAtivaId) rows.push(p);
     }
 
     return rows.sort((a, b) =>
       (a.colaborador_nome || "").localeCompare(b.colaborador_nome || "", "pt-BR", { sensitivity: "base" })
     );
-  }, [colaboradores, pontosDiarios, empresaAtivaId, tenantIdAtivo, dataSelStr]);
+  }, [colaboradores, pontosDiarios, empresaAtivaId, tenantIdAtivo, dataSelStr, desligadosPorCpf]);
 
   const filteredPontos = espelhoRows.filter((ponto) => {
     // Só lista no espelho quem tem ao menos uma marcação no dia. Some quem
