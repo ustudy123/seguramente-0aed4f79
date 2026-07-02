@@ -112,6 +112,31 @@ export function PontoBancoHorasTab() {
     setMovForm({ tipo: "credito", minutos: 0, data_referencia: format(new Date(), "yyyy-MM-dd"), descricao: "" });
   };
 
+  // Dias do colaborador em edição (ponto_diario da competência)
+  const editComp = editBanco?.competencia || "";
+  const editIniFim = editComp && /^\d{4}-\d{2}$/.test(editComp)
+    ? { ini: `${editComp}-01`, fim: `${editComp}-31` }
+    : null;
+  const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
+    queryKey: ["banco-horas-dias", editBanco?.colaborador_id, editComp],
+    enabled: !!editBanco && !!editIniFim,
+    queryFn: async () => {
+      if (!editBanco || !editIniFim) return [];
+      const { data, error } = await (supabase as any)
+        .from("ponto_diario")
+        .select("id, data, horas_trabalhadas_minutos, saldo_minutos, entrada, saida, status, observacao")
+        .eq("colaborador_id", editBanco.colaborador_id)
+        .gte("data", editIniFim.ini)
+        .lte("data", editIniFim.fim)
+        .order("data", { ascending: true });
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string; data: string; horas_trabalhadas_minutos: number | null; saldo_minutos: number | null;
+        entrada: string | null; saida: string | null; status: string | null; observacao: string | null;
+      }>;
+    },
+  });
+
   const totalCreditos = bancos.reduce((s, b) => s + b.creditos_minutos, 0);
   const totalDebitos = bancos.reduce((s, b) => s + b.debitos_minutos, 0);
   const totalSaldo = bancos.reduce((s, b) => s + b.saldo_atual_minutos, 0);
