@@ -5,9 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Save, X, Pencil, Clock, Paperclip, ShieldAlert, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Save, X, Pencil, Clock, Paperclip, ShieldAlert } from "lucide-react";
 import { usePontoJustificativas, type PontoJustificativa, type TipoAbono } from "@/hooks/usePontoJustificativas";
 
 interface Props {
@@ -27,7 +26,7 @@ const ABONO_BADGE: Record<TipoAbono, string> = {
 };
 
 export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
-  const { justificativas, loading, podeGerenciar, salvar, salvando, remover, restaurarPadroes, restaurando } = usePontoJustificativas();
+  const { justificativas, loading, podeGerenciar, salvar, salvando, remover } = usePontoJustificativas();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -76,14 +75,6 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
             Cadastre os motivos que o gestor pode escolher ao ajustar o ponto. Cada justificativa tem uma regra de <strong>abono automático</strong> (Sim / Não / Configurável), aplicada na aprovação do ajuste — não é mais preciso informar horas de abono manualmente.
           </DialogDescription>
         </DialogHeader>
-
-        {podeGerenciar && (
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => restaurarPadroes()} disabled={restaurando}>
-              <RotateCcw className="w-3.5 h-3.5 mr-1" /> {restaurando ? "Restaurando…" : "Restaurar padrões"}
-            </Button>
-          </div>
-        )}
 
         {!podeGerenciar && (
           <div className="flex items-center gap-2 text-sm bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 rounded-md p-3">
@@ -137,7 +128,9 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
           </div>
         )}
 
-        <ScrollArea className="flex-1 border rounded-md">
+        {/* min-h-0 é obrigatório: sem ele o item flex não encolhe e a lista
+            estoura o modal sem barra de rolagem (justificativas ficavam cortadas). */}
+        <div className="flex-1 min-h-0 overflow-y-auto border rounded-md scrollbar-thin">
           {loading ? (
             <p className="text-center text-sm text-muted-foreground py-8">Carregando…</p>
           ) : justificativas.length === 0 ? (
@@ -146,7 +139,7 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
             </p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-muted/50 sticky top-0">
+              <thead className="bg-muted/50 sticky top-0 z-10">
                 <tr className="text-left">
                   <th className="px-3 py-2 font-medium">Nome</th>
                   <th className="px-3 py-2 font-medium w-28">Abono</th>
@@ -189,7 +182,7 @@ export function ConfigJustificativasModal({ open, onOpenChange }: Props) {
               </tbody>
             </table>
           )}
-        </ScrollArea>
+        </div>
 
         <div className="flex justify-end pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
