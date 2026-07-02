@@ -1,0 +1,1 @@
+UPDATE public.atestados SET minutos_afastamento = 6 WHERE id = '29abc01f-7599-4b13-9f0c-48ccaca693bd';
