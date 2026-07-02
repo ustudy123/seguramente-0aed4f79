@@ -170,12 +170,21 @@ export function PontoBancoHorasTab() {
     },
   });
 
-
-  const totalCreditos = bancos.reduce((s, b) => s + b.creditos_minutos, 0);
-  const totalDebitos = bancos.reduce((s, b) => s + b.debitos_minutos, 0);
-  const totalSaldo = bancos.reduce((s, b) => s + b.saldo_atual_minutos, 0);
-
   const onlyDigits = (s: string) => (s || "").toString().replace(/\D/g, "");
+
+  // Filtra bancos de colaboradores ativos (useColaboradores já exclui inativos/desligados)
+  const cpfsAtivos = new Set(colaboradores.map(c => onlyDigits(c.cpf || "")));
+  const idsAtivos = new Set(colaboradores.map(c => c.id));
+  const bancosVisiveis = bancos.filter(b => {
+    const cpf = onlyDigits((b as any).colaborador_cpf || "");
+    if (cpf && cpfsAtivos.has(cpf)) return true;
+    if (b.colaborador_id && idsAtivos.has(b.colaborador_id)) return true;
+    return false;
+  });
+
+  const totalCreditos = bancosVisiveis.reduce((s, b) => s + b.creditos_minutos, 0);
+  const totalDebitos = bancosVisiveis.reduce((s, b) => s + b.debitos_minutos, 0);
+  const totalSaldo = bancosVisiveis.reduce((s, b) => s + b.saldo_atual_minutos, 0);
 
   const baixarModeloImport = () => {
     const ws = XLSX.utils.aoa_to_sheet([
@@ -337,9 +346,9 @@ export function PontoBancoHorasTab() {
             <TableBody>
               {isLoading ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
-              ) : bancos.length === 0 ? (
+              ) : bancosVisiveis.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum banco de horas para esta competência.</TableCell></TableRow>
-              ) : bancos.map(b => (
+              ) : bancosVisiveis.map(b => (
                 <TableRow key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedBanco(b)}>
                   <TableCell className="font-medium">{b.colaborador_nome}</TableCell>
                   <TableCell><Badge variant="outline">{b.tipo}</Badge></TableCell>
