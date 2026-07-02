@@ -596,7 +596,7 @@ export function PontoBancoHorasTab() {
       </Dialog>
       {/* Dialog Editar Banco de Horas */}
       <Dialog open={!!editBanco} onOpenChange={(o) => { if (!o) setEditBanco(null); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Editar Banco de Horas — {editBanco?.colaborador_nome}
