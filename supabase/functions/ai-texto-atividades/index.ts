@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getCompanyContext } from "../_shared/ai-helper.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +21,36 @@ serve(async (req) => {
       throw new Error("Texto muito curto. Forneça uma descrição mais detalhada.");
     }
 
-    console.log("Extraindo atividades do texto...", texto.substring(0, 100));
+    // Tenta obter contexto da empresa (não bloqueia se falhar)
+    let companyContext = "";
+    try {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const token = authHeader.replace("Bearer ", "");
+        const payload = JSON.parse(
+          atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+        );
+        const userId = payload.sub;
+        if (userId) {
+          const supabase = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+          );
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("tenant_id")
+            .eq("user_id", userId)
+            .single();
+          if (profile?.tenant_id) {
+            companyContext = await getCompanyContext(supabase, profile.tenant_id);
+          }
+        }
+      }
+    } catch (ctxErr) {
+      console.warn("Não foi possível carregar contexto da empresa:", ctxErr);
+    }
+
+    console.log("Extraindo atividades do texto...", texto.length, "chars");
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -29,33 +60,41 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        max_tokens: 8000,
         messages: [
           {
             role: "system",
-            content: `Você é um especialista em análise de cargos e funções corporativas.
-Sua tarefa é extrair atividades profissionais a partir de um texto descritivo de uma função/cargo.
+            content: `Você é um especialista sênior em análise de cargos e funções corporativas.
+Sua tarefa é EXTRAIR EXAUSTIVAMENTE todas as atividades profissionais mencionadas em um texto descritivo de função/cargo.
+
+${companyContext}
+
+REGRAS OBRIGATÓRIAS DE EXTRAÇÃO:
+1. Extraia TODAS as atividades citadas, mesmo que mencionadas de forma breve, em bullet points, listas, tabelas ou parágrafos corridos.
+2. NÃO agrupe atividades distintas em uma só. Cada tarefa/responsabilidade descrita deve virar UMA atividade separada.
+3. Se o texto tiver 30 atividades, retorne 30. Se tiver 50, retorne 50. Não há limite máximo.
+4. Não invente atividades que não estejam no texto — extraia apenas o que estiver descrito ou claramente implícito.
+5. Use o contexto da empresa (setor/CNAE/cultura) para dar precisão às descrições, mas NÃO para adicionar atividades inexistentes.
 
 Para cada atividade identificada, determine:
-- nome: título curto e claro da atividade (máximo 60 caracteres, verbo no infinitivo)
-- descricao: descrição detalhada do que a atividade envolve
-- frequencia: "diaria", "semanal", "mensal" ou "eventual"
-- complexidade: "baixa", "media" ou "alta"
-- classificacao: "rotineira", "critica" ou "excepcional"
+- nome: título curto e claro (máx. 60 caracteres, verbo no infinitivo — ex: "Elaborar relatórios mensais")
+- descricao: descrição detalhada do que a atividade envolve (2-4 frases)
+- frequencia: "diaria" | "semanal" | "mensal" | "eventual"
+- complexidade: "baixa" | "media" | "alta"
+- classificacao: "rotineira" | "critica" | "excepcional"
 
-Extraia TODAS as atividades mencionadas, mesmo que citadas brevemente.
-Seja objetivo nos nomes. Use verbos no infinitivo (Ex: "Elaborar relatórios mensais").
 Responda SEMPRE em português brasileiro.`
           },
           {
             role: "user",
-            content: `Função/Cargo: ${funcaoNome || "Não informado"}\n\nDescrição das atividades:\n"${texto}"\n\nExtraia todas as atividades profissionais mencionadas.`
+            content: `Função/Cargo: ${funcaoNome || "Não informado"}\n\nDescrição das atividades:\n"""\n${texto}\n"""\n\nExtraia TODAS as atividades profissionais mencionadas — não deixe nenhuma de fora.`
           }
         ],
         tools: [{
           type: "function",
           function: {
             name: "registrar_atividades",
-            description: "Registra as atividades extraídas do texto descritivo",
+            description: "Registra TODAS as atividades extraídas do texto descritivo, sem omitir nenhuma.",
             parameters: {
               type: "object",
               properties: {
@@ -99,6 +138,7 @@ Responda SEMPRE em português brasileiro.`
     if (!toolCall?.function?.arguments) throw new Error("Resposta inválida da IA");
 
     const resultado = JSON.parse(toolCall.function.arguments);
+    console.log(`Atividades extraídas: ${resultado.atividades?.length ?? 0}`);
 
     return new Response(JSON.stringify(resultado), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

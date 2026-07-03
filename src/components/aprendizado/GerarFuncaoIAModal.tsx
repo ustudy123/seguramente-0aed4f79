@@ -106,13 +106,13 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
                 placeholder={`Ex: "${cargoNome} responsável por gestão financeira, contas a pagar e receber, conciliação bancária e relatórios gerenciais no setor industrial"`}
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
-                className="min-h-[120px] resize-y"
-                maxLength={5000}
+                className="min-h-[200px] resize-y"
+                maxLength={30000}
                 disabled={loading}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Deixe vazio para usar apenas o nome do cargo: "{cargoNome}"</span>
-                <span className={descricao.length > 4500 ? "text-destructive font-medium" : ""}>{descricao.length}/5.000</span>
+                <span className={descricao.length > 27000 ? "text-destructive font-medium" : ""}>{descricao.length.toLocaleString("pt-BR")}/30.000</span>
               </div>
             </div>
 
