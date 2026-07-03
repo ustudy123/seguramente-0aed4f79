@@ -6,10 +6,15 @@ interface GeneratePdfFromHtmlOptions {
   filenamePrefix: string;
 }
 
-const PDF_MARGIN_MM = 15;
-const PDF_RENDER_SCALE = 2; // Reduced from 3 to avoid memory issues
-const LONG_TEXT_MIN_LENGTH = 80;
+// ABNT margins: superior 3cm, esquerda 3cm, inferior 2cm, direita 2cm
+const PDF_MARGIN_TOP_MM = 30;
+const PDF_MARGIN_LEFT_MM = 30;
+const PDF_MARGIN_RIGHT_MM = 20;
+const PDF_MARGIN_BOTTOM_MM = 20;
+const PDF_RENDER_SCALE = 2;
+const LONG_TEXT_MIN_LENGTH = 40;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
 
 function sanitizeFilename(value: string) {
   return value
@@ -76,23 +81,25 @@ export function normalizeManualHtml(html: string) {
   baseStyle.textContent = `
     html, body {
       background: #ffffff !important;
-      color: #000000 !important;
+      color: #1a1a1a !important;
       margin: 0 !important;
       padding: 0 !important;
+      font-family: 'Times New Roman', Times, Georgia, serif !important;
     }
 
     body {
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
       font-kerning: normal;
-      width: 794px !important;
-      max-width: 794px !important;
+      width: 604px !important;
+      max-width: 604px !important;
       margin: 0 auto !important;
-      padding: 0 40px !important;
+      padding: 0 !important;
       box-sizing: border-box !important;
       overflow-wrap: break-word;
       word-wrap: break-word;
-      word-break: break-word;
+      font-size: 12pt !important;
+      line-height: 1.5 !important;
     }
 
     *, *::before, *::after {
@@ -110,7 +117,12 @@ export function normalizeManualHtml(html: string) {
       overflow-wrap: break-word;
       word-wrap: break-word;
     }
+
+    p { text-align: justify !important; text-justify: inter-word; hyphens: none !important; margin: 0 0 10px 0 !important; }
+    li { text-align: justify !important; margin-bottom: 6px !important; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Times New Roman', Times, Georgia, serif !important; }
   `;
+
   documentNode.head.appendChild(baseStyle);
 
   // Ensure naked text nodes in body are wrapped in <p>
@@ -328,7 +340,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     "position: fixed",
     "top: 0",
     "left: -5000px", // Less extreme offset
-    "width: 794px",
+    "width: 604px",
     "background: #ffffff",
     "visibility: visible",
     "display: block",
@@ -344,17 +356,17 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   const contentDiv = document.createElement("div");
   contentDiv.innerHTML = bodyContent;
   contentDiv.style.cssText = [
-    "width: 794px",
-    "max-width: 794px",
+    "width: 604px",
+    "max-width: 604px",
     "margin: 0 auto",
-    "padding: 0 40px",
+    "padding: 0",
     "box-sizing: border-box",
     "overflow-wrap: break-word",
     "word-wrap: break-word",
-    "word-break: break-word",
     "background: #ffffff",
-    "color: #000000",
+    "color: #1a1a1a",
   ].join(";");
+
   container.appendChild(contentDiv);
 
   document.body.appendChild(container);
@@ -381,8 +393,8 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const contentWidth = pdfWidth - PDF_MARGIN_MM * 2;
-    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2 - 3; // 3mm bottom safety to avoid clipping descenders
+    const contentWidth = pdfWidth - PDF_MARGIN_LEFT_MM - PDF_MARGIN_RIGHT_MM;
+    const usableHeight = pdfHeight - PDF_MARGIN_TOP_MM - PDF_MARGIN_BOTTOM_MM - 3; // safety
     const SECTION_GAP_MM = 2;
 
     const sections = collectSections(contentDiv);
@@ -393,13 +405,14 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       throw new Error("Não foi possível identificar o conteúdo do manual para geração do PDF.");
     }
 
-    let currentY = PDF_MARGIN_MM;
+    let currentY = PDF_MARGIN_TOP_MM;
+
 
     const renderElementToCanvas = async (element: HTMLElement) => {
       // For grouped wrappers, mount them temporarily into the container
       const needsMount = !element.isConnected;
       if (needsMount) {
-        element.style.width = "754px"; // 794 - 2*20 padding
+        element.style.width = "604px";
         element.style.boxSizing = "border-box";
         element.style.background = "#ffffff";
         container.appendChild(element);
@@ -416,7 +429,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           allowTaint: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: 794,
+          windowWidth: 604,
         });
         if (needsMount) container.removeChild(element);
         return canvas;
@@ -431,7 +444,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
 
     const addCanvasAsImage = (canvas: HTMLCanvasElement, heightMm: number) => {
       const data = canvas.toDataURL("image/png");
-      pdf.addImage(data, "PNG", PDF_MARGIN_MM, currentY, contentWidth, heightMm);
+      pdf.addImage(data, "PNG", PDF_MARGIN_LEFT_MM, currentY, contentWidth, heightMm);
       currentY += heightMm + SECTION_GAP_MM;
     };
 
@@ -439,24 +452,24 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
       let y = 0;
       while (y < canvas.height) {
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY - 3;
+        const remainingMm = pdfHeight - PDF_MARGIN_BOTTOM_MM - currentY - 3;
         const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
         if (availablePx < 60) {
           pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+          currentY = PDF_MARGIN_TOP_MM;
           continue;
         }
         let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
         if (y + sliceH < canvas.height) {
-          const scanStart = Math.max(24, sliceH - 160);
+          const scanStart = Math.max(24, sliceH - 240);
           const scanEnd = Math.max(scanStart, sliceH - 8);
           let bestBreak = -1;
 
           const ctx = canvas.getContext("2d", { willReadFrequently: true });
           if (ctx) {
-            // Look for a band of consecutive blank rows (not just one), so we
-            // don't break in the middle of descenders.
-            const requiredBlankBand = 6;
+            // Look for a band of consecutive blank rows so we don't break
+            // through descenders (g, p, y) or ascenders.
+            const requiredBlankBand = 10;
             let blankRun = 0;
             for (let row = scanEnd; row >= scanStart; row -= 1) {
               const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
@@ -468,10 +481,10 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
                 if (alpha > 10 && isDark) inkPixels += 1;
               }
 
-              if (inkPixels < canvas.width * 0.01) {
+              if (inkPixels < canvas.width * 0.005) {
                 blankRun += 1;
                 if (blankRun >= requiredBlankBand) {
-                  bestBreak = row + requiredBlankBand; // break at top of blank band
+                  bestBreak = row + requiredBlankBand;
                   break;
                 }
               } else {
@@ -497,7 +510,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         y += sliceH;
         if (y < canvas.height) {
           pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+          currentY = PDF_MARGIN_TOP_MM;
         }
       }
     };
@@ -511,29 +524,27 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         }
 
         const heightMm = (canvas.height * contentWidth) / canvas.width;
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+        const remainingMm = pdfHeight - PDF_MARGIN_BOTTOM_MM - currentY;
 
         if (heightMm <= usableHeight) {
-          // Fits on a page — push to next page if needed
-          if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
+          if (heightMm > remainingMm && currentY > PDF_MARGIN_TOP_MM) {
             pdf.addPage();
-            currentY = PDF_MARGIN_MM;
+            currentY = PDF_MARGIN_TOP_MM;
           }
           addCanvasAsImage(canvas, heightMm);
         } else {
-          // Section is too tall for a single page — slice safely
-          if (currentY > PDF_MARGIN_MM) {
+          if (currentY > PDF_MARGIN_TOP_MM) {
             pdf.addPage();
-            currentY = PDF_MARGIN_MM;
+            currentY = PDF_MARGIN_TOP_MM;
           }
           sliceTallCanvas(canvas);
         }
       } catch (sectionErr) {
         console.error("Erro ao renderizar seção do manual:", sectionErr);
-        // Continue to next section instead of failing everything
         continue;
       }
     }
+
 
     const finalTotalPages = pdf.getNumberOfPages();
     for (let page = 1; page <= finalTotalPages; page += 1) {
