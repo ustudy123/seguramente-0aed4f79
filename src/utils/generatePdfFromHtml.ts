@@ -6,10 +6,15 @@ interface GeneratePdfFromHtmlOptions {
   filenamePrefix: string;
 }
 
-const PDF_MARGIN_MM = 15;
-const PDF_RENDER_SCALE = 2; // Reduced from 3 to avoid memory issues
-const LONG_TEXT_MIN_LENGTH = 80;
+// ABNT margins: superior 3cm, esquerda 3cm, inferior 2cm, direita 2cm
+const PDF_MARGIN_TOP_MM = 30;
+const PDF_MARGIN_LEFT_MM = 30;
+const PDF_MARGIN_RIGHT_MM = 20;
+const PDF_MARGIN_BOTTOM_MM = 20;
+const PDF_RENDER_SCALE = 2;
+const LONG_TEXT_MIN_LENGTH = 40;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
 
 function sanitizeFilename(value: string) {
   return value
