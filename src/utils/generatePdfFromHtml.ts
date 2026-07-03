@@ -359,14 +359,14 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     "width: 794px",
     "max-width: 794px",
     "margin: 0 auto",
-    "padding: 0 40px",
+    "padding: 0",
     "box-sizing: border-box",
     "overflow-wrap: break-word",
     "word-wrap: break-word",
-    "word-break: break-word",
     "background: #ffffff",
-    "color: #000000",
+    "color: #1a1a1a",
   ].join(";");
+
   container.appendChild(contentDiv);
 
   document.body.appendChild(container);
