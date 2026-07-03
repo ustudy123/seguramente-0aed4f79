@@ -386,8 +386,8 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const contentWidth = pdfWidth - PDF_MARGIN_MM * 2;
-    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2 - 3; // 3mm bottom safety to avoid clipping descenders
+    const contentWidth = pdfWidth - PDF_MARGIN_LEFT_MM - PDF_MARGIN_RIGHT_MM;
+    const usableHeight = pdfHeight - PDF_MARGIN_TOP_MM - PDF_MARGIN_BOTTOM_MM - 3; // safety
     const SECTION_GAP_MM = 2;
 
     const sections = collectSections(contentDiv);
@@ -398,7 +398,8 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       throw new Error("Não foi possível identificar o conteúdo do manual para geração do PDF.");
     }
 
-    let currentY = PDF_MARGIN_MM;
+    let currentY = PDF_MARGIN_TOP_MM;
+
 
     const renderElementToCanvas = async (element: HTMLElement) => {
       // For grouped wrappers, mount them temporarily into the container
