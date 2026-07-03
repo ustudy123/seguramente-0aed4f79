@@ -131,47 +131,93 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-foreground">Função gerada e salva com sucesso!</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {resultado.atividades?.length || 0} atividades, {resultado.competencias?.length || 0} competências 
+                  {resultado.atividades?.length || 0} atividades, {resultado.competencias?.length || 0} competências
                   e {resultado.indicadores?.length || 0} indicadores foram criados automaticamente.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 text-sm">
-              {resultado.objetivo_funcao && (
-                <div>
-                  <p className="font-medium text-foreground">🎯 Objetivo</p>
-                  <p className="text-muted-foreground">{resultado.objetivo_funcao}</p>
-                </div>
-              )}
-              {resultado.escopo_geral && (
-                <div>
-                  <p className="font-medium text-foreground">📋 Escopo</p>
-                  <p className="text-muted-foreground">{resultado.escopo_geral}</p>
-                </div>
-              )}
-              {resultado.atividades?.length > 0 && (
-                <div>
-                  <p className="font-medium text-foreground">📌 Atividades ({resultado.atividades.length})</p>
-                  <ul className="list-disc ml-5 text-muted-foreground space-y-0.5">
-                    {resultado.atividades.slice(0, 5).map((a: any, i: number) => (
-                      <li key={i}>{a.nome} <span className="text-xs opacity-70">({a.frequencia})</span></li>
-                    ))}
-                    {resultado.atividades.length > 5 && (
-                      <li className="text-xs opacity-60">+ {resultado.atividades.length - 5} mais...</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-            </div>
+            {resultado.objetivo_funcao && (
+              <div className="rounded-lg border bg-card p-4">
+                <p className="font-medium text-foreground mb-1">🎯 Objetivo</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{resultado.objetivo_funcao}</p>
+              </div>
+            )}
 
-            <div className="flex justify-end">
+            {resultado.escopo_geral && (
+              <div className="rounded-lg border bg-card p-4">
+                <p className="font-medium text-foreground mb-1">📋 Escopo</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{resultado.escopo_geral}</p>
+              </div>
+            )}
+
+            {resultado.atividades?.length > 0 && (
+              <div className="rounded-lg border bg-card p-4">
+                <p className="font-medium text-foreground mb-3">📌 Atividades ({resultado.atividades.length})</p>
+                <div className="space-y-2">
+                  {resultado.atividades.map((a: any, i: number) => (
+                    <div key={i} className="rounded-md border bg-background p-3">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="text-sm font-medium text-foreground">{i + 1}. {a.nome}</p>
+                        <div className="flex gap-1 shrink-0 flex-wrap justify-end">
+                          {a.frequencia && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">{a.frequencia}</span>}
+                          {a.complexidade && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400">{a.complexidade}</span>}
+                          {a.classificacao && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-400">{a.classificacao}</span>}
+                        </div>
+                      </div>
+                      {a.descricao && <p className="text-xs text-muted-foreground">{a.descricao}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {resultado.competencias?.length > 0 && (
+              <div className="rounded-lg border bg-card p-4">
+                <p className="font-medium text-foreground mb-3">🧠 Competências ({resultado.competencias.length})</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {resultado.competencias.map((c: any, i: number) => (
+                    <div key={i} className="rounded-md border bg-background p-2">
+                      <p className="text-sm text-foreground">{c.nome || c.competencia || c.titulo}</p>
+                      {c.tipo && <p className="text-[10px] text-muted-foreground uppercase mt-0.5">{c.tipo}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {resultado.indicadores?.length > 0 && (
+              <div className="rounded-lg border bg-card p-4">
+                <p className="font-medium text-foreground mb-3">📊 Indicadores ({resultado.indicadores.length})</p>
+                <ul className="space-y-1.5">
+                  {resultado.indicadores.map((ind: any, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground">
+                      • <span className="text-foreground">{ind.nome || ind.indicador || ind.titulo}</span>
+                      {ind.meta && <span className="text-xs opacity-70"> — meta: {ind.meta}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {resultado.responsabilidades?.length > 0 && (
+              <div className="rounded-lg border bg-card p-4">
+                <p className="font-medium text-foreground mb-3">✅ Responsabilidades ({resultado.responsabilidades.length})</p>
+                <ul className="space-y-1 list-disc ml-5">
+                  {resultado.responsabilidades.map((r: any, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground">{typeof r === "string" ? r : (r.descricao || r.nome)}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex justify-end sticky bottom-0 bg-background pt-2 -mx-6 px-6 border-t">
               <Button onClick={handleClose}>Fechar e ver detalhes</Button>
             </div>
           </div>
