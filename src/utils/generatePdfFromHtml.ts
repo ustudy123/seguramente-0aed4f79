@@ -437,7 +437,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
 
     const addCanvasAsImage = (canvas: HTMLCanvasElement, heightMm: number) => {
       const data = canvas.toDataURL("image/png");
-      pdf.addImage(data, "PNG", PDF_MARGIN_MM, currentY, contentWidth, heightMm);
+      pdf.addImage(data, "PNG", PDF_MARGIN_LEFT_MM, currentY, contentWidth, heightMm);
       currentY += heightMm + SECTION_GAP_MM;
     };
 
@@ -445,24 +445,24 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
       let y = 0;
       while (y < canvas.height) {
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY - 3;
+        const remainingMm = pdfHeight - PDF_MARGIN_BOTTOM_MM - currentY - 3;
         const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
         if (availablePx < 60) {
           pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+          currentY = PDF_MARGIN_TOP_MM;
           continue;
         }
         let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
         if (y + sliceH < canvas.height) {
-          const scanStart = Math.max(24, sliceH - 160);
+          const scanStart = Math.max(24, sliceH - 240);
           const scanEnd = Math.max(scanStart, sliceH - 8);
           let bestBreak = -1;
 
           const ctx = canvas.getContext("2d", { willReadFrequently: true });
           if (ctx) {
-            // Look for a band of consecutive blank rows (not just one), so we
-            // don't break in the middle of descenders.
-            const requiredBlankBand = 6;
+            // Look for a band of consecutive blank rows so we don't break
+            // through descenders (g, p, y) or ascenders.
+            const requiredBlankBand = 10;
             let blankRun = 0;
             for (let row = scanEnd; row >= scanStart; row -= 1) {
               const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
@@ -474,10 +474,10 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
                 if (alpha > 10 && isDark) inkPixels += 1;
               }
 
-              if (inkPixels < canvas.width * 0.01) {
+              if (inkPixels < canvas.width * 0.005) {
                 blankRun += 1;
                 if (blankRun >= requiredBlankBand) {
-                  bestBreak = row + requiredBlankBand; // break at top of blank band
+                  bestBreak = row + requiredBlankBand;
                   break;
                 }
               } else {
@@ -503,7 +503,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         y += sliceH;
         if (y < canvas.height) {
           pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+          currentY = PDF_MARGIN_TOP_MM;
         }
       }
     };
@@ -517,29 +517,27 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         }
 
         const heightMm = (canvas.height * contentWidth) / canvas.width;
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+        const remainingMm = pdfHeight - PDF_MARGIN_BOTTOM_MM - currentY;
 
         if (heightMm <= usableHeight) {
-          // Fits on a page — push to next page if needed
-          if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
+          if (heightMm > remainingMm && currentY > PDF_MARGIN_TOP_MM) {
             pdf.addPage();
-            currentY = PDF_MARGIN_MM;
+            currentY = PDF_MARGIN_TOP_MM;
           }
           addCanvasAsImage(canvas, heightMm);
         } else {
-          // Section is too tall for a single page — slice safely
-          if (currentY > PDF_MARGIN_MM) {
+          if (currentY > PDF_MARGIN_TOP_MM) {
             pdf.addPage();
-            currentY = PDF_MARGIN_MM;
+            currentY = PDF_MARGIN_TOP_MM;
           }
           sliceTallCanvas(canvas);
         }
       } catch (sectionErr) {
         console.error("Erro ao renderizar seção do manual:", sectionErr);
-        // Continue to next section instead of failing everything
         continue;
       }
     }
+
 
     const finalTotalPages = pdf.getNumberOfPages();
     for (let page = 1; page <= finalTotalPages; page += 1) {
