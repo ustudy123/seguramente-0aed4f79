@@ -340,7 +340,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     "position: fixed",
     "top: 0",
     "left: -5000px", // Less extreme offset
-    "width: 794px",
+    "width: 604px",
     "background: #ffffff",
     "visibility: visible",
     "display: block",
@@ -356,8 +356,8 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   const contentDiv = document.createElement("div");
   contentDiv.innerHTML = bodyContent;
   contentDiv.style.cssText = [
-    "width: 794px",
-    "max-width: 794px",
+    "width: 604px",
+    "max-width: 604px",
     "margin: 0 auto",
     "padding: 0",
     "box-sizing: border-box",
@@ -412,7 +412,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       // For grouped wrappers, mount them temporarily into the container
       const needsMount = !element.isConnected;
       if (needsMount) {
-        element.style.width = "754px"; // 794 - 2*20 padding
+        element.style.width = "604px";
         element.style.boxSizing = "border-box";
         element.style.background = "#ffffff";
         container.appendChild(element);
@@ -429,7 +429,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           allowTaint: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: 794,
+          windowWidth: 604,
         });
         if (needsMount) container.removeChild(element);
         return canvas;
