@@ -81,9 +81,10 @@ export function normalizeManualHtml(html: string) {
   baseStyle.textContent = `
     html, body {
       background: #ffffff !important;
-      color: #000000 !important;
+      color: #1a1a1a !important;
       margin: 0 !important;
       padding: 0 !important;
+      font-family: 'Times New Roman', Times, Georgia, serif !important;
     }
 
     body {
@@ -93,11 +94,12 @@ export function normalizeManualHtml(html: string) {
       width: 794px !important;
       max-width: 794px !important;
       margin: 0 auto !important;
-      padding: 0 40px !important;
+      padding: 0 !important;
       box-sizing: border-box !important;
       overflow-wrap: break-word;
       word-wrap: break-word;
-      word-break: break-word;
+      font-size: 12pt !important;
+      line-height: 1.5 !important;
     }
 
     *, *::before, *::after {
@@ -115,7 +117,12 @@ export function normalizeManualHtml(html: string) {
       overflow-wrap: break-word;
       word-wrap: break-word;
     }
+
+    p { text-align: justify !important; text-justify: inter-word; hyphens: none !important; margin: 0 0 10px 0 !important; }
+    li { text-align: justify !important; margin-bottom: 6px !important; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Times New Roman', Times, Georgia, serif !important; }
   `;
+
   documentNode.head.appendChild(baseStyle);
 
   // Ensure naked text nodes in body are wrapped in <p>
