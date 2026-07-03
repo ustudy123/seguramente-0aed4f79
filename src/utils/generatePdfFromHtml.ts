@@ -91,8 +91,8 @@ export function normalizeManualHtml(html: string) {
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
       font-kerning: normal;
-      width: 794px !important;
-      max-width: 794px !important;
+      width: 604px !important;
+      max-width: 604px !important;
       margin: 0 auto !important;
       padding: 0 !important;
       box-sizing: border-box !important;
