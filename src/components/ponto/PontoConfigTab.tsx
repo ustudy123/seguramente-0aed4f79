@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 import { ConfigJustificativasModal } from "./ConfigJustificativasModal";
+import { GeofenceConfigCard } from "./GeofenceConfigCard";
 
 interface PontoConfig {
   id: string;
@@ -226,6 +227,11 @@ export function PontoConfigTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cerca de Geolocalização — só gestor vê o resultado das batidas */}
+      <GeofenceConfigCard />
+
+
 
       {/* Tolerâncias */}
       <Card>

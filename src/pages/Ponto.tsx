@@ -121,7 +121,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,hash_marcacao,endereco_geolocalizacao,selfie_url")
+        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,hash_marcacao,endereco_geolocalizacao,selfie_url,distancia_metros,dentro_cerca")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       // NÃO filtramos por empresa_id aqui de propósito. As marcações são
@@ -245,7 +245,7 @@ const Ponto = () => {
     return map;
   }, [desligados]);
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; hash?: string; endereco?: string; selfieUrl?: string }>>();
+    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; hash?: string; endereco?: string; selfieUrl?: string; distanciaMetros?: number | null; dentroCerca?: boolean | null }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
@@ -256,7 +256,9 @@ const Ponto = () => {
         original: m.marcacao_original ?? true,
         hash: m.hash_marcacao || undefined,
         endereco: m.endereco_geolocalizacao,
-        selfieUrl: m.selfie_url
+        selfieUrl: m.selfie_url,
+        distanciaMetros: m.distancia_metros ?? null,
+        dentroCerca: m.dentro_cerca ?? null,
       });
     }
     return map;
@@ -961,7 +963,13 @@ const Ponto = () => {
                                             onSalvar={editarMarcacao}
                                             onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
                                             excluindo={excluindoMarcacao}
+                                            endereco={m.endereco}
+                                            selfieUrl={m.selfieUrl}
+                                            tipo={m.tipo}
+                                            distanciaMetros={m.distanciaMetros ?? null}
+                                            dentroCerca={m.dentroCerca ?? null}
                                           />
+
                                         );
                                       })}
                                     </div>
