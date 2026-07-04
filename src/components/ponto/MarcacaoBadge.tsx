@@ -56,6 +56,22 @@ export function MarcacaoBadge({
             {tipo === 'batida' ? (isEntry ? 'Entrada' : 'Saída') : (tipo || (isEntry ? 'Entrada' : 'Saída'))}
           </span>
           {!original && <span className="text-[9px] bg-amber-100 text-amber-700 px-1 rounded">Ajustado</span>}
+          {podeEditar && dentroCerca === true && (
+            <span
+              className="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold"
+              title={distanciaMetros != null ? `Dentro da cerca (${Math.round(distanciaMetros)} m do local)` : "Dentro da cerca"}
+            >
+              ✓ Cerca{distanciaMetros != null ? ` ${Math.round(distanciaMetros)}m` : ""}
+            </span>
+          )}
+          {podeEditar && dentroCerca === false && (
+            <span
+              className="text-[9px] bg-amber-100 text-amber-800 px-1 rounded font-semibold"
+              title={distanciaMetros != null ? `Batida ${Math.round(distanciaMetros)} m FORA do raio configurado` : "Fora da cerca"}
+            >
+              ⚠ Fora{distanciaMetros != null ? ` ${Math.round(distanciaMetros)}m` : ""}
+            </span>
+          )}
         </div>
         
         {endereco && (
