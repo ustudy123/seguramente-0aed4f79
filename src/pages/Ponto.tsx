@@ -121,7 +121,7 @@ const Ponto = () => {
     queryFn: async () => {
       if (!tenantIdAtivo) return [] as any[];
       let q = fromTable("ponto_marcacoes")
-        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,hash_marcacao,endereco_geolocalizacao,selfie_url")
+        .select("id,colaborador_cpf,hora_marcacao,tipo_marcacao,marcacao_original,hash_marcacao,endereco_geolocalizacao,selfie_url,distancia_metros,dentro_cerca")
         .eq("tenant_id", tenantIdAtivo)
         .eq("data_marcacao", dataSelStr);
       // NÃO filtramos por empresa_id aqui de propósito. As marcações são
