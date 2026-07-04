@@ -245,7 +245,7 @@ const Ponto = () => {
     return map;
   }, [desligados]);
   const marcacoesPorCpf = useMemo(() => {
-    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; hash?: string; endereco?: string; selfieUrl?: string }>>();
+    const map = new Map<string, Array<{ id: string; hora: string; tipo: string; original: boolean; hash?: string; endereco?: string; selfieUrl?: string; distanciaMetros?: number | null; dentroCerca?: boolean | null }>>();
     for (const m of marcacoesDoDia) {
       const k = onlyDigits(m.colaborador_cpf);
       if (!map.has(k)) map.set(k, []);
@@ -256,7 +256,9 @@ const Ponto = () => {
         original: m.marcacao_original ?? true,
         hash: m.hash_marcacao || undefined,
         endereco: m.endereco_geolocalizacao,
-        selfieUrl: m.selfie_url
+        selfieUrl: m.selfie_url,
+        distanciaMetros: m.distancia_metros ?? null,
+        dentroCerca: m.dentro_cerca ?? null,
       });
     }
     return map;
