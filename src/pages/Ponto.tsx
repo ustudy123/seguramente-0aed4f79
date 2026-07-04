@@ -963,7 +963,13 @@ const Ponto = () => {
                                             onSalvar={editarMarcacao}
                                             onExcluir={podeEditarMarcacao ? excluirMarcacao : undefined}
                                             excluindo={excluindoMarcacao}
+                                            endereco={m.endereco}
+                                            selfieUrl={m.selfieUrl}
+                                            tipo={m.tipo}
+                                            distanciaMetros={m.distanciaMetros ?? null}
+                                            dentroCerca={m.dentroCerca ?? null}
                                           />
+
                                         );
                                       })}
                                     </div>
