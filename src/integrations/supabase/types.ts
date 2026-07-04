@@ -4432,6 +4432,7 @@ export type Database = {
           fap_atual: number | null
           fap_classificacao: string | null
           fap_historico: Json | null
+          geofence_ativo: boolean | null
           grau_risco: number | null
           grau_risco_ajustado: number | null
           grau_risco_justificativa: string | null
@@ -4441,7 +4442,9 @@ export type Database = {
           inscricao_estadual: string | null
           inscricao_municipal: string | null
           jornada_padrao: string | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           matriz_id: string | null
           nome_fantasia: string | null
           numero: string | null
@@ -4452,6 +4455,7 @@ export type Database = {
           periculosidade: boolean | null
           possui_escalas_especiais: boolean | null
           possui_terceiro_turno: boolean | null
+          raio_geofence_metros: number | null
           razao_social: string | null
           sesmt_obrigatorio: boolean | null
           sesmt_profissionais: Json | null
@@ -4502,6 +4506,7 @@ export type Database = {
           fap_atual?: number | null
           fap_classificacao?: string | null
           fap_historico?: Json | null
+          geofence_ativo?: boolean | null
           grau_risco?: number | null
           grau_risco_ajustado?: number | null
           grau_risco_justificativa?: string | null
@@ -4511,7 +4516,9 @@ export type Database = {
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           jornada_padrao?: string | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           matriz_id?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -4522,6 +4529,7 @@ export type Database = {
           periculosidade?: boolean | null
           possui_escalas_especiais?: boolean | null
           possui_terceiro_turno?: boolean | null
+          raio_geofence_metros?: number | null
           razao_social?: string | null
           sesmt_obrigatorio?: boolean | null
           sesmt_profissionais?: Json | null
@@ -4572,6 +4580,7 @@ export type Database = {
           fap_atual?: number | null
           fap_classificacao?: string | null
           fap_historico?: Json | null
+          geofence_ativo?: boolean | null
           grau_risco?: number | null
           grau_risco_ajustado?: number | null
           grau_risco_justificativa?: string | null
@@ -4581,7 +4590,9 @@ export type Database = {
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           jornada_padrao?: string | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           matriz_id?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -4592,6 +4603,7 @@ export type Database = {
           periculosidade?: boolean | null
           possui_escalas_especiais?: boolean | null
           possui_terceiro_turno?: boolean | null
+          raio_geofence_metros?: number | null
           razao_social?: string | null
           sesmt_obrigatorio?: boolean | null
           sesmt_profissionais?: Json | null
@@ -7698,8 +7710,12 @@ export type Database = {
           empresa_id: string | null
           endereco: string | null
           estado: string | null
+          geofence_ativo: boolean | null
           id: string
+          latitude: number | null
+          longitude: number | null
           nome: string
+          raio_geofence_metros: number | null
           responsavel_id: string | null
           telefone: string | null
           tenant_id: string
@@ -7717,8 +7733,12 @@ export type Database = {
           empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
+          geofence_ativo?: boolean | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           nome: string
+          raio_geofence_metros?: number | null
           responsavel_id?: string | null
           telefone?: string | null
           tenant_id: string
@@ -7736,8 +7756,12 @@ export type Database = {
           empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
+          geofence_ativo?: boolean | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           nome?: string
+          raio_geofence_metros?: number | null
           responsavel_id?: string | null
           telefone?: string | null
           tenant_id?: string
@@ -18390,9 +18414,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_marcacao: string
+          dentro_cerca: boolean | null
           dispositivo: string | null
+          distancia_metros: number | null
           empresa_id: string | null
           endereco_geolocalizacao: string | null
+          geofence_ref: string | null
           hash_marcacao: string
           hora_marcacao: string
           id: string
@@ -18415,9 +18442,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_marcacao?: string
+          dentro_cerca?: boolean | null
           dispositivo?: string | null
+          distancia_metros?: number | null
           empresa_id?: string | null
           endereco_geolocalizacao?: string | null
+          geofence_ref?: string | null
           hash_marcacao: string
           hora_marcacao?: string
           id?: string
@@ -18440,9 +18470,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_marcacao?: string
+          dentro_cerca?: boolean | null
           dispositivo?: string | null
+          distancia_metros?: number | null
           empresa_id?: string | null
           endereco_geolocalizacao?: string | null
+          geofence_ref?: string | null
           hash_marcacao?: string
           hora_marcacao?: string
           id?: string
