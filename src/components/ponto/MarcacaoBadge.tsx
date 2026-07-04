@@ -21,11 +21,13 @@ interface Props {
   endereco?: string;
   selfieUrl?: string;
   tipo?: string;
+  distanciaMetros?: number | null;
+  dentroCerca?: boolean | null;
 }
 
 export function MarcacaoBadge({ 
   id, hora, isEntry, original, podeEditar, editando, onSalvar, onExcluir, excluindo,
-  endereco, selfieUrl, tipo
+  endereco, selfieUrl, tipo, distanciaMetros, dentroCerca
 }: Props) {
   const [open, setOpen] = useState(false);
   const [novaHora, setNovaHora] = useState(hora?.substring(0, 5) || "");
