@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 import { ConfigJustificativasModal } from "./ConfigJustificativasModal";
+import { GeofenceConfigCard } from "./GeofenceConfigCard";
 
 interface PontoConfig {
   id: string;
