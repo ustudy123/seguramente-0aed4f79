@@ -228,6 +228,11 @@ export function PontoConfigTab() {
         </CardContent>
       </Card>
 
+      {/* Cerca de Geolocalização — só gestor vê o resultado das batidas */}
+      <GeofenceConfigCard />
+
+
+
       {/* Tolerâncias */}
       <Card>
         <CardHeader>
