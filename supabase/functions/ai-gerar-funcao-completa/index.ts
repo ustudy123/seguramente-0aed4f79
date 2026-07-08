@@ -196,82 +196,12 @@ IMPORTANTE:
       throw new Error("A IA não retornou um JSON válido. Tente novamente.");
     }
 
-    // If cargo_id is provided, persist data directly
-    if (cargo_id) {
-      // Update cargo fields
-      const cargoUpdate: Record<string, unknown> = {};
-      const fields = ['descricao', 'responsabilidade', 'subordinacao', 'interfaces_cargo', 
-        'objetivo_funcao', 'escopo_geral', 'padroes_execucao', 'cultura_esperada', 
-        'erros_riscos', 'criterios_sucesso', 'ferramentas_cargo', 'requisitos_formacao', 'requisitos_experiencia'];
-
-      
-      for (const f of fields) {
-        if (parsed[f]) cargoUpdate[f] = parsed[f];
-      }
-      if (parsed.nivel) cargoUpdate['nivel'] = parsed.nivel;
-
-      if (Object.keys(cargoUpdate).length > 0) {
-        await supabase.from("cargos").update(cargoUpdate).eq("id", cargo_id);
-      }
-
-      // Create activities
-      if (parsed.atividades?.length) {
-        for (const atv of parsed.atividades) {
-          const { data: atvData } = await supabase.from("funcao_atividades").insert({
-            tenant_id: tenantId,
-            cargo_id: cargo_id,
-            nome: atv.nome,
-            descricao: atv.descricao || null,
-            como: atv.como || null,
-            resultado_esperado: atv.resultado_esperado || null,
-            processo: atv.processo || null,
-            frequencia: atv.frequencia || "diaria",
-            complexidade: atv.complexidade || "media",
-            classificacao: atv.classificacao || "rotineira",
-          }).select("id").single();
-
-          // Create responsibility
-          if (atvData && (atv.responsavel_direto || atv.interfaces || atv.consequencia_erro)) {
-            await supabase.from("funcao_responsabilidades").insert({
-              tenant_id: tenantId,
-              atividade_id: atvData.id,
-              responsavel_direto: atv.responsavel_direto || null,
-              interfaces: atv.interfaces || null,
-              consequencia_erro: atv.consequencia_erro || null,
-            });
-          }
-        }
-      }
-
-      // Create competencies
-      if (parsed.competencias?.length) {
-        for (const comp of parsed.competencias) {
-          await supabase.from("funcao_competencias").insert({
-            tenant_id: tenantId,
-            cargo_id: cargo_id,
-            nome: comp.nome,
-            tipo: comp.tipo || "tecnica",
-            descricao: comp.descricao || null,
-          });
-        }
-      }
-
-      // Create indicators
-      if (parsed.indicadores?.length) {
-        for (const ind of parsed.indicadores) {
-          await supabase.from("funcao_indicadores").insert({
-            tenant_id: tenantId,
-            cargo_id: cargo_id,
-            nome: ind.nome,
-            descricao: ind.descricao || null,
-            meta: ind.meta || null,
-            periodicidade: ind.periodicidade || "mensal",
-          });
-        }
-      }
+    // Persist only when explicitly requested (default true for backward compat)
+    if (cargo_id && persistir) {
+      await persistirResultado(supabase, tenantId, cargo_id, parsed);
     }
 
-    return new Response(JSON.stringify({ resultado: parsed, persistido: !!cargo_id }), {
+    return new Response(JSON.stringify({ resultado: parsed, persistido: !!(cargo_id && persistir) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
