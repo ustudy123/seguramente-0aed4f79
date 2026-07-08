@@ -229,10 +229,11 @@ export function PontoBancoHorasTab() {
       );
 
       const atestadoDatas = new Set<string>();
+      const atestadoHorasMin = new Map<string, number>();
       try {
         let atestadosQuery = (supabase as any)
           .from("atestados")
-          .select("data_inicio_afastamento, data_fim_afastamento")
+          .select("data_inicio_afastamento, data_fim_afastamento, unidade_afastamento, horas_afastamento, minutos_afastamento")
           .eq("tenant_id", tenantId)
           .lte("data_inicio_afastamento", editIniFim.fim)
           .or(`data_fim_afastamento.gte.${editIniFim.ini},data_fim_afastamento.is.null`);
@@ -244,15 +245,26 @@ export function PontoBancoHorasTab() {
         for (const atestado of atestados || []) {
           const inicio = String(atestado.data_inicio_afastamento || "");
           const fim = String(atestado.data_fim_afastamento || inicio);
+          // Mesma regra da apuração SQL: atestado de DIAS neutraliza o dia;
+          // atestado de HORAS (parcial) só desconta da jornada esperada.
+          const unidade = String(atestado.unidade_afastamento || "dias");
+          const minutosAtestado = (Number(atestado.horas_afastamento) || 0) * 60 + (Number(atestado.minutos_afastamento) || 0);
           for (const row of rows) {
-            if (row.data >= inicio && row.data <= fim) atestadoDatas.add(row.data);
+            if (row.data >= inicio && row.data <= fim) {
+              if (unidade === "horas") {
+                atestadoHorasMin.set(row.data, (atestadoHorasMin.get(row.data) || 0) + minutosAtestado);
+              } else {
+                atestadoDatas.add(row.data);
+              }
+            }
           }
         }
       } catch { /* ignore */ }
 
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
-        const esperado = jornadasETol[idx]?.jornada || 0;
+        const esperadoBase = jornadasETol[idx]?.jornada || 0;
+        const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
         const tol = jornadasETol[idx]?.tol || 0;
         const extras = intervalToMin(d.horas_extras);
         const faltantes = intervalToMin(d.horas_faltantes);
@@ -266,7 +278,10 @@ export function PontoBancoHorasTab() {
         const observacaoDia = String(d.observacao || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const diaProtegido = ["atestado", "ferias", "afastamento", "feriado"].some(tipo => tipoDia.includes(tipo))
           || observacaoDia.includes("atestado")
-          || atestadoDatas.has(d.data);
+          || atestadoDatas.has(d.data)
+          // Dia com status "justificado" (abono aprovado) é neutro,
+          // igual à apuração SQL.
+          || String(d.status || "") === "justificado";
         if (diaProtegido) {
           saldoDia = 0;
         }
