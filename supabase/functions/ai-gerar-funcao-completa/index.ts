@@ -117,19 +117,26 @@ Retorne APENAS um JSON válido (sem markdown, sem code blocks, sem explicações
   ]
 }
 
-REGRAS CRÍTICAS:
-- Mínimo de 8 atividades detalhadas.
-- Mínimo de 10 competências (divididas entre Soft e Hard skills).
-- Mínimo de 5 indicadores de performance (KPIs) realistas e mensuráveis.
+REGRAS CRÍTICAS DE COBERTURA (LEIA COM ATENÇÃO):
+- COBERTURA TOTAL: Se o usuário fornecer uma descrição detalhada com listas, tópicos, bullets ou subitens (ex: "Admissão", "Desligamento", "Compras", "Benefícios", "LGPD", "ASOs", "Atestados", "Periódicos"), você DEVE criar UMA atividade separada para CADA item mencionado. NÃO agrupe, NÃO resuma, NÃO omita nenhum item citado pelo usuário.
+- Se a descrição do usuário tiver 50 subitens, gere 50+ atividades. Se tiver 100, gere 100+.
+- Percorra a descrição do usuário do início ao fim e faça um "checklist mental" garantindo que TODO tópico/subitem virou uma atividade no JSON.
+- Além dos itens explícitos, adicione atividades complementares relacionadas ao cargo que não foram citadas mas são inerentes à função.
+- Mínimo ABSOLUTO de 8 atividades (mas SEMPRE prefira cobrir todos os itens do texto do usuário).
+- Mínimo de 10 competências (Soft + Hard skills).
+- Mínimo de 5 indicadores (KPIs) realistas e mensuráveis; se o usuário listar KPIs, inclua TODOS.
 - Use a descrição do setor/CNAE da empresa para contextualizar profundamente.
 - Tudo em Português (Brasil).
-- Respeite rigorosamente o CONTEXTO DA EMPRESA fornecido.`;
+- Respeite rigorosamente o CONTEXTO DA EMPRESA fornecido.
+- Seja conciso nos campos de texto (descricao, como, resultado_esperado ~1-2 frases cada) para caber TODAS as atividades sem truncar o JSON.`;
 
     const userPrompt = `Gere a estrutura completa da seguinte função:
 
 "${descricao_livre}"
 
-IMPORTANTE: Integre o contexto da empresa (Cultura, Setor, CNAE) para que as atividades e competências não sejam genéricas, mas sim específicas para esta organização.`;
+IMPORTANTE:
+1. Integre o contexto da empresa (Cultura, Setor, CNAE) para que as atividades não sejam genéricas.
+2. COBERTURA TOTAL: cada item, bullet, tópico ou subitem citado acima DEVE virar uma atividade específica no array "atividades". Não agrupe, não resuma, não pule nenhum. Ao final, revise mentalmente se todos os itens do texto foram contemplados.`;
 
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -141,7 +148,8 @@ IMPORTANTE: Integre o contexto da empresa (Cultura, Setor, CNAE) para que as ati
       body: JSON.stringify({
         model: "gpt-4o-mini",
         response_format: { type: "json_object" },
-        max_tokens: 8000,
+        max_tokens: 16000,
+        temperature: 0.4,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
