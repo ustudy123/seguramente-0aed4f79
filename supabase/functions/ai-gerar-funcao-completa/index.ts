@@ -45,7 +45,16 @@ Deno.serve(async (req) => {
 
     const tenantId = profile.tenant_id;
 
-    const { descricao_livre, cargo_id } = await req.json();
+    const body = await req.json();
+    const { descricao_livre, cargo_id, persistir = true, dados } = body;
+
+    // MODO 2: Persistir dados já prontos (vindos da tela de preview editada)
+    if (dados && cargo_id) {
+      await persistirResultado(supabase, tenantId, cargo_id, dados);
+      return new Response(JSON.stringify({ resultado: dados, persistido: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!descricao_livre || descricao_livre.trim().length < 3) {
       throw new Error("Descrição da função é obrigatória");
