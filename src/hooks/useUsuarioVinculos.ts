@@ -71,16 +71,31 @@ export function useUsuarioVinculos() {
     queryKey: ["usuario_vinculos", usuarioBase?.id, tenantId],
     queryFn: async () => {
       if (!usuarioBase?.id || !tenantId) return [];
-      const { data, error } = await fromTable("usuario_vinculos")
-        .select("id, empresa_id, tipo_vinculo, status, data_inicio, data_fim")
-        .eq("usuario_id", usuarioBase.id)
-        .eq("tenant_id", tenantId)
-        .eq("status", "ativo") as { data: UsuarioVinculo[] | null; error: Error | null };
-      if (error) {
-        console.warn("useUsuarioVinculos: erro ao buscar vínculos", error);
-        return [];
+      // Paginação manual para contornar o limite max-rows=1000 do PostgREST
+      // (mesmo padrão do EmpresaAtivaContext). Sem isso, usuários com mais de
+      // 1000 vínculos (ex.: técnicos de SST vinculados a centenas de clientes)
+      // tinham vínculos cortados silenciosamente e empresas sumiam da lista.
+      const PAGE = 1000;
+      let from = 0;
+      const acc: UsuarioVinculo[] = [];
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await fromTable("usuario_vinculos")
+          .select("id, empresa_id, tipo_vinculo, status, data_inicio, data_fim")
+          .eq("usuario_id", usuarioBase.id)
+          .eq("tenant_id", tenantId)
+          .eq("status", "ativo")
+          .order("id")
+          .range(from, from + PAGE - 1) as unknown as { data: UsuarioVinculo[] | null; error: Error | null };
+        if (error) {
+          console.warn("useUsuarioVinculos: erro ao buscar vínculos", error);
+          break;
+        }
+        const chunk = (data || []) as UsuarioVinculo[];
+        acc.push(...chunk);
+        if (chunk.length < PAGE) break;
+        from += PAGE;
       }
-      return (data || []) as UsuarioVinculo[];
+      return acc;
     },
     enabled: deveBuscarVinculos,
     staleTime: 2 * 60 * 1000,
