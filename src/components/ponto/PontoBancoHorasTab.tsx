@@ -194,21 +194,23 @@ export function PontoBancoHorasTab() {
 
       let fallbackJornadaMin = 0;
       let fallbackTolMin = 0;
+      let fallbackTolBatida = 5;
       if (fallbackEscalaId) {
         try {
           const { data: esc } = await (supabase as any)
             .from("ponto_escalas")
-            .select("jornada_diaria_minutos, dias_config, tolerancia_diaria_minutos")
+            .select("jornada_diaria_minutos, dias_config, tolerancia_diaria_minutos, tolerancia_minutos")
             .eq("id", fallbackEscalaId)
             .maybeSingle();
           fallbackJornadaMin = Number(esc?.jornada_diaria_minutos) || 0;
           fallbackTolMin = Number(esc?.tolerancia_diaria_minutos) || 0;
+          fallbackTolBatida = esc?.tolerancia_minutos != null ? Number(esc.tolerancia_minutos) : 5;
         } catch { /* ignore */ }
       }
 
       const jornadasETol = await Promise.all(
         rows.map(async (d: any) => {
-          if (!tenantId) return { jornada: 0, tol: fallbackTolMin };
+          if (!tenantId) return { jornada: 0, tol: fallbackTolMin, tolBatida: fallbackTolBatida };
           try {
             const { data: j } = await (supabase.rpc as any)("ponto_jornada_do_dia", {
               p_tenant_id: tenantId,
@@ -218,12 +220,12 @@ export function PontoBancoHorasTab() {
             });
             const val = extractJornada(j);
             const tol = extractTol(j) || fallbackTolMin;
-            if (val > 0) return { jornada: val, tol };
+            if (val > 0) return { jornada: val, tol, tolBatida: fallbackTolBatida };
             const dow = new Date(d.data + "T00:00:00").getDay();
-            if (dow === 0 || dow === 6) return { jornada: 0, tol };
-            return { jornada: fallbackJornadaMin, tol };
+            if (dow === 0 || dow === 6) return { jornada: 0, tol, tolBatida: fallbackTolBatida };
+            return { jornada: fallbackJornadaMin, tol, tolBatida: fallbackTolBatida };
           } catch {
-            return { jornada: 0, tol: fallbackTolMin };
+            return { jornada: 0, tol: fallbackTolMin, tolBatida: fallbackTolBatida };
           }
         })
       );
@@ -261,43 +263,19 @@ export function PontoBancoHorasTab() {
         }
       } catch { /* ignore */ }
 
-      // Débito por batida (atraso de entrada + saída antecipada), calculado pela
-      // MESMA função da apuração SQL — garante que a tela e o banco batam.
-      const debitosBatida = await Promise.all(
-        rows.map(async (d: any) => {
-          if (!tenantId) return 0;
-          try {
-            const { data: db } = await (supabase.rpc as any)("ponto_debito_batida_do_dia", {
-              p_tenant_id: tenantId,
-              p_colaborador_cpf: d.colaborador_cpf || cpfDigits || null,
-              p_data: d.data,
-              p_entrada: d.entrada,
-              p_saida: d.saida,
-            });
-            return Number(db) || 0;
-          } catch {
-            return 0;
-          }
-        })
-      );
-
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
         const esperadoBase = jornadasETol[idx]?.jornada || 0;
         const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
+        // Tolerância POR BATIDA da escala (tolerancia_minutos). A compensação
+        // (sair mais tarde) já entra no total trabalhado, então o déficit do
+        // dia reflete o saldo real.
+        const tol = jornadasETol[idx]?.tolBatida ?? jornadasETol[idx]?.tol ?? 0;
         const extras = intervalToMin(d.horas_extras);
-        const debBatida = debitosBatida[idx] || 0;
-        // Regra por BATIDA (igual à apuração SQL):
-        //  • crédito = quanto o trabalhado excede a jornada esperada;
-        //  • débito  = atraso de entrada + saída antecipada (tolerância da escala).
-        // Falta (sem jornada trabalhada) debita a jornada cheia.
-        let saldoDia: number;
-        if (esperado > 0 && trab === 0 && String(d.status || "") === "falta") {
-          saldoDia = -esperado;
-        } else {
-          const credito = esperado > 0 && trab > esperado ? trab - esperado : (extras > 0 ? extras : 0);
-          saldoDia = credito - debBatida;
-        }
+        const faltantes = intervalToMin(d.horas_faltantes);
+        let saldoDia = (extras || faltantes)
+          ? (extras - faltantes)
+          : (esperado > 0 ? trab - esperado : 0);
         // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui.
         // Alguns registros antigos ficaram como tipo_dia="normal"; por isso a tela
         // também cruza com a tabela de atestados e com a observação do dia.
@@ -312,7 +290,8 @@ export function PontoBancoHorasTab() {
         if (diaProtegido) {
           saldoDia = 0;
         }
-        // (Tolerância já aplicada por batida dentro de ponto_debito_batida_do_dia.)
+        // Tolerância por batida: déficit/excedente dentro da tolerância = regular.
+        if (tol > 0 && Math.abs(saldoDia) <= tol) saldoDia = 0;
         return {
           id: d.id,
           data: d.data,
