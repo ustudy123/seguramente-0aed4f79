@@ -569,6 +569,11 @@ export function usePonto() {
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-dia"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-hoje"] });
+      // A aprovação reapura o banco de horas da competência no backend
+      // (processar_ajuste_ponto) — refletir na aba Apuração sem F5.
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      queryClient.invalidateQueries({ queryKey: ["banco-horas-dias"] });
 
       if (!variables.multiple) {
         toast.success(`Ajuste ${variables.aprovado ? "aprovado" : "rejeitado"} com sucesso!`);
