@@ -261,16 +261,43 @@ export function PontoBancoHorasTab() {
         }
       } catch { /* ignore */ }
 
+      // Débito por batida (atraso de entrada + saída antecipada), calculado pela
+      // MESMA função da apuração SQL — garante que a tela e o banco batam.
+      const debitosBatida = await Promise.all(
+        rows.map(async (d: any) => {
+          if (!tenantId) return 0;
+          try {
+            const { data: db } = await (supabase.rpc as any)("ponto_debito_batida_do_dia", {
+              p_tenant_id: tenantId,
+              p_colaborador_cpf: d.colaborador_cpf || cpfDigits || null,
+              p_data: d.data,
+              p_entrada: d.entrada,
+              p_saida: d.saida,
+            });
+            return Number(db) || 0;
+          } catch {
+            return 0;
+          }
+        })
+      );
+
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
         const esperadoBase = jornadasETol[idx]?.jornada || 0;
         const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
-        const tol = jornadasETol[idx]?.tol || 0;
         const extras = intervalToMin(d.horas_extras);
-        const faltantes = intervalToMin(d.horas_faltantes);
-        let saldoDia = (extras || faltantes)
-          ? (extras - faltantes)
-          : (esperado > 0 ? trab - esperado : 0);
+        const debBatida = debitosBatida[idx] || 0;
+        // Regra por BATIDA (igual à apuração SQL):
+        //  • crédito = quanto o trabalhado excede a jornada esperada;
+        //  • débito  = atraso de entrada + saída antecipada (tolerância da escala).
+        // Falta (sem jornada trabalhada) debita a jornada cheia.
+        let saldoDia: number;
+        if (esperado > 0 && trab === 0 && String(d.status || "") === "falta") {
+          saldoDia = -esperado;
+        } else {
+          const credito = esperado > 0 && trab > esperado ? trab - esperado : (extras > 0 ? extras : 0);
+          saldoDia = credito - debBatida;
+        }
         // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui.
         // Alguns registros antigos ficaram como tipo_dia="normal"; por isso a tela
         // também cruza com a tabela de atestados e com a observação do dia.
@@ -285,8 +312,7 @@ export function PontoBancoHorasTab() {
         if (diaProtegido) {
           saldoDia = 0;
         }
-        // Aplica tolerância diária: dentro da tolerância = 0
-        if (tol > 0 && Math.abs(saldoDia) <= tol) saldoDia = 0;
+        // (Tolerância já aplicada por batida dentro de ponto_debito_batida_do_dia.)
         return {
           id: d.id,
           data: d.data,
