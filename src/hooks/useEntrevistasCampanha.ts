@@ -11,6 +11,9 @@ export interface EntrevistaLink {
   riscos_cobertos: number;
   total_riscos: number;
   colaborador_nome: string | null;
+  tipo_sessao?: string | null;
+  grupo_nome?: string | null;
+  participantes_previstos?: number | null;
   created_at: string;
   iniciada_em: string | null;
   concluida_em: string | null;
@@ -23,7 +26,7 @@ export function useEntrevistasCampanha(campanhaId: string | null) {
     queryFn: async () => {
       const { data, error } = await fromTable("psicossocial_entrevistas")
         .select(
-          "id, token, modalidade, status, fase_atual, riscos_cobertos, total_riscos, colaborador_nome, created_at, iniciada_em, concluida_em"
+          "id, token, modalidade, status, fase_atual, riscos_cobertos, total_riscos, colaborador_nome, tipo_sessao, grupo_nome, participantes_previstos, created_at, iniciada_em, concluida_em"
         )
         .eq("campanha_id", campanhaId as string)
         .order("created_at", { ascending: false });

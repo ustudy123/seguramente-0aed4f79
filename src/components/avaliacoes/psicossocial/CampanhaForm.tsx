@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info, Plus, Trash2, Building2, UserCog, ChevronDown, Check } from "lucide-react";
+import { Brain, Users, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info, Plus, Trash2, Building2, UserCog, ChevronDown, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -101,7 +101,7 @@ const formSchema = z.object({
   descricao: z.string().optional(),
   tipo: z.enum(['regular', 'extraordinaria']).default('regular'),
   instrumento: z.enum(['copsoq', 'copsoq2br', 'hse', 'proart', 'sipro', 'customizado']).default('sipro'),
-  tipo_instrumento: z.enum(['questionario', 'entrevista_guiada']).default('questionario'),
+  tipo_instrumento: z.enum(['questionario', 'entrevista_guiada', 'entrevista_coletiva']).default('questionario'),
   periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().min(1, "Data de término é obrigatória"),
@@ -265,6 +265,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
 
   useEffect(() => {
     if (!open) return;
+    // Workshop (entrevista coletiva) é exceção às faixas: permitido em qualquer
+    // porte — atende empresas cujo pessoal tem dificuldade/recusa de celular.
+    if (tipoInstrumento === 'entrevista_coletiva') return;
     if (modalidadeBloqueada && tipoInstrumento !== modalidadeBloqueada) {
       form.setValue('tipo_instrumento', modalidadeBloqueada);
     }
@@ -406,7 +409,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
         nome: data.nome,
         descricao: data.descricao,
         tipo: data.tipo,
-        instrumento: data.tipo_instrumento === 'entrevista_guiada' ? 'sipro' : data.instrumento,
+        instrumento: data.tipo_instrumento !== 'questionario' ? 'sipro' : data.instrumento,
         tipo_instrumento: data.tipo_instrumento,
         periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
         data_inicio: data.data_inicio,
@@ -693,7 +696,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                       <Sparkles className="h-4 w-4 text-purple-600" />
                       Modalidade de Coleta *
                     </FormLabel>
-                    <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="grid sm:grid-cols-3 gap-3">
                       <button
                         type="button"
                         disabled={lockQuest}
@@ -722,9 +725,23 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                       >
                         <div className="flex items-center gap-2 mb-1">
                           <Brain className="h-4 w-4 text-purple-600" />
-                          <span className="font-semibold text-sm">Entrevista guiada por IA</span>
+                          <span className="font-semibold text-sm">Entrevista guiada individual</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Conversa estruturada (texto ou voz). Saída qualitativa anonimizada com P/S por risco.</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => field.onChange('entrevista_coletiva')}
+                        className={cn(
+                          "text-left rounded-lg border p-3 transition",
+                          field.value === 'entrevista_coletiva' ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200" : "border-border hover:border-purple-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="h-4 w-4 text-purple-600" />
+                          <span className="font-semibold text-sm">Workshop — entrevista coletiva</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">O profissional reúne o grupo na empresa, lê as perguntas e registra a percepção coletiva. Para equipes com dificuldade/recusa de celular.</p>
                       </button>
                     </div>
                     <FormDescription>
@@ -732,6 +749,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
                       {modalidadeBloqueada === 'entrevista_guiada' && '< 5 colaboradores → apenas entrevista guiada (preserva anonimato).'}
                       {modalidadeBloqueada === 'questionario' && '> 10 colaboradores → apenas questionário (cobertura estatística).'}
                       {!modalidadeBloqueada && '5–10 colaboradores → escolha exclusiva por campanha.'}
+                      {' '}O Workshop (coletiva) é permitido em qualquer porte, quando a equipe não responde por celular/computador.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

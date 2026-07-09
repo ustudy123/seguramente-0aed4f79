@@ -5,8 +5,7 @@ import { supabasePublic } from "@/lib/supabasePublic";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
-import {
-  type CampanhaPsicossocial,
+import { type CampanhaPsicossocial,
   type ConvitePsicossocial,
   type RespostaPsicossocial,
   type NovaCampanha,
@@ -16,6 +15,7 @@ import {
   type RadarDimensao,
   type InstrumentoPsicossocial,
   calcularIPSClassificacao,
+  isEntrevistaInstrumento,
 } from "@/types/psicossocial";
 import {
   calcularIPSInstrumento,
@@ -285,7 +285,7 @@ export function usePsicossocial() {
             .eq("id", id)
             .single();
 
-          const minRespostas = campanha.tipo_instrumento === 'entrevista_guiada' ? 1 : 5;
+          const minRespostas =isEntrevistaInstrumento(campanha.tipo_instrumento) ? 1 : 5;
           if (campanha?.radar_data && (campanha.total_respostas ?? 0) >= minRespostas) {
             const situacoes = campanha.situacoes_trabalho ?? [];
 
@@ -638,7 +638,7 @@ export function usePsicossocial() {
     // Pendentes = quem ainda não respondeu dentro do universo elegível
     const pendentes = Math.max(0, total - concluidos);
 
-    const isEntrevistaGuiada = campanhaRes.data?.tipo_instrumento === "entrevista_guiada";
+    const isEntrevistaGuiada =isEntrevistaInstrumento(campanhaRes.data?.tipo_instrumento);
     const MINIMO_ANONIMATO = isEntrevistaGuiada ? 1 : 5;
     // Para entrevista guiada, as respostas vivem em `psicossocial_entrevistas` (concluídas).
     // Para questionários, contam as respostas reais salvas.

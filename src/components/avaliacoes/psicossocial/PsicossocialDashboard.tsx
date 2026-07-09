@@ -50,7 +50,7 @@ import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
-import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao, MINIMO_ANONIMATO_PADRAO, getMinimoRespostas } from "@/types/psicossocial";
+import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao, MINIMO_ANONIMATO_PADRAO, getMinimoRespostas, isEntrevistaInstrumento } from "@/types/psicossocial";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
@@ -114,7 +114,7 @@ export function PsicossocialDashboard() {
   const { campanhas: campanhasAll, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
   const campanhas = apenasAtivas ? campanhasAll.filter(c => c.status === 'ativa') : campanhasAll;
   const campanhasEntrevistaIds = useMemo(
-    () => campanhas.filter(c => (c as any).tipo_instrumento === "entrevista_guiada").map(c => c.id),
+    () => campanhas.filter(c =>isEntrevistaInstrumento((c as any).tipo_instrumento)).map(c => c.id),
     [campanhas],
   );
   const { agregadosPorCampanha } = useEntrevistasGuiadasAggregates(campanhasEntrevistaIds);

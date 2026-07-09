@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { type CampanhaPsicossocial, getMinimoRespostas } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, getMinimoRespostas, isEntrevistaInstrumento } from "@/types/psicossocial";
 
 /** Mínimo absoluto de respostas — ISO 45003 / COPSOQ III */
 export const MIN_RESPOSTAS_ABS = 5;
@@ -116,7 +116,7 @@ export function useMinRespostasCampanha(
   });
 
   // Entrevista guiada não tem limite de anonimato (exibe resultados desde a primeira resposta)
-  const isEntrevistaGuiada = campanha.tipo_instrumento === "entrevista_guiada";
+  const isEntrevistaGuiada =isEntrevistaInstrumento(campanha.tipo_instrumento);
 
   if (!hasGhes) {
     return {

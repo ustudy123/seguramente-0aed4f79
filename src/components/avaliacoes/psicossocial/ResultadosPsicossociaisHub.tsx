@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { isEntrevistaInstrumento } from "@/types/psicossocial";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ export function ResultadosPsicossociaisHub({ campanhas }: Props) {
   // promovendo ips_score / radar_data / total_respostas para que apareçam nos mesmos
   // filtros e gráficos dos questionários.
   const campanhasEntrevistaIds = useMemo(
-    () => campanhas.filter(c => (c as any).tipo_instrumento === "entrevista_guiada").map(c => c.id),
+    () => campanhas.filter(c =>isEntrevistaInstrumento((c as any).tipo_instrumento)).map(c => c.id),
     [campanhas]
   );
   const { agregadosPorCampanha } = useEntrevistasGuiadasAggregates(campanhasEntrevistaIds);

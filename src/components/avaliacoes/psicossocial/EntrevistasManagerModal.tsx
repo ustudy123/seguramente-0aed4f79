@@ -34,6 +34,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { gerarLinksEntrevistaColaboradores } from "@/utils/gerarLinksEntrevistaColaboradores";
 
 interface Props {
+  /** tipo_instrumento da campanha (workshop = 'entrevista_coletiva'). */
+  tipoInstrumento?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campanhaId: string | null;
@@ -47,7 +49,10 @@ const STATUS_META: Record<string, { label: string; variant: "default" | "seconda
   cancelada: { label: "Cancelada", variant: "destructive" },
 };
 
-export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campanhaNome }: Props) {
+export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campanhaNome, tipoInstrumento }: Props) {
+  const isColetiva = tipoInstrumento === "entrevista_coletiva";
+  const [grupoNome, setGrupoNome] = useState("");
+  const [participantes, setParticipantes] = useState("");
   const { data: entrevistas = [], isLoading } = useEntrevistasCampanha(campanhaId);
   const gerar = useGerarEntrevista();
   const cancelar = useCancelarEntrevista();
@@ -209,19 +214,71 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
               </Button>
             ))}
           </div>
-          <Button
-            size="sm"
-            disabled={!campanhaId || gerar.isPending}
-            onClick={() => campanhaId && gerar.mutate({ campanhaId })}
-          >
-            {gerar.isPending ? (
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4 mr-1" />
-            )}
-            Novo link
-          </Button>
+          {!isColetiva && (
+            <Button
+              size="sm"
+              disabled={!campanhaId || gerar.isPending}
+              onClick={() => campanhaId && gerar.mutate({ campanhaId })}
+            >
+              {gerar.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-1" />
+              )}
+              Novo link
+            </Button>
+          )}
         </div>
+
+        {isColetiva && (
+          <div className="rounded-lg border p-3 bg-purple-50/50 space-y-2">
+            <p className="text-sm font-medium">Nova sessão coletiva (Workshop)</p>
+            <p className="text-xs text-muted-foreground">
+              O profissional reúne o grupo, lê as perguntas e registra a percepção
+              coletiva na sessão. Informe o grupo reunido e quantas pessoas participaram.
+            </p>
+            <div className="flex gap-2 flex-wrap items-end">
+              <div className="flex-1 min-w-[180px]">
+                <Input
+                  placeholder="Nome do grupo/GHE (ex.: Produção — Turno A)"
+                  value={grupoNome}
+                  onChange={(e) => setGrupoNome(e.target.value)}
+                />
+              </div>
+              <div className="w-32">
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="Nº pessoas"
+                  value={participantes}
+                  onChange={(e) => setParticipantes(e.target.value)}
+                />
+              </div>
+              <Button
+                size="sm"
+                disabled={!campanhaId || gerar.isPending || !grupoNome.trim()}
+                onClick={() =>
+                  campanhaId &&
+                  gerar.mutate(
+                    {
+                      campanhaId,
+                      grupoNome: grupoNome.trim(),
+                      participantesPrevistos: participantes ? Number(participantes) : undefined,
+                    },
+                    { onSuccess: () => { setGrupoNome(""); setParticipantes(""); } }
+                  )
+                }
+              >
+                {gerar.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-1" />
+                )}
+                Nova sessão
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Button
           variant="default"
@@ -289,6 +346,11 @@ export function EntrevistasManagerModal({ open, onOpenChange, campanhaId, campan
                         <span className="text-xs text-muted-foreground">
                           Criado {format(parseISO(e.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                         </span>
+                        {(e as any).tipo_sessao === "coletiva" && (
+                          <Badge variant="outline" className="gap-1">
+                            Workshop{(e as any).participantes_previstos ? ` · ${(e as any).participantes_previstos} pessoas` : ""}
+                          </Badge>
+                        )}
                         {e.colaborador_nome && (
                           <span className="text-xs">• {e.colaborador_nome}</span>
                         )}

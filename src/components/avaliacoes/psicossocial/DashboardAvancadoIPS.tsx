@@ -42,7 +42,7 @@ import { RadarPsicossocial } from "./RadarPsicossocial";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { AnaliseSegmentadaSection } from "./AnaliseSegmentadaSection";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
-import { calcularIPSClassificacao, getIPSLabel, getIPSColor } from "@/types/psicossocial";
+import { calcularIPSClassificacao, getIPSLabel, getIPSColor, isEntrevistaInstrumento } from "@/types/psicossocial";
 import { 
   BarChart, 
   Bar, 
@@ -149,7 +149,7 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
                   <SelectContent>
                     <SelectItem value="todos">Todas as Campanhas</SelectItem>
                     {campanhas
-                      .filter(c => (c.total_respostas || 0) >= (c.tipo_instrumento === 'entrevista_guiada' ? 1 : 5))
+                      .filter(c => (c.total_respostas || 0) >= (isEntrevistaInstrumento(c.tipo_instrumento) ? 1 : 5))
                       .map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                       ))}

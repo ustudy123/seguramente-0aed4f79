@@ -16,9 +16,20 @@ export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo
 
 export const MINIMO_ANONIMATO_PADRAO = 5;
 
+/** Tipos de instrumento de campanha psicossocial. */
+export type TipoInstrumentoCampanha = 'questionario' | 'entrevista_guiada' | 'entrevista_coletiva';
+
+/**
+ * Campanha baseada em ENTREVISTA (individual ou coletiva/Workshop)?
+ * A coletiva (Workshop) herda todo o comportamento da entrevista guiada:
+ * mesma condução, mesmas evidências, mesmo relatório e mínimo de 1 sessão.
+ */
+export const isEntrevistaInstrumento = (tipo?: string | null): boolean =>
+  tipo === 'entrevista_guiada' || tipo === 'entrevista_coletiva';
+
 export function getMinimoRespostas(campanha?: Partial<CampanhaPsicossocial> | null): number {
   if (!campanha) return MINIMO_ANONIMATO_PADRAO;
-  return campanha.tipo_instrumento === 'entrevista_guiada' ? 1 : MINIMO_ANONIMATO_PADRAO;
+  return isEntrevistaInstrumento(campanha.tipo_instrumento) ? 1 : MINIMO_ANONIMATO_PADRAO;
 }
 
 // IPS - Índice Psicossocial YourEyes (0-100, higher = healthier)
@@ -230,7 +241,7 @@ export interface CampanhaPsicossocial {
   status: CampanhaPsicossocialStatus;
   tipo: CampanhaPsicossocialTipo;
   instrumento?: InstrumentoPsicossocial;
-  tipo_instrumento?: 'questionario' | 'entrevista_guiada';
+  tipo_instrumento?: TipoInstrumentoCampanha;
   escopo?: EscopoCampanha;
   escopo_valores?: string[];
   // Situações de trabalho vinculadas (pares Setor+Função — NR-17)
@@ -366,7 +377,7 @@ export interface NovaCampanha {
   descricao?: string;
   tipo?: CampanhaPsicossocialTipo;
   instrumento?: InstrumentoPsicossocial;
-  tipo_instrumento?: 'questionario' | 'entrevista_guiada';
+  tipo_instrumento?: TipoInstrumentoCampanha;
   periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas, isEntrevistaInstrumento } from "@/types/psicossocial";
 import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
@@ -790,7 +790,7 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
                       </SelectTrigger>
                       <SelectContent>
                         {campanhasValidas.map(c => {
-                          const isEntrevista = (c as any).tipo_instrumento === "entrevista_guiada";
+                          const isEntrevista =isEntrevistaInstrumento((c as any).tipo_instrumento);
                           const sufixo = c.id === campanhaMaisRecenteId ? " (mais recente)" : "";
                           return (
                             <SelectItem key={c.id} value={c.id}>

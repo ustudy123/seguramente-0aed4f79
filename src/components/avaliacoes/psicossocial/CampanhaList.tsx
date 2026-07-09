@@ -51,7 +51,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { confirm } from "@/components/ui/confirm-dialog";
-import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas } from "@/types/psicossocial";
+import { type CampanhaPsicossocial, type RadarDimensao, getMinimoRespostas, isEntrevistaInstrumento } from "@/types/psicossocial";
 
 interface CampanhaListProps {
   campanhas: CampanhaPsicossocial[];
@@ -340,6 +340,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
         onOpenChange={setShowEntrevistas}
         campanhaId={selectedCampanha?.id ?? null}
         campanhaNome={selectedCampanha?.nome}
+        tipoInstrumento={(selectedCampanha as any)?.tipo_instrumento}
       />
     </>
   );
@@ -362,7 +363,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
   const gerarEntrevista = useGerarEntrevista();
-  const isEntrevista = (campanha as any).tipo_instrumento === 'entrevista_guiada';
+  const isEntrevista =isEntrevistaInstrumento((campanha as any).tipo_instrumento);
 
   const getStatusBadge = (status: CampanhaPsicossocial['status']) => {
     switch (status) {
@@ -387,7 +388,9 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
           {isEntrevista && (
             <Badge variant="outline" className="text-xs gap-1 text-purple-700 border-purple-300 bg-purple-50">
               <MessageSquare className="h-3 w-3" />
-              Entrevista guiada por IA
+              {(campanha as any).tipo_instrumento === 'entrevista_coletiva'
+                ? 'Workshop — entrevista coletiva'
+                : 'Entrevista guiada por IA'}
             </Badge>
           )}
           {/* GAP 1: Badge indicando que riscos já foram exportados ao GRO */}

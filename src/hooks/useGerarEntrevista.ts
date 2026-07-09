@@ -17,9 +17,15 @@ export function useGerarEntrevista() {
     mutationFn: async ({
       campanhaId,
       modalidade = "texto",
+      grupoNome,
+      participantesPrevistos,
     }: {
       campanhaId: string;
       modalidade?: "texto" | "voz";
+      /** Sessão COLETIVA (Workshop): nome do grupo/GHE reunido. */
+      grupoNome?: string;
+      /** Sessão COLETIVA (Workshop): nº de participantes presentes. */
+      participantesPrevistos?: number;
     }) => {
       if (!user) throw new Error("Não autenticado");
       const tenantId = (
@@ -39,6 +45,17 @@ export function useGerarEntrevista() {
           token,
           modalidade,
           status: "pendente",
+          // Workshop (entrevista coletiva): registra o grupo e o nº de
+          // participantes; o nome do grupo aparece na listagem no lugar do
+          // colaborador individual.
+          ...(grupoNome
+            ? {
+                tipo_sessao: "coletiva",
+                grupo_nome: grupoNome,
+                participantes_previstos: participantesPrevistos ?? null,
+                colaborador_nome: grupoNome,
+              }
+            : {}),
         } as any)
         .select("id, token")
         .single();

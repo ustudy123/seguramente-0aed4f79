@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
-import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
+import { calcularIPSClassificacao, getIPSLabel, isEntrevistaInstrumento } from "@/types/psicossocial";
 import {
   scoreToProb15,
   sevFallbackFromScore,
@@ -74,12 +74,12 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
   // Campanhas de entrevista guiada (qualitativas) — todas elegíveis
   const campanhasEntrevista = useMemo(
-    () => campanhas.filter((c: any) => c.tipo_instrumento === "entrevista_guiada"),
+    () => campanhas.filter((c: any) =>isEntrevistaInstrumento(c.tipo_instrumento)),
     [campanhas],
   );
   
   const campanhasValidas = campanhas.filter(c => {
-    const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
+    const isEntrevistaGuiada =isEntrevistaInstrumento((c as any).tipo_instrumento);
     const minRespostas = isEntrevistaGuiada ? 1 : MINIMO_ANONIMATO;
     
     return c.ips_score != null &&
@@ -114,7 +114,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
 
   const campanhaEntrevistaIds = useMemo(() => {
     // Se uma campanha específica está selecionada e é de entrevista, buscamos evidências apenas dela
-    if (campanha && (campanha as any).tipo_instrumento === "entrevista_guiada") {
+    if (campanha &&isEntrevistaInstrumento((campanha as any).tipo_instrumento)) {
       return [campanha.id];
     }
     // Se "todos" está selecionado ou é quantitativa, buscamos de todas as entrevistas pertinentes à campanha atual
@@ -131,7 +131,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
   const temEvidenciasQualitativas = evidenciasQualitativas.length > 0;
   const podeExportar = campanhasValidas.length > 0 || temEvidenciasQualitativas;
 
-  const isEntrevista = (campanha as any)?.tipo_instrumento === "entrevista_guiada";
+  const isEntrevista =isEntrevistaInstrumento((campanha as any)?.tipo_instrumento);
   const isSipro = (campanha?.instrumento === 'sipro' && !isEntrevista) || isEntrevista;
   // Entrevista guiada com agregados (ips_score/radar derivados das entrevistas
   // concluídas) exibe o relatório completo (síntese + 13 fatores). Só cai no modo
@@ -751,7 +751,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
                 <SelectItem value="todos">Média Consolidada (Geral)</SelectItem>
                 {campanhasValidas.map(c => (
                   <SelectItem key={c.id} value={c.id}>
-                    {(c as any).tipo_instrumento === "entrevista_guiada" ? "🎙️ " : ""}
+                    {isEntrevistaInstrumento((c as any).tipo_instrumento) ? "🎙️ " : ""}
                     {c.nome}
                   </SelectItem>
                 ))}

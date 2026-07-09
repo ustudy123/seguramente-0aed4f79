@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { isEntrevistaInstrumento } from "@/types/psicossocial";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -183,7 +184,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
     return campanhas.filter((c) => {
       // Entrevistas guiadas não exigem o mínimo de anonimato (5 respostas):
       // são entrevistas nominais e devem aparecer mesmo com 1 resposta.
-      const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
+      const isEntrevistaGuiada =isEntrevistaInstrumento((c as any).tipo_instrumento);
       const hasRadar = Array.isArray(c.radar_data) && c.radar_data.length > 0;
       
       if (isEntrevistaGuiada) return (c.total_respostas || 0) >= 1 && hasRadar;
@@ -215,7 +216,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
       validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
 
     return INDICES.map((idx) => {
-      const isEntrevista = (atual as any)?.tipo_instrumento === "entrevista_guiada";
+      const isEntrevista =isEntrevistaInstrumento((atual as any)?.tipo_instrumento);
       let rawAtual = (atual[idx.campo] as number | null) ?? null;
       let rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
 
@@ -325,7 +326,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
               </SelectTrigger>
               <SelectContent>
                 {validas.map(c => {
-                  const isEntrevista = (c as any).tipo_instrumento === "entrevista_guiada";
+                  const isEntrevista =isEntrevistaInstrumento((c as any).tipo_instrumento);
                   const sufixo = c.id === campanhaMaisRecenteId ? " (mais recente)" : "";
                   return (
                     <SelectItem key={c.id} value={c.id}>

@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { isEntrevistaInstrumento } from "@/types/psicossocial";
 import {
   FileText,
   Download,
@@ -117,7 +118,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   // Campanhas válidas (mín. anonimato para questionário, 1 para entrevista guiada)
   const campanhasValidas = useMemo(() =>
     campanhas.filter(c => {
-      const isEntrevistaGuiada = (c as any).tipo_instrumento === "entrevista_guiada";
+      const isEntrevistaGuiada =isEntrevistaInstrumento((c as any).tipo_instrumento);
       const minRespostas = isEntrevistaGuiada ? 1 : MINIMO_ANONIMATO;
       
       return c.ips_score != null &&
@@ -145,7 +146,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     }
   }, [campanhasValidas, filtroCampanha]);
 
-  const isSipro = campanhasValidas[0]?.instrumento === 'sipro' || (campanhasValidas[0] as any)?.tipo_instrumento === "entrevista_guiada";
+  const isSipro = campanhasValidas[0]?.instrumento === 'sipro' ||isEntrevistaInstrumento((campanhasValidas[0] as any)?.tipo_instrumento);
   const campanhaAtual = campanhasValidas[0];
   const semEscopoGRO = !campanhaAtual?.situacoes_trabalho || campanhaAtual.situacoes_trabalho.length === 0;
 
@@ -415,7 +416,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     }
   };
 
-  const idsEntrevistaFallback = campanhas.filter((c: any) => c.tipo_instrumento === 'entrevista_guiada').map(c => c.id);
+  const idsEntrevistaFallback = campanhas.filter((c: any) =>isEntrevistaInstrumento(c.tipo_instrumento)).map(c => c.id);
 
   if (campanhasValidas.length === 0) {
     return (
@@ -456,7 +457,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
 
   // IDs de campanhas com modalidade entrevista guiada (evidências qualitativas, fora do critério de radar)
   const campanhasEntrevistaIds = (filtroCampanha === "todos" ? campanhas : campanhas.filter(c => c.id === filtroCampanha))
-    .filter((c: any) => c.tipo_instrumento === 'entrevista_guiada')
+    .filter((c: any) =>isEntrevistaInstrumento(c.tipo_instrumento))
     .map(c => c.id);
 
 
