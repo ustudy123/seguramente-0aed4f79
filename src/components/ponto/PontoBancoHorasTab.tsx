@@ -14,13 +14,14 @@ import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras"
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays } from "lucide-react";
+import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
+  const [busca, setBusca] = useState("");
   const {
     useBancoHorasPorCompetencia,
     useMovimentacoes,
@@ -318,16 +319,27 @@ export function PontoBancoHorasTab() {
   // Filtra bancos de colaboradores ativos (useColaboradores já exclui inativos/desligados)
   const cpfsAtivos = new Set(colaboradores.map(c => onlyDigits(c.cpf || "")));
   const idsAtivos = new Set(colaboradores.map(c => c.id));
-  const bancosVisiveis = bancos.filter(b => {
+  const bancosAtivos = bancos.filter(b => {
     const cpf = onlyDigits((b as any).colaborador_cpf || "");
     if (cpf && cpfsAtivos.has(cpf)) return true;
     if (b.colaborador_id && idsAtivos.has(b.colaborador_id)) return true;
     return false;
   });
 
-  const totalCreditos = bancosVisiveis.reduce((s, b) => s + b.creditos_minutos, 0);
-  const totalDebitos = bancosVisiveis.reduce((s, b) => s + b.debitos_minutos, 0);
-  const totalSaldo = bancosVisiveis.reduce((s, b) => s + b.saldo_atual_minutos, 0);
+  // Busca por nome ou CPF do colaborador.
+  const buscaNorm = busca.trim().toLowerCase();
+  const buscaDigits = onlyDigits(busca);
+  const bancosVisiveis = buscaNorm
+    ? bancosAtivos.filter(b => {
+        const nome = String(b.colaborador_nome || "").toLowerCase();
+        const cpf = onlyDigits((b as any).colaborador_cpf || "");
+        return nome.includes(buscaNorm) || (buscaDigits.length > 0 && cpf.includes(buscaDigits));
+      })
+    : bancosAtivos;
+
+  const totalCreditos = bancosAtivos.reduce((s, b) => s + b.creditos_minutos, 0);
+  const totalDebitos = bancosAtivos.reduce((s, b) => s + b.debitos_minutos, 0);
+  const totalSaldo = bancosAtivos.reduce((s, b) => s + b.saldo_atual_minutos, 0);
 
   const baixarModeloImport = () => {
     const ws = XLSX.utils.aoa_to_sheet([
@@ -473,6 +485,22 @@ export function PontoBancoHorasTab() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
+          <div className="p-3 border-b">
+            <div className="relative max-w-sm">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar colaborador por nome ou CPF..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            {busca.trim() && (
+              <p className="text-xs text-muted-foreground mt-1.5">
+                {bancosVisiveis.length} colaborador(es) encontrado(s)
+              </p>
+            )}
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -490,7 +518,7 @@ export function PontoBancoHorasTab() {
               {isLoading ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
               ) : bancosVisiveis.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum banco de horas para esta competência.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{busca.trim() ? "Nenhum colaborador encontrado para esta busca." : "Nenhum banco de horas para esta competência."}</TableCell></TableRow>
               ) : bancosVisiveis.map(b => (
                 <TableRow key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedBanco(b)}>
                   <TableCell className="font-medium">{b.colaborador_nome}</TableCell>
