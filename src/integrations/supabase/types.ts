@@ -22788,6 +22788,16 @@ export type Database = {
         Returns: boolean
       }
       ponto_classifica_tipo: { Args: { p_tipo: string }; Returns: string }
+      ponto_debito_batida_do_dia: {
+        Args: {
+          p_colaborador_cpf: string
+          p_data: string
+          p_entrada: string
+          p_saida: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
       ponto_empresa_do_colaborador: {
         Args: { p_colaborador_id: string }
         Returns: string
