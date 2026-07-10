@@ -496,18 +496,37 @@ export function PontoBancoHorasTab() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="p-3 border-b">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar colaborador por nome ou CPF..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                className="pl-8"
-              />
+          <div className="p-3 border-b space-y-2">
+            <div className="flex flex-col md:flex-row gap-2">
+              <div className="md:w-[320px]">
+                <ColaboradorSelect
+                  value={colaboradorFiltroId}
+                  onChange={setColaboradorFiltroId}
+                  colaboradores={colaboradores as any}
+                  placeholder="Filtrar por colaborador..."
+                />
+              </div>
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Ou buscar por nome / CPF..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              {(colaboradorFiltroId || busca.trim()) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setColaboradorFiltroId(""); setBusca(""); }}
+                >
+                  Limpar
+                </Button>
+              )}
             </div>
-            {busca.trim() && (
-              <p className="text-xs text-muted-foreground mt-1.5">
+            {(colaboradorFiltroId || busca.trim()) && (
+              <p className="text-xs text-muted-foreground">
                 {bancosVisiveis.length} colaborador(es) encontrado(s)
               </p>
             )}
