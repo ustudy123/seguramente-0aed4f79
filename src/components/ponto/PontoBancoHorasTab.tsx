@@ -327,16 +327,26 @@ export function PontoBancoHorasTab() {
     return false;
   });
 
-  // Busca por nome ou CPF do colaborador.
+  // Busca por nome ou CPF do colaborador + filtro por colaborador selecionado.
   const buscaNorm = busca.trim().toLowerCase();
   const buscaDigits = onlyDigits(busca);
-  const bancosVisiveis = buscaNorm
-    ? bancosAtivos.filter(b => {
-        const nome = String(b.colaborador_nome || "").toLowerCase();
-        const cpf = onlyDigits((b as any).colaborador_cpf || "");
-        return nome.includes(buscaNorm) || (buscaDigits.length > 0 && cpf.includes(buscaDigits));
-      })
-    : bancosAtivos;
+  const colabSelecionado = colaboradores.find(c => c.id === colaboradorFiltroId);
+  const cpfSelecionado = onlyDigits(colabSelecionado?.cpf || "");
+  let bancosVisiveis = bancosAtivos;
+  if (colaboradorFiltroId) {
+    bancosVisiveis = bancosVisiveis.filter(b => {
+      const cpf = onlyDigits((b as any).colaborador_cpf || "");
+      if (cpfSelecionado && cpf === cpfSelecionado) return true;
+      return b.colaborador_id === colaboradorFiltroId;
+    });
+  }
+  if (buscaNorm) {
+    bancosVisiveis = bancosVisiveis.filter(b => {
+      const nome = String(b.colaborador_nome || "").toLowerCase();
+      const cpf = onlyDigits((b as any).colaborador_cpf || "");
+      return nome.includes(buscaNorm) || (buscaDigits.length > 0 && cpf.includes(buscaDigits));
+    });
+  }
 
   const totalCreditos = bancosAtivos.reduce((s, b) => s + b.creditos_minutos, 0);
   const totalDebitos = bancosAtivos.reduce((s, b) => s + b.debitos_minutos, 0);
