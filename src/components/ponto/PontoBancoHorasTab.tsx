@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { ColaboradorSelect } from "@/components/shared/ColaboradorSelect";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search } from "lucide-react";
@@ -22,6 +23,7 @@ import * as XLSX from "xlsx";
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const [busca, setBusca] = useState("");
+  const [colaboradorFiltroId, setColaboradorFiltroId] = useState<string>("");
   const {
     useBancoHorasPorCompetencia,
     useMovimentacoes,
@@ -326,16 +328,26 @@ export function PontoBancoHorasTab() {
     return false;
   });
 
-  // Busca por nome ou CPF do colaborador.
+  // Busca por nome ou CPF do colaborador + filtro por colaborador selecionado.
   const buscaNorm = busca.trim().toLowerCase();
   const buscaDigits = onlyDigits(busca);
-  const bancosVisiveis = buscaNorm
-    ? bancosAtivos.filter(b => {
-        const nome = String(b.colaborador_nome || "").toLowerCase();
-        const cpf = onlyDigits((b as any).colaborador_cpf || "");
-        return nome.includes(buscaNorm) || (buscaDigits.length > 0 && cpf.includes(buscaDigits));
-      })
-    : bancosAtivos;
+  const colabSelecionado = colaboradores.find(c => c.id === colaboradorFiltroId);
+  const cpfSelecionado = onlyDigits(colabSelecionado?.cpf || "");
+  let bancosVisiveis = bancosAtivos;
+  if (colaboradorFiltroId) {
+    bancosVisiveis = bancosVisiveis.filter(b => {
+      const cpf = onlyDigits((b as any).colaborador_cpf || "");
+      if (cpfSelecionado && cpf === cpfSelecionado) return true;
+      return b.colaborador_id === colaboradorFiltroId;
+    });
+  }
+  if (buscaNorm) {
+    bancosVisiveis = bancosVisiveis.filter(b => {
+      const nome = String(b.colaborador_nome || "").toLowerCase();
+      const cpf = onlyDigits((b as any).colaborador_cpf || "");
+      return nome.includes(buscaNorm) || (buscaDigits.length > 0 && cpf.includes(buscaDigits));
+    });
+  }
 
   const totalCreditos = bancosAtivos.reduce((s, b) => s + b.creditos_minutos, 0);
   const totalDebitos = bancosAtivos.reduce((s, b) => s + b.debitos_minutos, 0);
@@ -485,18 +497,37 @@ export function PontoBancoHorasTab() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="p-3 border-b">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar colaborador por nome ou CPF..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                className="pl-8"
-              />
+          <div className="p-3 border-b space-y-2">
+            <div className="flex flex-col md:flex-row gap-2">
+              <div className="md:w-[320px]">
+                <ColaboradorSelect
+                  value={colaboradorFiltroId}
+                  onChange={setColaboradorFiltroId}
+                  colaboradores={colaboradores as any}
+                  placeholder="Filtrar por colaborador..."
+                />
+              </div>
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Ou buscar por nome / CPF..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              {(colaboradorFiltroId || busca.trim()) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setColaboradorFiltroId(""); setBusca(""); }}
+                >
+                  Limpar
+                </Button>
+              )}
             </div>
-            {busca.trim() && (
-              <p className="text-xs text-muted-foreground mt-1.5">
+            {(colaboradorFiltroId || busca.trim()) && (
+              <p className="text-xs text-muted-foreground">
                 {bancosVisiveis.length} colaborador(es) encontrado(s)
               </p>
             )}
