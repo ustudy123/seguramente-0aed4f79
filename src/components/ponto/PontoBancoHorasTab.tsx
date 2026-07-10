@@ -22,6 +22,7 @@ import * as XLSX from "xlsx";
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const [busca, setBusca] = useState("");
+  const [colaboradorFiltroId, setColaboradorFiltroId] = useState<string>("");
   const {
     useBancoHorasPorCompetencia,
     useMovimentacoes,
