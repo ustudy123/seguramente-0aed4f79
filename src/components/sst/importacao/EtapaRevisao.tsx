@@ -162,6 +162,31 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
     return parseDateString(prazoStr);
   };
 
+  // Sugere Data de Vencimento automaticamente com base no tipo de documento
+  // e nas datas extraídas (última revisão OU emissão), conforme NR-01 §1.5.4.4.6:
+  // PGR = 2 anos, PCMSO = 1 ano. LTCAT/AET/Laudos não têm validade normativa
+  // fixa — só pré-preenche se a IA identificou vigência explícita.
+  useEffect(() => {
+    if (dataVigenciaManual) return; // já preenchido — não sobrescreve
+    const dg = dados?.dados_gerais || {};
+    const vigenciaExtraida = parseDateString((dg as any).data_vigencia?.valor);
+    if (vigenciaExtraida) {
+      setDataVigenciaManual(vigenciaExtraida);
+      return;
+    }
+    const anosPorTipo: Record<string, number> = { PGR: 2, PCMSO: 1 };
+    const anos = anosPorTipo[tipo];
+    if (!anos) return;
+    const baseStr = parseDateString((dg as any).data_ultima_revisao?.valor)
+      || parseDateString((dg as any).data_emissao?.valor);
+    if (!baseStr) return;
+    const [y, m, d] = baseStr.split("-").map(Number);
+    const base = new Date(Date.UTC(y, m - 1, d));
+    base.setUTCFullYear(base.getUTCFullYear() + anos);
+    setDataVigenciaManual(base.toISOString().split("T")[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dados?.dados_gerais, tipo]);
+
   const enviarAcaoPlano = async (acao: AcaoItem, index: number) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
