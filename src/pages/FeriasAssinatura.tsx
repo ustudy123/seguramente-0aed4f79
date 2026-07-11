@@ -128,7 +128,9 @@ export default function FeriasAssinatura() {
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-blue-600" />
               <div>
-                <CardTitle className="text-lg">Aviso de Férias</CardTitle>
+                <CardTitle className="text-lg">
+                  {data?.tipo_documento === "recibo" ? "Recibo de Férias" : "Aviso de Férias"}
+                </CardTitle>
                 <p className="text-sm text-gray-500 mt-1">Assinatura digital do colaborador</p>
               </div>
             </div>
