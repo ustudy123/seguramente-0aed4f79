@@ -40,7 +40,9 @@ interface TrilhaFormProps {
   onOpenChange: (open: boolean) => void;
   trilha?: Trilha | null;
   onSuccess?: () => void;
+  onManageModulos?: (trilha: Trilha) => void;
 }
+
 
 const defaultForm = {
   nome: "",
