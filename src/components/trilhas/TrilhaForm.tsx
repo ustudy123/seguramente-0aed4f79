@@ -187,6 +187,12 @@ export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaForm
               onChange={(e) => set("pontuacao_minima", Number(e.target.value))}
             />
           </div>
+          <div className="flex items-center justify-between">
+            <Label>Conectar ao PDI</Label>
+            <Switch checked={form.conexao_pdi} onCheckedChange={(v) => set("conexao_pdi", v)} />
+          </div>
+
+
 
           {/* Módulos existentes (somente em modo edição) */}
           {trilha && (
