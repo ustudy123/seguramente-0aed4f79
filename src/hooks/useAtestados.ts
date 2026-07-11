@@ -578,6 +578,7 @@ export function useAtestados() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
       toast.success("Atestado atualizado com sucesso!");
     },
     onError: (error: Error) => {
