@@ -94,6 +94,8 @@ interface FeriasCardProps {
   onGerarRecibo: (item: FeriasSolicitacao) => void;
   onGerarFinanceiro: (item: FeriasSolicitacao) => void;
   onLinkAssinatura: (item: FeriasSolicitacao) => void;
+  onEnviarReciboAssinatura: (item: FeriasSolicitacao) => void;
+  onVerReciboAssinado: (item: FeriasSolicitacao) => void;
   onPublicarFeed: (item: FeriasSolicitacao) => void;
 }
 
