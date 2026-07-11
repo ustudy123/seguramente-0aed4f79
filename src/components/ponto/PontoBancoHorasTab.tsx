@@ -310,7 +310,7 @@ export function PontoBancoHorasTab() {
         });
 
         let saldoDia = saldoMin;
-        const trabExibido = usouAjuste ? trabalhadoAjustadoMin : trab;
+        void trabalhadoAjustadoMin;
 
         // Se veio extras/faltantes explícitos do banco e não há escala com horário, usa-os.
         if (!usouAjuste) {
