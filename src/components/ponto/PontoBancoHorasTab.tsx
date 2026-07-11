@@ -213,22 +213,44 @@ export function PontoBancoHorasTab() {
 
       const jornadasETol = await Promise.all(
         rows.map(async (d: any) => {
-          if (!tenantId) return { jornada: 0, tol: fallbackTolMin, tolBatida: fallbackTolBatida };
+          const base = {
+            jornada: 0,
+            tol: fallbackTolMin,
+            tolBatida: fallbackTolBatida,
+            entradaEscala: null as string | null,
+            saidaEscala: null as string | null,
+            intervaloMin: 0,
+          };
+          if (!tenantId) return base;
           try {
-            const { data: j } = await (supabase.rpc as any)("ponto_jornada_do_dia", {
+            const { data: esc } = await (supabase.rpc as any)("ponto_escala_do_dia", {
               p_tenant_id: tenantId,
               p_cpf: d.colaborador_cpf || cpfDigits || null,
               p_colaborador_id: d.colaborador_id ? String(d.colaborador_id) : null,
               p_data: d.data,
             });
-            const val = extractJornada(j);
-            const tol = extractTol(j) || fallbackTolMin;
-            if (val > 0) return { jornada: val, tol, tolBatida: fallbackTolBatida };
+            const row = Array.isArray(esc) ? esc[0] : esc;
+            const jornada = Number(row?.jornada_min) || 0;
+            const tol = Number(row?.tolerancia_diaria_min) || fallbackTolMin;
+            const tolBatida = row?.tolerancia_batida_min != null
+              ? Number(row.tolerancia_batida_min)
+              : fallbackTolBatida;
+            const trabalha = Boolean(row?.trabalha);
+            if (trabalha && jornada > 0) {
+              return {
+                jornada,
+                tol,
+                tolBatida,
+                entradaEscala: row?.entrada ? String(row.entrada).substring(0, 5) : null,
+                saidaEscala: row?.saida ? String(row.saida).substring(0, 5) : null,
+                intervaloMin: Number(row?.intervalo_min) || 0,
+              };
+            }
             const dow = new Date(d.data + "T00:00:00").getDay();
-            if (dow === 0 || dow === 6) return { jornada: 0, tol, tolBatida: fallbackTolBatida };
-            return { jornada: fallbackJornadaMin, tol, tolBatida: fallbackTolBatida };
+            if (dow === 0 || dow === 6) return { ...base, tol, tolBatida };
+            return { ...base, jornada: fallbackJornadaMin, tol, tolBatida };
           } catch {
-            return { jornada: 0, tol: fallbackTolMin, tolBatida: fallbackTolBatida };
+            return base;
           }
         })
       );
