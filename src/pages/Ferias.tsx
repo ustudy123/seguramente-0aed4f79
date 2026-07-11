@@ -13,7 +13,7 @@ import {
   Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
   ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
   FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck,
-  Loader2, MessageSquare,
+  Loader2, MessageSquare, PenLine,
 } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
 import { Button } from "@/components/ui/button";
