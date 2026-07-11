@@ -119,6 +119,15 @@ Confiança: "alta"=explícito | "media"=inferido | "baixa"=incerto.
 Para funcoes_atividades: extraia TODOS os cargos mencionados.
 Para estrutura_organizacional: setores e departamentos como listas simples de strings.
 
+REGRAS CRÍTICAS DE DATAS (NR-01 §1.5.4.4.6):
+- "data_emissao" = data de ELABORAÇÃO original do documento (primeira emissão).
+- "data_ultima_revisao" = data da revisão mais recente (ex.: "1ª Revisão: Outubro/2025"). Deixe null se não houver revisão.
+- "data_vigencia" = data de VALIDADE / VENCIMENTO do documento. NÃO confunda com data de revisão nem de elaboração.
+  * Para PGR: vigência máxima é 2 anos a partir da última revisão (ou 3 anos para MEI/ME/EPP com grau de risco 1 ou 2).
+  * Para PCMSO: vigência de 1 ano a contar da emissão/revisão.
+  * Para LTCAT/AET/Laudos: quando o documento não declara data de validade explícita, use null (confiança "baixa"). NUNCA use a data de elaboração/revisão como vigência.
+- Retorne datas no formato ISO "YYYY-MM-DD" quando possível. Se só houver mês/ano, use o primeiro dia do mês.
+
 Retorne JSON:
 {
   "dados_gerais": {
@@ -126,6 +135,7 @@ Retorne JSON:
     "cnpj": {"valor": null, "confianca": "baixa"},
     ${extra}
     "data_emissao": {"valor": null, "confianca": "baixa"},
+    "data_ultima_revisao": {"valor": null, "confianca": "baixa"},
     "data_vigencia": {"valor": null, "confianca": "baixa"},
     "versao": {"valor": null, "confianca": "baixa"}
   },
