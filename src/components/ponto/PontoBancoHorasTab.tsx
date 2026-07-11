@@ -665,6 +665,43 @@ export function PontoBancoHorasTab() {
         </CardContent>
       </Card>
 
+      {/* Legenda de apuração */}
+      <Card className="bg-muted/30">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2 text-sm font-medium mb-2">
+            <Info className="w-4 h-4 text-primary" />
+            <span>Legenda da apuração</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center font-mono font-semibold text-green-600">
+                <ArrowUpRight className="w-3 h-3 mr-0.5" />+0h 00min
+              </span>
+              <span className="text-muted-foreground">Saldo positivo (crédito / hora extra)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center font-mono font-semibold text-red-600">
+                <ArrowDownRight className="w-3 h-3 mr-0.5" />-0h 00min
+              </span>
+              <span className="text-muted-foreground">Saldo negativo (débito / atraso ou saída antecipada)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center font-mono font-semibold text-muted-foreground">
+                <Minus className="w-3 h-3 mr-0.5" />0h 0min
+              </span>
+              <span className="text-muted-foreground">Saldo zerado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/60" />
+                ±0 min
+              </span>
+              <span className="text-muted-foreground">Atraso/extra dentro da tolerância — não gera saldo</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Movimentações do banco selecionado */}
       {selectedBanco && !showMovimentacao && (
         <Card>
