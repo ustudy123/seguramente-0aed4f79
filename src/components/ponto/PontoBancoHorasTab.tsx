@@ -15,7 +15,8 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorSelect } from "@/components/shared/ColaboradorSelect";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search } from "lucide-react";
+import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search, Info } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -340,10 +341,26 @@ export function PontoBancoHorasTab() {
           horas_trabalhadas_minutos: trab,
           jornada_esperada_minutos: esperado,
           saldo_minutos: saldoDia,
+          detalhe: {
+            entradaEscala: info?.entradaEscala || null,
+            saidaEscala: info?.saidaEscala || null,
+            intervaloMin: info?.intervaloMin || 0,
+            toleranciaBatidaMin: tolBatida,
+            trabalhadoBrutoMin: trab,
+            trabalhadoAjustadoMin: usouAjuste ? trabalhadoAjustadoMin : trab,
+            jornadaEsperadaMin: esperado,
+            usouAjuste,
+            diaProtegido,
+          },
         };
       }) as Array<{
         id: string; data: string; horas_trabalhadas_minutos: number; jornada_esperada_minutos: number; saldo_minutos: number;
         entrada: string | null; saida: string | null; status: string | null; observacao: string | null; tipo_dia: string;
+        detalhe: {
+          entradaEscala: string | null; saidaEscala: string | null; intervaloMin: number;
+          toleranciaBatidaMin: number; trabalhadoBrutoMin: number; trabalhadoAjustadoMin: number;
+          jornadaEsperadaMin: number; usouAjuste: boolean; diaProtegido: boolean;
+        };
       }>;
 
     },
@@ -1012,7 +1029,88 @@ export function PontoBancoHorasTab() {
                               <TableCell className="py-1.5 text-xs font-mono">{d.saida?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
                               <TableCell className={`py-1.5 text-xs font-mono text-right font-semibold ${isCredito ? "text-green-600" : isDebito ? "text-red-600" : "text-muted-foreground"}`}>
-                                {isNeutro ? "—" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button type="button" className="inline-flex items-center gap-1 hover:underline focus:outline-none">
+                                      {isNeutro ? "—" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
+                                      <Info className="w-3 h-3 opacity-60" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="end" className="w-80 text-xs">
+                                    {(() => {
+                                      const det = d.detalhe;
+                                      const entradaReal = d.entrada?.slice(0, 5) || "-";
+                                      const saidaReal = d.saida?.slice(0, 5) || "-";
+                                      const tol = det.toleranciaBatidaMin || 0;
+                                      const toMin = (h?: string | null) => {
+                                        if (!h) return null;
+                                        const [hh, mm] = h.split(":").map(Number);
+                                        return hh * 60 + mm;
+                                      };
+                                      const eR = toMin(d.entrada?.slice(0, 5));
+                                      const sR = toMin(d.saida?.slice(0, 5));
+                                      const eE = toMin(det.entradaEscala);
+                                      const sE = toMin(det.saidaEscala);
+                                      const atrasoEntrada = (eR != null && eE != null) ? eR - eE : null;
+                                      const antecipSaida = (sR != null && sE != null) ? sE - sR : null;
+                                      const dentroEntrada = atrasoEntrada != null && atrasoEntrada <= tol;
+                                      const dentroSaida = antecipSaida != null && antecipSaida <= tol;
+                                      return (
+                                        <div className="space-y-2">
+                                          <div className="font-semibold text-sm">Detalhamento do saldo</div>
+                                          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                                            <span className="text-muted-foreground">Escala oficial</span>
+                                            <span className="font-mono text-right">{det.entradaEscala || "-"} → {det.saidaEscala || "-"}</span>
+
+                                            <span className="text-muted-foreground">Batida real</span>
+                                            <span className="font-mono text-right">{entradaReal} → {saidaReal}</span>
+
+                                            <span className="text-muted-foreground">Janela tolerância</span>
+                                            <span className="font-mono text-right">± {tol} min</span>
+
+                                            <span className="text-muted-foreground">Intervalo</span>
+                                            <span className="font-mono text-right">{formatMinutos(det.intervaloMin)}</span>
+
+                                            <span className="text-muted-foreground">Entrada</span>
+                                            <span className={`font-mono text-right ${atrasoEntrada != null && atrasoEntrada > 0 ? (dentroEntrada ? "text-muted-foreground" : "text-red-600") : "text-green-600"}`}>
+                                              {atrasoEntrada == null ? "-" : atrasoEntrada === 0 ? "no horário" : atrasoEntrada > 0 ? `atraso ${atrasoEntrada} min${dentroEntrada ? " (na tolerância)" : ""}` : `adiant. ${Math.abs(atrasoEntrada)} min`}
+                                            </span>
+
+                                            <span className="text-muted-foreground">Saída</span>
+                                            <span className={`font-mono text-right ${antecipSaida != null && antecipSaida > 0 ? (dentroSaida ? "text-muted-foreground" : "text-red-600") : "text-green-600"}`}>
+                                              {antecipSaida == null ? "-" : antecipSaida === 0 ? "no horário" : antecipSaida > 0 ? `antec. ${antecipSaida} min${dentroSaida ? " (na tolerância)" : ""}` : `extra ${Math.abs(antecipSaida)} min`}
+                                            </span>
+
+                                            <span className="text-muted-foreground">Trabalhado bruto</span>
+                                            <span className="font-mono text-right">{formatMinutos(det.trabalhadoBrutoMin)}</span>
+
+                                            {det.usouAjuste && (
+                                              <>
+                                                <span className="text-muted-foreground">Trabalhado ajustado</span>
+                                                <span className="font-mono text-right">{formatMinutos(det.trabalhadoAjustadoMin)}</span>
+                                              </>
+                                            )}
+
+                                            <span className="text-muted-foreground">Jornada esperada</span>
+                                            <span className="font-mono text-right">{formatMinutos(det.jornadaEsperadaMin)}</span>
+                                          </div>
+                                          <div className="border-t pt-2 flex items-center justify-between">
+                                            <span className="text-muted-foreground">Saldo do dia</span>
+                                            <span className={`font-mono font-semibold ${isCredito ? "text-green-600" : isDebito ? "text-red-600" : "text-muted-foreground"}`}>
+                                              {isNeutro ? "0h 0min" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
+                                            </span>
+                                          </div>
+                                          {det.diaProtegido && (
+                                            <p className="text-[11px] text-muted-foreground italic">Dia protegido (atestado/férias/afastamento/feriado): saldo neutralizado.</p>
+                                          )}
+                                          {!det.usouAjuste && !det.diaProtegido && (
+                                            <p className="text-[11px] text-muted-foreground italic">Sem horário de escala definido — cálculo usa trabalhado bruto × jornada.</p>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </PopoverContent>
+                                </Popover>
                               </TableCell>
 
                               <TableCell className="py-1.5 text-right">
