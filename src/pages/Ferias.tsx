@@ -427,6 +427,93 @@ const Ferias = () => {
       }
     } catch (err) { console.error(err); toast.error("Erro ao gerar link de assinatura"); }
   };
+  // ========== ENVIAR RECIBO PARA ASSINATURA ==========
+  const handleEnviarReciboAssinatura = async (item: FeriasSolicitacao) => {
+    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
+    try {
+      // 1) Gera HTML do recibo
+      const html = gerarReciboFeriasHTML({
+        colaboradorNome: item.colaborador_nome,
+        colaboradorCpf: item.colaborador_cpf || undefined,
+        departamento: item.departamento || "",
+        dataInicio: item.data_inicio,
+        dataFim: item.data_fim,
+        diasSolicitados: item.dias_solicitados,
+        abonoPecuniario: item.abono_pecuniario,
+        diasAbono: item.dias_abono,
+        salarioBase: item.salario_base || 0,
+      });
+
+      // 2) Upload no storage
+      const safeNome = item.colaborador_nome.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${tenantId}/ferias/recibo_${item.id}_${Date.now()}_${safeNome}.html`;
+      const { error: upErr } = await supabase.storage
+        .from("documentos")
+        .upload(storagePath, new Blob([html], { type: "text/html" }), {
+          contentType: "text/html", upsert: false,
+        });
+      if (upErr) throw upErr;
+
+      // 3) Cria link de assinatura
+      const { data, error } = await fromTable("ferias_assinatura_links")
+        .insert({
+          tenant_id: tenantId,
+          colaborador_id: item.colaborador_id,
+          empresa_id: (item as any).empresa_id || null,
+          ferias_solicitacao_id: item.id,
+          tipo_documento: "recibo",
+          colaborador_nome: item.colaborador_nome,
+          colaborador_cpf: item.colaborador_cpf,
+          departamento: item.departamento,
+          cargo: item.cargo,
+          data_inicio_ferias: item.data_inicio,
+          data_fim_ferias: item.data_fim,
+          dias_ferias: item.dias_solicitados,
+          abono_pecuniario: item.abono_pecuniario,
+          dias_abono: item.dias_abono,
+          salario_base: item.salario_base || 0,
+          documento_storage_path: storagePath,
+        } as any).select("token").single();
+      if (error) throw error;
+      const token = (data as any)?.token;
+      if (token) {
+        const url = `${window.location.origin}/ferias-assinatura/${token}`;
+        setLinkAssinaturaDialog({ url, colaborador: item.colaborador_nome });
+        atualizarCampo.mutate({ id: item.id, campo: "assinatura_link_id", valor: token });
+        toast.success("Link de assinatura do recibo gerado!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao enviar recibo para assinatura");
+    }
+  };
+
+  // ========== VER RECIBO ASSINADO ==========
+  const handleVerReciboAssinado = async (item: FeriasSolicitacao) => {
+    try {
+      const { data, error } = await fromTable("ferias_assinatura_links")
+        .select("documento_storage_path,status")
+        .eq("ferias_solicitacao_id", item.id)
+        .eq("tipo_documento", "recibo")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      const path = (data as any)?.documento_storage_path;
+      const status = (data as any)?.status;
+      if (!path) { toast.error("Nenhum recibo encontrado para esta solicitação"); return; }
+      if (status !== "assinado") {
+        toast.info("O recibo ainda não foi assinado pelo colaborador");
+      }
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("documentos").createSignedUrl(path, 3600);
+      if (signErr) throw signErr;
+      if (signed?.signedUrl) window.open(signed.signedUrl, "_blank");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao abrir recibo assinado");
+    }
+  };
 
   // ========== NOVA SOLICITAÇÃO ==========
   const handleNovaSolicitacao = () => {
