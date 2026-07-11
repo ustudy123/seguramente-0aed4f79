@@ -66,11 +66,13 @@ Deno.serve(async (req) => {
           dias_ferias: link.dias_ferias,
           abono_pecuniario: link.abono_pecuniario,
           dias_abono: link.dias_abono,
+          tipo_documento: link.tipo_documento || "aviso",
           status: link.status,
           documento_url: documentoUrl,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+
     }
 
     if (req.method === "POST") {
