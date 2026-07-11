@@ -340,10 +340,26 @@ export function PontoBancoHorasTab() {
           horas_trabalhadas_minutos: trab,
           jornada_esperada_minutos: esperado,
           saldo_minutos: saldoDia,
+          detalhe: {
+            entradaEscala: info?.entradaEscala || null,
+            saidaEscala: info?.saidaEscala || null,
+            intervaloMin: info?.intervaloMin || 0,
+            toleranciaBatidaMin: tolBatida,
+            trabalhadoBrutoMin: trab,
+            trabalhadoAjustadoMin: usouAjuste ? trabalhadoAjustadoMin : trab,
+            jornadaEsperadaMin: esperado,
+            usouAjuste,
+            diaProtegido,
+          },
         };
       }) as Array<{
         id: string; data: string; horas_trabalhadas_minutos: number; jornada_esperada_minutos: number; saldo_minutos: number;
         entrada: string | null; saida: string | null; status: string | null; observacao: string | null; tipo_dia: string;
+        detalhe: {
+          entradaEscala: string | null; saidaEscala: string | null; intervaloMin: number;
+          toleranciaBatidaMin: number; trabalhadoBrutoMin: number; trabalhadoAjustadoMin: number;
+          jornadaEsperadaMin: number; usouAjuste: boolean; diaProtegido: boolean;
+        };
       }>;
 
     },
