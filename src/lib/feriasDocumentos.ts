@@ -321,3 +321,60 @@ export function gerarReciboFeriasPDF(data: FeriasDocData): jsPDF {
 
   return doc;
 }
+
+/**
+ * Gera HTML do Recibo de Férias — usado na assinatura digital pelo colaborador.
+ */
+export function gerarReciboFeriasHTML(data: FeriasDocData): string {
+  const salarioDia = data.salarioBase / 30;
+  const valorFerias = salarioDia * data.diasSolicitados;
+  const terco = valorFerias / 3;
+  const valorAbono = data.abonoPecuniario ? salarioDia * data.diasAbono : 0;
+  const total = valorFerias + terco + valorAbono;
+
+  const linhaAbono = data.abonoPecuniario
+    ? `<tr><td>Abono Pecuniário — ${data.diasAbono} dias</td><td style="text-align:right;">${formatCurrency(valorAbono)}</td></tr>`
+    : "";
+  const infoAbono = data.abonoPecuniario
+    ? `<tr><td><strong>Abono Pecuniário:</strong></td><td>${data.diasAbono} dias</td></tr>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Recibo de Férias — ${data.colaboradorNome}</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;max-width:780px;margin:24px auto;padding:24px;color:#1f2937;}
+h1{text-align:center;font-size:20px;margin:0 0 4px;}
+h2{font-size:14px;margin:24px 0 8px;border-bottom:2px solid #333;padding-bottom:4px;}
+.sub{text-align:center;color:#666;font-size:12px;margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;}
+td{padding:6px 4px;vertical-align:top;}
+.tot{border-top:2px solid #000;font-weight:700;font-size:14px;}
+.decl{margin-top:32px;font-size:13px;line-height:1.5;}
+.sig{margin-top:60px;display:flex;justify-content:space-around;font-size:12px;text-align:center;}
+.sig div{width:45%;border-top:1px solid #000;padding-top:4px;}
+.foot{margin-top:40px;text-align:center;font-size:10px;color:#888;}
+</style></head><body>
+<h1>RECIBO DE PAGAMENTO DE FÉRIAS</h1>
+<p class="sub">Art. 145 da CLT — Pagamento até 2 dias antes do início do gozo</p>
+<h2>Identificação</h2>
+<table>
+<tr><td><strong>Colaborador:</strong></td><td>${data.colaboradorNome}</td></tr>
+<tr><td><strong>CPF:</strong></td><td>${data.colaboradorCpf || "—"}</td></tr>
+<tr><td><strong>Departamento:</strong></td><td>${data.departamento || "—"}</td></tr>
+<tr><td><strong>Período de gozo:</strong></td><td>${formatDate(data.dataInicio)} a ${formatDate(data.dataFim)}</td></tr>
+<tr><td><strong>Dias de gozo:</strong></td><td>${data.diasSolicitados} dias</td></tr>
+${infoAbono}
+</table>
+<h2>Composição do Pagamento</h2>
+<table>
+<tr><td>Férias — ${data.diasSolicitados} dias</td><td style="text-align:right;">${formatCurrency(valorFerias)}</td></tr>
+<tr><td>Adicional 1/3 Constitucional</td><td style="text-align:right;">${formatCurrency(terco)}</td></tr>
+${linhaAbono}
+<tr class="tot"><td>TOTAL BRUTO</td><td style="text-align:right;">${formatCurrency(total)}</td></tr>
+</table>
+<p class="decl">Declaro para os devidos fins que recebi da empresa o valor acima discriminado, referente às minhas férias e respectivos direitos legais, nada mais tendo a reclamar a este título.</p>
+<div class="sig"><div>Data</div><div>Assinatura do Colaborador</div></div>
+<p class="foot">Documento gerado automaticamente pelo sistema YourEyes</p>
+</body></html>`;
+}
+

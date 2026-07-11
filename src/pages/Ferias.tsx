@@ -13,7 +13,7 @@ import {
   Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
   ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
   FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck,
-  Loader2, MessageSquare,
+  Loader2, MessageSquare, PenLine,
 } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { useFinanceiro } from "@/hooks/useFinanceiro";
 import { useAuth } from "@/hooks/useAuth";
 import { validarFracionamentoCLT } from "@/lib/feriasPeriodo";
-import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF } from "@/lib/feriasDocumentos";
+import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF, gerarReciboFeriasHTML } from "@/lib/feriasDocumentos";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
@@ -94,10 +94,12 @@ interface FeriasCardProps {
   onGerarRecibo: (item: FeriasSolicitacao) => void;
   onGerarFinanceiro: (item: FeriasSolicitacao) => void;
   onLinkAssinatura: (item: FeriasSolicitacao) => void;
+  onEnviarReciboAssinatura: (item: FeriasSolicitacao) => void;
+  onVerReciboAssinado: (item: FeriasSolicitacao) => void;
   onPublicarFeed: (item: FeriasSolicitacao) => void;
 }
 
-const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura, onPublicarFeed }: FeriasCardProps) => {
+const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura, onEnviarReciboAssinatura, onVerReciboAssinado, onPublicarFeed }: FeriasCardProps) => {
   const config = statusConfig[item.status] || statusConfig.pendente;
   const startDate = new Date(item.data_inicio + "T12:00:00").toLocaleDateString("pt-BR");
   const endDate = new Date(item.data_fim + "T12:00:00").toLocaleDateString("pt-BR");
@@ -209,11 +211,30 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
               <DollarSign className="w-3.5 h-3.5 mr-1" /> Reg. Financeiro
             </Button>
             <Button size="sm" variant="outline" className="text-xs" onClick={() => onLinkAssinatura(item)}>
-              <Send className="w-3.5 h-3.5 mr-1" /> Link Assinatura
+              <Send className="w-3.5 h-3.5 mr-1" /> Aviso p/ Assinar
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs col-span-2 border-primary/40 text-primary hover:bg-primary/5"
+              onClick={() => onEnviarReciboAssinatura(item)}
+            >
+              <PenLine className="w-3.5 h-3.5 mr-1" /> Enviar Recibo p/ Assinatura
+            </Button>
+            {item.recibo_gerado && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs col-span-2 border-success/40 text-success hover:bg-success/5"
+                onClick={() => onVerReciboAssinado(item)}
+              >
+                <FileText className="w-3.5 h-3.5 mr-1" /> Ver Recibo Assinado
+              </Button>
+            )}
             <Button size="sm" variant="outline" className="text-xs col-span-2 text-primary" onClick={() => onPublicarFeed(item)}>
               <MessageSquare className="w-3.5 h-3.5 mr-1" /> Publicar no Feed
             </Button>
+
           </div>
         </div>
       )}
@@ -406,6 +427,93 @@ const Ferias = () => {
       }
     } catch (err) { console.error(err); toast.error("Erro ao gerar link de assinatura"); }
   };
+  // ========== ENVIAR RECIBO PARA ASSINATURA ==========
+  const handleEnviarReciboAssinatura = async (item: FeriasSolicitacao) => {
+    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
+    try {
+      // 1) Gera HTML do recibo
+      const html = gerarReciboFeriasHTML({
+        colaboradorNome: item.colaborador_nome,
+        colaboradorCpf: item.colaborador_cpf || undefined,
+        departamento: item.departamento || "",
+        dataInicio: item.data_inicio,
+        dataFim: item.data_fim,
+        diasSolicitados: item.dias_solicitados,
+        abonoPecuniario: item.abono_pecuniario,
+        diasAbono: item.dias_abono,
+        salarioBase: item.salario_base || 0,
+      });
+
+      // 2) Upload no storage
+      const safeNome = item.colaborador_nome.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${tenantId}/ferias/recibo_${item.id}_${Date.now()}_${safeNome}.html`;
+      const { error: upErr } = await supabase.storage
+        .from("documentos")
+        .upload(storagePath, new Blob([html], { type: "text/html" }), {
+          contentType: "text/html", upsert: false,
+        });
+      if (upErr) throw upErr;
+
+      // 3) Cria link de assinatura
+      const { data, error } = await fromTable("ferias_assinatura_links")
+        .insert({
+          tenant_id: tenantId,
+          colaborador_id: item.colaborador_id,
+          empresa_id: (item as any).empresa_id || null,
+          ferias_solicitacao_id: item.id,
+          tipo_documento: "recibo",
+          colaborador_nome: item.colaborador_nome,
+          colaborador_cpf: item.colaborador_cpf,
+          departamento: item.departamento,
+          cargo: item.cargo,
+          data_inicio_ferias: item.data_inicio,
+          data_fim_ferias: item.data_fim,
+          dias_ferias: item.dias_solicitados,
+          abono_pecuniario: item.abono_pecuniario,
+          dias_abono: item.dias_abono,
+          salario_base: item.salario_base || 0,
+          documento_storage_path: storagePath,
+        } as any).select("token").single();
+      if (error) throw error;
+      const token = (data as any)?.token;
+      if (token) {
+        const url = `${window.location.origin}/ferias-assinatura/${token}`;
+        setLinkAssinaturaDialog({ url, colaborador: item.colaborador_nome });
+        atualizarCampo.mutate({ id: item.id, campo: "assinatura_link_id", valor: token });
+        toast.success("Link de assinatura do recibo gerado!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao enviar recibo para assinatura");
+    }
+  };
+
+  // ========== VER RECIBO ASSINADO ==========
+  const handleVerReciboAssinado = async (item: FeriasSolicitacao) => {
+    try {
+      const { data, error } = await fromTable("ferias_assinatura_links")
+        .select("documento_storage_path,status")
+        .eq("ferias_solicitacao_id", item.id)
+        .eq("tipo_documento", "recibo")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      const path = (data as any)?.documento_storage_path;
+      const status = (data as any)?.status;
+      if (!path) { toast.error("Nenhum recibo encontrado para esta solicitação"); return; }
+      if (status !== "assinado") {
+        toast.info("O recibo ainda não foi assinado pelo colaborador");
+      }
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("documentos").createSignedUrl(path, 3600);
+      if (signErr) throw signErr;
+      if (signed?.signedUrl) window.open(signed.signedUrl, "_blank");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao abrir recibo assinado");
+    }
+  };
 
   // ========== NOVA SOLICITAÇÃO ==========
   const handleNovaSolicitacao = () => {
@@ -553,8 +661,11 @@ const Ferias = () => {
                   onAprovar={handleAprovar} onRecusar={(id) => recusar.mutate({ id })}
                   onGerarAviso={handleGerarAviso} onGerarRecibo={handleGerarRecibo}
                   onGerarFinanceiro={handleGerarFinanceiro} onLinkAssinatura={handleLinkAssinatura}
+                  onEnviarReciboAssinatura={handleEnviarReciboAssinatura}
+                  onVerReciboAssinado={handleVerReciboAssinado}
                   onPublicarFeed={handlePublicarFeed}
                 />
+
               ))}
             </div>
           )}

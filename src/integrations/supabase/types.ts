@@ -7421,6 +7421,7 @@ export type Database = {
           assinatura_ip: string | null
           cargo: string | null
           colaborador_cpf: string | null
+          colaborador_id: string | null
           colaborador_nome: string
           created_at: string
           data_fim_ferias: string
@@ -7428,12 +7429,16 @@ export type Database = {
           departamento: string | null
           dias_abono: number | null
           dias_ferias: number
+          documento_arquivado_id: string | null
           documento_storage_path: string | null
+          empresa_id: string | null
           expira_em: string
+          ferias_solicitacao_id: string | null
           id: string
           salario_base: number | null
           status: string
           tenant_id: string
+          tipo_documento: string | null
           token: string
           updated_at: string
         }
@@ -7443,6 +7448,7 @@ export type Database = {
           assinatura_ip?: string | null
           cargo?: string | null
           colaborador_cpf?: string | null
+          colaborador_id?: string | null
           colaborador_nome: string
           created_at?: string
           data_fim_ferias: string
@@ -7450,12 +7456,16 @@ export type Database = {
           departamento?: string | null
           dias_abono?: number | null
           dias_ferias: number
+          documento_arquivado_id?: string | null
           documento_storage_path?: string | null
+          empresa_id?: string | null
           expira_em?: string
+          ferias_solicitacao_id?: string | null
           id?: string
           salario_base?: number | null
           status?: string
           tenant_id: string
+          tipo_documento?: string | null
           token?: string
           updated_at?: string
         }
@@ -7465,6 +7475,7 @@ export type Database = {
           assinatura_ip?: string | null
           cargo?: string | null
           colaborador_cpf?: string | null
+          colaborador_id?: string | null
           colaborador_nome?: string
           created_at?: string
           data_fim_ferias?: string
@@ -7472,12 +7483,16 @@ export type Database = {
           departamento?: string | null
           dias_abono?: number | null
           dias_ferias?: number
+          documento_arquivado_id?: string | null
           documento_storage_path?: string | null
+          empresa_id?: string | null
           expira_em?: string
+          ferias_solicitacao_id?: string | null
           id?: string
           salario_base?: number | null
           status?: string
           tenant_id?: string
+          tipo_documento?: string | null
           token?: string
           updated_at?: string
         }
