@@ -290,33 +290,44 @@ export function PontoBancoHorasTab() {
 
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
-        const esperadoBase = jornadasETol[idx]?.jornada || 0;
+        const info = jornadasETol[idx];
+        const esperadoBase = info?.jornada || 0;
         const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
-        // Tolerância POR BATIDA da escala (tolerancia_minutos). A compensação
-        // (sair mais tarde) já entra no total trabalhado, então o déficit do
-        // dia reflete o saldo real.
-        const tol = jornadasETol[idx]?.tolBatida ?? jornadasETol[idx]?.tol ?? 0;
-        const extras = intervalToMin(d.horas_extras);
-        const faltantes = intervalToMin(d.horas_faltantes);
-        let saldoDia = (extras || faltantes)
-          ? (extras - faltantes)
-          : (esperado > 0 ? trab - esperado : 0);
+        const tolBatida = info?.tolBatida ?? 5;
+
+        // Prioriza cálculo por batida (tolerância aplicada na batida, não no saldo).
+        // Se não houver escala com horários definidos, cai no fallback antigo.
+        const { saldoMin, trabalhadoAjustadoMin, usouAjuste } = calcularSaldoDia({
+          entradaReal: d.entrada ? String(d.entrada).substring(0, 5) : null,
+          saidaReal: d.saida ? String(d.saida).substring(0, 5) : null,
+          entradaEscala: info?.entradaEscala || null,
+          saidaEscala: info?.saidaEscala || null,
+          intervaloMin: info?.intervaloMin || 0,
+          jornadaEsperadaMin: esperado,
+          toleranciaBatidaMin: tolBatida,
+          trabalhadoBrutoMin: trab,
+        });
+
+        let saldoDia = saldoMin;
+        const trabExibido = usouAjuste ? trabalhadoAjustadoMin : trab;
+
+        // Se veio extras/faltantes explícitos do banco e não há escala com horário, usa-os.
+        if (!usouAjuste) {
+          const extras = intervalToMin(d.horas_extras);
+          const faltantes = intervalToMin(d.horas_faltantes);
+          if (extras || faltantes) saldoDia = extras - faltantes;
+        }
+
         // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui.
-        // Alguns registros antigos ficaram como tipo_dia="normal"; por isso a tela
-        // também cruza com a tabela de atestados e com a observação do dia.
         const tipoDia = String(d.tipo_dia || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const observacaoDia = String(d.observacao || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const diaProtegido = ["atestado", "ferias", "afastamento", "feriado"].some(tipo => tipoDia.includes(tipo))
           || observacaoDia.includes("atestado")
           || atestadoDatas.has(d.data)
-          // Dia com status "justificado" (abono aprovado) é neutro,
-          // igual à apuração SQL.
           || String(d.status || "") === "justificado";
         if (diaProtegido) {
           saldoDia = 0;
         }
-        // Tolerância por batida: déficit/excedente dentro da tolerância = regular.
-        if (tol > 0 && Math.abs(saldoDia) <= tol) saldoDia = 0;
         return {
           id: d.id,
           data: d.data,
