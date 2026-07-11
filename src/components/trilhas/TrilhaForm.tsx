@@ -17,10 +17,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { useTrilhas } from "@/hooks/useTrilhas";
-import type { Trilha, TrilhaTipo, TrilhaPrioridade, TrilhaVisibilidade } from "@/types/trilha";
-import { TRILHA_TIPO_LABELS, TRILHA_PRIORIDADE_LABELS } from "@/types/trilha";
+import { Loader2, BookOpen, Video, FileText, Link2, PenSquare, HelpCircle, Lightbulb, Target, Sparkles } from "lucide-react";
+import { useTrilhas, useTrilhaModulos } from "@/hooks/useTrilhas";
+import type { Trilha, TrilhaTipo, TrilhaPrioridade, TrilhaVisibilidade, TrilhaModuloTipo } from "@/types/trilha";
+import { TRILHA_TIPO_LABELS, TRILHA_PRIORIDADE_LABELS, MODULO_TIPO_LABELS } from "@/types/trilha";
+
+const MODULO_TIPO_ICONS: Partial<Record<TrilhaModuloTipo, React.ElementType>> = {
+  video: Video,
+  pdf: FileText,
+  link: Link2,
+  apresentacao: FileText,
+  conteudo_interno: PenSquare,
+  quiz: HelpCircle,
+  reflexao: Lightbulb,
+  estudo_caso: Target,
+  microdesafio: Sparkles,
+};
+
 
 interface TrilhaFormProps {
   open: boolean;
