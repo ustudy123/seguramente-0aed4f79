@@ -21,6 +21,7 @@ export default function Trilhas() {
   const [showModuloForm, setShowModuloForm] = useState(false);
   const [editingModulo, setEditingModulo] = useState<TrilhaModulo | null>(null);
   const [execucaoTrilha, setExecucaoTrilha] = useState<TrilhaComProgresso | null>(null);
+  const [activeTab, setActiveTab] = useState("minhas");
 
   const handleNewTrilha = () => {
     setEditingTrilha(null);
