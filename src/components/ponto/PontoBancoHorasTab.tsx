@@ -15,7 +15,7 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorSelect } from "@/components/shared/ColaboradorSelect";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search, Info } from "lucide-react";
+import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search, Info, Minus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
