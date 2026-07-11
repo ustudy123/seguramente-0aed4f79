@@ -99,7 +99,7 @@ interface FeriasCardProps {
   onPublicarFeed: (item: FeriasSolicitacao) => void;
 }
 
-const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura, onPublicarFeed }: FeriasCardProps) => {
+const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura, onEnviarReciboAssinatura, onVerReciboAssinado, onPublicarFeed }: FeriasCardProps) => {
   const config = statusConfig[item.status] || statusConfig.pendente;
   const startDate = new Date(item.data_inicio + "T12:00:00").toLocaleDateString("pt-BR");
   const endDate = new Date(item.data_fim + "T12:00:00").toLocaleDateString("pt-BR");
