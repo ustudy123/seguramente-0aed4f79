@@ -291,6 +291,7 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["pendencias-dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["beneficios_inss"] });
       queryClient.invalidateQueries({ queryKey: ["beneficios"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
       toast.success("Atestado cadastrado com sucesso!");
     },
     onError: (error: Error) => {
@@ -577,6 +578,7 @@ export function useAtestados() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
       toast.success("Atestado atualizado com sucesso!");
     },
     onError: (error: Error) => {
@@ -624,6 +626,8 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
       queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-dia"] });
       toast.success("Atestado excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -680,6 +684,7 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
       toast.success("Afastamento excluído com sucesso!");
     },
     onError: (error: Error) => {
