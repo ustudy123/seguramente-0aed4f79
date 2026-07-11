@@ -21,6 +21,7 @@ export default function Trilhas() {
   const [showModuloForm, setShowModuloForm] = useState(false);
   const [editingModulo, setEditingModulo] = useState<TrilhaModulo | null>(null);
   const [execucaoTrilha, setExecucaoTrilha] = useState<TrilhaComProgresso | null>(null);
+  const [activeTab, setActiveTab] = useState("minhas");
 
   const handleNewTrilha = () => {
     setEditingTrilha(null);
@@ -78,7 +79,7 @@ export default function Trilhas() {
       {execucaoTrilha ? (
         <TrilhaExecucao trilha={execucaoTrilha} onBack={() => setExecucaoTrilha(null)} />
       ) : (
-        <Tabs defaultValue="minhas" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 max-w-lg">
             <TabsTrigger value="minhas">Minhas Trilhas</TabsTrigger>
             <TabsTrigger value="gamificacao">Gamificação</TabsTrigger>
@@ -128,7 +129,10 @@ export default function Trilhas() {
             setSelectedTrilha(null);
           }
         }}
-        onManageModulos={(t) => setSelectedTrilha(t)}
+        onManageModulos={(t) => {
+          setActiveTab("gestao");
+          setSelectedTrilha(t);
+        }}
       />
 
 
