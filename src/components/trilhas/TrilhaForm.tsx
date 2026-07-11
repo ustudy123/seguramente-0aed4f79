@@ -56,7 +56,7 @@ const defaultForm = {
   conexao_pdi: false,
 };
 
-export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaFormProps) {
+export function TrilhaForm({ open, onOpenChange, trilha, onSuccess, onManageModulos }: TrilhaFormProps) {
   const { criarTrilha, atualizarTrilha, criando } = useTrilhas();
   const { modulos, isLoading: loadingModulos } = useTrilhaModulos(trilha?.id);
 
