@@ -129,7 +129,10 @@ export default function Trilhas() {
             setSelectedTrilha(null);
           }
         }}
-        onManageModulos={(t) => setSelectedTrilha(t)}
+        onManageModulos={(t) => {
+          setActiveTab("gestao");
+          setSelectedTrilha(t);
+        }}
       />
 
 
