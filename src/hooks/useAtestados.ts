@@ -291,6 +291,7 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["pendencias-dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["beneficios_inss"] });
       queryClient.invalidateQueries({ queryKey: ["beneficios"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
       toast.success("Atestado cadastrado com sucesso!");
     },
     onError: (error: Error) => {
