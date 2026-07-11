@@ -12,17 +12,45 @@ export function useTrilhaProgresso() {
   const colaboradorId = user?.id;
   const colaboradorNome = profile?.nome_completo || user?.email || "";
 
-  // Fetch all active trilhas with user's progress
+  // Fetch trilhas assigned to the current user (individual, department, or "todos")
   const { data: minhasTrilhas = [], isLoading } = useQuery({
-    queryKey: ["minhas_trilhas", tenantId, colaboradorId],
+    queryKey: ["minhas_trilhas", tenantId, colaboradorId, user?.email],
     queryFn: async (): Promise<TrilhaComProgresso[]> => {
       if (!tenantId || !colaboradorId) return [];
 
-      // Fetch active trilhas
+      // Resolve current user's admissao record (assignments target admissoes.id, not auth.uid)
+      let admissaoIds: string[] = [];
+      let departamentos: string[] = [];
+      if (user?.email) {
+        const { data: admissoes } = await fromTable("admissoes")
+          .select("id, departamento")
+          .eq("tenant_id", tenantId)
+          .eq("email", user.email) as { data: any[] | null; error: Error | null };
+        admissaoIds = (admissoes || []).map((a) => a.id);
+        departamentos = [...new Set((admissoes || []).map((a) => a.departamento).filter(Boolean))] as string[];
+      }
+
+      // Fetch assignments applicable to this user
+      const { data: atribuicoes, error: aErr } = await fromTable("trilha_atribuicoes")
+        .select("trilha_id, tipo_alvo, alvo_id, alvo_nome")
+        .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
+      if (aErr) throw aErr;
+
+      const trilhaIdsAtribuidas = new Set<string>();
+      for (const a of atribuicoes || []) {
+        if (a.tipo_alvo === "todos") trilhaIdsAtribuidas.add(a.trilha_id);
+        else if (a.tipo_alvo === "colaborador" && a.alvo_id && admissaoIds.includes(a.alvo_id)) trilhaIdsAtribuidas.add(a.trilha_id);
+        else if (a.tipo_alvo === "departamento" && a.alvo_nome && departamentos.includes(a.alvo_nome)) trilhaIdsAtribuidas.add(a.trilha_id);
+      }
+
+      if (trilhaIdsAtribuidas.size === 0) return [];
+
+      // Fetch atribuídas trilhas (any status except arquivada)
       const { data: trilhas, error: tErr } = await fromTable("trilhas")
         .select("*")
         .eq("tenant_id", tenantId)
-        .eq("status", "ativa")
+        .in("id", Array.from(trilhaIdsAtribuidas))
+        .neq("status", "arquivada")
         .order("created_at", { ascending: false }) as { data: Trilha[] | null; error: Error | null };
       if (tErr) throw tErr;
       if (!trilhas?.length) return [];
@@ -44,6 +72,7 @@ export function useTrilhaProgresso() {
     },
     enabled: !!tenantId && !!colaboradorId,
   });
+
 
   // Fetch progress for specific trilha
   const useModuloProgresso = (trilhaId?: string) =>
