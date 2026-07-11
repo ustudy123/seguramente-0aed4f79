@@ -40,7 +40,9 @@ interface TrilhaFormProps {
   onOpenChange: (open: boolean) => void;
   trilha?: Trilha | null;
   onSuccess?: () => void;
+  onManageModulos?: (trilha: Trilha) => void;
 }
+
 
 const defaultForm = {
   nome: "",
@@ -54,7 +56,7 @@ const defaultForm = {
   conexao_pdi: false,
 };
 
-export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaFormProps) {
+export function TrilhaForm({ open, onOpenChange, trilha, onSuccess, onManageModulos }: TrilhaFormProps) {
   const { criarTrilha, atualizarTrilha, criando } = useTrilhas();
   const { modulos, isLoading: loadingModulos } = useTrilhaModulos(trilha?.id);
 
@@ -239,11 +241,29 @@ export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaForm
                   })}
                 </ul>
               )}
-              <p className="text-[11px] text-muted-foreground mt-2">
-                Para adicionar, editar ou remover módulos, use "Ver detalhes" da trilha.
-              </p>
+              <div className="flex items-center justify-between mt-3 gap-2">
+                <p className="text-[11px] text-muted-foreground">
+                  Adicione, edite ou remova módulos na página de detalhes.
+                </p>
+                {onManageModulos && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 flex-shrink-0"
+                    onClick={() => {
+                      onManageModulos(trilha);
+                      onOpenChange(false);
+                    }}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Gerenciar módulos
+                  </Button>
+                )}
+              </div>
             </div>
           )}
+
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

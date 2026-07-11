@@ -128,7 +128,9 @@ export default function Trilhas() {
             setSelectedTrilha(null);
           }
         }}
+        onManageModulos={(t) => setSelectedTrilha(t)}
       />
+
 
       {selectedTrilha && (
         <ModuloForm
