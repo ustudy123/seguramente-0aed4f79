@@ -56,6 +56,8 @@ const defaultForm = {
 
 export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaFormProps) {
   const { criarTrilha, atualizarTrilha, criando } = useTrilhas();
+  const { modulos, isLoading: loadingModulos } = useTrilhaModulos(trilha?.id);
+
   const [form, setForm] = useState(defaultForm);
 
   useEffect(() => {
