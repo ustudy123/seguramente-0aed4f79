@@ -22802,18 +22802,36 @@ export type Database = {
         Args: { p_colaborador_id: string }
         Returns: string
       }
-      ponto_escala_do_dia: {
-        Args: {
-          p_colaborador_id: string
-          p_cpf: string
-          p_data: string
-          p_tenant_id: string
-        }
-        Returns: {
-          hora_entrada: string
-          tolerancia_min: number
-        }[]
-      }
+      ponto_escala_do_dia:
+        | {
+            Args: {
+              p_colaborador_id: string
+              p_cpf: string
+              p_data: string
+              p_tenant_id: string
+            }
+            Returns: {
+              entrada: string
+              intervalo_min: number
+              jornada_min: number
+              saida: string
+              tolerancia_batida_min: number
+              tolerancia_diaria_min: number
+              trabalha: boolean
+            }[]
+          }
+        | {
+            Args: {
+              p_colaborador_id: string
+              p_cpf: string
+              p_data: string
+              p_tenant_id: string
+            }
+            Returns: {
+              hora_entrada: string
+              tolerancia_min: number
+            }[]
+          }
       ponto_jornada_do_dia: {
         Args: {
           p_colaborador_id: string
