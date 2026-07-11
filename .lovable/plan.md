@@ -1,70 +1,60 @@
-## Situação atual
+## Diagnóstico
 
-- `ponto_marcacoes` já grava `latitude`, `longitude` e `endereco_geolocalizacao` (endereço reverso do OpenStreetMap).
-- **Não existe cerca (geofence):** nenhum raio configurado, nenhum ponto-referência (lat/lon) da empresa/filial, nenhum flag de "fora da cerca".
-- O endereço da batida já aparece no `MarcacaoBadge`, mas hoje é exibido tanto para o colaborador quanto para o gestor.
+Arquivo: `src/components/ponto/PontoBancoHorasTab.tsx` (linhas ~269-297) e cálculo equivalente em `horas_trabalhadas` (campo cru vindo de `ponto_diario`).
 
-## O que vou implementar
+Hoje o cálculo do saldo do dia é:
 
-### 1. Banco (migration)
+```
+saldo = horas_trabalhadas - jornada_esperada
+if (|saldo| <= tolerancia_por_batida) saldo = 0
+```
 
-**`empresa_cadastro`** — adicionar coordenadas do local de trabalho:
-- `latitude numeric`, `longitude numeric`
-- `raio_geofence_metros integer DEFAULT 150`
-- `geofence_ativo boolean DEFAULT false`
+Isso gera os dois defeitos do print:
 
-**`filiais`** — mesmos 4 campos (opcional; se preenchido, tem precedência sobre a matriz).
+1. **01/06, 02/06, 03/06** — Entrou 07:58 (jornada 07:52, atraso 6 min = fora da tolerância de 5 min) e saiu 18:00. Como saiu "no horário", `horas_trabalhadas` = 8h32 e `esperado` também = 8h32 (a jornada esperada está sendo derivada do `horas_trabalhadas` cru quando não há bloco). Resultado: saldo 0 = "—". **Correto seria −6 min por dia** (atraso fora da tolerância deve debitar, e a saída pontual não compensa).
 
-**`ponto_marcacoes`** — adicionar campos calculados no INSERT:
-- `distancia_metros numeric` — distância entre a batida e o ponto de referência
-- `dentro_cerca boolean` — `true` / `false` / `null` (se geofence desativado)
-- `geofence_ref text` — de onde veio o centro (`filial:<id>` ou `empresa:<id>`)
+2. **08/06** — Entrou 07:54 (dentro dos 5 min de tolerância → deveria valer 07:52) e saiu 18:30 (30 min após o fim da jornada). Sistema mostra **+28 min** em vez de **+30 min**, porque calcula `9h06 (trabalhado bruto) − 8h38 (esperado)` em vez de aplicar a tolerância *na batida* (arredondar entrada para 07:52) e comparar contra a jornada oficial.
 
-**Trigger `BEFORE INSERT`** em `ponto_marcacoes`:
-1. Busca a filial do colaborador (`admissoes.filial` → `filiais.nome` no mesmo `empresa_id`), pega lat/lon/raio se `geofence_ativo=true`.
-2. Fallback: `empresa_cadastro` do `empresa_id` da marcação.
-3. Calcula distância via `haversine_distance` (já existe) × 1000.
-4. Marca `dentro_cerca = distancia <= raio`.
-5. Se não houver referência ou geofence desativado → deixa `null` (não bloqueia batida).
+**Causa raiz:** a tolerância está sendo aplicada ao **saldo consolidado**, não à **batida individual**. Além disso o cálculo compara `horas_trabalhadas` (tempo cru bater–bater) contra `jornada_esperada` derivada da própria batida — o que "auto-anula" atrasos quando a saída é pontual.
 
-Backfill: preenche `dentro_cerca=null, distancia_metros=null` para registros antigos (nada a corrigir retroativamente).
+## Plano de correção
 
-### 2. Configuração (UI — gestor)
+Reescrever a apuração diária para trabalhar com **horário oficial ajustado por tolerância**, tanto na UI (`PontoBancoHorasTab`) quanto na RPC SQL usada por Espelho/Fechamento, para manter os números idênticos entre tela e relatório.
 
-**Nova seção na aba "Configuração" do Ponto (`PontoConfigTab.tsx`)** — card "Cerca de Geolocalização":
-- Switch "Ativar cerca de geolocalização"
-- Input `latitude` / `longitude` do local principal (com botão "Usar minha localização atual" via `useGeolocation`)
-- Input `raio_geofence_metros` (padrão 150m, min 30, max 5000)
-- Texto explicativo: "As batidas fora do raio serão marcadas como 'Fora da cerca' apenas para gestores. A batida não é bloqueada — serve como evidência para auditoria."
+### 1. Nova função utilitária `calcularSaldoDia`
 
-Grava em `empresa_cadastro` do `empresa_id` ativo.
+Criar `src/lib/ponto/calcularSaldoDia.ts` recebendo:
+- `entradaReal`, `saidaReal` (HH:MM da marcação)
+- `entradaEscala`, `saidaEscala`, `intervaloMin` (blocos da escala do dia)
+- `toleranciaBatidaMin` (default 5)
+- `jornadaEsperadaMin`
 
-*(Configuração por filial fica para uma iteração seguinte se pedirem — o modelo já suporta.)*
+Regras:
+- Se `entradaReal ≤ entradaEscala + tol` → entrada considerada = `entradaEscala`; caso contrário, `entradaReal` (atraso vira débito integral, não só o excedente da tolerância — a tolerância só "perdoa" quem está dentro dela).
+- Se `saidaReal ≥ saidaEscala − tol` e `< saidaEscala` → saída considerada = `saidaEscala`. Se `saidaReal ≥ saidaEscala` → saída considerada = `saidaReal` (extras contam integralmente).
+- `trabalhadoAjustado = (saidaConsiderada − entradaConsiderada) − intervalo`.
+- `saldo = trabalhadoAjustado − jornadaEsperada`.
+- **Remover** o bloco `if (|saldo| ≤ tol) saldo = 0` — a tolerância já foi absorvida na batida.
 
-### 3. Exibição (UI — só gestor)
+### 2. Integrar em `PontoBancoHorasTab.tsx`
 
-**`MarcacaoBadge.tsx`** — adiciona badge visual quando `podeEditar === true` (que já é gestor/admin):
-- `dentro_cerca === true` → badge verde `Dentro da cerca (Xm)`
-- `dentro_cerca === false` → badge âmbar `Fora da cerca (Xm)`
-- `null` → nada
-- Endereço continua visível para todos (já era).
-- Nova prop `distanciaMetros`, `dentroCerca` no hook `usePonto` (extrair no `select`).
+- Buscar também os blocos da escala (`ponto_escala_blocos` via `ponto_jornada_do_dia` ou nova RPC) para conhecer `hora_entrada`, `hora_saida` e `intervalo` do dia.
+- Substituir o cálculo atual das linhas 269-297 pela chamada a `calcularSaldoDia`.
+- Manter os "dias protegidos" (atestado/férias/afastamento/feriado/justificado) neutralizando o saldo.
 
-**Nada muda na tela do colaborador** — ele continua vendo hora, endereço e selfie, mas não vê a métrica de cerca.
+### 3. Alinhar a RPC de apuração
 
-### 4. Alerta opcional (fora de escopo agora)
+Atualizar a função SQL usada por Espelho/Fechamento (`ponto_apuracao_dia` / equivalente) com a mesma regra, para não divergir entre telas. Migração apenas altera a função — sem mudança de schema.
 
-Poderia gerar `ponto_alertas` do tipo `batida_fora_cerca` — deixo comentado no trigger como TODO para não expandir muito. Confirma se quer que eu já ative esse alerta agora.
+### 4. Validação
 
-## Arquivos afetados
+- Reprocessar a competência do print e conferir:
+  - 01–03/06 → saldo diário = **−6 min** cada (débito de 18 min no acumulado dessas linhas).
+  - 08/06 → saldo diário = **+30 min**.
+- Rodar o botão "Recalcular apuração" para atualizar `ponto_diario.horas_extras / horas_faltantes`.
 
-- `supabase/migrations/<novo>.sql` (schema + trigger + grants)
-- `src/components/ponto/PontoConfigTab.tsx` (nova seção)
-- `src/components/ponto/MarcacaoBadge.tsx` (badge de cerca)
-- `src/hooks/usePonto.ts` (select dos novos campos + tipos)
+## Detalhes técnicos
 
-## Fora de escopo (avise se quiser incluir)
-
-- Bloquear batida fora da cerca (hoje só sinaliza).
-- Múltiplos pontos de referência por filial (obras, canteiros).
-- Alerta automático 5W2H para "fora da cerca".
+- Arquivos alterados: `src/lib/ponto/calcularSaldoDia.ts` (novo), `src/components/ponto/PontoBancoHorasTab.tsx`, migração SQL da função de apuração.
+- Sem mudança de schema, sem breaking change em telas consumidoras (todas leem `saldo_minutos`).
+- Testes manuais nos 3 cenários: atraso fora da tolerância, atraso dentro da tolerância, saída antecipada dentro da tolerância, extras reais.

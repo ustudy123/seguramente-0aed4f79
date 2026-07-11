@@ -19,6 +19,7 @@ import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, Tren
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { calcularSaldoDia } from "@/lib/ponto/calcularSaldoDia";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -213,22 +214,44 @@ export function PontoBancoHorasTab() {
 
       const jornadasETol = await Promise.all(
         rows.map(async (d: any) => {
-          if (!tenantId) return { jornada: 0, tol: fallbackTolMin, tolBatida: fallbackTolBatida };
+          const base = {
+            jornada: 0,
+            tol: fallbackTolMin,
+            tolBatida: fallbackTolBatida,
+            entradaEscala: null as string | null,
+            saidaEscala: null as string | null,
+            intervaloMin: 0,
+          };
+          if (!tenantId) return base;
           try {
-            const { data: j } = await (supabase.rpc as any)("ponto_jornada_do_dia", {
+            const { data: esc } = await (supabase.rpc as any)("ponto_escala_do_dia", {
               p_tenant_id: tenantId,
               p_cpf: d.colaborador_cpf || cpfDigits || null,
               p_colaborador_id: d.colaborador_id ? String(d.colaborador_id) : null,
               p_data: d.data,
             });
-            const val = extractJornada(j);
-            const tol = extractTol(j) || fallbackTolMin;
-            if (val > 0) return { jornada: val, tol, tolBatida: fallbackTolBatida };
+            const row = Array.isArray(esc) ? esc[0] : esc;
+            const jornada = Number(row?.jornada_min) || 0;
+            const tol = Number(row?.tolerancia_diaria_min) || fallbackTolMin;
+            const tolBatida = row?.tolerancia_batida_min != null
+              ? Number(row.tolerancia_batida_min)
+              : fallbackTolBatida;
+            const trabalha = Boolean(row?.trabalha);
+            if (trabalha && jornada > 0) {
+              return {
+                jornada,
+                tol,
+                tolBatida,
+                entradaEscala: row?.entrada ? String(row.entrada).substring(0, 5) : null,
+                saidaEscala: row?.saida ? String(row.saida).substring(0, 5) : null,
+                intervaloMin: Number(row?.intervalo_min) || 0,
+              };
+            }
             const dow = new Date(d.data + "T00:00:00").getDay();
-            if (dow === 0 || dow === 6) return { jornada: 0, tol, tolBatida: fallbackTolBatida };
-            return { jornada: fallbackJornadaMin, tol, tolBatida: fallbackTolBatida };
+            if (dow === 0 || dow === 6) return { ...base, tol, tolBatida };
+            return { ...base, jornada: fallbackJornadaMin, tol, tolBatida };
           } catch {
-            return { jornada: 0, tol: fallbackTolMin, tolBatida: fallbackTolBatida };
+            return base;
           }
         })
       );
@@ -268,33 +291,44 @@ export function PontoBancoHorasTab() {
 
       return rows.map((d: any, idx: number) => {
         const trab = intervalToMin(d.horas_trabalhadas);
-        const esperadoBase = jornadasETol[idx]?.jornada || 0;
+        const info = jornadasETol[idx];
+        const esperadoBase = info?.jornada || 0;
         const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
-        // Tolerância POR BATIDA da escala (tolerancia_minutos). A compensação
-        // (sair mais tarde) já entra no total trabalhado, então o déficit do
-        // dia reflete o saldo real.
-        const tol = jornadasETol[idx]?.tolBatida ?? jornadasETol[idx]?.tol ?? 0;
-        const extras = intervalToMin(d.horas_extras);
-        const faltantes = intervalToMin(d.horas_faltantes);
-        let saldoDia = (extras || faltantes)
-          ? (extras - faltantes)
-          : (esperado > 0 ? trab - esperado : 0);
+        const tolBatida = info?.tolBatida ?? 5;
+
+        // Prioriza cálculo por batida (tolerância aplicada na batida, não no saldo).
+        // Se não houver escala com horários definidos, cai no fallback antigo.
+        const { saldoMin, trabalhadoAjustadoMin, usouAjuste } = calcularSaldoDia({
+          entradaReal: d.entrada ? String(d.entrada).substring(0, 5) : null,
+          saidaReal: d.saida ? String(d.saida).substring(0, 5) : null,
+          entradaEscala: info?.entradaEscala || null,
+          saidaEscala: info?.saidaEscala || null,
+          intervaloMin: info?.intervaloMin || 0,
+          jornadaEsperadaMin: esperado,
+          toleranciaBatidaMin: tolBatida,
+          trabalhadoBrutoMin: trab,
+        });
+
+        let saldoDia = saldoMin;
+        void trabalhadoAjustadoMin;
+
+        // Se veio extras/faltantes explícitos do banco e não há escala com horário, usa-os.
+        if (!usouAjuste) {
+          const extras = intervalToMin(d.horas_extras);
+          const faltantes = intervalToMin(d.horas_faltantes);
+          if (extras || faltantes) saldoDia = extras - faltantes;
+        }
+
         // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui.
-        // Alguns registros antigos ficaram como tipo_dia="normal"; por isso a tela
-        // também cruza com a tabela de atestados e com a observação do dia.
         const tipoDia = String(d.tipo_dia || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const observacaoDia = String(d.observacao || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const diaProtegido = ["atestado", "ferias", "afastamento", "feriado"].some(tipo => tipoDia.includes(tipo))
           || observacaoDia.includes("atestado")
           || atestadoDatas.has(d.data)
-          // Dia com status "justificado" (abono aprovado) é neutro,
-          // igual à apuração SQL.
           || String(d.status || "") === "justificado";
         if (diaProtegido) {
           saldoDia = 0;
         }
-        // Tolerância por batida: déficit/excedente dentro da tolerância = regular.
-        if (tol > 0 && Math.abs(saldoDia) <= tol) saldoDia = 0;
         return {
           id: d.id,
           data: d.data,
