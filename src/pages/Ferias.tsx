@@ -211,11 +211,30 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
               <DollarSign className="w-3.5 h-3.5 mr-1" /> Reg. Financeiro
             </Button>
             <Button size="sm" variant="outline" className="text-xs" onClick={() => onLinkAssinatura(item)}>
-              <Send className="w-3.5 h-3.5 mr-1" /> Link Assinatura
+              <Send className="w-3.5 h-3.5 mr-1" /> Aviso p/ Assinar
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs col-span-2 border-primary/40 text-primary hover:bg-primary/5"
+              onClick={() => onEnviarReciboAssinatura(item)}
+            >
+              <PenLine className="w-3.5 h-3.5 mr-1" /> Enviar Recibo p/ Assinatura
+            </Button>
+            {item.recibo_gerado && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs col-span-2 border-success/40 text-success hover:bg-success/5"
+                onClick={() => onVerReciboAssinado(item)}
+              >
+                <FileText className="w-3.5 h-3.5 mr-1" /> Ver Recibo Assinado
+              </Button>
+            )}
             <Button size="sm" variant="outline" className="text-xs col-span-2 text-primary" onClick={() => onPublicarFeed(item)}>
               <MessageSquare className="w-3.5 h-3.5 mr-1" /> Publicar no Feed
             </Button>
+
           </div>
         </div>
       )}
