@@ -55,14 +55,24 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
         .select()
         .single();
       if (error) throw error;
+
+      // Auto-activate trilha if still in draft, so it becomes visible to assignees
+      await fromTable("trilhas")
+        .update({ status: "ativa" } as any)
+        .eq("id", input.trilha_id)
+        .eq("status", "rascunho");
+
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["trilha_atribuicoes"] });
+      qc.invalidateQueries({ queryKey: ["trilhas"] });
+      qc.invalidateQueries({ queryKey: ["minhas_trilhas"] });
       toast.success("Trilha atribuída com sucesso!");
     },
     onError: handleMutationError,
   });
+
 
   const removerMut = useMutation({
     mutationFn: async (id: string) => {
