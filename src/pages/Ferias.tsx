@@ -38,7 +38,7 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { useFinanceiro } from "@/hooks/useFinanceiro";
 import { useAuth } from "@/hooks/useAuth";
 import { validarFracionamentoCLT } from "@/lib/feriasPeriodo";
-import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF } from "@/lib/feriasDocumentos";
+import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF, gerarReciboFeriasHTML } from "@/lib/feriasDocumentos";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
