@@ -79,7 +79,7 @@ export default function Trilhas() {
       {execucaoTrilha ? (
         <TrilhaExecucao trilha={execucaoTrilha} onBack={() => setExecucaoTrilha(null)} />
       ) : (
-        <Tabs defaultValue="minhas" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 max-w-lg">
             <TabsTrigger value="minhas">Minhas Trilhas</TabsTrigger>
             <TabsTrigger value="gamificacao">Gamificação</TabsTrigger>
