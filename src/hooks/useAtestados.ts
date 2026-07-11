@@ -624,6 +624,8 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
       queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-dia"] });
       toast.success("Atestado excluído com sucesso!");
     },
     onError: (error: Error) => {
