@@ -165,6 +165,68 @@ Deno.serve(async (req) => {
                 documento_storage_path: signedPath,
               })
               .eq("id", link.id);
+
+            // Auto-archive to Documentos module (pasta do colaborador)
+            try {
+              const tipo = link.tipo_documento === "recibo"
+                ? "Recibo de Férias (Assinado)"
+                : "Aviso de Férias (Assinado)";
+              const nomeOriginal = `${tipo} - ${link.colaborador_nome}.html`;
+
+              // Resolve/create colaborador folder if colaborador_id present
+              let pastaId: string | null = null;
+              if (link.colaborador_id) {
+                const { data: pasta } = await supabase
+                  .from("documento_pastas")
+                  .select("id")
+                  .eq("tenant_id", link.tenant_id)
+                  .eq("colaborador_id", link.colaborador_id)
+                  .maybeSingle();
+                pastaId = pasta?.id || null;
+              }
+
+              const { data: docIns } = await supabase.from("documentos").insert({
+                tenant_id: link.tenant_id,
+                empresa_id: link.empresa_id || null,
+                colaborador_id: link.colaborador_id || null,
+                colaborador_nome: link.colaborador_nome,
+                colaborador_cpf: link.colaborador_cpf || null,
+                nome_arquivo: signedPath,
+                nome_original: nomeOriginal,
+                tipo,
+                tamanho: new Blob([updatedHtml]).size,
+                mime_type: "text/html",
+                storage_path: signedPath,
+                status: "valido",
+                observacoes: `Assinado digitalmente em ${new Date().toISOString()} (IP ${clientIP})`,
+                pasta_id: pastaId,
+                versao_atual: 1,
+                total_versoes: 1,
+              }).select("id").single();
+
+              if (docIns?.id) {
+                await supabase
+                  .from("ferias_assinatura_links")
+                  .update({ documento_arquivado_id: docIns.id })
+                  .eq("id", link.id);
+              }
+
+              // Mark recibo_gerado on the solicitacao when it's a recibo
+              if (link.tipo_documento === "recibo" && link.ferias_solicitacao_id) {
+                await supabase
+                  .from("ferias_solicitacoes")
+                  .update({ recibo_gerado: true, assinatura_status: "assinado" })
+                  .eq("id", link.ferias_solicitacao_id);
+              } else if (link.ferias_solicitacao_id) {
+                await supabase
+                  .from("ferias_solicitacoes")
+                  .update({ assinatura_status: "assinado" })
+                  .eq("id", link.ferias_solicitacao_id);
+              }
+            } catch (archErr) {
+              console.error("Erro ao arquivar em Documentos:", archErr);
+            }
+
           }
         } catch (docError) {
           console.error("Erro ao processar documento:", docError);
