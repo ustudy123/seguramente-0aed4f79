@@ -574,8 +574,11 @@ const Ferias = () => {
                   onAprovar={handleAprovar} onRecusar={(id) => recusar.mutate({ id })}
                   onGerarAviso={handleGerarAviso} onGerarRecibo={handleGerarRecibo}
                   onGerarFinanceiro={handleGerarFinanceiro} onLinkAssinatura={handleLinkAssinatura}
+                  onEnviarReciboAssinatura={handleEnviarReciboAssinatura}
+                  onVerReciboAssinado={handleVerReciboAssinado}
                   onPublicarFeed={handlePublicarFeed}
                 />
+
               ))}
             </div>
           )}
