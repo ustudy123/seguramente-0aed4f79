@@ -19,6 +19,7 @@ import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, Tren
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { calcularSaldoDia } from "@/lib/ponto/calcularSaldoDia";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
