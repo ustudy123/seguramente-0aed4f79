@@ -165,11 +165,13 @@ export function useSSTDocumentos() {
         .upload(storagePath, params.file, { cacheControl: "3600", upsert: false });
       if (uploadError) throw uploadError;
 
-      // Determine status based on vigencia
+      // Determine status based on vigencia (fix TZ: força meio-dia p/ evitar shift UTC)
       let status = "vigente";
       if (params.data_vigencia) {
-        const vigencia = new Date(params.data_vigencia);
-        if (vigencia < new Date()) status = "vencido";
+        const vigencia = new Date(params.data_vigencia + "T12:00:00");
+        const hojeMeio = new Date();
+        hojeMeio.setHours(12, 0, 0, 0);
+        if (vigencia.getTime() < hojeMeio.getTime()) status = "vencido";
       }
 
       // 1. Insert into sst_documentos (SST module's own table)
