@@ -92,7 +92,7 @@ export function useTrilhaModulos(trilhaId?: string) {
   const qc = useQueryClient();
 
   const { data: modulos = [], isLoading } = useQuery({
-    queryKey: ["trilha_modulos", trilhaId],
+    queryKey: ["trilha_modulos", tenantId, trilhaId],
     queryFn: async (): Promise<TrilhaModulo[]> => {
       if (!trilhaId) return [];
       if (!tenantId) return [];
@@ -104,7 +104,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!trilhaId,
+    enabled: !!trilhaId && !!tenantId,
   });
 
   const criarModuloMut = useMutation({
@@ -118,7 +118,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["trilha_modulos", trilhaId] });
+      qc.invalidateQueries({ queryKey: ["trilha_modulos"] });
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Módulo adicionado!");
     },
@@ -133,7 +133,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["trilha_modulos", trilhaId] });
+      qc.invalidateQueries({ queryKey: ["trilha_modulos"] });
       toast.success("Módulo atualizado!");
     },
     onError: handleMutationError,
@@ -145,7 +145,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["trilha_modulos", trilhaId] });
+      qc.invalidateQueries({ queryKey: ["trilha_modulos"] });
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Módulo removido!");
     },

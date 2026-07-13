@@ -22,12 +22,18 @@ export function useTrilhaProgresso() {
       let admissaoIds: string[] = [];
       let departamentos: string[] = [];
       if (user?.email) {
+        const emailNorm = user.email.trim().toLowerCase();
+        // Busca todas as admissões do tenant e casa o e-mail de forma robusta
+        // (case-insensitive, ignorando espaços) — evita que diferenças de
+        // caixa/espaço no cadastro impeçam o funcionário de ver a trilha.
         const { data: admissoes } = await fromTable("admissoes")
-          .select("id, departamento")
-          .eq("tenant_id", tenantId)
-          .eq("email", user.email) as { data: any[] | null; error: Error | null };
-        admissaoIds = (admissoes || []).map((a) => a.id);
-        departamentos = [...new Set((admissoes || []).map((a) => a.departamento).filter(Boolean))] as string[];
+          .select("id, departamento, email")
+          .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
+        const minhas = (admissoes || []).filter(
+          (a) => String(a.email || "").trim().toLowerCase() === emailNorm
+        );
+        admissaoIds = minhas.map((a) => a.id);
+        departamentos = [...new Set(minhas.map((a) => a.departamento).filter(Boolean))] as string[];
       }
 
       // Fetch assignments applicable to this user

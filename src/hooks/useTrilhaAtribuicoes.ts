@@ -56,11 +56,13 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
         .single();
       if (error) throw error;
 
-      // Auto-activate trilha if still in draft, so it becomes visible to assignees
-      await fromTable("trilhas")
+      // Auto-ativa a trilha se ainda estiver em rascunho, para ficar visível
+      // aos destinatários. Erro aqui não deve ser engolido silenciosamente.
+      const { error: ativarErr } = await fromTable("trilhas")
         .update({ status: "ativa" } as any)
         .eq("id", input.trilha_id)
         .eq("status", "rascunho");
+      if (ativarErr) throw ativarErr;
 
       return data;
     },
