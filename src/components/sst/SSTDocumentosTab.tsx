@@ -62,8 +62,9 @@ export function SSTDocumentosTab() {
 
   const statusInfo = (doc: SSTDocumento) => {
     if (doc.data_vigencia) {
-      const vig = new Date(doc.data_vigencia);
+      const vig = new Date(doc.data_vigencia + "T12:00:00");
       const hoje = new Date();
+      hoje.setHours(12, 0, 0, 0);
       const diff = Math.ceil((vig.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
       if (diff < 0) return { label: "Vencido", variant: "destructive" as const, color: "text-destructive" };
       if (diff <= 60) return { label: `Vence em ${diff}d`, variant: "outline" as const, color: "text-amber-600" };
