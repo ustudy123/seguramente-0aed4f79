@@ -17,8 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, FileText, X, ExternalLink } from "lucide-react";
 import { useTrilhaModulos } from "@/hooks/useTrilhas";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { TrilhaModulo, TrilhaModuloTipo, TrilhaOrdemTipo } from "@/types/trilha";
 import { MODULO_TIPO_LABELS } from "@/types/trilha";
 
@@ -72,8 +74,64 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }));
 
-  const needsUrl = ["video", "pdf", "link", "apresentacao"].includes(form.tipo);
-  const needsText = ["conteudo_interno", "reflexao", "estudo_caso", "microdesafio"].includes(form.tipo);
+  const [uploading, setUploading] = useState(false);
+
+  // Campo de conteúdo conforme o tipo selecionado
+  const isVideo = form.tipo === "video";
+  const isLink = form.tipo === "link";
+  const isFile = form.tipo === "pdf" || form.tipo === "apresentacao"; // upload + URL alternativa
+  const isQuiz = form.tipo === "quiz";
+  const needsText = ["conteudo_interno", "atividade_pratica", "checklist", "reflexao", "estudo_caso", "microdesafio"].includes(form.tipo);
+
+  const textLabel =
+    form.tipo === "checklist" ? "Itens do checklist" :
+    form.tipo === "atividade_pratica" ? "Instruções da atividade" :
+    form.tipo === "estudo_caso" ? "Descrição do caso" :
+    form.tipo === "reflexao" ? "Pergunta / tema de reflexão" :
+    form.tipo === "microdesafio" ? "Descrição do microdesafio" :
+    "Conteúdo";
+  const textPlaceholder =
+    form.tipo === "checklist" ? "Um item por linha..." :
+    form.tipo === "atividade_pratica" ? "Descreva o que o colaborador deve fazer..." :
+    "Escreva o conteúdo aqui...";
+
+  const handleUpload = async (file: File) => {
+    const pptTypes = [
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ];
+    if (form.tipo === "pdf" && file.type !== "application/pdf") {
+      toast.error("Selecione um arquivo PDF.");
+      return;
+    }
+    if (form.tipo === "apresentacao"
+        && file.type !== "application/pdf"
+        && !pptTypes.includes(file.type)
+        && !file.type.startsWith("image/")) {
+      toast.error("Formato não suportado. Use PDF ou PowerPoint.");
+      return;
+    }
+    if (file.size > 52428800) {
+      toast.error("Arquivo muito grande (máx. 50 MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 60);
+      const path = `${trilhaId}/${Date.now()}-${safe}`;
+      const { error } = await supabase.storage
+        .from("trilha-conteudo")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from("trilha-conteudo").getPublicUrl(path);
+      set("conteudo_url", data.publicUrl);
+      toast.success("Arquivo enviado.");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao enviar o arquivo.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.titulo.trim()) return;
@@ -133,16 +191,67 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
             <Input value={form.objetivo} onChange={(e) => set("objetivo", e.target.value)} placeholder="O que o colaborador deve aprender?" />
           </div>
 
-          {needsUrl && (
+          {isVideo && (
             <div>
-              <Label>URL do conteúdo</Label>
+              <Label>Link do vídeo</Label>
+              <Input value={form.conteudo_url} onChange={(e) => set("conteudo_url", e.target.value)} placeholder="https://youtu.be/... ou https://vimeo.com/..." />
+              <p className="text-xs text-muted-foreground mt-1">Cole o link de compartilhar do YouTube/Vimeo — o vídeo é embutido automaticamente.</p>
+            </div>
+          )}
+
+          {isLink && (
+            <div>
+              <Label>URL do link externo</Label>
               <Input value={form.conteudo_url} onChange={(e) => set("conteudo_url", e.target.value)} placeholder="https://..." />
             </div>
           )}
+
+          {isFile && (
+            <div className="space-y-2">
+              <Label>{form.tipo === "pdf" ? "Arquivo PDF" : "Arquivo da apresentação"}</Label>
+              {form.conteudo_url ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <a href={form.conteudo_url} target="_blank" rel="noopener noreferrer" className="truncate flex-1 text-primary hover:underline">
+                    {decodeURIComponent(form.conteudo_url.split("/").pop() || form.conteudo_url)}
+                  </a>
+                  <button type="button" onClick={() => set("conteudo_url", "")} className="text-muted-foreground hover:text-destructive" title="Remover">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-4 text-sm text-muted-foreground cursor-pointer hover:bg-muted/40 transition-colors">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploading ? "Enviando..." : `Enviar ${form.tipo === "pdf" ? "PDF" : "arquivo"} (até 50 MB)`}
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept={form.tipo === "pdf" ? "application/pdf" : "application/pdf,.ppt,.pptx,image/*"}
+                    disabled={uploading}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }}
+                  />
+                </label>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-[11px] text-muted-foreground">ou cole um link</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <Input value={form.conteudo_url} onChange={(e) => set("conteudo_url", e.target.value)} placeholder="https://... (Google Slides, Drive, etc.)" />
+            </div>
+          )}
+
+          {isQuiz && (
+            <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              <ExternalLink className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>As perguntas do quiz são configuradas após criar o módulo, na tela da trilha.</span>
+            </div>
+          )}
+
           {needsText && (
             <div>
-              <Label>Conteúdo / Instruções</Label>
-              <Textarea value={form.conteudo_texto} onChange={(e) => set("conteudo_texto", e.target.value)} rows={4} placeholder="Conteúdo ou instruções da atividade..." />
+              <Label>{textLabel}</Label>
+              <Textarea value={form.conteudo_texto} onChange={(e) => set("conteudo_texto", e.target.value)} rows={4} placeholder={textPlaceholder} />
             </div>
           )}
 
@@ -178,7 +287,7 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.titulo.trim() || criando}>
+            <Button onClick={handleSubmit} disabled={!form.titulo.trim() || criando || uploading}>
               {criando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {modulo ? "Salvar" : "Adicionar"}
             </Button>
