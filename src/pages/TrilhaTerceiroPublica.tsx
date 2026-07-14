@@ -16,8 +16,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { getEmbedUrl } from "@/lib/embedVideo";
+import { ConteudoView } from "@/components/trilhas/ConteudoView";
 import { toast } from "sonner";
-import type { TrilhaModuloTipo } from "@/types/trilha";
+import type { TrilhaModuloTipo, TrilhaModuloConteudo } from "@/types/trilha";
 import { MODULO_TIPO_LABELS } from "@/types/trilha";
 
 const moduloIcons: Record<TrilhaModuloTipo, React.ElementType> = {
@@ -43,6 +44,7 @@ interface ModuloData {
   tipo: TrilhaModuloTipo;
   conteudo_url: string | null;
   conteudo_texto: string | null;
+  conteudos?: TrilhaModuloConteudo[] | null;
   tempo_estimado_min: number;
   pontuacao: number;
   ordem: number;
@@ -91,7 +93,7 @@ export default function TrilhaTerceiroPublica() {
 
       const { data: modulosData, error: mErr } = await supabasePublic
         .from("trilha_modulos" as any)
-        .select("id, titulo, descricao, objetivo, tipo, conteudo_url, conteudo_texto, tempo_estimado_min, pontuacao, ordem, evidencia_obrigatoria")
+        .select("id, titulo, descricao, objetivo, tipo, conteudo_url, conteudo_texto, conteudos, tempo_estimado_min, pontuacao, ordem, evidencia_obrigatoria")
         .eq("trilha_id", trilhaData.id)
         .eq("ativo", true)
         .order("ordem") as { data: ModuloData[] | null; error: any };
@@ -367,6 +369,14 @@ export default function TrilhaTerceiroPublica() {
                             </a>
                           </Button>
                         )
+                      )}
+
+                      {Array.isArray(activeModulo.conteudos) && activeModulo.conteudos.length > 0 && (
+                        <div className="space-y-4">
+                          {activeModulo.conteudos.map((c) => (
+                            <ConteudoView key={c.id} item={c} surface="gray" />
+                          ))}
+                        </div>
                       )}
 
                       {activeModulo.conteudo_texto && (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getEmbedUrl } from "@/lib/embedVideo";
+import { ConteudoView } from "./ConteudoView";
 import { QuizPlayer } from "./QuizPlayer";
 import { EvidenciaUpload } from "./EvidenciaUpload";
 import { CulturaValoresModule } from "./CulturaValoresModule";
@@ -312,6 +313,14 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                                 </a>
                               </Button>
                             )}
+                          </div>
+                        )}
+
+                        {Array.isArray(activeModulo.conteudos) && activeModulo.conteudos.length > 0 && (
+                          <div className="space-y-4">
+                            {activeModulo.conteudos.map((c) => (
+                              <ConteudoView key={c.id} item={c} surface="muted" />
+                            ))}
                           </div>
                         )}
 

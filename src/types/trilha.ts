@@ -6,6 +6,16 @@ export type TrilhaModuloTipo = "video" | "pdf" | "link" | "apresentacao" | "cont
 export type TrilhaOrdemTipo = "sequencial" | "livre";
 export type TrilhaProgressoStatus = "nao_iniciado" | "em_andamento" | "concluido";
 
+// Conteúdo adicional dentro de um módulo (o módulo pode ter vários)
+export type TrilhaConteudoTipo = "video" | "pdf" | "apresentacao" | "link" | "texto";
+export interface TrilhaModuloConteudo {
+  id: string;
+  tipo: TrilhaConteudoTipo;
+  titulo?: string;
+  url?: string;
+  texto?: string;
+}
+
 export interface Trilha {
   id: string;
   tenant_id: string;
@@ -38,6 +48,7 @@ export interface TrilhaModulo {
   tipo: TrilhaModuloTipo;
   conteudo_url: string | null;
   conteudo_texto: string | null;
+  conteudos?: TrilhaModuloConteudo[] | null;
   tempo_estimado_min: number;
   pontuacao: number;
   ordem: number;

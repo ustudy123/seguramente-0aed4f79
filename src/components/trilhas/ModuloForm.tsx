@@ -17,12 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, FileText, X, ExternalLink } from "lucide-react";
+import { Loader2, Upload, FileText, X, ExternalLink, Plus } from "lucide-react";
 import { useTrilhaModulos } from "@/hooks/useTrilhas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { TrilhaModulo, TrilhaModuloTipo, TrilhaOrdemTipo } from "@/types/trilha";
+import type { TrilhaModulo, TrilhaModuloTipo, TrilhaOrdemTipo, TrilhaModuloConteudo } from "@/types/trilha";
 import { MODULO_TIPO_LABELS } from "@/types/trilha";
+import { ConteudoEditorItem } from "./ConteudoEditorItem";
 
 interface ModuloFormProps {
   open: boolean;
@@ -40,6 +41,7 @@ const defaultForm = {
   tipo: "video" as TrilhaModuloTipo,
   conteudo_url: "",
   conteudo_texto: "",
+  conteudos: [] as TrilhaModuloConteudo[],
   tempo_estimado_min: 10,
   pontuacao: 10,
   ordem_tipo: "sequencial" as TrilhaOrdemTipo,
@@ -60,6 +62,7 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
         tipo: modulo.tipo,
         conteudo_url: modulo.conteudo_url || "",
         conteudo_texto: modulo.conteudo_texto || "",
+        conteudos: Array.isArray(modulo.conteudos) ? modulo.conteudos : [],
         tempo_estimado_min: modulo.tempo_estimado_min,
         pontuacao: modulo.pontuacao,
         ordem_tipo: modulo.ordem_tipo,
@@ -75,6 +78,7 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
     setForm((prev) => ({ ...prev, [k]: v }));
 
   const [uploading, setUploading] = useState(false);
+  const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
 
   // Campo de conteúdo conforme o tipo selecionado
   const isVideo = form.tipo === "video";
@@ -95,27 +99,26 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
     form.tipo === "atividade_pratica" ? "Descreva o que o colaborador deve fazer..." :
     "Escreva o conteúdo aqui...";
 
-  const handleUpload = async (file: File) => {
+  const doUpload = async (file: File, expect: "pdf" | "apresentacao"): Promise<string | null> => {
     const pptTypes = [
       "application/vnd.ms-powerpoint",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     ];
-    if (form.tipo === "pdf" && file.type !== "application/pdf") {
+    if (expect === "pdf" && file.type !== "application/pdf") {
       toast.error("Selecione um arquivo PDF.");
-      return;
+      return null;
     }
-    if (form.tipo === "apresentacao"
+    if (expect === "apresentacao"
         && file.type !== "application/pdf"
         && !pptTypes.includes(file.type)
         && !file.type.startsWith("image/")) {
       toast.error("Formato não suportado. Use PDF ou PowerPoint.");
-      return;
+      return null;
     }
     if (file.size > 52428800) {
       toast.error("Arquivo muito grande (máx. 50 MB).");
-      return;
+      return null;
     }
-    setUploading(true);
     try {
       const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 60);
       const path = `${trilhaId}/${Date.now()}-${safe}`;
@@ -124,13 +127,33 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
         .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
       if (error) throw error;
       const { data } = supabase.storage.from("trilha-conteudo").getPublicUrl(path);
-      set("conteudo_url", data.publicUrl);
       toast.success("Arquivo enviado.");
+      return data.publicUrl;
     } catch (e: any) {
       toast.error(e?.message || "Falha ao enviar o arquivo.");
-    } finally {
-      setUploading(false);
+      return null;
     }
+  };
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    const url = await doUpload(file, form.tipo as "pdf" | "apresentacao");
+    if (url) set("conteudo_url", url);
+    setUploading(false);
+  };
+
+  // Conteúdos adicionais (lista)
+  const addConteudo = () =>
+    setForm((p) => ({ ...p, conteudos: [...p.conteudos, { id: crypto.randomUUID(), tipo: "video" }] }));
+  const updateConteudo = (id: string, patch: Partial<TrilhaModuloConteudo>) =>
+    setForm((p) => ({ ...p, conteudos: p.conteudos.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
+  const removeConteudo = (id: string) =>
+    setForm((p) => ({ ...p, conteudos: p.conteudos.filter((c) => c.id !== id) }));
+  const handleItemUpload = async (id: string, file: File, tipo: "pdf" | "apresentacao") => {
+    setUploadingItemId(id);
+    const url = await doUpload(file, tipo);
+    if (url) updateConteudo(id, { url });
+    setUploadingItemId(null);
   };
 
   const handleSubmit = async () => {
@@ -143,6 +166,7 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
         tipo: form.tipo as never,
         conteudo_url: form.conteudo_url || null,
         conteudo_texto: form.conteudo_texto || null,
+        conteudos: form.conteudos.filter((c) => (c.url && c.url.trim()) || (c.texto && c.texto.trim())) as never,
         tempo_estimado_min: form.tempo_estimado_min,
         pontuacao: form.pontuacao,
         ordem_tipo: form.ordem_tipo as never,
@@ -255,6 +279,33 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
             </div>
           )}
 
+          {/* Conteúdos adicionais (o módulo pode ter vários) */}
+          <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">Conteúdos adicionais</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={addConteudo} className="h-7 text-primary">
+                <Plus className="w-4 h-4 mr-1" /> Adicionar conteúdo
+              </Button>
+            </div>
+            {form.conteudos.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Anexe vídeos, PDFs, apresentações ou links extras a este módulo.</p>
+            ) : (
+              <div className="space-y-2">
+                {form.conteudos.map((c, i) => (
+                  <ConteudoEditorItem
+                    key={c.id}
+                    item={c}
+                    index={i}
+                    uploading={uploadingItemId === c.id}
+                    onChange={(patch) => updateConteudo(c.id, patch)}
+                    onRemove={() => removeConteudo(c.id)}
+                    onUpload={(file, tipo) => handleItemUpload(c.id, file, tipo)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Tempo estimado (min)</Label>
@@ -287,7 +338,7 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.titulo.trim() || criando || uploading}>
+            <Button onClick={handleSubmit} disabled={!form.titulo.trim() || criando || uploading || uploadingItemId !== null}>
               {criando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {modulo ? "Salvar" : "Adicionar"}
             </Button>
