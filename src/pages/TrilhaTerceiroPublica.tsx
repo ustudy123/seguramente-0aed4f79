@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { supabasePublic } from "@/lib/supabasePublic";
+import { getEmbedUrl } from "@/lib/embedVideo";
 import { toast } from "sonner";
 import type { TrilhaModuloTipo } from "@/types/trilha";
 import { MODULO_TIPO_LABELS } from "@/types/trilha";
@@ -348,7 +349,7 @@ export default function TrilhaTerceiroPublica() {
                       {activeModulo.conteudo_url && (
                         activeModulo.tipo === "video" ? (
                           <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                            <iframe src={activeModulo.conteudo_url.replace("watch?v=", "embed/")} className="w-full h-full" allowFullScreen />
+                            <iframe src={getEmbedUrl(activeModulo.conteudo_url)} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                           </div>
                         ) : activeModulo.tipo === "pdf" ? (
                           <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">

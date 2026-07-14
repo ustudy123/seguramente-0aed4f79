@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getEmbedUrl } from "@/lib/embedVideo";
 import { QuizPlayer } from "./QuizPlayer";
 import { EvidenciaUpload } from "./EvidenciaUpload";
 import { CulturaValoresModule } from "./CulturaValoresModule";
@@ -287,7 +288,7 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                             {activeModulo.tipo === "video" ? (
                               <div className="aspect-video bg-muted rounded-lg overflow-hidden">
                                 <iframe
-                                  src={activeModulo.conteudo_url.replace("watch?v=", "embed/")}
+                                  src={getEmbedUrl(activeModulo.conteudo_url)}
                                   className="w-full h-full"
                                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                   allowFullScreen
