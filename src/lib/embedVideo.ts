@@ -13,8 +13,8 @@
  * Para provedores não reconhecidos, devolve a URL original (fallback),
  * o que atende PDFs e iframes genéricos já hospedados.
  */
-export function getEmbedUrl(url: string): string {
-  if (!url) return url;
+export function getEmbedUrl(url: string | null | undefined): string {
+  if (!url) return "";
 
   const raw = url.trim();
 
