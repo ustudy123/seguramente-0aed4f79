@@ -294,9 +294,15 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                                   allowFullScreen
                                 />
                               </div>
-                            ) : activeModulo.tipo === "pdf" ? (
-                              <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden">
-                                <iframe src={activeModulo.conteudo_url} className="w-full h-full" />
+                            ) : (activeModulo.tipo === "pdf" || activeModulo.tipo === "apresentacao") ? (
+                              <div className="space-y-2">
+                                <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                                  <iframe src={getEmbedUrl(activeModulo.conteudo_url)} className="w-full h-full" />
+                                </div>
+                                <a href={activeModulo.conteudo_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  Abrir em nova aba
+                                </a>
                               </div>
                             ) : (
                               <Button variant="outline" asChild>

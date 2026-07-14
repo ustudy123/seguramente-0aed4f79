@@ -32,6 +32,18 @@ export function getEmbedUrl(url: string | null | undefined): string {
   const loom = raw.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
   if (loom) return `https://www.loom.com/embed/${loom[1]}`;
 
+  // Google Slides / Docs / Sheets → variante embutível
+  const gSlides = raw.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/);
+  if (gSlides) return `https://docs.google.com/presentation/d/${gSlides[1]}/embed`;
+  const gDoc = raw.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
+  if (gDoc) return `https://docs.google.com/document/d/${gDoc[1]}/preview`;
+  const gSheet = raw.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (gSheet) return `https://docs.google.com/spreadsheets/d/${gSheet[1]}/preview`;
+
+  // Google Drive (arquivo, ex.: PDF compartilhado) → /preview
+  const gDrive = raw.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (gDrive) return `https://drive.google.com/file/d/${gDrive[1]}/preview`;
+
   // Bunny Stream / iframe.mediadelivery.net já vêm como embed
   if (raw.includes("iframe.mediadelivery.net") || raw.includes("bunny")) {
     return raw;
