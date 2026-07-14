@@ -86,6 +86,7 @@ export interface TrilhaProgresso {
   evidencia_url: string | null;
   nota: number | null;
   pontos_obtidos: number | null;
+  conteudos_concluidos?: string[] | null;
   created_at: string;
   updated_at: string;
 }

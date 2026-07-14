@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getEmbedUrl } from "@/lib/embedVideo";
 import type { TrilhaModuloConteudo } from "@/types/trilha";
@@ -7,10 +7,13 @@ interface ConteudoViewProps {
   item: TrilhaModuloConteudo;
   /** "muted" usa bg-muted (app interno); "gray" usa bg-gray-100 (páginas públicas) */
   surface?: "muted" | "gray";
+  /** Quando definido, mostra o botão "marcar como concluído" para este conteúdo. */
+  concluido?: boolean;
+  onToggleConcluido?: () => void;
 }
 
 /** Renderiza um único conteúdo de módulo (vídeo, PDF, apresentação, link ou texto). */
-export function ConteudoView({ item, surface = "muted" }: ConteudoViewProps) {
+export function ConteudoView({ item, surface = "muted", concluido, onToggleConcluido }: ConteudoViewProps) {
   const bg = surface === "gray" ? "bg-gray-100" : "bg-muted";
   const url = item.url?.trim();
 
@@ -54,6 +57,21 @@ export function ConteudoView({ item, surface = "muted" }: ConteudoViewProps) {
         <div className="prose prose-sm max-w-none text-foreground bg-muted/30 rounded-lg p-4 border border-border whitespace-pre-wrap">
           {item.texto}
         </div>
+      )}
+
+      {onToggleConcluido && (
+        <button
+          type="button"
+          onClick={onToggleConcluido}
+          className={`inline-flex items-center gap-1.5 text-sm rounded-md px-2.5 py-1 border transition-colors ${
+            concluido
+              ? "text-success border-success/30 bg-success/10"
+              : "text-muted-foreground border-border hover:text-foreground hover:bg-muted/40"
+          }`}
+        >
+          {concluido ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+          {concluido ? "Concluído" : "Marcar como concluído"}
+        </button>
       )}
     </div>
   );

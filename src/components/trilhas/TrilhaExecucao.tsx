@@ -70,7 +70,7 @@ interface TrilhaExecucaoProps {
 export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
   const isOnboarding = trilha.tipo === "onboarding";
   const { modulos, isLoading: loadingModulos } = useTrilhaModulos(trilha.id);
-  const { useModuloProgresso, iniciarModulo, concluirModulo, concluindo } = useTrilhaProgresso();
+  const { useModuloProgresso, iniciarModulo, concluirModulo, concluindo, marcarConteudo } = useTrilhaProgresso();
   const { data: progresso = [] } = useModuloProgresso(trilha.id);
 
   const [activeModuloId, setActiveModuloId] = useState<string | null>(null);
@@ -89,6 +89,19 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
 
   const activeModulo = modulos.find((m) => m.id === activeModuloId);
   const activeStatus = activeModuloId ? getModuloStatus(activeModuloId) : "nao_iniciado";
+
+  const activeProgresso = progresso.find((p) => p.modulo_id === activeModuloId);
+  const conteudosConcluidos: string[] = Array.isArray(activeProgresso?.conteudos_concluidos)
+    ? (activeProgresso!.conteudos_concluidos as string[])
+    : [];
+
+  const handleToggleConteudo = async (conteudoId: string) => {
+    if (!activeModulo) return;
+    const novos = conteudosConcluidos.includes(conteudoId)
+      ? conteudosConcluidos.filter((id) => id !== conteudoId)
+      : [...conteudosConcluidos, conteudoId];
+    await marcarConteudo({ trilhaId: trilha.id, moduloId: activeModulo.id, conteudosConcluidos: novos });
+  };
 
   const handleOpenModulo = async (modulo: TrilhaModulo) => {
     setActiveModuloId(modulo.id);
@@ -319,7 +332,13 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                         {Array.isArray(activeModulo.conteudos) && activeModulo.conteudos.length > 0 && (
                           <div className="space-y-4">
                             {activeModulo.conteudos.map((c) => (
-                              <ConteudoView key={c.id} item={c} surface="muted" />
+                              <ConteudoView
+                                key={c.id}
+                                item={c}
+                                surface="muted"
+                                concluido={conteudosConcluidos.includes(c.id)}
+                                onToggleConcluido={() => handleToggleConteudo(c.id)}
+                              />
                             ))}
                           </div>
                         )}

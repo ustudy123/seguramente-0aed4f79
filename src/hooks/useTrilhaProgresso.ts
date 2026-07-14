@@ -187,6 +187,26 @@ export function useTrilhaProgresso() {
     onError: handleMutationError,
   });
 
+  // Marca/desmarca conteúdos individuais do módulo como concluídos.
+  // A linha de progresso já existe (abrir o módulo a cria via iniciarModulo),
+  // então usamos UPDATE — não mexe no status do módulo.
+  const marcarConteudoMut = useMutation({
+    mutationFn: async ({ trilhaId, moduloId, conteudosConcluidos }: { trilhaId: string; moduloId: string; conteudosConcluidos: string[] }) => {
+      if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
+      const { error } = await fromTable("trilha_progresso")
+        .update({ conteudos_concluidos: conteudosConcluidos } as never)
+        .eq("tenant_id", tenantId)
+        .eq("trilha_id", trilhaId)
+        .eq("modulo_id", moduloId)
+        .eq("colaborador_id", colaboradorId);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["trilha_progresso", vars.trilhaId] });
+    },
+    onError: handleMutationError,
+  });
+
   return {
     minhasTrilhas,
     isLoading,
@@ -194,5 +214,6 @@ export function useTrilhaProgresso() {
     iniciarModulo: iniciarModuloMut.mutateAsync,
     concluirModulo: concluirModuloMut.mutateAsync,
     concluindo: concluirModuloMut.isPending,
+    marcarConteudo: marcarConteudoMut.mutateAsync,
   };
 }
