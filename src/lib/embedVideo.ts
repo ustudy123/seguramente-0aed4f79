@@ -52,3 +52,12 @@ export function getEmbedUrl(url: string | null | undefined): string {
   // Fallback: devolve a URL como está (PDF, iframe genérico, etc.)
   return raw;
 }
+
+/** Extrai o ID de um vídeo do YouTube (ou null se não for YouTube). */
+export function getYouTubeId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.trim().match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return m ? m[1] : null;
+}
