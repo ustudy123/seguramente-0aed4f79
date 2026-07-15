@@ -19,6 +19,7 @@ export function useQaDocs(moduloId?: string | null) {
     queryFn: async () => {
       const { data, error } = await fromTable("qa_modulos")
         .select("*")
+        .order("prioridade_doc", { ascending: true })
         .order("ordem", { ascending: true });
       if (error) throw error;
       return (data || []) as QaModulo[];

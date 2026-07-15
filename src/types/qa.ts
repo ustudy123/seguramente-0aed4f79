@@ -2,6 +2,15 @@ export type QaCasoTipo = "feliz" | "alternativo" | "negativo" | "excecao";
 export type QaCasoStatus = "rascunho" | "aprovado" | "obsoleto";
 export type QaPrioridade = "critica" | "alta" | "media" | "baixa";
 export type QaNivel = "api" | "e2e";
+export type QaStatusDoc = "nao_iniciado" | "bloqueado" | "em_andamento" | "documentado" | "dispensado";
+
+export const QA_STATUS_DOC_LABELS: Record<QaStatusDoc, string> = {
+  nao_iniciado: "Na fila",
+  bloqueado: "Bloqueado",
+  em_andamento: "Em andamento",
+  documentado: "Documentado",
+  dispensado: "Dispensado",
+};
 
 export interface QaModulo {
   id: string;
@@ -10,6 +19,9 @@ export interface QaModulo {
   path: string;
   icone: string | null;
   ordem: number;
+  prioridade_doc: number;
+  status_doc: QaStatusDoc;
+  motivo_bloqueio: string | null;
   created_at: string;
 }
 
@@ -92,7 +104,12 @@ export function montarArvore(modulos: QaModulo[]): QaModuloNode[] {
   });
 
   const ordenar = (nodes: QaModuloNode[]) => {
-    nodes.sort((a, b) => a.ordem - b.ordem || a.label.localeCompare(b.label));
+    nodes.sort(
+      (a, b) =>
+        (a.prioridade_doc ?? 99) - (b.prioridade_doc ?? 99) ||
+        a.ordem - b.ordem ||
+        a.label.localeCompare(b.label)
+    );
     nodes.forEach((n) => ordenar(n.filhos));
   };
   ordenar(raizes);
