@@ -96,6 +96,7 @@ const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
 const QADocs = lazy(() => import("./pages/admin/QADocs"));
+const TenantAssinatura = lazy(() => import("./pages/admin/TenantAssinatura"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const ContratosAceite = lazy(() => import("./pages/admin/ContratosAceite"));
 const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
@@ -157,6 +158,7 @@ const App = () => (
               {/* Super Admin Routes */}
               <Route path="/admin" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
               <Route path="/admin/tenants/:id" element={<SuperAdminRoute><TenantDetalhe /></SuperAdminRoute>} />
+              <Route path="/admin/tenants/:id/assinatura" element={<SuperAdminRoute><TenantAssinatura /></SuperAdminRoute>} />
               <Route path="/admin/manual" element={<SuperAdminRoute><ManualSistema /></SuperAdminRoute>} />
               <Route path="/admin/qa" element={<SuperAdminRoute><QADashboard /></SuperAdminRoute>} />
               <Route path="/admin/qa/docs" element={<SuperAdminRoute><QADocs /></SuperAdminRoute>} />

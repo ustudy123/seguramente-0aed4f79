@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare, Brain, FileSignature, Rocket, Edit, Trash2, AlertTriangle, Loader2,
+  Activity, MessageSquare, Brain, FileSignature, Rocket, Edit, Trash2, AlertTriangle, Loader2, CreditCard,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -208,6 +208,9 @@ export default function SuperAdminDashboard() {
                                 </DropdownMenuItem>
                                  <DropdownMenuItem onClick={() => navigate(`/admin/tenants/${tenant.id}`)}>
                                   <Eye className="w-4 h-4 mr-2" />Ver detalhes
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/admin/tenants/${tenant.id}/assinatura`)}>
+                                  <CreditCard className="w-4 h-4 mr-2" />Assinatura e teste
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => { setSelectedTenant(tenant); setShowOwnerForm(true); }}>
                                   <UserPlus className="w-4 h-4 mr-2" />Criar usuário owner
