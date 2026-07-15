@@ -4,7 +4,7 @@ import {
   ArrowLeft, Shield, Database, Server, LayoutGrid, Zap,
   AlertTriangle, CheckCircle, Info, ChevronDown, ChevronUp,
   Loader2, Bug, Activity, Play, Bot, Clock, CheckCircle2,
-  XCircle, AlertCircle,
+  XCircle, AlertCircle, FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -446,6 +446,10 @@ export default function QADashboard() {
               Agente de testes automatizados + varredura de integridade
             </p>
           </div>
+          <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate("/admin/qa/docs")}>
+            <FileText className="w-4 h-4 mr-2" />
+            Documentação de testes
+          </Button>
         </div>
 
         {/* Tabs */}

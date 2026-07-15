@@ -95,6 +95,7 @@ const CompletarCadastro = lazy(() => import("./pages/CompletarCadastro"));
 const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard"));
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
+const QADocs = lazy(() => import("./pages/admin/QADocs"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const ContratosAceite = lazy(() => import("./pages/admin/ContratosAceite"));
 const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
@@ -158,6 +159,7 @@ const App = () => (
               <Route path="/admin/tenants/:id" element={<SuperAdminRoute><TenantDetalhe /></SuperAdminRoute>} />
               <Route path="/admin/manual" element={<SuperAdminRoute><ManualSistema /></SuperAdminRoute>} />
               <Route path="/admin/qa" element={<SuperAdminRoute><QADashboard /></SuperAdminRoute>} />
+              <Route path="/admin/qa/docs" element={<SuperAdminRoute><QADocs /></SuperAdminRoute>} />
               <Route path="/admin/blog" element={<SuperAdminRoute><BlogAdmin /></SuperAdminRoute>} />
               <Route path="/admin/contratos" element={<SuperAdminRoute><ContratosAceite /></SuperAdminRoute>} />
 
