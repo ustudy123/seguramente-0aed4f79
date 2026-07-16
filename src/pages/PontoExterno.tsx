@@ -47,9 +47,8 @@ const traduzirErroPonto = (mensagem?: string | null) => {
   if (texto.includes('column "origem"')) return "Não foi possível concluir o registro de ponto agora. Tente novamente em instantes.";
   if (texto.includes("Link inválido") || texto.includes("expirado")) return "Link inválido ou expirado.";
   if (/tipo inválido/i.test(texto)) return "Use apenas Entrada ou Saída.";
-  if (/Aguarde pelo menos 10 minutos/i.test(texto)) {
-    return "Sua marcação anterior já foi registrada com sucesso ✓ Por segurança, aguarde alguns minutos antes da próxima batida.";
-  }
+  // O banco já devolve a mensagem pronta do anti-toque-duplo, com os segundos
+  // que faltam. Não traduzir aqui — traduzir engoliria o tempo real.
 
   return texto;
 };
