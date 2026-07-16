@@ -12,6 +12,8 @@ import {
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
   MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon, CalendarDays,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { GuiaRapidoPonto } from "@/components/ponto/GuiaRapidoPonto";
 import { AnexosAjusteModal } from "@/components/ponto/AnexosAjusteModal";
@@ -80,6 +82,7 @@ const Ponto = () => {
   const geo = useGeolocation();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [calendarioAberto, setCalendarioAberto] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
@@ -664,10 +667,35 @@ const Ponto = () => {
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button id="btn-ponto-prev-dia" variant="outline" size="icon" onClick={handlePrevDay}><ChevronLeft className="w-4 h-4" /></Button>
-                  <div className="px-4 py-2 bg-muted rounded-lg min-w-[220px] text-center">
-                    <div className="font-medium leading-tight">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</div>
-                    <div className="text-[11px] text-muted-foreground capitalize leading-tight">{format(selectedDate, "EEEE", { locale: ptBR })}</div>
-                  </div>
+                  <Popover open={calendarioAberto} onOpenChange={setCalendarioAberto}>
+                    <PopoverTrigger asChild>
+                      <button
+                        id="btn-ponto-data"
+                        type="button"
+                        title="Clique para escolher a data"
+                        className="px-4 py-2 bg-muted hover:bg-muted/70 rounded-lg min-w-[220px] text-center transition-colors cursor-pointer"
+                      >
+                        <div className="font-medium leading-tight flex items-center justify-center gap-1.5">
+                          <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
+                          {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground capitalize leading-tight">
+                          {format(selectedDate, "EEEE", { locale: ptBR })}
+                        </div>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="center">
+                      <CalendarPicker
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarioAberto(false); } }}
+                        disabled={(d) => d > new Date()}
+                        defaultMonth={selectedDate}
+                        locale={ptBR}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button id="btn-ponto-next-dia" variant="outline" size="icon" onClick={handleNextDay}><ChevronRight className="w-4 h-4" /></Button>
                   <Button id="btn-ponto-hoje" variant="outline" size="sm" onClick={handleToday}>Hoje</Button>
                 </div>
