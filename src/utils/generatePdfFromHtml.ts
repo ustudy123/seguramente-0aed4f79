@@ -202,17 +202,20 @@ export function normalizeManualHtml(html: string) {
       return;
     }
 
-    // Sem text-align: justify. Sem hifenização (pt-BR), o justificado abre
-    // rios de espaço entre as palavras — visível na tabela de
-    // responsabilidades ("inconsistências    e    efetuar"). Alinhado à
-    // esquerda lê melhor e é o que a folha de estilo do manual já define.
+    // NÃO remover word-spacing: sem ele o html2canvas cola as palavras
+    // ("Facilitara execuçãodas rotinasde"). É remendo para um defeito da
+    // rasterização, não escolha estética.
+    // text-align: justify foi retirado de propósito: sem hifenização em
+    // pt-BR ele abre rios de espaço entre as palavras.
     appendInlineStyle(
       element,
       [
         "white-space: normal !important",
         "word-break: normal !important",
         "overflow-wrap: break-word !important",
+        "word-spacing: 0.05em !important",
         "letter-spacing: normal !important",
+        "line-height: 1.6",
         "hyphens: none !important",
         "margin-top: 0 !important",
         "margin-bottom: 12px !important",

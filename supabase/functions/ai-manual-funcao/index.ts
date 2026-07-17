@@ -407,24 +407,24 @@ INSTRUÇÕES OBRIGATÓRIAS:
   .folha{max-width:210mm; margin:0 auto; padding:0 0 16mm;}
   .folha > *:not(.capa){margin-left:14mm; margin-right:14mm;}
 
-  /* Capa — herói com gradiente (padrão do Manual de Cultura) */
+  /* Capa — cor sólida, NÃO gradiente: o PDF é rasterizado por html2canvas,
+     que não renderiza linear-gradient e deixava a capa em branco. */
   .capa{
-    background:linear-gradient(135deg,#1b3457 0%,#22587a 55%,#2d8a6e 100%);
-    color:#fff; text-align:center;
-    padding:52px 40px 44px; margin:0 0 30px;
-    /* sem isto o navegador remove o fundo ao imprimir/gerar PDF */
+    background:#1b3457; color:#fff; text-align:center;
+    padding:44px 36px 38px; margin:0 0 28px;
+    border-bottom:5px solid #2d8a6e;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
+  .capa-empresa{
+    font-size:14pt; font-weight:800; letter-spacing:.3px;
+    color:#f4a261; margin:0 0 10px; line-height:1.3;
+  }
   .capa h1{
-    font-size:19pt; line-height:1.3; font-weight:600; letter-spacing:-.2px;
+    font-size:18pt; line-height:1.35; font-weight:600;
     color:#fff; margin:0 auto; max-width:26em;
   }
-  .capa-empresa{
-    font-size:15pt; font-weight:800; letter-spacing:.3px;
-    color:#f4a261; margin:0 0 10px; line-height:1.25;
-  }
   .capa-data{
-    font-size:8.5pt; color:rgba(255,255,255,.8); margin:26px 0 0;
+    font-size:8.5pt; color:rgba(255,255,255,.8); margin:22px 0 0;
     text-transform:uppercase; letter-spacing:1px;
   }
 
@@ -499,18 +499,18 @@ INSTRUÇÕES OBRIGATÓRIAS:
   .tabela td{padding:8px 10px; border-bottom:1px solid var(--linha); vertical-align:top;}
   .tabela tbody tr:nth-child(even){background:var(--fundo-suave);}
 
-  /* Cards — inline-block em vez de grid, pelo mesmo motivo dos campos.
-     No PDF os três cards saíam empilhados em largura cheia. */
-  .cards{margin:10px -5px; font-size:0;}
+  /* Cards — float, não grid nem font-size:0. O grid não renderiza no
+     html2canvas e o truque de font-size:0 apagava o texto dos cards. */
+  .cards{margin:10px 0; overflow:hidden;}
   .card{
-    display:inline-block; vertical-align:top;
-    width:calc(33.333% - 10px); margin:5px;
+    float:left; width:31.5%; margin:0 2.75% 10px 0;
     border:1px solid var(--linha); border-top:3px solid var(--accent);
     border-radius:8px; padding:12px 14px; background:#fff;
-    font-size:9.5pt; break-inside:avoid; page-break-inside:avoid;
+    break-inside:avoid; page-break-inside:avoid;
   }
+  .card:last-child{margin-right:0;}
   .card h4{margin:0 0 7px; font-size:9.5pt; color:var(--accent); font-weight:700;}
-  .card ul{margin:0; padding-left:15px;}
+  .card ul{margin:0; padding-left:15px; font-size:9.5pt;}
   .card li{margin:2px 0;}
 
   .grupo{margin:14px 0;}
@@ -542,7 +542,6 @@ INSTRUÇÕES OBRIGATÓRIAS:
   @media print{
     .folha{max-width:none; padding:0;}
     .folha > *:not(.capa){margin-left:0; margin-right:0;}
-    .capa{break-after:page;}
     .funcao{break-before:page;}
     .secao, .card, .tabela tr{break-inside:avoid;}
     .secao h3, .funcao-titulo{break-after:avoid;}
