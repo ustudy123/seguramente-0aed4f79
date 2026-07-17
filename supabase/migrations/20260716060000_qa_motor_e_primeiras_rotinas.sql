@@ -404,7 +404,7 @@ BEGIN
               0);
     ELSE
       BEGIN
-        EXECUTE format('SELECT public.%I()', c.funcao_sql) INTO r;
+        EXECUTE format('SELECT * FROM public.%I()', c.funcao_sql) INTO r;
         INSERT INTO public.qa_resultados
           (execucao_id, caso_id, codigo, situacao, passo_ordem, passo_acao,
            esperado, obtido, erro_tecnico, detalhe, duracao_ms)

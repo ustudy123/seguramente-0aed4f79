@@ -40,7 +40,7 @@ DECLARE
 BEGIN
   BEGIN
     -- Tudo que a rotina escrever aqui dentro morre no RAISE lá embaixo.
-    EXECUTE format('SELECT public.%I()', p_funcao) INTO r;
+    EXECUTE format('SELECT * FROM public.%I()', p_funcao) INTO r;
 
     -- Desfaz o que a rotina criou. O veredito em `r` sobrevive: e' memoria.
     RAISE EXCEPTION USING ERRCODE = 'QA000', MESSAGE = 'QA_DESCARTE';

@@ -67,7 +67,7 @@ BEGIN
   PERFORM public.qa_exigir_modo();
 
   BEGIN
-    EXECUTE format('SELECT public.%I()', p_funcao) INTO r;
+    EXECUTE format('SELECT * FROM public.%I()', p_funcao) INTO r;
     RAISE EXCEPTION USING ERRCODE = 'QA000', MESSAGE = 'QA_DESCARTE';
   EXCEPTION
     WHEN SQLSTATE 'QA000' THEN
