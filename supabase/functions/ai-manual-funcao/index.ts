@@ -276,21 +276,25 @@ INSTRUÇÕES OBRIGATÓRIAS:
 
    OBRIGATÓRIO — use exatamente esta estrutura semântica:
 
+   ATENÇÃO: TODO elemento precisa da própria classe. O gerador de PDF clona
+   os elementos para fora do pai, então seletor descendente NÃO funciona —
+   um <h1> sem classe perde o estilo e sai errado no PDF.
+
    <header class="capa">
      <p class="capa-empresa">${nomeEmpresa}</p>
-     <h1>${tituloManual}</h1>
+     <h1 class="capa-titulo">${tituloManual}</h1>
    </header>
 
    <nav class="sumario">
-     <h2>Sumário</h2>
-     <ol><li><a href="#f1-s1">Identificação do Cargo</a></li>...</ol>
+     <h2 class="sumario-titulo">Sumário</h2>
+     <ol class="sumario-lista"><li><a href="#f1-s1">Identificação do Cargo</a></li>...</ol>
    </nav>
 
    <article class="funcao">
      <h2 class="funcao-titulo">Nome da Função</h2>
 
      <section id="f1-s1" class="secao">
-       <h3><span class="num">1</span>Identificação do Cargo</h3>
+       <h3 class="secao-titulo"><span class="num">1</span>Identificação do Cargo</h3>
        <dl class="campos">
          <dt>Nome</dt><dd>...</dd>
          <dt>Área</dt><dd>...</dd>
@@ -298,9 +302,9 @@ INSTRUÇÕES OBRIGATÓRIAS:
      </section>
 
      <section id="f1-s4" class="secao">
-       <h3><span class="num">4</span>Responsabilidades Detalhadas</h3>
+       <h3 class="secao-titulo"><span class="num">4</span>Responsabilidades Detalhadas</h3>
        <div class="grupo">
-         <h4>Nome do processo</h4>
+         <h4 class="grupo-titulo">Nome do processo</h4>
          <table class="tabela">
            <thead><tr><th>O que</th><th>Como</th><th>Frequência</th><th>Resultado</th></tr></thead>
            <tbody><tr><td>...</td><td>...</td><td><span class="badge">Diário</span></td><td>...</td></tr></tbody>
@@ -309,13 +313,22 @@ INSTRUÇÕES OBRIGATÓRIAS:
      </section>
 
      <section id="f1-s7" class="secao">
-       <h3><span class="num">7</span>Competências</h3>
+       <h3 class="secao-titulo"><span class="num">7</span>Competências</h3>
        <div class="cards">
-         <div class="card"><h4>Técnicas</h4><ul><li>...</li></ul></div>
-         <div class="card"><h4>Comportamentais</h4><ul><li>...</li></ul></div>
-         <div class="card"><h4>Cognitivas</h4><ul><li>...</li></ul></div>
+         <div class="card"><h4 class="card-titulo">Técnicas</h4><ul class="card-lista"><li>...</li></ul></div>
+         <div class="card"><h4 class="card-titulo">Comportamentais</h4><ul class="card-lista"><li>...</li></ul></div>
+         <div class="card"><h4 class="card-titulo">Cognitivas</h4><ul class="card-lista"><li>...</li></ul></div>
        </div>
      </section>
+
+   Classes obrigatórias por elemento:
+     h1 da capa      -> class="capa-titulo"
+     h2 do sumário   -> class="sumario-titulo"   |  ol -> class="sumario-lista"
+     h2 da função    -> class="funcao-titulo"
+     h3 de seção     -> class="secao-titulo"     |  número -> <span class="num">
+     h4 de grupo     -> class="grupo-titulo"
+     h4 de card      -> class="card-titulo"      |  ul -> class="card-lista"
+     parágrafo solto -> class="secao-texto"      |  ul solta -> class="secao-lista"
    </article>
 
    Regras de conteúdo:
@@ -419,7 +432,7 @@ INSTRUÇÕES OBRIGATÓRIAS:
     font-size:14pt; font-weight:800; letter-spacing:.3px;
     color:#f4a261; margin:0 0 10px; line-height:1.3;
   }
-  .capa h1{
+  .capa-titulo{
     font-size:18pt; line-height:1.35; font-weight:600;
     color:#fff; margin:0 auto; max-width:26em;
   }
@@ -433,14 +446,14 @@ INSTRUÇÕES OBRIGATÓRIAS:
     background:var(--fundo-suave); border:1px solid var(--linha);
     border-radius:8px; padding:18px 22px; margin:26px 0 34px;
   }
-  .sumario h2{
+  .sumario-titulo{
     font-size:9pt; text-transform:uppercase; letter-spacing:1px;
     color:var(--tinta-suave); margin:0 0 10px; font-weight:700;
   }
-  .sumario ol{margin:0; padding-left:20px; columns:2; column-gap:32px;}
-  .sumario li{margin:3px 0; font-size:9.5pt; break-inside:avoid;}
-  .sumario a{color:var(--tinta); text-decoration:none;}
-  .sumario a:hover{color:var(--accent);}
+  .sumario-lista{margin:0; padding-left:20px; columns:2; column-gap:32px;}
+  .sumario-lista li{margin:3px 0; font-size:9.5pt; break-inside:avoid;}
+  .sumario-lista a{color:var(--tinta); text-decoration:none;}
+  .sumario-lista a:hover{color:var(--accent);}
 
   /* Função */
   .funcao{margin-top:8px;}
@@ -452,7 +465,7 @@ INSTRUÇÕES OBRIGATÓRIAS:
 
   /* Seções */
   .secao{margin:26px 0; break-inside:avoid; page-break-inside:avoid;}
-  .secao h3{
+  .secao-titulo{
     font-size:11.5pt; font-weight:700; color:var(--primaria);
     margin:0 0 12px; padding-bottom:7px;
     border-bottom:1px solid var(--linha);
@@ -461,20 +474,19 @@ INSTRUÇÕES OBRIGATÓRIAS:
   /* O chip do número NÃO usa flex de propósito: o PDF é rasterizado por
      html2canvas, que centraliza flex de forma errada e cortava o número.
      line-height + text-align resolvem igual e renderizam certo. */
-  .secao h3 .num{
-    display:inline-block; vertical-align:middle;
-    width:22px; height:22px; line-height:22px; text-align:center;
-    margin-right:9px; border-radius:5px;
-    background:var(--primaria); color:#fff;
+  .num{
+    display:inline-block; padding:1px 8px; margin-right:9px;
+    border-radius:5px; background:var(--primaria); color:#fff;
     font-size:9pt; font-weight:700;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
-  .secao h4{
+  .grupo-titulo{
     font-size:10pt; font-weight:600; color:var(--tinta);
     margin:16px 0 7px;
   }
-  .secao p{margin:0 0 9px;}   /* sem justificar: evita rios no texto */
-  .secao ul{margin:0 0 9px; padding-left:18px;}
-  .secao li{margin:3px 0;}
+  .secao-texto{margin:0 0 9px;}   /* sem justificar: evita rios no texto */
+  .secao-lista{margin:0 0 9px; padding-left:18px;}
+  .secao-lista li{margin:3px 0;}
 
   /* Campos (definição) — float+clear em vez de grid: o PDF é rasterizado
      por html2canvas, que não renderiza grid de forma confiável. */
@@ -509,9 +521,9 @@ INSTRUÇÕES OBRIGATÓRIAS:
     break-inside:avoid; page-break-inside:avoid;
   }
   .card:last-child{margin-right:0;}
-  .card h4{margin:0 0 7px; font-size:9.5pt; color:var(--accent); font-weight:700;}
-  .card ul{margin:0; padding-left:15px; font-size:9.5pt;}
-  .card li{margin:2px 0;}
+  .card-titulo{margin:0 0 7px; font-size:9.5pt; color:var(--accent); font-weight:700;}
+  .card-lista{margin:0; padding-left:15px; font-size:9.5pt;}
+  .card-lista li{margin:2px 0;}
 
   .grupo{margin:14px 0;}
 
@@ -534,8 +546,8 @@ INSTRUÇÕES OBRIGATÓRIAS:
     margin-top:40px; padding-top:14px; border-top:1px solid var(--linha);
     font-size:8pt; color:var(--tinta-suave); overflow:hidden;
   }
-  .rodape span:first-child{float:left;}
-  .rodape span:last-child{float:right;}
+  .rodape-esq{float:left;}
+  .rodape-dir{float:right;}
 
   /* Impressão / PDF */
   @page{size:A4; margin:14mm 12mm;}
@@ -544,16 +556,16 @@ INSTRUÇÕES OBRIGATÓRIAS:
     .folha > *:not(.capa){margin-left:0; margin-right:0;}
     .funcao{break-before:page;}
     .secao, .card, .tabela tr{break-inside:avoid;}
-    .secao h3, .funcao-titulo{break-after:avoid;}
+    .secao-titulo, .funcao-titulo{break-after:avoid;}
     .sumario{background:#fff;}
     a{color:inherit; text-decoration:none;}
   }
   @media (max-width:640px){
     .cards{grid-template-columns:1fr;}
-    .sumario ol{columns:1;}
+    .sumario-lista{columns:1;}
     .folha > *:not(.capa){margin-left:16px; margin-right:16px;}
     .capa{padding:38px 22px 32px;}
-    .capa h1{font-size:16pt;}
+    .capa-titulo{font-size:16pt;}
     .capa-empresa{font-size:13pt;}
   }`;
 
@@ -562,7 +574,7 @@ INSTRUÇÕES OBRIGATÓRIAS:
       html = html.replace(/<\/header>/i, `<p class="capa-data">Gerado em ${geradoEm}</p></header>`);
     }
 
-    const rodape = `<footer class="rodape"><span>${nomeEmpresa}</span><span>Gerado em ${geradoEm}</span></footer>`;
+    const rodape = `<footer class="rodape"><span class="rodape-esq">${nomeEmpresa}</span><span class="rodape-dir">Gerado em ${geradoEm}</span></footer>`;
 
     html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">`
       + `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
