@@ -230,6 +230,18 @@ export function normalizeManualHtml(html: string) {
  * Identify "block" elements within the body that should be captured as
  * non-splittable units.
  */
+/**
+ * @deprecated NÃO USAR. Foi o que quebrou o PDF do manual.
+ *
+ * Esta função decompõe o documento e clona cada elemento para dentro de um
+ * <div> branco novo. Isso destrói todo seletor descendente — `.capa` perdia o
+ * fundo, `.capa-titulo` perdia a cor, cards perdiam o contexto — porque o
+ * elemento clonado deixa de ter os ancestrais que o CSS exige.
+ *
+ * O gerador passou a renderizar o documento inteiro de uma vez e a quebrar
+ * páginas pela posição real dos blocos. Mantida apenas como referência
+ * histórica.
+ */
 function collectSections(root: HTMLElement): HTMLElement[] {
   if (!root) return [];
   
@@ -396,154 +408,96 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const usableHeight = pdfHeight - PDF_MARGIN_TOP_MM - PDF_MARGIN_BOTTOM_MM - 3; // safety
     const SECTION_GAP_MM = 2;
 
-    const sections = collectSections(contentDiv);
-    console.log(`Geração PDF: ${sections.length} seções identificadas.`);
-    
-    if (sections.length === 0) {
-      console.error("Erro Crítico: Nenhuma seção encontrada no manual.");
-      throw new Error("Não foi possível identificar o conteúdo do manual para geração do PDF.");
+    // ── Render único + quebra semântica ───────────────────────────
+    // Antes, o gerador DECOMPUNHA o documento: clonava elemento por elemento
+    // para dentro de um <div> branco novo. Isso matava todo seletor
+    // descendente (.capa .capa-titulo, .secao .secao-titulo...) — a capa saía
+    // sem fundo, o título sem cor, os cards sem contexto.
+    //
+    // Agora o documento é renderizado INTEIRO, de uma vez, preservando o CSS.
+    // E as quebras de página saem da POSIÇÃO REAL de cada bloco (medida antes
+    // do render), não de caça a pixels em branco.
+
+    const contentRect = contentDiv.getBoundingClientRect();
+
+    // Pontos onde é aceitável cortar: começo e fim de cada bloco semântico.
+    const breakPointsCss: number[] = [];
+    contentDiv
+      .querySelectorAll(".capa, .sumario, .funcao, .secao, .grupo, .tabela, .cards, .card, .rodape")
+      .forEach((el) => {
+        const r = (el as HTMLElement).getBoundingClientRect();
+        breakPointsCss.push(r.top - contentRect.top);
+        breakPointsCss.push(r.bottom - contentRect.top);
+      });
+
+    const canvas = await html2canvas(contentDiv, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: "#ffffff",
+      logging: false,
+      windowWidth: contentDiv.scrollWidth,
+      windowHeight: contentDiv.scrollHeight,
+    });
+
+    if (!canvas.width || !canvas.height) {
+      throw new Error("Não foi possível renderizar o manual para PDF.");
     }
 
-    let currentY = PDF_MARGIN_TOP_MM;
+    // CSS px -> canvas px (html2canvas aplica o scale)
+    const cssToCanvas = canvas.height / (contentDiv.offsetHeight || 1);
+    const breakPoints = Array.from(
+      new Set(breakPointsCss.map((v) => Math.round(v * cssToCanvas)))
+    )
+      .filter((v) => v > 0 && v < canvas.height)
+      .sort((a, b) => a - b);
 
+    const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
+    console.log(
+      `Geração PDF: render único (${canvas.width}x${canvas.height}), ` +
+      `${breakPoints.length} pontos de quebra.`
+    );
 
-    const renderElementToCanvas = async (element: HTMLElement) => {
-      // For grouped wrappers, mount them temporarily into the container
-      const needsMount = !element.isConnected;
-      if (needsMount) {
-        element.style.width = "604px";
-        element.style.boxSizing = "border-box";
-        element.style.background = "#ffffff";
-        container.appendChild(element);
-        // Wait a bit longer for layout and images
-        await wait(100);
-      }
-      
-      try {
-        const canvas = await html2canvas(element, {
-          scale: PDF_RENDER_SCALE,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-          allowTaint: false,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: 604,
-        });
-        if (needsMount) container.removeChild(element);
-        return canvas;
-      } catch (err) {
-        console.error("Erro no html2canvas para elemento:", element.tagName, err);
-        if (needsMount && element.parentElement === container) {
-          container.removeChild(element);
-        }
-        throw err;
-      }
-    };
+    let y = 0;
+    let primeiraPagina = true;
 
-    const addCanvasAsImage = (canvas: HTMLCanvasElement, heightMm: number) => {
-      const data = canvas.toDataURL("image/png");
-      pdf.addImage(data, "PNG", PDF_MARGIN_LEFT_MM, currentY, contentWidth, heightMm);
-      currentY += heightMm + SECTION_GAP_MM;
-    };
+    while (y < canvas.height) {
+      if (!primeiraPagina) pdf.addPage();
+      primeiraPagina = false;
 
-    const sliceTallCanvas = (canvas: HTMLCanvasElement) => {
-      const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
-      let y = 0;
-      while (y < canvas.height) {
-        const remainingMm = pdfHeight - PDF_MARGIN_BOTTOM_MM - currentY - 3;
-        const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
-        if (availablePx < 60) {
-          pdf.addPage();
-          currentY = PDF_MARGIN_TOP_MM;
-          continue;
-        }
-        let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
-        if (y + sliceH < canvas.height) {
-          const scanStart = Math.max(24, sliceH - 240);
-          const scanEnd = Math.max(scanStart, sliceH - 8);
-          let bestBreak = -1;
+      let sliceH = Math.min(pageHeightPx, canvas.height - y);
 
-          const ctx = canvas.getContext("2d", { willReadFrequently: true });
-          if (ctx) {
-            // Look for a band of consecutive blank rows so we don't break
-            // through descenders (g, p, y) or ascenders.
-            const requiredBlankBand = 10;
-            let blankRun = 0;
-            for (let row = scanEnd; row >= scanStart; row -= 1) {
-              const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
-              let inkPixels = 0;
-
-              for (let i = 0; i < imageData.length; i += 4) {
-                const alpha = imageData[i + 3];
-                const isDark = imageData[i] < 245 || imageData[i + 1] < 245 || imageData[i + 2] < 245;
-                if (alpha > 10 && isDark) inkPixels += 1;
-              }
-
-              if (inkPixels < canvas.width * 0.005) {
-                blankRun += 1;
-                if (blankRun >= requiredBlankBand) {
-                  bestBreak = row + requiredBlankBand;
-                  break;
-                }
-              } else {
-                blankRun = 0;
-              }
-            }
-          }
-
-          if (bestBreak > 0) {
-            sliceH = bestBreak;
-          }
-        }
-        const slice = document.createElement("canvas");
-        slice.width = canvas.width;
-        slice.height = sliceH;
-        const sliceCtx = slice.getContext("2d");
-        if (!sliceCtx) throw new Error("Falha ao preparar slice.");
-        sliceCtx.fillStyle = "#ffffff";
-        sliceCtx.fillRect(0, 0, slice.width, slice.height);
-        sliceCtx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-        const sliceMm = (sliceH * contentWidth) / canvas.width;
-        addCanvasAsImage(slice, sliceMm);
-        y += sliceH;
-        if (y < canvas.height) {
-          pdf.addPage();
-          currentY = PDF_MARGIN_TOP_MM;
+      if (y + sliceH < canvas.height) {
+        // Prefere cortar no fim de um bloco. Só aceita se a página aproveitar
+        // pelo menos 45% da altura — senão sobraria página quase vazia.
+        const minAproveitamento = y + pageHeightPx * 0.45;
+        const cabem = breakPoints.filter((b) => b > minAproveitamento && b <= y + sliceH);
+        if (cabem.length) {
+          sliceH = cabem[cabem.length - 1] - y;
         }
       }
-    };
 
-    for (const section of sections) {
-      try {
-        const canvas = await renderElementToCanvas(section);
-        if (!canvas || !canvas.width || !canvas.height) {
-          console.warn("Seção ignorada por canvas inválido:", section.tagName);
-          continue;
-        }
+      const slice = document.createElement("canvas");
+      slice.width = canvas.width;
+      slice.height = sliceH;
+      const sliceCtx = slice.getContext("2d");
+      if (!sliceCtx) throw new Error("Falha ao preparar página do PDF.");
+      sliceCtx.fillStyle = "#ffffff";
+      sliceCtx.fillRect(0, 0, slice.width, slice.height);
+      sliceCtx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
 
-        const heightMm = (canvas.height * contentWidth) / canvas.width;
-        const remainingMm = pdfHeight - PDF_MARGIN_BOTTOM_MM - currentY;
+      const sliceMm = (sliceH * contentWidth) / canvas.width;
+      pdf.addImage(
+        slice.toDataURL("image/png"),
+        "PNG",
+        PDF_MARGIN_LEFT_MM,
+        PDF_MARGIN_TOP_MM,
+        contentWidth,
+        sliceMm
+      );
 
-        if (heightMm <= usableHeight) {
-          if (heightMm > remainingMm && currentY > PDF_MARGIN_TOP_MM) {
-            pdf.addPage();
-            currentY = PDF_MARGIN_TOP_MM;
-          }
-          addCanvasAsImage(canvas, heightMm);
-        } else {
-          if (currentY > PDF_MARGIN_TOP_MM) {
-            pdf.addPage();
-            currentY = PDF_MARGIN_TOP_MM;
-          }
-          sliceTallCanvas(canvas);
-        }
-      } catch (sectionErr) {
-        console.error("Erro ao renderizar seção do manual:", sectionErr);
-        continue;
-      }
+      y += sliceH;
     }
-
 
     const finalTotalPages = pdf.getNumberOfPages();
     for (let page = 1; page <= finalTotalPages; page += 1) {
