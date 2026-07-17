@@ -202,17 +202,17 @@ export function normalizeManualHtml(html: string) {
       return;
     }
 
+    // Sem text-align: justify. Sem hifenização (pt-BR), o justificado abre
+    // rios de espaço entre as palavras — visível na tabela de
+    // responsabilidades ("inconsistências    e    efetuar"). Alinhado à
+    // esquerda lê melhor e é o que a folha de estilo do manual já define.
     appendInlineStyle(
       element,
       [
-        "text-align: justify !important",
-        "text-justify: inter-word",
         "white-space: normal !important",
         "word-break: normal !important",
         "overflow-wrap: break-word !important",
-        "word-spacing: 0.05em !important",
         "letter-spacing: normal !important",
-        "line-height: 1.6",
         "hyphens: none !important",
         "margin-top: 0 !important",
         "margin-bottom: 12px !important",

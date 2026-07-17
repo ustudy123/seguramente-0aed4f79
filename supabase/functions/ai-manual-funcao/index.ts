@@ -277,8 +277,8 @@ INSTRUÇÕES OBRIGATÓRIAS:
    OBRIGATÓRIO — use exatamente esta estrutura semântica:
 
    <header class="capa">
-     <h1>${tituloManual}</h1>
      <p class="capa-empresa">${nomeEmpresa}</p>
+     <h1>${tituloManual}</h1>
    </header>
 
    <nav class="sumario">
@@ -412,16 +412,14 @@ INSTRUÇÕES OBRIGATÓRIAS:
     background:linear-gradient(135deg,#1b3457 0%,#22587a 55%,#2d8a6e 100%);
     color:#fff; text-align:center;
     padding:52px 40px 44px; margin:0 0 30px;
-    display:flex; flex-direction:column; align-items:center;
     /* sem isto o navegador remove o fundo ao imprimir/gerar PDF */
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
   .capa h1{
     font-size:19pt; line-height:1.3; font-weight:600; letter-spacing:-.2px;
-    color:#fff; margin:0; max-width:26em;
+    color:#fff; margin:0 auto; max-width:26em;
   }
   .capa-empresa{
-    order:-1;                       /* empresa em destaque, acima do título */
     font-size:15pt; font-weight:800; letter-spacing:.3px;
     color:#f4a261; margin:0 0 10px; line-height:1.25;
   }
@@ -453,18 +451,22 @@ INSTRUÇÕES OBRIGATÓRIAS:
   }
 
   /* Seções */
-  .secao{margin:26px 0; break-inside:avoid;}
+  .secao{margin:26px 0; break-inside:avoid; page-break-inside:avoid;}
   .secao h3{
-    display:flex; align-items:center; gap:10px;
     font-size:11.5pt; font-weight:700; color:var(--primaria);
     margin:0 0 12px; padding-bottom:7px;
     border-bottom:1px solid var(--linha);
+    break-after:avoid; page-break-after:avoid;
   }
+  /* O chip do número NÃO usa flex de propósito: o PDF é rasterizado por
+     html2canvas, que centraliza flex de forma errada e cortava o número.
+     line-height + text-align resolvem igual e renderizam certo. */
   .secao h3 .num{
-    flex:none; width:22px; height:22px; border-radius:5px;
+    display:inline-block; vertical-align:middle;
+    width:22px; height:22px; line-height:22px; text-align:center;
+    margin-right:9px; border-radius:5px;
     background:var(--primaria); color:#fff;
-    font-size:8.5pt; font-weight:700;
-    display:inline-flex; align-items:center; justify-content:center;
+    font-size:9pt; font-weight:700;
   }
   .secao h4{
     font-size:10pt; font-weight:600; color:var(--tinta);
@@ -474,13 +476,14 @@ INSTRUÇÕES OBRIGATÓRIAS:
   .secao ul{margin:0 0 9px; padding-left:18px;}
   .secao li{margin:3px 0;}
 
-  /* Campos (definição) */
-  .campos{
-    display:grid; grid-template-columns:max-content 1fr;
-    gap:6px 18px; margin:0;
+  /* Campos (definição) — float+clear em vez de grid: o PDF é rasterizado
+     por html2canvas, que não renderiza grid de forma confiável. */
+  .campos{margin:0; overflow:hidden;}
+  .campos dt{
+    float:left; clear:left; width:118px; padding:3px 0;
+    font-weight:600; color:var(--tinta-suave); font-size:9.5pt;
   }
-  .campos dt{font-weight:600; color:var(--tinta-suave); font-size:9.5pt;}
-  .campos dd{margin:0;}
+  .campos dd{margin:0 0 0 136px; padding:3px 0;}
 
   /* Tabelas */
   .tabela{
@@ -496,14 +499,19 @@ INSTRUÇÕES OBRIGATÓRIAS:
   .tabela td{padding:8px 10px; border-bottom:1px solid var(--linha); vertical-align:top;}
   .tabela tbody tr:nth-child(even){background:var(--fundo-suave);}
 
-  /* Cards */
-  .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:10px 0;}
+  /* Cards — inline-block em vez de grid, pelo mesmo motivo dos campos.
+     No PDF os três cards saíam empilhados em largura cheia. */
+  .cards{margin:10px -5px; font-size:0;}
   .card{
+    display:inline-block; vertical-align:top;
+    width:calc(33.333% - 10px); margin:5px;
     border:1px solid var(--linha); border-top:3px solid var(--accent);
-    border-radius:8px; padding:14px 16px; background:#fff; break-inside:avoid;
+    border-radius:8px; padding:12px 14px; background:#fff;
+    font-size:9.5pt; break-inside:avoid; page-break-inside:avoid;
   }
-  .card h4{margin:0 0 8px; font-size:9.5pt; color:var(--accent); font-weight:700;}
-  .card ul{margin:0; padding-left:16px; font-size:9.5pt;}
+  .card h4{margin:0 0 7px; font-size:9.5pt; color:var(--accent); font-weight:700;}
+  .card ul{margin:0; padding-left:15px;}
+  .card li{margin:2px 0;}
 
   .grupo{margin:14px 0;}
 
@@ -524,9 +532,10 @@ INSTRUÇÕES OBRIGATÓRIAS:
   /* Rodapé */
   .rodape{
     margin-top:40px; padding-top:14px; border-top:1px solid var(--linha);
-    font-size:8pt; color:var(--tinta-suave);
-    display:flex; justify-content:space-between; gap:16px;
+    font-size:8pt; color:var(--tinta-suave); overflow:hidden;
   }
+  .rodape span:first-child{float:left;}
+  .rodape span:last-child{float:right;}
 
   /* Impressão / PDF */
   @page{size:A4; margin:14mm 12mm;}
