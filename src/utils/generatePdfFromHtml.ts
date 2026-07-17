@@ -78,34 +78,34 @@ export function normalizeManualHtml(html: string) {
 
   const baseStyle = documentNode.createElement("style");
   baseStyle.setAttribute("data-manual-normalizer", "true");
+  // Normalizador de SEGURANÇA, não de design.
+  //
+  // Nasceu quando a IA gerava HTML arbitrário: forçava tudo num padrão com
+  // !important — Times New Roman, corpo de 604px centralizado e texto
+  // justificado. Hoje isso atropela a folha de estilo do manual, e era a
+  // origem do serifado, das faixas brancas nas laterais da prévia e dos rios
+  // de espaço no texto.
+  //
+  // Os 604px seguem existindo onde de fato importam: o pipeline do PDF aplica
+  // a largura no próprio container (mais abaixo neste arquivo). Aqui ficam só
+  // as proteções estruturais.
   baseStyle.textContent = `
     html, body {
-      background: #ffffff !important;
-      color: #1a1a1a !important;
+      background: #ffffff;
       margin: 0 !important;
       padding: 0 !important;
-      font-family: 'Times New Roman', Times, Georgia, serif !important;
     }
 
     body {
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
       font-kerning: normal;
-      width: 604px !important;
-      max-width: 604px !important;
-      margin: 0 auto !important;
-      padding: 0 !important;
-      box-sizing: border-box !important;
+      box-sizing: border-box;
       overflow-wrap: break-word;
       word-wrap: break-word;
-      font-size: 12pt !important;
-      line-height: 1.5 !important;
     }
 
-    *, *::before, *::after {
-      box-sizing: border-box;
-      color: inherit;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
 
     img, svg, canvas {
       max-width: 100%;
@@ -117,10 +117,6 @@ export function normalizeManualHtml(html: string) {
       overflow-wrap: break-word;
       word-wrap: break-word;
     }
-
-    p { text-align: justify !important; text-justify: inter-word; hyphens: none !important; margin: 0 0 10px 0 !important; }
-    li { text-align: justify !important; margin-bottom: 6px !important; }
-    h1, h2, h3, h4, h5, h6 { font-family: 'Times New Roman', Times, Georgia, serif !important; }
   `;
 
   documentNode.head.appendChild(baseStyle);

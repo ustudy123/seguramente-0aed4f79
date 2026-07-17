@@ -404,23 +404,30 @@ INSTRUÇÕES OBRIGATÓRIAS:
     font-size:10.5pt; line-height:1.65;
     -webkit-font-smoothing:antialiased;
   }
-  .folha{max-width:190mm; margin:0 auto; padding:16mm 14mm;}
+  .folha{max-width:210mm; margin:0 auto; padding:0 0 16mm;}
+  .folha > *:not(.capa){margin-left:14mm; margin-right:14mm;}
 
-  /* Capa */
+  /* Capa — herói com gradiente (padrão do Manual de Cultura) */
   .capa{
-    border-bottom:3px solid var(--primaria);
-    padding-bottom:18px; margin-bottom:8px;
+    background:linear-gradient(135deg,#1b3457 0%,#22587a 55%,#2d8a6e 100%);
+    color:#fff; text-align:center;
+    padding:52px 40px 44px; margin:0 0 30px;
+    display:flex; flex-direction:column; align-items:center;
+    /* sem isto o navegador remove o fundo ao imprimir/gerar PDF */
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
   .capa h1{
-    font-size:24pt; line-height:1.2; font-weight:700; letter-spacing:-.4px;
-    color:var(--primaria); margin:0 0 6px;
+    font-size:19pt; line-height:1.3; font-weight:600; letter-spacing:-.2px;
+    color:#fff; margin:0; max-width:26em;
   }
   .capa-empresa{
-    font-size:11pt; color:var(--tinta-suave); margin:0; font-weight:500;
+    order:-1;                       /* empresa em destaque, acima do título */
+    font-size:15pt; font-weight:800; letter-spacing:.3px;
+    color:#f4a261; margin:0 0 10px; line-height:1.25;
   }
   .capa-data{
-    font-size:8.5pt; color:var(--tinta-suave); margin:22px 0 0;
-    text-transform:uppercase; letter-spacing:.6px;
+    font-size:8.5pt; color:rgba(255,255,255,.8); margin:26px 0 0;
+    text-transform:uppercase; letter-spacing:1px;
   }
 
   /* Sumário */
@@ -525,8 +532,9 @@ INSTRUÇÕES OBRIGATÓRIAS:
   @page{size:A4; margin:14mm 12mm;}
   @media print{
     .folha{max-width:none; padding:0;}
+    .folha > *:not(.capa){margin-left:0; margin-right:0;}
+    .capa{break-after:page;}
     .funcao{break-before:page;}
-    .funcao:first-of-type{break-before:auto;}
     .secao, .card, .tabela tr{break-inside:avoid;}
     .secao h3, .funcao-titulo{break-after:avoid;}
     .sumario{background:#fff;}
@@ -535,7 +543,10 @@ INSTRUÇÕES OBRIGATÓRIAS:
   @media (max-width:640px){
     .cards{grid-template-columns:1fr;}
     .sumario ol{columns:1;}
-    .folha{padding:20px 16px;}
+    .folha > *:not(.capa){margin-left:16px; margin-right:16px;}
+    .capa{padding:38px 22px 32px;}
+    .capa h1{font-size:16pt;}
+    .capa-empresa{font-size:13pt;}
   }`;
 
     // Data na capa (a IA foi proibida de inventá-la)
