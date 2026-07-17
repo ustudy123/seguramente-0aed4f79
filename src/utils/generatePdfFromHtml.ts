@@ -430,13 +430,34 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         breakPointsCss.push(r.bottom - contentRect.top);
       });
 
+    // Zonas onde cortar é PROIBIDO: dentro de um título ou de uma linha de
+    // tabela. Os pontos de quebra acima são a preferência; isto é a garantia.
+    // Sem isto o corte passava no meio do "3 Escopo Geral" — ele saía picado
+    // no rodapé de uma página e no topo da seguinte.
+    const zonasProibidasCss: Array<[number, number]> = [];
+    contentDiv
+      .querySelectorAll(
+        ".capa-titulo, .funcao-titulo, .secao-titulo, .grupo-titulo, .card-titulo, .sumario-titulo, tr, .rodape"
+      )
+      .forEach((el) => {
+        const r = (el as HTMLElement).getBoundingClientRect();
+        zonasProibidasCss.push([r.top - contentRect.top, r.bottom - contentRect.top]);
+      });
+
     const canvas = await html2canvas(contentDiv, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
       backgroundColor: "#ffffff",
       logging: false,
-      windowWidth: contentDiv.scrollWidth,
+      // Altura explícita: sem isto o html2canvas pode parar antes do fim e
+      // cortar o rodapé (era o "Gerado em..." picado na última página).
+      width: contentDiv.scrollWidth,
+      height: contentDiv.scrollHeight,
+      // windowWidth largo de propósito: o contentDiv tem 604px e o CSS do
+      // manual tem @media (max-width:640px). Passar 604 aqui dispararia o
+      // layout mobile dentro do clone do html2canvas (cards em 1 coluna).
+      windowWidth: 1280,
       windowHeight: contentDiv.scrollHeight,
     });
 
@@ -457,6 +478,28 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       .sort((a, b) => a - b);
 
     const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
+
+    // Zonas proibidas convertidas para px de canvas, com folga de 2px.
+    const zonasProibidas = zonasProibidasCss
+      .map(([a, b]) => [Math.floor(a * cssToCanvas) - 2, Math.ceil(b * cssToCanvas) + 2] as [number, number])
+      .filter(([a, b]) => b > a);
+
+    /** Recua o corte se ele cair dentro de um título ou linha de tabela. */
+    const ajustaCorte = (inicio: number, altura: number): number => {
+      let h = altura;
+      // Repete: recuar pode jogar o corte para dentro de outra zona acima.
+      for (let tentativa = 0; tentativa < 6; tentativa += 1) {
+        const corte = inicio + h;
+        const zona = zonasProibidas.find(([a, b]) => corte > a && corte < b);
+        if (!zona) return h;
+        const novaAltura = zona[0] - inicio;
+        // Se recuar não deixa página utilizável, aceita o corte original:
+        // melhor uma linha partida do que loop infinito ou página vazia.
+        if (novaAltura < pageHeightPx * 0.2) return h;
+        h = novaAltura;
+      }
+      return h;
+    };
     console.log(
       `Geração PDF: render único (${canvas.width}x${canvas.height}), ` +
       `${breakPoints.length} pontos de quebra.`
@@ -504,6 +547,9 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
             }
           }
         }
+
+        // Garantia final: o corte nunca cai dentro de um título ou linha.
+        sliceH = ajustaCorte(y, sliceH);
       }
 
       const slice = document.createElement("canvas");
