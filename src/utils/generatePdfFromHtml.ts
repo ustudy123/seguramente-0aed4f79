@@ -484,6 +484,41 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       .map(([a, b]) => [Math.floor(a * cssToCanvas) - 2, Math.ceil(b * cssToCanvas) + 2] as [number, number])
       .filter(([a, b]) => b > a);
 
+    /**
+     * Procura, a partir de `corte`, a linha em branco mais próxima acima.
+     * Trabalha nos PIXELS REAIS do canvas — por isso é imune a erro de
+     * medição. O html2canvas clona a página para um iframe e renderiza lá;
+     * as posições que medimos no DOM ao vivo podem não bater com o que foi
+     * de fato desenhado. Os pixels não mentem.
+     */
+    const recuaAteLinhaBranca = (inicio: number, altura: number): number => {
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return altura;
+      const minimo = Math.max(40, Math.floor(pageHeightPx * 0.25));
+      let brancasSeguidas = 0;
+      for (let row = altura; row >= minimo; row -= 1) {
+        const abs = inicio + row;
+        if (abs >= canvas.height) continue;
+        const linha = ctx.getImageData(0, abs, canvas.width, 1).data;
+        let tinta = 0;
+        for (let i = 0; i < linha.length; i += 4) {
+          if (linha[i + 3] > 10 && (linha[i] < 244 || linha[i + 1] < 244 || linha[i + 2] < 244)) {
+            tinta += 1;
+            if (tinta > 2) break;
+          }
+        }
+        if (tinta <= 2) {
+          brancasSeguidas += 1;
+          // 6 linhas limpas seguidas = entrelinha de verdade, não buraco
+          // entre duas palavras.
+          if (brancasSeguidas >= 6) return row + brancasSeguidas - 1;
+        } else {
+          brancasSeguidas = 0;
+        }
+      }
+      return altura;
+    };
+
     /** Recua o corte se ele cair dentro de um título ou linha de tabela. */
     const ajustaCorte = (inicio: number, altura: number): number => {
       let h = altura;
@@ -515,41 +550,21 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       let sliceH = Math.min(pageHeightPx, canvas.height - y);
 
       if (y + sliceH < canvas.height) {
-        // Prefere cortar no fim de um bloco. Só aceita se a página aproveitar
-        // pelo menos 45% da altura — senão sobraria página quase vazia.
+        // 1) Preferência: cortar no fim de um bloco (posição medida no DOM).
         const minAproveitamento = y + pageHeightPx * 0.45;
         const cabem = breakPoints.filter((b) => b > minAproveitamento && b <= y + sliceH);
         if (cabem.length) {
           sliceH = cabem[cabem.length - 1] - y;
-        } else {
-          // Nenhum bloco termina aqui (ex.: tabela mais alta que a página).
-          // Recua até uma faixa de linhas em branco, para não cortar letras
-          // ao meio nem partir descendentes (g, p, y).
-          const ctx = canvas.getContext("2d", { willReadFrequently: true });
-          if (ctx) {
-            const limite = Math.max(24, Math.floor(sliceH * 0.55));
-            let brancasSeguidas = 0;
-            for (let row = sliceH - 4; row >= limite; row -= 1) {
-              const linha = ctx.getImageData(0, y + row, canvas.width, 1).data;
-              let tinta = 0;
-              for (let i = 0; i < linha.length; i += 4) {
-                if (linha[i + 3] > 10 && (linha[i] < 245 || linha[i + 1] < 245 || linha[i + 2] < 245)) {
-                  tinta += 1;
-                  if (tinta > 2) break;
-                }
-              }
-              if (tinta <= 2) {
-                brancasSeguidas += 1;
-                if (brancasSeguidas >= 8) { sliceH = row + brancasSeguidas; break; }
-              } else {
-                brancasSeguidas = 0;
-              }
-            }
-          }
         }
 
-        // Garantia final: o corte nunca cai dentro de um título ou linha.
+        // 2) Preferência: não cortar dentro de um título (também medido).
         sliceH = ajustaCorte(y, sliceH);
+
+        // 3) GARANTIA: o corte tem que cair numa entrelinha de verdade.
+        //    Os passos 1 e 2 dependem de medição do DOM, que pode divergir do
+        //    que o html2canvas desenhou no clone. Este passo olha o pixel e
+        //    não erra — é o que impede letra partida ao meio.
+        sliceH = recuaAteLinhaBranca(y, sliceH);
       }
 
       const slice = document.createElement("canvas");
