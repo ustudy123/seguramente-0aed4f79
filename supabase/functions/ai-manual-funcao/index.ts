@@ -264,23 +264,72 @@ INSTRUÇÕES OBRIGATÓRIAS:
    - Passos detalhados de execução
    - Materiais de treinamento
 
-4. FORMATAÇÃO HTML:
-   - CSS inline em cada elemento
-   - Paleta: primário #1e3a5f, secundário #2d8a6e, accent #f4a261, fundo #f8f9fa, texto #1a1a2e
-   - Fonte: 'Segoe UI', 'Inter', system-ui, sans-serif
-   - Cards com border-radius: 12px, box-shadow, padding 24px+
-   - Tabelas estilizadas com cabeçalho colorido e zebra
-   - Badges coloridos para frequência, complexidade, tipo
-   - Ícones emoji: 🎯 🧠 🛡️ ⚙️ 👤 📊 📋 ⚠️ ✅ 🔧 🏢
-   - Divisores visuais entre seções
-   - Numeração de seções (1-13)
-   - Tamanho: 15px corpo, 28px títulos, 42px capa
-   - @media print
+4. FORMATAÇÃO — LEIA COM ATENÇÃO:
+   O design NÃO é sua responsabilidade. Uma folha de estilo profissional
+   será aplicada automaticamente sobre o seu HTML.
 
-5. HTML SELF-CONTAINED, sem referências externas, começando com <!DOCTYPE html>.
-6. Aspecto de manual corporativo premium.
+   PROIBIDO:
+   - <!DOCTYPE>, <html>, <head>, <body> — retorne apenas o conteúdo
+   - qualquer <style>, <link> ou atributo style="..."
+   - escolher fontes, cores, tamanhos, sombras ou espaçamentos
+   - emojis como ícone de seção
 
-Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
+   OBRIGATÓRIO — use exatamente esta estrutura semântica:
+
+   <header class="capa">
+     <h1>${tituloManual}</h1>
+     <p class="capa-empresa">${nomeEmpresa}</p>
+   </header>
+
+   <nav class="sumario">
+     <h2>Sumário</h2>
+     <ol><li><a href="#f1-s1">Identificação do Cargo</a></li>...</ol>
+   </nav>
+
+   <article class="funcao">
+     <h2 class="funcao-titulo">Nome da Função</h2>
+
+     <section id="f1-s1" class="secao">
+       <h3><span class="num">1</span>Identificação do Cargo</h3>
+       <dl class="campos">
+         <dt>Nome</dt><dd>...</dd>
+         <dt>Área</dt><dd>...</dd>
+       </dl>
+     </section>
+
+     <section id="f1-s4" class="secao">
+       <h3><span class="num">4</span>Responsabilidades Detalhadas</h3>
+       <div class="grupo">
+         <h4>Nome do processo</h4>
+         <table class="tabela">
+           <thead><tr><th>O que</th><th>Como</th><th>Frequência</th><th>Resultado</th></tr></thead>
+           <tbody><tr><td>...</td><td>...</td><td><span class="badge">Diário</span></td><td>...</td></tr></tbody>
+         </table>
+       </div>
+     </section>
+
+     <section id="f1-s7" class="secao">
+       <h3><span class="num">7</span>Competências</h3>
+       <div class="cards">
+         <div class="card"><h4>Técnicas</h4><ul><li>...</li></ul></div>
+         <div class="card"><h4>Comportamentais</h4><ul><li>...</li></ul></div>
+         <div class="card"><h4>Cognitivas</h4><ul><li>...</li></ul></div>
+       </div>
+     </section>
+   </article>
+
+   Regras de conteúdo:
+   - Use <table class="tabela"> para KPIs, responsabilidades e rotina.
+   - Use <div class="cards"> + <div class="card"> para competências.
+   - Use <span class="badge"> para frequência/complexidade/tipo.
+   - Use <p class="vazio"> quando não houver conteúdo — mas SÓ se realmente
+     não houver dado. Prefira gerar conteúdo relevante ao cargo.
+   - Numere as seções de 1 a 13 dentro de <span class="num">.
+   - ids no padrão f{N}-s{M} (função N, seção M), casando com o sumário.
+
+5. NÃO inclua data de geração nem rodapé — são inseridos automaticamente.
+
+6. Retorne APENAS o HTML do conteúdo, sem markdown e sem code blocks.`;
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
@@ -323,13 +372,183 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
       html = html.replace(/^```(?:html)?\s*\n?/, "").replace(/\n?\s*```\s*$/, "");
     }
 
-    if (html && !html.toLowerCase().includes("<!doctype")) {
-      html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:20px;font-family:'Segoe UI','Inter',system-ui,sans-serif;}</style></head><body>${html}</body></html>`;
+    // ── Normalização: o design é nosso, não da IA ──────────────────
+    // Mesmo instruída, a IA às vezes devolve documento completo e estilos
+    // próprios. Aqui isso é removido, para o manual sair idêntico toda vez.
+    if (/<body[\s>]/i.test(html)) {
+      html = html.replace(/[\s\S]*<body[^>]*>/i, "").replace(/<\/body>[\s\S]*/i, "");
+    }
+    html = html
+      .replace(/<!DOCTYPE[^>]*>/gi, "")
+      .replace(/<\/?(?:html|head|body)[^>]*>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<link[^>]*>/gi, "")
+      .replace(/\sstyle="[^"]*"/gi, "")
+      .replace(/\sstyle='[^']*'/gi, "")
+      .trim();
+
+    // Data real de geração — antes a IA inventava (chegou a sair "2023-10-01")
+    const geradoEm = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo",
+    });
+
+    const CSS = `
+  :root{
+    --tinta:#16202e; --tinta-suave:#5b6878; --linha:#e3e8ef;
+    --primaria:#1e3a5f; --accent:#2d8a6e; --fundo-suave:#f7f9fb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:0; background:#fff; color:var(--tinta);
+    font-family:'Segoe UI','Inter',system-ui,-apple-system,sans-serif;
+    font-size:10.5pt; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .folha{max-width:190mm; margin:0 auto; padding:16mm 14mm;}
+
+  /* Capa */
+  .capa{
+    border-bottom:3px solid var(--primaria);
+    padding-bottom:18px; margin-bottom:8px;
+  }
+  .capa h1{
+    font-size:24pt; line-height:1.2; font-weight:700; letter-spacing:-.4px;
+    color:var(--primaria); margin:0 0 6px;
+  }
+  .capa-empresa{
+    font-size:11pt; color:var(--tinta-suave); margin:0; font-weight:500;
+  }
+  .capa-data{
+    font-size:8.5pt; color:var(--tinta-suave); margin:22px 0 0;
+    text-transform:uppercase; letter-spacing:.6px;
+  }
+
+  /* Sumário */
+  .sumario{
+    background:var(--fundo-suave); border:1px solid var(--linha);
+    border-radius:8px; padding:18px 22px; margin:26px 0 34px;
+  }
+  .sumario h2{
+    font-size:9pt; text-transform:uppercase; letter-spacing:1px;
+    color:var(--tinta-suave); margin:0 0 10px; font-weight:700;
+  }
+  .sumario ol{margin:0; padding-left:20px; columns:2; column-gap:32px;}
+  .sumario li{margin:3px 0; font-size:9.5pt; break-inside:avoid;}
+  .sumario a{color:var(--tinta); text-decoration:none;}
+  .sumario a:hover{color:var(--accent);}
+
+  /* Função */
+  .funcao{margin-top:8px;}
+  .funcao + .funcao{border-top:1px solid var(--linha); margin-top:38px; padding-top:30px;}
+  .funcao-titulo{
+    font-size:16pt; font-weight:700; color:var(--primaria);
+    margin:0 0 4px; letter-spacing:-.2px;
+  }
+
+  /* Seções */
+  .secao{margin:26px 0; break-inside:avoid;}
+  .secao h3{
+    display:flex; align-items:center; gap:10px;
+    font-size:11.5pt; font-weight:700; color:var(--primaria);
+    margin:0 0 12px; padding-bottom:7px;
+    border-bottom:1px solid var(--linha);
+  }
+  .secao h3 .num{
+    flex:none; width:22px; height:22px; border-radius:5px;
+    background:var(--primaria); color:#fff;
+    font-size:8.5pt; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .secao h4{
+    font-size:10pt; font-weight:600; color:var(--tinta);
+    margin:16px 0 7px;
+  }
+  .secao p{margin:0 0 9px;}   /* sem justificar: evita rios no texto */
+  .secao ul{margin:0 0 9px; padding-left:18px;}
+  .secao li{margin:3px 0;}
+
+  /* Campos (definição) */
+  .campos{
+    display:grid; grid-template-columns:max-content 1fr;
+    gap:6px 18px; margin:0;
+  }
+  .campos dt{font-weight:600; color:var(--tinta-suave); font-size:9.5pt;}
+  .campos dd{margin:0;}
+
+  /* Tabelas */
+  .tabela{
+    width:100%; border-collapse:collapse; margin:10px 0 14px;
+    font-size:9.5pt; break-inside:avoid;
+  }
+  .tabela th{
+    background:var(--primaria); color:#fff; text-align:left;
+    padding:8px 10px; font-weight:600; font-size:9pt;
+  }
+  .tabela th:first-child{border-radius:5px 0 0 0;}
+  .tabela th:last-child{border-radius:0 5px 0 0;}
+  .tabela td{padding:8px 10px; border-bottom:1px solid var(--linha); vertical-align:top;}
+  .tabela tbody tr:nth-child(even){background:var(--fundo-suave);}
+
+  /* Cards */
+  .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:10px 0;}
+  .card{
+    border:1px solid var(--linha); border-top:3px solid var(--accent);
+    border-radius:8px; padding:14px 16px; background:#fff; break-inside:avoid;
+  }
+  .card h4{margin:0 0 8px; font-size:9.5pt; color:var(--accent); font-weight:700;}
+  .card ul{margin:0; padding-left:16px; font-size:9.5pt;}
+
+  .grupo{margin:14px 0;}
+
+  /* Badge */
+  .badge{
+    display:inline-block; padding:2px 8px; border-radius:20px;
+    background:var(--fundo-suave); border:1px solid var(--linha);
+    font-size:8pt; font-weight:600; color:var(--tinta-suave); white-space:nowrap;
+  }
+
+  /* Estado vazio — discreto, sem parecer erro */
+  .vazio{
+    color:var(--tinta-suave); font-style:italic; font-size:9.5pt;
+    background:var(--fundo-suave); border-left:2px solid var(--linha);
+    padding:7px 12px; margin:6px 0; border-radius:0 4px 4px 0;
+  }
+
+  /* Rodapé */
+  .rodape{
+    margin-top:40px; padding-top:14px; border-top:1px solid var(--linha);
+    font-size:8pt; color:var(--tinta-suave);
+    display:flex; justify-content:space-between; gap:16px;
+  }
+
+  /* Impressão / PDF */
+  @page{size:A4; margin:14mm 12mm;}
+  @media print{
+    .folha{max-width:none; padding:0;}
+    .funcao{break-before:page;}
+    .funcao:first-of-type{break-before:auto;}
+    .secao, .card, .tabela tr{break-inside:avoid;}
+    .secao h3, .funcao-titulo{break-after:avoid;}
+    .sumario{background:#fff;}
+    a{color:inherit; text-decoration:none;}
+  }
+  @media (max-width:640px){
+    .cards{grid-template-columns:1fr;}
+    .sumario ol{columns:1;}
+    .folha{padding:20px 16px;}
+  }`;
+
+    // Data na capa (a IA foi proibida de inventá-la)
+    if (/<\/header>/i.test(html)) {
+      html = html.replace(/<\/header>/i, `<p class="capa-data">Gerado em ${geradoEm}</p></header>`);
     }
 
-    if (html && !html.toLowerCase().includes("viewport")) {
-      html = html.replace(/<head>/i, '<head><meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    }
+    const rodape = `<footer class="rodape"><span>${nomeEmpresa}</span><span>Gerado em ${geradoEm}</span></footer>`;
+
+    html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">`
+      + `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+      + `<title>${tituloManual}</title><style>${CSS}</style></head><body>`
+      + `<div class="folha">${html}${rodape}</div></body></html>`;
 
     return new Response(JSON.stringify({ html }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
