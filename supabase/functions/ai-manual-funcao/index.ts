@@ -474,11 +474,14 @@ INSTRUÇÕES OBRIGATÓRIAS:
   /* O chip do número NÃO usa flex de propósito: o PDF é rasterizado por
      html2canvas, que centraliza flex de forma errada e cortava o número.
      line-height + text-align resolvem igual e renderizam certo. */
+  /* Número da seção — texto simples, SEM pílula de fundo.
+     O html2canvas posiciona texto pela baseline e o fundo do inline-block
+     não acompanha: nas três tentativas anteriores (flex, altura fixa +
+     line-height, padding) o número saiu cortado ou invisível dentro do
+     chip. Número colorido resolve, renderiza sempre e continua legível. */
   .num{
-    display:inline-block; padding:1px 8px; margin-right:9px;
-    border-radius:5px; background:var(--primaria); color:#fff;
-    font-size:9pt; font-weight:700;
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    color:var(--accent); font-weight:800;
+    margin-right:7px; font-size:11.5pt;
   }
   .grupo-titulo{
     font-size:10pt; font-weight:600; color:var(--tinta);

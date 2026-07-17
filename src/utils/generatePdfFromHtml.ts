@@ -444,8 +444,12 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       throw new Error("Não foi possível renderizar o manual para PDF.");
     }
 
-    // CSS px -> canvas px (html2canvas aplica o scale)
-    const cssToCanvas = canvas.height / (contentDiv.offsetHeight || 1);
+    // CSS px -> canvas px. Derivado da LARGURA de propósito: a altura tem
+    // ambiguidade (offsetHeight x scrollHeight) e errar a escala aqui joga
+    // TODOS os pontos de quebra para o lugar errado — era o que cortava o
+    // título "Erros e Riscos" ao meio entre as páginas 4 e 5. A largura é
+    // fixa (604px) e o html2canvas escala os dois eixos igualmente.
+    const cssToCanvas = canvas.width / (contentDiv.offsetWidth || 604);
     const breakPoints = Array.from(
       new Set(breakPointsCss.map((v) => Math.round(v * cssToCanvas)))
     )
@@ -474,6 +478,31 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         const cabem = breakPoints.filter((b) => b > minAproveitamento && b <= y + sliceH);
         if (cabem.length) {
           sliceH = cabem[cabem.length - 1] - y;
+        } else {
+          // Nenhum bloco termina aqui (ex.: tabela mais alta que a página).
+          // Recua até uma faixa de linhas em branco, para não cortar letras
+          // ao meio nem partir descendentes (g, p, y).
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          if (ctx) {
+            const limite = Math.max(24, Math.floor(sliceH * 0.55));
+            let brancasSeguidas = 0;
+            for (let row = sliceH - 4; row >= limite; row -= 1) {
+              const linha = ctx.getImageData(0, y + row, canvas.width, 1).data;
+              let tinta = 0;
+              for (let i = 0; i < linha.length; i += 4) {
+                if (linha[i + 3] > 10 && (linha[i] < 245 || linha[i + 1] < 245 || linha[i + 2] < 245)) {
+                  tinta += 1;
+                  if (tinta > 2) break;
+                }
+              }
+              if (tinta <= 2) {
+                brancasSeguidas += 1;
+                if (brancasSeguidas >= 8) { sliceH = row + brancasSeguidas; break; }
+              } else {
+                brancasSeguidas = 0;
+              }
+            }
+          }
         }
       }
 
