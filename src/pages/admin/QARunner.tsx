@@ -6,12 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Play, Loader2, CheckCircle2, XCircle, AlertCircle,
-  CircleDashed, Clock, ChevronRight, Bot,
+  CircleDashed, Clock, ChevronRight, Bot, CalendarClock,
 } from "lucide-react";
 import {
-  useQaRunner, useQaResultados, type QaSituacao, type QaBateria,
+  useQaRunner, useQaResultados, useQaAgendamento,
+  type QaSituacao, type QaBateria,
 } from "@/hooks/useQaRunner";
 
 // ── aparência de cada situação ──────────────────────────
@@ -134,6 +137,111 @@ function Relatorio({ execucaoId }: { execucaoId: string }) {
   );
 }
 
+// ── card de agendamento ─────────────────────────────────
+function CardAgendamento() {
+  const { agendamento, carregando, salvar } = useQaAgendamento();
+  const [ligado, setLigado] = useState(false);
+  const [hora, setHora] = useState("03");
+  const [minuto, setMinuto] = useState("00");
+  const [tocado, setTocado] = useState(false);
+
+  // Sincroniza o estado local quando a config chega do banco (só uma vez).
+  if (agendamento && !tocado) {
+    if (
+      ligado !== agendamento.ligado ||
+      hora !== String(agendamento.hora).padStart(2, "0") ||
+      minuto !== String(agendamento.minuto).padStart(2, "0")
+    ) {
+      setLigado(agendamento.ligado);
+      setHora(String(agendamento.hora).padStart(2, "0"));
+      setMinuto(String(agendamento.minuto).padStart(2, "0"));
+    }
+  }
+
+  const aplicar = (novoLigado: boolean) => {
+    setTocado(true);
+    setLigado(novoLigado);
+    salvar.mutate({
+      ligado: novoLigado,
+      hora: Math.min(23, Math.max(0, parseInt(hora || "0", 10))),
+      minuto: Math.min(59, Math.max(0, parseInt(minuto || "0", 10))),
+      modulo: null, // agendamento roda todos os módulos
+    });
+  };
+
+  const salvarHorario = () => {
+    setTocado(true);
+    salvar.mutate({
+      ligado,
+      hora: Math.min(23, Math.max(0, parseInt(hora || "0", 10))),
+      minuto: Math.min(59, Math.max(0, parseInt(minuto || "0", 10))),
+      modulo: null,
+    });
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Rodar automaticamente</p>
+              <p className="text-xs text-muted-foreground">
+                {carregando
+                  ? "Carregando…"
+                  : ligado && agendamento?.proxima_execucao
+                  ? `Próxima: ${agendamento.proxima_execucao} · todos os módulos`
+                  : "Desligado — o robô só roda quando você clicar"}
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={ligado}
+            onCheckedChange={aplicar}
+            disabled={carregando || salvar.isPending}
+          />
+        </div>
+
+        {ligado && (
+          <div className="flex items-end gap-2 mt-4 pt-4 border-t">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Horário (todo dia)</label>
+              <div className="flex items-center gap-1">
+                <Input
+                  className="w-14 text-center"
+                  value={hora}
+                  onChange={(e) => setHora(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  inputMode="numeric"
+                />
+                <span className="text-muted-foreground">:</span>
+                <Input
+                  className="w-14 text-center"
+                  value={minuto}
+                  onChange={(e) => setMinuto(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  inputMode="numeric"
+                />
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={salvarHorario}
+              disabled={salvar.isPending}
+            >
+              {salvar.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                "Salvar horário"
+              )}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function QARunner() {
   const navigate = useNavigate();
   const { modulos, carregandoModulos, baterias, carregandoBaterias, disparar } =
@@ -210,6 +318,9 @@ export default function QARunner() {
           </p>
         </CardContent>
       </Card>
+
+      {/* agendamento */}
+      <CardAgendamento />
 
       {/* histórico */}
       <div className="space-y-3">

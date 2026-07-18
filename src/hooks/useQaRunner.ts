@@ -114,3 +114,52 @@ export function useQaResultados(execucaoId: string | null) {
     },
   });
 }
+
+export interface QaAgendamento {
+  ligado: boolean;
+  hora: number;
+  minuto: number;
+  modulo_path: string | null;
+  proxima_execucao: string | null;
+}
+
+/** Configuração do agendamento automático (superadmin). */
+export function useQaAgendamento() {
+  const qc = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["qa_agendamento"],
+    queryFn: async (): Promise<QaAgendamento | null> => {
+      const { data, error } = await rpc("qa_agendamento_ler");
+      if (error) throw error;
+      return (data?.[0] as QaAgendamento) ?? null;
+    },
+  });
+
+  const salvar = useMutation({
+    mutationFn: async (cfg: {
+      ligado: boolean;
+      hora: number;
+      minuto: number;
+      modulo: string | null;
+    }): Promise<string> => {
+      const { data, error } = await rpc("qa_agendamento_salvar", {
+        p_ligado: cfg.ligado,
+        p_hora: cfg.hora,
+        p_minuto: cfg.minuto,
+        p_modulo: cfg.modulo,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (msg) => {
+      qc.invalidateQueries({ queryKey: ["qa_agendamento"] });
+      toast.success(msg);
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar o agendamento");
+    },
+  });
+
+  return { agendamento: data, carregando: isLoading, salvar };
+}
