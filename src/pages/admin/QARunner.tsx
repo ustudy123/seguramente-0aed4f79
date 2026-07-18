@@ -137,106 +137,95 @@ function Relatorio({ execucaoId }: { execucaoId: string }) {
   );
 }
 
-// ── card de agendamento ─────────────────────────────────
+// ── uma linha da grade (um dia da semana) ───────────────
+function LinhaDia({
+  dia, onSalvar, salvando,
+}: {
+  dia: import("@/hooks/useQaRunner").QaDiaAgenda;
+  onSalvar: (d: { dia: number; ligado: boolean; hora: number; minuto: number }) => void;
+  salvando: boolean;
+}) {
+  const [hora, setHora] = useState(String(dia.hora).padStart(2, "0"));
+  const [minuto, setMinuto] = useState(String(dia.minuto).padStart(2, "0"));
+
+  const h = () => Math.min(23, Math.max(0, parseInt(hora || "0", 10)));
+  const m = () => Math.min(59, Math.max(0, parseInt(minuto || "0", 10)));
+
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <div className="w-20 shrink-0">
+        <Switch
+          checked={dia.ligado}
+          onCheckedChange={(v) => onSalvar({ dia: dia.dia_semana, ligado: v, hora: h(), minuto: m() })}
+          disabled={salvando}
+        />
+      </div>
+      <span className={`w-20 text-sm ${dia.ligado ? "font-medium" : "text-muted-foreground"}`}>
+        {dia.dia_nome}
+      </span>
+      {dia.ligado ? (
+        <div className="flex items-center gap-1">
+          <Input
+            className="w-12 h-8 text-center text-sm"
+            value={hora}
+            onChange={(e) => setHora(e.target.value.replace(/\D/g, "").slice(0, 2))}
+            onBlur={() => onSalvar({ dia: dia.dia_semana, ligado: true, hora: h(), minuto: m() })}
+            inputMode="numeric"
+          />
+          <span className="text-muted-foreground text-sm">:</span>
+          <Input
+            className="w-12 h-8 text-center text-sm"
+            value={minuto}
+            onChange={(e) => setMinuto(e.target.value.replace(/\D/g, "").slice(0, 2))}
+            onBlur={() => onSalvar({ dia: dia.dia_semana, ligado: true, hora: h(), minuto: m() })}
+            inputMode="numeric"
+          />
+        </div>
+      ) : (
+        <span className="text-xs text-muted-foreground">desligado</span>
+      )}
+    </div>
+  );
+}
+
+// ── card de agendamento (grade por dia) ─────────────────
 function CardAgendamento() {
-  const { agendamento, carregando, salvar } = useQaAgendamento();
-  const [ligado, setLigado] = useState(false);
-  const [hora, setHora] = useState("03");
-  const [minuto, setMinuto] = useState("00");
-  const [tocado, setTocado] = useState(false);
-
-  // Sincroniza o estado local quando a config chega do banco (só uma vez).
-  if (agendamento && !tocado) {
-    if (
-      ligado !== agendamento.ligado ||
-      hora !== String(agendamento.hora).padStart(2, "0") ||
-      minuto !== String(agendamento.minuto).padStart(2, "0")
-    ) {
-      setLigado(agendamento.ligado);
-      setHora(String(agendamento.hora).padStart(2, "0"));
-      setMinuto(String(agendamento.minuto).padStart(2, "0"));
-    }
-  }
-
-  const aplicar = (novoLigado: boolean) => {
-    setTocado(true);
-    setLigado(novoLigado);
-    salvar.mutate({
-      ligado: novoLigado,
-      hora: Math.min(23, Math.max(0, parseInt(hora || "0", 10))),
-      minuto: Math.min(59, Math.max(0, parseInt(minuto || "0", 10))),
-      modulo: null, // agendamento roda todos os módulos
-    });
-  };
-
-  const salvarHorario = () => {
-    setTocado(true);
-    salvar.mutate({
-      ligado,
-      hora: Math.min(23, Math.max(0, parseInt(hora || "0", 10))),
-      minuto: Math.min(59, Math.max(0, parseInt(minuto || "0", 10))),
-      modulo: null,
-    });
-  };
+  const { dias, proxima, carregando, salvarDia } = useQaAgendamento();
+  const algumLigado = dias.some((d) => d.ligado);
 
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="text-sm font-medium">Rodar automaticamente</p>
-              <p className="text-xs text-muted-foreground">
-                {carregando
-                  ? "Carregando…"
-                  : ligado && agendamento?.proxima_execucao
-                  ? `Próxima: ${agendamento.proxima_execucao} · todos os módulos`
-                  : "Desligado — o robô só roda quando você clicar"}
-              </p>
-            </div>
+        <div className="flex items-start gap-2 mb-2">
+          <CalendarClock className="h-4 w-4 text-muted-foreground mt-0.5" />
+          <div>
+            <p className="text-sm font-medium">Rodar automaticamente</p>
+            <p className="text-xs text-muted-foreground">
+              {carregando
+                ? "Carregando…"
+                : algumLigado && proxima
+                ? `Próxima: ${proxima} · todos os módulos`
+                : "Nenhum dia agendado — o robô só roda quando você clicar"}
+            </p>
           </div>
-          <Switch
-            checked={ligado}
-            onCheckedChange={aplicar}
-            disabled={carregando || salvar.isPending}
-          />
         </div>
 
-        {ligado && (
-          <div className="flex items-end gap-2 mt-4 pt-4 border-t">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Horário (todo dia)</label>
-              <div className="flex items-center gap-1">
-                <Input
-                  className="w-14 text-center"
-                  value={hora}
-                  onChange={(e) => setHora(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                  inputMode="numeric"
-                />
-                <span className="text-muted-foreground">:</span>
-                <Input
-                  className="w-14 text-center"
-                  value={minuto}
-                  onChange={(e) => setMinuto(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                  inputMode="numeric"
-                />
-              </div>
+        <div className="mt-3 divide-y">
+          {carregando ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+              <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={salvarHorario}
-              disabled={salvar.isPending}
-            >
-              {salvar.isPending ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                "Salvar horário"
-              )}
-            </Button>
-          </div>
-        )}
+          ) : (
+            dias.map((d) => (
+              <LinhaDia
+                key={d.dia_semana}
+                dia={d}
+                onSalvar={(x) => salvarDia.mutate(x)}
+                salvando={salvarDia.isPending}
+              />
+            ))
+          )}
+        </div>
       </CardContent>
     </Card>
   );

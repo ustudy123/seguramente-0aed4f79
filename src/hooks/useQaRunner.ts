@@ -115,51 +115,65 @@ export function useQaResultados(execucaoId: string | null) {
   });
 }
 
-export interface QaAgendamento {
+export interface QaDiaAgenda {
+  dia_semana: number;
+  dia_nome: string;
   ligado: boolean;
   hora: number;
   minuto: number;
-  modulo_path: string | null;
-  proxima_execucao: string | null;
 }
 
-/** Configuração do agendamento automático (superadmin). */
+/** Agendamento por dia da semana (superadmin). */
 export function useQaAgendamento() {
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["qa_agendamento"],
-    queryFn: async (): Promise<QaAgendamento | null> => {
-      const { data, error } = await rpc("qa_agendamento_ler");
+  const { data: dias = [], isLoading: carregando } = useQuery({
+    queryKey: ["qa_agendamento_dias"],
+    queryFn: async (): Promise<QaDiaAgenda[]> => {
+      const { data, error } = await rpc("qa_agendamento_ler_dias");
       if (error) throw error;
-      return (data?.[0] as QaAgendamento) ?? null;
+      return (data || []) as QaDiaAgenda[];
     },
   });
 
-  const salvar = useMutation({
-    mutationFn: async (cfg: {
+  const { data: proxima } = useQuery({
+    queryKey: ["qa_agendamento_proxima"],
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await rpc("qa_agendamento_proxima");
+      if (error) throw error;
+      // a rpc devolve um escalar; supabase embrulha em [{qa_agendamento_proxima: ...}]
+      if (Array.isArray(data)) {
+        const row = data[0] as Record<string, unknown> | undefined;
+        return (row ? Object.values(row)[0] : null) as string | null;
+      }
+      return (data as string) ?? null;
+    },
+  });
+
+  const salvarDia = useMutation({
+    mutationFn: async (d: {
+      dia: number;
       ligado: boolean;
       hora: number;
       minuto: number;
-      modulo: string | null;
     }): Promise<string> => {
-      const { data, error } = await rpc("qa_agendamento_salvar", {
-        p_ligado: cfg.ligado,
-        p_hora: cfg.hora,
-        p_minuto: cfg.minuto,
-        p_modulo: cfg.modulo,
+      const { data, error } = await rpc("qa_agendamento_salvar_dia", {
+        p_dia: d.dia,
+        p_ligado: d.ligado,
+        p_hora: d.hora,
+        p_minuto: d.minuto,
       });
       if (error) throw error;
       return data as string;
     },
-    onSuccess: (msg) => {
-      qc.invalidateQueries({ queryKey: ["qa_agendamento"] });
-      toast.success(msg);
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["qa_agendamento_dias"] });
+      qc.invalidateQueries({ queryKey: ["qa_agendamento_proxima"] });
     },
     onError: (e: unknown) => {
-      toast.error(e instanceof Error ? e.message : "Falha ao salvar o agendamento");
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar o dia");
     },
   });
 
-  return { agendamento: data, carregando: isLoading, salvar };
+  return { dias, proxima, carregando, salvarDia };
 }
