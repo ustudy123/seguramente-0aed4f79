@@ -62,6 +62,17 @@ function Placar({ b }: { b: QaBateria }) {
 function Relatorio({ execucaoId }: { execucaoId: string }) {
   const { data: resultados = [], isLoading } = useQaResultados(execucaoId);
 
+  // Ordem de leitura: o que exige acao primeiro (falhou, erro), depois o que
+  // passou, e por ultimo os "sem rotina" — que sao a lista de trabalho, nao
+  // um resultado. Dentro de cada grupo, por codigo.
+  const ordem: Record<QaSituacao, number> = {
+    falhou: 0, erro: 1, passou: 2, nao_implementado: 3,
+  };
+  const ordenados = [...resultados].sort(
+    (a, b) =>
+      ordem[a.situacao] - ordem[b.situacao] || a.codigo.localeCompare(b.codigo),
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
@@ -72,7 +83,7 @@ function Relatorio({ execucaoId }: { execucaoId: string }) {
 
   return (
     <div className="space-y-2">
-      {resultados.map((r) => {
+      {ordenados.map((r) => {
         const s = SITUACAO[r.situacao];
         const Icon = s.icon;
         const mostrarDetalhe =
@@ -128,15 +139,15 @@ export default function QARunner() {
   const { modulos, carregandoModulos, baterias, carregandoBaterias, disparar } =
     useQaRunner();
 
-  const [moduloSel, setModuloSel] = useState<string>("");
+  const [moduloSel, setModuloSel] = useState<string>("__todos__");
   const [abertaId, setAbertaId] = useState<string | null>(null);
 
   const totalCasos = modulos.reduce((n, m) => n + Number(m.casos_executaveis), 0);
 
   const rodar = async () => {
-    const alvo = moduloSel || modulos[0]?.modulo_path;
-    if (!alvo) return;
-    const id = await disparar.mutateAsync(alvo);
+    // "__todos__" roda o modulo padrao do motor (percorre tudo); senao, o escolhido.
+    const alvo = moduloSel === "__todos__" ? "" : moduloSel;
+    const id = await disparar.mutateAsync(alvo || modulos[0]?.modulo_path || "");
     setAbertaId(id); // abre o relatório da bateria recém-criada
   };
 
@@ -165,15 +176,12 @@ export default function QARunner() {
                 disabled={carregandoModulos || disparar.isPending}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      carregandoModulos
-                        ? "Carregando…"
-                        : `Todos os testáveis (${totalCasos} casos)`
-                    }
-                  />
+                  <SelectValue placeholder="Escolha o que rodar" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__todos__">
+                    Todos os módulos · {totalCasos} casos
+                  </SelectItem>
                   {modulos.map((m) => (
                     <SelectItem key={m.modulo_path} value={m.modulo_path}>
                       {m.label} · {m.casos_executaveis} casos

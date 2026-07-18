@@ -92,7 +92,7 @@ AS $$
     AND public.is_superadmin(auth.uid())
   ORDER BY
     CASE r.situacao WHEN 'falhou' THEN 0 WHEN 'erro' THEN 1
-                    WHEN 'nao_implementado' THEN 2 ELSE 3 END,
+                    WHEN 'passou' THEN 2 ELSE 3 END,
     r.codigo;
 $$;
 
