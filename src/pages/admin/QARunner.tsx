@@ -11,11 +11,13 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Play, Loader2, CheckCircle2, XCircle, AlertCircle,
   CircleDashed, Clock, ChevronRight, Bot, CalendarClock,
+  FileDown, Table2, Printer,
 } from "lucide-react";
 import {
   useQaRunner, useQaResultados, useQaAgendamento,
   type QaSituacao, type QaBateria,
 } from "@/hooks/useQaRunner";
+import { gerarPDF, gerarCSV, abrirImprimivel } from "@/lib/qaRelatorio";
 
 // ── aparência de cada situação ──────────────────────────
 const SITUACAO: Record<
@@ -57,6 +59,29 @@ function Placar({ b }: { b: QaBateria }) {
       {item(b.falhou, "falhou")}
       {item(b.erro, "erro")}
       {item(b.nao_implementado, "nao_implementado")}
+    </div>
+  );
+}
+
+// ── barra de exportação do relatório ────────────────────
+function BarraExportar({ bateria }: { bateria: QaBateria }) {
+  const { data: resultados = [], isLoading } = useQaResultados(bateria.id);
+  if (isLoading || resultados.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mb-3">
+      <span className="text-xs text-muted-foreground self-center mr-1">Relatório:</span>
+      <Button variant="outline" size="sm" className="h-7 text-xs"
+        onClick={() => gerarPDF(bateria, resultados)}>
+        <FileDown className="h-3 w-3 mr-1" /> PDF
+      </Button>
+      <Button variant="outline" size="sm" className="h-7 text-xs"
+        onClick={() => gerarCSV(bateria, resultados)}>
+        <Table2 className="h-3 w-3 mr-1" /> Planilha
+      </Button>
+      <Button variant="outline" size="sm" className="h-7 text-xs"
+        onClick={() => abrirImprimivel(bateria, resultados)}>
+        <Printer className="h-3 w-3 mr-1" /> Imprimir
+      </Button>
     </div>
   );
 }
@@ -366,6 +391,7 @@ export default function QARunner() {
                           {b.observacao}
                         </div>
                       )}
+                      <BarraExportar bateria={b} />
                       <Relatorio execucaoId={b.id} />
                     </div>
                   )}
