@@ -626,8 +626,14 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
       queryClient.invalidateQueries({ queryKey: ["afastamentos-ativos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      // Espelho do ponto: o trigger de DELETE reverte ponto_diario no banco;
+      // aqui invalidamos TODAS as queries que o espelho usa, para a tela
+      // refletir na hora, sem o usuário precisar recarregar.
       queryClient.invalidateQueries({ queryKey: ["ponto-atestados-dia"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-consolidado"] });
       toast.success("Atestado excluído com sucesso!");
     },
     onError: (error: Error) => {
