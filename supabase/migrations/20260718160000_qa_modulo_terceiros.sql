@@ -38,7 +38,7 @@ END $trava$;
 DO $seed$
 DECLARE v_mod uuid;
 BEGIN
-  SELECT id INTO v_mod FROM public.qa_modulos WHERE path='estrutura-organizacional/terceiros';
+  SELECT id INTO v_mod FROM public.qa_modulos WHERE path='estrutura-organizacional/prestadores';
   IF v_mod IS NULL THEN RAISE EXCEPTION 'Modulo terceiros nao encontrado.'; END IF;
 
   INSERT INTO public.qa_casos_teste (modulo_id, codigo, titulo, tipo, prioridade, status, nivel, objetivo, resultado_esperado)
@@ -206,7 +206,7 @@ INSERT INTO public.qa_implementacoes (codigo, funcao_sql) VALUES
 ON CONFLICT (codigo) DO UPDATE SET funcao_sql=EXCLUDED.funcao_sql, ativo=true;
 
 -- ── Rodar ──
-DO $roda$ BEGIN PERFORM public.qa_rodar_bateria('manual', 'estrutura-organizacional/terceiros'); END $roda$;
+DO $roda$ BEGIN PERFORM public.qa_rodar_bateria('manual', 'estrutura-organizacional/prestadores'); END $roda$;
 
 SELECT codigo, situacao::text, left(obtido, 58) AS resultado
 FROM public.qa_resultados
