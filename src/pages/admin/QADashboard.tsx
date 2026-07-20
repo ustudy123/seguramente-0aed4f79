@@ -456,14 +456,13 @@ export default function QADashboard() {
           </Button>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="agent" className="space-y-4">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="agent" className="gap-2">
-              <Bot className="w-4 h-4" /> Agente de Testes
-            </TabsTrigger>
+        {/* Tabs — a aba do agente antigo (que escrevia em cliente real via
+            OpenAI) foi retirada da interface. Testes agora sao pelo runner
+            novo, no botao 'Executar testes' do topo. So a Varredura fica. */}
+        <Tabs defaultValue="scan" className="space-y-4">
+          <TabsList className="grid w-full max-w-xs grid-cols-1">
             <TabsTrigger value="scan" className="gap-2">
-              <Database className="w-4 h-4" /> Varredura
+              <Database className="w-4 h-4" /> Varredura de integridade
             </TabsTrigger>
           </TabsList>
 
