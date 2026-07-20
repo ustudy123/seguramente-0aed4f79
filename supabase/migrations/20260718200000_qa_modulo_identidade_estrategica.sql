@@ -3,16 +3,17 @@
 --
 -- Primeiro item do bloco Planejamento & Gestão.
 --
--- CARACTERISTICA UNICA (lida do schema): tenant_id e UNIQUE.
---   => cada cliente tem UMA identidade (missao/visao/valores), nao varias.
---   Isso e o oposto dos modulos de Estrutura Organizacional (que eram
---   listas com muitos registros por cliente). Aqui o "proibido" e criar
---   uma SEGUNDA identidade para o mesmo cliente.
+-- CARACTERISTICA REAL (corrigida apos o robo pegar a divergencia):
+--   A migration de maio/2026 (20260506203450) REMOVEU o UNIQUE em tenant_id
+--   e trocou por UNIQUE (tenant_id, empresa_id) e (tenant_id, grupo_economico_id).
+--   DECISAO DE PRODUTO: identidade passou de "uma por cliente" para "uma por
+--   EMPRESA/grupo dentro do cliente". Um cliente com varias empresas tem uma
+--   missao/visao para cada. O caso IDE-020 testa a regra NOVA: nao pode haver
+--   duas identidades para a MESMA empresa (nao para o mesmo cliente).
 --
 -- Schema REAL:
---   estrategia_cultura: tenant_id UNIQUE, missao TEXT, visao TEXT,
---     valores JSONB, principios JSONB, comportamentos_* JSONB
---   Campos de texto sao opcionais (a identidade pode ser preenchida aos poucos).
+--   estrategia_cultura: tenant_id + empresa_id (UNIQUE parcial quando empresa
+--     nao e nula), missao TEXT, visao TEXT, valores JSONB, principios JSONB
 --
 -- IMPORTANTE para o teste: como o cercado (tenant qa-sandbox) pode JA ter
 -- uma identidade de rodadas anteriores, cada rotina limpa a identidade do
@@ -55,8 +56,8 @@ BEGIN
   (v_mod,'IDE-011','Valores como lista vazia e aceito','alternativo','baixa','aprovado','api',
    'Lista de valores pode comecar vazia.','Aceito com valores [].'),
   -- PROIBIDO
-  (v_mod,'IDE-020','Duas identidades para o mesmo cliente e proibido','negativo','alta','aprovado','api',
-   'tenant_id e UNIQUE: cada cliente tem UMA identidade.','Segunda identidade recusada.'),
+  (v_mod,'IDE-020','Duas identidades para a MESMA empresa e proibido','negativo','alta','aprovado','api',
+   'UNIQUE(tenant_id, empresa_id): cada empresa tem UMA identidade. Um cliente com varias empresas tem uma por empresa.','Segunda identidade para a mesma empresa recusada.'),
   (v_mod,'IDE-022','Identidade de outro cliente e invisivel','negativo','critica','aprovado','api',
    'Isolamento multi-tenant.','Identidade do tenant 1 invisivel ao tenant 2.')
   ON CONFLICT (codigo) DO NOTHING;
@@ -145,18 +146,22 @@ EXCEPTION WHEN OTHERS THEN r.situacao:='erro'; r.obtido:='Quebrou'; r.erro_tecni
 
 CREATE OR REPLACE FUNCTION public.qa_caso_ide_020()
 RETURNS public.qa_retorno LANGUAGE plpgsql AS $$
-DECLARE r public.qa_retorno; v_t uuid := public.qa_sandbox_tenant_id();
+DECLARE r public.qa_retorno; v_t uuid := public.qa_sandbox_tenant_id(); v_emp uuid;
 BEGIN
   PERFORM public.qa_modo_ligar();
   PERFORM public.qa_limpa_identidade(v_t);
-  r.passo_ordem:=1; r.passo_acao:='Criar a identidade do cliente'; r.esperado:='Segunda identidade para o MESMO cliente e recusada';
-  INSERT INTO public.estrategia_cultura (tenant_id, missao) VALUES (v_t, '[QA] Primeira Identidade');
-  r.passo_ordem:=2; r.passo_acao:='Tentar criar uma SEGUNDA identidade para o mesmo cliente';
+  -- cria uma empresa no cercado para amarrar a identidade
+  v_emp := public.qa_nova_empresa('[QA] Empresa Da Identidade', '33444555000199');
+  r.passo_ordem:=1; r.passo_acao:='Criar a identidade da EMPRESA'; r.esperado:='Segunda identidade para a MESMA empresa e recusada';
+  INSERT INTO public.estrategia_cultura (tenant_id, empresa_id, missao)
+  VALUES (v_t, v_emp, '[QA] Primeira Identidade da Empresa');
+  r.passo_ordem:=2; r.passo_acao:='Tentar uma SEGUNDA identidade para a mesma empresa';
   BEGIN
-    INSERT INTO public.estrategia_cultura (tenant_id, missao) VALUES (v_t, '[QA] Segunda Identidade');
-    r.situacao:='falhou'; r.obtido:='ACEITOU duas identidades para o mesmo cliente — o UNIQUE em tenant_id sumiu.';
+    INSERT INTO public.estrategia_cultura (tenant_id, empresa_id, missao)
+    VALUES (v_t, v_emp, '[QA] Segunda Identidade da Empresa');
+    r.situacao:='falhou'; r.obtido:='ACEITOU duas identidades para a mesma empresa — o UNIQUE (tenant, empresa) sumiu.';
   EXCEPTION WHEN unique_violation THEN
-    r.situacao:='passou'; r.obtido:='Recusado: cada cliente tem uma unica identidade, como esperado.';
+    r.situacao:='passou'; r.obtido:='Recusado: cada empresa tem uma unica identidade, como esperado.';
   END;
   RETURN r;
 EXCEPTION WHEN OTHERS THEN r.situacao:='erro'; r.obtido:='Quebrou'; r.erro_tecnico:=SQLERRM; RETURN r; END $$;
