@@ -446,7 +446,11 @@ export default function QADashboard() {
               Agente de testes automatizados + varredura de integridade
             </p>
           </div>
-          <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate("/admin/qa/docs")}>
+          <Button variant="default" size="sm" className="ml-auto" onClick={() => navigate("/admin/qa/runner")}>
+            <Play className="w-4 h-4 mr-2" />
+            Executar testes
+          </Button>
+          <Button variant="outline" size="sm" className="bg-background text-foreground" onClick={() => navigate("/admin/qa/docs")}>
             <FileText className="w-4 h-4 mr-2" />
             Documentação de testes
           </Button>
