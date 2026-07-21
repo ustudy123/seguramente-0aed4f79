@@ -727,7 +727,12 @@ const Ferias = () => {
                           <CommandItem key={c.id} value={c.nome_completo} onSelect={() => {
                             setNewSolicitacao(prev => ({
                               ...prev, colaborador: c.nome_completo,
-                              colaboradorCpf: c.cpf || "", colaboradorId: c.id || "",
+                              // colaboradorId NÃO recebe c.id: a lista vem de "admissoes",
+                              // mas a FK colaborador_id aponta para auth.users(id). O id de
+                              // uma admissão nunca existe em auth.users, então gravá-lo viola
+                              // a FK. A pessoa é identificada por nome + CPF, como no resto do
+                              // fluxo de férias. Fica nulo (a coluna aceita).
+                              colaboradorCpf: c.cpf || "", colaboradorId: "",
                               colaboradorEmpresaId: c.empresa_id || "",
                               departamento: c.departamento || "", salarioBase: (c as any).salario || 0,
                             }));
