@@ -38,6 +38,7 @@ interface AdmissaoDetailProps {
   onDocumentRemove: (documentoId: string) => void;
   onDocumentApprove?: (documentoId: string) => void;
   onDocumentReject?: (documentoId: string, motivo: string) => void;
+  onDocumentReplace?: (documentoId: string) => void;
   onAprovarEtapa?: (etapaId: string, observacao?: string) => void;
   onRejeitarEtapa?: (etapaId: string, observacao: string) => void;
   isAdmin?: boolean;
@@ -64,6 +65,7 @@ export function AdmissaoDetail({
   onDocumentRemove,
   onDocumentApprove,
   onDocumentReject,
+  onDocumentReplace,
   onAprovarEtapa,
   onRejeitarEtapa,
   isAdmin = false
@@ -255,6 +257,7 @@ export function AdmissaoDetail({
               onRemove={onDocumentRemove}
               onApprove={onDocumentApprove}
               onReject={onDocumentReject}
+              onReplace={onDocumentReplace}
               isAdmin={isAdmin}
             />
           </div>

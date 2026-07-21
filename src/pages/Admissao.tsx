@@ -353,6 +353,23 @@ export default function Admissao() {
     }
   };
 
+  // Reabre um documento já aprovado para substituição (aprovação por engano
+  // ou arquivo errado). Volta o status para 'enviado' — o arquivo atual
+  // permanece até o admin subir o novo, então cancelar o seletor não deixa o
+  // documento sem anexo. O upload do novo arquivo mantém o status 'enviado',
+  // exigindo nova aprovação.
+  const handleDocumentReplace = async (documentoId: string) => {
+    try {
+      await atualizarDocumento({
+        documentoId,
+        dados: { status: 'enviado', data_aprovacao: null, aprovado_por: null },
+      });
+      toast.info('Documento reaberto — envie o novo arquivo e aprove novamente.');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao reabrir documento');
+    }
+  };
+
   const handleDocumentReject = async (documentoId: string, motivo: string) => {
     try {
       await atualizarDocumento({
@@ -588,6 +605,7 @@ export default function Admissao() {
           onDocumentRemove={handleDocumentRemove}
           onDocumentApprove={handleDocumentApprove}
           onDocumentReject={handleDocumentReject}
+          onDocumentReplace={handleDocumentReplace}
           onAprovarEtapa={handleAprovarEtapa}
           onRejeitarEtapa={handleRejeitarEtapa}
           isAdmin={isAdmin}

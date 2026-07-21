@@ -1249,6 +1249,10 @@ function AdmissoesTab() {
     try { await atualizarDocumento({ documentoId, dados: { status: "aprovado" } }); toast.success("Documento aprovado!"); }
     catch (error: any) { toast.error(error.message || "Erro ao aprovar documento"); }
   };
+  const handleDocumentReplace = async (documentoId: string) => {
+    try { await atualizarDocumento({ documentoId, dados: { status: "enviado", data_aprovacao: null, aprovado_por: null } }); toast.info("Documento reaberto — envie o novo arquivo e aprove novamente."); }
+    catch (error: any) { toast.error(error.message || "Erro ao reabrir documento"); }
+  };
   const handleDocumentReject = async (documentoId: string, motivo: string) => {
     try { await atualizarDocumento({ documentoId, dados: { status: "rejeitado", observacao: motivo } }); toast.error("Documento rejeitado"); }
     catch (error: any) { toast.error(error.message || "Erro ao rejeitar documento"); }
@@ -1375,7 +1379,7 @@ function AdmissoesTab() {
           onBack={handleBack} onEdit={() => setViewMode("edit")}
           onDelete={() => handleDelete(selectedAdmissaoFormatted.id)}
           onDocumentUpload={handleDocumentUpload} onDocumentRemove={handleDocumentRemove}
-          onDocumentApprove={handleDocumentApprove} onDocumentReject={handleDocumentReject}
+          onDocumentApprove={handleDocumentApprove} onDocumentReject={handleDocumentReject} onDocumentReplace={handleDocumentReplace}
           onAprovarEtapa={handleAprovarEtapa} onRejeitarEtapa={handleRejeitarEtapa}
           isAdmin={isAdmin}
         />

@@ -45,6 +45,7 @@ interface DocumentUploadProps {
   onRemove: (documentoId: string) => void | Promise<void>;
   onApprove?: (documentoId: string) => void;
   onReject?: (documentoId: string, motivo: string) => void;
+  onReplace?: (documentoId: string) => void | Promise<void>;
   onToggleObrigatorio?: (documentoId: string, obrigatorio: boolean) => void;
   isAdmin?: boolean;
   editableObrigatorio?: boolean;
@@ -63,6 +64,7 @@ function DocumentItem({
   onRemove,
   onApprove,
   onReject,
+  onReplace,
   onToggleObrigatorio,
   isAdmin,
   editableObrigatorio 
@@ -72,6 +74,7 @@ function DocumentItem({
   onRemove: () => void | Promise<void>;
   onApprove?: () => void;
   onReject?: (motivo: string) => void;
+  onReplace?: () => void | Promise<void>;
   onToggleObrigatorio?: (obrigatorio: boolean) => void;
   isAdmin?: boolean;
   editableObrigatorio?: boolean;
@@ -287,15 +290,20 @@ function DocumentItem({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Input de arquivo sempre montado quando dá para enviar/substituir.
+              Antes só existia no status 'pendente', então documento aprovado
+              não tinha como receber novo arquivo. */}
+          {(documento.status === 'pendente' || (isAdmin && documento.status === 'aprovado')) && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            />
+          )}
           {documento.status === 'pendente' && (
             <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              />
               <Button
                 size="sm"
                 variant="outline"
@@ -303,6 +311,33 @@ function DocumentItem({
               >
                 <Upload className="h-4 w-4 mr-1" />
                 Enviar
+              </Button>
+            </>
+          )}
+
+          {/* Documento aprovado: admin pode substituir o anexo ou remover.
+              Corrige o caso de aprovação por engano / arquivo errado, que
+              antes ficava travado sem nenhuma ação disponível. Substituir
+              reabre para nova aprovação (onReplace volta o status a
+              'enviado'); remover limpa o anexo (volta a 'pendente'). */}
+          {documento.status === 'aprovado' && isAdmin && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => { e.stopPropagation(); onReplace?.(); fileInputRef.current?.click(); }}
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                Substituir
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                title="Remover anexo e voltar para pendente"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </>
           )}
@@ -453,6 +488,7 @@ export function DocumentUpload({
                 documento={doc}
                 onUpload={(file) => onUpload(doc.id, file)}
                 onRemove={() => onRemove(doc.id)}
+                onReplace={onReplace ? () => onReplace(doc.id) : undefined}
                 onApprove={() => onApprove?.(doc.id)}
                 onReject={(motivo) => onReject?.(doc.id, motivo)}
                 onToggleObrigatorio={(obrigatorio) => onToggleObrigatorio?.(doc.id, obrigatorio)}
@@ -506,6 +542,7 @@ export function DocumentUpload({
                   documento={doc}
                   onUpload={(file) => onUpload(doc.id, file)}
                   onRemove={() => onRemove(doc.id)}
+                onReplace={onReplace ? () => onReplace(doc.id) : undefined}
                   onApprove={() => onApprove?.(doc.id)}
                   onReject={(motivo) => onReject?.(doc.id, motivo)}
                   isAdmin={isAdmin}
@@ -531,6 +568,7 @@ export function DocumentUpload({
                   documento={doc}
                   onUpload={(file) => onUpload(doc.id, file)}
                   onRemove={() => onRemove(doc.id)}
+                onReplace={onReplace ? () => onReplace(doc.id) : undefined}
                   onApprove={() => onApprove?.(doc.id)}
                   onReject={(motivo) => onReject?.(doc.id, motivo)}
                   isAdmin={isAdmin}
