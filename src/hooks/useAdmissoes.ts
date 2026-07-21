@@ -120,7 +120,12 @@ export function useAdmissoes() {
 
       if (admissaoError) throw admissaoError;
 
-      // Insert default documents
+      // Insert default documents (idempotente: upsert em (admissao_id, nome)).
+      // Antes era .insert() puro — se este fluxo rodasse duas vezes para a
+      // mesma admissão (duplo clique, retry, re-render), inseria os
+      // documentos obrigatórios de novo e dobrava a lista (18 no lugar de 9).
+      // O upsert, ancorado no índice único admissao_documentos_admissao_nome_uidx,
+      // não recria o que já existe.
       const documentosToInsert: AdmissaoDocumentoInsert[] = DOCUMENTOS_OBRIGATORIOS.map(doc => ({
         admissao_id: admissao.id,
         tenant_id: tenantId,
@@ -132,7 +137,7 @@ export function useAdmissoes() {
 
       const { data: documentos, error: docsError } = await supabase
         .from('admissao_documentos')
-        .insert(documentosToInsert)
+        .upsert(documentosToInsert, { onConflict: 'admissao_id,nome', ignoreDuplicates: true })
         .select();
 
       if (docsError) throw docsError;
