@@ -28,6 +28,14 @@ export interface QaBateria {
   disparada_por_nome: string | null;
 }
 
+export interface QaPasso {
+  ordem: number;
+  acao: string;
+  dados?: string;
+  onde_na_tela?: string;
+  resultado_esperado?: string;
+}
+
 export interface QaResultado {
   codigo: string;
   situacao: QaSituacao;
@@ -37,6 +45,13 @@ export interface QaResultado {
   obtido: string | null;
   erro_tecnico: string | null;
   duracao_ms: number | null;
+  // conteúdo rico do caso (para o relatório detalhado)
+  titulo?: string | null;
+  objetivo?: string | null;
+  pre_condicoes?: string | null;
+  passos?: QaPasso[] | null;
+  resultado_esperado?: string | null;
+  observacoes?: string | null;
 }
 
 export interface QaModuloTestavel {

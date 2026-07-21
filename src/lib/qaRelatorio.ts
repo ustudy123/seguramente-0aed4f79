@@ -91,23 +91,59 @@ export function gerarPDF(bateria: QaBateria, resultados: QaResultado[]) {
     y += 6;
     doc.setFontSize(8);
     problemas.forEach((r) => {
-      if (y > 270) { doc.addPage(); y = 20; }
+      if (y > 260) { doc.addPage(); y = 20; }
       doc.setTextColor(0);
       doc.setFont(undefined, "bold");
-      doc.text(`${r.codigo}`, 14, y); y += 4;
+      doc.text(`${r.codigo}${r.titulo ? " — " + r.titulo : ""}`, 14, y); y += 4;
       doc.setFont(undefined, "normal");
+
+      // objetivo (o porquê)
+      if (r.objetivo) {
+        doc.setTextColor(80);
+        const l = doc.splitTextToSize(`Objetivo: ${r.objetivo}`, 178);
+        doc.text(l, 16, y); y += 4 * l.length;
+      }
+      // onde falhou
+      doc.setTextColor(150, 30, 30);
+      if (r.passo_acao) {
+        const l = doc.splitTextToSize(`Falhou no passo ${r.passo_ordem}: ${r.passo_acao}`, 178);
+        doc.text(l, 16, y); y += 4 * l.length;
+      }
       doc.setTextColor(80);
-      if (r.passo_acao) { doc.text(`Passo: ${r.passo_acao}`, 16, y); y += 4; }
-      if (r.esperado) { doc.text(`Esperado: ${r.esperado}`, 16, y); y += 4; }
-      if (r.obtido) {
-        const linhas = doc.splitTextToSize(`Obtido: ${r.obtido}`, 178);
-        doc.text(linhas, 16, y); y += 4 * linhas.length;
+      if (r.esperado) { const l = doc.splitTextToSize(`Esperava: ${r.esperado}`, 178); doc.text(l, 16, y); y += 4 * l.length; }
+      if (r.obtido) { const l = doc.splitTextToSize(`Obteve: ${r.obtido}`, 178); doc.text(l, 16, y); y += 4 * l.length; }
+      // impacto e correção
+      if (r.observacoes) {
+        doc.setTextColor(140, 90, 0);
+        const l = doc.splitTextToSize(r.observacoes, 178);
+        if (y + 4 * l.length > 280) { doc.addPage(); y = 20; }
+        doc.text(l, 16, y); y += 4 * l.length;
+      }
+      // passo a passo para reproduzir
+      if (r.passos && r.passos.length > 0) {
+        doc.setTextColor(0);
+        doc.setFont(undefined, "bold");
+        if (y > 265) { doc.addPage(); y = 20; }
+        doc.text("Passo a passo para reproduzir:", 16, y); y += 4;
+        doc.setFont(undefined, "normal");
+        doc.setTextColor(80);
+        r.passos.forEach((p) => {
+          if (y > 275) { doc.addPage(); y = 20; }
+          const partes = [`${p.ordem}. ${p.acao}`];
+          if (p.onde_na_tela && p.onde_na_tela !== "-") partes.push(`   Onde: ${p.onde_na_tela}`);
+          if (p.dados && p.dados !== "-") partes.push(`   Dados: ${p.dados}`);
+          if (p.resultado_esperado) partes.push(`   Esperado: ${p.resultado_esperado}`);
+          const l = doc.splitTextToSize(partes.join("\n"), 176);
+          doc.text(l, 18, y); y += 4 * l.length;
+        });
       }
       if (r.erro_tecnico) {
-        const linhas = doc.splitTextToSize(`Técnico: ${r.erro_tecnico}`, 178);
-        doc.setTextColor(150); doc.text(linhas, 16, y); y += 4 * linhas.length;
+        doc.setTextColor(150);
+        const l = doc.splitTextToSize(`Técnico: ${r.erro_tecnico}`, 178);
+        if (y + 4 * l.length > 285) { doc.addPage(); y = 20; }
+        doc.text(l, 16, y); y += 4 * l.length;
       }
-      y += 3;
+      y += 4;
     });
   }
 
@@ -120,10 +156,13 @@ export function gerarPDF(bateria: QaBateria, resultados: QaResultado[]) {
 export function gerarCSV(bateria: QaBateria, resultados: QaResultado[]) {
   const linhas = ordenar(resultados).map((r) => ({
     Caso: r.codigo,
+    Titulo: r.titulo || "",
     Situacao: SIT_LABEL[r.situacao] || r.situacao,
-    Passo: r.passo_acao || "",
+    Objetivo: r.objetivo || "",
+    Passo_que_falhou: r.passo_acao || "",
     Esperado: r.esperado || "",
     Obtido: r.obtido || "",
+    Impacto_e_correcao: r.observacoes || "",
     Erro_tecnico: r.erro_tecnico || "",
     Duracao_ms: r.duracao_ms ?? "",
   }));

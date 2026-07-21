@@ -135,23 +135,64 @@ function Relatorio({ execucaoId }: { execucaoId: string }) {
             </div>
 
             {mostrarDetalhe && (
-              <div className="mt-2 ml-6 space-y-1 text-xs">
+              <div className="mt-2 ml-6 space-y-2 text-xs">
+                {/* onde falhou */}
                 {r.passo_acao && (
-                  <p>
-                    <span className="text-muted-foreground">Passo que falhou: </span>
-                    {r.passo_acao}
+                  <p className="font-medium text-red-700">
+                    ⚠ Falhou no passo {r.passo_ordem}: {r.passo_acao}
                   </p>
                 )}
                 {r.esperado && (
-                  <p>
-                    <span className="text-muted-foreground">Esperado: </span>
-                    {r.esperado}
-                  </p>
+                  <p><span className="text-muted-foreground">Esperava: </span>{r.esperado}</p>
+                )}
+                {r.obtido && (
+                  <p><span className="text-muted-foreground">Obteve: </span>{r.obtido}</p>
                 )}
                 {r.erro_tecnico && (
                   <p className="font-mono text-orange-700 bg-orange-50 rounded px-2 py-1">
                     {r.erro_tecnico}
                   </p>
+                )}
+
+                {/* impacto e correção (observacoes do caso) */}
+                {r.observacoes && (
+                  <p className="text-amber-800 bg-amber-50 rounded px-2 py-1">
+                    {r.observacoes}
+                  </p>
+                )}
+
+                {/* passo a passo completo detalhado (expansível) */}
+                {r.passos && r.passos.length > 0 && (
+                  <details className="mt-1">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                      Ver o passo a passo completo para reproduzir
+                    </summary>
+                    <div className="mt-2 space-y-2 border-l-2 border-muted pl-3">
+                      {r.objetivo && (
+                        <p><span className="font-medium">Objetivo: </span>{r.objetivo}</p>
+                      )}
+                      {r.pre_condicoes && (
+                        <p><span className="font-medium">Pré-condições: </span>{r.pre_condicoes}</p>
+                      )}
+                      {r.passos.map((p) => (
+                        <div key={p.ordem} className={`rounded px-2 py-1 ${p.ordem === r.passo_ordem ? "bg-red-50 border border-red-200" : "bg-muted/40"}`}>
+                          <p className="font-medium">
+                            Passo {p.ordem}: {p.acao}
+                            {p.ordem === r.passo_ordem && <span className="text-red-700"> ← falhou aqui</span>}
+                          </p>
+                          {p.onde_na_tela && p.onde_na_tela !== "-" && (
+                            <p className="text-muted-foreground">Onde: {p.onde_na_tela}</p>
+                          )}
+                          {p.dados && p.dados !== "-" && (
+                            <p className="text-muted-foreground">Dados: {p.dados}</p>
+                          )}
+                          {p.resultado_esperado && (
+                            <p className="text-muted-foreground">Esperado: {p.resultado_esperado}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
                 )}
               </div>
             )}
