@@ -451,6 +451,7 @@ export function DocumentUpload({
   onRemove,
   onApprove,
   onReject,
+  onReplace,
   onToggleObrigatorio,
   isAdmin = false,
   editableObrigatorio = false
