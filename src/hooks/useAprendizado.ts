@@ -38,11 +38,48 @@ export function useAprendizado(cargoId?: string) {
     enabled: !!tenantId && !!cargoId,
   });
 
+  // Normalização de enums (frequencia/complexidade/classificacao). A IA de
+  // importação devolve texto livre ("Crítica", "Quinzenal", "Muito alta");
+  // as colunas são ENUMs do Postgres. Sem isto, um valor fora do enum faz o
+  // INSERT falhar — e no lote tudo-ou-nada, uma linha derruba todas.
+  const semAcento = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const normFrequencia = (v?: string): string => {
+    const k = semAcento(v || "");
+    if (["diaria", "diario", "diariamente"].includes(k)) return "diaria";
+    if (["semanal", "semanalmente"].includes(k)) return "semanal";
+    if (["mensal", "mensalmente", "quinzenal", "bimestral", "trimestral"].includes(k)) return "mensal";
+    if (["eventual", "esporadica", "esporadico", "ocasional", "quando necessario", "sob demanda"].includes(k)) return "eventual";
+    return ["diaria", "semanal", "mensal", "eventual"].includes(k) ? k : "diaria";
+  };
+  const normComplexidade = (v?: string): string => {
+    const k = semAcento(v || "");
+    if (["baixa", "baixo", "simples", "facil"].includes(k)) return "baixa";
+    if (["alta", "alto", "muito alta", "muito alto", "complexa", "complexo", "dificil"].includes(k)) return "alta";
+    if (["media", "medio", "moderada", "moderado", "intermediaria"].includes(k)) return "media";
+    return ["baixa", "media", "alta"].includes(k) ? k : "media";
+  };
+  const normClassificacao = (v?: string): string => {
+    const k = semAcento(v || "");
+    if (["rotineira", "rotina", "rotineiro", "operacional"].includes(k)) return "rotineira";
+    if (["critica", "critico", "essencial", "estrategica", "estrategico", "importante"].includes(k)) return "critica";
+    if (["excepcional", "excecao", "extraordinaria", "extraordinario", "rara", "raro"].includes(k)) return "excepcional";
+    return ["rotineira", "critica", "excepcional"].includes(k) ? k : "rotineira";
+  };
+
   const criarAtividadeMut = useMutation({
     mutationFn: async (input: Partial<FuncaoAtividade> & { nome: string }) => {
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
+      const { frequencia, complexidade, classificacao, ...resto } = input;
       const { data, error } = await fromTable("funcao_atividades")
-        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as any)
+        .insert({
+          tenant_id: tenantId,
+          cargo_id: cargoId,
+          ...resto,
+          ...(frequencia !== undefined ? { frequencia: normFrequencia(frequencia as any) } : {}),
+          ...(complexidade !== undefined ? { complexidade: normComplexidade(complexidade as any) } : {}),
+          ...(classificacao !== undefined ? { classificacao: normClassificacao(classificacao as any) } : {}),
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -59,11 +96,26 @@ export function useAprendizado(cargoId?: string) {
   // Antes, importar N atividades fazia N chamadas em série (for + await
   // criarAtividade), N refetch e N toasts — lento, e qualquer falha no meio
   // derrubava o restante ("Erro ao importar atividades" com 28+, ok com 4).
+  //
+  // frequencia/complexidade/classificacao são ENUMS do Postgres (valores
+  // fixos). A IA extrai esses campos como texto e às vezes devolve algo fora
+  // do enum — "Crítica" (com acento/maiúscula), "Quinzenal", "Muito alta" —
+  // e o INSERT rejeita a linha. Como o lote é tudo-ou-nada, UMA linha
+  // invalida derrubava as 21. Por isso normalizamos antes de gravar
+  // (normFrequencia/normComplexidade/normClassificacao, no topo do hook).
   const criarAtividadesLoteMut = useMutation({
     mutationFn: async (itens: Array<Partial<FuncaoAtividade> & { nome: string }>) => {
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
       if (!itens.length) return [];
-      const linhas = itens.map((it) => ({ tenant_id: tenantId, cargo_id: cargoId, ...it }));
+      const linhas = itens.map((it) => ({
+        tenant_id: tenantId,
+        cargo_id: cargoId,
+        nome: it.nome,
+        descricao: (it as any).descricao ?? null,
+        frequencia: normFrequencia(it.frequencia as any),
+        complexidade: normComplexidade(it.complexidade as any),
+        classificacao: normClassificacao(it.classificacao as any),
+      }));
       const { data, error } = await fromTable("funcao_atividades")
         .insert(linhas as any)
         .select();

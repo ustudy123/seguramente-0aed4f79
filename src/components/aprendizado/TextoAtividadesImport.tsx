@@ -144,8 +144,9 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
       await onImportar(selecionadas.map(({ selecionada, ...rest }) => rest));
       toast.success(`${selecionadas.length} atividade(s) importada(s) com sucesso!`);
       handleClose();
-    } catch {
-      toast.error("Erro ao importar atividades");
+    } catch (e: any) {
+      console.error("Falha ao importar atividades:", e);
+      toast.error(e?.message ? `Erro ao importar: ${e.message}` : "Erro ao importar atividades");
     } finally {
       setImportando(false);
     }
