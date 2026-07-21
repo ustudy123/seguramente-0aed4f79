@@ -19,10 +19,42 @@ export default function FeriasAssinatura() {
   const [signed, setSigned] = useState(false);
   const [showSignPad, setShowSignPad] = useState(false);
   const sigCanvasRef = useRef<SignatureCanvas>(null);
+  const [docHtml, setDocHtml] = useState<string | null>(null);
 
   useEffect(() => {
     if (token) fetchData();
   }, [token]);
+
+  // Busca o conteúdo do documento e injeta via srcDoc. Documentos antigos
+  // foram salvos no storage com Content-Type errado (text/plain), e o iframe
+  // por src respeita esse header — por isso apareciam com o HTML cru e os
+  // acentos quebrados. Buscando o texto e forçando via srcDoc, o navegador
+  // renderiza como HTML independentemente de como o arquivo foi salvo.
+  useEffect(() => {
+    const url = data?.documento_url;
+    if (!url) { setDocHtml(null); return; }
+    let ativo = true;
+    (async () => {
+      try {
+        const res = await fetch(url);
+        let texto = await res.text();
+        // Garante charset mesmo se o arquivo antigo não declarava.
+        if (!/<meta[^>]+charset/i.test(texto)) {
+          texto = texto.replace(
+            /<head(\s[^>]*)?>/i,
+            (m) => `${m}<meta charset="utf-8">`
+          );
+          if (!/<head/i.test(texto)) {
+            texto = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${texto}</body></html>`;
+          }
+        }
+        if (ativo) setDocHtml(texto);
+      } catch {
+        if (ativo) setDocHtml(null); // cai no fallback por src
+      }
+    })();
+    return () => { ativo = false; };
+  }, [data?.documento_url]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -185,13 +217,23 @@ export default function FeriasAssinatura() {
               <CardTitle className="text-sm font-medium">Documento do Aviso</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <iframe
-                src={data.documento_url}
-                className="w-full border-0 rounded-b-lg"
-                style={{ height: "60vh" }}
-                title="Aviso de Férias"
-                sandbox="allow-same-origin"
-              />
+              {docHtml ? (
+                <iframe
+                  srcDoc={docHtml}
+                  className="w-full border-0 rounded-b-lg"
+                  style={{ height: "60vh" }}
+                  title="Aviso de Férias"
+                  sandbox="allow-same-origin"
+                />
+              ) : (
+                <iframe
+                  src={data.documento_url}
+                  className="w-full border-0 rounded-b-lg"
+                  style={{ height: "60vh" }}
+                  title="Aviso de Férias"
+                  sandbox="allow-same-origin"
+                />
+              )}
             </CardContent>
           </Card>
         )}
