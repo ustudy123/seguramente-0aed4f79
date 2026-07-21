@@ -32,7 +32,7 @@ const TIPO_FERRAMENTA_LABELS: Record<string, string> = { sistema: "Sistema", sof
 
 export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSectionProps) {
   const {
-    atividades, criarAtividade, atualizarAtividade, atualizandoAtividade, excluirAtividade, criandoAtividade,
+    atividades, criarAtividade, criarAtividadesLote, atualizarAtividade, atualizandoAtividade, excluirAtividade, criandoAtividade,
     responsabilidades, salvarResponsabilidade,
     conteudos, criarConteudo, excluirConteudo,
     ferramentas, criarFerramenta, excluirFerramenta,
@@ -100,29 +100,29 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
           <AudioAtividadesImport
             funcaoNome={funcaoNome}
             onImportar={async (atividades) => {
-              for (const at of atividades) {
-                await criarAtividade({
+              await criarAtividadesLote(
+                atividades.map((at) => ({
                   nome: at.nome,
                   descricao: at.descricao,
                   frequencia: at.frequencia as any,
                   complexidade: at.complexidade as any,
                   classificacao: at.classificacao as any,
-                });
-              }
+                }))
+              );
             }}
           />
           <TextoAtividadesImport
             funcaoNome={funcaoNome}
             onImportar={async (atividades) => {
-              for (const at of atividades) {
-                await criarAtividade({
+              await criarAtividadesLote(
+                atividades.map((at) => ({
                   nome: at.nome,
                   descricao: at.descricao,
                   frequencia: at.frequencia as any,
                   complexidade: at.complexidade as any,
                   classificacao: at.classificacao as any,
-                });
-              }
+                }))
+              );
             }}
           />
           {(() => {

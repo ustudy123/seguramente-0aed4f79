@@ -55,6 +55,29 @@ export function useAprendizado(cargoId?: string) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Importação em lote: um único INSERT com todas as atividades.
+  // Antes, importar N atividades fazia N chamadas em série (for + await
+  // criarAtividade), N refetch e N toasts — lento, e qualquer falha no meio
+  // derrubava o restante ("Erro ao importar atividades" com 28+, ok com 4).
+  const criarAtividadesLoteMut = useMutation({
+    mutationFn: async (itens: Array<Partial<FuncaoAtividade> & { nome: string }>) => {
+      if (!tenantId || !cargoId) throw new Error("Sem contexto");
+      if (!itens.length) return [];
+      const linhas = itens.map((it) => ({ tenant_id: tenantId, cargo_id: cargoId, ...it }));
+      const { data, error } = await fromTable("funcao_atividades")
+        .insert(linhas as any)
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["funcao_atividades", cargoId] });
+      const n = Array.isArray(data) ? data.length : 0;
+      toast.success(`${n} atividade(s) importada(s) com sucesso!`);
+    },
+    onError: (e: Error) => toast.error("Erro ao importar atividades: " + e.message),
+  });
+
   const atualizarAtividadeMut = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<FuncaoAtividade> & { id: string }) => {
       const { error } = await fromTable("funcao_atividades")
@@ -525,6 +548,7 @@ export function useAprendizado(cargoId?: string) {
     atividades,
     loadingAtividades,
     criarAtividade: criarAtividadeMut.mutateAsync,
+    criarAtividadesLote: criarAtividadesLoteMut.mutateAsync,
     atualizarAtividade: atualizarAtividadeMut.mutateAsync,
     atualizandoAtividade: atualizarAtividadeMut.isPending,
     excluirAtividade: excluirAtividadeMut.mutateAsync,
