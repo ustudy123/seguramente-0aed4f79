@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fromTable } from "@/integrations/supabase/untypedClient";
+import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import type { RadarDimensao } from "@/types/psicossocial";
 
@@ -238,9 +239,31 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     staleTime: 60_000,
   });
 
+  // Respondentes REAIS por GHE — via função no servidor que cruza cpf_hash da
+  // resposta com a admissão (cargo/setor) sem expor CPF. Substitui o count
+  // inflado do agrupamento (que jogava cada resposta anônima em todos os GHE
+  // da campanha, por falta de ghe_id_snapshot).
+  const respondentesQuery = useQuery({
+    queryKey: ["psicossocial-respondentes-por-ghe", tenantId, idsKey],
+    enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("contar_respondentes_por_ghe", {
+        p_campanha_ids: campanhaIds,
+      });
+      if (error) throw error;
+      const map = new Map<string, number>();
+      (data ?? []).forEach((row: any) => {
+        if (row.ghe_id) map.set(row.ghe_id, Number(row.respondentes) || 0);
+      });
+      return map;
+    },
+  });
+
 
   const resultadosPorGHE = useMemo<ResultadoGHE[]>(() => {
     const data = query.data;
+    const respondentesReais = respondentesQuery.data ?? new Map<string, number>();
     const respostas = data?.respostas ?? [];
     const campanhasGhe = data?.campanhasGhe ?? [];
     const ghes = data?.ghes ?? [];
@@ -336,7 +359,9 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         ghe_id: realGheId,
         ghe_nome: g.nome,
         ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
-        count: g.count,
+        count: realGheId && respondentesReais.has(realGheId)
+          ? respondentesReais.get(realGheId)!   // respondentes reais por GHE (via cpf_hash)
+          : g.count,                             // fallback: agrupamento (pode inflar sem ghe snapshot)
         elegiveis: realGheId ? (elegiveisPorGhe.get(realGheId) ?? 0) : 0,
         radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
           subject,
@@ -358,7 +383,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           : [],
       };
     });
-  }, [query.data]);
+  }, [query.data, respondentesQuery.data]);
 
 
 
