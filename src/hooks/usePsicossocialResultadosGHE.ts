@@ -254,7 +254,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       if (error) throw error;
       const map = new Map<string, number>();
       (data ?? []).forEach((row: any) => {
-        if (row.ghe_id) map.set(row.ghe_id, Number(row.respondentes) || 0);
+        if (row.out_ghe_id) map.set(row.out_ghe_id, Number(row.out_respondentes) || 0);
       });
       return map;
     },
