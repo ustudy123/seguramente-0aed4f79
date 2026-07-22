@@ -57,6 +57,7 @@ export interface ResultadoGHE {
   ghe_nome: string;
   ghe_codigo?: string | null;
   count: number;
+  elegiveis: number;
   radar: RadarDimensao[];
   ipsMedio: number | null;
   campanhas: number;
@@ -91,6 +92,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           campanhasGhe: [] as CampanhaGheRow[],
           ghes: [] as GheRow[],
           composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>(),
+          elegiveisPorGhe: new Map<string, number>(),
         };
       }
 
@@ -123,6 +125,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
       let ghes: GheRow[] = [];
       const composicaoPorGhe = new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
+      const elegiveisPorGhe = new Map<string, number>();
 
       if (allGheIds.length > 0) {
         const [ghesRes, ghesCargosRes] = await Promise.all([
@@ -179,10 +182,43 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           }
           composicaoPorGhe.set(gc.ghe_id, entry);
         }
+
+        // Elegíveis por GHE — mesma regra da criação de GHE (GHEPanel):
+        // admissões ATIVAS cujo (cargo|departamento) casa com a composição do
+        // GHE. É este número que vai no PDF como "responderam X de Y", em vez
+        // do bug antigo que repetia o total de respondentes nos dois lados.
+        const admRes = await fromTable("admissoes")
+          .select("cargo, departamento, status")
+          .eq("tenant_id", tenantId);
+        if (admRes.error) throw admRes.error;
+        const ativos = (admRes.data ?? []).filter((a: any) => {
+          const s = (a.status || "").toLowerCase();
+          return !s || !["desligado", "demitido", "inativo"].includes(s);
+        });
+
+        // pares cargo|depto por GHE
+        const paresPorGhe = new Map<string, Set<string>>();
+        for (const gc of gheCargos) {
+          const cargo = (gc.cargo_id ? cargoNomeMap.get(gc.cargo_id) : "") || "";
+          const dept = (gc.departamento_id ? deptNomeMap.get(gc.departamento_id) : "") || "";
+          const key = `${cargo.trim().toLowerCase()}|${dept.trim().toLowerCase()}`;
+          const set = paresPorGhe.get(gc.ghe_id) ?? new Set<string>();
+          set.add(key);
+          paresPorGhe.set(gc.ghe_id, set);
+        }
+        for (const gId of allGheIds) {
+          const pares = paresPorGhe.get(gId);
+          if (!pares) { elegiveisPorGhe.set(gId, 0); continue; }
+          const n = ativos.filter((a: any) => {
+            const key = `${(a.cargo || "").trim().toLowerCase()}|${(a.departamento || "").trim().toLowerCase()}`;
+            return pares.has(key);
+          }).length;
+          elegiveisPorGhe.set(gId, n);
+        }
       }
 
 
-      return { respostas, campanhasGhe, ghes, composicaoPorGhe };
+      return { respostas, campanhasGhe, ghes, composicaoPorGhe, elegiveisPorGhe };
     },
     enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
     staleTime: 60_000,
@@ -195,6 +231,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     const campanhasGhe = data?.campanhasGhe ?? [];
     const ghes = data?.ghes ?? [];
     const composicaoPorGhe = data?.composicaoPorGhe ?? new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
+    const elegiveisPorGhe = data?.elegiveisPorGhe ?? new Map<string, number>();
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
@@ -286,6 +323,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         ghe_nome: g.nome,
         ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
         count: g.count,
+        elegiveis: realGheId ? (elegiveisPorGhe.get(realGheId) ?? 0) : 0,
         radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
           subject,
           value: Math.round(soma / n),

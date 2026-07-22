@@ -385,7 +385,8 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             doc.text(funcDeptoLines, ml, y);
             y += funcDeptoLines.length * 4;
             
-            doc.text(`Respondentes: responderam ${ghe.count} de ${ghe.count}`, ml, y);
+            const gheElegiveis = Math.max(ghe.elegiveis || 0, ghe.count);
+            doc.text(`Respondentes: responderam ${ghe.count} de ${gheElegiveis}`, ml, y);
             y += 5;
 
             // Agrega fatores por GHE
@@ -658,9 +659,10 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             const ipsGhe = g.ipsMedio != null
               ? (isSipro ? 100 - g.ipsMedio : g.ipsMedio)
               : 0;
+            const elegiveisGhe = Math.max(g.elegiveis || 0, g.count);
             return [
               sanitize(g.ghe_nome),
-              String(g.count),
+              `${g.count} de ${elegiveisGhe}`,
               `${ipsGhe}/100`,
               getIPSLabel(calcularIPSClassificacao(ipsGhe))
             ];
