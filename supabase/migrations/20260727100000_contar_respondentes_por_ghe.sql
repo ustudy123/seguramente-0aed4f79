@@ -22,6 +22,8 @@
 -- casa dentro da mesma campanha.
 -- =========================================================
 
+DROP FUNCTION IF EXISTS public.contar_respondentes_por_ghe(uuid[]);
+
 CREATE OR REPLACE FUNCTION public.contar_respondentes_por_ghe(p_campanha_ids uuid[])
 RETURNS TABLE (
   out_ghe_id       uuid,
