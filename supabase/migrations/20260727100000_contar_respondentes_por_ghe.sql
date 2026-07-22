@@ -77,7 +77,7 @@ BEGIN
       ON cm.tenant_id = a.tenant_id
      AND (cm.empresa_id IS NULL OR cm.empresa_id = a.empresa_id)
     WHERE a.cpf IS NOT NULL AND a.cpf <> ''
-      AND (a.status IS NULL OR lower(a.status) NOT IN ('desligado','demitido','inativo'))
+      AND (a.status IS NULL OR lower(a.status::text) NOT IN ('desligado','demitido','inativo'))
   ),
   -- Pares (cargo|depto) de cada GHE, por nome
   ghe_pares AS (
