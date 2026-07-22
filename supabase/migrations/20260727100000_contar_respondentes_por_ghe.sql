@@ -64,7 +64,10 @@ BEGIN
     SELECT
       cm.campanha_id,
       encode(
-        digest(regexp_replace(a.cpf, '[^0-9]', '', 'g') || '::' || cm.campanha_id::text, 'sha256'),
+        digest(
+          convert_to(regexp_replace(a.cpf, '[^0-9]', '', 'g') || '::' || cm.campanha_id::text, 'UTF8'),
+          'sha256'
+        ),
         'hex'
       ) AS cpf_hash,
       lower(trim(a.cargo))        AS cargo,
