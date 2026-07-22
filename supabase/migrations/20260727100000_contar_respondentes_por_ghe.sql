@@ -31,7 +31,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path TO 'public'
+SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_tenant uuid;
@@ -66,7 +66,7 @@ BEGIN
       encode(
         digest(
           convert_to(regexp_replace(a.cpf, '[^0-9]', '', 'g') || '::' || cm.campanha_id::text, 'UTF8'),
-          'sha256'
+          'sha256'::text
         ),
         'hex'
       ) AS cpf_hash,
