@@ -27,6 +27,7 @@ interface RespostaRow {
 interface CampanhaGheRow {
   id: string;
   ghe_ids: string[] | null;
+  empresa_id: string | null;
 }
 
 interface GheRow {
@@ -104,7 +105,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           .not("indicadores", "is", null),
 
         fromTable("questionario_psicossocial_campanhas")
-          .select("id, ghe_ids")
+          .select("id, ghe_ids, empresa_id")
           .eq("tenant_id", tenantId)
           .in("id", campanhaIds),
       ]);
@@ -187,9 +188,22 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         // admissões ATIVAS cujo (cargo|departamento) casa com a composição do
         // GHE. É este número que vai no PDF como "responderam X de Y", em vez
         // do bug antigo que repetia o total de respondentes nos dois lados.
-        const admRes = await fromTable("admissoes")
-          .select("cargo, departamento, status")
+        //
+        // IMPORTANTE: filtrar por empresa_id das campanhas. Sem isso, contava
+        // admissões de TODAS as empresas do tenant que casavam cargo/depto
+        // (ex.: outros supermercados com "Operador de Caixa"), inflando o Y —
+        // era o 49 no lugar de 25. O GHEPanel filtra por empresa_id; aqui
+        // reproduzimos usando as empresas das campanhas do relatório.
+        const empresaIds = Array.from(
+          new Set(campanhasGhe.map((c) => c.empresa_id).filter(Boolean) as string[])
+        );
+        let admQuery = fromTable("admissoes")
+          .select("cargo, departamento, status, empresa_id")
           .eq("tenant_id", tenantId);
+        if (empresaIds.length > 0) {
+          admQuery = admQuery.in("empresa_id", empresaIds);
+        }
+        const admRes = await admQuery;
         if (admRes.error) throw admRes.error;
         const ativos = (admRes.data ?? []).filter((a: any) => {
           const s = (a.status || "").toLowerCase();
