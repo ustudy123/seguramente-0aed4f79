@@ -81,6 +81,17 @@ BEGIN
     WHERE a.cpf IS NOT NULL AND a.cpf <> ''
       AND (a.status IS NULL OR lower(a.status::text) NOT IN ('desligado','demitido','inativo'))
   ),
+  -- GHEs SÓ das empresas envolvidas nas campanhas do relatório.
+  -- Sem isto, a função devolvia GHEs de todas as empresas do tenant (todos
+  -- zerados, porque as respostas não casam com eles) — a lista com
+  -- "Dors Alimentos", "KAIRO ARQUITETURA" etc.
+  ghes_empresa AS (
+    SELECT g.id AS ghe_id
+    FROM public.psicossocial_ghe g
+    JOIN camp cm
+      ON cm.tenant_id = g.tenant_id
+     AND (g.empresa_id IS NULL OR cm.empresa_id IS NULL OR g.empresa_id = cm.empresa_id)
+  ),
   -- Pares (cargo|depto) de cada GHE, por nome
   ghe_pares AS (
     SELECT
@@ -90,6 +101,7 @@ BEGIN
     FROM public.psicossocial_ghe_cargos gc
     JOIN public.cargos c        ON c.id = gc.cargo_id
     LEFT JOIN public.departamentos d ON d.id = gc.departamento_id
+    WHERE gc.ghe_id IN (SELECT ghe_id FROM ghes_empresa)
   ),
   -- Cada resposta -> admissão (pelo hash) -> GHE (pelo cargo|depto)
   resp AS (
