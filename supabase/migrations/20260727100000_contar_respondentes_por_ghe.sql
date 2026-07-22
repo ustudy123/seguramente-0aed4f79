@@ -24,10 +24,10 @@
 
 CREATE OR REPLACE FUNCTION public.contar_respondentes_por_ghe(p_campanha_ids uuid[])
 RETURNS TABLE (
-  ghe_id           uuid,
-  ghe_nome         text,
-  respondentes     bigint,
-  sem_ghe          bigint  -- respostas cujo CPF não casou nenhum GHE (diagnóstico)
+  out_ghe_id       uuid,
+  out_ghe_nome     text,
+  out_respondentes bigint,
+  out_sem_ghe      bigint  -- respostas cujo CPF não casou nenhum GHE (diagnóstico)
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
