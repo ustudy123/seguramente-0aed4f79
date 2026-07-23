@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { BarChart3, Lock, AlertTriangle, Info, CheckCheck, X } from "lucide-react";
+import { BarChart3, Lock, Info, CheckCheck, X, Repeat2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -71,7 +72,18 @@ export function SelecaoCampanhasModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Campanhas elegíveis a resultado, agrupadas por instrumento
+  const temResultado = (c: CampanhaPsicossocial) =>
+    (c.total_respostas || 0) >= getMinimoRespostas(c);
+
+  // Instrumento travado pela seleção atual
+  const instrumentoAtivo = useMemo(() => {
+    const primeira = campanhas.find(c => selecionadas.has(c.id));
+    return primeira ? (primeira.instrumento || "copsoq") : null;
+  }, [selecionadas, campanhas]);
+
+  // Campanhas agrupadas por instrumento.
+  // O grupo do instrumento em uso vem PRIMEIRO — senão o usuário vê uma lista
+  // toda bloqueada sem enxergar o que causou o bloqueio.
   const grupos = useMemo(() => {
     const mapa = new Map<string, CampanhaPsicossocial[]>();
     for (const c of campanhas) {
@@ -80,43 +92,47 @@ export function SelecaoCampanhasModal({
       arr.push(c);
       mapa.set(chave, arr);
     }
-    // Ordena cada grupo por data de início (mais recente primeiro)
     for (const arr of mapa.values()) {
       arr.sort((a, b) => (b.data_inicio || "").localeCompare(a.data_inicio || ""));
     }
-    return Array.from(mapa.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [campanhas]);
+    return Array.from(mapa.entries()).sort((a, b) => {
+      if (instrumentoAtivo) {
+        if (a[0] === instrumentoAtivo) return -1;
+        if (b[0] === instrumentoAtivo) return 1;
+      }
+      return b[1].length - a[1].length;
+    });
+  }, [campanhas, instrumentoAtivo]);
 
-  const temResultado = (c: CampanhaPsicossocial) =>
-    (c.total_respostas || 0) >= getMinimoRespostas(c);
-
-  // Instrumento travado pela primeira seleção
-  const instrumentoAtivo = useMemo(() => {
-    const primeira = campanhas.find(c => selecionadas.has(c.id));
-    return primeira ? (primeira.instrumento || "copsoq") : null;
-  }, [selecionadas, campanhas]);
-
-  const podeSelecionar = (c: CampanhaPsicossocial) => {
-    if (!temResultado(c)) return false;
-    if (!instrumentoAtivo) return true;
-    if (selecionadas.has(c.id)) return true;
-    return (c.instrumento || "copsoq") === instrumentoAtivo;
+  /** Bloqueio duro: sem respostas suficientes, não há o que mostrar. */
+  const bloqueioAnonimato = (c: CampanhaPsicossocial): string | null => {
+    if (temResultado(c)) return null;
+    const min = getMinimoRespostas(c);
+    const atual = c.total_respostas || 0;
+    return `Precisa de ${min} resposta${min !== 1 ? "s" : ""} para liberar a análise sem quebrar o anonimato — tem ${atual}.`;
   };
 
-  const motivoBloqueio = (c: CampanhaPsicossocial): string | null => {
-    if (!temResultado(c)) {
-      const min = getMinimoRespostas(c);
-      const atual = c.total_respostas || 0;
-      return `Precisa de ${min} resposta${min !== 1 ? "s" : ""} para liberar a análise sem quebrar o anonimato — tem ${atual}.`;
-    }
-    if (instrumentoAtivo && (c.instrumento || "copsoq") !== instrumentoAtivo && !selecionadas.has(c.id)) {
-      return `Instrumento diferente do já selecionado (${labelInstrumento(instrumentoAtivo)}). Escalas e dimensões não são comparáveis.`;
-    }
-    return null;
-  };
+  /** Instrumento incompatível: não bloqueia o clique, apenas troca o recorte. */
+  const instrumentoIncompativel = (c: CampanhaPsicossocial) =>
+    !!instrumentoAtivo &&
+    !selecionadas.has(c.id) &&
+    (c.instrumento || "copsoq") !== instrumentoAtivo;
 
   const toggle = (c: CampanhaPsicossocial) => {
-    if (!podeSelecionar(c)) return;
+    if (bloqueioAnonimato(c)) return;
+
+    // Clicar numa campanha de outro instrumento TROCA o recorte em vez de não
+    // fazer nada. Misturar instrumentos continua proibido, mas o usuário não
+    // fica preso sem entender o motivo.
+    if (instrumentoIncompativel(c)) {
+      setSelecionadas(new Set([c.id]));
+      toast.info(
+        `Recorte trocado para ${labelInstrumento(c.instrumento)} — a seleção anterior foi limpa.`,
+        { description: "Instrumentos diferentes não podem ser somados no mesmo índice." },
+      );
+      return;
+    }
+
     setSelecionadas(prev => {
       const next = new Set(prev);
       if (next.has(c.id)) next.delete(c.id);
@@ -149,6 +165,30 @@ export function SelecaoCampanhasModal({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Barra do recorte atual — deixa visível o que travou o instrumento */}
+        {instrumentoAtivo && (
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
+            <div className="flex-1 min-w-0 text-xs">
+              <span className="text-muted-foreground">Recorte atual: </span>
+              <strong>{labelInstrumento(instrumentoAtivo)}</strong>
+              <span className="text-muted-foreground">
+                {" · "}
+                {selecionadas.size} campanha{selecionadas.size !== 1 ? "s" : ""} marcada
+                {selecionadas.size !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1.5 shrink-0"
+              onClick={() => setSelecionadas(new Set())}
+            >
+              <Repeat2 className="h-3.5 w-3.5" />
+              Trocar instrumento
+            </Button>
+          </div>
+        )}
+
         {totalElegivel === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
             <Lock className="h-8 w-8 text-muted-foreground" />
@@ -170,12 +210,22 @@ export function SelecaoCampanhasModal({
                     <div key={instrumento} className="space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          <span
+                            className={cn(
+                              "text-xs font-semibold uppercase tracking-wide",
+                              bloqueadoPorInstrumento ? "text-muted-foreground" : "text-foreground",
+                            )}
+                          >
                             {labelInstrumento(instrumento)}
                           </span>
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             {lista.length}
                           </Badge>
+                          {bloqueadoPorInstrumento && elegiveis.length > 0 && (
+                            <span className="text-[10px] text-muted-foreground">
+                              clique para trocar o recorte
+                            </span>
+                          )}
                         </div>
                         {elegiveis.length > 1 && !bloqueadoPorInstrumento && (
                           <Button
@@ -192,14 +242,14 @@ export function SelecaoCampanhasModal({
 
                       <div className="space-y-1.5">
                         {lista.map(c => {
-                          const bloqueio = motivoBloqueio(c);
+                          const semRespostas = bloqueioAnonimato(c);
+                          const trocaRecorte = !semRespostas && instrumentoIncompativel(c);
                           const marcada = selecionadas.has(c.id);
-                          const desabilitada = !podeSelecionar(c);
                           const linha = (
                             <div
                               key={c.id}
                               role="button"
-                              tabIndex={desabilitada ? -1 : 0}
+                              tabIndex={semRespostas ? -1 : 0}
                               onClick={() => toggle(c)}
                               onKeyDown={e => {
                                 if (e.key === "Enter" || e.key === " ") {
@@ -209,15 +259,16 @@ export function SelecaoCampanhasModal({
                               }}
                               className={cn(
                                 "flex items-start gap-3 rounded-lg border p-3 transition-colors",
-                                desabilitada
+                                semRespostas
                                   ? "opacity-55 cursor-not-allowed bg-muted/30"
                                   : "cursor-pointer hover:bg-accent/50",
+                                trocaRecorte && "opacity-80",
                                 marcada && "border-primary bg-primary/5",
                               )}
                             >
                               <Checkbox
                                 checked={marcada}
-                                disabled={desabilitada}
+                                disabled={!!semRespostas}
                                 className="mt-0.5 pointer-events-none"
                                 tabIndex={-1}
                               />
@@ -243,19 +294,26 @@ export function SelecaoCampanhasModal({
                                     <> · desde {new Date(c.data_inicio).toLocaleDateString("pt-BR")}</>
                                   )}
                                 </p>
-                                {bloqueio && (
+                                {semRespostas && (
                                   <p className="text-[11px] text-amber-700 mt-1 flex items-start gap-1">
                                     <Lock className="h-3 w-3 mt-0.5 shrink-0" />
-                                    {bloqueio}
+                                    {semRespostas}
+                                  </p>
+                                )}
+                                {trocaRecorte && (
+                                  <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1">
+                                    <Repeat2 className="h-3 w-3 mt-0.5 shrink-0" />
+                                    Outro instrumento — clicar troca o recorte para{" "}
+                                    {labelInstrumento(c.instrumento)}.
                                   </p>
                                 )}
                               </div>
                             </div>
                           );
-                          return bloqueio ? (
+                          return semRespostas ? (
                             <Tooltip key={c.id}>
                               <TooltipTrigger asChild>{linha}</TooltipTrigger>
-                              <TooltipContent className="max-w-xs">{bloqueio}</TooltipContent>
+                              <TooltipContent className="max-w-xs">{semRespostas}</TooltipContent>
                             </Tooltip>
                           ) : (
                             linha
@@ -278,16 +336,6 @@ export function SelecaoCampanhasModal({
               somadas. O recorte agregado usa o mesmo instrumento
               ({labelInstrumento(instrumentoAtivo || undefined)}), e a aba{" "}
               <strong>Comparativo</strong> mostra a evolução campanha a campanha.
-            </p>
-          </div>
-        )}
-
-        {instrumentoAtivo && grupos.length > 1 && (
-          <div className="flex items-start gap-2 text-[11px] text-muted-foreground px-1">
-            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            <p>
-              Campanhas de outros instrumentos ficam bloqueadas enquanto houver seleção.
-              Limpe a seleção para trocar de instrumento.
             </p>
           </div>
         )}
