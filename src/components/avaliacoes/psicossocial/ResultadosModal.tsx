@@ -56,6 +56,32 @@ import {
 import { cn } from "@/lib/utils";
 import { useMinRespostasCampanha } from "@/hooks/usePsicossocialMinRespostas";
 
+/**
+ * Contraprova e Ergonomia cruzam dados de UMA campanha especifica (absenteismo,
+ * AEP, situacoes de trabalho). Num recorte multi-campanha elas continuam
+ * olhando so a campanha principal — isso precisa estar escrito na tela, senao
+ * o usuario le como se fosse do conjunto todo.
+ */
+function labelPeriodoCurto(inicios: string[], fins: string[]): string {
+  if (inicios.length === 0 && fins.length === 0) return "periodo nao informado";
+  const fmt = (d?: string) => (d ? new Date(d).toLocaleDateString("pt-BR") : "—");
+  const de = inicios.slice().sort()[0];
+  const ate = fins.slice().sort().at(-1);
+  return `${fmt(de)} a ${fmt(ate)}`;
+}
+
+function AvisoCampanhaPrincipal({ nome }: { nome: string }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-800">
+      <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+      <p>
+        Esta aba cruza dados de uma campanha por vez. O que aparece abaixo refere-se
+        apenas a <strong>{nome}</strong>, e nao ao recorte agregado.
+      </p>
+    </div>
+  );
+}
+
 interface ResultadosModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -78,10 +104,21 @@ export function ResultadosModal({ open, onOpenChange, campanha, campanhas }: Res
   // GHE, situações de trabalho). No modo multi ela é sintética: herda o
   // instrumento (garantidamente homogêneo pelo seletor) e une GHEs e situações.
   const campanhaRef = useMemo<CampanhaPsicossocial>(() => {
+    // Placeholder inerte: o early-return logo abaixo impede que este objeto
+    // chegue a ser renderizado. Existe so para os derivados acima do return
+    // (isSipro, temGHE, ...) nao estourarem quando a lista vem vazia.
+    if (!principal) return { id: "", nome: "" } as CampanhaPsicossocial;
     if (!isMulti) return principal;
+    // Periodo do recorte = da campanha mais antiga a mais recente. Sem isso o
+    // PDF de relatorio sairia com o periodo de uma campanha so, o que invalida
+    // o documento como prova do monitoramento (NR-01).
+    const inicios = selecionadas.map(c => c.data_inicio).filter(Boolean) as string[];
+    const fins = selecionadas.map(c => c.data_fim).filter(Boolean) as string[];
     return {
       ...principal,
-      nome: `${selecionadas.length} campanhas selecionadas`,
+      nome: `${selecionadas.length} campanhas — ${labelPeriodoCurto(inicios, fins)}`,
+      data_inicio: inicios.length ? inicios.slice().sort()[0] : principal.data_inicio,
+      data_fim: fins.length ? fins.slice().sort().at(-1) : principal.data_fim,
       ghe_ids: Array.from(new Set(selecionadas.flatMap(c => c.ghe_ids ?? []))),
       situacoes_trabalho: selecionadas.flatMap(c => c.situacoes_trabalho ?? []),
     } as CampanhaPsicossocial;
@@ -639,12 +676,14 @@ export function ResultadosModal({ open, onOpenChange, campanha, campanhas }: Res
             </TabsContent>
 
             {/* ── Tab: Contraprova Organizacional ── */}
-            <TabsContent value="contraprova" className="mt-4">
-              <ContaprovaOrganizacional campanha={campanha} ips={ips} />
+            <TabsContent value="contraprova" className="mt-4 space-y-3">
+              {isMulti && <AvisoCampanhaPrincipal nome={principal.nome} />}
+              <ContaprovaOrganizacional campanha={campanhaRef} ips={ips} />
             </TabsContent>
 
             {/* ── Tab: Ergonomia / AEP ── */}
             <TabsContent value="ergonomia" className="mt-4 space-y-3">
+              {isMulti && <AvisoCampanhaPrincipal nome={principal.nome} />}
               {/* GAP 3: Banner de recomendação de AET quando IPS < 65 ou múltiplos críticos */}
               {stats?.anonimato_garantido && ips !== undefined && (
                 (() => {
@@ -691,7 +730,7 @@ export function ResultadosModal({ open, onOpenChange, campanha, campanhas }: Res
                 })()
               )}
               <IntegracaoErgonomiaAEP
-                campanha={campanha}
+                campanha={campanhaRef}
                 ips={ips}
                 dimensoesCriticas={dimensoesAgregadas.filter(d => isCritico(d.media)).map(d => d.bloco)}
               />
@@ -819,7 +858,7 @@ export function ResultadosModal({ open, onOpenChange, campanha, campanhas }: Res
             Fechar
           </Button>
           <ExportarRelatorio
-            campanha={campanha}
+            campanha={campanhaRef}
             stats={stats}
             dimensoes={dimensoesAgregadas}
             analiseIA={analiseIA}
