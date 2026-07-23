@@ -11,6 +11,9 @@ import { type CampanhaPsicossocial,
   type NovaCampanha,
   type GerarConvitesInput,
   type EstatisticasCampanha,
+  type EstatisticasMultiCampanha,
+  type EstatisticaCampanhaResumo,
+  type GrupoEstatistica,
   type IndicadoresPsicossociais,
   type RadarDimensao,
   type InstrumentoPsicossocial,
@@ -765,6 +768,204 @@ export function usePsicossocial() {
     };
   };
 
+  // ── Estatísticas agregadas de N campanhas ─────────────────────────────────
+  //
+  // Estratégia (deliberada):
+  // • Números de participação (universo elegível, GHE, pendentes) reaproveitam
+  //   `calcularEstatisticas` por campanha e são SOMADOS. O denominador vira
+  //   "oportunidades de resposta" (pessoa × campanha), que é o que faz sentido
+  //   quando o mesmo quadro é convidado várias vezes ao longo do tempo.
+  // • IPS e radar são RECALCULADOS a partir das respostas brutas de todas as
+  //   campanhas — nunca média das médias. Assim uma campanha com 40 respostas
+  //   pesa 8× mais que uma com 5, como deve ser.
+  // • Anonimato (ISO 45003): exige o mínimo em CADA campanha do recorte E no
+  //   agregado. Somar duas campanhas de 3 respostas não "libera" análise.
+  const calcularEstatisticasMulti = async (
+    campanhaIds: string[],
+  ): Promise<EstatisticasMultiCampanha> => {
+    const ids = Array.from(new Set(campanhaIds.filter(Boolean)));
+    if (ids.length === 0) throw new Error("Nenhuma campanha selecionada");
+
+    const metaMap = new Map(campanhas.map(c => [c.id, c]));
+
+    const [statsPorCampanha, respostasPorCampanha] = await Promise.all([
+      Promise.all(ids.map(id => calcularEstatisticas(id))),
+      Promise.all(ids.map(id => buscarRespostas(id))),
+    ]);
+
+    // ── Resumo por campanha (aba comparativo) ────────────────────────────────
+    const por_campanha: EstatisticaCampanhaResumo[] = ids.map((id, i) => {
+      const meta = metaMap.get(id);
+      const s = statsPorCampanha[i];
+      const comIPS = respostasPorCampanha[i].filter(r => typeof r.indicadores?.IPS === "number");
+      return {
+        campanha_id: id,
+        nome: meta?.nome ?? "Campanha",
+        instrumento: meta?.instrumento,
+        tipo_instrumento: meta?.tipo_instrumento,
+        data_inicio: meta?.data_inicio,
+        data_fim: meta?.data_fim,
+        respostas_com_ips: comIPS.length,
+        concluidos: s.concluidos,
+        total: s.total_convites,
+        taxa_participacao: s.taxa_participacao,
+        anonimato_garantido: s.anonimato_garantido,
+        ips: s.ips,
+        ips_classificacao: s.ips_classificacao,
+      };
+    });
+
+    // ── Homogeneidade de instrumento ─────────────────────────────────────────
+    const instrumentos = new Set(por_campanha.map(c => c.instrumento || "copsoq"));
+    const instrumento_homogeneo = instrumentos.size <= 1;
+    const instrumento_comum = instrumento_homogeneo
+      ? (por_campanha[0]?.instrumento as InstrumentoPsicossocial | undefined)
+      : undefined;
+
+    // ── Anonimato ────────────────────────────────────────────────────────────
+    const campanhas_sem_anonimato = por_campanha
+      .filter(c => !c.anonimato_garantido)
+      .map(c => c.nome);
+    const todasRespostas = respostasPorCampanha.flat();
+    const respostasComIPS = todasRespostas.filter(r => typeof r.indicadores?.IPS === "number");
+    const minimoAgregado = por_campanha.every(c => isEntrevistaInstrumento(c.tipo_instrumento)) ? 1 : 5;
+    const totalRespostasEfetivas = Math.max(
+      todasRespostas.length,
+      statsPorCampanha.reduce((a, s) => a + s.concluidos, 0),
+    );
+    const anonimato_garantido =
+      campanhas_sem_anonimato.length === 0 && totalRespostasEfetivas >= minimoAgregado;
+
+    // ── Participação somada ──────────────────────────────────────────────────
+    const total_convites = statsPorCampanha.reduce((a, s) => a + s.total_convites, 0);
+    const concluidos = statsPorCampanha.reduce((a, s) => a + s.concluidos, 0);
+    const pendentes = statsPorCampanha.reduce((a, s) => a + s.pendentes, 0);
+    const iniciados = statsPorCampanha.reduce((a, s) => a + s.iniciados, 0);
+    const expirados = statsPorCampanha.reduce((a, s) => a + s.expirados, 0);
+
+    // ── IPS e radar ponderados por resposta ──────────────────────────────────
+    let ips: number | undefined;
+    let radar: RadarDimensao[] | undefined;
+
+    if (anonimato_garantido && respostasComIPS.length > 0) {
+      ips = Math.round(
+        respostasComIPS.reduce((acc, r) => acc + (r.indicadores?.IPS ?? 0), 0) / respostasComIPS.length,
+      );
+
+      // Radar: média por dimensão sobre TODAS as respostas que contêm aquela
+      // dimensão. Instrumentos diferentes têm dimensões diferentes, então o
+      // denominador é por dimensão (não o total geral) para não diluir.
+      const acc = new Map<string, { soma: number; n: number }>();
+      for (const r of respostasComIPS) {
+        const dims = r.indicadores?.radar;
+        if (!Array.isArray(dims)) continue;
+        for (const d of dims) {
+          const cur = acc.get(d.subject) ?? { soma: 0, n: 0 };
+          cur.soma += d.value;
+          cur.n += 1;
+          acc.set(d.subject, cur);
+        }
+      }
+      if (acc.size > 0) {
+        radar = Array.from(acc.entries()).map(([subject, { soma, n }]) => ({
+          subject,
+          value: Math.round(soma / n),
+          fullMark: 100,
+        }));
+      }
+    } else if (anonimato_garantido) {
+      // Sem respostas brutas com IPS (ex.: entrevistas guiadas, cujo score vem
+      // de resumo_ia). Cai para média das campanhas ponderada por concluídos.
+      const comIps = por_campanha.filter(c => typeof c.ips === "number" && c.concluidos > 0);
+      const pesoTotal = comIps.reduce((a, c) => a + c.concluidos, 0);
+      if (pesoTotal > 0) {
+        ips = Math.round(comIps.reduce((a, c) => a + (c.ips ?? 0) * c.concluidos, 0) / pesoTotal);
+      }
+      // Radar equivalente, dimensão a dimensão, ponderado por concluídos.
+      const acc = new Map<string, { soma: number; n: number }>();
+      statsPorCampanha.forEach((s, i) => {
+        const peso = por_campanha[i].concluidos || 0;
+        if (!s.radar || peso <= 0) return;
+        for (const d of s.radar) {
+          const cur = acc.get(d.subject) ?? { soma: 0, n: 0 };
+          cur.soma += d.value * peso;
+          cur.n += peso;
+          acc.set(d.subject, cur);
+        }
+      });
+      if (acc.size > 0) {
+        radar = Array.from(acc.entries()).map(([subject, { soma, n }]) => ({
+          subject,
+          value: Math.round(soma / n),
+          fullMark: 100,
+        }));
+      }
+    }
+
+    // ── Agregação por departamento/cargo ─────────────────────────────────────
+    // Recombina os grupos das campanhas ponderando pelo nº de respostas de
+    // cada grupo. Reaplica o mínimo de anonimato sobre o total consolidado.
+    const mesclarGrupos = (chave: "por_departamento" | "por_cargo"): GrupoEstatistica[] => {
+      const acc = new Map<string, { soma: number; n: number }>();
+      for (const s of statsPorCampanha) {
+        for (const g of s[chave] ?? []) {
+          if (typeof g.ips !== "number") continue;
+          const cur = acc.get(g.nome) ?? { soma: 0, n: 0 };
+          cur.soma += g.ips * g.total;
+          cur.n += g.total;
+          acc.set(g.nome, cur);
+        }
+      }
+      return Array.from(acc.entries())
+        .map(([nome, { soma, n }]) => {
+          const anon = n >= minimoAgregado;
+          const media = anon ? Math.round(soma / n) : undefined;
+          return {
+            nome,
+            total: n,
+            ips: media,
+            ips_classificacao: media !== undefined ? calcularIPSClassificacao(media) : undefined,
+            anonimato_garantido: anon,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+    };
+
+    return {
+      total_convites,
+      pendentes,
+      iniciados,
+      concluidos,
+      expirados,
+      taxa_participacao: total_convites > 0 ? (concluidos / total_convites) * 100 : 0,
+      anonimato_garantido,
+      ips,
+      ips_classificacao: ips !== undefined ? calcularIPSClassificacao(ips) : undefined,
+      radar,
+      por_departamento: mesclarGrupos("por_departamento"),
+      por_cargo: mesclarGrupos("por_cargo"),
+      campanhas_incluidas: ids.length,
+      por_campanha,
+      instrumento_homogeneo,
+      instrumento_comum,
+      campanhas_sem_anonimato,
+    };
+  };
+
+  /** Estatísticas de 1..N campanhas. Passe um array de IDs. */
+  const useEstatisticasCampanhas = (campanhaIds: string[]) => {
+    const chave = [...campanhaIds].sort().join(",");
+    return useQuery({
+      queryKey: ["psicossocial-estatisticas-multi", chave],
+      queryFn: () => calcularEstatisticasMulti(campanhaIds),
+      enabled: campanhaIds.length > 0,
+      staleTime: 0,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
+      refetchInterval: 60_000,
+    });
+  };
+
   // Hook para estatísticas
   const useEstatisticasCampanha = (campanhaId?: string) => {
     return useQuery({
@@ -931,6 +1132,7 @@ export function usePsicossocial() {
 
     // Estatísticas
     useEstatisticasCampanha,
+    useEstatisticasCampanhas,
 
     // Funções públicas
     buscarConvitePorToken,

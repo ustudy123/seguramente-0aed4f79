@@ -50,6 +50,7 @@ import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
+import { SelecaoCampanhasModal } from "./SelecaoCampanhasModal";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao, MINIMO_ANONIMATO_PADRAO, getMinimoRespostas, isEntrevistaInstrumento } from "@/types/psicossocial";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
@@ -72,7 +73,9 @@ export function PsicossocialDashboard() {
   const [campanhaParaEditar, setCampanhaParaEditar] = useState<CampanhaPsicossocial | undefined>();
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
-  const [bannerResultados, setBannerResultados] = useState<CampanhaPsicossocial | null>(null);
+  const [bannerResultados, setBannerResultados] = useState<CampanhaPsicossocial[] | null>(null);
+  const [showSelecaoResultados, setShowSelecaoResultados] = useState(false);
+  const [preSelecaoResultados, setPreSelecaoResultados] = useState<string[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Retrocompat: as três telas de metodologia viraram sub-abas de "metodologia".
@@ -275,7 +278,10 @@ export function PsicossocialDashboard() {
           campanhas={campanhas}
           onDistribuir={(c) => setBannerDistribuir(c)}
           onVerResultados={(c) => {
-            setBannerResultados(c);
+            // Abre o seletor com a campanha em destaque já marcada — o usuário
+            // decide se quer só ela, algumas ou todas.
+            setPreSelecaoResultados([c.id]);
+            setShowSelecaoResultados(true);
           }}
         />
 
@@ -526,11 +532,18 @@ export function PsicossocialDashboard() {
             campanha={bannerDistribuir}
           />
         )}
-        {bannerResultados && (
+        <SelecaoCampanhasModal
+          open={showSelecaoResultados}
+          onOpenChange={setShowSelecaoResultados}
+          campanhas={campanhas}
+          preSelecionadas={preSelecaoResultados}
+          onConfirmar={(sel) => setBannerResultados(sel)}
+        />
+        {bannerResultados && bannerResultados.length > 0 && (
           <ResultadosModal
-            open={!!bannerResultados}
+            open={bannerResultados.length > 0}
             onOpenChange={(o) => !o && setBannerResultados(null)}
-            campanha={bannerResultados}
+            campanhas={bannerResultados}
           />
         )}
 

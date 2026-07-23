@@ -363,6 +363,44 @@ export interface EstatisticasCampanha {
   por_cargo?: GrupoEstatistica[];
 }
 
+/**
+ * Resumo por campanha dentro de um recorte multi-campanha.
+ * Alimenta a aba "Comparativo" do ResultadosModal.
+ */
+export interface EstatisticaCampanhaResumo {
+  campanha_id: string;
+  nome: string;
+  instrumento?: InstrumentoPsicossocial;
+  tipo_instrumento?: TipoInstrumentoCampanha;
+  data_inicio?: string;
+  data_fim?: string;
+  respostas_com_ips: number;
+  concluidos: number;
+  total: number;
+  taxa_participacao: number;
+  anonimato_garantido: boolean;
+  ips?: number;
+  ips_classificacao?: IPSClassificacao;
+}
+
+/**
+ * Estatísticas de N campanhas agregadas.
+ *
+ * IMPORTANTE: `ips` e `radar` são recalculados a partir das RESPOSTAS BRUTAS
+ * de todas as campanhas do recorte — nunca por média das médias. Uma campanha
+ * com 40 respostas não pode pesar o mesmo que uma com 5.
+ */
+export interface EstatisticasMultiCampanha extends EstatisticasCampanha {
+  campanhas_incluidas: number;
+  por_campanha: EstatisticaCampanhaResumo[];
+  /** Todas as campanhas do recorte usam o mesmo instrumento? */
+  instrumento_homogeneo: boolean;
+  /** Instrumento comum quando homogêneo. */
+  instrumento_comum?: InstrumentoPsicossocial;
+  /** Campanhas do recorte que sozinhas não atingem o mínimo de anonimato. */
+  campanhas_sem_anonimato: string[];
+}
+
 export interface GrupoEstatistica {
   nome: string;
   total: number;

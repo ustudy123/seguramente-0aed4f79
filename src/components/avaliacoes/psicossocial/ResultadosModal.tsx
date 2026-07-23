@@ -59,13 +59,38 @@ import { useMinRespostasCampanha } from "@/hooks/usePsicossocialMinRespostas";
 interface ResultadosModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  campanha: CampanhaPsicossocial;
+  /** Uso legado / atalho de uma campanha só. */
+  campanha?: CampanhaPsicossocial;
+  /** Recorte multi-campanha. Tem precedência sobre `campanha`. */
+  campanhas?: CampanhaPsicossocial[];
 }
 
-export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModalProps) {
-  const { useEstatisticasCampanha, useRespostasCampanha } = usePsicossocial();
-  const { data: stats, isLoading: loadingStats } = useEstatisticasCampanha(campanha.id);
-  const { minRespostas: MINIMO_ANONIMATO, configurado: minConfigurado } = useMinRespostasCampanha(campanha);
+export function ResultadosModal({ open, onOpenChange, campanha, campanhas }: ResultadosModalProps) {
+  // Normaliza as duas entradas em uma lista única.
+  const selecionadas = useMemo<CampanhaPsicossocial[]>(
+    () => (campanhas && campanhas.length > 0 ? campanhas : campanha ? [campanha] : []),
+    [campanhas, campanha],
+  );
+  const isMulti = selecionadas.length > 1;
+  const principal = selecionadas[0];
+
+  // Campanha "de referência" para os campos que a tela lê (nome, instrumento,
+  // GHE, situações de trabalho). No modo multi ela é sintética: herda o
+  // instrumento (garantidamente homogêneo pelo seletor) e une GHEs e situações.
+  const campanhaRef = useMemo<CampanhaPsicossocial>(() => {
+    if (!isMulti) return principal;
+    return {
+      ...principal,
+      nome: `${selecionadas.length} campanhas selecionadas`,
+      ghe_ids: Array.from(new Set(selecionadas.flatMap(c => c.ghe_ids ?? []))),
+      situacoes_trabalho: selecionadas.flatMap(c => c.situacoes_trabalho ?? []),
+    } as CampanhaPsicossocial;
+  }, [isMulti, principal, selecionadas]);
+
+  const { useEstatisticasCampanhas } = usePsicossocial();
+  const idsSelecionados = useMemo(() => selecionadas.map(c => c.id), [selecionadas]);
+  const { data: stats, isLoading: loadingStats } = useEstatisticasCampanhas(idsSelecionados);
+  const { minRespostas: MINIMO_ANONIMATO, configurado: minConfigurado } = useMinRespostasCampanha(campanhaRef);
   // Removemos a busca manual de respostas aqui pois as estatísticas já trazem o IPS e radar agregados,
   // e as respostas individuais são sensíveis ao anonimato. Se precisarmos de detalhes por dimensão,
   // eles devem vir de 'stats'.
@@ -81,9 +106,9 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
   const isLoading = loadingStats || loadingRespostas;
 
-  const isSipro = campanha.instrumento === 'sipro';
+  const isSipro = campanhaRef.instrumento === 'sipro';
   // Quando a campanha está vinculada a GHE, a base da taxa é o GHE (não o setor).
-  const temGHE = (campanha.ghe_ids?.length ?? 0) > 0;
+  const temGHE = (campanhaRef.ghe_ids?.length ?? 0) > 0;
   const baseLabel = temGHE ? "GHE" : "Setor";
   const baseLabelInline = temGHE ? "GHE" : "setor";
 
@@ -104,12 +129,12 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
   // ── GAP A+B+C: Proteção de privacidade por grupo (ISO 45003) ───────────────
   // Verifica se há situações de trabalho segmentadas e aplica regras de mínimo.
   const privacidadeGrupos = useMemo(() => {
-    const situacoes = campanha.situacoes_trabalho ?? [];
+    const situacoes = campanhaRef.situacoes_trabalho ?? [];
     const totalRespondentes = stats?.concluidos ?? 0;
     if (situacoes.length === 0) return null; // sem segmentação — usa proteção global
     const contagem = estimarContagemPorGrupo(totalRespondentes, situacoes);
     return aplicarRegrasPrivacidade(situacoes, contagem, totalRespondentes);
-  }, [campanha.situacoes_trabalho, stats?.concluidos]);
+  }, [campanhaRef.situacoes_trabalho, stats?.concluidos]);
 
   // Dimensões por resposta → agregar média por dimensão
   // Para SIPRO (IRP-S): maior score = maior risco → críticas têm score ALTO, pontos fortes têm score BAIXO
@@ -159,8 +184,8 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
     setAnaliseIA(null);
     try {
       const contexto = {
-        campanha: campanha.nome,
-        instrumento: campanha.instrumento || 'copsoq',
+        campanha: campanhaRef.nome,
+        instrumento: campanhaRef.instrumento || 'copsoq',
         ips,
         classificacao: ipsClass,
         total_respostas: stats.concluidos,
@@ -191,8 +216,8 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
       const { data, error } = await supabase.functions.invoke('ai-psicossocial-analise', {
         body: {
           contexto: {
-            campanha: campanha.nome,
-            instrumento: campanha.instrumento || 'copsoq',
+            campanha: campanhaRef.nome,
+            instrumento: campanhaRef.instrumento || 'copsoq',
             ips,
             classificacao: ipsClass,
             dimensoes_criticas: dimensoesAgregadas.filter(d => isSipro ? d.media >= 50 : d.media < 50).map(d => d.bloco),
@@ -206,7 +231,7 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
       const { error: errAcao } = await supabase.from('plano_acoes').insert({
         tenant_id: tenantId,
         empresa_id: empresaAtivaId || null,
-        titulo: sugestao?.titulo || `Ação Psicossocial — ${campanha.nome}`,
+        titulo: sugestao?.titulo || `Ação Psicossocial — ${campanhaRef.nome}`,
         descricao: sugestao?.descricao || `Ação gerada a partir da campanha psicossocial com IPS ${ips}.`,
         porque: sugestao?.porque || `IPS ${ips} — Classificação: ${ipsClass}`,
         onde: sugestao?.onde || 'Organização',
@@ -214,7 +239,7 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
         tipo: 'preventiva' as const,
         prioridade: (ips < 35 ? 'imediato' : ips < 50 ? 'urgente' : 'medio') as any,
         origem_modulo: 'psicossocial' as const,
-        origem_descricao: `Campanha Psicossocial: ${campanha.nome}`,
+        origem_descricao: `Campanha Psicossocial: ${campanhaRef.nome}`,
         criado_por: user?.id,
         criado_por_nome: profile?.nome_completo || 'Sistema',
         exige_evidencia: false,
@@ -233,16 +258,24 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
     }
   };
 
+  if (selecionadas.length === 0) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-purple-600" />
-            Resultados — {campanha.nome}
+            Resultados — {campanhaRef.nome}
           </DialogTitle>
           <DialogDescription>
             {stats?.concluidos || 0} respostas de {stats?.total_convites || 0} convites enviados
+            {isMulti && (
+              <span className="block mt-1 text-xs">
+                Recorte agregado · IPS recalculado sobre as respostas de todas as campanhas
+                (ponderado, não é média das médias).
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -258,8 +291,14 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
           </div>
         ) : (
           <Tabs defaultValue="visao_geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className={cn("grid w-full", isMulti ? "grid-cols-7" : "grid-cols-6")}>
               <TabsTrigger value="visao_geral">Visão Geral</TabsTrigger>
+              {isMulti && (
+                <TabsTrigger value="comparativo">
+                  <GitCompare className="h-3.5 w-3.5 mr-1" />
+                  Comparativo
+                </TabsTrigger>
+              )}
               <TabsTrigger value="dimensoes">Por Dimensão</TabsTrigger>
               <TabsTrigger value="ia">
                 <Sparkles className="h-3.5 w-3.5 mr-1 text-purple-500" />
@@ -275,6 +314,75 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
               </TabsTrigger>
               <TabsTrigger value="participacao">Participação</TabsTrigger>
             </TabsList>
+
+            {/* ── Tab: Comparativo (só no recorte multi-campanha) ── */}
+            {isMulti && (
+              <TabsContent value="comparativo" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Campanha a campanha</CardTitle>
+                    <CardDescription className="text-xs">
+                      Para monitoramento contínuo (NR-01 / ISO 45003), a evolução entre campanhas
+                      costuma dizer mais que o número agregado. Campanhas abaixo do mínimo de
+                      respostas aparecem sem score.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(stats?.por_campanha ?? []).map(c => {
+                      const cls = c.ips !== undefined
+                        ? (isSipro
+                            ? (calcularIRPSClassificacao(c.ips) as unknown as IPSClassificacao)
+                            : calcularIPSClassificacao(c.ips))
+                        : null;
+                      return (
+                        <div
+                          key={c.campanha_id}
+                          className="flex items-center gap-3 rounded-lg border p-3"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{c.nome}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {c.concluidos} de {c.total} · adesão {c.taxa_participacao.toFixed(0)}%
+                              {c.data_inicio && (
+                                <> · desde {new Date(c.data_inicio).toLocaleDateString("pt-BR")}</>
+                              )}
+                            </p>
+                          </div>
+                          {c.ips !== undefined && cls ? (
+                            <div className="text-right shrink-0">
+                              <p className={cn("text-xl font-bold leading-none", getIPSColor(cls))}>
+                                {c.ips}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {isSipro ? "IRP-S" : "IPS"}
+                              </p>
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="shrink-0 gap-1">
+                              <Lock className="h-3 w-3" />
+                              Bloqueado
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+
+                {stats && !stats.instrumento_homogeneo && (
+                  <Card className="border-amber-200 bg-amber-50/40">
+                    <CardContent className="pt-4 flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-800">
+                        O recorte mistura instrumentos diferentes. As dimensões não são
+                        equivalentes e o score agregado não deve ser usado como prova documental.
+                        Use a comparação acima, campanha a campanha.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            )}
 
             {/* ── Tab: Visão Geral ── */}
             <TabsContent value="visao_geral" className="space-y-4 mt-4">
