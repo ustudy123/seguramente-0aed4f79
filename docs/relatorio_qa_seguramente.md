@@ -7,8 +7,8 @@
 | **Data** | 18 de julho de 2026 |
 | **Responsável** | Alexandre (uStudy) |
 | **Ambiente** | Cercado isolado — nenhum dado de cliente foi criado, alterado ou lido |
-| **Cobertura** | 113 casos executáveis · 14 módulos · 3 blocos |
-| **Resultado** | 106 comportamentos confirmados · **7 pontos de atenção** · 1 correção já aplicada |
+| **Cobertura** | 122 casos executáveis · 16 módulos |
+| **Resultado** | 115 comportamentos confirmados · **7 pontos de atenção** · 1 correção já aplicada |
 
 ---
 
@@ -16,7 +16,7 @@
 
 O agente de QA exercita as regras de negócio do sistema diretamente no banco de dados, dentro de um ambiente sintético isolado. Cada teste cria dados fictícios, verifica o comportamento e desfaz tudo. Nenhum dado real é tocado.
 
-Foram executados **113 casos de teste** cobrindo três blocos do sistema. A grande maioria passou — o que significa que as regras estão implementadas e protegidas no banco. Foram encontrados **7 pontos de atenção**, mais 1 problema que já foi corrigido durante os trabalhos.
+Foram executados **122 casos de teste** cobrindo três blocos do sistema, mais os fluxos de admissão, atestado e EPI. A grande maioria passou — o que significa que as regras estão implementadas e protegidas no banco. Foram encontrados **7 pontos de atenção**, mais 1 problema que já foi corrigido durante os trabalhos.
 
 ### O padrão dos achados
 
@@ -343,7 +343,7 @@ Nem todo teste procura defeito. Estes comportamentos foram confirmados funcionan
 
 ### 4.1 Isolamento entre clientes (multi-tenant) — o mais crítico
 
-**Verificado em todos os 14 módulos, sem exceção.** Dados de um cliente são invisíveis para outro: colaboradores, empresas, departamentos, cargos, estabelecimentos, terceiros, organograma, identidade, SWOT, Oceano Azul, metas, ações, documentos e dados fiscais do Hub.
+**Verificado nos 14 módulos que possuem caso de isolamento dedicado, sem exceção.** Dados de um cliente são invisíveis para outro: colaboradores, empresas, departamentos, cargos, estabelecimentos, terceiros, organograma, identidade, SWOT, Oceano Azul, metas, ações, documentos e dados fiscais do Hub.
 
 Nenhum vazamento foi encontrado. Esta é a proteção mais importante do sistema e ela está de pé.
 
@@ -412,16 +412,19 @@ A fundação do módulo está sólida.
 
 | Bloco | Módulos | Casos | Achados |
 |---|---|---|---|
-| Estrutura Organizacional | 7 | 53 | 4 |
+| Estrutura Organizacional | 7 | 59 | 4 |
 | Planejamento & Gestão | 5 | 39 | 1 |
 | Documentos & Governança | 2 | 21 | 2 |
-| **Total** | **14** | **113** | **7** |
+| Fluxos preservados (admissão, atestado, EPI) | 3 | 3 | — |
+| **Total** | **17** | **122** | **7** |
+
+> Os três **fluxos preservados** vêm do agente de QA anterior, que testava admissão, atestado e EPI escrevendo diretamente nas tabelas de clientes reais. Os testes foram reescritos para rodar dentro do ambiente cercado, mantendo o que era verificado e trocando a forma de verificar.
 
 ### Por módulo
 
 | Módulo | Casos | Achados |
 |---|---|---|
-| Colaboradores | 10 | 2 — CPF inválido, e-mail duplicado |
+| Colaboradores | 16 | 2 — CPF inválido, e-mail duplicado |
 | Empresa | 10 | — |
 | Departamentos | 6 | — |
 | Cargos | 5 | 1 — faixa salarial invertida |
@@ -435,6 +438,9 @@ A fundação do módulo está sólida.
 | Plano de Ação | 9 | — |
 | Documentos | 12 | 2 — validade não recalcula, status livre |
 | Hub Contábil | 9 | — |
+| Admissão | 1 | — |
+| Atestados | 1 | — |
+| EPI | 1 | — |
 
 ---
 
