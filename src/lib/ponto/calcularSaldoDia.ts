@@ -32,6 +32,19 @@ export interface CalcularSaldoDiaResult {
   usouAjuste: boolean;
 }
 
+/**
+ * @deprecated NÃO é mais a fonte da verdade do saldo diário.
+ *
+ * A regra de crédito/débito por dia agora vive UMA única vez, no banco:
+ * a função SQL `ponto_saldo_dias_competencia`. A apuração soma dela e a tela
+ * de edição do banco de horas lê dela.
+ *
+ * Esta função existia em paralelo à implementação SQL, e manter as duas em
+ * sincronia se mostrou inviável: a cada ajuste numa delas sobrava uma
+ * diferença na outra, e as telas voltavam a divergir. Mantida apenas como
+ * referência da regra (tolerância simétrica na batida) e para eventuais
+ * cálculos locais que não alimentem o banco de horas.
+ */
 export function calcularSaldoDia(input: CalcularSaldoDiaInput): CalcularSaldoDiaResult {
   const tol = Math.max(0, input.toleranciaBatidaMin ?? 10);
   const jornada = Math.max(0, input.jornadaEsperadaMin || 0);

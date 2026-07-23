@@ -20,7 +20,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { calcularSaldoDia } from "@/lib/ponto/calcularSaldoDia";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -149,239 +148,46 @@ export function PontoBancoHorasTab() {
     },
   });
 
+  // Dias com ponto na competência — lidos da FONTE ÚNICA no banco
+  // (ponto_saldo_dias_competencia). Antes esta regra era recalculada aqui em
+  // TypeScript e também em SQL na apuração; manter as duas em sincronia se
+  // mostrou inviável — a cada ajuste sobrava uma diferença e as telas
+  // divergiam. Agora a tela apenas EXIBE o que o banco calcula, e a apuração
+  // soma exatamente os mesmos números.
   const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
     queryKey: ["banco-horas-dias", editBanco?.colaborador_cpf, editComp, tenantId],
-    enabled: !!editBanco && !!editIniFim,
+    enabled: !!editBanco && !!editComp && !!tenantId,
     queryFn: async () => {
-      if (!editBanco || !editIniFim) return [];
-      const cpfDigits = (editBanco.colaborador_cpf || "").replace(/\D/g, "");
-      let query = (supabase as any)
-        .from("ponto_diario")
-        .select("id, data, horas_trabalhadas, horas_extras, horas_faltantes, entrada, saida, status, observacao, colaborador_cpf, colaborador_id, tipo_dia")
-        .gte("data", editIniFim.ini)
-        .lte("data", editIniFim.fim)
-        .order("data", { ascending: true });
-      if (cpfDigits) {
-        query = query.eq("colaborador_cpf", cpfDigits);
-      } else {
-        query = query.eq("colaborador_id", editBanco.colaborador_id);
-      }
-      const { data, error } = await query;
+      const cpfDigits = (editBanco?.colaborador_cpf || "").replace(/\D/g, "");
+      const { data, error } = await (supabase.rpc as any)("ponto_saldo_dias_competencia", {
+        p_tenant_id: tenantId,
+        p_colaborador_cpf: cpfDigits,
+        p_competencia: editComp,
+      });
       if (error) throw error;
-      const intervalToMin = (v: any): number => {
-        if (!v) return 0;
-        if (typeof v === "number") return Math.round(v);
-        if (typeof v === "object" && v !== null) {
-          const h = v.hours || 0, m = v.minutes || 0, s = v.seconds || 0;
-          return h * 60 + m + Math.round(s / 60);
-        }
-        const s = String(v);
-        const parts = s.split(":");
-        if (parts.length >= 2) return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
-        return 0;
-      };
-
-      // Busca a jornada esperada por dia via RPC (respeita escala + compensações mensais).
-      // A RPC retorna TABLE(jornada_min int, tol_min int) => vem como array no client.
-      const rows = data || [];
-      const extractJornada = (j: any): number => {
-        if (j == null) return 0;
-        if (typeof j === "number") return j;
-        if (Array.isArray(j)) return Number(j[0]?.jornada_min) || 0;
-        if (typeof j === "object") return Number(j.jornada_min) || 0;
-        return Number(j) || 0;
-      };
-      const extractTol = (j: any): number => {
-        if (j == null) return 0;
-        if (Array.isArray(j)) return Number(j[0]?.tol_min) || 0;
-        if (typeof j === "object") return Number(j.tol_min) || 0;
-        return 0;
-      };
-
-      // Fallback: se não houver atribuição vigente na data (ex.: dia anterior ao
-      // data_inicio da escala atual), usa a atribuição mais próxima do colaborador
-      // para derivar a jornada esperada — assim a UI mostra crédito/débito real.
-      let fallbackEscalaId: string | null = null;
-      try {
-        let atribQuery = (supabase as any)
-          .from("ponto_escala_atribuicoes")
-          .select("escala_id, data_inicio")
-          .eq("tenant_id", tenantId)
-          .eq("ativa", true)
-          .order("data_inicio", { ascending: true })
-          .limit(1);
-        if (cpfDigits) atribQuery = atribQuery.eq("colaborador_cpf", cpfDigits);
-        else atribQuery = atribQuery.eq("colaborador_id", editBanco.colaborador_id);
-        const { data: atrib } = await atribQuery;
-        fallbackEscalaId = atrib?.[0]?.escala_id || null;
-      } catch { /* ignore */ }
-
-      let fallbackJornadaMin = 0;
-      let fallbackTolMin = 0;
-      let fallbackTolBatida = 10;
-      if (fallbackEscalaId) {
-        try {
-          const { data: esc } = await (supabase as any)
-            .from("ponto_escalas")
-            .select("jornada_diaria_minutos, dias_config, tolerancia_diaria_minutos, tolerancia_minutos")
-            .eq("id", fallbackEscalaId)
-            .maybeSingle();
-          fallbackJornadaMin = Number(esc?.jornada_diaria_minutos) || 0;
-          fallbackTolMin = Number(esc?.tolerancia_diaria_minutos) || 0;
-          fallbackTolBatida = esc?.tolerancia_minutos != null ? Number(esc.tolerancia_minutos) : 10;
-        } catch { /* ignore */ }
-      }
-
-      const jornadasETol = await Promise.all(
-        rows.map(async (d: any) => {
-          const base = {
-            jornada: 0,
-            tol: fallbackTolMin,
-            tolBatida: fallbackTolBatida,
-            entradaEscala: null as string | null,
-            saidaEscala: null as string | null,
-            intervaloMin: 0,
-          };
-          if (!tenantId) return base;
-          try {
-            const { data: esc } = await (supabase.rpc as any)("ponto_escala_do_dia", {
-              p_tenant_id: tenantId,
-              p_cpf: d.colaborador_cpf || cpfDigits || null,
-              p_colaborador_id: d.colaborador_id ? String(d.colaborador_id) : null,
-              p_data: d.data,
-            });
-            const row = Array.isArray(esc) ? esc[0] : esc;
-            const jornada = Number(row?.jornada_min) || 0;
-            const tol = Number(row?.tolerancia_diaria_min) || fallbackTolMin;
-            const tolBatida = row?.tolerancia_batida_min != null
-              ? Number(row.tolerancia_batida_min)
-              : fallbackTolBatida;
-            const trabalha = Boolean(row?.trabalha);
-            if (trabalha && jornada > 0) {
-              return {
-                jornada,
-                tol,
-                tolBatida,
-                entradaEscala: row?.entrada ? String(row.entrada).substring(0, 5) : null,
-                saidaEscala: row?.saida ? String(row.saida).substring(0, 5) : null,
-                intervaloMin: Number(row?.intervalo_min) || 0,
-              };
-            }
-            const dow = new Date(d.data + "T00:00:00").getDay();
-            if (dow === 0 || dow === 6) return { ...base, tol, tolBatida };
-            return { ...base, jornada: fallbackJornadaMin, tol, tolBatida };
-          } catch {
-            return base;
-          }
-        })
-      );
-
-      const atestadoDatas = new Set<string>();
-      const atestadoHorasMin = new Map<string, number>();
-      try {
-        let atestadosQuery = (supabase as any)
-          .from("atestados")
-          .select("data_inicio_afastamento, data_fim_afastamento, unidade_afastamento, horas_afastamento, minutos_afastamento")
-          .eq("tenant_id", tenantId)
-          .lte("data_inicio_afastamento", editIniFim.fim)
-          .or(`data_fim_afastamento.gte.${editIniFim.ini},data_fim_afastamento.is.null`);
-
-        if (cpfDigits) atestadosQuery = atestadosQuery.eq("colaborador_cpf", cpfDigits);
-        else atestadosQuery = atestadosQuery.eq("colaborador_id", editBanco.colaborador_id);
-
-        const { data: atestados } = await atestadosQuery;
-        for (const atestado of atestados || []) {
-          const inicio = String(atestado.data_inicio_afastamento || "");
-          const fim = String(atestado.data_fim_afastamento || inicio);
-          // Mesma regra da apuração SQL: atestado de DIAS neutraliza o dia;
-          // atestado de HORAS (parcial) só desconta da jornada esperada.
-          const unidade = String(atestado.unidade_afastamento || "dias");
-          const minutosAtestado = (Number(atestado.horas_afastamento) || 0) * 60 + (Number(atestado.minutos_afastamento) || 0);
-          for (const row of rows) {
-            if (row.data >= inicio && row.data <= fim) {
-              if (unidade === "horas") {
-                atestadoHorasMin.set(row.data, (atestadoHorasMin.get(row.data) || 0) + minutosAtestado);
-              } else {
-                atestadoDatas.add(row.data);
-              }
-            }
-          }
-        }
-      } catch { /* ignore */ }
-
-      return rows.map((d: any, idx: number) => {
-        const trab = intervalToMin(d.horas_trabalhadas);
-        const info = jornadasETol[idx];
-        const esperadoBase = info?.jornada || 0;
-        const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
-        const tolBatida = info?.tolBatida ?? 10;
-
-        // Prioriza cálculo por batida (tolerância aplicada na batida, não no saldo).
-        // Se não houver escala com horários definidos, cai no fallback antigo.
-        const { saldoMin, trabalhadoAjustadoMin, usouAjuste } = calcularSaldoDia({
-          entradaReal: d.entrada ? String(d.entrada).substring(0, 5) : null,
-          saidaReal: d.saida ? String(d.saida).substring(0, 5) : null,
-          entradaEscala: info?.entradaEscala || null,
-          saidaEscala: info?.saidaEscala || null,
-          intervaloMin: info?.intervaloMin || 0,
-          jornadaEsperadaMin: esperado,
-          toleranciaBatidaMin: tolBatida,
-          trabalhadoBrutoMin: trab,
-        });
-
-        let saldoDia = saldoMin;
-        void trabalhadoAjustadoMin;
-
-        // Se veio extras/faltantes explícitos do banco e não há escala com horário, usa-os.
-        if (!usouAjuste) {
-          const extras = intervalToMin(d.horas_extras);
-          const faltantes = intervalToMin(d.horas_faltantes);
-          if (extras || faltantes) saldoDia = extras - faltantes;
-        }
-
-        // Dias de atestado, férias, afastamento ou feriado não geram débito/crédito aqui.
-        const tipoDia = String(d.tipo_dia || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        const observacaoDia = String(d.observacao || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        const diaProtegido = ["atestado", "ferias", "afastamento", "feriado"].some(tipo => tipoDia.includes(tipo))
-          || observacaoDia.includes("atestado")
-          || atestadoDatas.has(d.data)
-          || String(d.status || "") === "justificado";
-        if (diaProtegido) {
-          saldoDia = 0;
-        }
-        return {
-          id: d.id,
-          data: d.data,
-          entrada: d.entrada,
-          saida: d.saida,
-          status: d.status,
-          observacao: d.observacao,
-          tipo_dia: tipoDia,
-          horas_trabalhadas_minutos: trab,
-          jornada_esperada_minutos: esperado,
-          saldo_minutos: saldoDia,
-          detalhe: {
-            entradaEscala: info?.entradaEscala || null,
-            saidaEscala: info?.saidaEscala || null,
-            intervaloMin: info?.intervaloMin || 0,
-            toleranciaBatidaMin: tolBatida,
-            trabalhadoBrutoMin: trab,
-            trabalhadoAjustadoMin: usouAjuste ? trabalhadoAjustadoMin : trab,
-            jornadaEsperadaMin: esperado,
-            usouAjuste,
-            diaProtegido,
-          },
-        };
-      }) as Array<{
-        id: string; data: string; horas_trabalhadas_minutos: number; jornada_esperada_minutos: number; saldo_minutos: number;
-        entrada: string | null; saida: string | null; status: string | null; observacao: string | null; tipo_dia: string;
+      return ((data || []) as any[]).map((d) => ({
+        id: String(d.dia),
+        data: String(d.dia),
+        horas_trabalhadas_minutos: Number(d.trabalhado_min) || 0,
+        jornada_esperada_minutos: Number(d.jornada_min) || 0,
+        saldo_minutos: Number(d.saldo_min) || 0,
+        entrada: d.entrada ? String(d.entrada).substring(0, 5) : null,
+        saida: d.saida ? String(d.saida).substring(0, 5) : null,
+        status: null as string | null,
+        observacao: null as string | null,
+        tipo_dia: "",
         detalhe: {
-          entradaEscala: string | null; saidaEscala: string | null; intervaloMin: number;
-          toleranciaBatidaMin: number; trabalhadoBrutoMin: number; trabalhadoAjustadoMin: number;
-          jornadaEsperadaMin: number; usouAjuste: boolean; diaProtegido: boolean;
-        };
-      }>;
-
+          entradaEscala: null as string | null,
+          saidaEscala: null as string | null,
+          intervaloMin: 0,
+          toleranciaBatidaMin: 10,
+          trabalhadoBrutoMin: Number(d.trabalhado_min) || 0,
+          trabalhadoAjustadoMin: Number(d.trabalhado_min) || 0,
+          jornadaEsperadaMin: Number(d.jornada_min) || 0,
+          usouAjuste: true,
+          diaProtegido: Boolean(d.protegido),
+        },
+      }));
     },
   });
 
