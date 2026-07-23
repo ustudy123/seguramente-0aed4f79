@@ -346,6 +346,48 @@ export function PontoEscalasTab() {
   }>(null);
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
+  // Formata YYYY-MM-DD como dd/mm/aaaa. Monta a data pelos componentes em vez
+  // de new Date(str): a string ISO sem hora é interpretada como UTC, e no
+  // fuso do Brasil isso exibiria o dia anterior.
+  const formatarData = (iso: string) => {
+    if (!iso) return "-";
+    const [a, m, d] = iso.split("T")[0].split("-");
+    return `${d}/${m}/${a}`;
+  };
+
+  // Histórico de escalas do colaborador. Buscado sob demanda (ao abrir), e
+  // não junto da lista principal, porque a query de atribuições carrega só as
+  // ativas — o histórico inclui as encerradas (ativa=false).
+  const [historico, setHistorico] = useState<null | {
+    colaborador_nome: string;
+    itens: Array<{
+      id: string;
+      escala_id: string;
+      data_inicio: string;
+      data_fim: string | null;
+      ativa: boolean;
+    }>;
+  }>(null);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+
+  const abrirHistorico = async (colaboradorId: string, colaboradorNome: string) => {
+    setCarregandoHistorico(true);
+    setHistorico({ colaborador_nome: colaboradorNome, itens: [] });
+    try {
+      const { data, error } = await fromTable("ponto_escala_atribuicoes")
+        .select("id, escala_id, data_inicio, data_fim, ativa")
+        .eq("colaborador_id", colaboradorId)
+        .order("data_inicio", { ascending: false });
+      if (error) throw error;
+      setHistorico({ colaborador_nome: colaboradorNome, itens: (data || []) as any });
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao carregar o histórico");
+      setHistorico(null);
+    } finally {
+      setCarregandoHistorico(false);
+    }
+  };
+
   const handleSalvarEdicaoAtribuicao = async () => {
     if (!editAtribuicao) return;
     if (!editAtribuicao.escala_id_nova) { toast.error("Selecione a escala"); return; }
@@ -1021,11 +1063,63 @@ export function PontoEscalasTab() {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditAtribuicao(null)}>Cancelar</Button>
-            <Button onClick={handleSalvarEdicaoAtribuicao} disabled={salvandoEdicao}>
-              {salvandoEdicao ? "Salvando..." : "Salvar"}
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => editAtribuicao && abrirHistorico(editAtribuicao.colaborador_id, editAtribuicao.colaborador_nome)}
+            >
+              <Clock className="h-4 w-4 mr-1" />
+              Histórico
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditAtribuicao(null)}>Cancelar</Button>
+              <Button onClick={handleSalvarEdicaoAtribuicao} disabled={salvandoEdicao}>
+                {salvandoEdicao ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Histórico de escalas do colaborador */}
+      <Dialog open={!!historico} onOpenChange={(o) => { if (!o) setHistorico(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Histórico de escalas — {historico?.colaborador_nome}</DialogTitle>
+          </DialogHeader>
+
+          {carregandoHistorico ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Carregando…</p>
+          ) : !historico?.itens.length ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhuma atribuição registrada para este colaborador.
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {historico.itens.map(h => {
+                const nomeEscala = escalas.find(e => e.id === h.escala_id)?.nome || "Escala removida";
+                return (
+                  <div
+                    key={h.id}
+                    className={`rounded-md border p-3 ${h.ativa ? "bg-muted/40" : ""}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-sm">{nomeEscala}</span>
+                      {h.ativa && <Badge variant="secondary">Vigente</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {h.data_fim
+                        ? `De ${formatarData(h.data_inicio)} até ${formatarData(h.data_fim)}`
+                        : `A partir de ${formatarData(h.data_inicio)}`}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistorico(null)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
