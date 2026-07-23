@@ -48,6 +48,10 @@ AS $function$
 DECLARE
   v_ini date := to_date(p_competencia || '-01', 'YYYY-MM-DD');
   v_fim date := (to_date(p_competencia || '-01', 'YYYY-MM-DD') + INTERVAL '1 month - 1 day')::date;
+  -- CPF comparado SÓ POR DÍGITOS: as tabelas guardam ora com pontuação, ora
+  -- sem. O front sempre limpou antes de comparar; aqui é preciso fazer o
+  -- mesmo, senão a função não encontra os dias e devolve vazio.
+  v_cpf text := regexp_replace(COALESCE(p_colaborador_cpf, ''), '[^0-9]', '', 'g');
   v_colaborador_id text;
   v_fb_jornada int;
   v_fb_tol int := 0;
@@ -68,7 +72,7 @@ BEGIN
   SELECT colaborador_id INTO v_colaborador_id
   FROM public.ponto_diario
   WHERE tenant_id = p_tenant_id
-    AND colaborador_cpf = p_colaborador_cpf
+    AND regexp_replace(colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
     AND data BETWEEN v_ini AND v_fim
   ORDER BY data DESC
   LIMIT 1;
@@ -79,7 +83,7 @@ BEGIN
   FROM public.ponto_escala_atribuicoes a
   JOIN public.ponto_escalas e ON e.id = a.escala_id
   WHERE a.tenant_id = p_tenant_id
-    AND (a.colaborador_cpf = p_colaborador_cpf OR a.colaborador_id = v_colaborador_id)
+    AND (regexp_replace(COALESCE(a.colaborador_cpf,''), '[^0-9]', '', 'g') = v_cpf OR a.colaborador_id = v_colaborador_id)
     AND COALESCE(a.ativa, true) = true
   ORDER BY a.data_inicio ASC
   LIMIT 1;
@@ -89,7 +93,7 @@ BEGIN
            d.horas_extras, d.horas_faltantes, d.colaborador_id, d.entrada, d.saida
     FROM public.ponto_diario d
     WHERE d.tenant_id = p_tenant_id
-      AND d.colaborador_cpf = p_colaborador_cpf
+      AND regexp_replace(d.colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
       AND d.data BETWEEN v_ini AND v_fim
     ORDER BY d.data
   LOOP
@@ -101,7 +105,7 @@ BEGIN
       OR EXISTS (
         SELECT 1 FROM public.atestados a
         WHERE a.tenant_id = p_tenant_id
-          AND a.colaborador_cpf = p_colaborador_cpf
+          AND regexp_replace(a.colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
           AND COALESCE(a.unidade_afastamento, 'dias') = 'dias'
           AND a.data_inicio_afastamento IS NOT NULL
           AND a.data_inicio_afastamento <= r.data
@@ -119,7 +123,7 @@ BEGIN
 
     -- ── Jornada esperada ────────────────────────────────────────────────
     SELECT j.jornada_min, j.tol_min INTO v_jornada, v_tol
-    FROM public.ponto_jornada_do_dia(p_tenant_id, p_colaborador_cpf, r.colaborador_id::text, r.data) j;
+    FROM public.ponto_jornada_do_dia(p_tenant_id, v_cpf, r.colaborador_id::text, r.data) j;
 
     IF v_jornada IS NULL OR v_jornada = 0 THEN
       IF EXTRACT(DOW FROM r.data)::int IN (0, 6) THEN
@@ -137,7 +141,7 @@ BEGIN
       INTO v_atest_min
     FROM public.atestados a
     WHERE a.tenant_id = p_tenant_id
-      AND a.colaborador_cpf = p_colaborador_cpf
+      AND regexp_replace(a.colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
       AND COALESCE(a.unidade_afastamento, 'dias') = 'horas'
       AND a.data_inicio_afastamento IS NOT NULL
       AND a.data_inicio_afastamento <= r.data
@@ -150,7 +154,7 @@ BEGIN
     BEGIN
       SELECT e.entrada, e.saida, COALESCE(e.intervalo_min, 0), COALESCE(e.tolerancia_batida_min, 10)
         INTO v_ent_esc, v_sai_esc, v_interv, v_tol_bat
-      FROM public.ponto_escala_do_dia(p_tenant_id, p_colaborador_cpf, r.colaborador_id::text, r.data) e;
+      FROM public.ponto_escala_do_dia(p_tenant_id, v_cpf, r.colaborador_id::text, r.data) e;
     EXCEPTION WHEN OTHERS THEN
       v_ent_esc := NULL; v_sai_esc := NULL;
     END;
@@ -245,12 +249,15 @@ DECLARE
   v_tot_cred int := 0;
   v_tot_deb int := 0;
   v_tot_comp int := 0;
+  -- Só para LOCALIZAR os dias no ponto_diario. Ao gravar seguimos usando
+  -- p_colaborador_cpf, para não alterar o formato já existente na tabela.
+  v_cpf text := regexp_replace(COALESCE(p_colaborador_cpf, ''), '[^0-9]', '', 'g');
 BEGIN
   SELECT colaborador_id, colaborador_nome, empresa_id
     INTO v_colaborador_id, v_colaborador_nome, v_empresa_id
   FROM public.ponto_diario
   WHERE tenant_id = p_tenant_id
-    AND colaborador_cpf = p_colaborador_cpf
+    AND regexp_replace(colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
     AND data BETWEEN v_ini AND v_fim
   ORDER BY data DESC
   LIMIT 1;
