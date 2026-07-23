@@ -130,6 +130,25 @@ export function PontoBancoHorasTab() {
     const dd = String(lastDay).padStart(2, "0");
     return { ini: `${editComp}-01`, fim: `${editComp}-${dd}` };
   })();
+  // Movimentações MANUAIS do banco em edição. A listagem soma todas as
+  // movimentações (apuradas + manuais); o resumo da edição só considerava os
+  // dias com ponto, e por isso divergia sempre que havia lançamento manual.
+  // Aqui buscamos só as manuais — as apuradas já estão representadas pelos
+  // dias com ponto, somá-las seria contar duas vezes.
+  const { data: movsManuaisEdit = [] } = useQuery({
+    queryKey: ["banco-horas-movs-manuais", editBanco?.id],
+    enabled: !!editBanco?.id,
+    queryFn: async () => {
+      const { data, error } = await fromTable("ponto_banco_horas_movimentacoes")
+        .select("tipo, minutos, origem")
+        .eq("banco_horas_id", editBanco!.id);
+      if (error) throw error;
+      return (data || []).filter((m: any) =>
+        !["apuracao", "apuracao_auto"].includes(String(m.origem || ""))
+      ) as Array<{ tipo: string; minutos: number; origem: string }>;
+    },
+  });
+
   const { data: diasBanco = [], isLoading: carregandoDias } = useQuery({
     queryKey: ["banco-horas-dias", editBanco?.colaborador_cpf, editComp, tenantId],
     enabled: !!editBanco && !!editIniFim,
@@ -199,7 +218,7 @@ export function PontoBancoHorasTab() {
 
       let fallbackJornadaMin = 0;
       let fallbackTolMin = 0;
-      let fallbackTolBatida = 5;
+      let fallbackTolBatida = 10;
       if (fallbackEscalaId) {
         try {
           const { data: esc } = await (supabase as any)
@@ -209,7 +228,7 @@ export function PontoBancoHorasTab() {
             .maybeSingle();
           fallbackJornadaMin = Number(esc?.jornada_diaria_minutos) || 0;
           fallbackTolMin = Number(esc?.tolerancia_diaria_minutos) || 0;
-          fallbackTolBatida = esc?.tolerancia_minutos != null ? Number(esc.tolerancia_minutos) : 5;
+          fallbackTolBatida = esc?.tolerancia_minutos != null ? Number(esc.tolerancia_minutos) : 10;
         } catch { /* ignore */ }
       }
 
@@ -295,7 +314,7 @@ export function PontoBancoHorasTab() {
         const info = jornadasETol[idx];
         const esperadoBase = info?.jornada || 0;
         const esperado = Math.max(0, esperadoBase - (atestadoHorasMin.get(d.data) || 0));
-        const tolBatida = info?.tolBatida ?? 5;
+        const tolBatida = info?.tolBatida ?? 10;
 
         // Prioriza cálculo por batida (tolerância aplicada na batida, não no saldo).
         // Se não houver escala com horários definidos, cai no fallback antigo.
@@ -1183,24 +1202,40 @@ export function PontoBancoHorasTab() {
                 </div>
 
                 {(() => {
-                  // No modal de edição mostramos apenas Créditos e Débitos —
-                  // o que veio dos dias com ponto na competência. Compensados e
-                  // Saldo Atual saíram daqui de propósito: o cálculo do saldo
-                  // (anterior + créditos − débitos − compensados) é feito na
-                  // listagem do banco, que é a fonte única. Ter a conta em dois
-                  // lugares abria espaço para divergência entre as telas.
-                  const cred = diasBanco.reduce((s, d) => s + (d.saldo_minutos > 0 ? d.saldo_minutos : 0), 0);
-                  const deb = diasBanco.reduce((s, d) => s + (d.saldo_minutos < 0 ? -d.saldo_minutos : 0), 0);
+                  // Créditos/Débitos da edição = dias com ponto + lançamentos
+                  // MANUAIS do banco. Antes só somava os dias, e por isso
+                  // divergia da listagem sempre que havia ajuste manual.
+                  const credDias = diasBanco.reduce((s, d) => s + (d.saldo_minutos > 0 ? d.saldo_minutos : 0), 0);
+                  const debDias = diasBanco.reduce((s, d) => s + (d.saldo_minutos < 0 ? -d.saldo_minutos : 0), 0);
+                  const credManual = movsManuaisEdit
+                    .filter(m => m.tipo === "credito")
+                    .reduce((s, m) => s + (Number(m.minutos) || 0), 0);
+                  const debManual = movsManuaisEdit
+                    .filter(m => m.tipo === "debito")
+                    .reduce((s, m) => s + (Number(m.minutos) || 0), 0);
+                  const cred = credDias + credManual;
+                  const deb = debDias + debManual;
+                  const temManual = credManual > 0 || debManual > 0;
                   return (
-                    <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-2 gap-3 text-center">
-                      <div>
-                        <p className="text-[11px] text-muted-foreground">Créditos</p>
-                        <p className="font-mono text-sm text-green-600">+{formatMinutos(cred)}</p>
+                    <div className="rounded-md border bg-muted/40 p-3 space-y-2">
+                      <div className="grid grid-cols-2 gap-3 text-center">
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">Créditos</p>
+                          <p className="font-mono text-sm text-green-600">+{formatMinutos(cred)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">Débitos</p>
+                          <p className="font-mono text-sm text-red-600">-{formatMinutos(deb)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[11px] text-muted-foreground">Débitos</p>
-                        <p className="font-mono text-sm text-red-600">-{formatMinutos(deb)}</p>
-                      </div>
+                      {temManual && (
+                        <p className="text-[11px] text-muted-foreground text-center border-t pt-2">
+                          Inclui lançamento manual:
+                          {credManual > 0 && <> +{formatMinutos(credManual)} crédito</>}
+                          {credManual > 0 && debManual > 0 && " ·"}
+                          {debManual > 0 && <> -{formatMinutos(debManual)} débito</>}
+                        </p>
+                      )}
                     </div>
                   );
                 })()}

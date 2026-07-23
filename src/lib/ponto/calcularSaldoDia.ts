@@ -22,7 +22,7 @@ export interface CalcularSaldoDiaInput {
   saidaEscala?: string | null;       // HH:MM
   intervaloMin?: number | null;      // minutos de intervalo (almoço) da escala
   jornadaEsperadaMin: number;        // jornada oficial líquida (sem intervalo)
-  toleranciaBatidaMin?: number | null; // default 5
+  toleranciaBatidaMin?: number | null; // default 10
   trabalhadoBrutoMin?: number | null;  // fallback quando não há escala definida
 }
 
@@ -33,7 +33,7 @@ export interface CalcularSaldoDiaResult {
 }
 
 export function calcularSaldoDia(input: CalcularSaldoDiaInput): CalcularSaldoDiaResult {
-  const tol = Math.max(0, input.toleranciaBatidaMin ?? 5);
+  const tol = Math.max(0, input.toleranciaBatidaMin ?? 10);
   const jornada = Math.max(0, input.jornadaEsperadaMin || 0);
 
   const entradaReal = toMinutes(input.entradaReal);
@@ -49,21 +49,25 @@ export function calcularSaldoDia(input: CalcularSaldoDiaInput): CalcularSaldoDia
     return { saldoMin: saldo, trabalhadoAjustadoMin: bruto, usouAjuste: false };
   }
 
-  // Entrada: dentro da tolerância → considera horário oficial; fora → considera real (atraso integral)
-  const entradaConsiderada = entradaReal <= entradaEscala + tol
+  // Tolerância SIMÉTRICA, aplicada na batida (regra da empresa: 10 min).
+  // Dentro da tolerância (para mais ou para menos) considera-se o horário
+  // oficial — não gera crédito nem débito. Fora dela, vale o horário REAL e o
+  // tempo conta CHEIO, não só o que excede: chegar 11 min atrasado é 11 min de
+  // débito; sair 11 min depois é 11 min de crédito.
+  //
+  // A simetria vale para os dois lados de cada batida — antes, sair mais tarde
+  // creditava desde o primeiro minuto (sem tolerância) e chegar adiantado nunca
+  // creditava. Agora os dois passam pela mesma janela de 10 min.
+  const dentroDaTolerancia = (real: number, oficial: number) =>
+    Math.abs(real - oficial) <= tol;
+
+  const entradaConsiderada = dentroDaTolerancia(entradaReal, entradaEscala)
     ? entradaEscala
     : entradaReal;
 
-  // Saída: dentro da tolerância (saiu até `tol` min antes) → considera oficial;
-  // saída ≥ oficial → considera real (extras integrais); saída muito antes → real (débito integral).
-  let saidaConsiderada: number;
-  if (saidaReal >= saidaEscala) {
-    saidaConsiderada = saidaReal;
-  } else if (saidaReal >= saidaEscala - tol) {
-    saidaConsiderada = saidaEscala;
-  } else {
-    saidaConsiderada = saidaReal;
-  }
+  const saidaConsiderada = dentroDaTolerancia(saidaReal, saidaEscala)
+    ? saidaEscala
+    : saidaReal;
 
   const trabalhadoAjustado = Math.max(0, saidaConsiderada - entradaConsiderada - intervalo);
   const saldo = jornada > 0 ? trabalhadoAjustado - jornada : 0;

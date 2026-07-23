@@ -1,28 +1,31 @@
 -- =========================================================
--- APURAÇÃO DO BANCO DE HORAS: alinhar com a tela de edição
+-- BANCO DE HORAS: listagem passa a bater com a tela de edição
 --
--- PROBLEMA: os créditos/débitos da LISTAGEM (valor gravado pela apuração)
--- divergiam dos mostrados no dialog "Editar Banco" — ex.: Adriana, 07/2026,
--- listagem +8h51/-12h16 x dialog +7h50/-12h20. O correto é o do dialog.
+-- Diagnóstico (confirmado com os dados da Cleciane, 06/2026):
+--   listagem  +19h59 / -19h13
+--   edição    +12h26 / -14h26
+--   movimentações: apuracao 746cr/866db + apuracao_auto 453cr/11db
+--                  + manual 276db
+-- Ou seja: a edição JÁ batia com a origem 'apuracao' (746=12h26,
+-- 866=14h26). O cálculo nunca esteve errado. A listagem inflava porque
+-- somava DUAS coisas a mais:
 --
--- CAUSA: as duas telas aplicavam a tolerância em lugares diferentes.
---   - Apuração (antes): saldo = trabalhado_bruto - jornada; depois
---     DESCARTAVA o dia se |saldo| coubesse na tolerância diária.
---   - Dialog (correto): ajusta as BATIDAS pela tolerância (entrada/saída) e
---     só então calcula saldo = trabalhado_ajustado - jornada.
--- Por isso chegar adiantado virava crédito na apuração (mas não no dialog),
--- e atrasos pequenos eram zerados na apuração (mas contavam no dialog).
+--  1) movimentações órfãs de origem 'apuracao_auto', criadas por uma versão
+--     antiga da apuração (migration 20260701). A apuração atual só apagava
+--     origem='apuracao' antes de reinserir, então as 'apuracao_auto' nunca
+--     eram limpas e acumulavam a cada reapuração. -> CORRIGIDO aqui: o
+--     DELETE passa a remover as duas origens.
+--  2) lançamentos manuais, que a listagem soma e a edição não via. -> a
+--     edição passa a exibi-los (mudança no front, não nesta migration).
 --
--- ESCOPO DESTA MIGRATION (mínimo):
---   ALTERADO: apenas o cálculo do saldo do dia quando existe escala com
---   horários definidos — passa a usar ponto_escala_do_dia (entrada, saída,
---   intervalo, tolerância de batida), como o dialog.
---   PRESERVADO, sem qualquer mudança: dias protegidos (justificado, férias,
---   atestado, afastamento, feriado), atestado de horas descontando jornada,
---   fallback de jornada por atribuição mais antiga, regra de extras/faltantes
---   consolidados, saldo anterior, upsert do banco, movimentações manuais e
---   recálculo dos totais.
---   Quando NÃO há escala com horários, o caminho antigo continua idêntico.
+-- Também nesta migration: tolerância SIMÉTRICA de 10 min na batida, regra
+-- informada pela empresa — até 10 min não gera nada; a partir de 11 conta
+-- CHEIO, tanto crédito quanto débito, na entrada e na saída.
+--
+-- PRESERVADO sem mudança: dias protegidos (justificado/férias/atestado/
+-- afastamento/feriado), atestado de horas descontando jornada, fallback de
+-- jornada, extras/faltantes consolidados, saldo anterior, upsert do banco,
+-- movimentações manuais e recálculo dos totais.
 -- =========================================================
 
 CREATE OR REPLACE FUNCTION public.apurar_banco_horas_colaborador(
@@ -62,17 +65,9 @@ DECLARE
   v_faltantes int;
   v_fb_jornada int;      -- fallback: jornada_diaria_minutos da atribuição mais antiga
   v_fb_tol int := 0;
-  -- Batidas da escala do dia, para aplicar a tolerância NA BATIDA (regra do dialog)
-  v_ent_esc time;
-  v_sai_esc time;
-  v_interv int;
-  v_tol_bat int;
-  v_ent_real time;
-  v_sai_real time;
-  v_ent_cons int;        -- entrada considerada (minutos do dia)
-  v_sai_cons int;        -- saída considerada (minutos do dia)
-  v_trab_ajust int;      -- trabalhado após ajuste das batidas
-  v_usou_batida boolean; -- true quando o cálculo por batida foi aplicado
+  -- Batidas da escala do dia (tolerância aplicada NA BATIDA, como na tela)
+  v_ent_esc time; v_sai_esc time; v_interv int; v_tol_bat int;
+  v_ent_cons int; v_sai_cons int; v_trab_ajust int; v_usou_batida boolean;
   r RECORD;
 BEGIN
   -- Identidade do colaborador (registro mais recente da competência).
@@ -141,10 +136,9 @@ BEGIN
     SELECT jornada_min, tol_min INTO v_jornada, v_tol
     FROM public.ponto_jornada_do_dia(p_tenant_id, p_colaborador_cpf, r.colaborador_id::text, r.data);
 
-    -- Batidas previstas da escala do dia (mesma fonte usada pelo dialog).
-    v_ent_esc := NULL; v_sai_esc := NULL; v_interv := 0; v_tol_bat := 5;
+    v_ent_esc := NULL; v_sai_esc := NULL; v_interv := 0; v_tol_bat := 10;
     BEGIN
-      SELECT entrada, saida, COALESCE(intervalo_min, 0), COALESCE(tolerancia_batida_min, 5)
+      SELECT entrada, saida, COALESCE(intervalo_min, 0), COALESCE(tolerancia_batida_min, 10)
         INTO v_ent_esc, v_sai_esc, v_interv, v_tol_bat
       FROM public.ponto_escala_do_dia(p_tenant_id, p_colaborador_cpf, r.colaborador_id::text, r.data);
     EXCEPTION WHEN OTHERS THEN
@@ -167,40 +161,32 @@ BEGIN
     v_extras    := COALESCE((EXTRACT(EPOCH FROM r.horas_extras) / 60)::int, 0);
     v_faltantes := COALESCE((EXTRACT(EPOCH FROM r.horas_faltantes) / 60)::int, 0);
 
-    -- ── Cálculo por BATIDA (regra do dialog "Editar Banco") ──────────────
-    -- A tolerância é aplicada NA BATIDA, não no saldo do dia:
-    --   entrada dentro da tolerância  -> considera o horário oficial;
-    --   saída  dentro da tolerância   -> considera o horário oficial;
-    --   saída após o horário          -> considera a real (extra integral).
-    -- Consequência (correta): chegar adiantado não vira crédito, e atraso
-    -- além da tolerância conta integralmente. Antes a RPC fazia
-    -- (trabalhado_bruto - jornada) e depois descartava o dia se o SALDO
-    -- coubesse na tolerância diária — daí divergir do que a tela mostrava.
+    -- ── Tolerância SIMÉTRICA na batida (regra da empresa: 10 min) ────────
+    -- Dentro de 10 min (para mais ou para menos) vale o horário oficial: não
+    -- gera crédito nem débito. A partir de 11 min vale o horário REAL e o
+    -- tempo conta CHEIO — 11 min de atraso são 11 min de débito, 11 min a
+    -- mais na saída são 11 min de crédito. Mesma regra dos dois lados de cada
+    -- batida, entrada e saída.
     v_usou_batida := false;
-    v_ent_real := r.entrada;
-    v_sai_real := r.saida;
 
     IF v_ent_esc IS NOT NULL AND v_sai_esc IS NOT NULL
-       AND v_ent_real IS NOT NULL AND v_sai_real IS NOT NULL
+       AND r.entrada IS NOT NULL AND r.saida IS NOT NULL
        AND COALESCE(v_esperado, 0) > 0 THEN
 
       v_ent_cons := CASE
-        WHEN EXTRACT(EPOCH FROM v_ent_real)/60 <= EXTRACT(EPOCH FROM v_ent_esc)/60 + COALESCE(v_tol_bat, 5)
+        WHEN abs((EXTRACT(EPOCH FROM r.entrada)/60)::int - (EXTRACT(EPOCH FROM v_ent_esc)/60)::int) <= COALESCE(v_tol_bat, 10)
           THEN (EXTRACT(EPOCH FROM v_ent_esc)/60)::int
-        ELSE (EXTRACT(EPOCH FROM v_ent_real)/60)::int
+        ELSE (EXTRACT(EPOCH FROM r.entrada)/60)::int
       END;
 
       v_sai_cons := CASE
-        WHEN EXTRACT(EPOCH FROM v_sai_real)/60 >= EXTRACT(EPOCH FROM v_sai_esc)/60
-          THEN (EXTRACT(EPOCH FROM v_sai_real)/60)::int
-        WHEN EXTRACT(EPOCH FROM v_sai_real)/60 >= EXTRACT(EPOCH FROM v_sai_esc)/60 - COALESCE(v_tol_bat, 5)
+        WHEN abs((EXTRACT(EPOCH FROM r.saida)/60)::int - (EXTRACT(EPOCH FROM v_sai_esc)/60)::int) <= COALESCE(v_tol_bat, 10)
           THEN (EXTRACT(EPOCH FROM v_sai_esc)/60)::int
-        ELSE (EXTRACT(EPOCH FROM v_sai_real)/60)::int
+        ELSE (EXTRACT(EPOCH FROM r.saida)/60)::int
       END;
 
       v_trab_ajust := GREATEST(0, v_sai_cons - v_ent_cons - COALESCE(v_interv, 0));
 
-      -- Atestado de HORAS continua descontando da jornada esperada.
       SELECT COALESCE(SUM(COALESCE(a.horas_afastamento, 0) * 60 + COALESCE(a.minutos_afastamento, 0)), 0)
         INTO v_atest_min
       FROM public.atestados a
@@ -324,7 +310,7 @@ BEGIN
   -- Substitui apenas as movimentações apuradas anteriores (preserva manuais).
   DELETE FROM public.ponto_banco_horas_movimentacoes
   WHERE banco_horas_id = v_banco_id
-    AND origem = 'apuracao';
+    AND origem IN ('apuracao', 'apuracao_auto');
 
   IF v_creditos > 0 THEN
     INSERT INTO public.ponto_banco_horas_movimentacoes (
@@ -364,16 +350,51 @@ END;
 $$;
 
 -- ---------------------------------------------------------
+-- Limpeza retroativa: remove as movimentações órfãs já acumuladas.
+-- São resquícios da apuração automática antiga (origem 'apuracao_auto'),
+-- não lançamentos de ninguém — os manuais têm origem 'manual' e ficam.
+-- ---------------------------------------------------------
+DELETE FROM public.ponto_banco_horas_movimentacoes
+WHERE origem = 'apuracao_auto';
+
+-- Recalcula os totais de todos os bancos afetados a partir do que sobrou.
+UPDATE public.ponto_banco_horas b
+SET creditos_minutos = t.cred,
+    debitos_minutos = t.deb,
+    compensados_minutos = t.comp,
+    saldo_atual_minutos = b.saldo_anterior_minutos + t.cred - t.deb - t.comp,
+    updated_at = now()
+FROM (
+  SELECT banco_horas_id,
+         COALESCE(SUM(minutos) FILTER (WHERE tipo = 'credito'), 0)    AS cred,
+         COALESCE(SUM(minutos) FILTER (WHERE tipo = 'debito'), 0)     AS deb,
+         COALESCE(SUM(minutos) FILTER (WHERE tipo = 'compensacao'), 0) AS comp
+  FROM public.ponto_banco_horas_movimentacoes
+  GROUP BY banco_horas_id
+) t
+WHERE b.id = t.banco_horas_id;
+
+-- ---------------------------------------------------------
 -- Verificação
 -- ---------------------------------------------------------
 DO $verifica$
+DECLARE v_orfas int;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_proc p
-    WHERE p.proname = 'apurar_banco_horas_colaborador'
-      AND p.prosrc LIKE '%v_usou_batida%'
-  ) THEN
-    RAISE EXCEPTION 'FALHOU: apuração não foi atualizada com o cálculo por batida.';
+  SELECT count(*) INTO v_orfas
+  FROM public.ponto_banco_horas_movimentacoes
+  WHERE origem = 'apuracao_auto';
+
+  IF v_orfas > 0 THEN
+    RAISE EXCEPTION 'FALHOU: ainda restam % movimentações apuracao_auto.', v_orfas;
   END IF;
-  RAISE NOTICE 'OK: apuração alinhada ao dialog (tolerância aplicada na batida).';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE proname = 'apurar_banco_horas_colaborador'
+      AND prosrc LIKE '%apuracao_auto%'
+  ) THEN
+    RAISE EXCEPTION 'FALHOU: apuração não limpa mais a origem apuracao_auto.';
+  END IF;
+
+  RAISE NOTICE 'OK: órfãs removidas, apuração limpa as duas origens, tolerância simétrica de 10 min.';
 END $verifica$;
