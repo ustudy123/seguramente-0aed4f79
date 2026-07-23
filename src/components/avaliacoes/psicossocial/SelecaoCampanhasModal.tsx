@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -153,7 +152,7 @@ export function SelecaoCampanhasModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
@@ -200,7 +199,10 @@ export function SelecaoCampanhasModal({
           </div>
         ) : (
           <TooltipProvider>
-            <ScrollArea className="flex-1 -mx-2 px-2">
+            {/* Rolagem nativa: `min-h-0` e obrigatorio, senao o flex item nao
+                encolhe abaixo da altura do conteudo e nunca gera overflow.
+                O max-h e rede de seguranca caso o flex container falhe. */}
+            <div className="flex-1 min-h-0 max-h-[55vh] overflow-y-auto overscroll-contain scrollbar-visible -mx-2 px-2">
               <div className="space-y-5 py-1">
                 {grupos.map(([instrumento, lista]) => {
                   const elegiveis = lista.filter(temResultado);
@@ -324,7 +326,7 @@ export function SelecaoCampanhasModal({
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
           </TooltipProvider>
         )}
 
