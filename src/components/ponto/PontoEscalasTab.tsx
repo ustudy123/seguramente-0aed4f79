@@ -331,6 +331,53 @@ export function PontoEscalasTab() {
     return map;
   }, [atribuicoes]);
 
+  // Edição de uma atribuição existente: troca a escala do colaborador.
+  // Não sobrescreve o registro atual — encerra ele com data_fim e cria a
+  // nova atribuição. Preserva o histórico, que é o que o ponto exige (a
+  // escala vigente em cada período precisa continuar auditável).
+  const [editAtribuicao, setEditAtribuicao] = useState<null | {
+    id: string;
+    colaborador_id: string;
+    colaborador_nome: string;
+    colaborador_cpf: string;
+    escala_id: string;
+    escala_id_nova: string;
+    data_inicio: string;
+  }>(null);
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+
+  const handleSalvarEdicaoAtribuicao = async () => {
+    if (!editAtribuicao) return;
+    if (!editAtribuicao.escala_id_nova) { toast.error("Selecione a escala"); return; }
+    if (editAtribuicao.escala_id_nova === editAtribuicao.escala_id) {
+      toast.info("A escala selecionada é a mesma da atribuição atual.");
+      return;
+    }
+    setSalvandoEdicao(true);
+    try {
+      // Encerra a atribuição vigente na data de início da nova
+      await fromTable("ponto_escala_atribuicoes")
+        .update({ ativa: false, data_fim: editAtribuicao.data_inicio } as any)
+        .eq("id", editAtribuicao.id);
+
+      await atribuirEscala({
+        escala_id: editAtribuicao.escala_id_nova,
+        colaborador_id: editAtribuicao.colaborador_id,
+        colaborador_nome: editAtribuicao.colaborador_nome,
+        colaborador_cpf: editAtribuicao.colaborador_cpf,
+        data_inicio: editAtribuicao.data_inicio,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["ponto-escala-atribuicoes"] });
+      toast.success("Escala do colaborador atualizada!");
+      setEditAtribuicao(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao atualizar a escala");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
   const handleAtribuirLote = async () => {
     if (!atribuicaoForm.escala_id) { toast.error("Selecione uma escala"); return; }
     if (atribuicaoForm.colaborador_ids.length === 0) { toast.error("Selecione ao menos um colaborador"); return; }
@@ -467,6 +514,7 @@ export function PontoEscalasTab() {
                   <TableHead>Colaborador</TableHead>
                   <TableHead>Escala</TableHead>
                   <TableHead>Início</TableHead>
+                  <TableHead className="w-[80px] text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -475,6 +523,24 @@ export function PontoEscalasTab() {
                     <TableCell>{a.colaborador_nome}</TableCell>
                     <TableCell>{escalas.find(e => e.id === a.escala_id)?.nome || "-"}</TableCell>
                     <TableCell>{a.data_inicio}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Editar escala do colaborador"
+                        onClick={() => setEditAtribuicao({
+                          id: a.id,
+                          colaborador_id: a.colaborador_id,
+                          colaborador_nome: a.colaborador_nome,
+                          colaborador_cpf: (a as any).colaborador_cpf || "",
+                          escala_id: a.escala_id,
+                          escala_id_nova: a.escala_id,
+                          data_inicio: new Date().toISOString().split("T")[0],
+                        })}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -905,6 +971,60 @@ export function PontoEscalasTab() {
             <Button variant="outline" onClick={() => setShowAtribuir(false)} disabled={atribuindoLote}>Cancelar</Button>
             <Button onClick={handleAtribuirLote} disabled={atribuindoLote || atribuicaoForm.colaborador_ids.length === 0}>
               {atribuindoLote ? "Atribuindo..." : `Atribuir ${atribuicaoForm.colaborador_ids.length || ""}`.trim()}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar escala de um colaborador (atribuição ativa) */}
+      <Dialog open={!!editAtribuicao} onOpenChange={(o) => { if (!o) setEditAtribuicao(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar escala — {editAtribuicao?.colaborador_nome}</DialogTitle>
+          </DialogHeader>
+          {editAtribuicao && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Escala atual</Label>
+                <Input
+                  value={escalas.find(e => e.id === editAtribuicao.escala_id)?.nome || "-"}
+                  disabled
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nova escala</Label>
+                <Select
+                  value={editAtribuicao.escala_id_nova}
+                  onValueChange={v => setEditAtribuicao({ ...editAtribuicao, escala_id_nova: v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione a escala" /></SelectTrigger>
+                  <SelectContent>
+                    {escalas.filter(e => e.ativa !== false).map(e => (
+                      <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>A partir de</Label>
+                <Input
+                  type="date"
+                  value={editAtribuicao.data_inicio}
+                  onChange={e => setEditAtribuicao({ ...editAtribuicao, data_inicio: e.target.value })}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  A escala atual é encerrada nesta data e a nova passa a valer a partir dela.
+                  O histórico anterior é preservado.
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditAtribuicao(null)}>Cancelar</Button>
+            <Button onClick={handleSalvarEdicaoAtribuicao} disabled={salvandoEdicao}>
+              {salvandoEdicao ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>
