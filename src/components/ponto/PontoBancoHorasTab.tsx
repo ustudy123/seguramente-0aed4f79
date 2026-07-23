@@ -936,14 +936,13 @@ export function PontoBancoHorasTab() {
               Editar Banco de Horas — {editBanco?.colaborador_nome}
             </DialogTitle>
             <DialogDescription>
-              Ajuste tipo, competência, saldo anterior e prazo de compensação. O saldo atual é recalculado automaticamente
-              (saldo anterior + créditos − débitos − compensados).
+              Ajuste tipo, competência, saldo anterior e prazo de compensação.
+              O saldo atual é calculado na listagem do banco.
             </DialogDescription>
           </DialogHeader>
           {editBanco && (() => {
             const sinal = editBanco.saldo_anterior_negativo ? -1 : 1;
             const saldoAnteriorMin = sinal * (editBanco.saldo_anterior_horas * 60 + editBanco.saldo_anterior_mins);
-            const saldoAtual = saldoAnteriorMin + editBanco.creditos_minutos - editBanco.debitos_minutos - editBanco.compensados_minutos;
             return (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1184,13 +1183,16 @@ export function PontoBancoHorasTab() {
                 </div>
 
                 {(() => {
+                  // No modal de edição mostramos apenas Créditos e Débitos —
+                  // o que veio dos dias com ponto na competência. Compensados e
+                  // Saldo Atual saíram daqui de propósito: o cálculo do saldo
+                  // (anterior + créditos − débitos − compensados) é feito na
+                  // listagem do banco, que é a fonte única. Ter a conta em dois
+                  // lugares abria espaço para divergência entre as telas.
                   const cred = diasBanco.reduce((s, d) => s + (d.saldo_minutos > 0 ? d.saldo_minutos : 0), 0);
                   const deb = diasBanco.reduce((s, d) => s + (d.saldo_minutos < 0 ? -d.saldo_minutos : 0), 0);
-                  const saldoAnt = editBanco.saldo_anterior_minutos || 0;
-                  const comp = editBanco.compensados_minutos || 0;
-                  const saldoCalc = saldoAnt + cred - deb - comp;
                   return (
-                    <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-4 gap-3 text-center">
+                    <div className="rounded-md border bg-muted/40 p-3 grid grid-cols-2 gap-3 text-center">
                       <div>
                         <p className="text-[11px] text-muted-foreground">Créditos</p>
                         <p className="font-mono text-sm text-green-600">+{formatMinutos(cred)}</p>
@@ -1198,14 +1200,6 @@ export function PontoBancoHorasTab() {
                       <div>
                         <p className="text-[11px] text-muted-foreground">Débitos</p>
                         <p className="font-mono text-sm text-red-600">-{formatMinutos(deb)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-muted-foreground">Compensados</p>
-                        <p className="font-mono text-sm">{formatMinutos(comp)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-muted-foreground">Saldo Atual</p>
-                        <p className={`font-mono text-sm font-bold ${saldoCalc >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMinutos(saldoCalc)}</p>
                       </div>
                     </div>
                   );
