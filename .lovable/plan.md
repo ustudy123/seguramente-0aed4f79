@@ -1,60 +1,113 @@
-## Diagnóstico
+# Plano: Ambientes Supabase (Produção + Staging/Testes)
 
-Arquivo: `src/components/ponto/PontoBancoHorasTab.tsx` (linhas ~269-297) e cálculo equivalente em `horas_trabalhadas` (campo cru vindo de `ponto_diario`).
+## Objetivo
+Permitir que o projeto aponte para dois bancos independentes: um para **produção/real** (clientes) e outro para **staging/testes** (dados fictícios), sem hard-coded URLs ou chaves no código.
 
-Hoje o cálculo do saldo do dia é:
+## Decisão de arquitetura
+Usar **dois projetos Supabase independentes** dentro da mesma conta/organização. O frontend carrega a URL, anon key e project ID via variáveis de ambiente do Vite. O `config.toml` continua apontando para o projeto de produção por padrão; para deploy de edge functions no staging, o Supabase CLI é chamado com `--project-ref` ou variável `SUPABASE_PROJECT_ID`.
 
-```
-saldo = horas_trabalhadas - jornada_esperada
-if (|saldo| <= tolerancia_por_batida) saldo = 0
-```
+---
 
-Isso gera os dois defeitos do print:
+## Passos
 
-1. **01/06, 02/06, 03/06** — Entrou 07:58 (jornada 07:52, atraso 6 min = fora da tolerância de 5 min) e saiu 18:00. Como saiu "no horário", `horas_trabalhadas` = 8h32 e `esperado` também = 8h32 (a jornada esperada está sendo derivada do `horas_trabalhadas` cru quando não há bloco). Resultado: saldo 0 = "—". **Correto seria −6 min por dia** (atraso fora da tolerância deve debitar, e a saída pontual não compensa).
+### 1. Refatorar referências hard-coded no frontend
+Substituir todas as URLs e project refs fixos por variáveis de ambiente:
 
-2. **08/06** — Entrou 07:54 (dentro dos 5 min de tolerância → deveria valer 07:52) e saiu 18:30 (30 min após o fim da jornada). Sistema mostra **+28 min** em vez de **+30 min**, porque calcula `9h06 (trabalhado bruto) − 8h38 (esperado)` em vez de aplicar a tolerância *na batida* (arredondar entrada para 07:52) e comparar contra a jornada oficial.
+- `src/integrations/supabase/client.ts`
+- `src/lib/supabasePublic.ts`
+- `src/hooks/useChatIA.ts`
+- `src/hooks/useEpiFiscalIA.ts`
+- `src/components/atestados/AtestadoForm.tsx`
+- `src/pages/FeriasAssinatura.tsx`
+- `src/pages/ExperienciaAssinatura.tsx`
+- `src/pages/PdiAssinatura.tsx`
+- `src/pages/QuestionarioPsicossocial.tsx`
+- `src/pages/admin/QADashboard.tsx`
+- `src/components/experiencia/ExperienciaDocGenerator.tsx`
 
-**Causa raiz:** a tolerância está sendo aplicada ao **saldo consolidado**, não à **batida individual**. Além disso o cálculo compara `horas_trabalhadas` (tempo cru bater–bater) contra `jornada_esperada` derivada da própria batida — o que "auto-anula" atrasos quando a saída é pontual.
+Criar um helper central (`src/lib/supabaseFunctions.ts`) para montar URLs de edge functions no padrão `${VITE_SUPABASE_URL}/functions/v1/{function-name}`, evitando duplicação.
 
-## Plano de correção
+### 2. Organizar arquivos de ambiente
+- `.env.example` — template com chaves vazias/comentadas para desenvolvedores.
+- `.env.production` — aponta para o projeto atual (`diayjpsrcerycycyaxst`).
+- `.env.staging` — aponta para o novo projeto de staging (placeholder).
+- `.env` — continua sendo o arquivo local padrão; documentar que deve ser copiado de `.env.staging` ou `.env.production`.
 
-Reescrever a apuração diária para trabalhar com **horário oficial ajustado por tolerância**, tanto na UI (`PontoBancoHorasTab`) quanto na RPC SQL usada por Espelho/Fechamento, para manter os números idênticos entre tela e relatório.
+Adicionar `.env.production` e `.env.staging` no `.gitignore` se ainda não estiverem (`.env` já deve estar).
 
-### 1. Nova função utilitária `calcularSaldoDia`
+### 3. Criar script de seed para ambiente de testes
+Criar SQL/migration ou edge function para popular o staging com:
 
-Criar `src/lib/ponto/calcularSaldoDia.ts` recebendo:
-- `entradaReal`, `saidaReal` (HH:MM da marcação)
-- `entradaEscala`, `saidaEscala`, `intervaloMin` (blocos da escala do dia)
-- `toleranciaBatidaMin` (default 5)
-- `jornadaEsperadaMin`
+- Tenant fictício (`YourEyes Teste`).
+- Usuário admin de teste (`teste@youreyes.dev` / senha segura).
+- Empresa, filial, departamento e cargo de exemplo.
+- Colaborador fictício e usuário base.
+- Dados mínimos para validar login, dashboard e alguns módulos sem dados reais.
 
-Regras:
-- Se `entradaReal ≤ entradaEscala + tol` → entrada considerada = `entradaEscala`; caso contrário, `entradaReal` (atraso vira débito integral, não só o excedente da tolerância — a tolerância só "perdoa" quem está dentro dela).
-- Se `saidaReal ≥ saidaEscala − tol` e `< saidaEscala` → saída considerada = `saidaEscala`. Se `saidaReal ≥ saidaEscala` → saída considerada = `saidaReal` (extras contam integralmente).
-- `trabalhadoAjustado = (saidaConsiderada − entradaConsiderada) − intervalo`.
-- `saldo = trabalhadoAjustado − jornadaEsperada`.
-- **Remover** o bloco `if (|saldo| ≤ tol) saldo = 0` — a tolerância já foi absorvida na batida.
+Isso garante que o staging seja "usável" assim que criado.
 
-### 2. Integrar em `PontoBancoHorasTab.tsx`
+### 4. Sincronizar estrutura do banco entre ambientes
+- Todos os migrations atuais em `supabase/migrations/` serão aplicados no projeto staging recém-criado.
+- Documentar fluxo: após criar o projeto staging, rodar `supabase db reset` ou aplicar migrations via dashboard SQL Editor.
+- Adicionar hook/documentação para que, ao criar novas migrations, sejam aplicadas nos dois ambientes (produção e staging).
 
-- Buscar também os blocos da escala (`ponto_escala_blocos` via `ponto_jornada_do_dia` ou nova RPC) para conhecer `hora_entrada`, `hora_saida` e `intervalo` do dia.
-- Substituir o cálculo atual das linhas 269-297 pela chamada a `calcularSaldoDia`.
-- Manter os "dias protegidos" (atestado/férias/afastamento/feriado/justificado) neutralizando o saldo.
+### 5. Ajustar edge functions para múltiplos ambientes
+- Confirmar que as edge functions usam `Deno.env.get("SUPABASE_URL")` e `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` (já padrão do Supabase).
+- Documentar como fazer deploy seletivo:
+  - Produção: `supabase functions deploy` (padrão via `config.toml`).
+  - Staging: `supabase functions deploy --project-ref <staging-project-id>`.
+- Criar/atualizar `scripts` no `package.json` opcionais: `deploy:staging` e `deploy:prod`.
 
-### 3. Alinhar a RPC de apuração
+### 6. Configurar build do Lovable por ambiente
+- O Lovable preview usa o `.env` padrão do repositório. Para o preview apontar para staging, `.env` local deve conter as credenciais de staging.
+- Para publicação em produção, o build do Lovable deve usar `.env.production`. Documentar como alternar na plataforma Lovable.
+- Atualizar `VITE_APP_URL` por ambiente (preview vs publicado).
 
-Atualizar a função SQL usada por Espelho/Fechamento (`ponto_apuracao_dia` / equivalente) com a mesma regra, para não divergir entre telas. Migração apenas altera a função — sem mudança de schema.
+### 7. Documentar setup e operação
+Criar `docs/ambientes-supabase.md` com:
 
-### 4. Validação
+- Como criar o segundo projeto no Supabase.
+- Como obter URL e anon key do novo projeto.
+- Como copiar/enviar variáveis para Lovable.
+- Como aplicar migrations no staging.
+- Como rodar seed.
+- Como fazer deploy de edge functions em cada ambiente.
+- Recomendação de não usar dados reais no staging.
 
-- Reprocessar a competência do print e conferir:
-  - 01–03/06 → saldo diário = **−6 min** cada (débito de 18 min no acumulado dessas linhas).
-  - 08/06 → saldo diário = **+30 min**.
-- Rodar o botão "Recalcular apuração" para atualizar `ponto_diario.horas_extras / horas_faltantes`.
+### 8. Verificação
+- Build local com `bun run build` sem erros de tipos ou variáveis não definidas.
+- Testar login e carregamento do dashboard apontando para staging.
+- Confirmar que nenhum arquivo possui mais `diayjpsrcerycycyaxst` hard-coded.
+- Validação via `rg -n "diayjpsrcerycycyaxst" src/` retornando vazio.
 
-## Detalhes técnicos
+---
 
-- Arquivos alterados: `src/lib/ponto/calcularSaldoDia.ts` (novo), `src/components/ponto/PontoBancoHorasTab.tsx`, migração SQL da função de apuração.
-- Sem mudança de schema, sem breaking change em telas consumidoras (todas leem `saldo_minutos`).
-- Testes manuais nos 3 cenários: atraso fora da tolerância, atraso dentro da tolerância, saída antecipada dentro da tolerância, extras reais.
+## O que o usuário precisa fazer fora do Lovable
+1. Criar um novo projeto no Supabase (pode ser na mesma conta).
+2. Copiar o `Project URL` e `anon public` key do novo projeto.
+3. Inserir esses valores no `.env.staging` e no painel de variáveis de ambiente do Lovable para o preview.
+4. Aplicar as migrations no novo projeto e rodar o seed.
+
+---
+
+## Entregáveis
+- Código frontend 100% parametrizado por ambiente.
+- Arquivos `.env.example`, `.env.production`, `.env.staging`.
+- Seed SQL para staging.
+- Scripts/documentação de deploy e migração.
+- Build validado sem hard-coded references.
+
+## Não está no escopo deste plano
+- Replicação automática de dados de produção para staging (módulo futuro).
+- CI/CD automatizado entre ambientes (GitHub Actions etc.).
+- Backup/restore agendado.
+
+## Technical details
+- **Variáveis necessárias**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`, `SUPABASE_URL` (backend/build), `SUPABASE_PUBLISHABLE_KEY` (backend/build).
+- **Helper de functions**: `getSupabaseFunctionUrl(name)` retornando string baseada em `VITE_SUPABASE_URL`.
+- **Supabase CLI**: `supabase functions deploy --project-ref <staging-id>` para staging; `supabase functions deploy` para produção.
+- **Config.toml**: mantém `project_id = "diayjpsrcerycycyaxst"` (produção); staging é atingido via CLI flags.
+
+## Nota de segurança
+- A chave `anon` pode ir no frontend (é pública).
+- A `service_role` NUNCA deve ser armazenada no `.env` do frontend; só usada em edge functions via `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")`.
