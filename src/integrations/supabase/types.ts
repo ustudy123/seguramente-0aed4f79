@@ -1683,8 +1683,10 @@ export type Database = {
       }
       assinaturas: {
         Row: {
+          activation_email_sent_at: string | null
           approved_at: string | null
           ciclo: string
+          cliente_id: string | null
           created_at: string
           external_reference: string | null
           id: string
@@ -1698,12 +1700,15 @@ export type Database = {
           preference_id: string | null
           raw_payload: Json | null
           status: string
+          tenant_id: string | null
           updated_at: string
           valor_total: number
         }
         Insert: {
+          activation_email_sent_at?: string | null
           approved_at?: string | null
           ciclo: string
+          cliente_id?: string | null
           created_at?: string
           external_reference?: string | null
           id?: string
@@ -1717,12 +1722,15 @@ export type Database = {
           preference_id?: string | null
           raw_payload?: Json | null
           status?: string
+          tenant_id?: string | null
           updated_at?: string
           valor_total: number
         }
         Update: {
+          activation_email_sent_at?: string | null
           approved_at?: string | null
           ciclo?: string
+          cliente_id?: string | null
           created_at?: string
           external_reference?: string | null
           id?: string
@@ -1736,10 +1744,19 @@ export type Database = {
           preference_id?: string | null
           raw_payload?: Json | null
           status?: string
+          tenant_id?: string | null
           updated_at?: string
           valor_total?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "programa_validador_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       atestados: {
         Row: {
