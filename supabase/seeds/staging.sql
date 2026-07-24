@@ -35,7 +35,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- 2. Empresa (matriz) de testes
 INSERT INTO public.empresa_cadastro (
   id, tenant_id, razao_social, nome_fantasia, cnpj, cidade, estado, cep, telefone, email,
-  cnae_principal, cnae_descricao, grau_risco, ativo, created_at, updated_at
+  cnae_principal, cnae_descricao, grau_risco, tipo_pessoa, tipo_unidade, ativo, created_at, updated_at
 )
 VALUES (
   current_setting('seed.empresa_id')::uuid,
@@ -45,6 +45,7 @@ VALUES (
   '00.000.000/0001-00',
   'São Paulo', 'SP', '01000-000', '(11) 99999-9999', 'staging@youreyes.local',
   '6201501', 'Desenvolvimento de programas de computador sob encomenda', 2,
+  'juridica', 'matriz',
   true, now(), now()
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -139,13 +140,9 @@ BEGIN
   ON CONFLICT DO NOTHING;
 END $$;
 
--- 6. Contexto de IA para testes de geração de funções
-INSERT INTO public.empresa_cadastro (id, tenant_id, contexto_ia)
-VALUES (
-  current_setting('seed.empresa_id')::uuid,
-  current_setting('seed.tenant_id')::uuid,
-  'Empresa de tecnologia e serviços de SST. Processos: financeiros, DP, operação de produção e desenvolvimento de software. Atividades esperadas: contas a pagar/receber, folha de pagamento, admissão/demissão, controle de EPIs, desenvolvimento de funcionalidades, suporte a clientes internos.'
-)
-ON CONFLICT (id) DO UPDATE SET contexto_ia = EXCLUDED.contexto_ia;
+-- 6. Contexto de IA (ai_context) para testes de geração de funções
+UPDATE public.empresa_cadastro
+SET ai_context = 'Empresa de tecnologia e serviços de SST. Processos: financeiros, DP, operação de produção e desenvolvimento de software. Atividades esperadas: contas a pagar/receber, folha de pagamento, admissão/demissão, controle de EPIs, desenvolvimento de funcionalidades, suporte a clientes internos.'
+WHERE id = current_setting('seed.empresa_id')::uuid;
 
 COMMIT;
