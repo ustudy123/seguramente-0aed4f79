@@ -58,6 +58,11 @@ Deno.serve(async (req) => {
     const total = Math.round(preco_mensal * meses * 100) / 100;
     const baseUrl = origin || req.headers.get("origin") || "https://youreyes.com.br";
 
+    const externalReference = `${plano_id}-${ciclo}-${Date.now()}`;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
+
     const preference = {
       items: [
         {
@@ -77,7 +82,8 @@ Deno.serve(async (req) => {
       },
       auto_return: "approved",
       statement_descriptor: "YOUREYES",
-      external_reference: `${plano_id}-${ciclo}-${Date.now()}`,
+      external_reference: externalReference,
+      notification_url: webhookUrl,
       metadata: { plano_id, plano_nome, ciclo, preco_mensal, meses },
     };
 
