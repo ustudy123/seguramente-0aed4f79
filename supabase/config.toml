@@ -99,3 +99,5 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = true
   [functions.mercadopago-checkout]
     verify_jwt = false
+  [functions.mercadopago-webhook]
+    verify_jwt = false
