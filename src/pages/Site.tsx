@@ -579,6 +579,11 @@ export default function Site() {
                       {cicloAtual.discount > 0 && (
                         <div className="text-xs text-slate-400 line-through mt-1">R$ {p.base.toLocaleString("pt-BR")}/mês regular</div>
                       )}
+                      {ciclo !== "mensal" && (
+                        <div className="text-xs text-slate-600 mt-1">
+                          Total do ciclo: <strong>R$ {formatarTotalCiclo(p.base)}</strong>
+                        </div>
+                      )}
                       {ciclo === "semestral" && (
                         <div className="text-xs font-semibold text-[#FF8A00] mt-2">🔥 Preço de lançamento</div>
                       )}
