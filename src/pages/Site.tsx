@@ -12,8 +12,6 @@ import {
   Activity,
   BarChart3,
   FileCheck2,
-  HardHat,
-  GraduationCap,
   Building2,
   Scale,
   Lock,
@@ -25,6 +23,9 @@ import {
   Phone,
   MapPin,
   Sparkles,
+  Clock,
+  AlertTriangle,
+  Compass,
 } from "lucide-react";
 
 // ---------------- Data ----------------
@@ -55,7 +56,7 @@ const PLANOS: Plano[] = [
     tier: "Nível 01",
     nome: "Starter",
     base: 197,
-    publico: "Micro e pequenas empresas iniciando a jornada de conformidade.",
+    publico: "Para quem está começando a organizar a operação.",
     limite: "Até 20 colaboradores",
     modulos: [
       "Estrutura Organizacional completa",
@@ -70,7 +71,7 @@ const PLANOS: Plano[] = [
     tier: "Nível 02",
     nome: "Essential",
     base: 397,
-    publico: "PMEs que precisam operacionalizar GRO, PGR e evidências.",
+    publico: "Para quem já tem processo e precisa colocar no ar.",
     limite: "Até 80 colaboradores",
     modulos: [
       "Tudo do Starter",
@@ -83,10 +84,10 @@ const PLANOS: Plano[] = [
   {
     id: "professional",
     tier: "Nível 03",
-    nome: "Professional",
+    nome: "Performance",
     base: 797,
     destaque: true,
-    publico: "Operações estruturadas com múltiplas áreas e governança contínua.",
+    publico: "Para quem já tem processo e precisa medir.",
     limite: "Até 200 colaboradores",
     modulos: [
       "Tudo do Essential",
@@ -100,12 +101,12 @@ const PLANOS: Plano[] = [
   {
     id: "business",
     tier: "Nível 04",
-    nome: "Business",
+    nome: "Governança",
     base: 1797,
-    publico: "Empresas com múltiplas unidades e integrações corporativas.",
+    publico: "Para quem opera em múltiplas unidades e precisa integrar.",
     limite: "Até 500 colaboradores",
     modulos: [
-      "Tudo do Professional",
+      "Tudo do Performance",
       "SSO + auditoria de acessos",
       "KPIs Operacionais avançados",
       "API TOTVS, SAP, Sênior, Gupy",
@@ -119,10 +120,10 @@ const PLANOS: Plano[] = [
     nome: "Enterprise",
     base: 3500,
     consulta: true,
-    publico: "Grandes operações com exigências máximas de segurança e governança.",
+    publico: "Para grandes operações com exigência máxima de segurança.",
     limite: "300+ colaboradores · Banco isolado",
     modulos: [
-      "Tudo do Business",
+      "Tudo do Governança",
       "Banco de dados dedicado",
       "IA customizada por setor",
       "API dedicada + webhooks",
@@ -133,37 +134,42 @@ const PLANOS: Plano[] = [
   },
 ] as const;
 
-const MODULOS = [
-  { icon: ShieldCheck, titulo: "NR-1 & Compliance SST", desc: "GRO, PGR, PCMSO, LTCAT e evidências auditáveis alinhadas à Portaria MTE 1.419/2024." },
-  { icon: Brain, titulo: "Riscos Psicossociais", desc: "Instrumentos validados (COPSOQ, HSE, PROART), IPS/IRP-S e planos de ação automáticos." },
-  { icon: Users, titulo: "Gestão de Pessoas", desc: "Colaboradores, admissão, desligamento, contratos de experiência e ciclo completo do RH." },
-  { icon: Activity, titulo: "Jornada & Ponto", desc: "REP-C/REP-P, geofence, banco de horas, escalas, férias e atestados com governança CLT." },
-  { icon: BarChart3, titulo: "Metas & Performance", desc: "5W2H, GUT, PDI, avaliações 9-Box e OKRs conectados à estratégia da empresa." },
-  { icon: HardHat, titulo: "Saúde & Segurança", desc: "EPIs, Ergonomia (AEP/AET), incidentes eSocial S-2210 e Ordem de Serviço NR-1." },
-  { icon: GraduationCap, titulo: "Aprendizado & Cultura", desc: "Trilhas gamificadas, manuais de função por IA, feedback pedagógico e clima." },
-  { icon: FileCheck2, titulo: "Documental & Contábil", desc: "Arquivamento automático, checklists, assinatura digital e Hub Contábil PDCA." },
-  { icon: Sparkles, titulo: "IA aplicada", desc: "Extrações inteligentes, auditorias GPT-4o e insights convertidos em Ação 5W2H." },
+// 5 frentes (amplitude como consequência, não como abertura)
+const FRENTES = [
+  {
+    icon: Users,
+    titulo: "Pessoas e Cultura",
+    desc: "Recrutamento, integração, desenvolvimento, clima e avaliação. Da contratação certa ao desligamento sem passivo, com registro de tudo que foi combinado, feito e medido.",
+  },
+  {
+    icon: Activity,
+    titulo: "Jornada e Folha",
+    desc: "Ponto, escalas, férias, benefícios e departamento pessoal integrados. O tempo das pessoas deixa de ser conferência manual e vira dado confiável.",
+  },
+  {
+    icon: ShieldCheck,
+    titulo: "SST e Compliance",
+    desc: "Riscos ocupacionais e psicossociais, exames, ASO, treinamentos, normas regulamentadoras, ISO e auditorias. Conformidade que se sustenta sozinha, com prazo e responsável em cada item.",
+  },
+  {
+    icon: FileCheck2,
+    titulo: "Documentos e Governança",
+    desc: "Cada documento com versão, data, assinatura e responsável. Se alguém perguntar “quem aprovou isso e quando?”, a resposta leva três segundos.",
+  },
+  {
+    icon: BarChart3,
+    titulo: "Estratégia e Inteligência",
+    desc: "Metas, planos de ação, indicadores e IA contextual. A direção enxerga a empresa inteira em um painel e sabe o que fazer com o que vê.",
+  },
 ];
 
-const SOLUCOES = [
-  {
-    tag: "NR-1 & Psicossocial",
-    titulo: "Da norma à evidência auditável",
-    desc: "A NR-1 exige processo contínuo, inventário de riscos, plano de ação e participação dos trabalhadores. A YourEyes operacionaliza cada exigência com trilha auditável e evidência documental.",
-    pontos: ["GRO unificado NR-1 + NR-17", "IPS/IRP-S calculados automaticamente", "Anonimato mínimo de 5 respondentes", "Ação corretiva em 5W2H"],
-  },
-  {
-    tag: "RH & Departamento Pessoal",
-    titulo: "Ciclo completo do colaborador",
-    desc: "Da admissão ao desligamento CLT, com validações de ASO (90/135 dias), férias, banco de horas, benefícios e integração ao eSocial.",
-    pontos: ["Folha 2025 com 10 tipos de contrato", "CCT, INSS/IRRF atualizados", "Insalubridade/Periculosidade não-cumulativas", "Assinatura digital de recibos"],
-  },
-  {
-    tag: "Inteligência & Governança",
-    titulo: "Da incerteza à decisão",
-    desc: "Escore de Maturidade calculado por 4 pilares estratégicos, dashboards executivos e IA que traduz risco em ação priorizada.",
-    pontos: ["Dashboard de Maturidade", "Matriz GUT e Pirâmide de Bird", "Hub Contábil com SLAs", "Auditorias GPT-4o de PGR e LTCAT"],
-  },
+// 5 níveis de maturidade
+const NIVEIS = [
+  { n: 1, nome: "Reativa", desc: "Apaga incêndio. O documento existe para mostrar ao fiscal." },
+  { n: 2, nome: "Organizada", desc: "Tem processo no papel, mas depende de pessoas para acontecer." },
+  { n: 3, nome: "Controlada", desc: "Mede o que faz, tem evidência — mas em sistemas separados.", destaque: true },
+  { n: 4, nome: "Integrada", desc: "Gestão, gente e conformidade conversam. A decisão nasce do dado." },
+  { n: 5, nome: "Madura", desc: "O sistema opera sem heróis. Auditoria é rotina, não evento." },
 ];
 
 const CONFIANCA = [
@@ -173,13 +179,14 @@ const CONFIANCA = [
   { titulo: "Trilha auditável", desc: "Todo alerta convertível em Ação 5W2H" },
 ];
 
+// FAQ de objeções (última peça de vendas antes do fechamento)
 const FAQ = [
-  { q: "A oferta de 50% é permanente?", a: "É exclusiva de lançamento, válida por 6 meses. Clientes que assinarem o semestral neste período mantêm o desconto durante todo o ciclo contratado." },
-  { q: "Quanto tempo para estar em conformidade com a NR-1?", a: "Nos planos Essential ou superior, o GRO fica operacional em até 1 dia útil após o onboarding. Inventário PGR e plano de ação são gerados automaticamente." },
-  { q: "Posso mudar de plano durante o semestral?", a: "Upgrades são imediatos com crédito proporcional. Downgrades entram no próximo período." },
-  { q: "O Financeiro e a Rede de Parceiros estão em qual plano?", a: "A partir do plano Business (Nível 04), que exige estrutura multi-unidades e integrações de API." },
-  { q: "O que garante o banco de dados dedicado do Enterprise?", a: "Infraestrutura completamente isolada — seus dados nunca compartilham servidor com outros clientes, com LGPD avançada e auditoria independente." },
-  { q: "Existe trial ou demonstração?", a: "O Professional inclui trial de 14 dias com onboarding assistido. Para Enterprise, oferecemos demonstração guiada com especialista em NR-1." },
+  { q: "Já tenho sistema de RH e de ponto.", a: "Você não troca tudo. Começa pelo que mais dói e integra o resto no seu ritmo." },
+  { q: "Minha equipe não vai usar.", a: "Adoção é medida dentro da plataforma, a IA preenche o que dá para preencher, e a implantação leva 1 dia — não 6 meses." },
+  { q: "É caro para o meu tamanho.", a: "A cobrança é por colaborador e por módulo. Você paga pelo que usa, no tamanho que tem hoje." },
+  { q: "70 módulos parecem complexos demais.", a: "Você não implanta 70. Implanta o que o seu nível de maturidade pede — e ativa o resto quando subir de nível." },
+  { q: "Sou uma empresa pequena, preciso disso?", a: "Empresa pequena é a que mais sofre com dependência de pessoa. Sistema é o que permite crescer sem contratar caos junto." },
+  { q: "A oferta de 50% é permanente?", a: "É exclusiva de lançamento, válida por 6 meses. Quem assina o semestral neste período mantém o desconto durante todo o ciclo contratado." },
 ];
 
 // ---------------- Component ----------------
@@ -192,15 +199,14 @@ export default function Site() {
 
   useEffect(() => {
     const prevTitle = document.title;
-    document.title = "YourEyes — Governança do Trabalho Humano | NR-1, Psicossocial e RH";
+    document.title = "YourEyes — Sistema Operacional da Maturidade Organizacional";
     const meta = document.querySelector('meta[name="description"]');
     const prevDesc = meta?.getAttribute("content") || "";
     meta?.setAttribute(
       "content",
-      "Plataforma corporativa YourEyes: NR-1, riscos psicossociais, SST, RH e IA em governança contínua e auditável do trabalho humano.",
+      "Sua empresa cresce ou só aumenta? A YourEyes organiza pessoas, SST, DP, documentos, metas e estratégia em uma única plataforma auditável com IA — e mede, em tempo real, o quanto sua empresa amadureceu.",
     );
 
-    // Feedback de retorno do Mercado Pago
     const params = new URLSearchParams(window.location.search);
     const pag = params.get("pagamento");
     if (pag === "sucesso") {
@@ -257,10 +263,8 @@ export default function Site() {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-[#0B1D34] text-slate-100">
-
 
       {/* NAV */}
       <header className="sticky top-0 z-40 bg-[#0B1D34]/85 backdrop-blur border-b border-white/10">
@@ -268,31 +272,31 @@ export default function Site() {
           <a href="#topo" className="flex items-center gap-3">
             <img src={logo} alt="YourEyes" className="h-9 w-9" />
             <div className="leading-tight">
-              <div className="font-bold text-[#0B1D34] tracking-tight">YourEyes</div>
-              <div className="text-[10px] uppercase tracking-widest text-slate-500">Governança do Trabalho Humano</div>
+              <div className="font-bold text-white tracking-tight">YourEyes</div>
+              <div className="text-[10px] uppercase tracking-widest text-slate-400">Maturidade Organizacional</div>
             </div>
           </a>
           <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-200">
-            <a href="#plataforma" className="hover:text-[#0A6BBF]">Plataforma</a>
-            <a href="#solucoes" className="hover:text-[#0A6BBF]">Soluções</a>
-            <a href="#planos" className="hover:text-[#0A6BBF]">Planos</a>
-            <a href="#seguranca" className="hover:text-[#0A6BBF]">Segurança</a>
-            <a href="#sobre" className="hover:text-[#0A6BBF]">Sobre</a>
-            <a href="#contato" className="hover:text-[#0A6BBF]">Contato</a>
+            <a href="#problema" className="hover:text-[#60ABEF]">Problema</a>
+            <a href="#niveis" className="hover:text-[#60ABEF]">Níveis</a>
+            <a href="#plataforma" className="hover:text-[#60ABEF]">Plataforma</a>
+            <a href="#planos" className="hover:text-[#60ABEF]">Planos</a>
+            <a href="#seguranca" className="hover:text-[#60ABEF]">Segurança</a>
+            <a href="#contato" className="hover:text-[#60ABEF]">Contato</a>
           </nav>
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-slate-700 hover:text-[#0A6BBF]">
+            <Link to="/login" className="text-sm font-medium text-slate-200 hover:text-[#60ABEF]">
               Entrar
             </Link>
             <a
               href="#contato"
-              className="inline-flex items-center gap-2 bg-[#0A6BBF] hover:bg-[#0959a3] text-white text-sm font-semibold px-4 py-2 rounded-md transition"
+              className="inline-flex items-center gap-2 bg-[#FF8A00] hover:bg-[#e67a00] text-white text-sm font-semibold px-4 py-2 rounded-md transition"
             >
-              Agendar diagnóstico <ArrowRight className="w-4 h-4" />
+              Medir maturidade <ArrowRight className="w-4 h-4" />
             </a>
           </div>
           <button
-            className="lg:hidden text-slate-700"
+            className="lg:hidden text-white"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Menu"
           >
@@ -300,13 +304,13 @@ export default function Site() {
           </button>
         </div>
         {menuOpen && (
-          <div className="lg:hidden border-t border-slate-200 bg-[#0B1D34] px-6 py-4 space-y-3 text-sm text-slate-200">
-            {["plataforma", "solucoes", "planos", "seguranca", "sobre", "contato"].map((s) => (
-              <a key={s} href={`#${s}`} className="block text-slate-700 capitalize" onClick={() => setMenuOpen(false)}>
-                {s === "solucoes" ? "Soluções" : s === "seguranca" ? "Segurança" : s}
+          <div className="lg:hidden border-t border-white/10 bg-[#0B1D34] px-6 py-4 space-y-3 text-sm text-slate-200">
+            {["problema", "niveis", "plataforma", "planos", "seguranca", "contato"].map((s) => (
+              <a key={s} href={`#${s}`} className="block capitalize" onClick={() => setMenuOpen(false)}>
+                {s === "niveis" ? "Níveis" : s === "seguranca" ? "Segurança" : s}
               </a>
             ))}
-            <Link to="/login" className="block text-[#0A6BBF] font-semibold">Entrar na plataforma →</Link>
+            <Link to="/login" className="block text-[#60ABEF] font-semibold">Entrar na plataforma →</Link>
           </div>
         )}
       </header>
@@ -316,44 +320,33 @@ export default function Site() {
         <div className="max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#FFA033] mb-6">
-              <span className="w-8 h-px bg-[#FFA033]" /> Portaria MTE 1.419/2024
+              <span className="w-8 h-px bg-[#FFA033]" /> Sistema Operacional da Maturidade Organizacional
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-              Governança contínua do <span className="text-[#60ABEF]">trabalho humano</span> — da norma à evidência.
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
+              Sua empresa cresce — <span className="text-[#60ABEF]">ou só aumenta?</span>
             </h1>
             <p className="mt-6 text-lg text-slate-300 max-w-2xl leading-relaxed">
-              A YourEyes operacionaliza NR-1, riscos psicossociais, SST, RH e desempenho em uma única plataforma auditável,
-              com inteligência artificial aplicada e trilha documental para segurança jurídica do empregador.
+              Crescer é faturar mais com processo, evidência e gente desenvolvida. Aumentar é faturar mais com caos,
+              planilha e dependência de heróis. A YourEyes organiza pessoas, SST, DP, documentos, metas e estratégia em
+              uma única plataforma auditável com IA — e mede, em tempo real, o quanto sua empresa amadureceu.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <a
                 href="#contato"
                 className="inline-flex items-center gap-2 bg-[#FF8A00] hover:bg-[#e67a00] text-white font-semibold px-6 py-3 rounded-md transition"
               >
-                Agendar diagnóstico <ArrowRight className="w-4 h-4" />
+                Medir a maturidade da minha empresa <ArrowRight className="w-4 h-4" />
               </a>
               <a
-                href="#planos"
+                href="#plataforma"
                 className="inline-flex items-center gap-2 border border-white/30 hover:border-white text-white font-semibold px-6 py-3 rounded-md transition"
               >
-                Ver planos e preços
+                Ver a plataforma por dentro
               </a>
             </div>
-            <div className="mt-10 grid grid-cols-3 gap-6 max-w-xl">
-              {[
-                { n: "1 dia", l: "GRO operacional" },
-                { n: "70+", l: "módulos integrados" },
-                { n: "99,5%", l: "SLA garantido" },
-              ].map((s) => (
-                <div key={s.l}>
-                  <div className="text-2xl font-bold text-white">{s.n}</div>
-                  <div className="text-xs uppercase tracking-wider text-slate-400 mt-1">{s.l}</div>
-                </div>
-              ))}
-            </div>
+            <div className="mt-4 text-xs text-slate-400">Diagnóstico em 3 minutos · grátis · sem compromisso</div>
           </div>
           <div className="lg:col-span-5 relative flex flex-col items-center">
-            {/* Mascot floating */}
             <div className="relative flex justify-center">
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-[380px] h-[380px] rounded-full bg-[#60ABEF]/20 blur-3xl" />
@@ -361,11 +354,10 @@ export default function Site() {
               <img
                 src={mascot.url}
                 alt="EYE — assistente de IA da YourEyes"
-                className="relative z-10 h-[360px] md:h-[420px] w-auto rounded-2xl drop-shadow-[0_25px_60px_rgba(96,171,239,0.35)] animate-[floatMascot_6s_ease-in-out_infinite]"
+                className="relative z-10 h-[360px] md:h-[420px] w-auto rounded-2xl drop-shadow-[0_25px_60px_rgba(96,171,239,0.35)]"
                 style={{ animation: "floatMascot 6s ease-in-out infinite" }}
               />
             </div>
-            {/* Compact maturity card overlapping */}
             <div className="relative -mt-10 w-full rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl z-20">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF8A00]" />
@@ -375,10 +367,10 @@ export default function Site() {
               </div>
               <div className="space-y-3">
                 {[
-                  { l: "Conformidade NR-1", v: 92, c: "#21A365" },
-                  { l: "Riscos Psicossociais", v: 78, c: "#0A6BBF" },
-                  { l: "Gestão de Pessoas", v: 85, c: "#60ABEF" },
-                  { l: "SST & Ergonomia", v: 68, c: "#FF8A00" },
+                  { l: "Pessoas e Cultura", v: 85, c: "#60ABEF" },
+                  { l: "Jornada e Folha", v: 78, c: "#0A6BBF" },
+                  { l: "SST e Compliance", v: 92, c: "#21A365" },
+                  { l: "Documentos e Governança", v: 68, c: "#FF8A00" },
                 ].map((k) => (
                   <div key={k.l}>
                     <div className="flex justify-between text-xs text-slate-300 mb-1.5">
@@ -391,123 +383,148 @@ export default function Site() {
                   </div>
                 ))}
               </div>
+              <div className="mt-4 pt-4 border-t border-white/10 text-[11px] text-slate-400 leading-relaxed">
+                Este é o painel real da plataforma. Descubra o da sua empresa em 3 minutos.
+              </div>
             </div>
             <style>{`@keyframes floatMascot { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }`}</style>
           </div>
         </div>
       </section>
 
-      {/* CONTEXTO / URGÊNCIA */}
-      <section className="bg-white/[0.03] border-y border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-12 grid md:grid-cols-4 gap-8 text-center md:text-left">
-          {[
-            { n: "472k+", l: "afastamentos por transtornos mentais em 2024" },
-            { n: "+67%", l: "aumento anual em benefícios por saúde mental" },
-            { n: "R$ 6k+", l: "por infração à NR-1" },
-            { n: "Contínuo", l: "processo exigido pela Portaria MTE 1.419/2024" },
-          ].map((s) => (
-            <div key={s.l}>
-              <div className="text-3xl font-bold text-white">{s.n}</div>
-              <div className="text-sm text-slate-300 mt-2 leading-snug">{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* PLATAFORMA / MÓDULOS */}
-      <section id="plataforma" className="py-24">
+      {/* PROBLEMA */}
+      <section id="problema" className="py-24 bg-white/[0.03] border-y border-white/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-14">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">A plataforma</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">O problema</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Um sistema único para RH, SST, Compliance e Liderança.
+              Sua gestão não está desorganizada. Está espalhada.
             </h2>
             <p className="mt-4 text-slate-300 text-lg leading-relaxed">
-              Nove famílias de módulos conectadas entre si, com dados isolados por empresa e evidência
-              documental em cada ação executada.
+              Um sistema para ponto. Outro para SST. Uma pasta compartilhada para documentos. Uma planilha para metas.
+              Um grupo de WhatsApp para as ações. E, quando alguém pergunta “isso foi feito?”, começa a caça à evidência.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MODULOS.map((m) => (
-              <div
-                key={m.titulo}
-                className="border border-white/10 rounded-lg p-6 hover:border-[#60ABEF] hover:bg-white/[0.06] transition group bg-white/[0.03] backdrop-blur"
-              >
-                <div className="w-11 h-11 rounded-md bg-[#0A6BBF]/10 text-[#0A6BBF] flex items-center justify-center mb-4 group-hover:bg-[#0A6BBF] group-hover:text-white transition">
-                  <m.icon className="w-5 h-5" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Clock,
+                titulo: "Custo de tempo",
+                desc: "Retrabalho, conferência manual, relatório montado à mão toda vez que a diretoria pede.",
+              },
+              {
+                icon: AlertTriangle,
+                titulo: "Custo de risco",
+                desc: "Documento sem trilha, prazo perdido, ação sem responsável, passivo que aparece anos depois.",
+              },
+              {
+                icon: Compass,
+                titulo: "Custo de decisão",
+                desc: "Você decide por percepção, porque o dado está em seis lugares diferentes.",
+              },
+            ].map((b) => (
+              <div key={b.titulo} className="border border-white/10 rounded-lg p-6 bg-white/[0.04] backdrop-blur">
+                <div className="w-11 h-11 rounded-md bg-[#FF8A00]/15 text-[#FFA033] flex items-center justify-center mb-4">
+                  <b.icon className="w-5 h-5" />
                 </div>
-                <h3 className="font-semibold text-white mb-2">{m.titulo}</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">{m.desc}</p>
+                <h3 className="font-semibold text-white mb-2">{b.titulo}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
+          <div className="mt-10 text-center">
+            <div className="inline-block text-lg font-semibold text-white border-l-4 border-[#FF8A00] pl-4 py-1">
+              Não é falta de esforço. É falta de sistema.
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* SOLUÇÕES */}
-      <section id="solucoes" className="py-24 bg-transparent border-y border-white/10">
+      {/* NÍVEIS DE MATURIDADE */}
+      <section id="niveis" className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-14">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Soluções</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">A virada</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Três frentes que convergem em uma única governança.
+              Existem cinco níveis de maturidade organizacional. Em qual está a sua?
             </h2>
           </div>
-          <div className="space-y-8">
-            {SOLUCOES.map((s, i) => {
-              const gradients = [
-                "from-[#0B1D34] via-[#0A6BBF] to-[#60ABEF]",
-                "from-[#0B4A2E] via-[#21A365] to-[#5FD39A]",
-                "from-[#5B2A86] via-[#0A6BBF] to-[#FF8A00]",
-              ];
-              const glows = [
-                "shadow-[0_20px_60px_-15px_rgba(10,107,191,0.55)]",
-                "shadow-[0_20px_60px_-15px_rgba(33,163,101,0.55)]",
-                "shadow-[0_20px_60px_-15px_rgba(255,138,0,0.45)]",
-              ];
-              return (
-                <div
-                  key={s.titulo}
-                  className={`group relative bg-white border border-slate-200 rounded-2xl overflow-hidden grid md:grid-cols-12 gap-0 transition-all duration-500 hover:-translate-y-1 ${glows[i % 3]} hover:shadow-[0_30px_80px_-15px_rgba(11,29,52,0.4)]`}
-                >
-                  <div
-                    className={`md:col-span-4 relative p-8 flex flex-col justify-between text-white bg-gradient-to-br ${gradients[i % 3]} overflow-hidden`}
-                  >
-                    {/* 3D glow orbs */}
-                    <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/20 blur-3xl" />
-                    <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full bg-black/20 blur-3xl" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.25),transparent_60%)]" />
-
-                    <div className="relative z-10">
-                      <div className="text-[11px] uppercase tracking-[0.2em] text-white/80 mb-4 font-semibold">
-                        {s.tag}
-                      </div>
-                      <div className="text-6xl font-black text-white/25 drop-shadow-lg leading-none">
-                        0{i + 1}
-                      </div>
-                    </div>
-                    <h3 className="relative z-10 text-2xl md:text-3xl font-bold mt-8 leading-tight drop-shadow-md">
-                      {s.titulo}
-                    </h3>
+          <div className="grid md:grid-cols-5 gap-4">
+            {NIVEIS.map((nv) => (
+              <div
+                key={nv.n}
+                className={`relative rounded-lg p-6 border transition ${
+                  nv.destaque
+                    ? "border-[#60ABEF] bg-gradient-to-b from-[#0A6BBF]/25 to-[#0B1D34] shadow-2xl shadow-[#60ABEF]/20 ring-1 ring-[#60ABEF]/40"
+                    : "border-white/10 bg-white/[0.04]"
+                }`}
+              >
+                {nv.destaque && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0A6BBF] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded whitespace-nowrap">
+                    Maioria das empresas
                   </div>
-                  <div className="md:col-span-8 p-8 bg-gradient-to-br from-white to-slate-50">
-                    <p className="text-slate-600 leading-relaxed mb-6">{s.desc}</p>
-                    <ul className="grid sm:grid-cols-2 gap-3">
-                      {s.pontos.map((p) => (
-                        <li
-                          key={p}
-                          className="flex items-start gap-2 text-sm text-slate-700 p-2 rounded-lg transition hover:bg-white hover:shadow-sm"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-[#21A365] flex-shrink-0 mt-0.5" />
-                          <span>{p}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              );
-            })}
+                )}
+                <div className="text-5xl font-black text-white/20 leading-none">0{nv.n}</div>
+                <div className="mt-3 text-lg font-bold text-white">{nv.nome}</div>
+                <p className="mt-2 text-sm text-slate-300 leading-relaxed">{nv.desc}</p>
+              </div>
+            ))}
           </div>
+          <div className="mt-10 text-center">
+            <a
+              href="#contato"
+              className="inline-flex items-center gap-2 bg-[#FF8A00] hover:bg-[#e67a00] text-white font-semibold px-6 py-3 rounded-md transition"
+            >
+              Descobrir meu nível agora <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* PLATAFORMA — 5 FRENTES (amplitude como prova) */}
+      <section id="plataforma" className="py-24 bg-white/[0.03] border-y border-white/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-3xl mb-14">
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">A plataforma</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              Um sistema. Cinco frentes. Toda a operação humana da sua empresa.
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FRENTES.map((f) => (
+              <div
+                key={f.titulo}
+                className="border border-white/10 rounded-lg p-6 hover:border-[#60ABEF] hover:bg-white/[0.06] transition group bg-white/[0.03] backdrop-blur"
+              >
+                <div className="w-11 h-11 rounded-md bg-[#0A6BBF]/15 text-[#60ABEF] flex items-center justify-center mb-4 group-hover:bg-[#0A6BBF] group-hover:text-white transition">
+                  <f.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-white mb-2">{f.titulo}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-10 max-w-3xl text-slate-300 leading-relaxed">
+            São mais de 70 módulos integrados. Você não precisa usar todos — precisa que eles conversem entre si.
+            É exatamente isso que a YourEyes faz.
+          </p>
+        </div>
+      </section>
+
+      {/* PROVA */}
+      <section className="py-16 bg-transparent">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8 text-center md:text-left">
+          {[
+            { n: "1.100+", l: "empresas com gestão rodando na plataforma" },
+            { n: "38", l: "implantações concluídas em um único ciclo" },
+            { n: "1 dia", l: "para estar operando — não meses" },
+            { n: "99,5%", l: "SLA garantido em contrato" },
+          ].map((s) => (
+            <div key={s.l}>
+              <div className="text-4xl font-bold text-white">{s.n}</div>
+              <div className="text-sm text-slate-300 mt-2 leading-snug">{s.l}</div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -515,16 +532,16 @@ export default function Site() {
       <section id="planos" className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-10">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Planos & Preços</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">Planos & Preços</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Cinco níveis para diferentes maturidades de operação.
+              Cinco níveis. Um para cada estágio de maturidade.
             </h2>
             <p className="mt-4 text-slate-300 text-lg">
-              Oferta de lançamento: <strong>50% de desconto</strong> no semestral, exclusiva para os primeiros clientes.
+              Cobrança por colaborador e por módulo. Você paga pelo que usa, no tamanho que tem hoje.
+              Oferta de lançamento: <strong>50% de desconto</strong> no semestral.
             </p>
           </div>
 
-          {/* Toggle ciclos */}
           <div className="inline-flex bg-white/10 rounded-lg p-1 mb-10 border border-white/10">
             {CICLOS.map((c) => (
               <button
@@ -560,6 +577,7 @@ export default function Site() {
                 <div className="p-6 border-b border-slate-200">
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{p.tier}</div>
                   <div className="text-xl font-bold text-[#0B1D34] mt-1">{p.nome}</div>
+                  <div className="text-xs text-slate-600 mt-1">{p.publico}</div>
                   <div className="text-xs text-slate-500 mt-1">{p.limite}</div>
                 </div>
                 <div className="p-6 border-b border-slate-200">
@@ -640,12 +658,12 @@ export default function Site() {
               Dados sensíveis exigem arquitetura à altura.
             </h2>
             <p className="mt-4 text-slate-300 leading-relaxed">
-              Multi-tenancy com Row-Level Security, dados de saúde em bucket privado com classificação por grupos clínicos e
+              Dados isolados por empresa, dados de saúde em bucket privado com classificação por grupos clínicos e
               trilha auditável de cada acesso ou alteração.
             </p>
             <div className="mt-8 flex items-center gap-4">
               <Lock className="w-5 h-5 text-[#21A365]" />
-              <span className="text-sm text-slate-300">RLS ativo em 100% das tabelas públicas.</span>
+              <span className="text-sm text-slate-300">Isolamento por empresa em 100% dos dados.</span>
             </div>
             <div className="mt-3 flex items-center gap-4">
               <Scale className="w-5 h-5 text-[#21A365]" />
@@ -667,17 +685,16 @@ export default function Site() {
       <section id="sobre" className="py-24">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-start">
           <div className="lg:col-span-5">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Sobre a YourEyes</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">Sobre a YourEyes</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
               A norma orienta. O sistema operacionaliza.
             </h2>
           </div>
           <div className="lg:col-span-7 space-y-6 text-slate-300 leading-relaxed text-lg">
             <p>
-              A YourEyes nasceu no cruzamento entre inteligência organizacional, RH, SST e compliance, com ênfase em NR-1,
-              riscos psicossociais e saúde mental no trabalho. Não somos apenas um software de RH nem uma consultoria de
-              compliance: somos a plataforma confiável que transforma risco ocupacional em <strong>evidência, decisão e
-              ação coordenada</strong> entre RH, SST, jurídico e liderança.
+              A YourEyes nasceu para responder uma pergunta simples e desconfortável: sua empresa cresce ou só aumenta?
+              Empresa que cresce tem processo, evidência e gente desenvolvida. Empresa que só aumenta acumula caos,
+              planilha e dependência de heróis.
             </p>
             <p>
               Nosso propósito é entregar <strong>segurança jurídica ao empregador</strong> por meio de um sistema que gera
@@ -686,17 +703,17 @@ export default function Site() {
             </p>
             <div className="grid sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
-                <Building2 className="w-6 h-6 text-[#0A6BBF] mb-2" />
+                <Building2 className="w-6 h-6 text-[#60ABEF] mb-2" />
                 <div className="font-semibold text-white">Dados isolados por empresa</div>
                 <div className="text-sm text-slate-400 mt-1">Cada cliente enxerga apenas suas unidades e colaboradores</div>
               </div>
               <div>
-                <Brain className="w-6 h-6 text-[#0A6BBF] mb-2" />
+                <Brain className="w-6 h-6 text-[#60ABEF] mb-2" />
                 <div className="font-semibold text-white">IA First</div>
                 <div className="text-sm text-slate-400 mt-1">GPT-4o em extrações e auditorias</div>
               </div>
               <div>
-                <ShieldCheck className="w-6 h-6 text-[#0A6BBF] mb-2" />
+                <Sparkles className="w-6 h-6 text-[#60ABEF] mb-2" />
                 <div className="font-semibold text-white">Auditável</div>
                 <div className="text-sm text-slate-400 mt-1">Trilha documental em cada ação</div>
               </div>
@@ -705,17 +722,17 @@ export default function Site() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* FAQ DE OBJEÇÕES */}
       <section className="py-24 bg-transparent border-y border-white/10">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3 text-center">Perguntas frequentes</div>
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Tire suas dúvidas</h2>
+          <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3 text-center">Objeções frequentes</div>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">O que costumam nos dizer antes de assinar</h2>
           <div className="space-y-3">
             {FAQ.map((f, i) => (
               <details key={i} className="group bg-white/[0.04] backdrop-blur border border-white/10 rounded-lg">
                 <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-white">
-                  <span>{f.q}</span>
-                  <span className="text-[#0A6BBF] group-open:rotate-180 transition text-lg">▾</span>
+                  <span>“{f.q}”</span>
+                  <span className="text-[#60ABEF] group-open:rotate-180 transition text-lg">▾</span>
                 </summary>
                 <div className="px-6 pb-5 text-sm text-slate-300 leading-relaxed border-t border-white/10 pt-4">{f.a}</div>
               </details>
@@ -724,29 +741,29 @@ export default function Site() {
         </div>
       </section>
 
-      {/* CONTATO */}
+      {/* FECHAMENTO / CONTATO */}
       <section id="contato" className="py-24 bg-white/[0.02] border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12">
           <div className="lg:col-span-5">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Contato</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">Fechamento</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Leve sua operação da incerteza à evidência.
+              Toda empresa tem um nível de maturidade. A diferença está em saber qual é o seu — e o que fazer com ele.
             </h2>
-            <p className="mt-4 text-slate-600 leading-relaxed">
-              Agende um diagnóstico com um especialista em NR-1 e governança do trabalho humano. Em 30 minutos, mapeamos
-              onde sua operação está exposta e como estruturar a conformidade.
+            <p className="mt-4 text-slate-300 leading-relaxed">
+              Preencha o formulário para agendar seu diagnóstico. Em 30 minutos, mapeamos onde sua operação está exposta
+              e mostramos, em tempo real, o seu Painel de Maturidade.
             </p>
             <div className="mt-8 space-y-4">
               <div className="flex items-center gap-3 text-slate-200">
-                <Mail className="w-5 h-5 text-[#0A6BBF]" />
-                <a href="mailto:contato@youreyes.com.br" className="hover:text-[#0A6BBF]">contato@youreyes.com.br</a>
+                <Mail className="w-5 h-5 text-[#60ABEF]" />
+                <a href="mailto:contato@youreyes.com.br" className="hover:text-[#60ABEF]">contato@youreyes.com.br</a>
               </div>
               <div className="flex items-center gap-3 text-slate-200">
-                <Phone className="w-5 h-5 text-[#0A6BBF]" />
+                <Phone className="w-5 h-5 text-[#60ABEF]" />
                 <span>Atendimento comercial via WhatsApp</span>
               </div>
               <div className="flex items-center gap-3 text-slate-200">
-                <MapPin className="w-5 h-5 text-[#0A6BBF]" />
+                <MapPin className="w-5 h-5 text-[#60ABEF]" />
                 <span>Brasil · SLA 99,5% garantido</span>
               </div>
             </div>
@@ -757,9 +774,7 @@ export default function Site() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const data = new FormData(e.currentTarget);
-                const params = new URLSearchParams();
-                data.forEach((v, k) => params.append(k, String(v)));
-                window.location.href = `mailto:contato@youreyes.com.br?subject=Diagnóstico YourEyes&body=${encodeURIComponent(
+                window.location.href = `mailto:contato@youreyes.com.br?subject=Diagnóstico de Maturidade YourEyes&body=${encodeURIComponent(
                   Array.from(data.entries())
                     .map(([k, v]) => `${k}: ${v}`)
                     .join("\n"),
@@ -769,19 +784,19 @@ export default function Site() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nome</label>
-                  <input name="nome" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
+                  <input name="nome" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#60ABEF] focus:ring-1 focus:ring-[#60ABEF] outline-none" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Empresa</label>
-                  <input name="empresa" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
+                  <input name="empresa" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#60ABEF] focus:ring-1 focus:ring-[#60ABEF] outline-none" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">E-mail corporativo</label>
-                  <input type="email" name="email" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
+                  <input type="email" name="email" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#60ABEF] focus:ring-1 focus:ring-[#60ABEF] outline-none" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nº de colaboradores</label>
-                  <select name="colaboradores" className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none">
+                  <select name="colaboradores" className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#60ABEF] focus:ring-1 focus:ring-[#60ABEF] outline-none">
                     <option>Até 20</option>
                     <option>21 a 80</option>
                     <option>81 a 200</option>
@@ -791,14 +806,14 @@ export default function Site() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Necessidade principal</label>
-                <textarea name="mensagem" rows={4} className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" placeholder="NR-1, riscos psicossociais, folha, ponto..." />
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Onde mais dói hoje?</label>
+                <textarea name="mensagem" rows={4} className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#60ABEF] focus:ring-1 focus:ring-[#60ABEF] outline-none" placeholder="Pessoas, jornada, SST, documentos, metas..." />
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#0A6BBF] hover:bg-[#0959a3] text-white font-semibold py-3 rounded-md transition inline-flex items-center justify-center gap-2"
+                className="w-full bg-[#FF8A00] hover:bg-[#e67a00] text-white font-semibold py-3 rounded-md transition inline-flex items-center justify-center gap-2"
               >
-                Solicitar diagnóstico <ArrowRight className="w-4 h-4" />
+                Medir a maturidade da minha empresa <ArrowRight className="w-4 h-4" />
               </button>
               <p className="text-xs text-slate-500 text-center">
                 Ao enviar, você concorda com nossa{" "}
@@ -818,14 +833,15 @@ export default function Site() {
               <div className="font-bold text-white">YourEyes</div>
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
-              Plataforma de Governança do Trabalho Humano. NR-1 · Psicossocial · RH · IA.
+              Sistema Operacional da Maturidade Organizacional.
             </p>
           </div>
           <div>
             <div className="text-xs uppercase tracking-widest text-white font-semibold mb-4">Plataforma</div>
             <ul className="space-y-2 text-sm">
-              <li><a href="#plataforma" className="hover:text-white">Módulos</a></li>
-              <li><a href="#solucoes" className="hover:text-white">Soluções</a></li>
+              <li><a href="#problema" className="hover:text-white">Problema</a></li>
+              <li><a href="#niveis" className="hover:text-white">Níveis</a></li>
+              <li><a href="#plataforma" className="hover:text-white">Plataforma</a></li>
               <li><a href="#planos" className="hover:text-white">Planos</a></li>
               <li><a href="#seguranca" className="hover:text-white">Segurança</a></li>
             </ul>
@@ -849,7 +865,7 @@ export default function Site() {
         </div>
         <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between gap-4 text-xs text-slate-500">
           <span>© {new Date().getFullYear()} YourEyes. Todos os direitos reservados.</span>
-          <span>A norma orienta. O sistema operacionaliza.</span>
+          <span>Sua empresa cresce — ou só aumenta?</span>
         </div>
       </footer>
     </div>
