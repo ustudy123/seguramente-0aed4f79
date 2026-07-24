@@ -359,6 +359,7 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
         ipsGlobal,
         porteCategoria: porteInfo?.faixa.categoria,
         colaboradoresCnpj: porteInfo?.colaboradores ?? null,
+        setorPorte: porteInfo?.setorLabel,
       };
 
       const grupos: GrupoPlano[] = ghes
@@ -414,7 +415,8 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
                     {porteInfo.colaboradores} colaborador
                     {porteInfo.colaboradores === 1 ? "" : "es"} ativo
                     {porteInfo.colaboradores === 1 ? "" : "s"} no CNPJ ·{" "}
-                    {faixaEmTexto(porteInfo.faixa)}
+                    {porteInfo.setorLabel} ({faixaEmTexto(porteInfo.faixa)}) ·
+                    critério IBGE/SEBRAE por pessoal ocupado
                   </span>
                 </div>
               )}

@@ -9,11 +9,21 @@ import { useQuery } from "@tanstack/react-query";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
-import { classificarPorte, type FaixaPorte } from "@/lib/porteEmpresa";
+import {
+  classificarPorte,
+  setorPorCnae,
+  SETOR_LABEL,
+  type FaixaPorte,
+  type SetorPorte,
+} from "@/lib/porteEmpresa";
 
 export interface PorteEmpresaInfo {
   colaboradores: number;
   faixa: FaixaPorte;
+  /** IBGE/SEBRAE usa cortes diferentes para indústria e para comércio. */
+  setor: SetorPorte;
+  setorLabel: string;
+  cnaePrincipal: string;
   razaoSocial: string;
   cnpj: string;
 }
@@ -44,17 +54,28 @@ export function usePorteEmpresa() {
 
       let razaoSocial = "";
       let cnpj = "";
+      let cnaePrincipal = "";
       if (empresaAtivaId) {
         const { data: emp } = await fromTable("empresa_cadastro")
-          .select("razao_social, nome_fantasia, cnpj")
+          .select("razao_social, nome_fantasia, cnpj, cnae_principal")
           .eq("id", empresaAtivaId)
           .maybeSingle();
         razaoSocial = emp?.razao_social || emp?.nome_fantasia || "";
         cnpj = emp?.cnpj || "";
+        cnaePrincipal = emp?.cnae_principal || "";
       }
 
       const colaboradores = count ?? 0;
-      return { colaboradores, faixa: classificarPorte(colaboradores), razaoSocial, cnpj };
+      const setor = setorPorCnae(cnaePrincipal);
+      return {
+        colaboradores,
+        setor,
+        setorLabel: SETOR_LABEL[setor],
+        cnaePrincipal,
+        faixa: classificarPorte(colaboradores, setor),
+        razaoSocial,
+        cnpj,
+      };
     },
   });
 }

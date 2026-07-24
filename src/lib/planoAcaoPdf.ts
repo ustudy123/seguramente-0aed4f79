@@ -29,6 +29,8 @@ export interface CabecalhoRelatorio {
   porteCategoria?: string;
   /** Colaboradores ativos do CNPJ que determinaram o porte. */
   colaboradoresCnpj?: number | null;
+  /** Ex.: "Comércio e serviços" — IBGE/SEBRAE usa cortes distintos por setor. */
+  setorPorte?: string;
 }
 
 export interface GrupoPlano {
@@ -100,6 +102,14 @@ export function gerarPdfPlanoAcao(
         cabecalho.porteCategoria ?? "—",
         "Colaboradores no CNPJ",
         cabecalho.colaboradoresCnpj != null ? String(cabecalho.colaboradoresCnpj) : "—",
+      ],
+      // O critério precisa estar no documento: porte por pessoal ocupado não é
+      // o mesmo que o enquadramento da LC 123/2006, e um auditor vai conferir.
+      [
+        "Critério de Porte",
+        "Pessoal ocupado (IBGE/SEBRAE)",
+        "Setor de Enquadramento",
+        cabecalho.setorPorte ?? "—",
       ],
     ],
     styles: { fontSize: 8, cellPadding: 2 },
