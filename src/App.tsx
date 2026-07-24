@@ -88,6 +88,7 @@ const OnboardingCliente = lazy(() => import("./pages/OnboardingCliente"));
 const AtivarConta = lazy(() => import("./pages/AtivarConta"));
 const OnboardingProtegido = lazy(() => import("./pages/OnboardingProtegido"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Site = lazy(() => import("./pages/Site"));
 const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
