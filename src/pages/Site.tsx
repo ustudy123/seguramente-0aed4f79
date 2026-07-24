@@ -535,11 +535,11 @@ export default function Site() {
                   )}
                 </div>
                 <div className="p-6 flex-1">
-                  <ul className="space-y-2.5 text-sm">
+                  <ul className="space-y-3 text-[15px] leading-relaxed">
                     {p.modulos.map((m) => (
-                      <li key={m} className="flex items-start gap-2 text-slate-200">
-                        <CheckCircle2 className="w-4 h-4 text-[#21A365] flex-shrink-0 mt-0.5" />
-                        <span>{m}</span>
+                      <li key={m} className="flex items-start gap-2.5 text-[#0B1D34]">
+                        <CheckCircle2 className="w-5 h-5 text-[#21A365] flex-shrink-0 mt-0.5" />
+                        <span className="font-medium">{m}</span>
                       </li>
                     ))}
                   </ul>
