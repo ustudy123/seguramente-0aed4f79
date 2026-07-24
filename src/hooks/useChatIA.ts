@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -10,7 +11,7 @@ export function useChatIA() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const CHAT_URL = `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ai-chat`;
+  const CHAT_URL = getSupabaseFunctionUrl("ai-chat");
 
   const sendMessage = useCallback(async (userMessage: string) => {
     if (!userMessage.trim()) return;
@@ -42,7 +43,6 @@ export function useChatIA() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXlqcHNyY2VyeWN5Y3lheHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3Mjg3NTEsImV4cCI6MjA4MzMwNDc1MX0.5DUjPQQB-CKdiuERL3LBUX4g2yzDy_L5b-M8FQS-Dxo`
         },
         body: JSON.stringify({ messages: allMessages })
       });
