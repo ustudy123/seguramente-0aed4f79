@@ -214,6 +214,7 @@ const menuSections: MenuSection[] = [
           { title: "Campanhas", path: "/psicossocial?tab=campanhas", color: "text-violet-300", dot: "bg-violet-400" },
           { title: "Resultados", path: "/psicossocial?tab=resultados", color: "text-pink-300", dot: "bg-pink-400" },
           { title: "Inventário PGR", path: "/psicossocial?tab=pgr", color: "text-emerald-300", dot: "bg-emerald-400" },
+          { title: "Plano de Ação PGR", path: "/psicossocial?tab=plano-acao-pgr", color: "text-teal-300", dot: "bg-teal-400" },
           { title: "Metodologia", path: "/psicossocial?tab=metodologia", color: "text-amber-300", dot: "bg-amber-400" },
         ],
       },

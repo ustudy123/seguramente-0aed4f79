@@ -35,6 +35,7 @@ import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
+import { PlanoAcaoPGR } from "./PlanoAcaoPGR";
 import { GHEPanel } from "./GHEPanel";
 import { ResultadosPorGHEPanel } from "./ResultadosPorGHEPanel";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
@@ -502,6 +503,11 @@ export function PsicossocialDashboard() {
           {/* Tab: Inventário PGR */}
           <TabsContent value="pgr" className="mt-4 space-y-4">
             <InventarioPGR campanhas={campanhasEnriquecidas} />
+          </TabsContent>
+
+          {/* Tab: Plano de Ação PGR */}
+          <TabsContent value="plano-acao-pgr" className="mt-4 space-y-4">
+            <PlanoAcaoPGR campanhas={campanhasEnriquecidas} />
           </TabsContent>
 
         </Tabs>
