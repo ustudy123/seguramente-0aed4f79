@@ -97,3 +97,5 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = true
   [functions.reset-senha-gestor]
     verify_jwt = true
+  [functions.mercadopago-checkout]
+    verify_jwt = false
