@@ -43,6 +43,8 @@ export default function AtivarConta() {
     password: "",
     confirm_password: "",
     telefone: "",
+    nome_empresa: "",
+    cnpj: "",
   });
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
