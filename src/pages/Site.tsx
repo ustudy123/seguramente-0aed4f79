@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import logo from "@/assets/logo-youreyes.svg";
 import {
   ShieldCheck,
