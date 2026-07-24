@@ -31,6 +31,8 @@ serve(async (req) => {
     email: string;
     password: string;
     telefone?: string;
+    nome_empresa?: string;
+    cnpj?: string;
   };
 
   try {
@@ -39,9 +41,13 @@ serve(async (req) => {
     return json({ error: "Invalid JSON" }, 400);
   }
 
-  const { activation_token, nome_completo, email, password } = payload;
-  if (!activation_token || !nome_completo || !email || !password) {
+  const { activation_token, nome_completo, email, password, nome_empresa, cnpj } = payload;
+  if (!activation_token || !nome_completo || !email || !password || !nome_empresa || !cnpj) {
     return json({ error: "Missing required fields" }, 400);
+  }
+  const cnpjDigits = cnpj.replace(/\D/g, "");
+  if (cnpjDigits.length !== 14) {
+    return json({ error: "CNPJ inválido" }, 400);
   }
 
   // 1. Fetch cliente by token
