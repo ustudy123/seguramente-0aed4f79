@@ -301,15 +301,28 @@ export default function Site() {
               ))}
             </div>
           </div>
-          <div className="lg:col-span-5">
-            <div className="relative rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl">
+          <div className="lg:col-span-5 relative">
+            {/* Mascot floating */}
+            <div className="relative flex justify-center">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-[420px] h-[420px] rounded-full bg-[#60ABEF]/20 blur-3xl" />
+              </div>
+              <img
+                src={mascot.url}
+                alt="EYE — assistente de IA da YourEyes"
+                className="relative z-10 w-[300px] md:w-[360px] drop-shadow-[0_25px_50px_rgba(96,171,239,0.35)] animate-[float_6s_ease-in-out_infinite]"
+                style={{ animation: "floatMascot 6s ease-in-out infinite" }}
+              />
+            </div>
+            {/* Compact maturity card overlapping */}
+            <div className="relative -mt-8 rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl z-20">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF8A00]" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFA033]" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#21A365]" />
                 <span className="ml-2 text-xs text-slate-400">Painel de Maturidade</span>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[
                   { l: "Conformidade NR-1", v: 92, c: "#21A365" },
                   { l: "Riscos Psicossociais", v: 78, c: "#0A6BBF" },
@@ -327,10 +340,8 @@ export default function Site() {
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-6 border-t border-white/10 text-xs text-slate-400">
-                Dashboard executivo · Escore de Maturidade calculado por 4 pilares estratégicos.
-              </div>
             </div>
+            <style>{`@keyframes floatMascot { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }`}</style>
           </div>
         </div>
       </section>
