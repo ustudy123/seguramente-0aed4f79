@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PhoneInput, validatePhone, cleanPhone } from "@/components/ui/phone-input";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 
 interface VerificacaoTelefoneProps {
   campanhaId: string;
@@ -90,12 +91,10 @@ export function VerificacaoTelefone({
 
     setEnviando(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 
-        (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').split('.')[0];
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`,
+        getSupabaseFunctionUrl("psicossocial-whatsapp-otp"),
         {
           method: "POST",
           headers: {
@@ -141,12 +140,10 @@ export function VerificacaoTelefone({
 
     setVerificando(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 
-        (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').split('.')[0];
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`,
+        getSupabaseFunctionUrl("psicossocial-whatsapp-otp"),
         {
           method: "POST",
           headers: {

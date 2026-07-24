@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import logoYourEyes from "@/assets/logo-youreyes.svg";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 
 type EtapaQuestionario = 'consentimento' | 'verificacao_cpf' | 'instrucoes' | 'questionario' | 'resumo' | 'concluido';
 
@@ -293,10 +294,8 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
       // Após submissão bem-sucedida, registra telefone como usado (se houver verificação OTP)
       if (telefoneHash && campanha?.id) {
         try {
-          const projectId = (import.meta.env.VITE_SUPABASE_URL || 'https://diayjpsrcerycycyaxst.supabase.co')
-            .replace('https://', '').split('.')[0];
-          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-          await fetch(`https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`, {
+          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          await fetch(getSupabaseFunctionUrl("psicossocial-whatsapp-otp"), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

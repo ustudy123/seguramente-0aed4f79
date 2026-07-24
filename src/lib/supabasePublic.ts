@@ -5,13 +5,24 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const SUPABASE_URL = "https://diayjpsrcerycycyaxst.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXlqcHNyY2VyeWN5Y3lheHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3Mjg3NTEsImV4cCI6MjA4MzMwNDc1MX0.5DUjPQQB-CKdiuERL3LBUX4g2yzDy_L5b-M8FQS-Dxo";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error(
+    "[supabasePublic] VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY são obrigatórios. " +
+    "Verifique o arquivo .env do ambiente."
+  );
+}
 
 // Cliente sem persistência de sessão - sempre anônimo
-export const supabasePublic = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+export const supabasePublic = createClient<Database>(
+  SUPABASE_URL || "",
+  SUPABASE_ANON_KEY || "",
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  }
+);
