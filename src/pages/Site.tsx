@@ -390,32 +390,60 @@ export default function Site() {
               Três frentes que convergem em uma única governança.
             </h2>
           </div>
-          <div className="space-y-6">
-            {SOLUCOES.map((s, i) => (
-              <div
-                key={s.titulo}
-                className="bg-white border border-slate-200 rounded-lg overflow-hidden grid md:grid-cols-12 gap-0"
-              >
-                <div className="md:col-span-4 bg-[#0B1D34] text-white p-8 flex flex-col justify-between">
-                  <div>
-                    <div className="text-xs uppercase tracking-widest text-[#60ABEF] mb-3">{s.tag}</div>
-                    <div className="text-3xl font-bold text-white/20">0{i + 1}</div>
+          <div className="space-y-8">
+            {SOLUCOES.map((s, i) => {
+              const gradients = [
+                "from-[#0B1D34] via-[#0A6BBF] to-[#60ABEF]",
+                "from-[#0B4A2E] via-[#21A365] to-[#5FD39A]",
+                "from-[#5B2A86] via-[#0A6BBF] to-[#FF8A00]",
+              ];
+              const glows = [
+                "shadow-[0_20px_60px_-15px_rgba(10,107,191,0.55)]",
+                "shadow-[0_20px_60px_-15px_rgba(33,163,101,0.55)]",
+                "shadow-[0_20px_60px_-15px_rgba(255,138,0,0.45)]",
+              ];
+              return (
+                <div
+                  key={s.titulo}
+                  className={`group relative bg-white border border-slate-200 rounded-2xl overflow-hidden grid md:grid-cols-12 gap-0 transition-all duration-500 hover:-translate-y-1 ${glows[i % 3]} hover:shadow-[0_30px_80px_-15px_rgba(11,29,52,0.4)]`}
+                >
+                  <div
+                    className={`md:col-span-4 relative p-8 flex flex-col justify-between text-white bg-gradient-to-br ${gradients[i % 3]} overflow-hidden`}
+                  >
+                    {/* 3D glow orbs */}
+                    <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/20 blur-3xl" />
+                    <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full bg-black/20 blur-3xl" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.25),transparent_60%)]" />
+
+                    <div className="relative z-10">
+                      <div className="text-[11px] uppercase tracking-[0.2em] text-white/80 mb-4 font-semibold">
+                        {s.tag}
+                      </div>
+                      <div className="text-6xl font-black text-white/25 drop-shadow-lg leading-none">
+                        0{i + 1}
+                      </div>
+                    </div>
+                    <h3 className="relative z-10 text-2xl md:text-3xl font-bold mt-8 leading-tight drop-shadow-md">
+                      {s.titulo}
+                    </h3>
                   </div>
-                  <h3 className="text-2xl font-bold mt-8 leading-tight">{s.titulo}</h3>
+                  <div className="md:col-span-8 p-8 bg-gradient-to-br from-white to-slate-50">
+                    <p className="text-slate-600 leading-relaxed mb-6">{s.desc}</p>
+                    <ul className="grid sm:grid-cols-2 gap-3">
+                      {s.pontos.map((p) => (
+                        <li
+                          key={p}
+                          className="flex items-start gap-2 text-sm text-slate-700 p-2 rounded-lg transition hover:bg-white hover:shadow-sm"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-[#21A365] flex-shrink-0 mt-0.5" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="md:col-span-8 p-8">
-                  <p className="text-slate-600 leading-relaxed mb-6">{s.desc}</p>
-                  <ul className="grid sm:grid-cols-2 gap-3">
-                    {s.pontos.map((p) => (
-                      <li key={p} className="flex items-start gap-2 text-sm text-slate-700">
-                        <CheckCircle2 className="w-4 h-4 text-[#21A365] flex-shrink-0 mt-0.5" />
-                        <span>{p}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
