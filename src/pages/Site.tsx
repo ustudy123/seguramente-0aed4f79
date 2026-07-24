@@ -207,11 +207,11 @@ export default function Site() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#0B1D34]">
+    <div className="min-h-screen bg-[#0B1D34] text-slate-100">
 
 
       {/* NAV */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200">
+      <header className="sticky top-0 z-40 bg-[#0B1D34]/85 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="#topo" className="flex items-center gap-3">
             <img src={logo} alt="YourEyes" className="h-9 w-9" />
@@ -248,7 +248,7 @@ export default function Site() {
           </button>
         </div>
         {menuOpen && (
-          <div className="lg:hidden border-t border-slate-200 bg-white px-6 py-4 space-y-3 text-sm">
+          <div className="lg:hidden border-t border-slate-200 bg-[#0B1D34] px-6 py-4 space-y-3 text-sm text-slate-200">
             {["plataforma", "solucoes", "planos", "seguranca", "sobre", "contato"].map((s) => (
               <a key={s} href={`#${s}`} className="block text-slate-700 capitalize" onClick={() => setMenuOpen(false)}>
                 {s === "solucoes" ? "Soluções" : s === "seguranca" ? "Segurança" : s}
@@ -335,7 +335,7 @@ export default function Site() {
       </section>
 
       {/* CONTEXTO / URGÊNCIA */}
-      <section className="bg-slate-50 border-y border-slate-200">
+      <section className="bg-white/[0.03] border-y border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-12 grid md:grid-cols-4 gap-8 text-center md:text-left">
           {[
             { n: "472k+", l: "afastamentos por transtornos mentais em 2024" },
@@ -344,8 +344,8 @@ export default function Site() {
             { n: "Contínuo", l: "processo exigido pela Portaria MTE 1.419/2024" },
           ].map((s) => (
             <div key={s.l}>
-              <div className="text-3xl font-bold text-[#0B1D34]">{s.n}</div>
-              <div className="text-sm text-slate-600 mt-2 leading-snug">{s.l}</div>
+              <div className="text-3xl font-bold text-white">{s.n}</div>
+              <div className="text-sm text-slate-300 mt-2 leading-snug">{s.l}</div>
             </div>
           ))}
         </div>
@@ -356,10 +356,10 @@ export default function Site() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-14">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">A plataforma</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#0B1D34] leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
               Um sistema único para RH, SST, Compliance e Liderança.
             </h2>
-            <p className="mt-4 text-slate-600 text-lg leading-relaxed">
+            <p className="mt-4 text-slate-300 text-lg leading-relaxed">
               Nove famílias de módulos conectadas entre si, com dados normalizados por tenant e evidência
               documental em cada ação executada.
             </p>
@@ -368,13 +368,13 @@ export default function Site() {
             {MODULOS.map((m) => (
               <div
                 key={m.titulo}
-                className="border border-slate-200 rounded-lg p-6 hover:border-[#0A6BBF] hover:shadow-md transition group bg-white"
+                className="border border-white/10 rounded-lg p-6 hover:border-[#60ABEF] hover:bg-white/[0.06] transition group bg-white/[0.03] backdrop-blur"
               >
                 <div className="w-11 h-11 rounded-md bg-[#0A6BBF]/10 text-[#0A6BBF] flex items-center justify-center mb-4 group-hover:bg-[#0A6BBF] group-hover:text-white transition">
                   <m.icon className="w-5 h-5" />
                 </div>
-                <h3 className="font-semibold text-[#0B1D34] mb-2">{m.titulo}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{m.desc}</p>
+                <h3 className="font-semibold text-white mb-2">{m.titulo}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{m.desc}</p>
               </div>
             ))}
           </div>
@@ -382,11 +382,11 @@ export default function Site() {
       </section>
 
       {/* SOLUÇÕES */}
-      <section id="solucoes" className="py-24 bg-[#F7F9FC] border-y border-slate-200">
+      <section id="solucoes" className="py-24 bg-transparent border-y border-white/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-14">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Soluções</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#0B1D34] leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
               Três frentes que convergem em uma única governança.
             </h2>
           </div>
@@ -453,10 +453,10 @@ export default function Site() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-10">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Planos & Preços</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#0B1D34] leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
               Cinco tiers para diferentes maturidades de operação.
             </h2>
-            <p className="mt-4 text-slate-600 text-lg">
+            <p className="mt-4 text-slate-300 text-lg">
               Oferta de lançamento: <strong>50% de desconto</strong> no semestral, exclusiva para os primeiros clientes.
             </p>
           </div>
@@ -510,7 +510,7 @@ export default function Site() {
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-sm text-slate-500">R$</span>
-                        <span className="text-3xl font-bold text-[#0B1D34]">{formatarPreco(p.base)}</span>
+                        <span className="text-3xl font-bold text-white">{formatarPreco(p.base)}</span>
                         <span className="text-sm text-slate-500">/mês</span>
                       </div>
                       {cicloAtual.discount > 0 && (
@@ -594,7 +594,7 @@ export default function Site() {
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-start">
           <div className="lg:col-span-5">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Sobre a YourEyes</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#0B1D34] leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
               A norma orienta. O sistema operacionaliza.
             </h2>
           </div>
@@ -632,10 +632,10 @@ export default function Site() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 bg-[#F7F9FC] border-y border-slate-200">
+      <section className="py-24 bg-transparent border-y border-white/10">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3 text-center">Perguntas frequentes</div>
-          <h2 className="text-3xl font-bold text-[#0B1D34] text-center mb-12">Tire suas dúvidas</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Tire suas dúvidas</h2>
           <div className="space-y-3">
             {FAQ.map((f, i) => (
               <details key={i} className="group bg-white border border-slate-200 rounded-lg">
@@ -643,7 +643,7 @@ export default function Site() {
                   <span>{f.q}</span>
                   <span className="text-[#0A6BBF] group-open:rotate-180 transition text-lg">▾</span>
                 </summary>
-                <div className="px-6 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">{f.a}</div>
+                <div className="px-6 pb-5 text-sm text-slate-300 leading-relaxed border-t border-slate-100 pt-4">{f.a}</div>
               </details>
             ))}
           </div>
@@ -655,7 +655,7 @@ export default function Site() {
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12">
           <div className="lg:col-span-5">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Contato</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#0B1D34] leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
               Leve sua operação da incerteza à evidência.
             </h2>
             <p className="mt-4 text-slate-600 leading-relaxed">
