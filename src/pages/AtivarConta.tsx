@@ -133,6 +133,15 @@ export default function AtivarConta() {
       toast.error("Preencha nome completo e e-mail.");
       return;
     }
+    if (!form.nome_empresa.trim()) {
+      toast.error("Informe o nome da empresa.");
+      return;
+    }
+    const cnpjDigits = form.cnpj.replace(/\D/g, "");
+    if (cnpjDigits.length !== 14) {
+      toast.error("Informe um CNPJ válido (14 dígitos).");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -143,6 +152,8 @@ export default function AtivarConta() {
           email: form.email,
           password: form.password,
           telefone: form.telefone || undefined,
+          nome_empresa: form.nome_empresa.trim(),
+          cnpj: cnpjDigits,
         },
       });
 
