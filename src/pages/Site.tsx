@@ -687,8 +687,8 @@ export default function Site() {
             <div className="grid sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
                 <Building2 className="w-6 h-6 text-[#0A6BBF] mb-2" />
-                <div className="font-semibold text-white">Multi-tenant</div>
-                <div className="text-sm text-slate-400 mt-1">Isolamento estrito por empresa e unidade</div>
+                <div className="font-semibold text-white">Dados isolados por empresa</div>
+                <div className="text-sm text-slate-400 mt-1">Cada cliente enxerga apenas suas unidades e colaboradores</div>
               </div>
               <div>
                 <Brain className="w-6 h-6 text-[#0A6BBF] mb-2" />
