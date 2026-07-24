@@ -186,6 +186,21 @@ export default function Site() {
 
   const cicloAtual = useMemo(() => CICLOS.find((c) => c.key === ciclo)!, [ciclo]);
 
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "YourEyes — Governança do Trabalho Humano | NR-1, Psicossocial e RH";
+    const meta = document.querySelector('meta[name="description"]');
+    const prevDesc = meta?.getAttribute("content") || "";
+    meta?.setAttribute(
+      "content",
+      "Plataforma corporativa YourEyes: NR-1, riscos psicossociais, SST, RH e IA em governança contínua e auditável do trabalho humano.",
+    );
+    return () => {
+      document.title = prevTitle;
+      meta?.setAttribute("content", prevDesc);
+    };
+  }, []);
+
   const formatarPreco = (base: number) => {
     const preco = Math.round(base * (1 - cicloAtual.discount));
     return preco.toLocaleString("pt-BR");
@@ -193,14 +208,7 @@ export default function Site() {
 
   return (
     <div className="min-h-screen bg-white text-[#0B1D34]">
-      <Helmet>
-        <title>YourEyes — Governança do Trabalho Humano | NR-1, Psicossocial e RH</title>
-        <meta
-          name="description"
-          content="Plataforma corporativa YourEyes: NR-1, riscos psicossociais, SST, RH e IA em governança contínua e auditável do trabalho humano."
-        />
-        <link rel="canonical" href="https://www.youreyes.com.br/site" />
-      </Helmet>
+
 
       {/* NAV */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200">
