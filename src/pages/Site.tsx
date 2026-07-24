@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo-youreyes.svg";
 import mascot from "@/assets/mascot-ye.png.asset.json";
 import {
@@ -184,6 +186,7 @@ const FAQ = [
 export default function Site() {
   const [ciclo, setCiclo] = useState<Ciclo>("semestral");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
 
   const cicloAtual = useMemo(() => CICLOS.find((c) => c.key === ciclo)!, [ciclo]);
 
@@ -196,6 +199,18 @@ export default function Site() {
       "content",
       "Plataforma corporativa YourEyes: NR-1, riscos psicossociais, SST, RH e IA em governança contínua e auditável do trabalho humano.",
     );
+
+    // Feedback de retorno do Mercado Pago
+    const params = new URLSearchParams(window.location.search);
+    const pag = params.get("pagamento");
+    if (pag === "sucesso") {
+      toast({ title: "Pagamento aprovado!", description: "Em breve nosso time entrará em contato para ativar seu plano." });
+    } else if (pag === "pendente") {
+      toast({ title: "Pagamento pendente", description: "Aguardando confirmação do Mercado Pago." });
+    } else if (pag === "falha") {
+      toast({ title: "Pagamento não concluído", description: "Tente novamente ou escolha outro método.", variant: "destructive" });
+    }
+
     return () => {
       document.title = prevTitle;
       meta?.setAttribute("content", prevDesc);
@@ -206,6 +221,38 @@ export default function Site() {
     const preco = Math.round(base * (1 - cicloAtual.discount));
     return preco.toLocaleString("pt-BR");
   };
+
+  const handleAssinar = async (p: Plano) => {
+    if (p.consulta) {
+      window.location.hash = "#contato";
+      return;
+    }
+    try {
+      setLoadingPlano(p.id);
+      const preco_mensal = Math.round(p.base * (1 - cicloAtual.discount) * 100) / 100;
+      const { data, error } = await supabase.functions.invoke("mercadopago-checkout", {
+        body: {
+          plano_id: p.id,
+          plano_nome: p.nome,
+          preco_mensal,
+          ciclo,
+          origin: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      if (!data?.checkout_url) throw new Error("URL de checkout não retornada");
+      window.location.href = data.checkout_url as string;
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Erro ao iniciar pagamento",
+        description: err instanceof Error ? err.message : "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+      setLoadingPlano(null);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[#0B1D34] text-slate-100">
@@ -545,9 +592,11 @@ export default function Site() {
                   </ul>
                 </div>
                 <div className="p-6 pt-0">
-                  <a
-                    href="#contato"
-                    className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-sm py-2.5 rounded-md transition ${
+                  <button
+                    type="button"
+                    disabled={loadingPlano === p.id}
+                    onClick={() => handleAssinar(p)}
+                    className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-sm py-2.5 rounded-md transition disabled:opacity-60 disabled:cursor-not-allowed ${
                       p.destaque
                         ? "bg-[#0A6BBF] hover:bg-[#0959a3] text-white"
                         : p.id === "enterprise"
@@ -555,8 +604,12 @@ export default function Site() {
                         : "border border-slate-300 hover:border-[#0A6BBF] hover:text-[#0A6BBF] text-slate-700"
                     }`}
                   >
-                    {p.consulta ? "Falar com especialista" : `Assinar ${p.nome}`}
-                  </a>
+                    {loadingPlano === p.id
+                      ? "Redirecionando..."
+                      : p.consulta
+                      ? "Falar com especialista"
+                      : `Assinar ${p.nome}`}
+                  </button>
                 </div>
               </div>
             ))}
