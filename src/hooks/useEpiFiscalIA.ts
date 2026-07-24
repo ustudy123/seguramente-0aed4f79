@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 import { useAuth } from "./useAuth";
 
 export function useEpiFiscalIA() {
@@ -17,13 +18,13 @@ export function useEpiFiscalIA() {
 
     try {
       const response = await fetch(
-        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ai-epi-fiscal`,
+        getSupabaseFunctionUrl("ai-epi-fiscal"),
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXlqcHNyY2VyeWN5Y3lheHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3Mjg3NTEsImV4cCI6MjA4MzMwNDc1MX0.5DUjPQQB-CKdiuERL3LBUX4g2yzDy_L5b-M8FQS-Dxo",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
           },
           body: JSON.stringify({ tenant_id: tenantId }),
         }
