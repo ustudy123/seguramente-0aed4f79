@@ -592,9 +592,11 @@ export default function Site() {
                   </ul>
                 </div>
                 <div className="p-6 pt-0">
-                  <a
-                    href="#contato"
-                    className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-sm py-2.5 rounded-md transition ${
+                  <button
+                    type="button"
+                    disabled={loadingPlano === p.id}
+                    onClick={() => handleAssinar(p)}
+                    className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-sm py-2.5 rounded-md transition disabled:opacity-60 disabled:cursor-not-allowed ${
                       p.destaque
                         ? "bg-[#0A6BBF] hover:bg-[#0959a3] text-white"
                         : p.id === "enterprise"
@@ -602,8 +604,12 @@ export default function Site() {
                         : "border border-slate-300 hover:border-[#0A6BBF] hover:text-[#0A6BBF] text-slate-700"
                     }`}
                   >
-                    {p.consulta ? "Falar com especialista" : `Assinar ${p.nome}`}
-                  </a>
+                    {loadingPlano === p.id
+                      ? "Redirecionando..."
+                      : p.consulta
+                      ? "Falar com especialista"
+                      : `Assinar ${p.nome}`}
+                  </button>
                 </div>
               </div>
             ))}
