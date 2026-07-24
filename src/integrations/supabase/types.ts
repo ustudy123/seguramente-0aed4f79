@@ -19864,6 +19864,81 @@ export type Database = {
           },
         ]
       }
+      psicossocial_plano_acao: {
+        Row: {
+          ate_quando: string | null
+          campanha_ids: string[]
+          como: string | null
+          created_at: string
+          criado_por: string | null
+          data_inicial: string | null
+          empresa_id: string | null
+          fator: string
+          fator_id: string
+          ghe_id: string | null
+          ghe_nome: string
+          id: string
+          nivel_gro: string
+          o_que: string
+          onde: string | null
+          origem: string
+          por_que: string | null
+          quanto: string | null
+          quem: string | null
+          selecionada: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ate_quando?: string | null
+          campanha_ids?: string[]
+          como?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_inicial?: string | null
+          empresa_id?: string | null
+          fator: string
+          fator_id: string
+          ghe_id?: string | null
+          ghe_nome?: string
+          id?: string
+          nivel_gro: string
+          o_que: string
+          onde?: string | null
+          origem?: string
+          por_que?: string | null
+          quanto?: string | null
+          quem?: string | null
+          selecionada?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ate_quando?: string | null
+          campanha_ids?: string[]
+          como?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_inicial?: string | null
+          empresa_id?: string | null
+          fator?: string
+          fator_id?: string
+          ghe_id?: string | null
+          ghe_nome?: string
+          id?: string
+          nivel_gro?: string
+          o_que?: string
+          onde?: string | null
+          origem?: string
+          por_que?: string | null
+          quanto?: string | null
+          quem?: string | null
+          selecionada?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       psicossocial_riscos: {
         Row: {
           ativo: boolean
@@ -23607,6 +23682,86 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_cond_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_002: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_003: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_012: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_013: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cond_022: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_dep_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -24947,6 +25102,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_conferir_seguranca: {
+        Args: never
+        Returns: {
+          detalhe: string
+          item: string
+          situacao: string
+        }[]
+      }
       qa_cron_sincronizar: { Args: never; Returns: string }
       qa_disparar_bateria: { Args: { p_modulo?: string }; Returns: string }
       qa_empresa: { Args: { p_nome: string }; Returns: string }
@@ -25012,6 +25175,19 @@ export type Database = {
         Returns: string
       }
       qa_nova_competencia: { Args: { p_comp: string }; Returns: string }
+      qa_nova_condicao: {
+        Args: {
+          p_aplicado?: string
+          p_grau?: string
+          p_insal?: boolean
+          p_nome: string
+          p_peric?: boolean
+          p_val_aplicado?: number
+          p_val_insal?: number
+          p_val_peric?: number
+        }
+        Returns: string
+      }
       qa_nova_empresa: {
         Args: { p_ativo?: boolean; p_cnpj: string; p_razao: string }
         Returns: string
