@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:staging": "cp .env.staging .env && vite build --mode staging",
+    "build:production": "cp .env.production .env && vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
