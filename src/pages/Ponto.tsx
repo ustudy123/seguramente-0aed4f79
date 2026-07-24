@@ -792,11 +792,18 @@ const Ponto = () => {
                     if (tipoDia === "afastamento") return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
                     // Dias abonados (status 'justificado') vindos da consolidação de
                     // atestado/férias/afastamento NÃO setam tipo_dia — deriva o rótulo
-                    // pelo prefixo da observação ('Atestado: ...', 'Férias: ...').
+                    // pela observação.
+                    //
+                    // As funções do banco não seguem um prefixo único: gravam
+                    // 'Abonado por afastamento (...)' e 'Abonado: Afastamento (...)',
+                    // além do formato canônico 'Afastamento: ...'. Testar só o
+                    // início da string fazia todo afastamento cair no rótulo
+                    // genérico "Justificado". Normaliza o prefixo antes de comparar.
                     if (ponto.status === "justificado") {
-                      if (/^Atestado/i.test(obs)) return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
-                      if (/^Férias/i.test(obs)) return { label: "Férias", color: "bg-sky-100 text-sky-800" };
-                      if (/^Afastamento/i.test(obs)) return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
+                      const motivo = obs.replace(/^\s*abonado\s*(?::|por)?\s*/i, "");
+                      if (/^atestado/i.test(motivo)) return { label: "Atestado", color: "bg-violet-100 text-violet-800" };
+                      if (/^f[ée]rias/i.test(motivo)) return { label: "Férias", color: "bg-sky-100 text-sky-800" };
+                      if (/^afastamento/i.test(motivo)) return { label: "Afastamento", color: "bg-purple-100 text-purple-800" };
                     }
                     return statusConfig;
                   })();
