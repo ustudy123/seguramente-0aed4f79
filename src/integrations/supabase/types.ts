@@ -1681,6 +1681,66 @@ export type Database = {
           },
         ]
       }
+      assinaturas: {
+        Row: {
+          approved_at: string | null
+          ciclo: string
+          created_at: string
+          external_reference: string | null
+          id: string
+          meses: number
+          payer_email: string | null
+          payment_id: string | null
+          payment_method: string | null
+          plano_id: string
+          plano_nome: string
+          preco_mensal: number
+          preference_id: string | null
+          raw_payload: Json | null
+          status: string
+          updated_at: string
+          valor_total: number
+        }
+        Insert: {
+          approved_at?: string | null
+          ciclo: string
+          created_at?: string
+          external_reference?: string | null
+          id?: string
+          meses: number
+          payer_email?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          plano_id: string
+          plano_nome: string
+          preco_mensal: number
+          preference_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          updated_at?: string
+          valor_total: number
+        }
+        Update: {
+          approved_at?: string | null
+          ciclo?: string
+          created_at?: string
+          external_reference?: string | null
+          id?: string
+          meses?: number
+          payer_email?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          plano_id?: string
+          plano_nome?: string
+          preco_mensal?: number
+          preference_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Relationships: []
+      }
       atestados: {
         Row: {
           afastamento_id: string | null
