@@ -301,21 +301,21 @@ export default function Site() {
               ))}
             </div>
           </div>
-          <div className="lg:col-span-5 relative">
+          <div className="lg:col-span-5 relative flex flex-col items-center">
             {/* Mascot floating */}
             <div className="relative flex justify-center">
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-[420px] h-[420px] rounded-full bg-[#60ABEF]/20 blur-3xl" />
+                <div className="w-[380px] h-[380px] rounded-full bg-[#60ABEF]/20 blur-3xl" />
               </div>
               <img
                 src={mascot.url}
                 alt="EYE — assistente de IA da YourEyes"
-                className="relative z-10 w-[300px] md:w-[360px] drop-shadow-[0_25px_50px_rgba(96,171,239,0.35)] animate-[float_6s_ease-in-out_infinite]"
+                className="relative z-10 h-[360px] md:h-[420px] w-auto rounded-2xl drop-shadow-[0_25px_60px_rgba(96,171,239,0.35)] animate-[floatMascot_6s_ease-in-out_infinite]"
                 style={{ animation: "floatMascot 6s ease-in-out infinite" }}
               />
             </div>
             {/* Compact maturity card overlapping */}
-            <div className="relative -mt-8 rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl z-20">
+            <div className="relative -mt-10 w-full rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl z-20">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF8A00]" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFA033]" />
