@@ -14,6 +14,7 @@ import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -279,8 +280,7 @@ export default function QADashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "diayjpsrcerycycyaxst";
-      const url = `https://${projectId}.supabase.co/functions/v1/ai-qa-agent`;
+      const url = getSupabaseFunctionUrl("ai-qa-agent");
 
       const response = await fetch(url, {
         method: "POST",

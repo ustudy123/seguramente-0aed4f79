@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { FileText, Download, Loader2, Printer, Send, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 import { toast } from "sonner";
 import type { ContratoExperiencia } from "@/hooks/useContratosExperiencia";
 import { getDuracaoTotal } from "@/hooks/useContratosExperiencia";
@@ -79,11 +80,10 @@ export function ExperienciaDocGenerator({ contrato, open, onClose }: Experiencia
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 55000);
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "diayjpsrcerycycyaxst";
       const { data: { session } } = await supabase.auth.getSession();
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/ai-experiencia-doc`,
+        getSupabaseFunctionUrl("ai-experiencia-doc"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
