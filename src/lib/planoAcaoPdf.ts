@@ -25,6 +25,10 @@ export interface CabecalhoRelatorio {
   razaoSocial: string;
   cnpj: string;
   ipsGlobal: number | null;
+  /** Ex.: "Categoria B – Pequeno e Médio Porte". */
+  porteCategoria?: string;
+  /** Colaboradores ativos do CNPJ que determinaram o porte. */
+  colaboradoresCnpj?: number | null;
 }
 
 export interface GrupoPlano {
@@ -88,6 +92,14 @@ export function gerarPdfPlanoAcao(
         String(cabecalho.totalRespondentes),
         "IPS Global",
         cabecalho.ipsGlobal !== null ? `${cabecalho.ipsGlobal} / 100` : "—",
+      ],
+      // Porte determina a profundidade das ações — precisa estar no documento
+      // para justificar por que um plano é mais enxuto que outro.
+      [
+        "Porte da Empresa",
+        cabecalho.porteCategoria ?? "—",
+        "Colaboradores no CNPJ",
+        cabecalho.colaboradoresCnpj != null ? String(cabecalho.colaboradoresCnpj) : "—",
       ],
     ],
     styles: { fontSize: 8, cellPadding: 2 },

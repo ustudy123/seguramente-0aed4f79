@@ -6,6 +6,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface AcaoReferencia {
+  oQue: string;
+  quem: string;
+  onde: string;
+  porQue: string;
+  como: string;
+}
+
 interface FatorEntrada {
   fator_id: string;
   fator: string;
@@ -13,6 +21,8 @@ interface FatorEntrada {
   score: number;
   dimensoes?: string[];
   norma?: string;
+  /** Ação modelo daquele fator no porte da empresa (modelos SudoMed). */
+  referencia?: AcaoReferencia | null;
 }
 
 interface Body {
@@ -23,6 +33,11 @@ interface Body {
   fatores: FatorEntrada[];
   /** Quantas opções gerar por fator. */
   opcoes_por_fator?: number;
+  /** Porte da empresa, medido por colaboradores ativos do CNPJ. */
+  porte?: "mei" | "pequeno_medio" | "grande" | null;
+  porte_label?: string | null;
+  porte_perfil?: string | null;
+  colaboradores_cnpj?: number | null;
 }
 
 const PRAZO_DIAS: Record<string, number> = {
@@ -48,6 +63,10 @@ serve(async (req) => {
       instrumento = "COPSOQ",
       fatores = [],
       opcoes_por_fator = 3,
+      porte = null,
+      porte_label = null,
+      porte_perfil = null,
+      colaboradores_cnpj = null,
     } = body;
 
     if (fatores.length === 0) {
@@ -62,7 +81,15 @@ serve(async (req) => {
           `- id="${f.fator_id}" | fator="${f.fator}" | nível GRO=${f.nivel_gro.toUpperCase()} | score de risco=${f.score}%` +
           (f.dimensoes?.length ? ` | dimensões=${f.dimensoes.join(", ")}` : "") +
           (f.norma ? ` | base normativa=${f.norma}` : "") +
-          ` | prazo máximo=${PRAZO_DIAS[f.nivel_gro] || "sem prazo (registro documental)"} dias`,
+          ` | prazo máximo=${PRAZO_DIAS[f.nivel_gro] || "sem prazo (registro documental)"} dias` +
+          (f.referencia
+            ? `\n  AÇÃO DE REFERÊNCIA PARA ESTE PORTE (use como base, não copie literalmente):` +
+              `\n    o_que: ${f.referencia.oQue}` +
+              `\n    quem: ${f.referencia.quem}` +
+              `\n    onde: ${f.referencia.onde}` +
+              `\n    por_que: ${f.referencia.porQue}` +
+              `\n    como: ${f.referencia.como}`
+            : ""),
       )
       .join("\n");
 
@@ -75,6 +102,14 @@ Grupo Homogêneo de Exposição (GHE): ${ghe_nome}
 Respondentes do GHE: ${respondentes}
 ${composicao.length ? `Composição: ${composicao.join("; ")}` : ""}
 Instrumento aplicado: ${instrumento}
+${
+  porte_label
+    ? `PORTE DA EMPRESA: ${porte_label}${
+        colaboradores_cnpj !== null ? ` — ${colaboradores_cnpj} colaboradores ativos no CNPJ` : ""
+      }
+PERFIL ESTRUTURAL DESTE PORTE: ${porte_perfil ?? ""}`
+    : ""
+}
 
 FATORES DE RISCO IDENTIFICADOS
 ${listaFatores}
@@ -97,6 +132,15 @@ REGRAS
   Se envolver custo, indique a natureza (ex.: "Investimento financeiro — consultoria externa").
 - Priorize controles ORGANIZACIONAIS sobre individuais: a NR-01 exige atuar na fonte
   do risco, não apenas no indivíduo.
+- CALIBRE PELO PORTE. A ação precisa ser executável com a estrutura que a empresa tem.
+  Não proponha comitê, ouvidoria independente, PMO, diretoria de compliance, plataforma
+  corporativa ou programa 24/7 para empresa que não sustenta isso. Na direção contrária,
+  não resolva com "conversa na reunião de equipe" o risco de uma organização com centenas
+  de trabalhadores e várias unidades. Em "quem", use papéis que existam nesse porte.
+- A AÇÃO DE REFERÊNCIA de cada fator é o padrão técnico esperado para o porte. Use-a como
+  âncora de escopo, profundidade e vocabulário. As ${opcoes_por_fator} opções devem variar
+  a abordagem em torno dela, mantendo o mesmo nível de ambição — não fique aquém nem
+  proponha estrutura que o porte não comporta.
 - Não proponha intervenção clínica, diagnóstico ou tratamento de saúde mental.
 - Português brasileiro. Máximo 220 caracteres por campo.
 

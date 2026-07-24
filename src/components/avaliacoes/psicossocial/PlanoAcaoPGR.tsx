@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Lock,
   Pencil,
+  Building2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,9 @@ import { SelecaoCampanhasModal } from "./SelecaoCampanhasModal";
 import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosGHE";
 import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { usePorteEmpresa } from "@/hooks/usePorteEmpresa";
+import { faixaEmTexto } from "@/lib/porteEmpresa";
+import { referenciaDoFator } from "@/data/planoAcaoReferencia";
 import {
   usePsicossocialPlanoAcao,
   type AcaoPlanoPsicossocial,
@@ -82,6 +86,7 @@ interface PlanoAcaoPGRProps {
 
 export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
   const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
+  const { data: porteInfo } = usePorteEmpresa();
 
   const [seletorAberto, setSeletorAberto] = useState(false);
   const [selecionadas, setSelecionadas] = useState<CampanhaPsicossocial[]>([]);
@@ -158,6 +163,13 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
           respondentes: ghe.count,
           composicao: ghe.composicaoSetores,
           instrumento: isSipro ? "SIPRO" : (selecionadas[0]?.instrumento ?? "COPSOQ").toUpperCase(),
+          // Porte define o registro da acao: uma empresa de 8 pessoas nao
+          // sustenta comite de saude mental, e uma de 800 nao se resolve com
+          // conversa na reuniao de equipe.
+          porte: porteInfo?.faixa.porte ?? null,
+          porte_label: porteInfo?.faixa.label ?? null,
+          porte_perfil: porteInfo?.faixa.perfil ?? null,
+          colaboradores_cnpj: porteInfo?.colaboradores ?? null,
           fatores: ghe.fatores.map(f => ({
             fator_id: f.fatorId,
             fator: f.fator,
@@ -165,6 +177,9 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
             score: f.scoreRisco,
             dimensoes: f.dimensoes,
             norma: f.norma,
+            // Acao modelo daquele fator no porte da empresa (SudoMed), usada
+            // como base pela IA e como fallback se ela falhar.
+            referencia: porteInfo ? referenciaDoFator(porteInfo.faixa.porte, f.fatorId) ?? null : null,
           })),
           opcoes_por_fator: 3,
         },
@@ -181,8 +196,41 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
       );
       toast.success(`${qtd} opções geradas para ${ghe.ghe_nome}`);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao gerar sugestões";
-      toast.error(msg);
+      // Fallback determinístico: se a IA falhar (chave ausente, timeout, cota),
+      // cai para a ação de referência do porte. Um plano com a ação padrão é
+      // muito melhor do que um plano vazio — este é documento probatório de
+      // NR-01, e a tela não pode ficar sem saída.
+      const refs: SugestaoIA[] = porteInfo
+        ? ghe.fatores
+            .map(f => {
+              const r = referenciaDoFator(porteInfo.faixa.porte, f.fatorId);
+              if (!r) return null;
+              return {
+                fator_id: f.fatorId,
+                opcoes: [
+                  {
+                    o_que: r.oQue,
+                    quem: r.quem,
+                    onde: r.onde,
+                    por_que: r.porQue,
+                    como: r.como,
+                    quanto: "A definir pela empresa",
+                  },
+                ],
+              } as SugestaoIA;
+            })
+            .filter((x): x is SugestaoIA => x !== null)
+        : [];
+
+      if (refs.length > 0) {
+        setSugestoes(prev => ({ ...prev, [ghe.ghe_id ?? "__org__"]: refs }));
+        toast.warning(
+          `IA indisponível — carreguei as ações de referência para ${porteInfo?.faixa.label}.`,
+          { description: "Revise e edite antes de incluir no plano." },
+        );
+      } else {
+        toast.error(e instanceof Error ? e.message : "Falha ao gerar sugestões");
+      }
     } finally {
       setGerandoGhe(null);
     }
@@ -309,6 +357,8 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
         razaoSocial: empresaAtiva?.razao_social || empresaAtiva?.nome_fantasia || "—",
         cnpj: empresaAtiva?.cnpj || "—",
         ipsGlobal,
+        porteCategoria: porteInfo?.faixa.categoria,
+        colaboradoresCnpj: porteInfo?.colaboradores ?? null,
       };
 
       const grupos: GrupoPlano[] = ghes
@@ -354,6 +404,20 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
                 Ações 5W2H por fator de risco e por GHE, derivadas do Inventário PGR.
                 O nível de GRO vem do cruzamento probabilidade × severidade.
               </CardDescription>
+              {porteInfo && (
+                <div className="mt-2 flex items-center gap-2 flex-wrap text-xs">
+                  <Badge variant="outline" className="gap-1.5 font-normal">
+                    <Building2 className="h-3.5 w-3.5" />
+                    {porteInfo.faixa.label}
+                  </Badge>
+                  <span className="text-muted-foreground">
+                    {porteInfo.colaboradores} colaborador
+                    {porteInfo.colaboradores === 1 ? "" : "es"} ativo
+                    {porteInfo.colaboradores === 1 ? "" : "s"} no CNPJ ·{" "}
+                    {faixaEmTexto(porteInfo.faixa)}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setSeletorAberto(true)} className="gap-2">
