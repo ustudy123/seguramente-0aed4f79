@@ -110,6 +110,25 @@ Deno.serve(async (req) => {
     const isTest = accessToken.startsWith("TEST-");
     const checkoutUrl = isTest ? mpJson.sandbox_init_point : mpJson.init_point;
 
+    // Persiste registro pendente da assinatura
+    try {
+      const supabase = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
+      await supabase.from("assinaturas").insert({
+        plano_id,
+        plano_nome,
+        ciclo,
+        preco_mensal,
+        valor_total: total,
+        meses,
+        status: "pending",
+        payer_email: email ?? null,
+        preference_id: mpJson.id,
+        external_reference: externalReference,
+      });
+    } catch (e) {
+      console.error("Erro ao registrar assinatura pendente:", e);
+    }
+
     return new Response(
       JSON.stringify({
         checkout_url: checkoutUrl,
