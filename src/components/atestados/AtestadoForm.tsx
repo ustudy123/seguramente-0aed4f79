@@ -65,6 +65,7 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 import { toast } from "sonner";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
@@ -272,7 +273,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch(
-        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/consultar-cid`,
+        getSupabaseFunctionUrl("consultar-cid"),
         {
           method: "POST",
           headers: {
@@ -355,7 +356,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
       // 2. Se não encontrou no histórico, tenta a validação/busca externa (simulada via Edge Function)
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch(
-        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/consultar-crm`,
+        getSupabaseFunctionUrl("consultar-crm"),
         {
           method: "POST",
           headers: {
@@ -396,7 +397,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
       const { data: sessionData } = await supabase.auth.getSession();
       
       const response = await fetch(
-        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/extract-atestado`,
+        getSupabaseFunctionUrl("extract-atestado"),
         {
           method: "POST",
           headers: {
