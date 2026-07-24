@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -500,7 +500,23 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
     maxSize: 20 * 1024 * 1024,
   });
 
+  // Trava interna contra duplo submit. Nao depende do chamador passar `loading`:
+  // a CentralGaf nao passava, e isso gerava atestados duplicados a ~150ms de
+  // distancia (duplo clique). Ref em vez de state porque precisa valer no mesmo
+  // tick, antes de qualquer re-render.
+  const submittingRef = useRef(false);
+
   const handleSubmit = async (values: FormValues) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      await handleSubmitInterno(values);
+    } finally {
+      submittingRef.current = false;
+    }
+  };
+
+  const handleSubmitInterno = async (values: FormValues) => {
     // Validar se colaborador foi selecionado
     if (!colaboradorSelecionado) {
       toast.error("Selecione um colaborador cadastrado antes de continuar.");

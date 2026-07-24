@@ -39,6 +39,7 @@ const CentralGaf = () => {
     getSignedUrl,
     createAtestado,
     updateAtestado,
+    creatingAtestado,
     deleteAfastamento
   } = useAtestados();
   const { absenteismoStats, saudeMentalStats, fapRatStats, pendenciasStats, isLoading: loadingStats } = useGafDashboards();
@@ -148,6 +149,7 @@ const CentralGaf = () => {
         open={formOpen} 
         onOpenChange={(v) => { setFormOpen(v); if (!v) setEditingAtestado(null); }} 
         onSubmit={handleCreateAtestado}
+        loading={creatingAtestado}
         atestadoEdit={editingAtestado}
       />
 
