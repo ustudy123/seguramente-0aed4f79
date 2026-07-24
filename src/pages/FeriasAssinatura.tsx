@@ -7,8 +7,9 @@ import { Loader2, CheckCircle2, FileText, AlertTriangle, PenLine, Calendar, User
 import SignatureCanvas from "react-signature-canvas";
 import { toast } from "sonner";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 
-const FUNCTION_URL = "https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ferias-assinatura";
+const FUNCTION_URL = getSupabaseFunctionUrl("ferias-assinatura");
 
 export default function FeriasAssinatura() {
   const { token } = useParams<{ token: string }>();

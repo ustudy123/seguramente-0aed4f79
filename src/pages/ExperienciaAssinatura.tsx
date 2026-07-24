@@ -8,8 +8,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import SignatureCanvas from "react-signature-canvas";
 import { CheckCircle2, FileText, Loader2, PenLine, RotateCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 
-const FUNCTION_URL = "https://diayjpsrcerycycyaxst.supabase.co/functions/v1/experiencia-assinatura";
+const FUNCTION_URL = getSupabaseFunctionUrl("experiencia-assinatura");
 
 export default function ExperienciaAssinatura() {
   const { token } = useParams<{ token: string }>();
