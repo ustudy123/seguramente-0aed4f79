@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseFunctionUrl } from "@/lib/supabaseFunctions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ export default function PdiAssinatura() {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/pdi-assinatura?token=${token}`,
+        `${getSupabaseFunctionUrl("pdi-assinatura")}?token=${token}`,
         { headers: { "Content-Type": "application/json" } }
       );
       const json = await res.json();
@@ -64,7 +65,7 @@ export default function PdiAssinatura() {
       const assinatura_base64 = sigCanvasRef.current.toDataURL("image/png");
 
       const res = await fetch(
-        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/pdi-assinatura?token=${token}`,
+        `${getSupabaseFunctionUrl("pdi-assinatura")}?token=${token}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
