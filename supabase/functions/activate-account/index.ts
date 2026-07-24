@@ -31,6 +31,8 @@ serve(async (req) => {
     email: string;
     password: string;
     telefone?: string;
+    nome_empresa?: string;
+    cnpj?: string;
   };
 
   try {
@@ -39,9 +41,13 @@ serve(async (req) => {
     return json({ error: "Invalid JSON" }, 400);
   }
 
-  const { activation_token, nome_completo, email, password } = payload;
-  if (!activation_token || !nome_completo || !email || !password) {
+  const { activation_token, nome_completo, email, password, nome_empresa, cnpj } = payload;
+  if (!activation_token || !nome_completo || !email || !password || !nome_empresa || !cnpj) {
     return json({ error: "Missing required fields" }, 400);
+  }
+  const cnpjDigits = cnpj.replace(/\D/g, "");
+  if (cnpjDigits.length !== 14) {
+    return json({ error: "CNPJ inválido" }, 400);
   }
 
   // 1. Fetch cliente by token
@@ -110,7 +116,7 @@ serve(async (req) => {
     req.headers.get("x-real-ip") || "unknown";
   const userAgent = req.headers.get("user-agent") || "unknown";
 
-  // 6. Mark account as activated
+  // 6. Mark account as activated + persist company data
   const { error: updateError } = await admin
     .from("programa_validador_clientes")
     .update({
@@ -121,11 +127,33 @@ serve(async (req) => {
       aceite_user_agent: userAgent,
       aceite_termos_em: new Date().toISOString(),
       aceite_versao_termos: "1.0",
+      nome_empresa,
+      cnpj: cnpjDigits,
     } as never)
     .eq("activation_token", activation_token);
 
   if (updateError) {
     return json({ error: updateError.message }, 500);
+  }
+
+  // 6b. Update tenant name and store CNPJ in configuracoes JSONB
+  if (tenantId) {
+    const { data: tenantRow } = await admin
+      .from("tenants")
+      .select("configuracoes")
+      .eq("id", tenantId)
+      .maybeSingle();
+
+    const configuracoes = {
+      ...((tenantRow?.configuracoes as Record<string, unknown> | null) ?? {}),
+      cnpj: cnpjDigits,
+      nome_empresa,
+    };
+
+    await admin
+      .from("tenants")
+      .update({ nome: nome_empresa, configuracoes } as never)
+      .eq("id", tenantId);
   }
 
   // 7. Sign in the user to get session

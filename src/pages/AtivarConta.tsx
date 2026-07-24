@@ -43,6 +43,8 @@ export default function AtivarConta() {
     password: "",
     confirm_password: "",
     telefone: "",
+    nome_empresa: "",
+    cnpj: "",
   });
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -91,6 +93,8 @@ export default function AtivarConta() {
       ...prev,
       nome_completo: data.poc_nome || "",
       email: data.poc_email || "",
+      nome_empresa: data.nome_empresa || "",
+      cnpj: data.cnpj || "",
     }));
     setLoading(false);
   }
@@ -129,6 +133,15 @@ export default function AtivarConta() {
       toast.error("Preencha nome completo e e-mail.");
       return;
     }
+    if (!form.nome_empresa.trim()) {
+      toast.error("Informe o nome da empresa.");
+      return;
+    }
+    const cnpjDigits = form.cnpj.replace(/\D/g, "");
+    if (cnpjDigits.length !== 14) {
+      toast.error("Informe um CNPJ válido (14 dígitos).");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -139,6 +152,8 @@ export default function AtivarConta() {
           email: form.email,
           password: form.password,
           telefone: form.telefone || undefined,
+          nome_empresa: form.nome_empresa.trim(),
+          cnpj: cnpjDigits,
         },
       });
 
@@ -330,16 +345,45 @@ export default function AtivarConta() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* Company info pill */}
-            {cliente && (
-              <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Empresa</p>
-                  <p className="text-sm font-semibold text-foreground truncate">{cliente.nome_empresa}</p>
-                </div>
+            {/* Dados da empresa */}
+            <div className="space-y-1.5">
+              <Label htmlFor="nome_empresa" className="text-sm font-medium">Razão social / Nome da empresa</Label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="nome_empresa"
+                  className="pl-9"
+                  placeholder="Ex.: Sua Empresa LTDA"
+                  value={form.nome_empresa}
+                  onChange={e => setForm(f => ({ ...f, nome_empresa: e.target.value }))}
+                  required
+                />
               </div>
-            )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cnpj" className="text-sm font-medium">CNPJ</Label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="cnpj"
+                  className="pl-9"
+                  placeholder="00.000.000/0000-00"
+                  value={form.cnpj}
+                  onChange={e => {
+                    const d = e.target.value.replace(/\D/g, "").slice(0, 14);
+                    const masked = d
+                      .replace(/^(\d{2})(\d)/, "$1.$2")
+                      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+                      .replace(/(\d{4})(\d)/, "$1-$2");
+                    setForm(f => ({ ...f, cnpj: masked }));
+                  }}
+                  required
+                />
+              </div>
+            </div>
+
 
             {/* Nome completo */}
             <div className="space-y-1.5">
