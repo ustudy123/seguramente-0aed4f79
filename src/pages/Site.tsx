@@ -34,7 +34,19 @@ const CICLOS: { key: Ciclo; label: string; badge?: string; discount: number }[] 
   { key: "anual", label: "Anual", badge: "−40%", discount: 0.4 },
 ];
 
-const PLANOS = [
+type Plano = {
+  id: string;
+  tier: string;
+  nome: string;
+  base: number;
+  publico: string;
+  limite: string;
+  modulos: string[];
+  destaque?: boolean;
+  consulta?: boolean;
+};
+
+const PLANOS: Plano[] = [
   {
     id: "starter",
     tier: "Tier 01",
