@@ -220,7 +220,7 @@ export default function Site() {
               <div className="text-[10px] uppercase tracking-widest text-slate-500">Governança do Trabalho Humano</div>
             </div>
           </a>
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-700">
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-200">
             <a href="#plataforma" className="hover:text-[#0A6BBF]">Plataforma</a>
             <a href="#solucoes" className="hover:text-[#0A6BBF]">Soluções</a>
             <a href="#planos" className="hover:text-[#0A6BBF]">Planos</a>
@@ -462,13 +462,13 @@ export default function Site() {
           </div>
 
           {/* Toggle ciclos */}
-          <div className="inline-flex bg-slate-100 rounded-lg p-1 mb-10 border border-slate-200">
+          <div className="inline-flex bg-white/10 rounded-lg p-1 mb-10 border border-white/10">
             {CICLOS.map((c) => (
               <button
                 key={c.key}
                 onClick={() => setCiclo(c.key)}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition ${
-                  ciclo === c.key ? "bg-white shadow text-[#0B1D34]" : "text-slate-600 hover:text-[#0B1D34]"
+                  ciclo === c.key ? "bg-white shadow text-[#0B1D34]" : "text-slate-300 hover:text-white"
                 }`}
               >
                 {c.label}
@@ -486,20 +486,20 @@ export default function Site() {
               <div
                 key={p.id}
                 className={`rounded-lg border ${
-                  p.destaque ? "border-[#0A6BBF] shadow-xl ring-1 ring-[#0A6BBF]/20 relative" : "border-slate-200"
-                } bg-white flex flex-col`}
+                  p.destaque ? "border-[#60ABEF] shadow-2xl shadow-[#60ABEF]/20 ring-1 ring-[#60ABEF]/30 relative" : "border-white/10"
+                } bg-white flex flex-col text-[#0B1D34]`}
               >
                 {p.destaque && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0A6BBF] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded">
                     Recomendado
                   </div>
                 )}
-                <div className="p-6 border-b border-slate-100">
+                <div className="p-6 border-b border-slate-200">
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{p.tier}</div>
                   <div className="text-xl font-bold text-[#0B1D34] mt-1">{p.nome}</div>
                   <div className="text-xs text-slate-500 mt-1">{p.limite}</div>
                 </div>
-                <div className="p-6 border-b border-slate-100">
+                <div className="p-6 border-b border-slate-200">
                   {p.consulta ? (
                     <div>
                       <div className="text-sm text-slate-500 mb-1">Sob consulta</div>
@@ -510,7 +510,7 @@ export default function Site() {
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-sm text-slate-500">R$</span>
-                        <span className="text-3xl font-bold text-white">{formatarPreco(p.base)}</span>
+                        <span className="text-3xl font-bold text-[#0B1D34]">{formatarPreco(p.base)}</span>
                         <span className="text-sm text-slate-500">/mês</span>
                       </div>
                       {cicloAtual.discount > 0 && (
@@ -525,7 +525,7 @@ export default function Site() {
                 <div className="p-6 flex-1">
                   <ul className="space-y-2.5 text-sm">
                     {p.modulos.map((m) => (
-                      <li key={m} className="flex items-start gap-2 text-slate-700">
+                      <li key={m} className="flex items-start gap-2 text-slate-200">
                         <CheckCircle2 className="w-4 h-4 text-[#21A365] flex-shrink-0 mt-0.5" />
                         <span>{m}</span>
                       </li>
@@ -598,7 +598,7 @@ export default function Site() {
               A norma orienta. O sistema operacionaliza.
             </h2>
           </div>
-          <div className="lg:col-span-7 space-y-6 text-slate-600 leading-relaxed text-lg">
+          <div className="lg:col-span-7 space-y-6 text-slate-300 leading-relaxed text-lg">
             <p>
               A YourEyes nasceu no cruzamento entre inteligência organizacional, RH, SST e compliance, com ênfase em NR-1,
               riscos psicossociais e saúde mental no trabalho. Não somos apenas um software de RH nem uma consultoria de
@@ -610,21 +610,21 @@ export default function Site() {
               contra-prova documental automática. Cada alerta pode ser convertido em Plano de Ação 5W2H. Cada análise
               alimenta o Escore de Maturidade da organização.
             </p>
-            <div className="grid sm:grid-cols-3 gap-6 pt-6 border-t border-slate-200">
+            <div className="grid sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
                 <Building2 className="w-6 h-6 text-[#0A6BBF] mb-2" />
-                <div className="font-semibold text-[#0B1D34]">Multi-tenant</div>
-                <div className="text-sm text-slate-500 mt-1">Isolamento estrito por empresa e unidade</div>
+                <div className="font-semibold text-white">Multi-tenant</div>
+                <div className="text-sm text-slate-400 mt-1">Isolamento estrito por empresa e unidade</div>
               </div>
               <div>
                 <Brain className="w-6 h-6 text-[#0A6BBF] mb-2" />
-                <div className="font-semibold text-[#0B1D34]">IA First</div>
-                <div className="text-sm text-slate-500 mt-1">GPT-4o em extrações e auditorias</div>
+                <div className="font-semibold text-white">IA First</div>
+                <div className="text-sm text-slate-400 mt-1">GPT-4o em extrações e auditorias</div>
               </div>
               <div>
                 <ShieldCheck className="w-6 h-6 text-[#0A6BBF] mb-2" />
-                <div className="font-semibold text-[#0B1D34]">Auditável</div>
-                <div className="text-sm text-slate-500 mt-1">Trilha documental em cada ação</div>
+                <div className="font-semibold text-white">Auditável</div>
+                <div className="text-sm text-slate-400 mt-1">Trilha documental em cada ação</div>
               </div>
             </div>
           </div>
@@ -638,12 +638,12 @@ export default function Site() {
           <h2 className="text-3xl font-bold text-white text-center mb-12">Tire suas dúvidas</h2>
           <div className="space-y-3">
             {FAQ.map((f, i) => (
-              <details key={i} className="group bg-white border border-slate-200 rounded-lg">
-                <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-[#0B1D34]">
+              <details key={i} className="group bg-white/[0.04] backdrop-blur border border-white/10 rounded-lg">
+                <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-white">
                   <span>{f.q}</span>
                   <span className="text-[#0A6BBF] group-open:rotate-180 transition text-lg">▾</span>
                 </summary>
-                <div className="px-6 pb-5 text-sm text-slate-300 leading-relaxed border-t border-slate-100 pt-4">{f.a}</div>
+                <div className="px-6 pb-5 text-sm text-slate-300 leading-relaxed border-t border-white/10 pt-4">{f.a}</div>
               </details>
             ))}
           </div>
@@ -651,7 +651,7 @@ export default function Site() {
       </section>
 
       {/* CONTATO */}
-      <section id="contato" className="py-24 bg-white">
+      <section id="contato" className="py-24 bg-white/[0.02] border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12">
           <div className="lg:col-span-5">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Contato</div>
@@ -663,15 +663,15 @@ export default function Site() {
               onde sua operação está exposta e como estruturar a conformidade.
             </p>
             <div className="mt-8 space-y-4">
-              <div className="flex items-center gap-3 text-slate-700">
+              <div className="flex items-center gap-3 text-slate-200">
                 <Mail className="w-5 h-5 text-[#0A6BBF]" />
                 <a href="mailto:contato@youreyes.com.br" className="hover:text-[#0A6BBF]">contato@youreyes.com.br</a>
               </div>
-              <div className="flex items-center gap-3 text-slate-700">
+              <div className="flex items-center gap-3 text-slate-200">
                 <Phone className="w-5 h-5 text-[#0A6BBF]" />
                 <span>Atendimento comercial via WhatsApp</span>
               </div>
-              <div className="flex items-center gap-3 text-slate-700">
+              <div className="flex items-center gap-3 text-slate-200">
                 <MapPin className="w-5 h-5 text-[#0A6BBF]" />
                 <span>Brasil · SLA 99,5% garantido</span>
               </div>
@@ -679,7 +679,7 @@ export default function Site() {
           </div>
           <div className="lg:col-span-7">
             <form
-              className="border border-slate-200 rounded-lg p-8 bg-white shadow-sm space-y-4"
+              className="border border-white/10 rounded-lg p-8 bg-white/[0.04] backdrop-blur shadow-2xl space-y-4"
               onSubmit={(e) => {
                 e.preventDefault();
                 const data = new FormData(e.currentTarget);
@@ -694,20 +694,20 @@ export default function Site() {
             >
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nome</label>
-                  <input name="nome" required className="w-full mt-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nome</label>
+                  <input name="nome" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Empresa</label>
-                  <input name="empresa" required className="w-full mt-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Empresa</label>
+                  <input name="empresa" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">E-mail corporativo</label>
-                  <input type="email" name="email" required className="w-full mt-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">E-mail corporativo</label>
+                  <input type="email" name="email" required className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nº de colaboradores</label>
-                  <select name="colaboradores" className="w-full mt-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none">
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nº de colaboradores</label>
+                  <select name="colaboradores" className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none">
                     <option>Até 20</option>
                     <option>21 a 80</option>
                     <option>81 a 200</option>
@@ -717,8 +717,8 @@ export default function Site() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Necessidade principal</label>
-                <textarea name="mensagem" rows={4} className="w-full mt-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" placeholder="NR-1, riscos psicossociais, folha, ponto..." />
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Necessidade principal</label>
+                <textarea name="mensagem" rows={4} className="w-full mt-1 border border-white/15 bg-white/5 text-white placeholder:text-slate-400 rounded-md px-3 py-2 text-sm focus:border-[#0A6BBF] focus:ring-1 focus:ring-[#0A6BBF] outline-none" placeholder="NR-1, riscos psicossociais, folha, ponto..." />
               </div>
               <button
                 type="submit"
