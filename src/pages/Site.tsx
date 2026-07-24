@@ -217,9 +217,13 @@ export default function Site() {
     };
   }, []);
 
-  const formatarPreco = (base: number) => {
-    const preco = Math.round(base * (1 - cicloAtual.discount));
-    return preco.toLocaleString("pt-BR");
+  const precoMensal = (base: number) => Math.round(base * (1 - cicloAtual.discount) * 100) / 100;
+  const formatarPreco = (base: number) =>
+    precoMensal(base).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatarTotalCiclo = (base: number) => {
+    const meses = ciclo === "mensal" ? 1 : ciclo === "trimestral" ? 3 : ciclo === "semestral" ? 6 : 12;
+    const total = Math.round(precoMensal(base) * meses * 100) / 100;
+    return total.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const handleAssinar = async (p: Plano) => {
@@ -574,6 +578,11 @@ export default function Site() {
                       </div>
                       {cicloAtual.discount > 0 && (
                         <div className="text-xs text-slate-400 line-through mt-1">R$ {p.base.toLocaleString("pt-BR")}/mês regular</div>
+                      )}
+                      {ciclo !== "mensal" && (
+                        <div className="text-xs text-slate-600 mt-1">
+                          Total do ciclo: <strong>R$ {formatarTotalCiclo(p.base)}</strong>
+                        </div>
                       )}
                       {ciclo === "semestral" && (
                         <div className="text-xs font-semibold text-[#FF8A00] mt-2">🔥 Preço de lançamento</div>
