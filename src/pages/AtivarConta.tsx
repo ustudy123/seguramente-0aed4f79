@@ -93,6 +93,8 @@ export default function AtivarConta() {
       ...prev,
       nome_completo: data.poc_nome || "",
       email: data.poc_email || "",
+      nome_empresa: data.nome_empresa || "",
+      cnpj: data.cnpj || "",
     }));
     setLoading(false);
   }
