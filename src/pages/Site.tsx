@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import logo from "@/assets/logo-youreyes.svg";
+import logoAsset from "@/assets/logo-youreyes-3.png.asset.json";
 import mascot from "@/assets/mascot-ye.png.asset.json";
 import {
   ShieldCheck,
@@ -270,7 +270,7 @@ export default function Site() {
       <header className="sticky top-0 z-40 bg-[#0B1D34]/85 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="#topo" className="flex items-center gap-3">
-            <img src={logo} alt="YourEyes" className="h-9 w-9" />
+            <img src={logoAsset.url} alt="YourEyes" className="h-10 w-10 rounded-full" />
             <div className="leading-tight">
               <div className="font-bold text-white tracking-tight">YourEyes</div>
               <div className="text-[10px] uppercase tracking-widest text-slate-400">Maturidade Organizacional</div>
@@ -829,7 +829,7 @@ export default function Site() {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-10">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="YourEyes" className="h-8 w-8" />
+              <img src={logoAsset.url} alt="YourEyes" className="h-8 w-8 rounded-full" />
               <div className="font-bold text-white">YourEyes</div>
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
