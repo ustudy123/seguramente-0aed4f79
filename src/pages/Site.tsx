@@ -168,7 +168,7 @@ const SOLUCOES = [
 
 const CONFIANCA = [
   { titulo: "LGPD", desc: "Dados de saúde em bucket privado com grupos clínicos" },
-  { titulo: "RLS Multi-tenant", desc: "Isolamento por tenant_id e empresa_id" },
+  { titulo: "Isolamento por empresa", desc: "Cada empresa acessa somente os próprios dados" },
   { titulo: "Assinatura digital", desc: "Injeção HTML com carimbo de auditoria" },
   { titulo: "Trilha auditável", desc: "Todo alerta convertível em Ação 5W2H" },
 ];
