@@ -52,7 +52,7 @@ type Plano = {
 const PLANOS: Plano[] = [
   {
     id: "starter",
-    tier: "Tier 01",
+    tier: "Nível 01",
     nome: "Starter",
     base: 197,
     publico: "Micro e pequenas empresas iniciando a jornada de conformidade.",
@@ -67,7 +67,7 @@ const PLANOS: Plano[] = [
   },
   {
     id: "essential",
-    tier: "Tier 02",
+    tier: "Nível 02",
     nome: "Essential",
     base: 397,
     publico: "PMEs que precisam operacionalizar GRO, PGR e evidências.",
@@ -82,7 +82,7 @@ const PLANOS: Plano[] = [
   },
   {
     id: "professional",
-    tier: "Tier 03",
+    tier: "Nível 03",
     nome: "Professional",
     base: 797,
     destaque: true,
@@ -99,7 +99,7 @@ const PLANOS: Plano[] = [
   },
   {
     id: "business",
-    tier: "Tier 04",
+    tier: "Nível 04",
     nome: "Business",
     base: 1797,
     publico: "Empresas com múltiplas unidades e integrações corporativas.",
@@ -115,7 +115,7 @@ const PLANOS: Plano[] = [
   },
   {
     id: "enterprise",
-    tier: "Tier 05",
+    tier: "Nível 05",
     nome: "Enterprise",
     base: 3500,
     consulta: true,
@@ -168,7 +168,7 @@ const SOLUCOES = [
 
 const CONFIANCA = [
   { titulo: "LGPD", desc: "Dados de saúde em bucket privado com grupos clínicos" },
-  { titulo: "RLS Multi-tenant", desc: "Isolamento por tenant_id e empresa_id" },
+  { titulo: "Isolamento por empresa", desc: "Cada empresa acessa somente os próprios dados" },
   { titulo: "Assinatura digital", desc: "Injeção HTML com carimbo de auditoria" },
   { titulo: "Trilha auditável", desc: "Todo alerta convertível em Ação 5W2H" },
 ];
@@ -177,7 +177,7 @@ const FAQ = [
   { q: "A oferta de 50% é permanente?", a: "É exclusiva de lançamento, válida por 6 meses. Clientes que assinarem o semestral neste período mantêm o desconto durante todo o ciclo contratado." },
   { q: "Quanto tempo para estar em conformidade com a NR-1?", a: "Nos planos Essential ou superior, o GRO fica operacional em até 1 dia útil após o onboarding. Inventário PGR e plano de ação são gerados automaticamente." },
   { q: "Posso mudar de plano durante o semestral?", a: "Upgrades são imediatos com crédito proporcional. Downgrades entram no próximo período." },
-  { q: "O Financeiro e a Rede de Parceiros estão em qual plano?", a: "A partir do plano Business (Tier 04), que exige estrutura multi-unidades e integrações de API." },
+  { q: "O Financeiro e a Rede de Parceiros estão em qual plano?", a: "A partir do plano Business (Nível 04), que exige estrutura multi-unidades e integrações de API." },
   { q: "O que garante o banco de dados dedicado do Enterprise?", a: "Infraestrutura completamente isolada — seus dados nunca compartilham servidor com outros clientes, com LGPD avançada e auditoria independente." },
   { q: "Existe trial ou demonstração?", a: "O Professional inclui trial de 14 dias com onboarding assistido. Para Enterprise, oferecemos demonstração guiada com especialista em NR-1." },
 ];
@@ -423,7 +423,7 @@ export default function Site() {
               Um sistema único para RH, SST, Compliance e Liderança.
             </h2>
             <p className="mt-4 text-slate-300 text-lg leading-relaxed">
-              Nove famílias de módulos conectadas entre si, com dados normalizados por tenant e evidência
+              Nove famílias de módulos conectadas entre si, com dados isolados por empresa e evidência
               documental em cada ação executada.
             </p>
           </div>
@@ -517,7 +517,7 @@ export default function Site() {
           <div className="max-w-3xl mb-10">
             <div className="text-xs font-semibold uppercase tracking-widest text-[#0A6BBF] mb-3">Planos & Preços</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Cinco tiers para diferentes maturidades de operação.
+              Cinco níveis para diferentes maturidades de operação.
             </h2>
             <p className="mt-4 text-slate-300 text-lg">
               Oferta de lançamento: <strong>50% de desconto</strong> no semestral, exclusiva para os primeiros clientes.
@@ -687,8 +687,8 @@ export default function Site() {
             <div className="grid sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
                 <Building2 className="w-6 h-6 text-[#0A6BBF] mb-2" />
-                <div className="font-semibold text-white">Multi-tenant</div>
-                <div className="text-sm text-slate-400 mt-1">Isolamento estrito por empresa e unidade</div>
+                <div className="font-semibold text-white">Dados isolados por empresa</div>
+                <div className="text-sm text-slate-400 mt-1">Cada cliente enxerga apenas suas unidades e colaboradores</div>
               </div>
               <div>
                 <Brain className="w-6 h-6 text-[#0A6BBF] mb-2" />
