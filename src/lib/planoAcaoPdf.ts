@@ -30,7 +30,10 @@ export interface CabecalhoRelatorio {
 export interface GrupoPlano {
   gheId: string | null;
   gheNome: string;
-  respondentes: number;
+  /** Setores vinculados ao GHE no cadastro. */
+  setores: string[];
+  /** Cargos vinculados ao GHE no cadastro. */
+  cargos: string[];
   acoes: AcaoPlanoPsicossocial[];
 }
 
@@ -127,27 +130,58 @@ export function gerarPdfPlanoAcao(
   grupos.forEach(grupo => {
     if (grupo.acoes.length === 0) return;
 
-    const inicioY = primeiraTabela
-      ? 24
-      : (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
-    primeiraTabela = false;
+    // Espaço mínimo para o cabeçalho do GHE (nome + setores + cargos) mais o
+    // cabeçalho da tabela. Sem isso o bloco pode ficar órfão no pé da página.
+    const alturaCabecalho =
+      10 + (grupo.setores.length > 0 ? 4 : 0) + (grupo.cargos.length > 0 ? 4 : 0);
+    const limite = doc.internal.pageSize.getHeight() - (30 + alturaCabecalho);
 
-    if (inicioY > doc.internal.pageSize.getHeight() - 40) doc.addPage();
-
-    const yGhe = primeiraTabela
-      ? 24
-      : Math.min(inicioY, doc.internal.pageSize.getHeight() - 40);
+    let yGhe: number;
+    if (primeiraTabela) {
+      yGhe = 24;
+      primeiraTabela = false;
+    } else {
+      const proposto =
+        (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+      if (proposto > limite) {
+        // Antes o y não era reposicionado depois do addPage, e o cabeçalho do
+        // GHE ia parar no rodapé de uma página em branco.
+        doc.addPage();
+        yGhe = 20;
+      } else {
+        yGhe = proposto;
+      }
+    }
 
     doc.setFontSize(9.5);
     doc.setFont("helvetica", "bold");
-    doc.text(
-      `GHE: ${grupo.gheNome}  ·  ${grupo.respondentes} respondente(s)  ·  ${grupo.acoes.length} ação(ões)`,
-      14,
-      yGhe,
-    );
+    doc.text(`GHE: ${grupo.gheNome}`, 14, yGhe);
+
+    // Composição cadastral do GHE: setores e cargos abrangidos. Substitui as
+    // contagens de respondentes/ações, que não pertencem ao plano de ação — o
+    // que importa aqui é a quem a ação se aplica.
+    let yComp = yGhe;
+    const larguraUtil = doc.internal.pageSize.getWidth() - 28;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(90, 90, 90);
+
+    for (const [rotulo, itens] of [
+      ["Setores", grupo.setores],
+      ["Cargos", grupo.cargos],
+    ] as const) {
+      if (itens.length === 0) continue;
+      const linhas = doc.splitTextToSize(`${rotulo}: ${itens.join(", ")}`, larguraUtil);
+      for (const linha of linhas) {
+        yComp += 4;
+        doc.text(linha, 14, yComp);
+      }
+    }
+
+    doc.setTextColor(0, 0, 0);
 
     autoTable(doc, {
-      startY: yGhe + 3,
+      startY: yComp + 3,
       head: [[
         "Fator de risco", "O quê?", "Quem?", "Onde?", "Por quê?",
         "Data inicial", "Até quando", "Como?", "Quanto?", "Nível de GRO",

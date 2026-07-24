@@ -320,7 +320,8 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
           return {
             gheId: g.ghe_id,
             gheNome: g.ghe_nome,
-            respondentes: g.count,
+            setores: g.composicaoSetores,
+            cargos: g.composicaoCargos,
             acoes: lista,
           };
         })
