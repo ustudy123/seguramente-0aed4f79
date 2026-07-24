@@ -154,7 +154,7 @@ const App = () => (
               <Route path="/assinar-contrato/:token" element={<AssinarContrato />} />
               <Route path="/ativar-conta" element={<AtivarConta />} />
               <Route path="/lp" element={<LandingPage />} />
-              <Route path="/site" element={<Site />} />
+              <Route path="/site" element={<Suspense fallback={<PageLoader />}><Site /></Suspense>} />
               <Route path="/termos-de-uso" element={<TermosDeUso />} />
               <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
 
