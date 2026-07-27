@@ -530,8 +530,17 @@ const Ferias = () => {
     }
     const diasSolicitados = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+    // Fracionamento por CPF, não por nome — homônimos não podem compartilhar o
+    // limite de 3 períodos do art. 134. Fallback ao nome só quando não há CPF
+    // (registros antigos), e ainda assim restrito ao mesmo período aquisitivo.
+    const cpfAtual = (newSolicitacao.colaboradorCpf || "").replace(/\D/g, "");
     const fracionamentosAnteriores = solicitacoes
-      .filter((f) => f.colaborador_nome === newSolicitacao.colaborador && f.status !== "recusado" && f.status !== "cancelado")
+      .filter((f) => {
+        if (f.status === "recusado" || f.status === "cancelado") return false;
+        const cpfF = (f.colaborador_cpf || "").replace(/\D/g, "");
+        if (cpfAtual && cpfF) return cpfF === cpfAtual;
+        return f.colaborador_nome === newSolicitacao.colaborador;
+      })
       .map((f) => f.dias_solicitados);
     const validacao = validarFracionamentoCLT(diasSolicitados, fracionamentosAnteriores);
     if (!validacao.valido) { toast.error(validacao.erro || "Fracionamento inválido"); return; }

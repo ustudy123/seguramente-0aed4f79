@@ -11,6 +11,9 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ImportarFeriasModal } from "./ImportarFeriasModal";
+import { FeriasValidacaoFila } from "./FeriasValidacaoFila";
+import { useFeriasPeriodos } from "@/hooks/useFeriasPeriodos";
+import { soDigitos } from "@/lib/feriasImport";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -43,6 +46,10 @@ interface ColaboradorSaldo {
   nome: string;
   departamento: string;
   saldoTotal: number;
+  /** true quando os números vêm do motor (períodos importados). */
+  temMotor?: boolean;
+  periodosAbertos?: number;
+  temPendencia?: boolean;
   diasUsados: number;
   diasPendentes: number;
   saldoDisponivel: number;
@@ -56,6 +63,12 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
   const { colaboradores } = useColaboradores();
   const [search, setSearch] = useState("");
   const [importOpen, setImportOpen] = useState(false);
+  const {
+    saldosPorCpf,
+    pendentesValidacao,
+    temDadosImportados,
+    resolverValidacao,
+  } = useFeriasPeriodos();
 
   const saldos = useMemo<ColaboradorSaldo[]>(() => {
     const map = new Map<string, ColaboradorSaldo>();
@@ -72,13 +85,21 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
       // Calcular período aquisitivo real
       const periodo = calcularPeriodoFerias(c.data_admissao, diasUsados);
 
+      // Motor real: se este colaborador tem períodos importados (casados por
+      // CPF), o direito e o saldo vêm do cálculo (art. 130 / avos), não do
+      // "30 fixo". Sem importação, mantém o comportamento anterior.
+      const doMotor = saldosPorCpf.get(soDigitos(c.cpf));
+
       map.set(c.nome_completo, {
         nome: c.nome_completo,
         departamento: c.departamento || "Não informado",
-        saldoTotal: 30,
-        diasUsados,
+        saldoTotal: doMotor ? doMotor.diasDireitoTotal : 30,
+        diasUsados: doMotor ? doMotor.diasGozadosTotal : diasUsados,
         diasPendentes,
-        saldoDisponivel: 30 - diasUsados,
+        saldoDisponivel: doMotor ? doMotor.diasSaldoTotal : 30 - diasUsados,
+        temMotor: !!doMotor,
+        periodosAbertos: doMotor?.periodosAbertos,
+        temPendencia: doMotor?.temPendencia,
         periodoAquisitivo: periodo?.periodoAquisitivoLabel || "Sem admissão",
         vencimento: periodo?.vencimentoLabel || "—",
         statusVencimento: periodo?.statusVencimento || "ok",
@@ -108,7 +129,7 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
       const order = { vencido: 0, alerta: 1, ok: 2 };
       return order[a.statusVencimento] - order[b.statusVencimento] || a.nome.localeCompare(b.nome);
     });
-  }, [colaboradores, ferias]);
+  }, [colaboradores, ferias, saldosPorCpf]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return saldos;
@@ -186,6 +207,13 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
 
       <ImportarFeriasModal open={importOpen} onOpenChange={setImportOpen} />
 
+      {/* Fila de validação de zeragens (art. 130) */}
+      <FeriasValidacaoFila
+        pendentes={pendentesValidacao}
+        onResolver={(args) => resolverValidacao.mutate(args)}
+        resolvendo={resolverValidacao.isPending}
+      />
+
       {/* Table */}
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -211,7 +239,7 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
                 </tr>
               ) : (
                 filtered.map((s) => {
-                  const pct = (s.diasUsados / s.saldoTotal) * 100;
+                  const pct = Math.min(100, s.saldoTotal > 0 ? (s.diasUsados / s.saldoTotal) * 100 : 0);
                   return (
                     <tr
                       key={s.nome}
@@ -231,7 +259,20 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{s.departamento}</td>
-                      <td className="px-4 py-3 text-center font-semibold text-foreground">{s.saldoDisponivel}d</td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="font-semibold text-foreground">{s.saldoDisponivel}d</span>
+                          {s.temMotor ? (
+                            s.temPendencia ? (
+                              <span className="text-[9px] text-amber-600">a validar</span>
+                            ) : (
+                              <span className="text-[9px] text-emerald-600">de {s.saldoTotal}d</span>
+                            )
+                          ) : (
+                            <span className="text-[9px] text-muted-foreground">estimado</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-center text-muted-foreground">{s.diasUsados}d</td>
                       <td className="px-4 py-3 text-center">
                         {s.diasPendentes > 0 ? (
