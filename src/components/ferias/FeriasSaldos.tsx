@@ -6,8 +6,11 @@ import {
   CheckCircle,
   Search,
   Clock,
+  Upload,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ImportarFeriasModal } from "./ImportarFeriasModal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -52,6 +55,7 @@ interface ColaboradorSaldo {
 export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
   const { colaboradores } = useColaboradores();
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
 
   const saldos = useMemo<ColaboradorSaldo[]>(() => {
     const map = new Map<string, ColaboradorSaldo>();
@@ -163,16 +167,24 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar colaborador ou departamento..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      {/* Search + importar */}
+      <div className="flex items-center gap-2 justify-between flex-wrap">
+        <div className="relative max-w-sm flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar colaborador ou departamento..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Button variant="outline" className="gap-2" onClick={() => setImportOpen(true)}>
+          <Upload className="w-4 h-4" />
+          Importar saldos
+        </Button>
       </div>
+
+      <ImportarFeriasModal open={importOpen} onOpenChange={setImportOpen} />
 
       {/* Table */}
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
