@@ -323,7 +323,7 @@ export default function Site() {
               <span className="w-8 h-px bg-[#FFA033]" /> Sistema Operacional da Maturidade Organizacional
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-              Sua empresa cresce — <span className="text-[#60ABEF]">ou só aumenta?</span>
+              Sua empresa cresce <span className="text-[#60ABEF]">ou só aumenta?</span>
             </h1>
             <p className="mt-6 text-lg text-slate-300 max-w-2xl leading-relaxed">
               Crescer é faturar mais com processo, evidência e gente desenvolvida. Aumentar é faturar mais com caos,
@@ -354,7 +354,7 @@ export default function Site() {
               <img
                 src={mascot.url}
                 alt="EYE — assistente de IA da YourEyes"
-                className="relative z-10 h-[360px] md:h-[420px] w-auto rounded-2xl drop-shadow-[0_25px_60px_rgba(96,171,239,0.35)]"
+                className="relative z-10 h-[360px] md:h-[420px] w-auto rounded-2xl drop-shadow-[0_25px_60px_rgba(96,171,239,0.35)] -scale-x-100"
                 style={{ animation: "floatMascot 6s ease-in-out infinite" }}
               />
             </div>
