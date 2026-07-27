@@ -7583,6 +7583,33 @@ export type Database = {
           },
         ]
       }
+      ferias_config: {
+        Row: {
+          created_at: string
+          empresa_id: string | null
+          id: string
+          metodo_calculo: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          metodo_calculo?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          metodo_calculo?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ferias_historico: {
         Row: {
           acao: string
@@ -7636,6 +7663,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ferias_periodos_aquisitivos: {
+        Row: {
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          calculado_em: string | null
+          colaborador_cpf: string
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          data_admissao: string
+          dias_direito: number
+          dias_gozados: number
+          dias_saldo: number
+          empresa_id: string | null
+          faltas_carga: number
+          faltas_consideradas: number
+          fonte_faltas: string
+          id: string
+          origem: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          validacao_motivo: string | null
+          validado_em: string | null
+          validado_por: string | null
+        }
+        Insert: {
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          calculado_em?: string | null
+          colaborador_cpf: string
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          data_admissao: string
+          dias_direito?: number
+          dias_gozados?: number
+          dias_saldo?: number
+          empresa_id?: string | null
+          faltas_carga?: number
+          faltas_consideradas?: number
+          fonte_faltas?: string
+          id?: string
+          origem?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          validacao_motivo?: string | null
+          validado_em?: string | null
+          validado_por?: string | null
+        }
+        Update: {
+          aquisitivo_fim?: string
+          aquisitivo_inicio?: string
+          calculado_em?: string | null
+          colaborador_cpf?: string
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          data_admissao?: string
+          dias_direito?: number
+          dias_gozados?: number
+          dias_saldo?: number
+          empresa_id?: string | null
+          faltas_carga?: number
+          faltas_consideradas?: number
+          fonte_faltas?: string
+          id?: string
+          origem?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          validacao_motivo?: string | null
+          validado_em?: string | null
+          validado_por?: string | null
+        }
+        Relationships: []
       }
       ferias_solicitacoes: {
         Row: {
@@ -20140,6 +20245,7 @@ export type Database = {
       }
       qa_casos_teste: {
         Row: {
+          base_legal: string | null
           codigo: string | null
           created_at: string
           created_by: string | null
@@ -20159,6 +20265,7 @@ export type Database = {
           versao: number
         }
         Insert: {
+          base_legal?: string | null
           codigo?: string | null
           created_at?: string
           created_by?: string | null
@@ -20178,6 +20285,7 @@ export type Database = {
           versao?: number
         }
         Update: {
+          base_legal?: string | null
           codigo?: string | null
           created_at?: string
           created_by?: string | null
@@ -23100,6 +23208,27 @@ export type Database = {
         Args: { p_colaborador_id: string; p_data: string; p_tenant_id: string }
         Returns: string
       }
+      ferias_dias_por_faltas_clt: {
+        Args: { p_faltas: number }
+        Returns: number
+      }
+      ferias_faltas_do_ponto: {
+        Args: {
+          p_cpf: string
+          p_fim: string
+          p_inicio: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
+      ferias_recalcular_empresa: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: number
+      }
+      ferias_recalcular_periodo: {
+        Args: { p_periodo_id: string }
+        Returns: undefined
+      }
       finalizar_admissao_by_token: {
         Args: { _token: string }
         Returns: undefined
@@ -23619,6 +23748,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_colab_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_colab_011: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -23730,6 +23869,26 @@ export type Database = {
         }
       }
       qa_caso_colab_029: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_colab_033: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_colab_034: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -24119,6 +24278,36 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_emp_023: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_emp_024: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_emp_025: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_emp_030: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -24190,6 +24379,26 @@ export type Database = {
         }
       }
       qa_caso_emp_041: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_emp_060: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_emp_061: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -24280,6 +24489,26 @@ export type Database = {
         }
       }
       qa_caso_est_022: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_hier_005: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_hier_006: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -24909,6 +25138,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_porte_005: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_swot_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -25314,6 +25553,10 @@ export type Database = {
       qa_novo_terceiro: {
         Args: { p_cnpj: string; p_razao: string }
         Returns: string
+      }
+      qa_obrigacao_existe: {
+        Args: { p_empresa: string; p_subcategoria: string }
+        Returns: boolean
       }
       qa_resultados_da_bateria: {
         Args: { p_execucao_id: string }
