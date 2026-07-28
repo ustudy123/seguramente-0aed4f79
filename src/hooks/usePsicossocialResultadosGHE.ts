@@ -85,8 +85,29 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
   const { tenantId } = useTenant();
   const idsKey = (campanhaIds ?? []).slice().sort().join(",");
 
+  // Antes de agregar: preenche ghe_id_snapshot das respostas que ainda não têm,
+  // cruzando cpf_hash -> admissão -> GHE no servidor (sem expor CPF). As funções
+  // de gravação de resposta anônima não gravam o snapshot; sem este passo, as
+  // respostas ficam sem GHE e o resultado é replicado igual em todos os GHEs.
+  // Idempotente: só toca nas que estão com snapshot nulo.
+  const preenchimentoQuery = useQuery({
+    queryKey: ["psicossocial-preencher-ghe-snapshot", tenantId, idsKey],
+    enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)("preencher_ghe_snapshot_respostas", {
+        p_campanha_ids: campanhaIds,
+      });
+      if (error) throw error;
+      return Number(data ?? 0);
+    },
+  });
+
+
   const query = useQuery({
-    queryKey: ["psicossocial-respostas-por-ghe-v2", tenantId, idsKey],
+    queryKey: ["psicossocial-respostas-por-ghe-v2", tenantId, idsKey, preenchimentoQuery.data ?? 0],
+    enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0 && !preenchimentoQuery.isLoading,
     queryFn: async () => {
       if (!tenantId || !campanhaIds || campanhaIds.length === 0) {
         return {
@@ -235,7 +256,6 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
       return { respostas, campanhasGhe, ghes, composicaoPorGhe, elegiveisPorGhe };
     },
-    enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
     staleTime: 60_000,
   });
 
@@ -244,8 +264,8 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
   // inflado do agrupamento (que jogava cada resposta anônima em todos os GHE
   // da campanha, por falta de ghe_id_snapshot).
   const respondentesQuery = useQuery({
-    queryKey: ["psicossocial-respondentes-por-ghe", tenantId, idsKey],
-    enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0,
+    queryKey: ["psicossocial-respondentes-por-ghe", tenantId, idsKey, preenchimentoQuery.data ?? 0],
+    enabled: !!tenantId && !!campanhaIds && campanhaIds.length > 0 && !preenchimentoQuery.isLoading,
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("contar_respondentes_por_ghe", {
@@ -253,6 +273,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       });
       if (error) throw error;
       const map = new Map<string, number>();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (data ?? []).forEach((row: any) => {
         if (row.out_ghe_id) map.set(row.out_ghe_id, Number(row.out_respondentes) || 0);
       });
