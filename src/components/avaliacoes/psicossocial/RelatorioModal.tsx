@@ -389,6 +389,28 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
             doc.text(`Respondentes: responderam ${ghe.count} de ${gheElegiveis}`, ml, y);
             y += 5;
 
+            // Mesma trava do Plano de Ação PGR: GHE abaixo do mínimo NÃO exibe
+            // scores. Sem isto, o relatório se contradizia — enunciava a regra
+            // dos 5 (ISO 45003 §6.1.2) e a violava na estratificação por GHE,
+            // além do risco de reidentificação em grupo pequeno.
+            const isEntrevista = campanhasParaProcessar.some(c => isEntrevistaInstrumento(c.tipo_instrumento));
+            const minimoGHE = isEntrevista ? 1 : MINIMO_ANONIMATO;
+            if (ghe.count < minimoGHE) {
+              doc.setFontSize(8);
+              doc.setFont("helvetica", "italic");
+              doc.setTextColor(146, 64, 14);
+              const nota = doc.splitTextToSize(
+                `Análise individualizada não disponível: ${ghe.count} resposta(s), abaixo do mínimo de ${minimoGHE} exigido para este GHE (ISO 45003 §6.1.2). ` +
+                `O resultado deste grupo está preservado no consolidado da campanha, sem detalhamento por fator, para evitar reidentificação.`,
+                pageW - ml - mr,
+              );
+              doc.text(nota, ml, y);
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+              y += nota.length * 4 + 8;
+              return; // pula a tabela de fatores deste GHE
+            }
+
             // Agrega fatores por GHE
             const fatoresGHE = (() => {
               type Agg = { fator: string; dimensoes: string[]; soma: number; n: number };
@@ -655,11 +677,23 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome, campanha
           margin: { left: ml, right: mr, top: mt, bottom: mb },
           head: [["GHE", "Respondentes", "IPS Médio", "Situação"]],
           body: resultadosPorGHE.map(g => {
+            const elegiveisGhe = Math.max(g.elegiveis || 0, g.count);
+            const minimoGHE = isEntrevistaOnly ? 1 : MINIMO_ANONIMATO;
+            // GHE abaixo do mínimo: mantém a linha (prova de que o grupo existe
+            // e participou) mas não expõe IPS/situação, que são agregados de
+            // grupo pequeno — mesmo critério da seção 3.
+            if (g.count < minimoGHE) {
+              return [
+                sanitize(g.ghe_nome),
+                `${g.count} de ${elegiveisGhe}`,
+                "—",
+                "Abaixo do mínimo",
+              ];
+            }
             // SIPRO armazena score de risco (alto = pior); IPS = 100 - risco
             const ipsGhe = g.ipsMedio != null
               ? (isSipro ? 100 - g.ipsMedio : g.ipsMedio)
               : 0;
-            const elegiveisGhe = Math.max(g.elegiveis || 0, g.count);
             return [
               sanitize(g.ghe_nome),
               `${g.count} de ${elegiveisGhe}`,
