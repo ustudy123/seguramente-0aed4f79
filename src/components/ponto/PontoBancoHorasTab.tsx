@@ -1043,13 +1043,43 @@ export function PontoBancoHorasTab() {
                         </div>
                       </div>
                       {temManual && (
-                        <p className="text-[11px] text-muted-foreground text-center border-t pt-2">
-                          Inclui lançamento manual:
-                          {credManual > 0 && <> +{formatMinutos(credManual)} crédito</>}
-                          {credManual > 0 && debManual > 0 && " ·"}
-                          {debManual > 0 && <> -{formatMinutos(debManual)} débito</>}
-                        </p>
+                        <div className="border-t pt-2 space-y-1">
+                          <p className="text-[11px] font-medium text-muted-foreground">
+                            Lançamentos manuais ({movsManuaisEdit.length}):
+                          </p>
+                          <ul className="text-[11px] space-y-1">
+                            {movsManuaisEdit.map((m, i) => {
+                              const data = m.data_referencia
+                                ? new Date(m.data_referencia + "T12:00:00").toLocaleDateString("pt-BR")
+                                : new Date(m.created_at).toLocaleDateString("pt-BR");
+                              const isCred = m.tipo === "credito";
+                              return (
+                                <li key={i} className="flex items-start justify-between gap-2 border-b border-dashed last:border-0 pb-1">
+                                  <div className="flex-1 text-left">
+                                    <span className="font-mono">{data}</span>
+                                    {m.descricao && (
+                                      <span className="text-muted-foreground"> — {m.descricao}</span>
+                                    )}
+                                    {m.origem && m.origem !== "manual" && (
+                                      <span className="text-muted-foreground"> ({m.origem})</span>
+                                    )}
+                                  </div>
+                                  <span className={`font-mono font-medium ${isCred ? "text-green-600" : "text-red-600"}`}>
+                                    {isCred ? "+" : "-"}{formatMinutos(Number(m.minutos) || 0)}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                          <p className="text-[11px] text-muted-foreground text-center pt-1">
+                            Subtotal manual:
+                            {credManual > 0 && <> <span className="text-green-600">+{formatMinutos(credManual)}</span></>}
+                            {credManual > 0 && debManual > 0 && " ·"}
+                            {debManual > 0 && <> <span className="text-red-600">-{formatMinutos(debManual)}</span></>}
+                          </p>
+                        </div>
                       )}
+
                     </div>
                   );
                 })()}
