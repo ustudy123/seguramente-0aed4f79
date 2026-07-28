@@ -140,14 +140,16 @@ export function PontoBancoHorasTab() {
     enabled: !!editBanco?.id,
     queryFn: async () => {
       const { data, error } = await fromTable("ponto_banco_horas_movimentacoes")
-        .select("tipo, minutos, origem")
-        .eq("banco_horas_id", editBanco!.id);
+        .select("tipo, minutos, origem, data_referencia, descricao, created_at, created_by")
+        .eq("banco_horas_id", editBanco!.id)
+        .order("data_referencia", { ascending: true });
       if (error) throw error;
       return (data || []).filter((m: any) =>
         !["apuracao", "apuracao_auto"].includes(String(m.origem || ""))
-      ) as Array<{ tipo: string; minutos: number; origem: string }>;
+      ) as Array<{ tipo: string; minutos: number; origem: string; data_referencia: string | null; descricao: string | null; created_at: string; created_by: string | null }>;
     },
   });
+
 
   // Dias com ponto na competência — lidos da FONTE ÚNICA no banco
   // (ponto_saldo_dias_competencia). Antes esta regra era recalculada aqui em
