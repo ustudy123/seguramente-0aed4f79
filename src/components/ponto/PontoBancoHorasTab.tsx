@@ -136,12 +136,26 @@ export function PontoBancoHorasTab() {
   // Aqui buscamos só as manuais — as apuradas já estão representadas pelos
   // dias com ponto, somá-las seria contar duas vezes.
   const { data: movsManuaisEdit = [] } = useQuery({
-    queryKey: ["banco-horas-movs-manuais", editBanco?.id],
-    enabled: !!editBanco?.id,
+    queryKey: [
+      "banco-horas-movs-manuais",
+      editBanco?.colaborador_cpf,
+      editComp,
+      tenantId,
+    ],
+    enabled: !!editBanco?.colaborador_cpf && !!editComp && !!tenantId,
     queryFn: async () => {
+      // Buscamos manuais por (tenant + cpf + competência), não só por
+      // banco_horas_id. Um mesmo colaborador pode ter mais de um banco no
+      // mesmo mês (ex.: mensal e semestral), e o lançamento manual pode ter
+      // ficado vinculado ao banco antigo depois de uma re-apuração — se
+      // filtrássemos só pelo id, o rodapé ficaria vazio.
+      const cpfDigits = (editBanco?.colaborador_cpf || "").replace(/\D/g, "");
       const { data, error } = await fromTable("ponto_banco_horas_movimentacoes")
         .select("tipo, minutos, origem, data_referencia, descricao, created_at, created_by")
-        .eq("banco_horas_id", editBanco!.id)
+        .eq("tenant_id", tenantId)
+        .eq("colaborador_cpf", cpfDigits)
+        .gte("data_referencia", editRange.ini)
+        .lte("data_referencia", editRange.fim)
         .order("data_referencia", { ascending: true });
       if (error) throw error;
       return (data || []).filter((m: any) =>
@@ -149,6 +163,7 @@ export function PontoBancoHorasTab() {
       ) as Array<{ tipo: string; minutos: number; origem: string; data_referencia: string | null; descricao: string | null; created_at: string; created_by: string | null }>;
     },
   });
+
 
 
   // Dias com ponto na competência — lidos da FONTE ÚNICA no banco
