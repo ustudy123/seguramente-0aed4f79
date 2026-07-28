@@ -150,12 +150,16 @@ export function PontoBancoHorasTab() {
       // ficado vinculado ao banco antigo depois de uma re-apuração — se
       // filtrássemos só pelo id, o rodapé ficaria vazio.
       const cpfDigits = (editBanco?.colaborador_cpf || "").replace(/\D/g, "");
+      const ini = editIniFim?.ini;
+      const fim = editIniFim?.fim;
+      if (!ini || !fim) return [];
       const { data, error } = await fromTable("ponto_banco_horas_movimentacoes")
         .select("tipo, minutos, origem, data_referencia, descricao, created_at, created_by")
         .eq("tenant_id", tenantId)
         .eq("colaborador_cpf", cpfDigits)
-        .gte("data_referencia", editRange.ini)
-        .lte("data_referencia", editRange.fim)
+        .gte("data_referencia", ini)
+        .lte("data_referencia", fim)
+
         .order("data_referencia", { ascending: true });
       if (error) throw error;
       return (data || []).filter((m: any) =>
