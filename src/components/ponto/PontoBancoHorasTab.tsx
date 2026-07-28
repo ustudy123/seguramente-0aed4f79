@@ -520,9 +520,9 @@ export function PontoBancoHorasTab() {
             <div className="flex items-start gap-2">
               <span className="inline-flex items-center gap-1 shrink-0 text-muted-foreground">
                 <span className="w-2 h-2 rounded-full bg-muted-foreground/60" />
-                ±0 min
+                ±10 min
               </span>
-              <span className="text-muted-foreground leading-relaxed">Atraso ou extra dentro da janela de tolerância — não gera saldo.</span>
+              <span className="text-muted-foreground leading-relaxed">Atraso ou extra de até 10 minutos no saldo do dia é neutralizado — não gera crédito nem débito.</span>
             </div>
           </div>
         </CardContent>
