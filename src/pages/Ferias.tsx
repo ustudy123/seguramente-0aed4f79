@@ -505,10 +505,28 @@ const Ferias = () => {
       if (status !== "assinado") {
         toast.info("O recibo ainda não foi assinado pelo colaborador");
       }
+      // Recibos são HTML. Abrir a signed URL direto às vezes mostra o código-
+      // fonte em vez de renderizar: o storage nem sempre devolve o header
+      // Content-Type correto (objetos antigos, proxies), e o navegador cai em
+      // text/plain. Buscamos o conteúdo e reabrimos como blob text/html local,
+      // que renderiza sempre, independente do header do storage.
+      const isHtml = path.toLowerCase().endsWith(".html");
       const { data: signed, error: signErr } = await supabase.storage
         .from("documentos").createSignedUrl(path, 3600);
       if (signErr) throw signErr;
-      if (signed?.signedUrl) window.open(signed.signedUrl, "_blank");
+      if (!signed?.signedUrl) { toast.error("Não foi possível gerar o link do recibo"); return; }
+
+      if (isHtml) {
+        const resp = await fetch(signed.signedUrl);
+        const texto = await resp.text();
+        const blobUrl = URL.createObjectURL(new Blob([texto], { type: "text/html;charset=utf-8" }));
+        const win = window.open(blobUrl, "_blank");
+        // Revoga após a aba carregar, sem cortar o carregamento.
+        if (win) setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+        else { URL.revokeObjectURL(blobUrl); toast.error("Permita pop-ups para visualizar o recibo."); }
+      } else {
+        window.open(signed.signedUrl, "_blank");
+      }
     } catch (err) {
       console.error(err);
       toast.error("Erro ao abrir recibo assinado");
