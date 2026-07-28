@@ -962,6 +962,11 @@ export function PontoBancoHorasTab() {
                                               {isNeutro ? "0h 0min" : `${isCredito ? "+" : "-"}${formatMinutos(Math.abs(saldoDia))}`}
                                             </span>
                                           </div>
+                                          {isNeutro && !det.diaProtegido && (
+                                            <p className="text-[11px] text-muted-foreground italic">
+                                              Diferenças de até 10 minutos no saldo do dia são neutralizadas.
+                                            </p>
+                                          )}
                                           {det.diaProtegido && (
                                             <p className="text-[11px] text-muted-foreground italic">Dia protegido (atestado/férias/afastamento/feriado): saldo neutralizado.</p>
                                           )}
