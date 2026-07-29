@@ -23,6 +23,8 @@ import {
 } from "@/lib/feriasFinanceiro";
 import { toast } from "sonner";
 
+const EMPTY_FERIADOS: string[] = [];
+
 export type EstadoProg =
   | "sugerido" | "planejado" | "confirmado" | "ciente"
   | "solicitado" | "aprovado" | "em_gozo" | "concluido" | "cancelado";
@@ -72,6 +74,11 @@ export interface LinhaProgramacao {
   diasProgramados: number;
   diasNaoProgramados: number;
   valorEstimado: number;
+
+  // Contexto 3B-2 (para o motor de regras)
+  feriados: string[];
+  feriasFamiliares: { nome: string; inicio: string; fim: string }[];
+  afastamentoReinicia: { motivo: string; diasTotais: number } | null;
 }
 
 interface AdmissaoInfo {
@@ -159,9 +166,76 @@ export function useFeriasProgramacao() {
     },
   });
 
+  // Feriados (art. 134 §3º) — datas do ano corrente e do próximo
+  const feriadosQuery = useQuery({
+    queryKey: ["ferias-prog-feriados", tenantId],
+    enabled: !!tenantId,
+    queryFn: async (): Promise<string[]> => {
+      const anoIni = `${new Date().getFullYear()}-01-01`;
+      const anoFim = `${new Date().getFullYear() + 1}-12-31`;
+      const { data } = await fromTable("feriados")
+        .select("data, tipo")
+        .gte("data", anoIni).lte("data", anoFim);
+      // Só feriados de fato (não facultativos) contam para o art. 134 §3º.
+      return (data ?? [])
+        .filter((f: Record<string, unknown>) => f.tipo !== "facultativo")
+        .map((f: Record<string, unknown>) => String(f.data));
+    },
+  });
+
+  // Afastamentos longos (art. 133) por CPF — >30 dias reinicia o aquisitivo
+  const afastQuery = useQuery({
+    queryKey: ["ferias-prog-afastamentos", tenantId, empresaAtivaId],
+    enabled: !!tenantId,
+    queryFn: async () => {
+      const { data } = await fromTable("afastamentos")
+        .select("colaborador_cpf, motivo_principal, dias_totais, status")
+        .eq("tenant_id", tenantId);
+      const map = new Map<string, { motivo: string; diasTotais: number }>();
+      for (const a of data ?? []) {
+        const cpf = String(a.colaborador_cpf ?? "").replace(/\D/g, "");
+        const dias = Number(a.dias_totais ?? 0);
+        // Art. 133: licença remunerada > 30 dias reinicia o aquisitivo.
+        if (cpf && dias > 30) {
+          const cur = map.get(cpf);
+          if (!cur || dias > cur.diasTotais) {
+            map.set(cpf, { motivo: String(a.motivo_principal ?? "afastamento"), diasTotais: dias });
+          }
+        }
+      }
+      return map;
+    },
+  });
+
+  // Vínculos familiares por CPF (art. 136)
+  const vinculoQuery = useQuery({
+    queryKey: ["ferias-prog-vinculos", tenantId, empresaAtivaId],
+    enabled: !!tenantId,
+    queryFn: async () => {
+      let q = fromTable("ferias_vinculo_familiar").select("cpf_a, nome_a, cpf_b, nome_b").eq("tenant_id", tenantId);
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data } = await q;
+      // cpf -> lista de {cpf, nome} de parentes
+      const map = new Map<string, { cpf: string; nome: string }[]>();
+      const add = (cpf: string, parente: { cpf: string; nome: string }) => {
+        const k = cpf.replace(/\D/g, "");
+        (map.get(k) ?? map.set(k, []).get(k)!).push(parente);
+      };
+      for (const r of data ?? []) {
+        const a = String(r.cpf_a).replace(/\D/g,""), b = String(r.cpf_b).replace(/\D/g,"");
+        add(a, { cpf: b, nome: String(r.nome_b) });
+        add(b, { cpf: a, nome: String(r.nome_a) });
+      }
+      return map;
+    },
+  });
+
   const admissoes = admissoesQuery.data;
   const encargos = encargosQuery.data ?? ENCARGOS_PADRAO;
   const progs = progQuery.data;
+  const feriados = feriadosQuery.data ?? EMPTY_FERIADOS;
+  const afastamentos = afastQuery.data;
+  const vinculos = vinculoQuery.data;
 
   const linhas = useMemo<LinhaProgramacao[]>(() => {
     if (!admissoes) return [];
@@ -228,11 +302,23 @@ export function useFeriasProgramacao() {
         diasProgramados,
         diasNaoProgramados: Math.max(0, periodo.diasSaldo - diasProgramados),
         valorEstimado,
+        feriados,
+        feriasFamiliares: (vinculos?.get(cpf) ?? []).flatMap(parente => {
+          // Férias já programadas (com P1) do parente.
+          const prg = progs?.get(
+            [...(progs?.keys() ?? [])].find(k => k.startsWith(`${parente.cpf.replace(/\D/g,"")}|`)) ?? "",
+          );
+          if (prg?.p1_inicio && prg?.p1_fim) {
+            return [{ nome: parente.nome, inicio: String(prg.p1_inicio), fim: String(prg.p1_fim) }];
+          }
+          return [];
+        }),
+        afastamentoReinicia: afastamentos?.get(cpf) ?? null,
       });
     }
 
     return out.sort((a, b) => a.diasParaVencimento - b.diasParaVencimento);
-  }, [admissoes, periodos, progs, encargos]);
+  }, [admissoes, periodos, progs, encargos, feriados, afastamentos, vinculos]);
 
   // Salvar (upsert) uma linha de programação
   const salvar = useMutation({

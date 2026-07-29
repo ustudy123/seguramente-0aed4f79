@@ -42,6 +42,21 @@ export interface EntradaProgramacao {
   /** Limite concessivo do período (art. 134 caput). */
   limiteConcessivo: Date;
   hoje?: Date;
+  /** Contexto da 3B-2 (opcional — regra só roda se o dado estiver presente). */
+  contexto?: ContextoRegras3B2;
+}
+
+/** Dados que habilitam as regras da 3B-2. Ausentes = regra não avaliada. */
+export interface ContextoRegras3B2 {
+  /** Feriados (data ISO) que se aplicam à unidade do colaborador. */
+  feriados?: string[];
+  /** Períodos de férias já programados de familiares no mesmo estabelecimento. */
+  feriasFamiliares?: { nome: string; inicio: string; fim: string }[];
+  /**
+   * Afastamento que reinicia o período aquisitivo (art. 133): licença
+   * remunerada > 30 dias ou benefício previdenciário > 6 meses no período.
+   */
+  afastamentoReinicia?: { motivo: string; diasTotais: number } | null;
 }
 
 const dias = (s: SubPeriodoEntrada) => s.dias ?? 0;
@@ -182,7 +197,66 @@ export function avaliarRegrasProgramacao(e: EntradaProgramacao): ViolacaoRegra[]
     }
   }
 
+  // ── 3B-2 — regras que dependem de dado de contexto ─────────────────────────
+  const ctx = e.contexto;
+  if (ctx) {
+    // Art. 134 §3º — vedado iniciar 2 dias antes de feriado ou DSR (domingo).
+    if (ctx.feriados) {
+      for (const s of subs) {
+        if (!s.inicio) continue;
+        const proibido = datasVedadas(s.inicio, ctx.feriados);
+        if (proibido) {
+          v.push({
+            regra: "Início 2 dias antes de feriado/DSR",
+            baseLegal: "CLT art. 134, §3º",
+            comportamento: "bloqueio",
+            mensagem: `Início em ${d(s.inicio).toLocaleDateString("pt-BR")} cai nos 2 dias que antecedem ${proibido}. Escolha outra data.`,
+          });
+          break;
+        }
+      }
+    }
+
+    // Art. 136 §1º — familiar no mesmo estabelecimento (informativo/sugestão).
+    if (ctx.feriasFamiliares && ctx.feriasFamiliares.length > 0 && subs.length > 0) {
+      const nomes = ctx.feriasFamiliares.map(f => f.nome).join(", ");
+      v.push({
+        regra: "Familiar no mesmo estabelecimento",
+        baseLegal: "CLT art. 136, §1º",
+        comportamento: "informativo",
+        mensagem: `${nomes} também tem férias programadas. A lei faculta o gozo no mesmo período, se não houver prejuízo ao serviço.`,
+      });
+    }
+
+    // Art. 133 — afastamento reinicia o período aquisitivo (informativo).
+    if (ctx.afastamentoReinicia) {
+      v.push({
+        regra: "Afastamento reinicia o aquisitivo",
+        baseLegal: "CLT art. 133",
+        comportamento: "alerta",
+        mensagem: `Afastamento (${ctx.afastamentoReinicia.motivo}, ${ctx.afastamentoReinicia.diasTotais} dias) pode ter reiniciado o período aquisitivo. Confira a data-base antes de programar.`,
+      });
+    }
+  }
+
   return v;
+}
+
+/**
+ * Retorna o rótulo do dia proibido se `inicio` cai em D-1 ou D-2 antes de um
+ * feriado ou domingo (DSR). Art. 134 §3º: vedado iniciar férias nesses dias.
+ */
+function datasVedadas(inicio: string, feriados: string[]): string | null {
+  const ini = d(inicio);
+  for (let offset = 1; offset <= 2; offset++) {
+    const alvo = new Date(ini);
+    alvo.setDate(alvo.getDate() + offset);
+    // Domingo = DSR
+    if (alvo.getDay() === 0) return "um domingo (DSR)";
+    const iso = `${alvo.getFullYear()}-${String(alvo.getMonth() + 1).padStart(2, "0")}-${String(alvo.getDate()).padStart(2, "0")}`;
+    if (feriados.includes(iso)) return "um feriado";
+  }
+  return null;
 }
 
 /** Há alguma violação que impede salvar? */

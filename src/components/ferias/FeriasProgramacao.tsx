@@ -20,7 +20,7 @@ import {
 } from "@/hooks/useFeriasProgramacao";
 import { formatBRL } from "@/lib/feriasFinanceiro";
 import {
-  avaliarRegrasProgramacao, temBloqueio, REGRAS_PENDENTES_3B2,
+  avaliarRegrasProgramacao, temBloqueio,
   type ViolacaoRegra,
 } from "@/lib/feriasRegras";
 import { cn } from "@/lib/utils";
@@ -295,8 +295,14 @@ function EditarProgramacaoDialog({ linha, onOpenChange, onSalvar, salvando }: {
       abonoVender: l.abonoVender,
       abonoDias: l.abonoDias,
       limiteConcessivo: l.limiteConcessivoDate,
+      contexto: {
+        feriados: l.feriados,
+        feriasFamiliares: l.feriasFamiliares,
+        afastamentoReinicia: l.afastamentoReinicia,
+      },
     }),
-    [l.aquisitivoFim, l.saldo, l.p1, l.p2, l.p3, l.abonoVender, l.abonoDias, l.limiteConcessivoDate],
+    [l.aquisitivoFim, l.saldo, l.p1, l.p2, l.p3, l.abonoVender, l.abonoDias, l.limiteConcessivoDate,
+     l.feriados, l.feriasFamiliares, l.afastamentoReinicia],
   );
   const bloqueado = temBloqueio(violacoes);
   const temProgramacao = totalProg > 0;
@@ -397,11 +403,6 @@ function EditarProgramacaoDialog({ linha, onOpenChange, onSalvar, salvando }: {
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          {REGRAS_PENDENTES_3B2.length > 0 && (
-            <span className="text-[10px] text-muted-foreground mr-auto">
-              {REGRAS_PENDENTES_3B2.length} regras dependem de configuração pendente
-            </span>
-          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button disabled={salvando || travado || bloqueado || !temProgramacao}
             onClick={() => onSalvar({ ...l, estado: l.estado === "sugerido" ? "planejado" : l.estado })}
