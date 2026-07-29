@@ -149,6 +149,8 @@ const CentralGaf = () => {
       </header>
 
       <AtestadoForm 
+        tituloTipo={activeTab === "atestados" ? "Atestado" : "Afastamento"}
+
         open={formOpen} 
         onOpenChange={(v) => { setFormOpen(v); if (!v) setEditingAtestado(null); }} 
         onSubmit={handleCreateAtestado}

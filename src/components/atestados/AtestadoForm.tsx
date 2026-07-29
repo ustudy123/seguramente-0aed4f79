@@ -158,9 +158,11 @@ interface AtestadoFormProps {
   onSubmit: (data: { formData: AtestadoFormData; file?: File; colaboradorId?: string; id?: string }) => Promise<void>;
   loading?: boolean;
   atestadoEdit?: any | null;
+  /** Rótulo do tipo exibido no título (ex.: "Atestado", "Afastamento"). */
+  tituloTipo?: string;
 }
 
-export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEdit }: AtestadoFormProps) {
+export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEdit, tituloTipo = "Afastamento" }: AtestadoFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [tipoAfastamento, setTipoAfastamento] = useState<AfastamentoTipo>(window.location.pathname.includes('saude-ocupacional') ? "ocupacional" : "atestados");
@@ -606,7 +608,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {atestadoEdit ? "Editar Afastamento" : "Novo Afastamento"}
+            {atestadoEdit ? `Editar ${tituloTipo}` : `Novo ${tituloTipo}`}
           </DialogTitle>
         </DialogHeader>
 
