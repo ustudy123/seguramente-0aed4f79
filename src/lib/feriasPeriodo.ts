@@ -154,3 +154,40 @@ export function validarFracionamentoCLT(
 
   return { valido: true };
 }
+
+/**
+ * Limite concessivo de um período aquisitivo ESPECÍFICO (art. 134 caput):
+ * 12 meses após o FIM do próprio período. Distinto de calcularPeriodoFerias,
+ * que deriva o limite do período em curso a partir da admissão — errado quando
+ * a linha trata de um período importado antigo (o vencido acumula dobra).
+ *
+ * Status: 'vencido' se o limite já passou; 'alerta' se falta ≤ 90 dias; 'ok'
+ * caso contrário.
+ */
+export function limiteConcessivoDoPeriodo(
+  aquisitivoFim: string,
+  hoje: Date = new Date(),
+): {
+  limite: Date;
+  limiteLabel: string;
+  diasParaVencimento: number;
+  status: "ok" | "alerta" | "vencido";
+} {
+  const fim = new Date(aquisitivoFim + "T12:00:00");
+  const limite = new Date(fim);
+  limite.setMonth(limite.getMonth() + 12);
+
+  const base = new Date(hoje);
+  base.setHours(12, 0, 0, 0);
+  const diasParaVencimento = Math.ceil((limite.getTime() - base.getTime()) / 86400000);
+
+  const status: "ok" | "alerta" | "vencido" =
+    diasParaVencimento < 0 ? "vencido" : diasParaVencimento <= 90 ? "alerta" : "ok";
+
+  return {
+    limite,
+    limiteLabel: limite.toLocaleDateString("pt-BR"),
+    diasParaVencimento,
+    status,
+  };
+}

@@ -17,7 +17,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeriasPeriodos } from "@/hooks/useFeriasPeriodos";
-import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
+import { limiteConcessivoDoPeriodo } from "@/lib/feriasPeriodo";
 import {
   provisaoColaborador, ENCARGOS_PADRAO, type EncargosConfig,
 } from "@/lib/feriasFinanceiro";
@@ -179,9 +179,10 @@ export function useFeriasProgramacao() {
       // Usa o período aquisitivo mais recente como o "programável" da linha.
       const periodo = lista.slice().sort((a, b) => a.aquisitivoInicio.localeCompare(b.aquisitivoInicio)).at(-1)!;
 
-      const calc = info.dataAdmissao
-        ? calcularPeriodoFerias(info.dataAdmissao, periodo.diasGozados)
-        : null;
+      // Limite concessivo do PERÍODO da linha (aquisitivo_fim + 12 meses), não
+      // o derivado da admissão — que apontava para o período em curso e dava um
+      // vencimento errado (otimista) quando a linha é de um período importado.
+      const limiteReal = limiteConcessivoDoPeriodo(periodo.aquisitivoFim);
 
       const prog = progs?.get(`${cpf}|${periodo.aquisitivoInicio}`);
 
@@ -212,9 +213,9 @@ export function useFeriasProgramacao() {
         diasGozados: periodo.diasGozados,
         saldo: periodo.diasSaldo,
         temPeriodosAnteriores: lista.length > 1,
-        limiteConcessivo: calc?.vencimentoLabel ?? "—",
-        diasParaVencimento: calc?.diasParaVencimento ?? 999,
-        risco: calc?.statusVencimento ?? "ok",
+        limiteConcessivo: limiteReal.limiteLabel,
+        diasParaVencimento: limiteReal.diasParaVencimento,
+        risco: limiteReal.status,
         progId: (prog?.id as string) ?? null,
         p1, p2, p3,
         abonoVender: !!prog?.abono_vender,
