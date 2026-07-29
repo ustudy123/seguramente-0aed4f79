@@ -241,14 +241,6 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Rede de Parceiros",
-    color: "text-orange-400",
-    sectionIcon: Store,
-    items: [
-      { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
-    ],
-  },
-  {
     label: "Academia",
     color: "text-indigo-400",
     sectionIcon: BookOpen,
