@@ -153,6 +153,7 @@ const App = () => (
               <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
               <Route path="/assinar-contrato/:token" element={<AssinarContrato />} />
               <Route path="/ativar-conta" element={<AtivarConta />} />
+              <Route path="/marketplace" element={<div className="min-h-screen bg-background p-4 md:p-8"><Marketplace /></div>} />
               <Route path="/lp" element={<LandingPage />} />
               <Route path="/site" element={<Suspense fallback={<PageLoader />}><Site /></Suspense>} />
               <Route path="/termos-de-uso" element={<TermosDeUso />} />
@@ -206,7 +207,6 @@ const App = () => (
                 <Route path="/psicossocial" element={<Psicossocial />} />
                 <Route path="/felicidade" element={<BemEstar />} />
                 <Route path="/documentos" element={<Documentos />} />
-                <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/terceiros" element={<Terceiros />} />
                 <Route path="/incidentes-acidentes" element={<IncidentesAcidentes />} />
                 <Route path="/cultura-celebracoes" element={<CulturaCelebracoes />} />
