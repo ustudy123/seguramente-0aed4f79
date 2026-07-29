@@ -400,12 +400,15 @@ export function useFeriasProgramacao() {
           empresa_id: empresaAtivaId ?? null,
           colaborador_nome: l.nome,
           colaborador_cpf: l.cpf,
-          colaborador_id: l.colaboradorId,
+          // colaborador_id NÃO é enviado: a coluna é FK para auth.users(id), mas
+          // l.colaboradorId vem de admissoes.id (outro domínio de UUID). Mandar
+          // esse valor viola a FK. A solicitação se identifica por CPF.
           departamento: l.departamento || null,
           cargo: l.cargo || null,
           data_inicio: s.inicio,
           data_fim: s.fim,
           dias_solicitados: dias,
+          saldo_dias: l.saldo,
           abono_pecuniario: abono,
           dias_abono: abono ? l.abonoDias : 0,
           salario_base: l.salario,
@@ -441,7 +444,9 @@ export function useFeriasProgramacao() {
         { description: "Veja na aba Solicitações para aprovar." },
       );
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao converter"),
+    onError: (e) => toast.error("Falha ao converter", {
+      description: e instanceof Error ? e.message : String(e),
+    }),
   });
 
   return {
