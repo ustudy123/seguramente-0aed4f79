@@ -90,6 +90,8 @@ export interface MarketplaceFilters {
   raioKm?: number;
 }
 
+const PROF_PUBLIC_COLS = "id, nome_completo, foto_url, bio, formacao_academica, registro_profissional, conselho, uf_registro, registro_validade, certificacoes, especialidades, areas_atuacao, modalidades_atendimento, cidade, estado, status, plano, selo_verificado, nota_media, total_avaliacoes, total_servicos_executados, tem_atestado_capacidade, latitude, longitude, created_at";
+
 export function useMarketplace() {
   const { tenantId } = useTenant();
   const queryClient = useQueryClient();
@@ -123,7 +125,7 @@ export function useMarketplace() {
 
       let query = supabase
         .from("marketplace_servicos")
-        .select("*, profissional:marketplace_profissionais(*), categoria:marketplace_categorias(*)")
+        .select(`*, profissional:marketplace_profissionais(${PROF_PUBLIC_COLS}), categoria:marketplace_categorias(*)`)
         .eq("ativo", true)
         .in("profissional_id", profissionalIds);
 
@@ -150,7 +152,7 @@ export function useMarketplace() {
       // Vitrine global: profissionais aparecem para todas as empresas, sem filtro de tenant
       // If user location is available, use proximity search
       if (filters.userLat && filters.userLng) {
-        const { data, error } = await supabase.rpc("buscar_profissionais_proximos", {
+        const { data, error } = await supabase.rpc("buscar_profissionais_proximos_publico", {
           p_lat: filters.userLat,
           p_lon: filters.userLng,
           p_raio_km: filters.raioKm || 500,
@@ -175,7 +177,7 @@ export function useMarketplace() {
       // Fallback: normal query (sem filtro de tenant — vitrine global)
       let query = supabase
         .from("marketplace_profissionais")
-        .select("*")
+        .select(PROF_PUBLIC_COLS)
         .eq("status", "ativo");
 
       if (filters.estado) {
