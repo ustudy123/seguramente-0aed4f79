@@ -138,10 +138,13 @@ const CentralGaf = () => {
             Exportar
           </Button>
 
-          <Button size="sm" onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Afastamento
-          </Button>
+          {(activeTab === "atestados" || activeTab === "afastamentos") && (
+            <Button size="sm" onClick={() => setFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {activeTab === "atestados" ? "Novo Atestado" : "Novo Afastamento"}
+            </Button>
+          )}
+
         </div>
       </header>
 
