@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield, Smile } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield, Smile, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
