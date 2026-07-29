@@ -79,6 +79,9 @@ export interface LinhaProgramacao {
   feriados: string[];
   feriasFamiliares: { nome: string; inicio: string; fim: string }[];
   afastamentoReinicia: { motivo: string; diasTotais: number } | null;
+
+  // Para conversão em solicitação (3C)
+  salario: number;
 }
 
 interface AdmissaoInfo {
@@ -314,6 +317,7 @@ export function useFeriasProgramacao() {
           return [];
         }),
         afastamentoReinicia: afastamentos?.get(cpf) ?? null,
+        salario: info.salario,
       });
     }
 
@@ -368,11 +372,84 @@ export function useFeriasProgramacao() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao confirmar"),
   });
 
+  // Converter em solicitação formal (3C) — sem redigitação.
+  // Cada sub-período (P1/P2/P3) vira uma solicitação; a programação passa a
+  // 'solicitado' e guarda a solicitação do P1 como referência.
+  const converter = useMutation({
+    mutationFn: async (l: LinhaProgramacao) => {
+      if (!l.progId) throw new Error("Programação ainda não salva.");
+      if (l.estado !== "confirmado") throw new Error("Só programações confirmadas podem ser convertidas.");
+
+      const subs = [l.p1, l.p2, l.p3].filter(s => s.inicio && s.fim && (s.dias ?? 0) > 0);
+      if (subs.length === 0) throw new Error("Nenhum período com datas para converter.");
+
+      const salarioDia = l.salario / 30;
+      let primeiraSolicitacaoId: string | null = null;
+
+      for (let i = 0; i < subs.length; i++) {
+        const s = subs[i];
+        const dias = s.dias!;
+        const valorFerias = salarioDia * dias;
+        const valorTerco = valorFerias / 3;
+        // O abono só entra na primeira solicitação, para não duplicar.
+        const abono = i === 0 && l.abonoVender;
+        const valorAbono = abono ? salarioDia * l.abonoDias : 0;
+
+        const { data, error } = await fromTable("ferias_solicitacoes").insert({
+          tenant_id: tenantId,
+          empresa_id: empresaAtivaId ?? null,
+          colaborador_nome: l.nome,
+          colaborador_cpf: l.cpf,
+          colaborador_id: l.colaboradorId,
+          departamento: l.departamento || null,
+          cargo: l.cargo || null,
+          data_inicio: s.inicio,
+          data_fim: s.fim,
+          dias_solicitados: dias,
+          abono_pecuniario: abono,
+          dias_abono: abono ? l.abonoDias : 0,
+          salario_base: l.salario,
+          periodo_aquisitivo_inicio: l.aquisitivoInicio,
+          periodo_aquisitivo_fim: l.aquisitivoFim,
+          valor_ferias: valorFerias,
+          valor_terco: valorTerco,
+          valor_abono: valorAbono,
+          valor_total_bruto: valorFerias + valorTerco + valorAbono,
+          status: "pendente",
+          observacoes: `Gerada da Programação Anual${subs.length > 1 ? ` (período ${i + 1}/${subs.length})` : ""}.`,
+        }).select("id").single();
+        if (error) throw error;
+        if (i === 0) primeiraSolicitacaoId = (data as { id: string })?.id ?? null;
+      }
+
+      // Programação passa a 'solicitado' e referencia a solicitação do P1.
+      const { error: upErr } = await fromTable("ferias_programacao").update({
+        estado: "solicitado",
+        solicitacao_id: primeiraSolicitacaoId,
+      }).eq("id", l.progId);
+      if (upErr) throw upErr;
+
+      return subs.length;
+    },
+    onSuccess: (qtd) => {
+      qc.invalidateQueries({ queryKey: ["ferias-programacao"] });
+      qc.invalidateQueries({ queryKey: ["ferias_solicitacoes"] });
+      toast.success(
+        qtd === 1
+          ? "Programação convertida em solicitação."
+          : `${qtd} solicitações geradas da programação.`,
+        { description: "Veja na aba Solicitações para aprovar." },
+      );
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao converter"),
+  });
+
   return {
     linhas,
     isLoading: admissoesQuery.isLoading || progQuery.isLoading,
     temSaldos: periodos.some(p => p.status !== "encerrado"),
     salvar,
     confirmar,
+    converter,
   };
 }

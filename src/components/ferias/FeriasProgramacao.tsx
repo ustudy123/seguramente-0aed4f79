@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import {
-  CalendarRange, Search, Pencil, CheckCircle2, Lock, AlertTriangle,
+  CalendarRange, Search, Pencil, CheckCircle2, Lock, AlertTriangle, Send,
   Clock, Loader2, Plus, Info,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -189,6 +189,14 @@ export function FeriasProgramacao() {
                               onClick={() => prog.confirmar.mutate(l.progId!)}
                               title="Confirmar programação">
                               <CheckCircle2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {l.estado === "confirmado" && (
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-violet-600"
+                              onClick={() => prog.converter.mutate(l)}
+                              disabled={prog.converter.isPending}
+                              title="Converter em solicitação">
+                              <Send className="h-3.5 w-3.5" />
                             </Button>
                           )}
                         </div>
