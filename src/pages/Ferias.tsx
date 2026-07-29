@@ -5,6 +5,7 @@ import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
 import { FeriasFinanceiro } from "@/components/ferias/FeriasFinanceiro";
 import { FeriasProgramacao } from "@/components/ferias/FeriasProgramacao";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
+import { FeriasEvidenciaNR1 } from "@/components/ferias/FeriasEvidenciaNR1";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
 import { FeriasGovernanca } from "@/components/ferias/FeriasGovernanca";
@@ -721,9 +722,10 @@ const Ferias = () => {
           <FeriasFinanceiro />
         </TabsContent>
 
-        <TabsContent value="inteligencia">
+        <TabsContent value="inteligencia" className="space-y-4">
           <FeriasInteligencia ranking={inrRanking} criticos={inrCriticos} altos={inrAltos}
             onCriarAcaoPreventiva={handleCriarAcaoPreventiva} colaboradoresPorSetor={colaboradoresPorSetor} />
+          <FeriasEvidenciaNR1 ranking={inrRanking} />
         </TabsContent>
 
         <TabsContent value="cultura">
