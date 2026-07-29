@@ -15,11 +15,11 @@ export interface MarketplaceCategoria {
 
 export interface MarketplaceProfissional {
   id: string;
-  user_id: string | null;
-  tenant_id: string | null;
+  user_id?: string | null;
+  tenant_id?: string | null;
   nome_completo: string;
-  email: string;
-  telefone: string | null;
+  email?: string | null;
+  telefone?: string | null;
   foto_url: string | null;
   bio: string | null;
   formacao_academica: string | null;
@@ -39,7 +39,7 @@ export interface MarketplaceProfissional {
   nota_media: number;
   total_avaliacoes: number;
   total_servicos_executados: number;
-  codigo_afiliado: string | null;
+  codigo_afiliado?: string | null;
   created_at: string;
 }
 
@@ -141,7 +141,7 @@ export function useMarketplace() {
 
       const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
-      return data as MarketplaceServico[];
+      return (data ?? []) as unknown as MarketplaceServico[];
     },
     enabled: true,
   });
@@ -191,7 +191,7 @@ export function useMarketplace() {
         .order("tem_atestado_capacidade", { ascending: false })
         .order("nota_media", { ascending: false });
       if (error) throw error;
-      return data as MarketplaceProfissional[];
+      return (data ?? []) as unknown as MarketplaceProfissional[];
     },
     enabled: true,
   });
