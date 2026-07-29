@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield, Smile } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield, Smile, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -100,8 +100,26 @@ export const Header = ({ onMenuToggle, isMobile, isSidebarCollapsed, onSidebarTo
           </Button>
         )}
 
+        {/* Rede de Parceiros - acesso global */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/marketplace")}
+              className="flex items-center gap-2 text-white/90 hover:text-white hover:bg-white/15"
+            >
+              <Store className="w-5 h-5" />
+              <span className="hidden lg:inline text-sm font-medium">Rede de Parceiros</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Rede de Parceiros</TooltipContent>
+        </Tooltip>
+
         {/* Empresa Selector */}
         <EmpresaSelector />
+
+
 
         {/* Humor indicator - always clickable to change */}
         <Tooltip>

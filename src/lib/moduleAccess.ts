@@ -18,7 +18,7 @@ export const PATH_TO_MODULO: Record<string, string> = {
   "/cadastros/departamentos": "configuracoes",
   "/cadastros/cargos": "configuracoes",
   "/colaboradores": "colaboradores",
-  "/marketplace": "configuracoes",
+  // "/marketplace" — acesso global (ver ALWAYS_ALLOWED_PATHS)
 
   // Estratégia & Governança (link de topo do sidebar)
   "/estrategia": "configuracoes",
@@ -79,7 +79,7 @@ export const ADMIN_PATHS = new Set<string>([
   "/cadastros/departamentos",
   "/cadastros/cargos",
   "/colaboradores",
-  "/marketplace",
+  
   "/contratos-experiencia",
   "/onboarding-rh",
   "/ferias",
@@ -109,6 +109,8 @@ export const ADMIN_PATHS = new Set<string>([
  */
 export const ALWAYS_ALLOWED_PATHS = new Set<string>([
   "/",
+  "/marketplace", // Rede de Parceiros: módulo global no header
+
   "/meu-perfil",
   "/suporte",
   "/pendencias",
