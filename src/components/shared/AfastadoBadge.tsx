@@ -19,12 +19,17 @@ const MOTIVO_LABELS: Record<string, string> = {
 interface AfastadoBadgeProps {
   afastamento: AfastamentoAtivo | undefined;
   compact?: boolean;
+  /** Sobrescreve o rótulo exibido (ex.: "Atestado", "Licença") mantendo o alerta visual. */
+  labelOverride?: string;
 }
 
-export function AfastadoBadge({ afastamento, compact = false }: AfastadoBadgeProps) {
+export function AfastadoBadge({ afastamento, compact = false, labelOverride }: AfastadoBadgeProps) {
   if (!afastamento) return null;
 
-  const statusLabel = afastamento.status === "beneficio_inss" ? "Benefício INSS" : "Afastado";
+  const statusLabel =
+    afastamento.status === "beneficio_inss"
+      ? "Benefício INSS"
+      : labelOverride || "Afastado";
   const motivo = afastamento.motivo_principal ? MOTIVO_LABELS[afastamento.motivo_principal] || afastamento.motivo_principal : null;
   const desde = afastamento.data_inicio ? format(new Date(afastamento.data_inicio + "T00:00:00"), "dd/MM/yyyy") : "";
 
