@@ -6,6 +6,7 @@ import { FeriasFinanceiro } from "@/components/ferias/FeriasFinanceiro";
 import { FeriasProgramacao } from "@/components/ferias/FeriasProgramacao";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
 import { FeriasEvidenciaNR1 } from "@/components/ferias/FeriasEvidenciaNR1";
+import { FeriasVinculoFamiliar } from "@/components/ferias/FeriasVinculoFamiliar";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
 import { FeriasGovernanca } from "@/components/ferias/FeriasGovernanca";
@@ -247,7 +248,7 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
 
 const Ferias = () => {
   const [statusFilter, setStatusFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("solicitacoes");
+  const [activeTab, setActiveTab] = useState("programacao");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
   const [newSolicitacao, setNewSolicitacao] = useState({
@@ -736,8 +737,9 @@ const Ferias = () => {
           <FeriasRelatorios solicitacoes={solicitacoes} colaboradores={colaboradores} />
         </TabsContent>
 
-        <TabsContent value="governanca">
+        <TabsContent value="governanca" className="space-y-4">
           <FeriasGovernanca solicitacoes={solicitacoes} colaboradores={colaboradores} />
+          <FeriasVinculoFamiliar colaboradores={colaboradores} />
         </TabsContent>
       </Tabs>
 
