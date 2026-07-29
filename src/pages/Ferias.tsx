@@ -7,6 +7,7 @@ import { FeriasProgramacao } from "@/components/ferias/FeriasProgramacao";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
 import { FeriasEvidenciaNR1 } from "@/components/ferias/FeriasEvidenciaNR1";
 import { FeriasVinculoFamiliar } from "@/components/ferias/FeriasVinculoFamiliar";
+import { useFeriasFinanceiro } from "@/hooks/useFeriasFinanceiro";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
 import { FeriasGovernanca } from "@/components/ferias/FeriasGovernanca";
@@ -296,12 +297,10 @@ const Ferias = () => {
   };
 
   // ========== PROVISÃO FINANCEIRA ==========
-  const provisaoTotal = useMemo(() => {
-    return colaboradores.reduce((sum, c) => {
-      const sal = (c as any).salario || 0;
-      return sum + sal + (sal / 3);
-    }, 0);
-  }, [colaboradores]);
+  // Provisão do card do topo vem do MESMO motor da aba Financeiro (Fase 2).
+  // Antes era sal + sal/3 para todo colaborador, sem dias de direito e sem
+  // encargos — divergia do valor da aba e superestimava o passivo.
+  const { provisaoTotal } = useFeriasFinanceiro();
 
   // ========== SOBREPOSIÇÃO ==========
   const verificarSobreposicao = (item: FeriasSolicitacao): string[] => {
@@ -621,7 +620,11 @@ const Ferias = () => {
           { label: "Concluídas", value: stats.concluidos, icon: CheckCircle, color: "primary" },
           { label: "Com Abono", value: stats.comAbono, icon: Banknote, color: "primary" },
           { label: "Preventivas", value: stats.acoesPreventivas, icon: Brain, color: "info" },
-          { label: "Provisão", value: provisaoTotal > 0 ? `R$ ${(provisaoTotal / 1000).toFixed(0)}k` : "—", icon: TrendingUp, color: "destructive" },
+          { label: "Provisão", value: provisaoTotal > 0
+              ? (provisaoTotal >= 10000
+                  ? `R$ ${(provisaoTotal / 1000).toFixed(0)}k`
+                  : provisaoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }))
+              : "—", icon: TrendingUp, color: "destructive" },
         ].map((s) => (
           <div key={s.label} className={cn(
             "rounded-xl border p-4 flex items-center gap-3",

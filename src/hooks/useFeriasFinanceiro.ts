@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 
 const EMPTY_SAL = new Map<string, { salario: number; dependentes: number }>();
+const EMPTY_PROG: Record<string, unknown>[] = [];
 
 export function useFeriasFinanceiro() {
   const { tenantId } = useTenant();
@@ -77,6 +78,24 @@ export function useFeriasFinanceiro() {
 
   const salarios = salariosQuery.data ?? EMPTY_SAL;
 
+  // Períodos PROGRAMADOS (Fase 3) — fonte do desembolso projetado. Substitui o
+  // proxy anterior (dias já gozados), que olhava o passado em vez do futuro.
+  const programacaoQuery = useQuery({
+    queryKey: ["ferias-financeiro-programacao", tenantId, empresaAtivaId],
+    enabled: !!tenantId,
+    queryFn: async () => {
+      let q = fromTable("ferias_programacao")
+        .select("colaborador_cpf, colaborador_nome, p1_inicio, p1_fim, p1_dias, p2_inicio, p2_fim, p2_dias, p3_inicio, p3_fim, p3_dias, abono_vender, abono_dias, estado")
+        .eq("tenant_id", tenantId)
+        .neq("estado", "cancelado");
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data } = await q;
+      return data ?? [];
+    },
+  });
+
+  const programacoes = programacaoQuery.data ?? EMPTY_PROG;
+
   // ── Cálculos ───────────────────────────────────────────────────────────────
   const resultado = useMemo(() => {
     const provisoes: ProvisaoColaborador[] = [];
@@ -110,16 +129,33 @@ export function useFeriasFinanceiro() {
         if (dobra) passivos.push(dobra);
       }
 
-      // Desembolso projetado: dias já gozados no período (proxy de caixa).
-      // Quando a aba Programação existir (Fase 3), virá dos períodos programados.
-      if (p.diasGozados > 0) {
+      // (o desembolso agora vem das programações, fora deste laço)
+    }
+
+    // Desembolso projetado: um lançamento por sub-período PROGRAMADO, alocado no
+    // mês do pagamento (D-2, art. 145). É fluxo de caixa futuro — o que vai
+    // sair — e não mais o que já foi gozado.
+    for (const prg of programacoes) {
+      const cpf = String(prg.colaborador_cpf ?? "").replace(/\D/g, "");
+      const info = salarios.get(cpf);
+      const salario = info?.salario ?? 0;
+      if (salario <= 0) continue;
+
+      for (const n of [1, 2, 3] as const) {
+        const inicio = prg[`p${n}_inicio`] as string | null;
+        const fim = prg[`p${n}_fim`] as string | null;
+        const dias = Number(prg[`p${n}_dias`] ?? 0);
+        if (!inicio || !fim || dias <= 0) continue;
+
         desembolsos.push(desembolsoPeriodo({
-          cpf: p.colaboradorCpf,
-          nome: p.colaboradorNome,
+          cpf,
+          nome: String(prg.colaborador_nome ?? ""),
           remuneracaoMensal: salario,
-          dataInicio: p.aquisitivoInicio,
-          dataFim: p.aquisitivoFim,
-          diasGozados: p.diasGozados,
+          dataInicio: inicio,
+          dataFim: fim,
+          diasGozados: dias,
+          // Abono só no primeiro sub-período, para não duplicar.
+          abonoDias: n === 1 && prg.abono_vender ? Number(prg.abono_dias ?? 0) : 0,
           dependentes: info?.dependentes ?? 0,
         }));
       }
@@ -143,7 +179,7 @@ export function useFeriasFinanceiro() {
           (salarios.get(p.colaboradorCpf.replace(/\D/g, ""))?.salario ?? 0) <= 0,
       ).length,
     };
-  }, [periodos, salarios, encargos]);
+  }, [periodos, salarios, encargos, programacoes]);
 
   // ── Salvar config de encargos ──────────────────────────────────────────────
   const salvarEncargos = useMutation({
