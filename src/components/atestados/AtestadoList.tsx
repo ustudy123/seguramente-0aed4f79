@@ -228,7 +228,19 @@ export function AtestadoList({
                       <div className="flex items-center gap-1.5 text-foreground font-medium">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate">{atestado.colaborador_nome}</span>
-                        <AfastadoBadge afastamento={getAfastamento({ cpf: atestado.colaborador_cpf, nome: atestado.colaborador_nome })} compact />
+                        <AfastadoBadge
+                          afastamento={getAfastamento({ cpf: atestado.colaborador_cpf, nome: atestado.colaborador_nome })}
+                          compact
+                          labelOverride={
+                            atestado.tipo === 'atestados'
+                              ? 'Atestado'
+                              : atestado.tipo === 'licencas'
+                                ? 'Licença'
+                                : atestado.tipo === 'ocupacional'
+                                  ? 'Ocupacional'
+                                  : undefined
+                          }
+                        />
                       </div>
                       {atestado.colaborador_departamento && (
                         <div className="flex items-center gap-1.5 text-muted-foreground">

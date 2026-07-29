@@ -7587,24 +7587,39 @@ export type Database = {
         Row: {
           created_at: string
           empresa_id: string | null
+          encargo_fgts: number
+          encargo_inss_patronal: number
+          encargo_rat_fap: number
+          encargo_terceiros: number
           id: string
           metodo_calculo: string
+          simples_dispensa_patronal: boolean
           tenant_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           empresa_id?: string | null
+          encargo_fgts?: number
+          encargo_inss_patronal?: number
+          encargo_rat_fap?: number
+          encargo_terceiros?: number
           id?: string
           metodo_calculo?: string
+          simples_dispensa_patronal?: boolean
           tenant_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           empresa_id?: string | null
+          encargo_fgts?: number
+          encargo_inss_patronal?: number
+          encargo_rat_fap?: number
+          encargo_terceiros?: number
           id?: string
           metodo_calculo?: string
+          simples_dispensa_patronal?: boolean
           tenant_id?: string
           updated_at?: string
         }
@@ -7739,6 +7754,99 @@ export type Database = {
           validacao_motivo?: string | null
           validado_em?: string | null
           validado_por?: string | null
+        }
+        Relationships: []
+      }
+      ferias_programacao: {
+        Row: {
+          abono_dias: number
+          abono_vender: boolean
+          adiantar_13: boolean
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          colaborador_cpf: string
+          colaborador_id: string | null
+          colaborador_nome: string
+          confirmado_em: string | null
+          confirmado_por: string | null
+          created_at: string
+          criado_por: string | null
+          empresa_id: string | null
+          estado: Database["public"]["Enums"]["ferias_prog_estado"]
+          id: string
+          observacao: string | null
+          p1_dias: number | null
+          p1_fim: string | null
+          p1_inicio: string | null
+          p2_dias: number | null
+          p2_fim: string | null
+          p2_inicio: string | null
+          p3_dias: number | null
+          p3_fim: string | null
+          p3_inicio: string | null
+          solicitacao_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          abono_dias?: number
+          abono_vender?: boolean
+          adiantar_13?: boolean
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          colaborador_cpf: string
+          colaborador_id?: string | null
+          colaborador_nome: string
+          confirmado_em?: string | null
+          confirmado_por?: string | null
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string | null
+          estado?: Database["public"]["Enums"]["ferias_prog_estado"]
+          id?: string
+          observacao?: string | null
+          p1_dias?: number | null
+          p1_fim?: string | null
+          p1_inicio?: string | null
+          p2_dias?: number | null
+          p2_fim?: string | null
+          p2_inicio?: string | null
+          p3_dias?: number | null
+          p3_fim?: string | null
+          p3_inicio?: string | null
+          solicitacao_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          abono_dias?: number
+          abono_vender?: boolean
+          adiantar_13?: boolean
+          aquisitivo_fim?: string
+          aquisitivo_inicio?: string
+          colaborador_cpf?: string
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          confirmado_em?: string | null
+          confirmado_por?: string | null
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string | null
+          estado?: Database["public"]["Enums"]["ferias_prog_estado"]
+          id?: string
+          observacao?: string | null
+          p1_dias?: number | null
+          p1_fim?: string | null
+          p1_inicio?: string | null
+          p2_dias?: number | null
+          p2_fim?: string | null
+          p2_inicio?: string | null
+          p3_dias?: number | null
+          p3_fim?: string | null
+          p3_inicio?: string | null
+          solicitacao_id?: string | null
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -7894,6 +8002,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ferias_vinculo_familiar: {
+        Row: {
+          cpf_a: string
+          cpf_b: string
+          created_at: string
+          criado_por: string | null
+          empresa_id: string | null
+          grau: string
+          id: string
+          nome_a: string
+          nome_b: string
+          observacao: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cpf_a: string
+          cpf_b: string
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string | null
+          grau?: string
+          id?: string
+          nome_a: string
+          nome_b: string
+          observacao?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cpf_a?: string
+          cpf_b?: string
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string | null
+          grau?: string
+          id?: string
+          nome_a?: string
+          nome_b?: string
+          observacao?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       filiais: {
         Row: {
@@ -20391,6 +20544,27 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_mobiliario_fixo: {
+        Row: {
+          esperado: number
+          motivo: string | null
+          registrado_em: string
+          tabela: string
+        }
+        Insert: {
+          esperado: number
+          motivo?: string | null
+          registrado_em?: string
+          tabela: string
+        }
+        Update: {
+          esperado?: number
+          motivo?: string | null
+          registrado_em?: string
+          tabela?: string
+        }
+        Relationships: []
+      }
       qa_modulos: {
         Row: {
           created_at: string
@@ -23678,6 +23852,126 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_adm_002: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_003: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_090: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_091: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_101: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_102: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_103: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_105: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_106: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_108: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_110: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_adm_111: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ate_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -24167,6 +24461,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      qa_caso_detalhe: {
+        Args: { p_codigo: string }
+        Returns: {
+          campo: string
+          conteudo: string
+        }[]
       }
       qa_caso_doc_001: {
         Args: never
@@ -25570,6 +25871,7 @@ export type Database = {
         Returns: string
       }
       qa_fixture_limpar: { Args: { p_codigo: string }; Returns: undefined }
+      qa_houve_vazamento: { Args: never; Returns: boolean }
       qa_limpa_config_metas: { Args: { p_tenant: string }; Returns: undefined }
       qa_limpa_identidade: { Args: { p_tenant: string }; Returns: undefined }
       qa_limpar_historico: { Args: { p_dias?: number }; Returns: number }
@@ -25588,6 +25890,13 @@ export type Database = {
           observacao: string
           passou: number
           total: number
+        }[]
+      }
+      qa_mobiliario_registrar: {
+        Args: never
+        Returns: {
+          esperado: number
+          tabela: string
         }[]
       }
       qa_modo_ligado: { Args: never; Returns: boolean }
@@ -25671,6 +25980,15 @@ export type Database = {
       qa_obrigacao_existe: {
         Args: { p_empresa: string; p_subcategoria: string }
         Returns: boolean
+      }
+      qa_relatorio_falhas: {
+        Args: { p_modulo?: string }
+        Returns: {
+          achado: string
+          codigo: string
+          prio: string
+          situacao: string
+        }[]
       }
       qa_resultados_da_bateria: {
         Args: { p_execucao_id: string }
@@ -26151,6 +26469,16 @@ export type Database = {
         | "concluido"
       evento_sst_tipo: "incidente" | "acidente"
       feedback_categoria: "reconhecimento" | "alinhamento" | "desenvolvimento"
+      ferias_prog_estado:
+        | "sugerido"
+        | "planejado"
+        | "confirmado"
+        | "ciente"
+        | "solicitado"
+        | "aprovado"
+        | "em_gozo"
+        | "concluido"
+        | "cancelado"
       forma_calculo:
         | "VALOR_FIXO"
         | "PERCENTUAL_SALARIO"
@@ -26827,6 +27155,17 @@ export const Constants = {
       ],
       evento_sst_tipo: ["incidente", "acidente"],
       feedback_categoria: ["reconhecimento", "alinhamento", "desenvolvimento"],
+      ferias_prog_estado: [
+        "sugerido",
+        "planejado",
+        "confirmado",
+        "ciente",
+        "solicitado",
+        "aprovado",
+        "em_gozo",
+        "concluido",
+        "cancelado",
+      ],
       forma_calculo: [
         "VALOR_FIXO",
         "PERCENTUAL_SALARIO",
