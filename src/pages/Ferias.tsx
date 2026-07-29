@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
 import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
 import { FeriasFinanceiro } from "@/components/ferias/FeriasFinanceiro";
+import { FeriasProgramacao } from "@/components/ferias/FeriasProgramacao";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
@@ -13,7 +14,7 @@ import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
 import {
   Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
   ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
-  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck, Wallet,
+  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck, Wallet, CalendarRange,
   Loader2, MessageSquare, PenLine,
 } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
@@ -640,6 +641,7 @@ const Ferias = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
           className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <TabsList className="bg-muted/50 flex-wrap">
+            <TabsTrigger value="programacao"><CalendarRange className="w-3.5 h-3.5 mr-1" /> Programação</TabsTrigger>
             <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
             <TabsTrigger value="calendario">Calendário</TabsTrigger>
             <TabsTrigger value="saldos">Saldos</TabsTrigger>
@@ -670,6 +672,10 @@ const Ferias = () => {
             </SelectContent>
           </Select>
         </motion.div>
+
+        <TabsContent value="programacao">
+          <FeriasProgramacao />
+        </TabsContent>
 
         <TabsContent value="solicitacoes" className="mt-0">
           {loadingFerias ? (
