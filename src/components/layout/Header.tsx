@@ -106,7 +106,7 @@ export const Header = ({ onMenuToggle, isMobile, isSidebarCollapsed, onSidebarTo
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/marketplace")}
+              onClick={() => window.open("/marketplace", "_blank", "noopener,noreferrer")}
               className="flex items-center gap-2 text-white/90 hover:text-white hover:bg-white/15"
             >
               <Store className="w-5 h-5" />
