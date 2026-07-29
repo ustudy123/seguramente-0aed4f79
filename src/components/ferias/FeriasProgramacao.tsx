@@ -52,6 +52,15 @@ export function FeriasProgramacao() {
 
   // Reposiciona um sub-período (novo início, mesma duração), revalida e salva.
   const moverPeriodo = (linha: LinhaProgramacao, n: 1 | 2 | 3, novoInicio: string) => {
+    // Período que já virou solicitação/aprovação não pode mudar de data pela
+    // timeline: a solicitação formal na aba Solicitações ficaria com a data
+    // antiga, e as duas telas divergiriam. Trava aqui, além do draggable da UI.
+    if (["solicitado","aprovado","em_gozo","concluido"].includes(linha.estado)) {
+      toast.error("Período já solicitado", {
+        description: "Altere pela aba Solicitações para manter as duas telas em sincronia.",
+      });
+      return;
+    }
     const key = `p${n}` as "p1" | "p2" | "p3";
     const sub = linha[key];
     if (!sub.dias) return;
