@@ -53,6 +53,8 @@ export interface LinhaProgramacao {
 
   // Limite concessivo (feriasPeriodo)
   limiteConcessivo: string;
+  /** Limite concessivo como Date, para o motor de regras. */
+  limiteConcessivoDate: Date;
   diasParaVencimento: number;
   risco: "ok" | "alerta" | "vencido";
 
@@ -214,6 +216,7 @@ export function useFeriasProgramacao() {
         saldo: periodo.diasSaldo,
         temPeriodosAnteriores: lista.length > 1,
         limiteConcessivo: limiteReal.limiteLabel,
+        limiteConcessivoDate: limiteReal.limite,
         diasParaVencimento: limiteReal.diasParaVencimento,
         risco: limiteReal.status,
         progId: (prog?.id as string) ?? null,

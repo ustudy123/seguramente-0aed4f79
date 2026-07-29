@@ -19,6 +19,10 @@ import {
   useFeriasProgramacao, type LinhaProgramacao, type SubPeriodo, type EstadoProg,
 } from "@/hooks/useFeriasProgramacao";
 import { formatBRL } from "@/lib/feriasFinanceiro";
+import {
+  avaliarRegrasProgramacao, temBloqueio, REGRAS_PENDENTES_3B2,
+  type ViolacaoRegra,
+} from "@/lib/feriasRegras";
 import { cn } from "@/lib/utils";
 
 const ESTADO_LABEL: Record<EstadoProg, { label: string; cls: string }> = {
@@ -95,8 +99,9 @@ export function FeriasProgramacao() {
         <Info className="h-4 w-4 mt-0.5 shrink-0" />
         <p>
           Monte o plano de férias de 12 meses. Saldo e valor vêm do cálculo real (abas Saldos e
-          Financeiro). A validação legal das datas (art. 134, 135, 145) entra na próxima etapa —
-          por ora as datas são livres.
+          Financeiro). As datas são validadas contra a CLT ao programar (art. 130, 134, 135, 137,
+          143, 145). Três regras — feriado, vínculo familiar e afastamento — dependem de
+          configuração ainda pendente.
         </p>
       </div>
 
@@ -280,7 +285,21 @@ function EditarProgramacaoDialog({ linha, onOpenChange, onSalvar, salvando }: {
   };
 
   const totalProg = (l.p1.dias ?? 0) + (l.p2.dias ?? 0) + (l.p3.dias ?? 0) + (l.abonoVender ? l.abonoDias : 0);
-  const excede = totalProg > l.saldo;
+
+  // Motor de regras (3B): avalia em tempo real conforme o RH edita as datas.
+  const violacoes = useMemo<ViolacaoRegra[]>(
+    () => avaliarRegrasProgramacao({
+      aquisitivoFim: l.aquisitivoFim,
+      saldo: l.saldo,
+      p1: l.p1, p2: l.p2, p3: l.p3,
+      abonoVender: l.abonoVender,
+      abonoDias: l.abonoDias,
+      limiteConcessivo: l.limiteConcessivoDate,
+    }),
+    [l.aquisitivoFim, l.saldo, l.p1, l.p2, l.p3, l.abonoVender, l.abonoDias, l.limiteConcessivoDate],
+  );
+  const bloqueado = temBloqueio(violacoes);
+  const temProgramacao = totalProg > 0;
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -346,15 +365,45 @@ function EditarProgramacaoDialog({ linha, onOpenChange, onSalvar, salvando }: {
           </div>
         </div>
 
+        {/* Violações do motor de regras (3B) */}
+        {violacoes.length > 0 && (
+          <div className="space-y-1.5">
+            {violacoes.map((viol, i) => {
+              const estilo =
+                viol.comportamento === "bloqueio" ? "border-red-200 bg-red-50/60 text-red-700"
+                : viol.comportamento === "alerta" ? "border-amber-200 bg-amber-50/60 text-amber-800"
+                : "border-blue-200 bg-blue-50/60 text-blue-800";
+              const Icone =
+                viol.comportamento === "bloqueio" ? Lock
+                : viol.comportamento === "alerta" ? AlertTriangle : Info;
+              return (
+                <div key={i} className={cn("flex items-start gap-2 rounded-lg border p-2 text-xs", estilo)}>
+                  <Icone className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <div>
+                    <span className="font-medium">{viol.regra}</span>{" "}
+                    <span className="opacity-70">({viol.baseLegal})</span>
+                    <p className="opacity-90">{viol.mensagem}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className={cn("flex items-center justify-between rounded-lg p-2.5 text-sm",
-          excede ? "bg-red-50 text-red-700" : "bg-muted/50")}>
+          bloqueado ? "bg-red-50 text-red-700" : "bg-muted/50")}>
           <span>Total programado</span>
-          <span className="font-semibold">{totalProg}d de {l.saldo}d{excede && " — excede o saldo"}</span>
+          <span className="font-semibold">{totalProg}d de {l.saldo}d</span>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          {REGRAS_PENDENTES_3B2.length > 0 && (
+            <span className="text-[10px] text-muted-foreground mr-auto">
+              {REGRAS_PENDENTES_3B2.length} regras dependem de configuração pendente
+            </span>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button disabled={salvando || travado || excede}
+          <Button disabled={salvando || travado || bloqueado || !temProgramacao}
             onClick={() => onSalvar({ ...l, estado: l.estado === "sugerido" ? "planejado" : l.estado })}
             className="gap-2">
             {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
