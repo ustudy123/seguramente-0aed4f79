@@ -591,8 +591,8 @@ export default function Site() {
                   {p.consulta ? (
                     <div>
                       <div className="text-sm text-slate-500 mb-1">Sob consulta</div>
-                      <div className="text-2xl font-bold text-[#0B1D34]">A partir de R$ 3.500</div>
-                      <div className="text-xs text-slate-500 mt-1">Contrato personalizado</div>
+                      <div className="text-lg font-semibold text-[#0B1D34]">Contrato personalizado</div>
+                      <div className="text-xs text-slate-500 mt-1">Fale com um especialista</div>
                     </div>
                   ) : (
                     <div>
