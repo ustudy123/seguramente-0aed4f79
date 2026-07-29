@@ -233,6 +233,13 @@ export default function Site() {
   };
 
   const handleAssinar = async (p: Plano) => {
+    if (p.id === "enterprise") {
+      const msg = encodeURIComponent(
+        "Olá! Estou no site da YourEyes e gostaria de saber mais informações sobre o plano Enterprise. Pode me ajudar?"
+      );
+      window.open(`https://wa.me/554699337504?text=${msg}`, "_blank");
+      return;
+    }
     if (p.consulta) {
       window.location.hash = "#contato";
       return;
