@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
 import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
+import { FeriasFinanceiro } from "@/components/ferias/FeriasFinanceiro";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
@@ -12,7 +13,7 @@ import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
 import {
   Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
   ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
-  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck,
+  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck, Wallet,
   Loader2, MessageSquare, PenLine,
 } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
@@ -642,6 +643,7 @@ const Ferias = () => {
             <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
             <TabsTrigger value="calendario">Calendário</TabsTrigger>
             <TabsTrigger value="saldos">Saldos</TabsTrigger>
+            <TabsTrigger value="financeiro"><Wallet className="w-3.5 h-3.5 mr-1" /> Financeiro</TabsTrigger>
             <TabsTrigger value="inteligencia" className="flex items-center gap-1.5">
               <Brain className="w-3.5 h-3.5" /> INR™
               {inrCriticos.length > 0 && (
@@ -707,6 +709,10 @@ const Ferias = () => {
 
         <TabsContent value="saldos">
           <FeriasSaldos ferias={feriasLegacy} />
+        </TabsContent>
+
+        <TabsContent value="financeiro">
+          <FeriasFinanceiro />
         </TabsContent>
 
         <TabsContent value="inteligencia">
