@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   CalendarRange, Search, Pencil, CheckCircle2, Lock, AlertTriangle, Send,
+  LayoutGrid, GanttChartSquare,
   Clock, Loader2, Plus, Info,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +24,9 @@ import {
   avaliarRegrasProgramacao, temBloqueio,
   type ViolacaoRegra,
 } from "@/lib/feriasRegras";
+import { FeriasTimeline } from "./FeriasTimeline";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const ESTADO_LABEL: Record<EstadoProg, { label: string; cls: string }> = {
   sugerido:   { label: "Sugerido",   cls: "bg-slate-100 text-slate-700" },
@@ -45,6 +48,39 @@ export function FeriasProgramacao() {
   const [busca, setBusca] = useState("");
   const [filtroRisco, setFiltroRisco] = useState<"todos" | "ok" | "alerta" | "vencido">("todos");
   const [editando, setEditando] = useState<LinhaProgramacao | null>(null);
+  const [visao, setVisao] = useState<"grade" | "timeline">("grade");
+
+  // Reposiciona um sub-período (novo início, mesma duração), revalida e salva.
+  const moverPeriodo = (linha: LinhaProgramacao, n: 1 | 2 | 3, novoInicio: string) => {
+    const key = `p${n}` as "p1" | "p2" | "p3";
+    const sub = linha[key];
+    if (!sub.dias) return;
+    const ini = new Date(novoInicio + "T12:00:00");
+    const fim = new Date(ini);
+    fim.setDate(fim.getDate() + sub.dias - 1);
+    const fimIso = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
+    const atualizada: LinhaProgramacao = {
+      ...linha,
+      [key]: { inicio: novoInicio, fim: fimIso, dias: sub.dias },
+    };
+    // Revalida pelas regras; bloqueio impede o movimento.
+    const viol = avaliarRegrasProgramacao({
+      aquisitivoFim: atualizada.aquisitivoFim, saldo: atualizada.saldo,
+      p1: atualizada.p1, p2: atualizada.p2, p3: atualizada.p3,
+      abonoVender: atualizada.abonoVender, abonoDias: atualizada.abonoDias,
+      limiteConcessivo: atualizada.limiteConcessivoDate,
+      contexto: {
+        feriados: atualizada.feriados,
+        feriasFamiliares: atualizada.feriasFamiliares,
+        afastamentoReinicia: atualizada.afastamentoReinicia,
+      },
+    });
+    if (temBloqueio(viol)) {
+      toast.error("Movimento inválido", { description: viol.find(v => v.comportamento === "bloqueio")?.mensagem });
+      return;
+    }
+    prog.salvar.mutate(atualizada);
+  };
 
   const filtradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -123,7 +159,22 @@ export function FeriasProgramacao() {
         </Select>
       </div>
 
-      {/* Grade */}
+      {/* Alternador de visão */}
+      <div className="flex items-center gap-1 rounded-lg border p-0.5 w-fit">
+        <Button size="sm" variant={visao === "grade" ? "secondary" : "ghost"}
+          className="h-7 gap-1.5 text-xs" onClick={() => setVisao("grade")}>
+          <LayoutGrid className="h-3.5 w-3.5" /> Grade
+        </Button>
+        <Button size="sm" variant={visao === "timeline" ? "secondary" : "ghost"}
+          className="h-7 gap-1.5 text-xs" onClick={() => setVisao("timeline")}>
+          <GanttChartSquare className="h-3.5 w-3.5" /> Linha do tempo
+        </Button>
+      </div>
+
+      {visao === "timeline" ? (
+        <FeriasTimeline linhas={filtradas} onMover={(l, sub, novoInicio) => moverPeriodo(l, sub, novoInicio)} />
+      ) : (
+      /* Grade */
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -214,6 +265,7 @@ export function FeriasProgramacao() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {editando && (
         <EditarProgramacaoDialog
