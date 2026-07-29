@@ -12912,6 +12912,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "marketplace_afiliados_comissoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "marketplace_afiliados_comissoes_tenant_indicado_id_fkey"
             columns: ["tenant_indicado_id"]
             isOneToOne: false
@@ -12967,6 +12974,13 @@ export type Database = {
             columns: ["profissional_id"]
             isOneToOne: false
             referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_audit_log_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
             referencedColumns: ["id"]
           },
           {
@@ -13037,6 +13051,13 @@ export type Database = {
             columns: ["profissional_id"]
             isOneToOne: false
             referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_avaliacoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
             referencedColumns: ["id"]
           },
           {
@@ -13177,6 +13198,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "marketplace_contratacoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "marketplace_contratacoes_servico_id_fkey"
             columns: ["servico_id"]
             isOneToOne: false
@@ -13260,6 +13288,13 @@ export type Database = {
             columns: ["profissional_id"]
             isOneToOne: false
             referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_denuncias_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
             referencedColumns: ["id"]
           },
           {
@@ -13361,6 +13396,13 @@ export type Database = {
             columns: ["profissional_id"]
             isOneToOne: false
             referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_pacotes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -13538,6 +13580,13 @@ export type Database = {
             referencedRelation: "marketplace_profissionais"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "marketplace_profissional_documentos_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       marketplace_servicos: {
@@ -13605,6 +13654,13 @@ export type Database = {
             columns: ["profissional_id"]
             isOneToOne: false
             referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_servicos_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -22878,6 +22934,90 @@ export type Database = {
           },
         ]
       }
+      marketplace_profissionais_publico: {
+        Row: {
+          areas_atuacao: string[] | null
+          bio: string | null
+          certificacoes: string[] | null
+          cidade: string | null
+          conselho: string | null
+          created_at: string | null
+          especialidades: string[] | null
+          estado: string | null
+          formacao_academica: string | null
+          foto_url: string | null
+          id: string | null
+          modalidades_atendimento:
+            | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
+            | null
+          nome_completo: string | null
+          nota_media: number | null
+          registro_profissional: string | null
+          selo_verificado: boolean | null
+          status:
+            | Database["public"]["Enums"]["marketplace_profissional_status"]
+            | null
+          tem_atestado_capacidade: boolean | null
+          total_avaliacoes: number | null
+          total_servicos_executados: number | null
+          uf_registro: string | null
+        }
+        Insert: {
+          areas_atuacao?: string[] | null
+          bio?: string | null
+          certificacoes?: string[] | null
+          cidade?: string | null
+          conselho?: string | null
+          created_at?: string | null
+          especialidades?: string[] | null
+          estado?: string | null
+          formacao_academica?: string | null
+          foto_url?: string | null
+          id?: string | null
+          modalidades_atendimento?:
+            | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
+            | null
+          nome_completo?: string | null
+          nota_media?: number | null
+          registro_profissional?: string | null
+          selo_verificado?: boolean | null
+          status?:
+            | Database["public"]["Enums"]["marketplace_profissional_status"]
+            | null
+          tem_atestado_capacidade?: boolean | null
+          total_avaliacoes?: number | null
+          total_servicos_executados?: number | null
+          uf_registro?: string | null
+        }
+        Update: {
+          areas_atuacao?: string[] | null
+          bio?: string | null
+          certificacoes?: string[] | null
+          cidade?: string | null
+          conselho?: string | null
+          created_at?: string | null
+          especialidades?: string[] | null
+          estado?: string | null
+          formacao_academica?: string | null
+          foto_url?: string | null
+          id?: string | null
+          modalidades_atendimento?:
+            | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
+            | null
+          nome_completo?: string | null
+          nota_media?: number | null
+          registro_profissional?: string | null
+          selo_verificado?: boolean | null
+          status?:
+            | Database["public"]["Enums"]["marketplace_profissional_status"]
+            | null
+          tem_atestado_capacidade?: boolean | null
+          total_avaliacoes?: number | null
+          total_servicos_executados?: number | null
+          uf_registro?: string | null
+        }
+        Relationships: []
+      }
       psicossocial_participacao_stats: {
         Row: {
           campanha_id: string | null
@@ -23280,6 +23420,29 @@ export type Database = {
           selo_verificado: boolean
           status: string
           telefone: string
+          tem_atestado_capacidade: boolean
+          total_avaliacoes: number
+          total_servicos_executados: number
+        }[]
+      }
+      buscar_profissionais_proximos_publico: {
+        Args: { p_lat: number; p_lon: number; p_raio_km?: number }
+        Returns: {
+          areas_atuacao: string[]
+          bio: string
+          cidade: string
+          conselho: string
+          distancia_km: number
+          especialidades: string[]
+          estado: string
+          foto_url: string
+          id: string
+          modalidades_atendimento: string[]
+          nome_completo: string
+          nota_media: number
+          registro_profissional: string
+          selo_verificado: boolean
+          status: string
           tem_atestado_capacidade: boolean
           total_avaliacoes: number
           total_servicos_executados: number
