@@ -233,6 +233,13 @@ export default function Site() {
   };
 
   const handleAssinar = async (p: Plano) => {
+    if (p.id === "enterprise") {
+      const msg = encodeURIComponent(
+        "Olá! Estou no site da YourEyes e gostaria de saber mais informações sobre o plano Enterprise. Pode me ajudar?"
+      );
+      window.open(`https://wa.me/554699337504?text=${msg}`, "_blank");
+      return;
+    }
     if (p.consulta) {
       window.location.hash = "#contato";
       return;
@@ -584,8 +591,8 @@ export default function Site() {
                   {p.consulta ? (
                     <div>
                       <div className="text-sm text-slate-500 mb-1">Sob consulta</div>
-                      <div className="text-2xl font-bold text-[#0B1D34]">A partir de R$ 3.500</div>
-                      <div className="text-xs text-slate-500 mt-1">Contrato personalizado</div>
+                      <div className="text-lg font-semibold text-[#0B1D34]">Contrato personalizado</div>
+                      <div className="text-xs text-slate-500 mt-1">Fale com um especialista</div>
                     </div>
                   ) : (
                     <div>
