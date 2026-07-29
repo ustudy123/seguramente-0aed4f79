@@ -58,7 +58,7 @@ export function useFeriasFinanceiro() {
     enabled: !!tenantId,
     queryFn: async () => {
       let q = fromTable("admissoes")
-        .select("cpf, salario_base, dependentes_irrf")
+        .select("cpf, salario, dependentes_irrf")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
       if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
@@ -67,7 +67,7 @@ export function useFeriasFinanceiro() {
       for (const a of data ?? []) {
         const cpf = String(a.cpf ?? "").replace(/\D/g, "");
         if (cpf) map.set(cpf, {
-          salario: Number(a.salario_base ?? 0),
+          salario: Number(a.salario ?? 0),
           dependentes: Number(a.dependentes_irrf ?? 0),
         });
       }
