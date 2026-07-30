@@ -80,25 +80,41 @@ DECLARE
   v_qtd integer := 0;
 BEGIN
   INSERT INTO public.documentos (
-    tenant_id, empresa_id, nome_original, tipo, storage_path,
+    tenant_id, empresa_id, nome_arquivo, nome_original, tipo,
+    tamanho, mime_type, storage_path,
     colaborador_nome, colaborador_cpf, status, classificacao, created_at
   )
   SELECT DISTINCT ON (ad.arquivo_url)
     a.tenant_id,
     a.empresa_id,
-    COALESCE(ad.arquivo_nome, ad.nome),
+    COALESCE(ad.arquivo_nome, ad.nome, 'documento'),
+    COALESCE(ad.arquivo_nome, ad.nome, 'documento'),
     ad.tipo,
+    -- arquivo_tamanho vem nulo em registros antigos; 0 significa desconhecido.
+    -- Mais honesto que inventar um número.
+    COALESCE(ad.arquivo_tamanho, 0),
+    -- A origem não guarda o MIME; deriva da extensão do arquivo.
+    CASE lower(regexp_replace(COALESCE(ad.arquivo_nome, ad.arquivo_url), '^.*\.', ''))
+      WHEN 'pdf'  THEN 'application/pdf'
+      WHEN 'png'  THEN 'image/png'
+      WHEN 'jpg'  THEN 'image/jpeg'
+      WHEN 'jpeg' THEN 'image/jpeg'
+      WHEN 'webp' THEN 'image/webp'
+      WHEN 'doc'  THEN 'application/msword'
+      WHEN 'docx' THEN 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ELSE 'application/octet-stream'
+    END,
     ad.arquivo_url,
     a.nome_completo,
     a.cpf,
     'valido',
-    -- Classificação LGPD já na origem (ADM-110).
     CASE
       WHEN ad.tipo ILIKE '%aso%' OR ad.tipo ILIKE '%exame%'
         OR ad.tipo ILIKE '%atestado%' OR ad.tipo ILIKE '%laudo%' THEN 'sensivel_saude'
       WHEN ad.tipo ILIKE '%rg%' OR ad.tipo ILIKE '%cpf%' OR ad.tipo ILIKE '%ctps%'
         OR ad.tipo ILIKE '%carteira%' OR ad.tipo ILIKE '%certid%'
-        OR ad.tipo ILIKE '%titulo%' OR ad.tipo ILIKE '%reservista%' THEN 'pessoal'
+        OR ad.tipo ILIKE '%titulo%' OR ad.tipo ILIKE '%identidade%'
+        OR ad.tipo ILIKE '%reservista%' THEN 'pessoal'
       ELSE 'comum'
     END,
     ad.created_at
@@ -106,6 +122,7 @@ BEGIN
   JOIN public.admissoes a ON a.id = ad.admissao_id
   WHERE ad.arquivo_url IS NOT NULL
     AND ad.arquivo_url <> ''
+    AND a.nome_completo IS NOT NULL
     AND NOT EXISTS (
       SELECT 1 FROM public.documentos d WHERE d.storage_path = ad.arquivo_url
     );
