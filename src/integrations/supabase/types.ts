@@ -26378,6 +26378,7 @@ export type Database = {
         Args: { p_trabalhador_id: string }
         Returns: undefined
       }
+      reconciliar_documentos_admissao: { Args: never; Returns: number }
       reconciliar_pastas_todas_empresas: {
         Args: never
         Returns: {
@@ -26386,6 +26387,7 @@ export type Database = {
           out_razao_social: string
         }[]
       }
+      reconciliar_versoes_documentos: { Args: never; Returns: number }
       registrar_assinatura_contrato:
         | {
             Args: {
