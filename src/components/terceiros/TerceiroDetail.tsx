@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft, Users, FileText, Plus, Trash2, AlertTriangle, CheckCircle, Clock, XCircle,
-  GraduationCap, Eye, Download, ExternalLink, Loader2,
+  GraduationCap, Eye, Download, ExternalLink, Loader2, CircleDashed,
 } from "lucide-react";
 import type { Terceiro, TerceiroDocumento, TerceiroTrabalhador, TerceiroTreinamento } from "@/types/terceiros";
 import { useTerceiros } from "@/hooks/useTerceiros";
@@ -19,13 +19,27 @@ import { formatCpf } from "@/lib/cpf";
 import { toast } from "sonner";
 import { formatDateBR } from "@/lib/dataLocal";
 
+const STATUS_ROTULO: Record<string, string> = {
+  valido: "Válido",
+  a_vencer: "A vencer",
+  vencido: "Vencido",
+  // 'pendente' = sem data de validade e sem arquivo. Só passou a ser alcançável
+  // em treinamentos depois da correção da trigger (achado TTRE-011); antes, o
+  // cadastro sem validade dava erro de banco.
+  pendente: "Pendente — sem validade informada",
+};
+
 const statusIcon = (s: string) => {
-  switch (s) {
-    case "valido": return <CheckCircle className="w-4 h-4 text-green-500" />;
-    case "a_vencer": return <Clock className="w-4 h-4 text-yellow-500" />;
-    case "vencido": return <XCircle className="w-4 h-4 text-destructive" />;
-    default: return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
-  }
+  const rotulo = STATUS_ROTULO[s] ?? s;
+  const icone =
+    s === "valido" ? <CheckCircle className="w-4 h-4 text-green-500" /> :
+    s === "a_vencer" ? <Clock className="w-4 h-4 text-yellow-500" /> :
+    s === "vencido" ? <XCircle className="w-4 h-4 text-destructive" /> :
+    s === "pendente" ? <CircleDashed className="w-4 h-4 text-muted-foreground" /> :
+    <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
+  // O ícone sozinho era ambíguo — 'pendente' caía no triângulo genérico sem
+  // nenhum rótulo. O title dá o nome do status ao passar o mouse.
+  return <span title={rotulo} className="inline-flex">{icone}</span>;
 };
 
 const statusBadge = (s: string) => {
