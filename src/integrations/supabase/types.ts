@@ -26379,6 +26379,14 @@ export type Database = {
         Returns: undefined
       }
       reconciliar_documentos_admissao: { Args: never; Returns: number }
+      reconciliar_donos_documentos: {
+        Args: never
+        Returns: {
+          out_ambiguos: number
+          out_sem_pasta: number
+          out_vinculados: number
+        }[]
+      }
       reconciliar_pastas_todas_empresas: {
         Args: never
         Returns: {
