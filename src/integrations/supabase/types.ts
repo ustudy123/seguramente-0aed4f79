@@ -24036,6 +24036,10 @@ export type Database = {
           trabalhado_min: number
         }[]
       }
+      preencher_ghe_snapshot_respostas: {
+        Args: { p_campanha_ids: string[] }
+        Returns: number
+      }
       processar_ajuste_ponto: {
         Args: {
           p_ajuste_id: string
