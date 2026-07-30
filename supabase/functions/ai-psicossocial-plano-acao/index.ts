@@ -38,6 +38,8 @@ interface Body {
   porte_label?: string | null;
   porte_perfil?: string | null;
   colaboradores_cnpj?: number | null;
+  /** Cargos/funções realmente cadastrados na empresa. */
+  papeis_disponiveis?: string[];
 }
 
 const PRAZO_DIAS: Record<string, number> = {
@@ -67,7 +69,19 @@ serve(async (req) => {
       porte_label = null,
       porte_perfil = null,
       colaboradores_cnpj = null,
+      papeis_disponiveis = [],
     } = body;
+
+    // Empresa pequena / sem estrutura formal: o responsável pela ação é o
+    // responsável legal, não papéis que a empresa não possui.
+    const estruturaEnxuta =
+      porte === "mei" ||
+      porte === "pequeno_medio" ||
+      (colaboradores_cnpj !== null && colaboradores_cnpj <= 50);
+
+    const papeisTexto = papeis_disponiveis.length
+      ? papeis_disponiveis.slice(0, 80).join("; ")
+      : "";
 
     if (fatores.length === 0) {
       return new Response(JSON.stringify({ sugestoes: [] }), {
@@ -111,6 +125,10 @@ PERFIL ESTRUTURAL DESTE PORTE: ${porte_perfil ?? ""}`
     : ""
 }
 
+PAPÉIS EXISTENTES NA EMPRESA (únicos permitidos no campo "quem")
+${papeisTexto || "Nenhuma função cadastrada — use apenas \"Responsável legal\"."}
+${estruturaEnxuta ? 'ESTRUTURA ENXUTA: empresa de pequeno porte. Não existe RH, SESMT, ouvidoria, comitê ou área de compliance. Quando nenhum cargo cadastrado couber, "quem" deve ser exatamente "Responsável legal".' : ""}
+
 FATORES DE RISCO IDENTIFICADOS
 ${listaFatores}
 
@@ -121,8 +139,10 @@ uma de capacitação, uma de acompanhamento), não variações da mesma ideia.
 
 REGRAS
 - "o_que": a ação a ser executada. Verbo no infinitivo, específico e verificável.
-- "quem": o papel responsável (ex.: "RH e liderança do setor", "SESMT", "Gestor imediato").
-  Não invente nomes de pessoas.
+- "quem": OBRIGATORIAMENTE um dos papéis listados em "PAPÉIS EXISTENTES NA EMPRESA"
+  ou "Responsável legal". Nunca invente cargos, áreas ou nomes de pessoas, e nunca
+  cite RH, SESMT, ouvidoria, comitê, PMO ou compliance se não estiverem na lista.
+  ${estruturaEnxuta ? 'Nesta empresa, na dúvida use "Responsável legal".' : ""}
 - "onde": o meio ou local onde a ação acontece (ex.: "Reuniões quinzenais da equipe",
   "Plataforma de treinamento corporativa").
 - "por_que": a justificativa técnica, ancorada no fator e no nível de risco.
@@ -130,8 +150,15 @@ REGRAS
 - "quanto": o tipo de recurso necessário. Use uma das formas: "Tempo interno",
   "Tempo interno + custo baixo", "Investimento financeiro", "Sem custo direto".
   Se envolver custo, indique a natureza (ex.: "Investimento financeiro — consultoria externa").
-- Priorize controles ORGANIZACIONAIS sobre individuais: a NR-01 exige atuar na fonte
-  do risco, não apenas no indivíduo.
+- AS AÇÕES DEVEM SER EXCLUSIVAMENTE SOBRE A ORGANIZAÇÃO DO TRABALHO — atuar na fonte
+  do risco (NR-01 / NR-17 / ISO 45003): distribuição e volume de tarefas, jornada, ritmo
+  e pausas, metas, escalas, definição de papéis e responsabilidades, autonomia e margem
+  de decisão, canais e rotinas de comunicação, apoio da chefia, fluxo de trabalho,
+  dimensionamento de equipe, procedimentos e condições de execução.
+  É PROIBIDO propor ações centradas no indivíduo: terapia, coaching, mindfulness,
+  ginástica laboral, palestras motivacionais, resiliência, autocuidado, gestão pessoal
+  do estresse, avaliação psicológica ou qualquer intervenção que transfira ao trabalhador
+  a responsabilidade pelo risco.
 - CALIBRE PELO PORTE. A ação precisa ser executável com a estrutura que a empresa tem.
   Não proponha comitê, ouvidoria independente, PMO, diretoria de compliance, plataforma
   corporativa ou programa 24/7 para empresa que não sustenta isso. Na direção contrária,
@@ -194,7 +221,28 @@ Responda SOMENTE com JSON válido, sem markdown, sem cercas de código, no forma
         )
       : [];
 
-    return new Response(JSON.stringify({ sugestoes }), {
+    // Guarda determinística: mesmo instruída, a IA pode devolver papéis
+    // inexistentes. Em empresa enxuta, qualquer papel fora da lista de cargos
+    // cadastrados vira "Responsável legal".
+    const norm = (v: string) =>
+      v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const permitidos = new Set(papeis_disponiveis.map(norm));
+    permitidos.add("responsavel legal");
+
+    const sugestoesFinal = estruturaEnxuta
+      ? (sugestoes as Array<{ fator_id: string; opcoes: Array<Record<string, string>> }>).map(s => ({
+          ...s,
+          opcoes: (s.opcoes || []).map(o => {
+            const quem = (o.quem || "").trim();
+            const ok =
+              quem &&
+              [...permitidos].some(p => norm(quem).includes(p) || p.includes(norm(quem)));
+            return { ...o, quem: ok ? quem : "Responsável legal" };
+          }),
+        }))
+      : sugestoes;
+
+    return new Response(JSON.stringify({ sugestoes: sugestoesFinal }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
