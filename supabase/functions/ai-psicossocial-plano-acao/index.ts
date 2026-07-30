@@ -221,7 +221,28 @@ Responda SOMENTE com JSON válido, sem markdown, sem cercas de código, no forma
         )
       : [];
 
-    return new Response(JSON.stringify({ sugestoes }), {
+    // Guarda determinística: mesmo instruída, a IA pode devolver papéis
+    // inexistentes. Em empresa enxuta, qualquer papel fora da lista de cargos
+    // cadastrados vira "Responsável legal".
+    const norm = (v: string) =>
+      v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const permitidos = new Set(papeis_disponiveis.map(norm));
+    permitidos.add("responsavel legal");
+
+    const sugestoesFinal = estruturaEnxuta
+      ? (sugestoes as Array<{ fator_id: string; opcoes: Array<Record<string, string>> }>).map(s => ({
+          ...s,
+          opcoes: (s.opcoes || []).map(o => {
+            const quem = (o.quem || "").trim();
+            const ok =
+              quem &&
+              [...permitidos].some(p => norm(quem).includes(p) || p.includes(norm(quem)));
+            return { ...o, quem: ok ? quem : "Responsável legal" };
+          }),
+        }))
+      : sugestoes;
+
+    return new Response(JSON.stringify({ sugestoes: sugestoesFinal }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
