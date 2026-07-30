@@ -295,3 +295,26 @@ UPDATE public.documentos
    AND (tipo ILIKE '%rg%' OR tipo ILIKE '%cpf%' OR tipo ILIKE '%ctps%'
         OR tipo ILIKE '%carteira%' OR tipo ILIKE '%certid%' OR tipo ILIKE '%titulo%'
         OR tipo ILIKE '%comprovante de resid%' OR tipo ILIKE '%reservista%');
+
+
+-- ============================================================================
+-- APLICADA EM 30/07/2026, em 6 blocos separados (o ALTER em admissoes causou
+-- deadlock quando rodado junto com o resto).
+--
+-- Resultado da classificação sobre 989 documentos:
+--   comum           677
+--   pessoal         189
+--   sensivel_saude  123
+--
+-- Os 21 desligamentos anteriores ficam SEM protocolo. A trigger só age em
+-- gravação nova; gerar retroativamente inventaria um número que nunca foi
+-- mostrado a ninguém — pior que não ter.
+--
+-- ADM-106 (36 documentos em tenant divergente): VERIFICADO E RESOLVIDO.
+-- O vínculo confiável entre documentos e admissões é o arquivo físico
+-- (documentos.storage_path = admissao_documentos.arquivo_url), não o CPF —
+-- que, como se descobriu, é compartilhado por várias pessoas em 9 empresas.
+-- Por esse vínculo: 208 documentos casaram, ZERO com tenant divergente.
+-- Os 36 eram resíduo anterior à correção do código, como o próprio relatório
+-- indicava, e já haviam sido migrados.
+-- ============================================================================
