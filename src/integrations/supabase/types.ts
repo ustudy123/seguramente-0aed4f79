@@ -448,6 +448,51 @@ export type Database = {
           },
         ]
       }
+      admissao_desligamento_historico: {
+        Row: {
+          admissao_id: string
+          alterado_em: string
+          alterado_por: string | null
+          colaborador_cpf: string | null
+          colaborador_nome: string | null
+          data_desligamento_anterior: string | null
+          data_desligamento_novo: string | null
+          id: string
+          motivo_desligamento_anterior: string | null
+          motivo_desligamento_novo: string | null
+          tenant_id: string
+          tipo_mudanca: string
+        }
+        Insert: {
+          admissao_id: string
+          alterado_em?: string
+          alterado_por?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          data_desligamento_anterior?: string | null
+          data_desligamento_novo?: string | null
+          id?: string
+          motivo_desligamento_anterior?: string | null
+          motivo_desligamento_novo?: string | null
+          tenant_id: string
+          tipo_mudanca: string
+        }
+        Update: {
+          admissao_id?: string
+          alterado_em?: string
+          alterado_por?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          data_desligamento_anterior?: string | null
+          data_desligamento_novo?: string | null
+          id?: string
+          motivo_desligamento_anterior?: string | null
+          motivo_desligamento_novo?: string | null
+          tenant_id?: string
+          tipo_mudanca?: string
+        }
+        Relationships: []
+      }
       admissao_documentos: {
         Row: {
           admissao_id: string
@@ -2933,6 +2978,63 @@ export type Database = {
           codigo?: string
           created_at?: string
           titulo?: string
+        }
+        Relationships: []
+      }
+      cipa_composicao: {
+        Row: {
+          ativo: boolean
+          candidatura_em: string | null
+          colaborador_cpf: string
+          colaborador_id: string | null
+          colaborador_nome: string
+          condicao: string
+          created_at: string
+          criado_por: string | null
+          empresa_id: string
+          id: string
+          mandato_fim: string
+          mandato_inicio: string
+          observacao: string | null
+          representacao: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          candidatura_em?: string | null
+          colaborador_cpf: string
+          colaborador_id?: string | null
+          colaborador_nome: string
+          condicao?: string
+          created_at?: string
+          criado_por?: string | null
+          empresa_id: string
+          id?: string
+          mandato_fim: string
+          mandato_inicio: string
+          observacao?: string | null
+          representacao?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          candidatura_em?: string | null
+          colaborador_cpf?: string
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          condicao?: string
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string
+          id?: string
+          mandato_fim?: string
+          mandato_inicio?: string
+          observacao?: string | null
+          representacao?: string
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -12677,6 +12779,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mandato_sindical: {
+        Row: {
+          ativo: boolean
+          cargo_sindical: string | null
+          colaborador_cpf: string
+          colaborador_id: string | null
+          colaborador_nome: string
+          condicao: string
+          created_at: string
+          criado_por: string | null
+          documento_ref: string | null
+          empresa_id: string | null
+          fim: string | null
+          id: string
+          inicio: string
+          sindicato: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cargo_sindical?: string | null
+          colaborador_cpf: string
+          colaborador_id?: string | null
+          colaborador_nome: string
+          condicao?: string
+          created_at?: string
+          criado_por?: string | null
+          documento_ref?: string | null
+          empresa_id?: string | null
+          fim?: string | null
+          id?: string
+          inicio: string
+          sindicato?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cargo_sindical?: string | null
+          colaborador_cpf?: string
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          condicao?: string
+          created_at?: string
+          criado_por?: string | null
+          documento_ref?: string | null
+          empresa_id?: string | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          sindicato?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       manuais_gerados: {
         Row: {
@@ -23497,6 +23656,7 @@ export type Database = {
         }[]
       }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
+      cpf_valido: { Args: { p_cpf: string }; Returns: boolean }
       current_user_tenant_id: { Args: never; Returns: string }
       delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
       empresa_existe_por_documento: {
@@ -26192,6 +26352,7 @@ export type Database = {
           veredito: string
         }[]
       }
+      reavaliar_validade_documentos: { Args: never; Returns: number }
       recalcular_status_terceiro: {
         Args: { p_terceiro_id: string }
         Returns: undefined
