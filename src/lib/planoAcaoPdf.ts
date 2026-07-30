@@ -159,12 +159,12 @@ export function gerarPdfPlanoAcao(
     y += 5.5;
   });
 
-  // ── 2. Síntese Executiva ──────────────────────────────────────────────────
+  // ── 3. Síntese Executiva ──────────────────────────────────────────────────
   y += 4;
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("2. SÍNTESE EXECUTIVA", 14, y);
+  doc.text("3. SÍNTESE EXECUTIVA", 14, y);
   y += 6;
 
 
