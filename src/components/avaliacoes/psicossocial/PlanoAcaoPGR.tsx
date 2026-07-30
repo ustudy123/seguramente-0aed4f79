@@ -270,7 +270,7 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
           fator_id: fator.fatorId,
           fator: fator.fator,
           nivel_gro: fator.nivelKey,
-          o_que: op.o_que,
+          o_que: oQue,
           quem: op.quem ?? null,
           onde: op.onde ?? null,
           por_que: op.por_que ?? null,
