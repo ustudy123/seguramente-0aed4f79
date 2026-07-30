@@ -92,7 +92,10 @@ export function usePsicossocialPlanoAcao(campanhaIds: string[]) {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
     onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : "Erro ao salvar as ações";
+      const msg =
+        e instanceof Error
+          ? e.message
+          : (e as { message?: string })?.message || "Erro ao salvar as ações";
       toast.error(msg);
     },
   });
