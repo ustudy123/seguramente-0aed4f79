@@ -282,11 +282,11 @@ export function gerarPdfPlanoAcao(
     });
   });
 
-  // ── 4. Matriz de Nível de GRO ─────────────────────────────────────────────
+  // ── 5. Matriz de Nível de GRO ─────────────────────────────────────────────
   doc.addPage();
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("4. NÍVEL DE GRO — PROBABILIDADE x SEVERIDADE", 14, 16);
+  doc.text("5. NÍVEL DE GRO — PROBABILIDADE x SEVERIDADE", 14, 16);
 
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
