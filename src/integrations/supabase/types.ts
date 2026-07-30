@@ -711,6 +711,7 @@ export type Database = {
           dependentes_irrf: number | null
           desligado_por: string | null
           desligado_por_nome: string | null
+          desligamento_protocolo: string | null
           dias_aviso_previo: number | null
           email: string | null
           empresa_id: string | null
@@ -792,6 +793,7 @@ export type Database = {
           dependentes_irrf?: number | null
           desligado_por?: string | null
           desligado_por_nome?: string | null
+          desligamento_protocolo?: string | null
           dias_aviso_previo?: number | null
           email?: string | null
           empresa_id?: string | null
@@ -873,6 +875,7 @@ export type Database = {
           dependentes_irrf?: number | null
           desligado_por?: string | null
           desligado_por_nome?: string | null
+          desligamento_protocolo?: string | null
           dias_aviso_previo?: number | null
           email?: string | null
           empresa_id?: string | null
@@ -4470,6 +4473,7 @@ export type Database = {
       documentos: {
         Row: {
           atividade_vinculada: string | null
+          classificacao: string
           colaborador_cpf: string | null
           colaborador_id: string | null
           colaborador_nome: string
@@ -4498,6 +4502,7 @@ export type Database = {
         }
         Insert: {
           atividade_vinculada?: string | null
+          classificacao?: string
           colaborador_cpf?: string | null
           colaborador_id?: string | null
           colaborador_nome: string
@@ -4526,6 +4531,7 @@ export type Database = {
         }
         Update: {
           atividade_vinculada?: string | null
+          classificacao?: string
           colaborador_cpf?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string
@@ -23683,6 +23689,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      estabilidades_vigentes: {
+        Args: { p_cpf: string; p_data?: string; p_tenant_id: string }
+        Returns: {
+          base_legal: string
+          detalhe: string
+          exige_inquerito: boolean
+          tipo: string
+          vigente_ate: string
+        }[]
+      }
       excluir_colaborador_forcado: {
         Args: { _admissao_id: string }
         Returns: Json
@@ -23781,6 +23797,7 @@ export type Database = {
           dependentes_irrf: number | null
           desligado_por: string | null
           desligado_por_nome: string | null
+          desligamento_protocolo: string | null
           dias_aviso_previo: number | null
           email: string | null
           empresa_id: string | null
