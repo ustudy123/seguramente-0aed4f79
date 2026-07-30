@@ -22,10 +22,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
+import { MIN_ELEGIVEIS_GHE, validarElegibilidadeGHE } from "@/lib/psicossocial-ghe";
 import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
 
 /** Mínimo absoluto de respostas para liberar resultados (ISO 45003 / COPSOQ III) */
-const MIN_RESPOSTAS_ABS = 5;
+const MIN_RESPOSTAS_ABS = MIN_ELEGIVEIS_GHE;
 
 /** Calcula o nº de respostas exigido para liberar resultados deste GHE */
 function calcMinRespostas(elegiveis: number, ausencias: number, pct: number): number {
@@ -236,17 +237,14 @@ export function GHEPanel() {
       if (conflitos.length > 0) {
         throw new Error(`${conflitos.length} cargo/departamento já pertence(m) a outro GHE.`);
       }
-      // Regra: GHE precisa ter ao menos 5 elegíveis (após ausências justificadas)
-      if (elegiveisForm < MIN_RESPOSTAS_ABS) {
-        throw new Error(
-          `Este GHE possui apenas ${elegiveisForm} colaborador(es) elegível(is). O mínimo permitido é ${MIN_RESPOSTAS_ABS} para garantir o anonimato (ISO 45003).`,
-        );
-      }
-      if (baseRespondentesForm < MIN_RESPOSTAS_ABS) {
-        throw new Error(
-          `Após descontar ${f.ausenciasJustificadas} ausência(s) justificada(s), restam apenas ${baseRespondentesForm} elegível(is). Mínimo: ${MIN_RESPOSTAS_ABS}.`,
-        );
-      }
+      const erroElegibilidade = validarElegibilidadeGHE({
+        isEdicao: Boolean(f.id),
+        vinculos: f.pairs.length,
+        elegiveis: elegiveisForm,
+        baseRespondentes: baseRespondentesForm,
+        ausenciasJustificadas: f.ausenciasJustificadas,
+      });
+      if (erroElegibilidade) throw new Error(erroElegibilidade);
       const payloadBase = {
         codigo: f.codigo.trim(),
         nome: f.nome.trim(),
@@ -803,6 +801,14 @@ export function GHEPanel() {
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
                     Um GHE precisa ter pelo menos <strong>{MIN_RESPOSTAS_ABS} colaboradores elegíveis</strong> para preservar o anonimato. Inclua mais cargos/departamentos.
+                  </span>
+                </div>
+              )}
+              {Boolean(form.id) && form.pairs.length === 0 && (
+                <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 border rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Salve sem cargos para concluir a desvinculação. Depois, o GHE poderá ser excluído definitivamente.
                   </span>
                 </div>
               )}
