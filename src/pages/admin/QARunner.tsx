@@ -308,9 +308,14 @@ export default function QARunner() {
   const totalCasos = modulos.reduce((n, m) => n + Number(m.casos_executaveis), 0);
 
   const rodar = async () => {
-    // "__todos__" roda o modulo padrao do motor (percorre tudo); senao, o escolhido.
+    // "__todos__" vira string vazia, que o motor entende como "percorrer tudo"
+    // (qa_rodar_bateria: v_todos := p_modulo IS NULL OR btrim(p_modulo) = '').
+    //
+    // NÃO usar `alvo || modulos[0]?...` aqui: string vazia é falsy em JS, então
+    // o fallback derrubava "todos" para o primeiro módulo da lista e a bateria
+    // rodava só Documentos, contrariando o que a tela mostrava.
     const alvo = moduloSel === "__todos__" ? "" : moduloSel;
-    const id = await disparar.mutateAsync(alvo || modulos[0]?.modulo_path || "");
+    const id = await disparar.mutateAsync(alvo);
     setAbertaId(id); // abre o relatório da bateria recém-criada
   };
 

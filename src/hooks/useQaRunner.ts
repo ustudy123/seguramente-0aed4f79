@@ -101,8 +101,30 @@ export function useQaRunner() {
       toast.success("Bateria concluída");
     },
     onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : "Falha ao rodar a bateria";
-      toast.error(msg);
+      // O supabase-js devolve erro de RPC como objeto simples (PostgrestError),
+      // que NÃO é instanceof Error. A checagem anterior caía sempre no texto
+      // genérico e descartava a mensagem do Postgres — deixando a ferramenta de
+      // QA incapaz de diagnosticar a própria falha.
+      const err = e as {
+        message?: string; details?: string; hint?: string; code?: string;
+      } | null;
+
+      const base =
+        err?.message ??
+        (e instanceof Error ? e.message : "Falha ao rodar a bateria");
+
+      const extra = [
+        err?.code ? `código ${err.code}` : null,
+        err?.details || null,
+        err?.hint ? `dica: ${err.hint}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+
+      // Log completo no console para copiar em caso de erro longo.
+      console.error("qa_disparar_bateria falhou:", e);
+
+      toast.error(extra ? `${base} — ${extra}` : base, { duration: 15000 });
     },
   });
 
