@@ -259,6 +259,8 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
       if (!fator) return;
       sug.opcoes?.forEach((op, idx) => {
         if (!marcadas.has(chaveOpcao(gheKey, sug.fator_id, idx))) return;
+        // "o_que" é NOT NULL no banco — sugestões da IA podem vir vazias.
+        const oQue = (op.o_que ?? "").trim() || `Ação para: ${fator.fator}`;
         const ate = calcularAteQuando(dataInicialPlano, fator.nivelKey);
         novas.push({
           empresa_id: empresaAtivaId ?? null,
