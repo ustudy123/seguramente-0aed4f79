@@ -113,13 +113,59 @@ export function gerarPdfPlanoAcao(
     margin: { left: 14, right: 14 },
   });
 
+  // ── 1.2. Dispositivos Normativos de Suporte ───────────────────────────────
+  let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 9;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("1.2. Dispositivos Normativos de Suporte", 14, y);
+  y += 5;
+
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "normal");
+  const intro = doc.splitTextToSize(
+    `Este Plano de Ação compõe o Programa de Gerenciamento de Riscos (PGR) da organização ` +
+      `${cabecalho.razaoSocial ? `(${cabecalho.razaoSocial})` : ""}, derivado da campanha "${cabecalho.campanha}" ` +
+      `(instrumento ${cabecalho.instrumento}, período ${cabecalho.periodo}), atendendo rigorosamente a:`,
+    larguraUtil
+  );
+  doc.text(intro, 14, y);
+  y += intro.length * 4 + 2;
+
+  const dispositivos: [string, string][] = [
+    ["NR-01 (MTP nº 672/2021):", "Requisitos de Inventário de Riscos e Matriz Contínua de Ações."],
+    ["NR-17 (MTP nº 423/2021):", "Avaliação Ergonômica dos Fatores Organizacionais e Psicossociais de Trabalho."],
+    ["ISO 45001:2018:", "Sistema de Gestão de SST — Estrutura de PDCA e rastreabilidade."],
+    [
+      "ISO 45003:2021:",
+      "Gestão da Saúde Psicossocial e Riscos Psicossociais no Trabalho — Intervenções Primárias e Secundárias.",
+    ],
+  ];
+
+  dispositivos.forEach(([norma, texto]) => {
+    doc.setFillColor(88, 28, 135);
+    doc.circle(17, y - 1.2, 1.1, "F");
+    doc.setFont("helvetica", "bold");
+    const larguraNorma = doc.getTextWidth(norma);
+    doc.text(norma, 21, y);
+    doc.setFont("helvetica", "normal");
+    const linhas = doc.splitTextToSize(texto, larguraUtil - 7 - larguraNorma - 2);
+    doc.text(linhas[0] ?? "", 21 + larguraNorma + 1.5, y);
+    for (let i = 1; i < linhas.length; i++) {
+      y += 4;
+      doc.text(linhas[i], 21, y);
+    }
+    y += 5.5;
+  });
+
   // ── 2. Síntese Executiva ──────────────────────────────────────────────────
-  let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+  y += 4;
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text("2. SÍNTESE EXECUTIVA", 14, y);
   y += 6;
+
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
