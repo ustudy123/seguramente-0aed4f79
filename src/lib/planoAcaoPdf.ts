@@ -114,12 +114,12 @@ export function gerarPdfPlanoAcao(
     margin: { left: 14, right: 14 },
   });
 
-  // ── 1.2. Dispositivos Normativos de Suporte ───────────────────────────────
+  // ── 2. Dispositivos Normativos de Suporte ─────────────────────────────────
   let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 9;
 
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("1.2. Dispositivos Normativos de Suporte", 14, y);
+  doc.text("2. DISPOSITIVOS NORMATIVOS DE SUPORTE", 14, y);
   y += 5;
 
   doc.setFontSize(8.5);
