@@ -180,11 +180,11 @@ export function gerarPdfPlanoAcao(
     y += 6;
   });
 
-  // ── 3. Plano de Ação por GHE ──────────────────────────────────────────────
+  // ── 4. Plano de Ação por GHE ──────────────────────────────────────────────
   doc.addPage();
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("3. PLANO DE AÇÃO POR GRUPO HOMOGÊNEO DE EXPOSIÇÃO", 14, 16);
+  doc.text("4. PLANO DE AÇÃO POR GRUPO HOMOGÊNEO DE EXPOSIÇÃO", 14, 16);
 
   let primeiraTabela = true;
   grupos.forEach(grupo => {
