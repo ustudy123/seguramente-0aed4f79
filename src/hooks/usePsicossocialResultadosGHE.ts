@@ -351,12 +351,14 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         );
         continue;
       }
-      // Fallback: usa ghe_ids da campanha
+      // Fallback: só é seguro atribuir a resposta ao GHE da campanha quando a
+      // campanha tem UM único GHE. Com vários GHEs, replicar a mesma resposta
+      // em todos produzia scores idênticos em GHE 01, GHE 02 etc. — a mesma
+      // média global repetida. Nesse caso a resposta fica fora da
+      // estratificação até o snapshot ser resolvido no servidor.
       const ids = campanhaGheMap.get(r.campanha_id) ?? [];
-      if (ids.length > 0) {
-        for (const id of ids) {
-          addToGrupo(id, gheNomeMap.get(id) ?? "GHE", r);
-        }
+      if (ids.length === 1) {
+        addToGrupo(ids[0], gheNomeMap.get(ids[0]) ?? "GHE", r);
       } else {
         addToGrupo("__sem_ghe__", "Sem GHE definido", r);
       }
