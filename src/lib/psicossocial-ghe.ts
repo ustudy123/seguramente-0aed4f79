@@ -20,7 +20,7 @@ export function validarElegibilidadeGHE({
   baseRespondentes,
   ausenciasJustificadas,
 }: ValidarElegibilidadeGHEParams): string | null {
-  if (isEdicao && vinculos === 0) return null;
+  if (vinculos === 0) return null;
 
   if (elegiveis < MIN_ELEGIVEIS_GHE) {
     return `Este GHE possui apenas ${elegiveis} colaborador(es) elegível(is). O mínimo permitido é ${MIN_ELEGIVEIS_GHE} para garantir o anonimato (ISO 45003).`;
