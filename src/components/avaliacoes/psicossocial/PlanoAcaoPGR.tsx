@@ -39,6 +39,7 @@ import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosG
 import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { usePorteEmpresa } from "@/hooks/usePorteEmpresa";
+import { usePapeisEmpresa } from "@/hooks/usePapeisEmpresa";
 import { faixaEmTexto } from "@/lib/porteEmpresa";
 import { referenciaDoFator } from "@/data/planoAcaoReferencia";
 import {
@@ -87,6 +88,7 @@ interface PlanoAcaoPGRProps {
 export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
   const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
   const { data: porteInfo } = usePorteEmpresa();
+  const { data: papeisEmpresa = [] } = usePapeisEmpresa();
 
   const [seletorAberto, setSeletorAberto] = useState(false);
   const [selecionadas, setSelecionadas] = useState<CampanhaPsicossocial[]>([]);
@@ -170,6 +172,10 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
           porte_label: porteInfo?.faixa.label ?? null,
           porte_perfil: porteInfo?.faixa.perfil ?? null,
           colaboradores_cnpj: porteInfo?.colaboradores ?? null,
+          // Papeis reais da empresa: a IA nao pode responsabilizar RH/SESMT/
+          // ouvidoria que nao existem. Sem cargos cadastrados, cai em
+          // "Responsavel legal".
+          papeis_disponiveis: papeisEmpresa,
           fatores: ghe.fatores.map(f => ({
             fator_id: f.fatorId,
             fator: f.fator,
