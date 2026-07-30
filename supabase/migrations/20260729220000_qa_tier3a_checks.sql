@@ -7,6 +7,30 @@
 -- ============================================================================
 
 
+-- ── PARTE 1 — correção dos dados que bloqueavam dois CHECKs ─────────────────
+-- A auditoria encontrou 3 registros violando. Sem corrigi-los, EMP-041 e
+-- META-034 falhariam na criação da constraint.
+
+-- ALFAFLIX PROMOCAO DE VENDAS: mínimo 1 com máximo 0 é impossível por
+-- construção — o "0" era campo não preenchido, não um teto real. Vira faixa
+-- não configurada (NULL), que é o que de fato descreve a situação.
+UPDATE public.empresa_cadastro
+   SET aprendiz_quantidade_minima = NULL,
+       aprendiz_quantidade_maxima = NULL
+ WHERE id = '24fc5b7a-dddd-4078-bf8a-a6a29f51bc88';
+
+-- Meta "teste": descartável.
+DELETE FROM public.metas
+ WHERE id = '5a880be4-34f6-492c-b498-0f1e788b9f84';
+
+-- Meta de produtividade: fim 8 dias ANTES do início. O título diz "até o final
+-- do próximo trimestre", então o fim correto é 30/06/2026 — a data de fim nunca
+-- havia sido preenchida direito.
+UPDATE public.metas
+   SET data_fim = '2026-06-30'
+ WHERE id = '96afe4cc-2b81-4de6-9be5-703517cda5ee';
+
+
 -- ── CARGO-012 — faixa salarial coerente ─────────────────────────────────────
 -- O banco aceitava mínimo 8000 com máximo 3000.
 ALTER TABLE public.cargos
@@ -41,6 +65,16 @@ ALTER TABLE public.empresa_cadastro
      AND COALESCE(aprendiz_quantidade_maxima, 0) >= 0);
 
 
+-- ── EMP-041 — faixa de aprendiz coerente (destravado pela Parte 1) ──────────
+ALTER TABLE public.empresa_cadastro
+  DROP CONSTRAINT IF EXISTS empresa_aprendiz_faixa_coerente;
+ALTER TABLE public.empresa_cadastro
+  ADD CONSTRAINT empresa_aprendiz_faixa_coerente
+  CHECK (aprendiz_quantidade_minima IS NULL
+      OR aprendiz_quantidade_maxima IS NULL
+      OR aprendiz_quantidade_minima <= aprendiz_quantidade_maxima);
+
+
 -- ── MCFG-021 — escala de avaliação coerente ─────────────────────────────────
 ALTER TABLE public.metas_configuracao
   DROP CONSTRAINT IF EXISTS metas_config_escala_coerente;
@@ -56,6 +90,14 @@ ALTER TABLE public.metas
 ALTER TABLE public.metas
   ADD CONSTRAINT metas_progresso_faixa
   CHECK (progresso IS NULL OR (progresso >= 0 AND progresso <= 100));
+
+
+-- ── META-034 — vigência coerente (destravado pela Parte 1) ──────────────────
+ALTER TABLE public.metas
+  DROP CONSTRAINT IF EXISTS metas_vigencia_coerente;
+ALTER TABLE public.metas
+  ADD CONSTRAINT metas_vigencia_coerente
+  CHECK (data_inicio IS NULL OR data_fim IS NULL OR data_fim >= data_inicio);
 
 
 -- ── META-035 — título não pode ser espaço em branco ─────────────────────────
@@ -86,11 +128,6 @@ ALTER TABLE public.documentos
 
 -- ============================================================================
 -- NÃO INCLUÍDOS — e por quê
---
--- EMP-041 (faixa de aprendiz mín <= máx) e META-034 (vigência fim >= início):
---   há 1 e 2 registros violando, respectivamente. O CHECK falharia ao ser
---   criado. Precisam de correção de dado antes — as linhas estão identificadas
---   nas consultas de auditoria que acompanham esta entrega.
 --
 -- OBRG-020 (categoria/subcategoria de obrigações):
 --   o relatório aponta que os valores válidos "vivem só no comentário do
