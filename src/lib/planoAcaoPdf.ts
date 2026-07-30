@@ -3,9 +3,10 @@
  *
  * Estrutura conforme especificação:
  *   1. Identificação da Avaliação
- *   2. Síntese Executiva (contagem por nível de GRO e prazos)
- *   3. Plano de Ação 5W2H — uma tabela por GHE
- *   4. Matriz 4.3 — Nível de GRO (probabilidade x severidade)
+ *   2. Dispositivos Normativos de Suporte
+ *   3. Síntese Executiva (contagem por nível de GRO e prazos)
+ *   4. Plano de Ação 5W2H — uma tabela por GHE
+ *   5. Matriz 4.3 — Nível de GRO (probabilidade x severidade)
  */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
