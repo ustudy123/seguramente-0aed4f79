@@ -95,22 +95,13 @@ export function gerarPdfPlanoAcao(
         "IPS Global",
         cabecalho.ipsGlobal !== null ? `${cabecalho.ipsGlobal} / 100` : "—",
       ],
-      // Porte determina a profundidade das ações — precisa estar no documento
-      // para justificar por que um plano é mais enxuto que outro.
       [
-        "Porte da Empresa",
-        cabecalho.porteCategoria ?? "—",
         "Colaboradores no CNPJ",
         cabecalho.colaboradoresCnpj != null ? String(cabecalho.colaboradoresCnpj) : "—",
-      ],
-      // O critério precisa estar no documento: porte por pessoal ocupado não é
-      // o mesmo que o enquadramento da LC 123/2006, e um auditor vai conferir.
-      [
-        "Critério de Porte",
-        "Pessoal ocupado (IBGE/SEBRAE)",
         "Setor de Enquadramento",
         cabecalho.setorPorte ?? "—",
       ],
+
     ],
     styles: { fontSize: 8, cellPadding: 2 },
     columnStyles: {
