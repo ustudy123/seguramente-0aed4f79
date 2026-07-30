@@ -165,9 +165,9 @@ BEGIN
   WITH pasta_unica AS (
     SELECT tenant_id,
            regexp_replace(colaborador_cpf, '[^0-9]', '', 'g') AS cpf_n,
-           min(id)             AS pasta_id,
-           min(colaborador_id) AS colaborador_id,
-           count(*)            AS qtd
+           -- UUID não tem min()/max(); HAVING count(*)=1 garante grupo unitário.
+           (array_agg(id))[1]             AS pasta_id,
+           (array_agg(colaborador_id))[1] AS colaborador_id
       FROM public.documento_pastas
      WHERE tipo = 'colaborador'
        AND colaborador_cpf IS NOT NULL
@@ -250,7 +250,7 @@ BEGIN
 
   -- Só age quando a pasta do colaborador é única — mesma cautela da rotina
   -- retroativa: na dúvida, deixa avulso em vez de arquivar na pessoa errada.
-  SELECT count(*), min(id), min(colaborador_id)
+  SELECT count(*), (array_agg(id))[1], (array_agg(colaborador_id))[1]
     INTO v_qtd, v_pasta, v_colab
     FROM public.documento_pastas
    WHERE tenant_id = NEW.tenant_id
@@ -261,10 +261,13 @@ BEGIN
 
   UPDATE public.documentos
      SET pasta_id       = COALESCE(pasta_id, v_pasta),
-         colaborador_id = COALESCE(colaborador_id, v_colab)
+         colaborador_id = COALESCE(colaborador_id, v_colab),
+         -- empresa_id entrou aqui depois: era o que faltava no caso real
+         -- encontrado (documentos concluídos sem empresa, logo sem pasta possível).
+         empresa_id     = COALESCE(empresa_id, NEW.empresa_id)
    WHERE tenant_id = NEW.tenant_id
      AND regexp_replace(COALESCE(colaborador_cpf, ''), '[^0-9]', '', 'g') = v_cpf
-     AND (pasta_id IS NULL OR colaborador_id IS NULL);
+     AND (pasta_id IS NULL OR colaborador_id IS NULL OR empresa_id IS NULL);
 
   RETURN NEW;
 END;
@@ -314,3 +317,39 @@ DROP TRIGGER IF EXISTS versiona_documento ON public.documentos;
 CREATE TRIGGER versiona_documento
 AFTER INSERT OR UPDATE OF storage_path ON public.documentos
 FOR EACH ROW EXECUTE FUNCTION public.registrar_versao_documento();
+
+
+-- ============================================================================
+-- APLICADA EM 30/07/2026. Resultado real:
+--
+--   reconciliar_versoes_documentos()    985 versões v1 criadas
+--   reconciliar_documentos_admissao()    18 documentos criados
+--   reconciliar_donos_documentos()      216 vinculados
+--                                        17 ambíguos (pulados de propósito)
+--                                         8 sem pasta
+--
+-- LEITURA DOS NÚMEROS — o relatório contou 231 como passivo, mas parte NÃO é:
+--
+--   • 17 ambíguos: o CPF aponta para mais de uma pasta de colaborador, efeito
+--     dos CPFs compartilhados. Ficam avulsos DE PROPÓSITO — arquivar o RG de
+--     uma pessoa na pasta de outra é pior que o problema original.
+--
+--   • 3 documentos de admissão em RASCUNHO (Leiridiani Nuernberg): estão
+--     avulsos porque o processo não terminou. É o comportamento correto, não
+--     passivo. A trigger de conclusão os arquiva quando a admissão fechar.
+--
+--   • 4 documentos (Edina Juliana da Silva): admissão concluída mas documentos
+--     sem empresa_id, logo sem pasta possível. O empresa_id foi corrigido a
+--     partir da admissão; a pasta é criada pelo fluxo do produto
+--     (src/utils/criarPastaColaborador.ts), que monta também as subpastas
+--     padrão. Replicar isso em SQL manteria duas implementações da mesma regra.
+--
+--   • 1 documento (Mila Samara): sem correspondência em admissao_documentos
+--     pelo storage_path. Chegou por outro caminho. PENDENTE de investigação.
+--
+-- PENDÊNCIA CONHECIDA (ADM-105 parcial): a trigger registra a versão no BANCO,
+-- mas o upload segue usando upsert:true no storage — o arquivo físico anterior
+-- continua sendo sobrescrito. O histórico existe como registro, não como
+-- arquivo recuperável. Resolver exige versionar o caminho do upload
+-- (.../v2/arquivo.pdf), que é mudança de código, não de banco.
+-- ============================================================================
