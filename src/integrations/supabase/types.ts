@@ -25893,6 +25893,66 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_250: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_251: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_252: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_253: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_270: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_271: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_porte_005: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -26173,6 +26233,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_cercas_faltando: {
+        Args: never
+        Returns: {
+          tabela: string
+        }[]
+      }
       qa_coluna_existe: {
         Args: { p_coluna: string; p_tabela: string }
         Returns: boolean
@@ -26216,6 +26282,13 @@ export type Database = {
       }
       qa_fixture_limpar: { Args: { p_codigo: string }; Returns: undefined }
       qa_houve_vazamento: { Args: never; Returns: boolean }
+      qa_instalar_cercas: {
+        Args: never
+        Returns: {
+          acao: string
+          nome_tabela: string
+        }[]
+      }
       qa_limpa_config_metas: { Args: { p_tenant: string }; Returns: undefined }
       qa_limpa_identidade: { Args: { p_tenant: string }; Returns: undefined }
       qa_limpar_historico: { Args: { p_dias?: number }; Returns: number }
