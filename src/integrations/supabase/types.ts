@@ -20495,6 +20495,39 @@ export type Database = {
         }
         Relationships: []
       }
+      psicossocial_responsavel_tecnico: {
+        Row: {
+          created_at: string
+          empresa_id: string | null
+          id: string
+          nome: string
+          ocupacao: string | null
+          registro_profissional: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          ocupacao?: string | null
+          registro_profissional?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          ocupacao?: string | null
+          registro_profissional?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       psicossocial_riscos: {
         Row: {
           ativo: boolean
@@ -20623,6 +20656,10 @@ export type Database = {
           codigo: string | null
           created_at: string
           created_by: string | null
+          disposicao: string
+          disposicao_em: string | null
+          disposicao_motivo: string | null
+          disposicao_por: string | null
           id: string
           modulo_id: string
           nivel: string
@@ -20643,6 +20680,10 @@ export type Database = {
           codigo?: string | null
           created_at?: string
           created_by?: string | null
+          disposicao?: string
+          disposicao_em?: string | null
+          disposicao_motivo?: string | null
+          disposicao_por?: string | null
           id?: string
           modulo_id: string
           nivel?: string
@@ -20663,6 +20704,10 @@ export type Database = {
           codigo?: string | null
           created_at?: string
           created_by?: string | null
+          disposicao?: string
+          disposicao_em?: string | null
+          disposicao_motivo?: string | null
+          disposicao_por?: string | null
           id?: string
           modulo_id?: string
           nivel?: string
@@ -23069,6 +23114,143 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      youreyes_agentes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          dia_mes: number | null
+          dias_semana: number[]
+          documento_ids: string[]
+          emoji: string
+          horario: string
+          id: string
+          modulo: string | null
+          nome: string
+          periodicidade: string
+          proxima_execucao: string | null
+          ultima_execucao: string | null
+          ultimo_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dias_semana?: number[]
+          documento_ids?: string[]
+          emoji?: string
+          horario?: string
+          id?: string
+          modulo?: string | null
+          nome: string
+          periodicidade?: string
+          proxima_execucao?: string | null
+          ultima_execucao?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dias_semana?: number[]
+          documento_ids?: string[]
+          emoji?: string
+          horario?: string
+          id?: string
+          modulo?: string | null
+          nome?: string
+          periodicidade?: string
+          proxima_execucao?: string | null
+          ultima_execucao?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      youreyes_documentos: {
+        Row: {
+          conteudo: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          modulo: string
+          submodulo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          conteudo?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          modulo: string
+          submodulo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          modulo?: string
+          submodulo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      youreyes_execucoes: {
+        Row: {
+          agente_id: string
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string
+          origem: string
+          resultado: Json | null
+          resumo: string | null
+          score: number | null
+          status: string
+        }
+        Insert: {
+          agente_id: string
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          origem?: string
+          resultado?: Json | null
+          resumo?: string | null
+          score?: number | null
+          status?: string
+        }
+        Update: {
+          agente_id?: string
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          origem?: string
+          resultado?: Json | null
+          resumo?: string | null
+          score?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youreyes_execucoes_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "youreyes_agentes"
             referencedColumns: ["id"]
           },
         ]
@@ -26251,6 +26433,7 @@ export type Database = {
           situacao: string
         }[]
       }
+      qa_cpf: { Args: { p_semente: number }; Returns: string }
       qa_cron_sincronizar: { Args: never; Returns: string }
       qa_disparar_bateria: { Args: { p_modulo?: string }; Returns: string }
       qa_empresa: { Args: { p_nome: string }; Returns: string }
@@ -26403,6 +26586,7 @@ export type Database = {
         Returns: {
           achado: string
           codigo: string
+          disposicao: string
           prio: string
           situacao: string
         }[]
@@ -26743,6 +26927,17 @@ export type Database = {
         Args: { p_campanha_id: string; p_hash: string }
         Returns: boolean
       }
+      youreyes_calcular_proxima_execucao: {
+        Args: {
+          _a_partir_de?: string
+          _dia_mes: number
+          _dias_semana: number[]
+          _horario: string
+          _periodicidade: string
+        }
+        Returns: string
+      }
+      youreyes_dispatch_agentes: { Args: never; Returns: undefined }
     }
     Enums: {
       acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"
