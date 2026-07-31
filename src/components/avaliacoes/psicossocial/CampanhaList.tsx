@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { resolverSituacoesTrabalho } from "@/utils/situacoesCampanha";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
 import { ParticipacaoManager } from "./ParticipacaoManager";
@@ -107,7 +108,8 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
           // Verificar se a campanha tem dados suficientes para exportar ao GRO
           const totalRespostas = campanha.total_respostas || 0;
           const radarData = campanha.radar_data as RadarDimensao[] | null;
-          const situacoes = campanha.situacoes_trabalho ?? [];
+          // Setor+Função legado ou derivado dos GHEs vinculados
+          const situacoes = await resolverSituacoesTrabalho(campanha).catch(() => []);
 
           if (
             totalRespostas >= getMinimoRespostas(campanha) &&

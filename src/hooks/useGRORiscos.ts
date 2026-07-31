@@ -150,11 +150,11 @@ export function useGRORiscos() {
     }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
 
-      // Bloquear se campanha não tem vínculo de setor/função
+      // Bloquear se campanha não tem vínculo de GHE nem de setor/função
       if (!situacoes || situacoes.length === 0) {
         throw new Error(
-          "Esta campanha não possui situações de trabalho (Setor+Função) vinculadas. " +
-          "Para exportar ao GRO com conformidade NR-17, edite a campanha e adicione pelo menos uma situação de trabalho."
+          "Esta campanha não possui GHEs nem situações de trabalho (Setor+Função) vinculados. " +
+          "Para exportar ao GRO com conformidade NR-17, edite a campanha e vincule pelo menos um GHE."
         );
       }
 
