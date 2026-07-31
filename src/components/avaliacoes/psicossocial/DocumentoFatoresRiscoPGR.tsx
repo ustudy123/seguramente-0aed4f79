@@ -15,6 +15,8 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
+import { usePsicossocialPlanoAcao } from "@/hooks/usePsicossocialPlanoAcao";
+import { NIVEL15_ORDEM, type NivelGRO15 } from "@/lib/groPsicossocial15";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import {
   construirInventarioDiagnostico,
@@ -61,23 +63,22 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
     [campanhaSelecionada, temDiagnostico, sevCatalogo]
   );
 
-  // Prévia do Anexo II: ações do Plano de Ação PGR vinculadas à campanha
-  const { data: acoesPGR = [] } = useQuery({
-    queryKey: ["psico-doc-acoes-pgr", tenantId, empresaAtivaId, campanhaId],
-    queryFn: async (): Promise<AcaoPlanoPGRDocumento[]> => {
-      let query = fromTable("psicossocial_plano_acao")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .overlaps("campanha_ids", [campanhaId])
-        .eq("selecionada", true)
-        .order("created_at", { ascending: true });
-      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as AcaoPlanoPGRDocumento[];
-    },
-    enabled: !!tenantId && !!campanhaId,
-  });
+  // Anexo II: MESMA fonte do módulo Plano de Ação PGR (hook idêntico, sem filtros extras)
+  const { acoes: acoesPlano } = usePsicossocialPlanoAcao(campanhaId ? [campanhaId] : []);
+
+  // Ordena como o módulo apresenta: por GHE e, dentro dele, do risco mais grave ao menor
+  const acoesPGR = useMemo<AcaoPlanoPGRDocumento[]>(
+    () =>
+      [...acoesPlano].sort((a, b) => {
+        const ghe = (a.ghe_nome || "").localeCompare(b.ghe_nome || "");
+        if (ghe !== 0) return ghe;
+        return (
+          (NIVEL15_ORDEM[a.nivel_gro as NivelGRO15] ?? 9) -
+          (NIVEL15_ORDEM[b.nivel_gro as NivelGRO15] ?? 9)
+        );
+      }),
+    [acoesPlano]
+  );
 
   // Responsável técnico salvo (reutilizado nas próximas emissões)
   const { data: respSalvo } = useQuery({
@@ -236,7 +237,7 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
               <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                 <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 Sem ações no Plano de Ação PGR para esta campanha — o Anexo II sairá vazio.
-                Monte o plano na aba "Inventário PGR" se quiser incluí-lo.
+                Monte o plano na aba "Plano de Ação PGR" se quiser incluí-lo.
               </p>
             )}
           </div>
