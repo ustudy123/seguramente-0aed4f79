@@ -44,6 +44,7 @@ import { MetodologiaPanel } from "./MetodologiaPanel";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
 import { DashboardAvancadoIPS } from "./DashboardAvancadoIPS";
 import { ResultadosPsicossociaisHub } from "./ResultadosPsicossociaisHub";
+import { DocumentoFatoresRiscoPGR } from "./DocumentoFatoresRiscoPGR";
 import { useEntrevistasGuiadasAggregates } from "@/hooks/useEntrevistasGuiadasAggregates";
 
 
@@ -462,6 +463,9 @@ export function PsicossocialDashboard() {
 
             {/* Índices Derivados */}
             <IndicesDerivadosDashboard campanhas={campanhas} />
+
+            {/* Documento oficial de Fatores de Risco Psicossociais (PGR/GRO) por campanha */}
+            <DocumentoFatoresRiscoPGR campanhas={campanhasAll} />
           </TabsContent>
 
           {/* Tab: Metodologia (agrupa Fatores de Riscos, Instrumentos e Índices) */}
