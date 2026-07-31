@@ -15,6 +15,7 @@ import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras"
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorSelect } from "@/components/shared/ColaboradorSelect";
 import { useAuth } from "@/hooks/useAuth";
+import { usePontoEqualizacao } from "@/hooks/usePontoEqualizacao";
 import { format } from "date-fns";
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search, Info, Minus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -25,6 +26,9 @@ import * as XLSX from "xlsx";
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const [busca, setBusca] = useState("");
+  const [memoriaEq, setMemoriaEq] = useState<Record<string, any> | null>(null);
+  const { data: equalizacoes = [] } = usePontoEqualizacao(competencia);
+  const eqComDeficit = equalizacoes.filter((e) => (e.total_equalizacao_min || 0) > 0);
   const [colaboradorFiltroId, setColaboradorFiltroId] = useState<string>("");
   const {
     useBancoHorasPorCompetencia,
@@ -391,6 +395,39 @@ export function PontoBancoHorasTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Equalização mensal (RN04): valor necessário no mês para fechar 44h,
+          visível desde o dia 1 — memória de cálculo (RN10) no ícone ⓘ. */}
+      {eqComDeficit.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/40 dark:bg-amber-950/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CalendarDays className="w-4 h-4 text-amber-600" />
+              <p className="text-sm font-semibold">Equalização mensal (fechar 44h) — {competencia}</p>
+            </div>
+            <div className="space-y-1.5">
+              {eqComDeficit.map((e) => (
+                <div key={e.escala_id} className="flex items-center justify-between gap-2 text-sm flex-wrap">
+                  <span className="font-medium">{e.escala_nome}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-mono font-semibold text-amber-700">{formatMinutos(e.total_equalizacao_min)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {e.dias_uteis_efetivos} dias úteis · {e.qtd_feriados} feriado(s) deduzido(s)
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Memória de cálculo"
+                      onClick={() => setMemoriaEq(e.memoria)}>
+                      <Info className="w-3.5 h-3.5" />
+                    </Button>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Horas do sábado de equalização que apenas completam a jornada contratual do mês (não geram crédito).
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Table */}
       <Card>
@@ -1126,6 +1163,58 @@ export function PontoBancoHorasTab() {
               }}
             >{editandoBancoHoras ? "Salvando..." : "Salvar"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Memória de cálculo da equalização (RN10 — rastreabilidade Portaria 671) */}
+      <Dialog open={!!memoriaEq} onOpenChange={(o) => !o && setMemoriaEq(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Memória de cálculo — Equalização mensal</DialogTitle>
+            <DialogDescription>
+              {memoriaEq?.escala_nome} · {memoriaEq?.competencia}
+            </DialogDescription>
+          </DialogHeader>
+          {memoriaEq && (
+            <div className="space-y-2 text-sm">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                <span className="text-muted-foreground">Dias úteis brutos (seg–sex)</span>
+                <span className="font-mono text-right">{memoriaEq.dias_uteis_brutos}</span>
+                <span className="text-muted-foreground">Feriados deduzidos</span>
+                <span className="font-mono text-right">{memoriaEq.qtd_feriados_deduzidos}</span>
+                <span className="text-muted-foreground">Dias úteis efetivos</span>
+                <span className="font-mono text-right font-semibold">{memoriaEq.dias_uteis_efetivos}</span>
+                <span className="text-muted-foreground">Carga semanal real da escala</span>
+                <span className="font-mono text-right">{formatMinutos(memoriaEq.carga_semanal_real_min || 0)}</span>
+                <span className="text-muted-foreground">Déficit semanal (44h − carga)</span>
+                <span className="font-mono text-right">{formatMinutos(memoriaEq.deficit_semanal_min || 0)}</span>
+                <span className="text-muted-foreground">Déficit diário (÷ 5)</span>
+                <span className="font-mono text-right">{memoriaEq.deficit_diario_min} min/dia</span>
+                <span className="text-muted-foreground font-medium">Total de equalização do mês</span>
+                <span className="font-mono text-right font-bold text-amber-700">{formatMinutos(memoriaEq.total_equalizacao_min || 0)}</span>
+              </div>
+              {Array.isArray(memoriaEq.feriados_deduzidos) && memoriaEq.feriados_deduzidos.length > 0 && (
+                <div className="border-t pt-2">
+                  <p className="text-xs font-medium mb-1">Feriados deduzidos:</p>
+                  {memoriaEq.feriados_deduzidos.map((f: any, i: number) => (
+                    <p key={i} className="text-xs text-muted-foreground">
+                      {String(f.data).split("-").reverse().join("/")} — {f.nome}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {Array.isArray(memoriaEq.observacoes) && memoriaEq.observacoes.length > 0 && (
+                <div className="border-t pt-2">
+                  {memoriaEq.observacoes.map((o: string, i: number) => (
+                    <p key={i} className="text-[11px] text-amber-700">⚠ {o}</p>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground border-t pt-2">
+                Gerado em {memoriaEq.gerado_em ? new Date(memoriaEq.gerado_em).toLocaleString("pt-BR") : "—"} · Contagem direta do calendário (RN01) · Base legal: art. 59 CLT
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

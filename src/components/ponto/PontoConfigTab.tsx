@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Settings, Monitor, Link2, Globe2, Camera, MapPin, Save, Loader2, Info, FileText } from "lucide-react";
+import { Settings, Monitor, Link2, Globe2, Camera, MapPin, Save, Loader2, Info, FileText, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useFeriados } from "@/hooks/useFeriados";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,8 @@ interface PontoConfig {
 }
 
 export function PontoConfigTab() {
+  const { feriados, criar: criarFeriado, excluir: excluirFeriado } = useFeriados();
+  const [novoFeriado, setNovoFeriado] = useState({ data: "", nome: "", ambito: "nacional" as "nacional" | "estadual" | "municipal", uf: "", municipio: "" });
   const { tenantId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -304,6 +308,100 @@ export function PontoConfigTab() {
         open={showJustificativasModal} 
         onOpenChange={setShowJustificativasModal} 
       />
+
+      {/* Feriados (RN02 da equalização mensal): nacionais padrão + locais do RH */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarDays className="w-4 h-4" /> Feriados
+          </CardTitle>
+          <CardDescription>
+            Feriados nacionais fixos já vêm cadastrados. Cadastre aqui os móveis
+            (Sexta-feira Santa, Corpus Christi, Carnaval) e os estaduais/municipais
+            da sua região — eles são deduzidos do cálculo da equalização mensal.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <Label className="text-xs">Data</Label>
+              <Input type="date" className="h-8 w-[150px]" value={novoFeriado.data}
+                onChange={(e) => setNovoFeriado((p) => ({ ...p, data: e.target.value }))} />
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <Label className="text-xs">Nome</Label>
+              <Input className="h-8" placeholder="Ex.: Padroeira do município" value={novoFeriado.nome}
+                onChange={(e) => setNovoFeriado((p) => ({ ...p, nome: e.target.value }))} />
+            </div>
+            <div>
+              <Label className="text-xs">Âmbito</Label>
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-sm block"
+                value={novoFeriado.ambito}
+                onChange={(e) => setNovoFeriado((p) => ({ ...p, ambito: e.target.value as any }))}
+              >
+                <option value="nacional">Nacional</option>
+                <option value="estadual">Estadual</option>
+                <option value="municipal">Municipal</option>
+              </select>
+            </div>
+            {novoFeriado.ambito !== "nacional" && (
+              <div>
+                <Label className="text-xs">UF</Label>
+                <Input className="h-8 w-[70px]" placeholder="PR" maxLength={2} value={novoFeriado.uf}
+                  onChange={(e) => setNovoFeriado((p) => ({ ...p, uf: e.target.value.toUpperCase() }))} />
+              </div>
+            )}
+            {novoFeriado.ambito === "municipal" && (
+              <div>
+                <Label className="text-xs">Município</Label>
+                <Input className="h-8 w-[160px]" placeholder="Maringá" value={novoFeriado.municipio}
+                  onChange={(e) => setNovoFeriado((p) => ({ ...p, municipio: e.target.value }))} />
+              </div>
+            )}
+            <Button size="sm" className="h-8"
+              disabled={!novoFeriado.data || !novoFeriado.nome.trim() || criarFeriado.isPending}
+              onClick={() => criarFeriado.mutate(
+                {
+                  data: novoFeriado.data,
+                  nome: novoFeriado.nome,
+                  ambito: novoFeriado.ambito,
+                  uf: novoFeriado.uf || null,
+                  municipio: novoFeriado.municipio || null,
+                },
+                { onSuccess: () => setNovoFeriado({ data: "", nome: "", ambito: "nacional", uf: "", municipio: "" }) }
+              )}
+            >
+              {criarFeriado.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Adicionar"}
+            </Button>
+          </div>
+
+          <div className="max-h-56 overflow-y-auto divide-y rounded-md border">
+            {feriados.length === 0 && (
+              <p className="text-xs text-muted-foreground p-3">Nenhum feriado cadastrado.</p>
+            )}
+            {feriados.map((f) => (
+              <div key={f.id} className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm">
+                <span className="font-mono text-xs w-[80px] shrink-0">
+                  {String(f.data).split("-").reverse().join("/")}
+                </span>
+                <span className="flex-1 truncate">{f.nome}</span>
+                <Badge variant="outline" className="text-[10px]">
+                  {f.ambito === "nacional" ? "Nacional" : f.ambito === "estadual" ? `Estadual${f.uf ? ` · ${f.uf}` : ""}` : `Municipal${f.municipio ? ` · ${f.municipio}` : ""}`}
+                </Badge>
+                {f.tenant_id === null ? (
+                  <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
+                ) : (
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
+                    onClick={() => excluirFeriado.mutate(f.id)} title="Remover">
+                    ×
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Save */}
       <div className="flex justify-end">
