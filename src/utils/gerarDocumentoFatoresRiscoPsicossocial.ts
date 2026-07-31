@@ -2,11 +2,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  GRO_PROBABILIDADE_LABELS,
-  GRO_SEVERIDADE_LABELS,
-  type GRORisco,
-} from "@/types/gro";
+import type { ItemDiagnosticoPsicossocial } from "@/utils/inventarioDiagnosticoPsicossocial";
+import type { NivelGRO15 } from "@/lib/groPsicossocial15";
+import { NIVEL15_LABELS } from "@/lib/groPsicossocial15";
 
 // Normaliza para WinAnsi (fontes padrão do jsPDF suportam Latin-1 acentuado)
 const s = (t: string | null | undefined): string => (t || "").normalize("NFC");
@@ -39,56 +37,53 @@ export interface CampanhaDocumento {
   total_respostas?: number | null;
 }
 
-export interface AcaoDocumento {
-  titulo: string;
-  descricao?: string | null;
-  porque?: string | null;
+/** Ação do Plano de Ação PGR (tabela psicossocial_plano_acao) — 5W2H fiel ao módulo. */
+export interface AcaoPlanoPGRDocumento {
+  fator: string;
+  ghe_nome?: string | null;
+  nivel_gro?: string | null;
+  o_que: string;
+  quem?: string | null;
   onde?: string | null;
+  por_que?: string | null;
+  data_inicial?: string | null;
+  ate_quando?: string | null;
   como?: string | null;
-  prazo?: string | null;
-  responsavel_nome?: string | null;
-  custo_estimado?: number | null;
-  status?: string | null;
-  prioridade?: string | null;
+  quanto?: string | null;
 }
 
 interface GerarDocumentoParams {
   empresa: EmpresaDocumento;
   responsavel: ResponsavelTecnicoDocumento;
   campanha: CampanhaDocumento;
-  riscos: GRORisco[];
-  acoes: AcaoDocumento[];
+  inventario: ItemDiagnosticoPsicossocial[];
+  acoes: AcaoPlanoPGRDocumento[];
 }
 
-const NIVEL_LABELS: Record<string, string> = {
-  baixo: "BAIXO",
-  medio: "MÉDIO",
-  alto: "ALTO",
-  critico: "CRÍTICO",
-};
-
-const NIVEL_CORES: Record<string, [number, number, number]> = {
+const NIVEL_CORES: Record<NivelGRO15, [number, number, number]> = {
+  trivial: [90, 130, 150],
   baixo: [16, 150, 84],
   medio: [217, 158, 12],
   alto: [222, 107, 25],
   critico: [190, 30, 40],
 };
 
-const STATUS_ACAO_LABELS: Record<string, string> = {
-  pendente: "Pendente",
-  em_andamento: "Em andamento",
-  concluida: "Concluída",
-  atrasada: "Atrasada",
-  cancelada: "Cancelada",
-};
-
 const ROXO: [number, number, number] = [88, 28, 135];
+
+const fmtData = (d?: string | null): string => {
+  if (!d) return "";
+  try {
+    return format(new Date(d.slice(0, 10) + "T12:00:00"), "dd/MM/yyyy");
+  } catch {
+    return d;
+  }
+};
 
 export async function gerarDocumentoFatoresRiscoPsicossocial({
   empresa,
   responsavel,
   campanha,
-  riscos,
+  inventario,
   acoes,
 }: GerarDocumentoParams): Promise<void> {
   const doc = new jsPDF({ format: "a4", unit: "mm" });
@@ -162,7 +157,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     const lines = doc.splitTextToSize(s(text), contentW) as string[];
     lines.forEach((ln) => {
       ensureSpace(lineHeight);
-      doc.text(ln, marginX, y, { align: "justify", maxWidth: contentW } as any);
+      doc.text(ln, marginX, y);
       y += lineHeight;
     });
     y += 1.6;
@@ -187,6 +182,31 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     y += 1;
   };
 
+  /** Fluxo de avaliação em etapas empilhadas (sem caracteres fora do WinAnsi). */
+  const writeFluxo = (etapas: string[]) => {
+    doc.setFontSize(9.5);
+    etapas.forEach((etapa, i) => {
+      ensureSpace(6.5);
+      const label = s(`${i + 1}. ${etapa}`);
+      doc.setFillColor(243, 235, 252);
+      doc.setDrawColor(216, 204, 234);
+      doc.setLineWidth(0.3);
+      const boxW = 120;
+      doc.roundedRect(marginX + 4, y - 3.8, boxW, 6.2, 1.2, 1.2, "FD");
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...ROXO);
+      doc.text(label, marginX + 8, y);
+      y += 6.2;
+      if (i < etapas.length - 1) {
+        doc.setFillColor(150, 120, 190);
+        doc.triangle(marginX + 9, y - 2.4, marginX + 13, y - 2.4, marginX + 11, y + 0.2, "F");
+        y += 3.4;
+      }
+    });
+    doc.setTextColor(45, 45, 45);
+    y += 2;
+  };
+
   const campoLinha = (rotulo: string, valor: string | null | undefined) => {
     ensureSpace(6);
     doc.setFont("helvetica", "bold");
@@ -205,7 +225,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     .join(", ");
   const periodo =
     campanha.data_inicio || campanha.data_fim
-      ? `${campanha.data_inicio ? format(new Date(campanha.data_inicio + "T12:00:00"), "dd/MM/yyyy") : "—"} a ${campanha.data_fim ? format(new Date(campanha.data_fim + "T12:00:00"), "dd/MM/yyyy") : "em andamento"}`
+      ? `${campanha.data_inicio ? fmtData(campanha.data_inicio) : "—"} a ${campanha.data_fim ? fmtData(campanha.data_fim) : "em andamento"}`
       : null;
 
   // ═══════════════ CAPA ═══════════════
@@ -252,9 +272,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   y = marginTop;
 
   writeTitle("1. IDENTIFICAÇÃO");
-  doc.setFillColor(248, 244, 255);
-  const idCardTop = y;
-  y += 5;
+  y += 3;
   campoLinha("EMPRESA:", empresaNome);
   campoLinha("C.N.P.J.:", empresa.cnpj);
   campoLinha("ENDEREÇO:", enderecoCompleto || null);
@@ -277,7 +295,6 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   if (campanha.instrumento) campoLinha("INSTRUMENTO:", campanha.instrumento.toUpperCase());
   if (campanha.total_respostas != null)
     campoLinha("PARTICIPAÇÕES:", String(campanha.total_respostas));
-  void idCardTop;
   y += 3;
 
   // ═══════════════ 2. INTRODUÇÃO ═══════════════
@@ -300,13 +317,17 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   writeParagraph(
     "A metodologia adotada para o mapeamento e a estruturação das ações alinha-se aos preceitos da ISO 45003:2021 (Gestão da Saúde Psicossocial no Trabalho) e da ISO 45001:2018 (Sistemas de Gestão de SST), operando por meio de um ciclo contínuo de gestão (PDCA)."
   );
-  writeParagraph(
-    "Fluxo de Avaliação: [ Mapeamento Setor + Função ] → [ Coleta Multimodal ] → [ Diagnóstico & Matriz GRO ] → [ Plano de Ação (5W2H) ]"
-  );
+  writeParagraph("Fluxo de Avaliação:");
+  writeFluxo([
+    "Mapeamento dos GHEs (Setor + Função)",
+    "Coleta Multimodal",
+    "Diagnóstico & Matriz GRO",
+    "Plano de Ação (5W2H)",
+  ]);
 
   writeSubTitle("3.1. Estruturação dos Grupos de Avaliação (NR-17 / NR-01)");
   writeParagraph(
-    "Conforme exigência legal de rastreabilidade, a avaliação é estratificada por combinações de Setor + Função (Grupos Homogêneos de Exposição — GHE). Essa abordagem garante que cada risco identificado esteja atrelado à rotina e à realidade daquela específica atividade laboral."
+    "Conforme exigência legal de rastreabilidade, a avaliação é estratificada por Grupos Homogêneos de Exposição (GHE), compostos pelas combinações de Setor + Função. Essa abordagem garante que cada risco identificado esteja atrelado à rotina e à realidade daquela específica atividade laboral."
   );
 
   writeSubTitle("3.2. Coleta de Dados e Garantia do Anonimato (LGPD e ISO 45003)");
@@ -327,12 +348,12 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
 
   writeSubTitle("3.3. Matriz de Graduação de Risco Ocupacional (GRO / NR-01)");
   writeParagraph(
-    "A severidade e a probabilidade são mensuradas para determinar a matriz final de risco do inventário, enquadrando os achados nos níveis operacionais: BAIXO, MÉDIO, ALTO e CRÍTICO. Nível de Risco (GRO) = Probabilidade × Severidade."
+    "A severidade e a probabilidade são mensuradas para determinar a matriz final de risco do inventário, enquadrando os achados nos níveis operacionais: TRIVIAL, BAIXO, MÉDIO, ALTO e CRÍTICO. Nível de Risco (GRO) = Probabilidade x Severidade."
   );
 
   writeSubTitle("3.4. Integração com o Plano de Ação (GRO / PGR)");
   writeBullets([
-    "Encaminhamento para o GRO/PGR: todos os fatores mapeados alimentam automaticamente o inventário corporativo de riscos do PGR.",
+    "Encaminhamento para o GRO/PGR: todos os fatores mapeados alimentam o inventário corporativo de riscos do PGR.",
     "Planos de Ação Obrigatórios: riscos classificados como ALTO ou CRÍTICO demandam a estruturação imediata de Planos de Ação 5W2H com prazos de intervenção prioritários (de 30 a 60 dias).",
   ]);
 
@@ -346,39 +367,43 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     "ANEXO II: PLANO DE AÇÃO ESTRATÉGICO PARA CONTROLE DE RISCOS PSICOSSOCIAIS (MODELO 5W2H).",
   ]);
 
-  // ═══════════════ ANEXO I — INVENTÁRIO ═══════════════
+  // ═══════════════ ANEXO I — INVENTÁRIO (Diagnóstico Psicossocial) ═══════════════
   doc.addPage();
   drawHeader();
   y = marginTop;
   writeTitle("ANEXO I — INVENTÁRIO DE RISCOS PSICOSSOCIAIS (GRO / NR-01)");
   writeParagraph(
-    `Inventário gerado a partir da campanha "${campanha.nome}", com ${riscos.length} fator(es) de risco identificado(s) e classificado(s) pela Matriz GRO (Probabilidade × Severidade).`
+    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) de risco avaliado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo NR-01 / ISO 45003.`
   );
 
   autoTable(doc, {
     startY: y,
     margin: { left: marginX, right: marginX, top: marginTop, bottom: marginBottom },
-    head: [["Fator de Risco / Dimensão", "Setor", "Função", "Probabilidade", "Severidade", "Nível"]],
-    body: riscos.map((r) => [
-      s(r.dimensao_psicossocial || r.titulo),
-      s(r.setor || "—"),
-      s(r.cargo || "—"),
-      GRO_PROBABILIDADE_LABELS[r.probabilidade] || s(r.probabilidade),
-      GRO_SEVERIDADE_LABELS[r.severidade] || s(r.severidade),
-      NIVEL_LABELS[r.nivel_risco] || s(r.nivel_risco),
+    head: [["Fator de Risco", "Dimensões do Instrumento", "Base Normativa", "Score", "Probabilidade", "Severidade", "Grau de Risco"]],
+    body: inventario.map((item) => [
+      s(item.fator),
+      s(item.dimensoes.join(" • ")),
+      s(item.norma),
+      `${item.scoreReal}%`,
+      s(item.probabilidadeLabel),
+      s(item.severidadeLabel),
+      s(item.nivelLabel),
     ]),
-    styles: { font: "helvetica", fontSize: 7.8, cellPadding: 1.8, textColor: [45, 45, 45] },
-    headStyles: { fillColor: ROXO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
+    styles: { font: "helvetica", fontSize: 7.4, cellPadding: 1.6, textColor: [45, 45, 45] },
+    headStyles: { fillColor: ROXO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7.6 },
     alternateRowStyles: { fillColor: [248, 245, 253] },
     columnStyles: {
-      0: { cellWidth: 52 },
-      3: { cellWidth: 24 },
+      0: { cellWidth: 34 },
+      1: { cellWidth: 36 },
+      2: { cellWidth: 26 },
+      3: { cellWidth: 12, halign: "center" },
       4: { cellWidth: 22 },
-      5: { cellWidth: 18, fontStyle: "bold", halign: "center" },
+      5: { cellWidth: 20 },
+      6: { cellWidth: 20, fontStyle: "bold" },
     },
     didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 5) {
-        const nivel = riscos[data.row.index]?.nivel_risco;
+      if (data.section === "body" && data.column.index === 6) {
+        const nivel = inventario[data.row.index]?.nivelKey;
         if (nivel && NIVEL_CORES[nivel]) data.cell.styles.textColor = NIVEL_CORES[nivel];
       }
     },
@@ -387,24 +412,24 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   y = (doc as any).lastAutoTable.finalY + 6;
 
   // Resumo por nível
-  const contagem = {
-    critico: riscos.filter((r) => r.nivel_risco === "critico").length,
-    alto: riscos.filter((r) => r.nivel_risco === "alto").length,
-    medio: riscos.filter((r) => r.nivel_risco === "medio").length,
-    baixo: riscos.filter((r) => r.nivel_risco === "baixo").length,
-  };
+  const contagem = (Object.keys(NIVEL15_LABELS) as NivelGRO15[]).reduce(
+    (acc, nivel) => ({ ...acc, [nivel]: inventario.filter((i) => i.nivelKey === nivel).length }),
+    {} as Record<NivelGRO15, number>
+  );
   ensureSpace(10);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(35, 35, 35);
   doc.text(
-    s(`Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s)`),
+    s(
+      `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)`
+    ),
     marginX,
     y
   );
   y += 8;
 
-  // ═══════════════ ANEXO II — PLANO DE AÇÃO 5W2H ═══════════════
+  // ═══════════════ ANEXO II — PLANO DE AÇÃO PGR (5W2H) ═══════════════
   doc.addPage();
   drawHeader();
   y = marginTop;
@@ -412,40 +437,40 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
 
   if (acoes.length === 0) {
     writeParagraph(
-      "Nenhuma ação registrada no Plano de Ação para esta campanha até a data de emissão deste documento."
+      "Nenhuma ação registrada no Plano de Ação PGR para esta campanha até a data de emissão deste documento."
     );
   } else {
     writeParagraph(
-      `Plano de ação com ${acoes.length} medida(s) de controle vinculada(s) aos riscos psicossociais desta campanha.`
+      `Plano de Ação PGR da campanha, com ${acoes.length} medida(s) de controle estruturada(s) no modelo 5W2H.`
     );
     acoes.forEach((acao, idx) => {
+      const cabecalho = [
+        `AÇÃO ${idx + 1} — ${acao.fator}`,
+        acao.ghe_nome ? `GHE: ${acao.ghe_nome}` : null,
+        acao.nivel_gro ? NIVEL15_LABELS[acao.nivel_gro as NivelGRO15] || acao.nivel_gro : null,
+      ]
+        .filter(Boolean)
+        .join("  ·  ");
+
       const linhas: [string, string][] = [
-        ["O que (What)", acao.titulo + (acao.descricao ? ` — ${acao.descricao}` : "")],
-        ["Por que (Why)", acao.porque || "—"],
+        ["O que (What)", acao.o_que || "—"],
+        ["Por que (Why)", acao.por_que || "—"],
         ["Onde (Where)", acao.onde || "—"],
-        ["Quem (Who)", acao.responsavel_nome || "A definir"],
-        [
-          "Quando (When)",
-          acao.prazo ? format(new Date(acao.prazo + "T12:00:00"), "dd/MM/yyyy") : "A definir",
-        ],
+        ["Quem (Who)", acao.quem || "A definir"],
+        ["Início (When)", acao.data_inicial ? fmtData(acao.data_inicial) : "A definir"],
+        ["Até quando (When)", acao.ate_quando ? fmtData(acao.ate_quando) : "A definir"],
         ["Como (How)", acao.como || "—"],
-        [
-          "Quanto (How much)",
-          acao.custo_estimado != null
-            ? acao.custo_estimado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-            : "—",
-        ],
-        ["Status", STATUS_ACAO_LABELS[acao.status || ""] || acao.status || "Pendente"],
+        ["Quanto (How much)", acao.quanto || "—"],
       ];
 
       autoTable(doc, {
         startY: y,
         margin: { left: marginX, right: marginX, top: marginTop, bottom: marginBottom },
-        head: [[{ content: s(`AÇÃO ${idx + 1} — ${acao.titulo}`), colSpan: 2 }]],
+        head: [[{ content: s(cabecalho), colSpan: 2 }]],
         body: linhas.map(([k, v]) => [s(k), s(v)]),
         styles: { font: "helvetica", fontSize: 8.2, cellPadding: 1.8, textColor: [45, 45, 45] },
         headStyles: { fillColor: ROXO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8.5 },
-        columnStyles: { 0: { cellWidth: 38, fontStyle: "bold", fillColor: [248, 245, 253] } },
+        columnStyles: { 0: { cellWidth: 40, fontStyle: "bold", fillColor: [248, 245, 253] } },
         didDrawPage: () => drawHeader(),
       });
       y = (doc as any).lastAutoTable.finalY + 5;
