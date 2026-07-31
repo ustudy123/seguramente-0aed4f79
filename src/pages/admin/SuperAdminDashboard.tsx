@@ -125,6 +125,9 @@ export default function SuperAdminDashboard() {
             <Button variant="outline" size="sm" onClick={() => navigate('/admin/qa')}>
               <Bug className="w-4 h-4 mr-2" />QA
             </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/youreyes')}>
+              <Eye className="w-4 h-4 mr-2" />YourEyes
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate('/admin/blog')}>
               <FileText className="w-4 h-4 mr-2" />Blog
             </Button>

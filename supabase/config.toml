@@ -101,3 +101,5 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = false
   [functions.mercadopago-webhook]
     verify_jwt = false
+  [functions.youreyes-run-agent]
+    verify_jwt = false
