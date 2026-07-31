@@ -15,7 +15,6 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
-import { usePsicossocialPlanoAcao } from "@/hooks/usePsicossocialPlanoAcao";
 import { NIVEL15_ORDEM, type NivelGRO15 } from "@/lib/groPsicossocial15";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import {
@@ -63,8 +62,23 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
     [campanhaSelecionada, temDiagnostico, sevCatalogo]
   );
 
-  // Anexo II: MESMA fonte do módulo Plano de Ação PGR (hook idêntico, sem filtros extras)
-  const { acoes: acoesPlano } = usePsicossocialPlanoAcao(campanhaId ? [campanhaId] : []);
+  // Anexo II: ações do Plano de Ação PGR vinculadas à campanha.
+  // O vínculo que vale é ação <-> campanha (campanha_ids): NÃO filtra pela unidade
+  // ativa, pois o empresa_id da ação é só um retrato da unidade selecionada no
+  // momento da criação — filtrar por ele esconderia ações legítimas da campanha.
+  const { data: acoesPlano = [] } = useQuery({
+    queryKey: ["psico-doc-acoes-pgr", tenantId, campanhaId],
+    queryFn: async (): Promise<AcaoPlanoPGRDocumento[]> => {
+      const { data, error } = await fromTable("psicossocial_plano_acao")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .overlaps("campanha_ids", [campanhaId])
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data || []) as AcaoPlanoPGRDocumento[];
+    },
+    enabled: !!tenantId && !!campanhaId,
+  });
 
   // Ordena como o módulo apresenta: por GHE e, dentro dele, do risco mais grave ao menor
   const acoesPGR = useMemo<AcaoPlanoPGRDocumento[]>(
