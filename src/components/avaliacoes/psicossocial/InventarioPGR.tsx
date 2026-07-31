@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { resolverSituacoesTrabalho } from "@/utils/situacoesCampanha";
 import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosGHE";
 import { PrivacidadeGrupoAlert } from "./PrivacidadeGrupoAlert";
 import {
@@ -304,12 +305,20 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     // Importar da campanha mais recente com radar_data
     const campanha = campanhasValidas[0];
     const radar = campanha.radar_data as RadarDimensao[];
-    const situacoes = campanha.situacoes_trabalho ?? [];
 
-    if (situacoes.length === 0) {
+    // Resolve as situações de trabalho: pares Setor+Função legados ou derivadas dos GHEs vinculados
+    let situacoes: typeof campanha.situacoes_trabalho = [];
+    try {
+      situacoes = await resolverSituacoesTrabalho(campanha);
+    } catch (e: any) {
+      toast.error(`Erro ao carregar os GHEs da campanha: ${e.message}`);
+      return;
+    }
+
+    if (!situacoes || situacoes.length === 0) {
       toast.error(
-        "Esta campanha não possui situações de trabalho (Setor+Função) vinculadas. " +
-        "Edite a campanha para adicionar pares Setor+Função antes de exportar ao GRO (NR-17).",
+        "Esta campanha não possui GHEs nem situações de trabalho (Setor+Função) vinculados. " +
+        "Edite a campanha e vincule pelo menos um GHE antes de exportar ao GRO (NR-17).",
         { duration: 6000 }
       );
       return;
