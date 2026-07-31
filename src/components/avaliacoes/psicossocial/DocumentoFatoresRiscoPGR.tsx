@@ -14,11 +14,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
-import type { GRORisco } from "@/types/gro";
+import {
+  construirInventarioDiagnostico,
+  campanhaTemDiagnostico,
+} from "@/utils/inventarioDiagnosticoPsicossocial";
 import {
   gerarDocumentoFatoresRiscoPsicossocial,
-  type AcaoDocumento,
+  type AcaoPlanoPGRDocumento,
 } from "@/utils/gerarDocumentoFatoresRiscoPsicossocial";
 
 interface DocumentoFatoresRiscoPGRProps {
@@ -29,6 +33,7 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
   const { tenantId } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
+  const { data: sevCatalogo } = useSeveridadesCatalogo();
 
   const [campanhaId, setCampanhaId] = useState<string>("");
   const [nome, setNome] = useState("");
@@ -43,6 +48,36 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
       ),
     [campanhas]
   );
+
+  const campanhaSelecionada = campanhas.find((c) => c.id === campanhaId) || null;
+  const temDiagnostico = campanhaSelecionada ? campanhaTemDiagnostico(campanhaSelecionada) : false;
+
+  // Prévia do Anexo I: mesmo cálculo do Relatório de Diagnóstico Psicossocial (Inventário PGR)
+  const inventarioPrevia = useMemo(
+    () =>
+      campanhaSelecionada && temDiagnostico
+        ? construirInventarioDiagnostico(campanhaSelecionada, sevCatalogo)
+        : [],
+    [campanhaSelecionada, temDiagnostico, sevCatalogo]
+  );
+
+  // Prévia do Anexo II: ações do Plano de Ação PGR vinculadas à campanha
+  const { data: acoesPGR = [] } = useQuery({
+    queryKey: ["psico-doc-acoes-pgr", tenantId, empresaAtivaId, campanhaId],
+    queryFn: async (): Promise<AcaoPlanoPGRDocumento[]> => {
+      let query = fromTable("psicossocial_plano_acao")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .overlaps("campanha_ids", [campanhaId])
+        .eq("selecionada", true)
+        .order("created_at", { ascending: true });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as AcaoPlanoPGRDocumento[];
+    },
+    enabled: !!tenantId && !!campanhaId,
+  });
 
   // Responsável técnico salvo (reutilizado nas próximas emissões)
   const { data: respSalvo } = useQuery({
@@ -69,21 +104,6 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
     }
   }, [respSalvo]);
 
-  // Prévia do que a campanha selecionada tem de inventário + plano de ação
-  const { data: previa } = useQuery({
-    queryKey: ["psico-doc-previa", campanhaId],
-    queryFn: async () => {
-      const { data: riscos, error } = await fromTable("gro_riscos")
-        .select("id, acao_id, nivel_risco")
-        .eq("campanha_id", campanhaId)
-        .eq("ativo", true);
-      if (error) throw error;
-      const acaoIds = [...new Set((riscos || []).map((r: any) => r.acao_id).filter(Boolean))];
-      return { totalRiscos: (riscos || []).length, totalAcoesVinculadas: acaoIds.length };
-    },
-    enabled: !!campanhaId,
-  });
-
   const salvarResponsavel = async () => {
     const payload = {
       tenant_id: tenantId,
@@ -101,7 +121,7 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
   };
 
   const handleGerar = async () => {
-    if (!campanhaId) {
+    if (!campanhaSelecionada) {
       toast.error("Selecione a campanha do documento");
       return;
     }
@@ -109,8 +129,13 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
       toast.error("Informe o nome do responsável técnico");
       return;
     }
-    const campanha = campanhas.find((c) => c.id === campanhaId);
-    if (!campanha) return;
+    if (!temDiagnostico || inventarioPrevia.length === 0) {
+      toast.error(
+        "Esta campanha ainda não tem diagnóstico liberado (mínimo de respostas não atingido ou sem resultados processados).",
+        { duration: 7000 }
+      );
+      return;
+    }
 
     setGerando(true);
     try {
@@ -132,51 +157,6 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
       const empresa = empresas?.[0];
       if (!empresa) throw new Error("Cadastro da empresa não encontrado");
 
-      // Anexo I: inventário de riscos da campanha
-      const { data: riscos, error: riscosErr } = await fromTable("gro_riscos")
-        .select("*")
-        .eq("campanha_id", campanhaId)
-        .eq("ativo", true)
-        .order("nivel_risco", { ascending: true });
-      if (riscosErr) throw riscosErr;
-      const riscosCampanha = (riscos || []) as GRORisco[];
-
-      if (riscosCampanha.length === 0) {
-        toast.error(
-          "Esta campanha ainda não tem inventário de riscos. Exporte os resultados para o GRO na aba Inventário PGR antes de emitir o documento.",
-          { duration: 8000 }
-        );
-        return;
-      }
-
-      // Anexo II: ações vinculadas aos riscos + ações originadas da campanha
-      const acaoIds = [...new Set(riscosCampanha.map((r) => r.acao_id).filter(Boolean))] as string[];
-      const [vinculadasRes, origemRes] = await Promise.all([
-        acaoIds.length
-          ? supabase.from("plano_acoes").select("*").in("id", acaoIds)
-          : Promise.resolve({ data: [], error: null } as any),
-        supabase
-          .from("plano_acoes")
-          .select("*")
-          .eq("tenant_id", tenantId!)
-          .eq("origem_modulo", "psicossocial")
-          .ilike("origem_descricao", `%${campanha.nome}%`),
-      ]);
-      if (vinculadasRes.error) throw vinculadasRes.error;
-      if (origemRes.error) throw origemRes.error;
-
-      const acoesMap = new Map<string, AcaoDocumento & { id: string }>();
-      [...(vinculadasRes.data || []), ...(origemRes.data || [])].forEach((a: any) => {
-        acoesMap.set(a.id, a);
-      });
-      const acoes = [...acoesMap.values()];
-
-      // Ordena os riscos do mais grave para o menos grave
-      const pesoNivel: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
-      riscosCampanha.sort(
-        (a, b) => (pesoNivel[a.nivel_risco] ?? 9) - (pesoNivel[b.nivel_risco] ?? 9)
-      );
-
       await gerarDocumentoFatoresRiscoPsicossocial({
         empresa,
         responsavel: {
@@ -185,14 +165,14 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
           registro_profissional: registro.trim() || null,
         },
         campanha: {
-          nome: campanha.nome,
-          data_inicio: campanha.data_inicio,
-          data_fim: campanha.data_fim,
-          instrumento: campanha.instrumento,
-          total_respostas: campanha.total_respostas,
+          nome: campanhaSelecionada.nome,
+          data_inicio: campanhaSelecionada.data_inicio,
+          data_fim: campanhaSelecionada.data_fim,
+          instrumento: campanhaSelecionada.instrumento,
+          total_respostas: campanhaSelecionada.total_respostas,
         },
-        riscos: riscosCampanha,
-        acoes,
+        inventario: inventarioPrevia,
+        acoes: acoesPGR,
       });
 
       toast.success("Documento gerado! O PDF está pronto para conferência e assinatura.");
@@ -213,8 +193,8 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
         </CardTitle>
         <CardDescription>
           Emite o documento oficial da campanha com identificação da empresa, metodologia,
-          Anexo I (Inventário de Riscos) e Anexo II (Plano de Ação 5W2H), pronto para assinatura
-          do responsável técnico.
+          Anexo I (Inventário de Riscos — Diagnóstico Psicossocial) e Anexo II (Plano de Ação PGR
+          5W2H), pronto para assinatura do responsável técnico.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -233,23 +213,30 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
                 ))}
               </SelectContent>
             </Select>
-            {campanhaId && previa && (
-              <div className="flex items-center gap-2 pt-1">
+            {campanhaSelecionada && temDiagnostico && (
+              <div className="flex items-center gap-2 pt-1 flex-wrap">
                 <Badge variant="outline" className="gap-1 text-[11px]">
                   <ClipboardList className="h-3 w-3" />
-                  {previa.totalRiscos} risco(s) no inventário
+                  {inventarioPrevia.length} fator(es) no diagnóstico
                 </Badge>
                 <Badge variant="outline" className="gap-1 text-[11px]">
                   <Target className="h-3 w-3" />
-                  {previa.totalAcoesVinculadas} ação(ões) vinculada(s)
+                  {acoesPGR.length} ação(ões) no Plano PGR
                 </Badge>
               </div>
             )}
-            {campanhaId && previa?.totalRiscos === 0 && (
+            {campanhaSelecionada && !temDiagnostico && (
               <p className="text-xs text-amber-600 flex items-start gap-1.5">
                 <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                Campanha sem inventário no GRO. Exporte os resultados na aba "Inventário PGR"
-                antes de emitir o documento.
+                Campanha sem diagnóstico liberado: é preciso atingir o mínimo de respostas
+                (5 para questionário, 1 para entrevista) para emitir o documento.
+              </p>
+            )}
+            {campanhaSelecionada && temDiagnostico && acoesPGR.length === 0 && (
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                Sem ações no Plano de Ação PGR para esta campanha — o Anexo II sairá vazio.
+                Monte o plano na aba "Inventário PGR" se quiser incluí-lo.
               </p>
             )}
           </div>
@@ -284,7 +271,7 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
           </p>
           <Button
             onClick={handleGerar}
-            disabled={gerando || !campanhaId || !nome.trim()}
+            disabled={gerando || !campanhaId || !nome.trim() || !temDiagnostico}
             className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
           >
             {gerando ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
