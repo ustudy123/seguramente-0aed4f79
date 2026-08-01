@@ -130,6 +130,8 @@ export function PontoEscalasTab() {
     modalidade: "fixa",
     dias_config: diasConfigPadrao(),
     compensacoes_mensais: [] as Compensacao[],
+    equalizacao_mensal_ativa: false,
+    carga_semanal_contratada_min: 2640,
     ciclo_horas_trabalho: 12,
     ciclo_horas_descanso: 36,
     ciclo_inicio_data: new Date().toISOString().split("T")[0],
@@ -278,6 +280,8 @@ export function PontoEscalasTab() {
       modalidade: anyE.modalidade || "fixa",
       dias_config: migrarDiaConfig(anyE.dias_config),
       compensacoes_mensais: Array.isArray(anyE.compensacoes_mensais) ? anyE.compensacoes_mensais : [],
+      equalizacao_mensal_ativa: !!anyE.equalizacao_mensal_ativa,
+      carga_semanal_contratada_min: Number(anyE.carga_semanal_contratada_min) || 2640,
       ciclo_horas_trabalho: anyE.ciclo_horas_trabalho ?? 12,
       ciclo_horas_descanso: anyE.ciclo_horas_descanso ?? 36,
       ciclo_inicio_data: anyE.ciclo_inicio_data || new Date().toISOString().split("T")[0],
@@ -746,6 +750,60 @@ export function PontoEscalasTab() {
                 })()}
               </div>
 
+              {/* Equalização mensal com sábado variável (novo modelo) */}
+              <div className="rounded-lg border p-3 space-y-3 bg-amber-50/40 dark:bg-amber-950/10">
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <Repeat className="w-4 h-4 text-amber-600" /> Equalização mensal (sábado variável)
+                  </Label>
+                  <Switch
+                    checked={!!escalaForm.equalizacao_mensal_ativa}
+                    onCheckedChange={(v) => setEscalaForm({ ...escalaForm, equalizacao_mensal_ativa: v })}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Ligue apenas para escalas que fecham a carga contratada trabalhando um sábado por mês.
+                  O sistema calcula sozinho quantas horas de equalização o mês exige e reconhece qualquer
+                  sábado trabalhado como o dia de compensação.
+                </p>
+                {escalaForm.equalizacao_mensal_ativa && (() => {
+                  const real = calcularJornadasFixa(escalaForm.dias_config).semanal;
+                  const contratada = Number(escalaForm.carga_semanal_contratada_min) || 2640;
+                  const deficit = Math.max(0, contratada - real);
+                  const fmt = (m: number) => `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`;
+                  return (
+                    <div className="space-y-2 border-t pt-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Label className="text-xs">Carga semanal contratada</Label>
+                        <select
+                          className="h-8 rounded-md border bg-background px-2 text-sm"
+                          value={contratada}
+                          onChange={(e) => setEscalaForm({ ...escalaForm, carga_semanal_contratada_min: Number(e.target.value) })}
+                        >
+                          <option value={2640}>44h (padrão)</option>
+                          <option value={2400}>40h</option>
+                          <option value={2160}>36h</option>
+                          <option value={1200}>20h</option>
+                        </select>
+                        <span className="text-[11px] text-muted-foreground">
+                          Carga real da escala (seg–sex): <strong>{fmt(real)}</strong>
+                        </span>
+                      </div>
+                      {deficit === 0 ? (
+                        <p className="text-[11px] text-green-700">
+                          A escala já cumpre a carga contratada — nenhuma equalização será gerada.
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-amber-700">
+                          Déficit de <strong>{fmt(deficit)}/semana</strong> ({fmt(Math.round(deficit / 5))}/dia) será
+                          equalizado no sábado trabalhado de cada mês.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Compensações Mensais — equalização da carga semanal */}
               <div className="rounded-lg border p-3 space-y-2 bg-amber-50/40 dark:bg-amber-950/10">
                 <div className="flex items-center justify-between">
@@ -766,7 +824,8 @@ export function PontoEscalasTab() {
                   </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Use para equalizar quando a escala fixa fica abaixo da carga semanal contratada (ex.: 1º sábado do mês trabalhado para fechar 44h).
+                  Modelo antigo (posição fixa, ex.: "3º sábado"). Prefira a <strong>Equalização mensal</strong> acima,
+                  que reconhece qualquer sábado trabalhado. Mantido apenas para escalas já configuradas.
                 </p>
                 {(escalaForm.compensacoes_mensais || []).length === 0 ? (
                   <p className="text-xs text-muted-foreground italic py-2 text-center">Nenhuma compensação configurada.</p>
