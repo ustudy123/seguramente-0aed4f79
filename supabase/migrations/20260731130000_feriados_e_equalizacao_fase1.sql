@@ -78,7 +78,7 @@ BEGIN
     END LOOP;
   ELSE
     v_carga := COALESCE(v_esc.jornada_diaria_minutos, 0) * 5;
-    v_obs := v_obs || 'Carga semanal estimada por jornada_diaria_minutos × 5 (escala sem dias_config).';
+    v_obs := v_obs || ARRAY['Carga semanal estimada por jornada_diaria_minutos × 5 (escala sem dias_config).'];
   END IF;
 
   -- RN01: contagem direta de seg–sex do mês civil (sem multiplicador fixo)
@@ -115,10 +115,10 @@ BEGIN
   v_total    := round(v_efetivos * v_def_sem / 5.0)::int;   -- RN04
 
   IF v_def_sem = 0 THEN
-    v_obs := v_obs || 'Escala já cumpre 44h semanais — equalização não se aplica.';
+    v_obs := v_obs || ARRAY['Escala já cumpre 44h semanais — equalização não se aplica.'];
   END IF;
   IF v_qtd_fer = 0 THEN
-    v_obs := v_obs || 'Nenhum feriado deduzido neste mês (pontos facultativos não são deduzidos).';
+    v_obs := v_obs || ARRAY['Nenhum feriado deduzido neste mês (pontos facultativos não são deduzidos).'];
   END IF;
 
   -- RN10: memória de cálculo completa
