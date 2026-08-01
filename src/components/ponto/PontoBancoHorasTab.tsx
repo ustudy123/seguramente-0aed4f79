@@ -1320,6 +1320,19 @@ export function PontoBancoHorasTab() {
                     </div>
                   )}
 
+                  {c.data_marcada && (() => {
+                    // RN08: intervalo intrajornada mínimo pelo total do dia marcado.
+                    const sab = c.sabados.find((s) => s.data === c.data_marcada);
+                    const trab = sab?.trabalhado_min || 0;
+                    const minInt = trab <= 240 ? 0 : trab <= 360 ? 15 : 60;
+                    return (
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Intervalo mínimo neste dia ({formatMinutos(trab)} trabalhados):{" "}
+                        <strong>{minInt === 0 ? "não obrigatório" : `${minInt} min`}</strong> (art. 71 CLT).
+                      </p>
+                    );
+                  })()}
+
                   {c.data_marcada && !c.art61_liberado && (
                     <Button variant="ghost" size="sm" className="h-6 text-[11px] mt-2 text-amber-700 px-1"
                       onClick={() => setArt61({ cpf: c.colaborador_cpf, nome: c.colaborador_nome, justificativa: "" })}>

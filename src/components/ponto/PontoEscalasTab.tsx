@@ -758,7 +758,20 @@ export function PontoEscalasTab() {
                   </Label>
                   <Switch
                     checked={!!escalaForm.equalizacao_mensal_ativa}
-                    onCheckedChange={(v) => setEscalaForm({ ...escalaForm, equalizacao_mensal_ativa: v })}
+                    onCheckedChange={(v) => {
+                      // RN09: só permite ativar quando há déficit real a equalizar.
+                      // Se a carga real da escala já cobre (ou excede) a contratada,
+                      // ligar geraria débito indevido / crédito duplicado — bloqueia.
+                      const real = calcularJornadasFixa(escalaForm.dias_config).semanal;
+                      const contratada = Number(escalaForm.carga_semanal_contratada_min) || 2640;
+                      if (v && real >= contratada) {
+                        toast.error(
+                          `Sem déficit a equalizar: a carga real (${Math.floor(real/60)}h${String(real%60).padStart(2,"0")}) já atinge a contratada. Ajuste a carga contratada ou a escala antes de ativar.`
+                        );
+                        return;
+                      }
+                      setEscalaForm({ ...escalaForm, equalizacao_mensal_ativa: v });
+                    }}
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
