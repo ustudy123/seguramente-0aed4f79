@@ -18214,6 +18214,74 @@ export type Database = {
           },
         ]
       }
+      ponto_equalizacao_mensal: {
+        Row: {
+          art61_justificativa: string | null
+          art61_liberado_em: string | null
+          art61_liberado_por: string | null
+          colaborador_cpf: string
+          colaborador_nome: string | null
+          competencia: string
+          created_at: string
+          criado_por: string | null
+          data_equalizacao: string
+          empresa_id: string | null
+          escala_id: string | null
+          id: string
+          memoria: Json | null
+          origem: string
+          tenant_id: string
+          total_equalizacao_min: number
+          updated_at: string
+        }
+        Insert: {
+          art61_justificativa?: string | null
+          art61_liberado_em?: string | null
+          art61_liberado_por?: string | null
+          colaborador_cpf: string
+          colaborador_nome?: string | null
+          competencia: string
+          created_at?: string
+          criado_por?: string | null
+          data_equalizacao: string
+          empresa_id?: string | null
+          escala_id?: string | null
+          id?: string
+          memoria?: Json | null
+          origem?: string
+          tenant_id: string
+          total_equalizacao_min: number
+          updated_at?: string
+        }
+        Update: {
+          art61_justificativa?: string | null
+          art61_liberado_em?: string | null
+          art61_liberado_por?: string | null
+          colaborador_cpf?: string
+          colaborador_nome?: string | null
+          competencia?: string
+          created_at?: string
+          criado_por?: string | null
+          data_equalizacao?: string
+          empresa_id?: string | null
+          escala_id?: string | null
+          id?: string
+          memoria?: Json | null
+          origem?: string
+          tenant_id?: string
+          total_equalizacao_min?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_equalizacao_mensal_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_escala_atribuicoes: {
         Row: {
           ativa: boolean | null
@@ -18483,6 +18551,7 @@ export type Database = {
           adicional_noturno_fim: string | null
           adicional_noturno_inicio: string | null
           ativa: boolean | null
+          carga_semanal_contratada_min: number
           cct_act_url: string | null
           ciclo_horas_descanso: number | null
           ciclo_horas_trabalho: number | null
@@ -18497,6 +18566,7 @@ export type Database = {
           dias_semana: Json | null
           domingo_util: boolean | null
           empresa_id: string | null
+          equalizacao_mensal_ativa: boolean
           hora_entrada_padrao: string | null
           hora_saida_padrao: string | null
           id: string
@@ -18527,6 +18597,7 @@ export type Database = {
           adicional_noturno_fim?: string | null
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
+          carga_semanal_contratada_min?: number
           cct_act_url?: string | null
           ciclo_horas_descanso?: number | null
           ciclo_horas_trabalho?: number | null
@@ -18541,6 +18612,7 @@ export type Database = {
           dias_semana?: Json | null
           domingo_util?: boolean | null
           empresa_id?: string | null
+          equalizacao_mensal_ativa?: boolean
           hora_entrada_padrao?: string | null
           hora_saida_padrao?: string | null
           id?: string
@@ -18571,6 +18643,7 @@ export type Database = {
           adicional_noturno_fim?: string | null
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
+          carga_semanal_contratada_min?: number
           cct_act_url?: string | null
           ciclo_horas_descanso?: number | null
           ciclo_horas_trabalho?: number | null
@@ -18585,6 +18658,7 @@ export type Database = {
           dias_semana?: Json | null
           domingo_util?: boolean | null
           empresa_id?: string | null
+          equalizacao_mensal_ativa?: boolean
           hora_entrada_padrao?: string | null
           hora_saida_padrao?: string | null
           id?: string
@@ -24156,6 +24230,64 @@ export type Database = {
         Args: { p_colaborador_id: string }
         Returns: string
       }
+      ponto_equalizacao_art61_liberar: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_justificativa: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
+      ponto_equalizacao_competencia: {
+        Args: {
+          p_competencia: string
+          p_escala_id: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      ponto_equalizacao_competencia_tenant: {
+        Args: { p_competencia: string; p_tenant_id: string }
+        Returns: {
+          dias_uteis_efetivos: number
+          escala_id: string
+          escala_nome: string
+          memoria: Json
+          qtd_feriados: number
+          total_equalizacao_min: number
+        }[]
+      }
+      ponto_equalizacao_definir: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      ponto_equalizacao_listar: {
+        Args: { p_competencia: string; p_tenant_id: string }
+        Returns: {
+          art61_liberado: boolean
+          colaborador_cpf: string
+          colaborador_nome: string
+          data_marcada: string
+          escala_id: string
+          escala_nome: string
+          sabados: Json
+          total_equalizacao_min: number
+        }[]
+      }
+      ponto_equalizacao_remover: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       ponto_escala_do_dia:
         | {
             Args: {
@@ -24211,6 +24343,8 @@ export type Database = {
         Returns: {
           dia: string
           entrada: string
+          equalizacao: boolean
+          excedente_retido_min: number
           jornada_min: number
           protegido: boolean
           saida: string
