@@ -15,7 +15,7 @@ import { usePontoBancoHoras, type BancoHoras } from "@/hooks/usePontoBancoHoras"
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorSelect } from "@/components/shared/ColaboradorSelect";
 import { useAuth } from "@/hooks/useAuth";
-import { usePontoEqualizacao } from "@/hooks/usePontoEqualizacao";
+import { usePontoEqualizacao, usePontoEqualizacaoGerenciador } from "@/hooks/usePontoEqualizacao";
 import { format } from "date-fns";
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Upload, Download, FileSpreadsheet, Pencil, Trash2, CalendarDays, Search, Info, Minus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -28,6 +28,14 @@ export function PontoBancoHorasTab() {
   const [busca, setBusca] = useState("");
   const [memoriaEq, setMemoriaEq] = useState<Record<string, any> | null>(null);
   const { data: equalizacoes = [] } = usePontoEqualizacao(competencia);
+  const [gerenciarEq, setGerenciarEq] = useState(false);
+  const [art61, setArt61] = useState<{ cpf: string; nome: string; justificativa: string } | null>(null);
+  const {
+    colaboradores: eqColaboradores,
+    definir: definirEq,
+    remover: removerEq,
+    liberarArt61,
+  } = usePontoEqualizacaoGerenciador(competencia);
   const eqComDeficit = equalizacoes.filter((e) => (e.total_equalizacao_min || 0) > 0);
   const [colaboradorFiltroId, setColaboradorFiltroId] = useState<string>("");
   const {
@@ -199,6 +207,8 @@ export function PontoBancoHorasTab() {
         saldo_minutos: Number(d.saldo_min) || 0,
         entrada: d.entrada ? String(d.entrada).substring(0, 5) : null,
         saida: d.saida ? String(d.saida).substring(0, 5) : null,
+        equalizacao: Boolean(d.equalizacao),
+        excedente_retido_min: Number(d.excedente_retido_min) || 0,
         status: null as string | null,
         observacao: null as string | null,
         tipo_dia: "",
@@ -401,9 +411,15 @@ export function PontoBancoHorasTab() {
       {eqComDeficit.length > 0 && (
         <Card className="border-amber-200 bg-amber-50/40 dark:bg-amber-950/10">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <CalendarDays className="w-4 h-4 text-amber-600" />
-              <p className="text-sm font-semibold">Equalização mensal (fechar 44h) — {competencia}</p>
+            <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-amber-600" />
+                <p className="text-sm font-semibold">Equalização mensal (fechar 44h) — {competencia}</p>
+              </div>
+              <Button variant="outline" size="sm" className="h-7 text-xs"
+                onClick={() => setGerenciarEq(true)}>
+                Definir sábados
+              </Button>
             </div>
             <div className="space-y-1.5">
               {eqComDeficit.map((e) => (
@@ -944,7 +960,21 @@ export function PontoBancoHorasTab() {
                           const isNeutro = saldoDia === 0;
                           return (
                             <TableRow key={d.id}>
-                              <TableCell className="py-1.5 text-xs">{dd}/{m}/{y}</TableCell>
+                              <TableCell className="py-1.5 text-xs">
+                                <div className="flex flex-col gap-0.5">
+                                  <span>{dd}/{m}/{y}</span>
+                                  {d.equalizacao && (
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1 w-fit border-amber-500 text-amber-700">
+                                      Equalização
+                                    </Badge>
+                                  )}
+                                  {d.excedente_retido_min > 0 && (
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1 w-fit border-red-400 text-red-600">
+                                      Retido {formatMinutos(d.excedente_retido_min)} (art. 61)
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
                               <TableCell className="py-1.5 text-xs font-mono">{d.entrada?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono">{d.saida?.slice(0, 5) || "-"}</TableCell>
                               <TableCell className="py-1.5 text-xs font-mono text-right">{formatMinutos(d.horas_trabalhadas_minutos || 0)}</TableCell>
@@ -1215,6 +1245,130 @@ export function PontoBancoHorasTab() {
               </p>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* Gerenciador do sábado de equalização (RN05 — marcação INDIVIDUAL por
+          colaborador) e liberação de excedente retido pelo teto (art. 61 CLT). */}
+      <Dialog open={gerenciarEq} onOpenChange={setGerenciarEq}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sábado de equalização — {competencia}</DialogTitle>
+            <DialogDescription>
+              Marque, para cada colaborador, qual sábado trabalhado fecha as 44h do mês.
+              A escolha é individual: colaboradores da mesma escala podem ter sábados diferentes.
+            </DialogDescription>
+          </DialogHeader>
+
+          {eqColaboradores.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhum colaborador com equalização a definir nesta competência.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {eqColaboradores.map((c) => (
+                <div key={c.colaborador_cpf} className="border rounded-md p-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                    <div>
+                      <p className="text-sm font-medium">{c.colaborador_nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.escala_nome} · precisa de{" "}
+                        <span className="font-mono font-semibold text-amber-700">
+                          {formatMinutos(c.total_equalizacao_min)}
+                        </span>
+                      </p>
+                    </div>
+                    {c.art61_liberado && (
+                      <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700">
+                        Excedente liberado (art. 61)
+                      </Badge>
+                    )}
+                  </div>
+
+                  {c.sabados.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhum sábado com ponto registrado neste mês — a equalização ficará como débito no fechamento.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {c.sabados.map((s) => {
+                        const marcado = c.data_marcada === s.data;
+                        return (
+                          <Button
+                            key={s.data}
+                            size="sm"
+                            variant={marcado ? "default" : "outline"}
+                            className="h-7 text-xs"
+                            disabled={definirEq.isPending || removerEq.isPending}
+                            onClick={() =>
+                              marcado
+                                ? removerEq.mutate(c.colaborador_cpf)
+                                : definirEq.mutate({ cpf: c.colaborador_cpf, data: s.data })
+                            }
+                          >
+                            {String(s.data).split("-").reverse().slice(0, 2).join("/")}
+                            <span className="ml-1 opacity-70">({formatMinutos(s.trabalhado_min)})</span>
+                          </Button>
+                        );
+                      })}
+                      {c.data_marcada && (
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
+                          disabled={removerEq.isPending}
+                          onClick={() => removerEq.mutate(c.colaborador_cpf)}>
+                          Nenhum
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {c.data_marcada && !c.art61_liberado && (
+                    <Button variant="ghost" size="sm" className="h-6 text-[11px] mt-2 text-amber-700 px-1"
+                      onClick={() => setArt61({ cpf: c.colaborador_cpf, nome: c.colaborador_nome, justificativa: "" })}>
+                      Liberar excedente acima do teto (art. 61 CLT)
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground border-t pt-2">
+                Intervalo mínimo do dia (art. 71 CLT): até 4h sem intervalo; de 4h a 6h, 15 minutos; acima de 6h, 1 hora.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Justificativa do art. 61 para liberar excedente retido */}
+      <Dialog open={!!art61} onOpenChange={(o) => !o && setArt61(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Liberar excedente — art. 61 CLT</DialogTitle>
+            <DialogDescription>
+              O excedente acima do teto legal fica retido até validação do RH. Registre a
+              justificativa de necessidade imperiosa ou força maior para {art61?.nome}.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label className="text-xs">Justificativa (obrigatória)</Label>
+            <Input
+              value={art61?.justificativa || ""}
+              onChange={(e) => setArt61((p) => (p ? { ...p, justificativa: e.target.value } : p))}
+              placeholder="Ex.: atendimento emergencial de cliente em parada de produção"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setArt61(null)}>Cancelar</Button>
+            <Button
+              disabled={!art61?.justificativa.trim() || liberarArt61.isPending}
+              onClick={() => {
+                if (!art61) return;
+                liberarArt61.mutate(
+                  { cpf: art61.cpf, justificativa: art61.justificativa.trim() },
+                  { onSuccess: () => setArt61(null) }
+                );
+              }}
+            >
+              {liberarArt61.isPending ? "Liberando..." : "Liberar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
