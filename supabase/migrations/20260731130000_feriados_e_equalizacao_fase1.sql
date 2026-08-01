@@ -9,73 +9,12 @@
 -- Nenhuma alteração de saldo/apuração nesta fase (fundação apenas).
 -- =====================================================================
 
--- 1) BASE DE FERIADOS ---------------------------------------------------
--- tenant_id NULL = feriado GLOBAL (nacionais, semeados abaixo; somente
--- leitura para os tenants). Feriados do tenant: estaduais/municipais/
--- móveis, cadastrados pelo RH em Configurações → Feriados.
-CREATE TABLE IF NOT EXISTS public.feriados (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id uuid REFERENCES public.tenants(id) ON DELETE CASCADE,
-  ambito text NOT NULL DEFAULT 'nacional' CHECK (ambito IN ('nacional','estadual','municipal')),
-  uf text,
-  municipio text,
-  data date NOT NULL,
-  nome text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_feriados_data ON public.feriados(data);
-CREATE INDEX IF NOT EXISTS idx_feriados_tenant ON public.feriados(tenant_id);
-
-ALTER TABLE public.feriados ENABLE ROW LEVEL SECURITY;
-
-DO $$ BEGIN
-  CREATE POLICY "feriados_select" ON public.feriados FOR SELECT
-    USING (tenant_id IS NULL OR tenant_id = public.get_user_tenant_id());
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "feriados_insert" ON public.feriados FOR INSERT
-    WITH CHECK (tenant_id = public.get_user_tenant_id());
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "feriados_update" ON public.feriados FOR UPDATE
-    USING (tenant_id = public.get_user_tenant_id());
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "feriados_delete" ON public.feriados FOR DELETE
-    USING (tenant_id = public.get_user_tenant_id());
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Seed: feriados nacionais FIXOS 2026–2027 (globais). Feriados móveis
--- (Sexta-feira Santa, Corpus Christi, Carnaval) e locais: cadastrar na UI.
-INSERT INTO public.feriados (tenant_id, ambito, data, nome)
-SELECT NULL, 'nacional', v.d::date, v.n FROM (VALUES
-  ('2026-01-01','Confraternização Universal'),
-  ('2026-04-21','Tiradentes'),
-  ('2026-05-01','Dia do Trabalho'),
-  ('2026-09-07','Independência do Brasil'),
-  ('2026-10-12','Nossa Senhora Aparecida'),
-  ('2026-11-02','Finados'),
-  ('2026-11-15','Proclamação da República'),
-  ('2026-11-20','Dia Nacional de Zumbi e da Consciência Negra'),
-  ('2026-12-25','Natal'),
-  ('2027-01-01','Confraternização Universal'),
-  ('2027-04-21','Tiradentes'),
-  ('2027-05-01','Dia do Trabalho'),
-  ('2027-09-07','Independência do Brasil'),
-  ('2027-10-12','Nossa Senhora Aparecida'),
-  ('2027-11-02','Finados'),
-  ('2027-11-15','Proclamação da República'),
-  ('2027-11-20','Dia Nacional de Zumbi e da Consciência Negra'),
-  ('2027-12-25','Natal')
-) AS v(d, n)
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.feriados f
-  WHERE f.tenant_id IS NULL AND f.data = v.d::date AND f.nome = v.n
-);
+-- 1) BASE DE FERIADOS — JÁ EXISTE no banco (public.feriados), com colunas
+--    abrangencia (nacional/estadual/municipal), tipo (feriado/facultativo),
+--    ativo, uf, municipio, codigo_ibge. Nacionais já semeados até 2028.
+--    Esta migration NÃO recria nem altera a tabela; apenas a consome.
+--    IMPORTANTE: só tipo='feriado' e ativo=true são deduzidos dos dias úteis
+--    — ponto facultativo NÃO suspende expediente obrigatoriamente.
 
 -- 2) CÁLCULO DA EQUALIZAÇÃO DE UMA ESCALA NUMA COMPETÊNCIA --------------
 CREATE OR REPLACE FUNCTION public.ponto_equalizacao_competencia(
@@ -158,13 +97,15 @@ BEGIN
     FROM public.feriados
     WHERE data BETWEEN v_ini AND v_fim
       AND EXTRACT(ISODOW FROM data) BETWEEN 1 AND 5
+      AND COALESCE(ativo, true) = true
+      AND tipo = 'feriado'          -- facultativo não deduz dia útil
+      AND (tenant_id IS NULL OR tenant_id = p_tenant_id)
       AND (
-        (tenant_id IS NULL AND ambito = 'nacional')
-        OR (tenant_id = p_tenant_id AND (
-              ambito = 'nacional'
-              OR (ambito = 'estadual'  AND (uf IS NULL OR v_emp.estado IS NULL OR upper(uf) = upper(v_emp.estado)))
-              OR (ambito = 'municipal' AND (municipio IS NULL OR v_emp.cidade IS NULL OR lower(municipio) = lower(v_emp.cidade)))
-            ))
+        abrangencia = 'nacional'
+        OR (abrangencia = 'estadual'
+            AND (uf IS NULL OR v_emp.estado IS NULL OR upper(uf) = upper(v_emp.estado)))
+        OR (abrangencia = 'municipal'
+            AND (municipio IS NULL OR v_emp.cidade IS NULL OR lower(municipio) = lower(v_emp.cidade)))
       )
     ORDER BY data, nome
   ) f;
@@ -177,7 +118,7 @@ BEGIN
     v_obs := v_obs || 'Escala já cumpre 44h semanais — equalização não se aplica.';
   END IF;
   IF v_qtd_fer = 0 THEN
-    v_obs := v_obs || 'Nenhum feriado cadastrado caiu em dia útil neste mês (confira feriados móveis/locais em Configurações → Feriados).';
+    v_obs := v_obs || 'Nenhum feriado deduzido neste mês (pontos facultativos não são deduzidos).';
   END IF;
 
   -- RN10: memória de cálculo completa

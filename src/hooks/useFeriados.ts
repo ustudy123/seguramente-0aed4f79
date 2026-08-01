@@ -6,7 +6,9 @@ import { toast } from "sonner";
 export interface Feriado {
   id: string;
   tenant_id: string | null; // null = feriado global (nacional padrão)
-  ambito: "nacional" | "estadual" | "municipal";
+  abrangencia: "nacional" | "estadual" | "municipal";
+  tipo: "feriado" | "facultativo";
+  ativo: boolean;
   uf: string | null;
   municipio: string | null;
   data: string; // YYYY-MM-DD
@@ -16,7 +18,8 @@ export interface Feriado {
 export interface NovoFeriado {
   data: string;
   nome: string;
-  ambito: "nacional" | "estadual" | "municipal";
+  abrangencia: "nacional" | "estadual" | "municipal";
+  tipo?: "feriado" | "facultativo";
   uf?: string | null;
   municipio?: string | null;
 }
@@ -32,6 +35,7 @@ export function useFeriados() {
       if (!tenantId) return [];
       const { data, error } = await fromTable("feriados")
         .select("*")
+        .eq("ativo", true)
         .order("data") as { data: Feriado[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
@@ -44,9 +48,10 @@ export function useFeriados() {
       if (!tenantId) throw new Error("Tenant não identificado");
       const { error } = await fromTable("feriados").insert({
         tenant_id: tenantId,
-        ambito: f.ambito,
-        uf: f.ambito !== "nacional" ? (f.uf || null) : null,
-        municipio: f.ambito === "municipal" ? (f.municipio || null) : null,
+        abrangencia: f.abrangencia,
+        tipo: f.tipo || "feriado",
+        uf: f.abrangencia !== "nacional" ? (f.uf || null) : null,
+        municipio: f.abrangencia === "municipal" ? (f.municipio || null) : null,
         data: f.data,
         nome: f.nome.trim(),
       } as any) as { error: Error | null };

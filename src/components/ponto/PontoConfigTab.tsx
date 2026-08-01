@@ -31,7 +31,7 @@ interface PontoConfig {
 
 export function PontoConfigTab() {
   const { feriados, criar: criarFeriado, excluir: excluirFeriado } = useFeriados();
-  const [novoFeriado, setNovoFeriado] = useState({ data: "", nome: "", ambito: "nacional" as "nacional" | "estadual" | "municipal", uf: "", municipio: "" });
+  const [novoFeriado, setNovoFeriado] = useState({ data: "", nome: "", abrangencia: "nacional" as "nacional" | "estadual" | "municipal", uf: "", municipio: "" });
   const { tenantId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -318,7 +318,8 @@ export function PontoConfigTab() {
           <CardDescription>
             Feriados nacionais fixos já vêm cadastrados. Cadastre aqui os móveis
             (Sexta-feira Santa, Corpus Christi, Carnaval) e os estaduais/municipais
-            da sua região — eles são deduzidos do cálculo da equalização mensal.
+            da sua região. Apenas feriados (não pontos facultativos) são deduzidos
+            do cálculo da equalização mensal.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -337,22 +338,22 @@ export function PontoConfigTab() {
               <Label className="text-xs">Âmbito</Label>
               <select
                 className="h-8 rounded-md border bg-background px-2 text-sm block"
-                value={novoFeriado.ambito}
-                onChange={(e) => setNovoFeriado((p) => ({ ...p, ambito: e.target.value as any }))}
+                value={novoFeriado.abrangencia}
+                onChange={(e) => setNovoFeriado((p) => ({ ...p, abrangencia: e.target.value as any }))}
               >
                 <option value="nacional">Nacional</option>
                 <option value="estadual">Estadual</option>
                 <option value="municipal">Municipal</option>
               </select>
             </div>
-            {novoFeriado.ambito !== "nacional" && (
+            {novoFeriado.abrangencia !== "nacional" && (
               <div>
                 <Label className="text-xs">UF</Label>
                 <Input className="h-8 w-[70px]" placeholder="PR" maxLength={2} value={novoFeriado.uf}
                   onChange={(e) => setNovoFeriado((p) => ({ ...p, uf: e.target.value.toUpperCase() }))} />
               </div>
             )}
-            {novoFeriado.ambito === "municipal" && (
+            {novoFeriado.abrangencia === "municipal" && (
               <div>
                 <Label className="text-xs">Município</Label>
                 <Input className="h-8 w-[160px]" placeholder="Maringá" value={novoFeriado.municipio}
@@ -365,11 +366,11 @@ export function PontoConfigTab() {
                 {
                   data: novoFeriado.data,
                   nome: novoFeriado.nome,
-                  ambito: novoFeriado.ambito,
+                  abrangencia: novoFeriado.abrangencia,
                   uf: novoFeriado.uf || null,
                   municipio: novoFeriado.municipio || null,
                 },
-                { onSuccess: () => setNovoFeriado({ data: "", nome: "", ambito: "nacional", uf: "", municipio: "" }) }
+                { onSuccess: () => setNovoFeriado({ data: "", nome: "", abrangencia: "nacional", uf: "", municipio: "" }) }
               )}
             >
               {criarFeriado.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Adicionar"}
@@ -387,8 +388,11 @@ export function PontoConfigTab() {
                 </span>
                 <span className="flex-1 truncate">{f.nome}</span>
                 <Badge variant="outline" className="text-[10px]">
-                  {f.ambito === "nacional" ? "Nacional" : f.ambito === "estadual" ? `Estadual${f.uf ? ` · ${f.uf}` : ""}` : `Municipal${f.municipio ? ` · ${f.municipio}` : ""}`}
+                  {f.abrangencia === "nacional" ? "Nacional" : f.abrangencia === "estadual" ? `Estadual${f.uf ? ` · ${f.uf}` : ""}` : `Municipal${f.municipio ? ` · ${f.municipio}` : ""}`}
                 </Badge>
+                {f.tipo === "facultativo" && (
+                  <Badge variant="secondary" className="text-[10px]">Facultativo</Badge>
+                )}
                 {f.tenant_id === null ? (
                   <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
                 ) : (
