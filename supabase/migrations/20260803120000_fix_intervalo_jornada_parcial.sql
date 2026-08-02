@@ -25,11 +25,16 @@
 --      bater o almoço e trabalha o dia inteiro.
 --   3. Sem janela de intervalo conhecida, desconta no máximo o excedente
 --      sobre a jornada — nunca zera um dia curto legitimamente trabalhado.
+--   4. Turno que cruza a meia-noite deixa de zerar o trabalhado.
 --
--- Escopo deliberadamente restrito ao desconto do intervalo, para que o
--- comparativo antes/depois isole uma única variável. A precedência de
--- horas_extras/horas_faltantes sobre o atestado (bug latente no mesmo
--- arquivo) NÃO é tocada aqui.
+-- IMPORTANTE: esta versão parte de 20260801120000_fix_equalizacao_sabado_
+-- trabalhado.sql e PRESERVA integralmente a equalização mensal (RN05/RN06/
+-- RN11), as colunas equalizacao/excedente_retido_min e a retenção do
+-- excedente. A única alteração no corpo é o cálculo do intervalo.
+--
+-- Escopo deliberadamente restrito, para que o comparativo antes/depois
+-- isole uma única variável. A precedência de horas_extras/horas_faltantes
+-- sobre o atestado (bug latente no mesmo arquivo) NÃO é tocada aqui.
 -- =====================================================================
 
 -- 1) JANELA DO INTERVALO PREVISTO NA ESCALA ---------------------------
@@ -150,11 +155,19 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 -- sem isto o statement_timeout padrão pode abortar a migration em bases grandes.
 SET statement_timeout = 0;
 
+-- Idempotente: só captura o "antes" se ainda não existir. Numa reexecução
+-- (a primeira tentativa desta migration falhava por mudança de tipo de
+-- retorno) o "antes" original é preservado.
 DO $capt$
 DECLARE
   r RECORD;
   v_total int := 0;
 BEGIN
+  IF EXISTS (SELECT 1 FROM public.ponto_saldo_fix_intervalo_snapshot WHERE fase = 'antes') THEN
+    RAISE NOTICE 'Snapshot ANTES já existe — preservado.';
+    RETURN;
+  END IF;
+
   FOR r IN
     SELECT DISTINCT b.tenant_id, b.colaborador_cpf, b.competencia
     FROM public.ponto_banco_horas b
@@ -174,13 +187,13 @@ BEGIN
   RAISE NOTICE 'Snapshot ANTES: % colaborador(es)/competência(s) capturado(s)', v_total;
 END $capt$;
 
--- 3) FUNÇÃO CORRIGIDA --------------------------------------------------
+-- 3) FUNÇÃO CORRIGIDA (base: 20260801120000 + correção do intervalo) ----
 CREATE OR REPLACE FUNCTION public.ponto_saldo_dias_competencia(p_tenant_id uuid, p_colaborador_cpf text, p_competencia text)
- RETURNS TABLE(dia date, entrada time without time zone, saida time without time zone, trabalhado_min integer, jornada_min integer, saldo_min integer, protegido boolean)
+ RETURNS TABLE(dia date, entrada time without time zone, saida time without time zone, trabalhado_min integer, jornada_min integer, saldo_min integer, protegido boolean, equalizacao boolean, excedente_retido_min integer)
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$
+AS $$
 DECLARE
   v_ini date := to_date(p_competencia || '-01', 'YYYY-MM-DD');
   v_fim date := (to_date(p_competencia || '-01', 'YYYY-MM-DD') + INTERVAL '1 month - 1 day')::date;
@@ -188,6 +201,7 @@ DECLARE
   v_colaborador_id text;
   v_fb_jornada int;
   v_fb_tol int := 0;
+  v_fb_escala_id uuid;
   v_jornada int;
   v_tol int;
   v_esperado int;
@@ -200,13 +214,20 @@ DECLARE
   v_ent_esc time; v_sai_esc time; v_interv int; v_tol_bat int;
   v_ent_cons int; v_sai_cons int; v_trab_ajust int; v_usou_batida boolean;
   v_protegido boolean;
-  -- desconto de intervalo (correção)
-  v_trab_marc int;      -- minutos pareados nas marcações (já sem os intervalos reais)
-  v_janela int;         -- permanência real: última saída - primeira entrada
-  v_janela_cons int;    -- permanência com as bordas ajustadas pela tolerância
+  -- desconto de intervalo (correcao 03/08/2026)
+  v_trab_marc int;      -- minutos pareados nas marcacoes (ja sem intervalos reais)
+  v_janela int;         -- permanencia real: ultima saida - primeira entrada
+  v_janela_cons int;    -- permanencia com as bordas ajustadas pela tolerancia
   v_interv_real int;    -- intervalo efetivamente registrado nas batidas
-  v_desc_interv int;    -- intervalo previsto a descontar quando não houve registro
+  v_desc_interv int;    -- intervalo previsto a descontar quando nao houve registro
   v_int_ini time; v_int_fim time;
+  v_eq_data date;
+  v_eq_total int;
+  v_eq_liberado boolean := false;
+  v_eq_teve_linha boolean := false;
+  v_eq_m jsonb;
+  v_eq_auto boolean := false;
+  v_qtd_sab int := 0;
   r RECORD;
 BEGIN
   SELECT colaborador_id INTO v_colaborador_id
@@ -217,8 +238,8 @@ BEGIN
   ORDER BY data DESC
   LIMIT 1;
 
-  SELECT e.jornada_diaria_minutos, COALESCE(e.tolerancia_diaria_minutos, 0)
-    INTO v_fb_jornada, v_fb_tol
+  SELECT e.jornada_diaria_minutos, COALESCE(e.tolerancia_diaria_minutos, 0), e.id
+    INTO v_fb_jornada, v_fb_tol, v_fb_escala_id
   FROM public.ponto_escala_atribuicoes a
   JOIN public.ponto_escalas e ON e.id = a.escala_id
   WHERE a.tenant_id = p_tenant_id
@@ -226,6 +247,46 @@ BEGIN
     AND COALESCE(a.ativa, true) = true
   ORDER BY a.data_inicio ASC
   LIMIT 1;
+
+  SELECT pem.data_equalizacao, pem.total_equalizacao_min, (pem.art61_liberado_em IS NOT NULL)
+    INTO v_eq_data, v_eq_total, v_eq_liberado
+  FROM public.ponto_equalizacao_mensal pem
+  WHERE pem.tenant_id = p_tenant_id
+    AND pem.colaborador_cpf = v_cpf
+    AND pem.competencia = p_competencia;
+
+  -- FIX (chamado Kailaine) — Detecção automática do dia de equalização (RN05):
+  -- se NÃO há marcação manual mas existe sábado com ponto no mês, esse sábado é
+  -- o dia de equalização. Havendo vários, usa o último. Isso evita creditar o
+  -- sábado cheio e ainda lançar débito-fantasma de fechamento num dia sem ponto.
+  IF v_eq_data IS NULL AND v_fb_escala_id IS NOT NULL THEN
+    SELECT count(*) INTO v_qtd_sab
+    FROM public.ponto_diario d
+    WHERE d.tenant_id = p_tenant_id
+      AND regexp_replace(d.colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
+      AND d.data BETWEEN v_ini AND v_fim
+      AND EXTRACT(ISODOW FROM d.data) = 6
+      AND (d.entrada IS NOT NULL OR COALESCE((EXTRACT(EPOCH FROM d.horas_trabalhadas)/60)::int,0) > 0);
+
+    IF v_qtd_sab >= 1 THEN
+      SELECT d.data INTO v_eq_data
+      FROM public.ponto_diario d
+      WHERE d.tenant_id = p_tenant_id
+        AND regexp_replace(d.colaborador_cpf, '[^0-9]', '', 'g') = v_cpf
+        AND d.data BETWEEN v_ini AND v_fim
+        AND EXTRACT(ISODOW FROM d.data) = 6
+        AND (d.entrada IS NOT NULL OR COALESCE((EXTRACT(EPOCH FROM d.horas_trabalhadas)/60)::int,0) > 0)
+      ORDER BY d.data DESC
+      LIMIT 1;
+
+      v_eq_m := public.ponto_equalizacao_competencia(p_tenant_id, v_fb_escala_id, p_competencia);
+      v_eq_total := COALESCE((v_eq_m->>'total_equalizacao_min')::int, 0);
+      v_eq_auto := (v_eq_total > 0);
+      IF NOT v_eq_auto THEN
+        v_eq_data := NULL;
+      END IF;
+    END IF;
+  END IF;
 
   FOR r IN
     SELECT d.data, d.status, d.tipo_dia, d.observacao, d.horas_trabalhadas,
@@ -252,9 +313,33 @@ BEGIN
     );
 
     IF v_protegido THEN
+      IF v_eq_data IS NOT NULL AND r.data = v_eq_data THEN
+        v_eq_teve_linha := true;
+      END IF;
       dia := r.data; entrada := r.entrada; saida := r.saida;
       trabalhado_min := COALESCE((EXTRACT(EPOCH FROM r.horas_trabalhadas)/60)::int, 0);
       jornada_min := 0; saldo_min := 0; protegido := true;
+      equalizacao := false; excedente_retido_min := 0;
+      RETURN NEXT;
+      CONTINUE;
+    END IF;
+
+    IF v_eq_data IS NOT NULL AND r.data = v_eq_data THEN
+      v_eq_teve_linha := true;
+      v_trab := COALESCE((EXTRACT(EPOCH FROM r.horas_trabalhadas)/60)::int, 0);
+      v_diff := v_trab - COALESCE(v_eq_total, 0);
+      excedente_retido_min := 0;
+      IF v_diff > 120 AND NOT v_eq_liberado THEN
+        excedente_retido_min := v_diff - 120;
+        v_diff := 120;
+      END IF;
+      IF abs(v_diff) <= 10 THEN v_diff := 0; END IF;
+      dia := r.data; entrada := r.entrada; saida := r.saida;
+      trabalhado_min := v_trab;
+      jornada_min := COALESCE(v_eq_total, 0);
+      saldo_min := v_diff;
+      protegido := false;
+      equalizacao := true;
       RETURN NEXT;
       CONTINUE;
     END IF;
@@ -302,7 +387,6 @@ BEGIN
        AND r.entrada IS NOT NULL AND r.saida IS NOT NULL
        AND v_jornada_efetiva > 0 THEN
 
-      -- Bordas: batida dentro da tolerância vale como o horário da escala.
       v_ent_cons := CASE
         WHEN abs((EXTRACT(EPOCH FROM r.entrada)/60)::int - (EXTRACT(EPOCH FROM v_ent_esc)/60)::int) <= COALESCE(v_tol_bat, 10)
           THEN (EXTRACT(EPOCH FROM v_ent_esc)/60)::int
@@ -315,8 +399,8 @@ BEGIN
         ELSE (EXTRACT(EPOCH FROM r.saida)/60)::int
       END;
 
-      -- Intervalo REAL: o que a permanência tem a mais do que o tempo pareado
-      -- nas marcações. Se o colaborador bateu o almoço, aparece aqui.
+      -- Intervalo REAL: o que a permanencia tem a mais do que o tempo pareado
+      -- nas marcacoes. Se o colaborador bateu o almoco, aparece aqui.
       v_trab_marc := COALESCE((EXTRACT(EPOCH FROM r.horas_trabalhadas)/60)::int, 0);
       v_janela := (EXTRACT(EPOCH FROM r.saida)/60)::int - (EXTRACT(EPOCH FROM r.entrada)/60)::int;
       IF v_janela < 0 THEN
@@ -324,22 +408,20 @@ BEGIN
       END IF;
       v_interv_real := GREATEST(0, v_janela - v_trab_marc);
 
-      -- Janela consolidada (bordas na tolerância). Turno que vira o dia:
-      -- saída < entrada, soma 24h — sem isso o trabalhado zerava.
+      -- Janela consolidada (bordas na tolerancia). Turno que vira o dia:
+      -- saida < entrada, soma 24h -- sem isto o trabalhado zerava.
       v_janela_cons := v_sai_cons - v_ent_cons;
       IF v_janela_cons < 0 THEN
         v_janela_cons := v_janela_cons + 1440;
       END IF;
 
       IF v_interv_real > 0 THEN
-        -- Intervalo registrado: já descontado no pareamento, não desconta de novo.
+        -- Intervalo registrado: ja descontado no pareamento, nao desconta de novo.
         v_desc_interv := 0;
       ELSE
-        -- Intervalo NÃO registrado: desconta o previsto apenas na parte que a
+        -- Intervalo NAO registrado: desconta o previsto apenas na parte que a
         -- janela trabalhada realmente atravessa.
         v_int_ini := NULL; v_int_fim := NULL;
-        -- A interseção por minutos-do-dia não vale em turno que cruza a
-        -- meia-noite; nesse caso usa a regra limitada pelo excedente.
         IF v_sai_cons >= v_ent_cons THEN
           BEGIN
             SELECT w.inicio, w.fim INTO v_int_ini, v_int_fim
@@ -355,8 +437,8 @@ BEGIN
             - GREATEST(v_ent_cons, (EXTRACT(EPOCH FROM v_int_ini)/60)::int)
           );
         ELSE
-          -- Sem janela conhecida: desconta no máximo o excedente sobre a
-          -- jornada — nunca zera um dia curto legitimamente trabalhado.
+          -- Sem janela conhecida: desconta no maximo o excedente sobre a
+          -- jornada -- nunca zera um dia curto legitimamente trabalhado.
           v_desc_interv := LEAST(COALESCE(v_interv, 0), GREATEST(0, v_janela - v_jornada_efetiva));
         END IF;
       END IF;
@@ -374,8 +456,6 @@ BEGIN
       IF v_extras > 0 OR v_faltantes > 0 THEN
         v_diff := v_extras - v_faltantes;
       ELSIF v_jornada_efetiva = 0 THEN
-        -- Dia sem jornada prevista (folga / sábado ou domingo não útil):
-        -- tudo o que foi efetivamente trabalhado vira crédito integral.
         v_diff := GREATEST(0, v_trab);
       ELSIF r.status = 'falta' THEN
         v_diff := -v_jornada_efetiva;
@@ -387,8 +467,6 @@ BEGIN
       END IF;
     END IF;
 
-    -- Neutralização final: qualquer saldo diário de até 10 minutos (para mais
-    -- ou para menos) é zerado — não vira crédito nem débito.
     IF abs(v_diff) <= 10 THEN
       v_diff := 0;
     END IF;
@@ -400,12 +478,38 @@ BEGIN
     jornada_min := v_jornada_efetiva;
     saldo_min := v_diff;
     protegido := false;
+    equalizacao := false;
+    excedente_retido_min := 0;
     RETURN NEXT;
   END LOOP;
-END;
-$function$;
 
-GRANT EXECUTE ON FUNCTION public.ponto_saldo_dias_competencia(uuid, text, text) TO authenticated;
+  IF v_eq_data IS NOT NULL AND NOT v_eq_teve_linha AND v_eq_data < CURRENT_DATE THEN
+    dia := v_eq_data; entrada := NULL; saida := NULL;
+    trabalhado_min := 0;
+    jornada_min := COALESCE(v_eq_total, 0);
+    saldo_min := -COALESCE(v_eq_total, 0);
+    protegido := false; equalizacao := true; excedente_retido_min := 0;
+    IF saldo_min <> 0 THEN RETURN NEXT; END IF;
+  END IF;
+
+  -- FIX (chamado Kailaine): fallback só dispara se NÃO houve sábado trabalhado.
+  IF v_eq_data IS NULL AND v_fim < CURRENT_DATE AND v_fb_escala_id IS NOT NULL
+     AND v_qtd_sab = 0 THEN
+    v_eq_m := public.ponto_equalizacao_competencia(p_tenant_id, v_fb_escala_id, p_competencia);
+    v_eq_total := COALESCE((v_eq_m->>'total_equalizacao_min')::int, 0);
+    IF v_eq_total > 0 THEN
+      dia := v_fim; entrada := NULL; saida := NULL;
+      trabalhado_min := 0;
+      jornada_min := v_eq_total;
+      saldo_min := -v_eq_total;
+      protegido := false; equalizacao := true; excedente_retido_min := 0;
+      RETURN NEXT;
+    END IF;
+  END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.ponto_saldo_dias_competencia(uuid, text, text) TO authenticated, service_role;
 
 -- 4) SNAPSHOT "DEPOIS" + REAPURAÇÃO RETROATIVA -------------------------
 DO $reap$
@@ -413,6 +517,8 @@ DECLARE
   r RECORD;
   v_reap int := 0;
 BEGIN
+  DELETE FROM public.ponto_saldo_fix_intervalo_snapshot WHERE fase = 'depois';
+
   FOR r IN
     SELECT DISTINCT b.tenant_id, b.colaborador_cpf, b.competencia
     FROM public.ponto_banco_horas b
