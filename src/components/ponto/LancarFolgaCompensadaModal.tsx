@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoBancoHoras } from "@/hooks/usePontoBancoHoras";
+import { formatarHoraMinuto } from "@/lib/ponto/diaSemana";
 
 interface Props {
   open: boolean;
@@ -143,7 +144,7 @@ export function LancarFolgaCompensadaModal({ open, onOpenChange, colaborador, da
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={salvando || totalMin <= 0 || !colaborador}>
-            {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Lançar ${Math.floor(totalMin / 60)}h${totalMin % 60 ? ` ${totalMin % 60}min` : ""}`}
+            {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Lançar ${formatarHoraMinuto(totalMin)}`}
           </Button>
         </DialogFooter>
       </DialogContent>

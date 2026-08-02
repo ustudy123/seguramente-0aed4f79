@@ -710,8 +710,15 @@ const Ponto = () => {
                           <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
                           {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                         </div>
-                        <div className="text-[11px] text-muted-foreground capitalize leading-tight">
+                        <div className="text-[11px] text-muted-foreground capitalize leading-tight flex items-center justify-center gap-1.5">
                           {format(selectedDate, "EEEE", { locale: ptBR })}
+                          {/* RN15: domingo é Descanso Semanal Remunerado (art. 67 CLT).
+                              O rótulo não se aplica ao sábado. */}
+                          {selectedDate.getDay() === 0 && (
+                            <span className="rounded bg-sky-100 text-sky-700 px-1 py-px text-[9px] font-semibold not-italic normal-case">
+                              DSR
+                            </span>
+                          )}
                         </div>
                       </button>
                     </PopoverTrigger>

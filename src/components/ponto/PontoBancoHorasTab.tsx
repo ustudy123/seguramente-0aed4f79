@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { formatarHoraMinuto, abreviacaoDiaSemana, rotuloTipoDia } from "@/lib/ponto/diaSemana";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -88,11 +89,8 @@ export function PontoBancoHorasTab() {
     observacoes: string;
   }>(null);
 
-  const formatMinutos = (min: number) => {
-    const sinal = min < 0 ? "-" : "";
-    const abs = Math.abs(min);
-    return `${sinal}${Math.floor(abs / 60)}h ${abs % 60}min`;
-  };
+  // RN19: minutos sempre com dois dígitos ("8h 08min").
+  const formatMinutos = (min: number) => formatarHoraMinuto(min);
 
   const handleCriar = async () => {
     const colab = colaboradores.find(c => c.id === criarForm.colaborador_id);
@@ -962,12 +960,23 @@ export function PontoBancoHorasTab() {
                             <TableRow key={d.id}>
                               <TableCell className="py-1.5 text-xs">
                                 <div className="flex flex-col gap-0.5">
-                                  <span>{dd}/{m}/{y}</span>
-                                  {d.equalizacao && (
+                                  {/* RN16: abreviação do dia da semana ao lado da data */}
+                                  <span>
+                                    {dd}/{m}/{y}{" "}
+                                    <span className="text-muted-foreground font-medium">{abreviacaoDiaSemana(d.data)}</span>
+                                  </span>
+                                  {/* RN14/RN15: DSR no domingo; sábado comum fica só com
+                                      a abreviação (sem "Compensado"); o sábado de
+                                      equalização mantém o rótulo próprio. */}
+                                  {d.equalizacao ? (
                                     <Badge variant="outline" className="text-[9px] h-4 px-1 w-fit border-amber-500 text-amber-700">
                                       Equalização
                                     </Badge>
-                                  )}
+                                  ) : rotuloTipoDia(d.data) === "DSR" ? (
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1 w-fit border-sky-500 text-sky-700">
+                                      DSR
+                                    </Badge>
+                                  ) : null}
                                   {d.excedente_retido_min > 0 && (
                                     <Badge variant="outline" className="text-[9px] h-4 px-1 w-fit border-red-400 text-red-600">
                                       Retido {formatMinutos(d.excedente_retido_min)} (art. 61)

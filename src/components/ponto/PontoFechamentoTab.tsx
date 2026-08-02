@@ -19,6 +19,7 @@ import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatarHoraMinuto } from "@/lib/ponto/diaSemana";
 
 const STATUS_FECHAMENTO: Record<string, { label: string; color: string }> = {
   aberto: { label: "Aberto", color: "bg-green-100 text-green-800" },
@@ -129,10 +130,8 @@ export function PontoFechamentoTab() {
   const rowsToShow: PontoEspelho[] = espelhos.length > 0 ? espelhos : previewEspelhos;
   const isPreview = espelhos.length === 0 && previewEspelhos.length > 0;
 
-  const formatMinutos = (min: number) => {
-    const abs = Math.abs(min);
-    return `${Math.floor(abs / 60)}h ${abs % 60}min`;
-  };
+  // RN19: minutos sempre com dois dígitos ("8h 08min").
+  const formatMinutos = (min: number) => formatarHoraMinuto(Math.abs(min));
 
   const handleFechar = async () => {
     await fecharPeriodo({ competencia, observacoes });
