@@ -11,6 +11,7 @@ import {
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
   MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon, CalendarDays,
+  AlertTriangle,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -34,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { usePonto, TIPO_MARCACAO_LABELS, STATUS_PONTO_CONFIG, type PontoDiario, type PontoAjuste } from "@/hooks/usePonto";
+import { calcularCoberturaJornada, formatarMinutosCurto } from "@/lib/ponto/alertasDia";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -219,7 +221,14 @@ const Ponto = () => {
         .eq("dia_semana", diaSemana)
         .in("escala_id", escalaIds) as { data: any[] | null; error: Error | null };
       if (e2) throw e2;
-      return { atribuicoes: ativas, periodos: periodos || [] };
+      // Jornada diária da escala — usada como fallback do teto legal (RN17)
+      // quando a escala não tem blocos cadastrados para o dia.
+      const { data: escalas, error: e3 } = await fromTable("ponto_escalas")
+        .select("id, jornada_diaria_minutos")
+        .eq("tenant_id", tenantIdAtivo)
+        .in("id", escalaIds) as { data: any[] | null; error: Error | null };
+      if (e3) throw e3;
+      return { atribuicoes: ativas, periodos: periodos || [], escalas: escalas || [] };
     },
     enabled: !!tenantIdAtivo,
   });
@@ -324,6 +333,28 @@ const Ponto = () => {
     }
     return map;
   }, [escalaDia]);
+
+  // Jornada prevista do dia (minutos) por CPF: soma dos blocos da escala e,
+  // quando o dia não tem blocos cadastrados, a jornada diária da escala.
+  // Base da cobertura por atestado e do teto diário (RN17).
+  const jornadaPrevistaPorCpf = useMemo(() => {
+    const map = new Map<string, number>();
+    const atribs = (escalaDia?.atribuicoes || []) as any[];
+    const escalas = (escalaDia?.escalas || []) as any[];
+    const jornadaPorEscala = new Map<string, number>(
+      escalas.map((e: any) => [String(e.id), Number(e.jornada_diaria_minutos) || 0]),
+    );
+    const ordenadas = [...atribs].sort((a, b) => String(b.data_inicio || "").localeCompare(String(a.data_inicio || "")));
+    for (const a of ordenadas) {
+      const cpf = onlyDigits(a.colaborador_cpf);
+      if (!cpf || map.has(cpf)) continue;
+      const blocos = blocosPrevistosPorCpf.get(cpf);
+      const somaBlocos = (blocos || []).reduce((acc, b) => acc + Math.max(0, b.fim - b.ini), 0);
+      const jornada = somaBlocos > 0 ? somaBlocos : (jornadaPorEscala.get(String(a.escala_id)) || 0);
+      if (jornada > 0) map.set(cpf, jornada);
+    }
+    return map;
+  }, [escalaDia, blocosPrevistosPorCpf]);
   
   // Determine which markings the selected collaborator already has today
   const marcacoesColaboradorHoje = marcacoesHoje.filter(
@@ -844,6 +875,21 @@ const Ponto = () => {
                   const totalLabel = marcs.length > 0
                     ? `${Math.floor(Math.max(0, totalMin) / 60).toString().padStart(2, "0")}h ${(Math.max(0, totalMin) % 60).toString().padStart(2, "0")}min`
                     : formatInterval(ponto.horas_trabalhadas);
+
+                  // ── Cobertura da jornada e teto diário ────────────────────
+                  // Atestado de HORAS do dia (parcial): a ausência é justificada.
+                  const atestadoMin = atestadoRaw && (atestadoRaw.unidade_afastamento || "dias") === "horas"
+                    ? (Number(atestadoRaw.horas_afastamento) || 0) * 60 + (Number(atestadoRaw.minutos_afastamento) || 0)
+                    : 0;
+                  const jornadaPrevistaMin = jornadaPrevistaPorCpf.get(cpfKey) || 0;
+                  const { jornadaCoberta, excedenteLimiteMin, excedeLimiteDiario } =
+                    calcularCoberturaJornada({
+                      jornadaPrevistaMin,
+                      atestadoMin,
+                      totalMin,
+                      toleranciaMin: TOLERANCIA_SAIDA_MIN,
+                    });
+                  const excedenteLabel = formatarMinutosCurto(excedenteLimiteMin);
                   return (
                     <TableRow key={ponto.id} className="hover:bg-muted/30">
                       <TableCell>
@@ -937,6 +983,14 @@ const Ponto = () => {
                                   <FileText className="w-3 h-3" /> ATESTADO{atestadoInfo.label ? ` · ${atestadoInfo.label}` : ""}
                                 </span>
                               )}
+                              {excedeLimiteDiario && (
+                                <span
+                                  className="inline-flex items-center gap-1 self-start rounded-md bg-red-100 text-red-800 px-2 py-0.5 text-[11px] font-semibold"
+                                  title={`Total do dia acima da jornada (${Math.floor(jornadaPrevistaMin / 60)}h${String(jornadaPrevistaMin % 60).padStart(2, "0")}) + 2h suplementares — art. 59, caput, CLT. Excedente: ${excedenteLabel}.`}
+                                >
+                                  <AlertTriangle className="w-3 h-3" /> EXCEDE LIMITE DIÁRIO · {excedenteLabel}
+                                </span>
+                              )}
                               {linhas.map((linha, li) => {
                                 const primeiroEhEntrada = linha[0].tipo === "entrada" || linha[0].tipo === "retorno_almoco";
                                 const parCompleto = linha.length === 2 && primeiroEhEntrada;
@@ -954,15 +1008,12 @@ const Ponto = () => {
                                 // atestado, licença, folga...) vira o selo do período,
                                 // exibindo o próprio motivo escolhido no ajuste.
                                 const ehAusenciaPar = AUSENCIA_RE.test(motivoPar || "");
-                                const parStatus = ehAusenciaPar
-                                  ? { label: motivoPar as string, color: "bg-violet-100 text-violet-800" }
-                                  : !parCompleto
-                                    ? { label: "Incompleto", color: "bg-orange-100 text-orange-800" }
-                                    : STATUS_PONTO_CONFIG.regular;
                                 // Saída antecipada: compara a saída real do par com o fim
                                 // do bloco previsto na escala (o de maior sobreposição).
+                                // Não se aplica quando a jornada do dia já está fechada
+                                // pela soma de atestado + trabalho: a ausência é amparada.
                                 let saidaAntecipada: string | null = null;
-                                if (parCompleto && !ehAusenciaPar) {
+                                if (parCompleto && !ehAusenciaPar && !jornadaCoberta) {
                                   const blocos = blocosPrevistosPorCpf.get(cpfKey);
                                   if (blocos?.length) {
                                     const pIni = hmToMin(linha[0].hora);
@@ -981,6 +1032,17 @@ const Ponto = () => {
                                     }
                                   }
                                 }
+                                // O status do período reflete os alertas: nunca exibe
+                                // "Regular" ao lado de uma irregularidade sinalizada.
+                                const parStatus = ehAusenciaPar
+                                  ? { label: motivoPar as string, color: "bg-violet-100 text-violet-800" }
+                                  : !parCompleto
+                                    ? { label: "Incompleto", color: "bg-orange-100 text-orange-800" }
+                                    : excedeLimiteDiario
+                                      ? { label: "Excede limite diário", color: "bg-red-100 text-red-800" }
+                                      : saidaAntecipada
+                                        ? { label: "Saída antecipada", color: "bg-amber-100 text-amber-800" }
+                                        : STATUS_PONTO_CONFIG.regular;
                                 return (
                                   <div key={li} className={gridCols}>
                                     <div className="grid grid-cols-2 gap-1.5">
