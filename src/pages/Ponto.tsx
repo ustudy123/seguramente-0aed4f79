@@ -827,9 +827,9 @@ const Ponto = () => {
               </TableHeader>
               <TableBody>
                 {loadingPontos ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8">Carregando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8">Carregando...</TableCell></TableRow>
                 ) : filteredPontos.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
                 ) : filteredPontos.map((ponto) => {
                   // Linha virtual (colaborador sem registro no dia) mostra
                   // "Pendente"; só registros reais com status pendente viram
