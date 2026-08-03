@@ -431,9 +431,13 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     y = (doc as any).lastAutoTable.finalY + 6;
   };
 
+  // Preferência do cliente: fatores sem cobertura no instrumento ("Não avaliada")
+  // não devem constar nas tabelas do relatório.
+  const somenteAvaliados = (itens: ItemDiagnosticoPsicossocial[]) =>
+    itens.filter((i) => i.avaliado !== false);
+
   const escreverResumoNiveis = (itens: ItemDiagnosticoPsicossocial[]) => {
-    const avaliados = itens.filter((i) => i.avaliado !== false);
-    const naoAvaliados = itens.length - avaliados.length;
+    const avaliados = somenteAvaliados(itens);
     const contagem = (Object.keys(NIVEL15_LABELS) as NivelGRO15[]).reduce(
       (acc, nivel) => ({ ...acc, [nivel]: avaliados.filter((i) => i.nivelKey === nivel).length }),
       {} as Record<NivelGRO15, number>
@@ -444,8 +448,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     doc.setTextColor(35, 35, 35);
     doc.text(
       s(
-        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)` +
-          (naoAvaliados > 0 ? ` · ${naoAvaliados} sem cobertura no instrumento` : "")
+        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)`
       ),
       marginX,
       y
@@ -458,12 +461,13 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   if (temGHE) {
     writeSubTitle("I.1. Consolidado da campanha (todos os GHEs)");
   }
-  const nAvaliados = inventario.filter((i) => i.avaliado !== false).length;
+  const inventarioAvaliado = somenteAvaliados(inventario);
   writeParagraph(
-    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) do catálogo NR-01 / ISO 45003 inventariado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo — sendo ${nAvaliados} avaliado(s) diretamente pelos itens do instrumento aplicado e ${inventario.length - nAvaliados} sem cobertura direta no instrumento (mantidos no inventário para rastreabilidade e monitoramento).`
+    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventarioAvaliado.length} fator(es) do catálogo NR-01 / ISO 45003 avaliado(s) pelos itens do instrumento aplicado e inventariado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo.`
   );
-  renderTabelaInventario(inventario);
-  escreverResumoNiveis(inventario);
+  renderTabelaInventario(inventarioAvaliado);
+  escreverResumoNiveis(inventarioAvaliado);
+
 
   // Estratificação obrigatória por GHE (NR-01 / NR-17): cada grupo tem o seu
   // próprio inventário, calculado apenas com as respostas daquele GHE.
