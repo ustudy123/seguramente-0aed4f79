@@ -9,6 +9,8 @@ import { EmpresaEnquadramentoLegal } from '@/components/empresa/EmpresaEnquadram
 import { EmpresaObrigacoesInclusao } from '@/components/empresa/EmpresaObrigacoesInclusao';
 import { EmpresaIndicadores } from '@/components/empresa/EmpresaIndicadores';
 import { EmpresaJornadaCondicoes } from '@/components/empresa/EmpresaJornadaCondicoes';
+import { EmpresaFeriadoTabelaField } from '@/components/empresa/EmpresaFeriadoTabelaField';
+
 import { EmpresaObrigacoesTab } from '@/components/empresa/EmpresaObrigacoesTab';
 import { EmpresaImportExport } from '@/components/empresa/EmpresaImportExport';
 import { EmpresaList } from '@/components/empresa/EmpresaList';
