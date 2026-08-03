@@ -238,8 +238,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Relacionamentos',
-      'Relacionamentos e',
-      'Qualidade das',
+      'Relacionamentos e Suporte',
       'Qualidade das Relações',
       'Clima de Equipe',
       'Conflitos Interpessoais',
