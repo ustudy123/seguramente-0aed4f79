@@ -11,7 +11,7 @@ import {
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
   MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon, CalendarDays,
-  AlertTriangle,
+  AlertTriangle, ShieldAlert,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -54,6 +54,7 @@ import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoAjustesTab } from "@/components/ponto/PontoAjustesTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
+import { PontoAuditoriaAjustesTab } from "@/components/ponto/PontoAuditoriaAjustesTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 import { PontoFeriadosTab } from "@/components/ponto/PontoFeriadosTab";
@@ -1230,13 +1231,15 @@ const Ponto = () => {
         {/* Compliance */}
         <TabsContent value="compliance">
           <Tabs value={complianceTab} onValueChange={setComplianceTab} className="w-full">
-            <TabsList className="grid w-full max-w-xl grid-cols-3 mb-4">
+            <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-4">
               <TabsTrigger value="alertas" className="text-xs"><Bell className="h-3.5 w-3.5 mr-1" />Alertas CLT</TabsTrigger>
+              <TabsTrigger value="auditoria" className="text-xs"><ShieldAlert className="h-3.5 w-3.5 mr-1" />Auditoria de ajustes</TabsTrigger>
               <TabsTrigger value="acordos" className="text-xs"><FileText className="h-3.5 w-3.5 mr-1" />Acordos</TabsTrigger>
               <TabsTrigger value="cct" className="text-xs"><Scale className="h-3.5 w-3.5 mr-1" />CCT</TabsTrigger>
             </TabsList>
             <TabsContent value="alertas"><PontoAlertasTab /></TabsContent>
             <TabsContent value="acordos"><PontoAcordosTab /></TabsContent>
+            <TabsContent value="auditoria"><PontoAuditoriaAjustesTab /></TabsContent>
             <TabsContent value="cct"><PontoCCTTab /></TabsContent>
           </Tabs>
         </TabsContent>
