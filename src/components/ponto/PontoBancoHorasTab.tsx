@@ -23,6 +23,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { formatarHoraMinuto, abreviacaoDiaSemana, rotuloTipoDia } from "@/lib/ponto/diaSemana";
+import { ExcedenteRetidoPanel } from "./ExcedenteRetidoPanel";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -403,6 +404,10 @@ export function PontoBancoHorasTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* RN17: excedente diário acima do teto legal aguardando decisão do RH.
+          Só aparece quando há pendência. */}
+      <ExcedenteRetidoPanel competencia={competencia} />
 
       {/* Equalização mensal (RN04): valor necessário no mês para fechar 44h,
           visível desde o dia 1 — memória de cálculo (RN10) no ícone ⓘ. */}
