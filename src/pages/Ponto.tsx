@@ -908,24 +908,44 @@ const Ponto = () => {
                       pendingEntry = null;
                     }
                   }
-                  const totalLabel = marcs.length > 0
-                    ? `${Math.floor(Math.max(0, totalMin) / 60).toString().padStart(2, "0")}h ${(Math.max(0, totalMin) % 60).toString().padStart(2, "0")}min`
+                  // Saldo apurado do dia (RPC) — mesma fonte do Banco de Horas.
+                  const saldoApurado = saldoDiaPorCpf.get(cpfKey);
+                  const totalDiaMin = saldoApurado ? saldoApurado.trabalhadoMin : Math.max(0, totalMin);
+                  const totalLabel = saldoApurado || marcs.length > 0
+                    ? `${Math.floor(totalDiaMin / 60).toString().padStart(2, "0")}h ${(totalDiaMin % 60).toString().padStart(2, "0")}min`
                     : formatInterval(ponto.horas_trabalhadas);
+                  const saldoCell = saldoApurado
+                    ? (
+                      <span
+                        className={cn(
+                          "font-mono text-xs font-semibold",
+                          saldoApurado.saldoMin > 0 && "text-emerald-600",
+                          saldoApurado.saldoMin < 0 && "text-red-600",
+                          saldoApurado.saldoMin === 0 && "text-muted-foreground",
+                        )}
+                        title="Saldo apurado pela mesma rotina do Banco de Horas (escala, tolerância e abonos)"
+                      >
+                        {saldoApurado.saldoMin > 0 ? "+" : saldoApurado.saldoMin < 0 ? "−" : ""}
+                        {formatarMinutosCurto(Math.abs(saldoApurado.saldoMin))}
+                      </span>
+                    )
+                    : <span className="text-xs text-muted-foreground">—</span>;
 
                   // ── Cobertura da jornada e teto diário ────────────────────
                   // Atestado de HORAS do dia (parcial): a ausência é justificada.
                   const atestadoMin = atestadoRaw && (atestadoRaw.unidade_afastamento || "dias") === "horas"
                     ? (Number(atestadoRaw.horas_afastamento) || 0) * 60 + (Number(atestadoRaw.minutos_afastamento) || 0)
                     : 0;
-                  const jornadaPrevistaMin = jornadaPrevistaPorCpf.get(cpfKey) || 0;
+                  const jornadaPrevistaMin = saldoApurado?.jornadaMin || jornadaPrevistaPorCpf.get(cpfKey) || 0;
                   const { jornadaCoberta, excedenteLimiteMin, excedeLimiteDiario } =
                     calcularCoberturaJornada({
                       jornadaPrevistaMin,
                       atestadoMin,
-                      totalMin,
+                      totalMin: totalDiaMin,
                       toleranciaMin: TOLERANCIA_SAIDA_MIN,
                     });
                   const excedenteLabel = formatarMinutosCurto(excedenteLimiteMin);
+
                   return (
                     <TableRow key={ponto.id} className="hover:bg-muted/30">
                       <TableCell>
