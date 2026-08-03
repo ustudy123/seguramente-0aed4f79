@@ -19,6 +19,10 @@ export type EntrevistaMeta = {
   consentimento_lgpd_em: string | null;
   iniciada_em: string | null;
   concluida_em: string | null;
+  tipo_sessao: "individual" | "coletiva";
+  grupo_nome: string | null;
+  participantes_previstos: number | null;
+  tipo_instrumento: string | null;
 };
 
 export function useEntrevistaIA(token: string | undefined) {

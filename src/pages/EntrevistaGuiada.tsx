@@ -102,6 +102,8 @@ export default function EntrevistaGuiada() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streaming]);
 
+  const isColetiva = meta?.tipo_sessao === "coletiva";
+
   if (loading) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
@@ -142,32 +144,61 @@ export default function EntrevistaGuiada() {
                   <Brain className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-foreground">Entrevista Psicossocial</h1>
-                  <p className="text-xs text-muted-foreground">{meta.empresa_nome}</p>
+                  <h1 className="text-lg font-bold text-foreground">
+                    {isColetiva ? "Workshop Psicossocial" : "Entrevista Psicossocial"}
+                  </h1>
+                  <p className="text-xs text-muted-foreground">
+                    {isColetiva && meta.grupo_nome
+                      ? `${meta.grupo_nome} · ${meta.empresa_nome}`
+                      : meta.empresa_nome}
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-3 text-sm text-foreground">
-                <p>
-                  Olá! Você foi convidado(a) a participar de uma <strong>entrevista anônima</strong>{" "}
-                  conduzida por uma assistente de IA especializada em saúde no trabalho.
-                </p>
+                {isColetiva ? (
+                  <p>
+                    Olá! Este grupo{meta.grupo_nome ? <> (<strong>{meta.grupo_nome}</strong>)</> : null} foi
+                    convidado a participar de uma <strong>conversa coletiva anônima</strong> conduzida por
+                    uma assistente de IA especializada em saúde no trabalho.
+                    {meta.participantes_previstos
+                      ? ` Participação prevista: ${meta.participantes_previstos} pessoas.`
+                      : ""}
+                  </p>
+                ) : (
+                  <p>
+                    Olá! Você foi convidado(a) a participar de uma <strong>entrevista anônima</strong>{" "}
+                    conduzida por uma assistente de IA especializada em saúde no trabalho.
+                  </p>
+                )}
                 <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 space-y-1.5">
                   <div className="flex items-center gap-2 text-purple-900 font-medium text-sm">
-                    <Shield className="w-4 h-4" /> Suas garantias
+                    <Shield className="w-4 h-4" /> {isColetiva ? "Garantias do grupo" : "Suas garantias"}
                   </div>
                   <ul className="text-xs text-purple-900/80 space-y-1 pl-6 list-disc">
-                    <li>Sua identidade não é vinculada às respostas.</li>
-                    <li>A IA anonimiza automaticamente nomes, cargos e datas.</li>
-                    <li>Suas falas alimentam apenas o relatório psicossocial.</li>
-                    <li>Duração estimada: 15 a 25 minutos.</li>
+                    {isColetiva ? (
+                      <>
+                        <li>As respostas representam a percepção do grupo, sem identificação individual.</li>
+                        <li>A IA anonimiza automaticamente nomes, cargos e datas.</li>
+                        <li>As falas alimentam apenas o relatório psicossocial da empresa.</li>
+                        <li>Duração estimada: 30 a 45 minutos.</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>Sua identidade não é vinculada às respostas.</li>
+                        <li>A IA anonimiza automaticamente nomes, cargos e datas.</li>
+                        <li>Suas falas alimentam apenas o relatório psicossocial.</li>
+                        <li>Duração estimada: 15 a 25 minutos.</li>
+                      </>
+                    )}
                   </ul>
                 </div>
                 <label className="flex items-start gap-2 cursor-pointer">
                   <Checkbox checked={consent} onCheckedChange={(v) => setConsent(!!v)} className="mt-0.5" />
                   <span className="text-xs text-foreground/90">
-                    Li e concordo em participar desta entrevista para fins de diagnóstico organizacional,
-                    conforme a LGPD.
+                    {isColetiva
+                      ? "O grupo foi informado e concorda em participar desta sessão coletiva para fins de diagnóstico organizacional, conforme a LGPD."
+                      : "Li e concordo em participar desta entrevista para fins de diagnóstico organizacional, conforme a LGPD."}
                   </span>
                 </label>
               </div>
@@ -183,7 +214,7 @@ export default function EntrevistaGuiada() {
                 }}
                 className="w-full gap-2 bg-gradient-to-r from-purple-600 to-indigo-600"
               >
-                <Sparkles className="w-4 h-4" /> Iniciar entrevista
+                <Sparkles className="w-4 h-4" /> {isColetiva ? "Iniciar workshop" : "Iniciar entrevista"}
               </Button>
             </CardContent>
           </Card>
@@ -199,10 +230,11 @@ export default function EntrevistaGuiada() {
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center space-y-3">
             <CheckCircle2 className="w-14 h-14 text-emerald-600 mx-auto" />
-            <h2 className="text-xl font-bold">Entrevista concluída</h2>
+            <h2 className="text-xl font-bold">{isColetiva ? "Workshop concluído" : "Entrevista concluída"}</h2>
             <p className="text-sm text-muted-foreground">
-              Obrigado por compartilhar. Suas respostas vão alimentar o diagnóstico psicossocial
-              da empresa, sem identificação pessoal.
+              {isColetiva
+                ? "Obrigado a todos por compartilharem. As percepções do grupo vão alimentar o diagnóstico psicossocial da empresa, sem identificação individual."
+                : "Obrigado por compartilhar. Suas respostas vão alimentar o diagnóstico psicossocial da empresa, sem identificação pessoal."}
             </p>
           </CardContent>
         </Card>
@@ -223,12 +255,16 @@ export default function EntrevistaGuiada() {
               <Brain className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-bold text-foreground truncate">Entrevista Psicossocial</h1>
+              <h1 className="text-sm font-bold text-foreground truncate">
+                {isColetiva
+                  ? `Workshop${meta.grupo_nome ? ` · ${meta.grupo_nome}` : ""}`
+                  : "Entrevista Psicossocial"}
+              </h1>
               <p className="text-[11px] text-muted-foreground truncate">{meta.empresa_nome}</p>
             </div>
           </div>
           <Badge variant="outline" className="gap-1 text-xs">
-            <Shield className="w-3 h-3" /> Anônimo
+            <Shield className="w-3 h-3" /> {isColetiva ? "Sessão coletiva" : "Anônimo"}
           </Badge>
         </div>
         <div className="max-w-3xl mx-auto mt-2">
@@ -295,7 +331,7 @@ export default function EntrevistaGuiada() {
               className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-teal-600"
             >
               {finalizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Finalizar entrevista
+              {isColetiva ? "Finalizar workshop" : "Finalizar entrevista"}
             </Button>
           )}
           {recorder.isRecording ? (
@@ -337,7 +373,11 @@ export default function EntrevistaGuiada() {
               <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Escreva sua resposta ou use o microfone para ditar..."
+                placeholder={
+                  isColetiva
+                    ? "Registre a resposta do grupo ou use o microfone para ditar..."
+                    : "Escreva sua resposta ou use o microfone para ditar..."
+                }
                 rows={2}
                 disabled={streaming || finalizing}
                 onKeyDown={(e) => {

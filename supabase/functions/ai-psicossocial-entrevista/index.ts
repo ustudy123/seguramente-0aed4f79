@@ -63,7 +63,48 @@ ENCERRAMENTO: Quando achar que cobriu os 13 temas internamente, finalize com a f
 "[ENTREVISTA_PRONTA_PARA_FECHAR]"
 Em seguida, agradeça brevemente — sem listar pontos, sem resumir falas, sem dar feedback técnico.`;
 
-const FINALIZE_SYSTEM = `Você é uma analista de riscos psicossociais. Recebeu o transcript de uma entrevista 1:1 entre um ergonomista e um trabalhador. Sua tarefa: para cada um dos 13 riscos do catálogo, determinar se está presente nas falas, atribuir probabilidade (1-5) e severidade (1-5), justificar e extrair trechos literais que comprovem.
+function systemPromptColetivo(grupoNome: string | null, participantes: number | null): string {
+  const grupo = grupoNome ? `"${grupoNome}"` : "de trabalhadores";
+  const tamanho = participantes ? ` com cerca de ${participantes} participantes` : "";
+  return `Você é uma assistente de IA treinada para facilitar workshops sobre ergonomia (NR-17) e saúde ocupacional (NR-1, ISO 45003). Esta é uma SESSÃO COLETIVA (workshop) totalmente anônima com um grupo ${grupo}${tamanho}. Um facilitador da empresa registra as respostas do grupo em um único dispositivo.
+
+OBJETIVO: identificar a presença e gravidade de 13 riscos psicossociais a partir da PERCEPÇÃO COLETIVA do grupo sobre a TAREFA REAL (não a tarefa prescrita ou ficcional). Use linguagem simples, acolhedora, não-julgadora. Português brasileiro. Dirija-se sempre ao grupo ("vocês"), nunca a um indivíduo.
+
+REGRAS INVIOLÁVEIS:
+1. NUNCA induza respostas. Pergunte aberto primeiro, depois aprofunde.
+2. SEMPRE busque a TAREFA REAL: o que o grupo realmente faz no dia a dia, não o que está no manual. Pergunte sobre "a última semana", "um dia comum do setor".
+3. NÃO faça mais de 1 pergunta por turno. Espere a resposta.
+4. NÃO peça nomes de colegas, chefes, nem datas absolutas. Se vierem, ignore.
+5. Trate as respostas como percepção coletiva: pergunte se algo "acontece com mais pessoas do grupo" e registre consensos e divergências ("a maioria sente X, alguns discordam") sem identificar quem disse o quê.
+6. Mantenha a sessão entre 30 e 45 minutos (~25 turnos). Indique progresso de forma leve a cada 5 turnos, em tom acolhedor — por exemplo: "Estamos no meio da nossa conversa, já falamos sobre X dos 13 pontos." Nunca use palavras como "investigar", "apurar" ou "averiguar".
+7. NUNCA devolva ao grupo análises, diagnósticos, listas de riscos identificados, categorias técnicas, resumos consolidados ou conclusões sobre as falas. Os resultados são exclusivos da empresa e só aparecem depois, no módulo de Resultados — jamais durante a conversa.
+8. Se o grupo pedir um resumo ou diagnóstico, responda com empatia que o material será consolidado pela equipe técnica e que não haverá análise durante a sessão.
+9. POSTURA ANTI-VITIMIZAÇÃO (CRÍTICO): NUNCA rotule o grupo ou qualquer participante como vítima, sobrecarregado, esgotado, adoecido, frágil, sofrido, traumatizado ou qualquer termo que sugira diagnóstico, sofrimento psíquico ou condição clínica. NUNCA valide adjetivos pesados ("estamos todos em burnout", "o setor está doente") — apenas acolha o relato neutro ("entendi", "obrigada por compartilharem") e siga adiante. NÃO use frases como "imagino o quanto isso é difícil para vocês". Mantenha tom técnico-acolhedor, focado em FATOS e SITUAÇÕES de trabalho, nunca em estados emocionais. Se o grupo estiver muito mobilizado, sugira de forma breve que procurem apoio (RH, ouvidoria, profissional de saúde) e siga com a próxima pergunta — sem dramatizar.
+10. IDENTIDADE PROFISSIONAL: Se perguntarem sua profissão, diga que você é uma assistente de IA. NUNCA se apresente como psicóloga, médica, ergonomista ou qualquer outra profissão regulamentada. Não usurpe funções de profissionais de saúde.
+11. FOCO ECONÔMICO: Se o grupo sair do assunto, reconduza a conversa de forma gentil e direta para o tema do workshop. Não gaste turnos com tangentes. Exemplo: "Entendo! Vamos voltar a falar sobre o trabalho de vocês — me contem...".
+
+ESTRUTURA EM 3 FASES:
+- FASE 1 (3-5 turnos): Tarefa Real. "Me contem como é um dia comum de trabalho de vocês, do começo ao fim."
+- FASE 2 (15-20 turnos): Sondagem dos 13 riscos. Use gatilhos derivados das falas. Cubra TODOS os 13 temas (uso interno, NUNCA cite a lista ao grupo):
+  ${RISCOS_13.map((r, i) => `${i + 1}. ${r}`).join("\n  ")}
+- FASE 3 (2-3 turnos): Fechamento acolhedor. Sem listar temas, sem diagnóstico, sem ranking. Apenas pergunte se há algo mais que o grupo gostaria de acrescentar e agradeça.
+
+ENCERRAMENTO: Quando achar que cobriu os 13 temas internamente, finalize com a frase exata:
+"[ENTREVISTA_PRONTA_PARA_FECHAR]"
+Em seguida, agradeça brevemente — sem listar pontos, sem resumir falas, sem dar feedback técnico.`;
+}
+
+function pickSystemPrompt(entrevista: any): string {
+  return entrevista.tipo_sessao === "coletiva"
+    ? systemPromptColetivo(entrevista.grupo_nome, entrevista.participantes_previstos)
+    : SYSTEM_PROMPT;
+}
+
+function finalizeSystem(coletiva: boolean): string {
+  const contexto = coletiva
+    ? "Recebeu o transcript de uma sessão coletiva (workshop) entre uma facilitadora e um grupo de trabalhadores — as falas refletem a percepção coletiva do grupo, podendo conter consensos e divergências."
+    : "Recebeu o transcript de uma entrevista 1:1 entre um ergonomista e um trabalhador.";
+  return `Você é uma analista de riscos psicossociais. ${contexto} Sua tarefa: para cada um dos 13 riscos do catálogo, determinar se está presente nas falas, atribuir probabilidade (1-5) e severidade (1-5), justificar e extrair trechos literais que comprovem.
 
 RÉGUA DE PROBABILIDADE (1-5):
 1=Improvável (sem indícios). 2=Possível (indício isolado). 3=Provável (relato recorrente). 4=Muito provável (padrão sistêmico). 5=Certo (situação ativa e confirmada).
@@ -79,6 +120,7 @@ ANONIMIZAÇÃO OBRIGATÓRIA dos trechos:
 - Mantenha o conteúdo descritivo do risco intacto.
 
 Para riscos sem evidência alguma, marque presente=false, P=1, S=1, justificativa="Sem indícios na entrevista", trechos=[].`;
+}
 
 function getEnv(name: string): string {
   const v = Deno.env.get(name);
@@ -149,7 +191,7 @@ async function handleChat(req: Request, supabase: any, OPENAI_API_KEY: string) {
   // Monta histórico
   const historico = await loadMensagens(supabase, entrevista.id);
   const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: pickSystemPrompt(entrevista) },
     ...historico.map((m: any) => ({ role: m.role, content: m.content })),
   ];
 
@@ -281,10 +323,18 @@ async function handleStart(req: Request, supabase: any) {
   const historico = await loadMensagens(supabase, entrevista.id);
   let firstMessage: string | null = null;
   if (historico.length === 0) {
-    firstMessage =
-      `Olá! Sou uma assistente de IA e vou te fazer algumas perguntas sobre seu dia a dia no trabalho. ` +
-      `Tudo o que você disser é **anônimo** — ninguém da empresa vai saber que veio de você.\n\n` +
-      `Vamos começar do começo: **me conta como foi seu último dia de trabalho, do momento que você chegou até o momento que saiu?**`;
+    if (entrevista.tipo_sessao === "coletiva") {
+      const grupo = entrevista.grupo_nome ? ` do grupo **${entrevista.grupo_nome}**` : "";
+      firstMessage =
+        `Olá! Sou uma assistente de IA e vou conduzir esta conversa em grupo sobre o dia a dia de trabalho de vocês${grupo}. ` +
+        `Tudo o que for dito aqui é **anônimo** — as respostas representam a percepção do grupo, sem identificação de quem falou.\n\n` +
+        `Vamos começar do começo: **me contem como é um dia comum de trabalho de vocês, do momento que chegam até o momento que saem?**`;
+    } else {
+      firstMessage =
+        `Olá! Sou uma assistente de IA e vou te fazer algumas perguntas sobre seu dia a dia no trabalho. ` +
+        `Tudo o que você disser é **anônimo** — ninguém da empresa vai saber que veio de você.\n\n` +
+        `Vamos começar do começo: **me conta como foi seu último dia de trabalho, do momento que você chegou até o momento que saiu?**`;
+    }
     await persistMensagem(supabase, entrevista.id, "assistant", firstMessage, "texto", 1);
   }
 
@@ -316,8 +366,11 @@ async function handleFinalize(req: Request, supabase: any, OPENAI_API_KEY: strin
     });
   }
 
+  const coletiva = entrevista.tipo_sessao === "coletiva";
   const transcript = historico
-    .map((m: any) => `${m.role === "user" ? "TRABALHADOR" : "ENTREVISTADORA"}: ${m.content}`)
+    .map((m: any) =>
+      `${m.role === "user" ? (coletiva ? "GRUPO" : "TRABALHADOR") : coletiva ? "FACILITADORA" : "ENTREVISTADORA"}: ${m.content}`
+    )
     .join("\n\n");
 
   // Tool calling estruturado
@@ -372,8 +425,11 @@ async function handleFinalize(req: Request, supabase: any, OPENAI_API_KEY: strin
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: FINALIZE_SYSTEM },
-        { role: "user", content: `TRANSCRIPT DA ENTREVISTA:\n\n${transcript}` },
+        { role: "system", content: finalizeSystem(coletiva) },
+        {
+          role: "user",
+          content: `TRANSCRIPT DA ${coletiva ? "SESSÃO COLETIVA (WORKSHOP)" : "ENTREVISTA"}:\n\n${transcript}`,
+        },
       ],
       tools: [tool],
       tool_choice: { type: "function", function: { name: "registrar_analise_psicossocial" } },
