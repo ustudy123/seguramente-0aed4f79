@@ -575,6 +575,14 @@ export function SolicitarAjusteFolhaInterno({
                       const futuro = data > today;
                       const itensDia = itensAlterados.filter((i) => i.data === data);
                       const paresAlterados = new Set(itensDia.map((i) => i.par));
+                      // Marcações recém-adicionadas (ainda vazias) também abrem o
+                      // campo de justificativa — senão a coluna some e o gestor
+                      // não tem onde justificar o período que está criando.
+                      if (ed.marcacoes !== undefined) {
+                        ed.marcacoes.forEach((_, i) => {
+                          if (i >= original.length) paresAlterados.add(Math.floor(i / 2));
+                        });
+                      }
                       // Renderiza a linha de UMA marcação (entrada/saída) pelo índice i.
                       const renderMarcInput = (i: number) => {
                         const valor = marcs[i];
