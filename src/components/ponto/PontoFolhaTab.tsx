@@ -57,11 +57,8 @@ export function PontoFolhaTab() {
     enabled: !!tenantId,
   });
 
-  const formatMinutos = (min: number) => {
-    const h = Math.floor(Math.abs(min) / 60);
-    const m = Math.abs(min) % 60;
-    return `${min < 0 ? "-" : ""}${h}:${String(m).padStart(2, "0")}`;
-  };
+  const formatMinutos = (min: number) => formatarHoraRelogio(min);
+
 
   const gerarDadosFolha = () => {
     return espelhos.map((e: any) => ({
