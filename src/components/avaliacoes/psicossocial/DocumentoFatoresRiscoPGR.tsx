@@ -15,8 +15,10 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
+import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosGHE";
+import { calcularFatoresRisco } from "@/lib/fatoresRiscoPsicossocial";
 import { NIVEL15_ORDEM, type NivelGRO15 } from "@/lib/groPsicossocial15";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { isEntrevistaInstrumento, type CampanhaPsicossocial } from "@/types/psicossocial";
 import {
   construirInventarioDiagnostico,
   campanhaTemDiagnostico,
@@ -24,6 +26,7 @@ import {
 import {
   gerarDocumentoFatoresRiscoPsicossocial,
   type AcaoPlanoPGRDocumento,
+  type InventarioGHEDocumento,
 } from "@/utils/gerarDocumentoFatoresRiscoPsicossocial";
 
 interface DocumentoFatoresRiscoPGRProps {
