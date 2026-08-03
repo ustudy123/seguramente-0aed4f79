@@ -212,6 +212,7 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
           total_respostas: campanhaSelecionada.total_respostas,
         },
         inventario: inventarioPrevia,
+        inventarioPorGHE,
         acoes: acoesPGR,
       });
 
