@@ -377,31 +377,44 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
   },
 ];
 
+const normalizar = (v: string) =>
+  v
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+/** Comprimento mínimo de alias para permitir match parcial (evita fragmentos). */
+const MIN_ALIAS_PARCIAL = 8;
+
 /**
  * Resolve um subject vindo de instrumento (SIPRO/COPSOQ/HSE) ao fator do catálogo.
- * Faz match exato e, em seguida, busca por aliases (case-insensitive, contains).
+ * Ordem: nome exato → alias exato → alias contido no subject (alias longo, com
+ * fronteira de palavra), escolhendo sempre o alias mais específico (mais longo).
  */
 export function resolverFatorPorSubject(
   subject: string
 ): FatorRiscoPsicossocial | null {
   if (!subject) return null;
-  const norm = subject.trim().toLowerCase();
+  const norm = normalizar(subject);
+  if (!norm) return null;
 
-  // Match exato em nome ou alias
   for (const f of CATALOGO_RISCOS_PSICOSSOCIAIS) {
-    if (f.nome.toLowerCase() === norm) return f;
-    if (f.aliases.some((a) => a.toLowerCase() === norm)) return f;
+    if (normalizar(f.nome) === norm) return f;
+    if (f.aliases.some((a) => normalizar(a) === norm)) return f;
   }
-  // Match por contains (alias dentro do subject ou vice-versa)
+
+  let melhor: { fator: FatorRiscoPsicossocial; peso: number } | null = null;
   for (const f of CATALOGO_RISCOS_PSICOSSOCIAIS) {
-    if (
-      f.aliases.some(
-        (a) =>
-          norm.includes(a.toLowerCase()) || a.toLowerCase().includes(norm)
-      )
-    ) {
-      return f;
+    for (const alias of f.aliases) {
+      const a = normalizar(alias);
+      if (a.length < MIN_ALIAS_PARCIAL) continue;
+      const boundary = new RegExp(`(^|\\s)${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`);
+      if (!boundary.test(norm)) continue;
+      if (!melhor || a.length > melhor.peso) melhor = { fator: f, peso: a.length };
     }
   }
-  return null;
+  return melhor?.fator ?? null;
 }
