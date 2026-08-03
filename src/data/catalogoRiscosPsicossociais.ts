@@ -325,10 +325,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Trabalho Isolado',
       'Isolamento',
       'Teletrabalho',
-      'Equilíbrio Trabalho-Vida',
-      'Recuperação e Equilíbrio',
-      'Recuperação e',
-      'Conciliação',
+      'Trabalho a Distância',
     ],
   },
   {
