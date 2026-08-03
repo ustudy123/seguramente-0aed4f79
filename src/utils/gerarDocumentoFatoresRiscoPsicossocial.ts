@@ -399,7 +399,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
         s(item.fator),
         s(item.dimensoes.join(" • ")),
         s(item.norma),
-        `${item.scoreReal}%`,
+        item.avaliado === false ? "—" : `${item.scoreReal}%`,
         s(item.probabilidadeLabel),
         s(item.severidadeLabel),
         s(item.nivelLabel),
@@ -418,8 +418,12 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
       },
       didParseCell: (data) => {
         if (data.section === "body" && data.column.index === 6) {
-          const nivel = itens[data.row.index]?.nivelKey;
-          if (nivel && NIVEL_CORES[nivel]) data.cell.styles.textColor = NIVEL_CORES[nivel];
+          const item = itens[data.row.index];
+          if (item?.avaliado === false) {
+            data.cell.styles.textColor = [120, 120, 120];
+          } else if (item?.nivelKey && NIVEL_CORES[item.nivelKey]) {
+            data.cell.styles.textColor = NIVEL_CORES[item.nivelKey];
+          }
         }
       },
       didDrawPage: () => drawHeader(),
@@ -428,8 +432,10 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   };
 
   const escreverResumoNiveis = (itens: ItemDiagnosticoPsicossocial[]) => {
+    const avaliados = itens.filter((i) => i.avaliado !== false);
+    const naoAvaliados = itens.length - avaliados.length;
     const contagem = (Object.keys(NIVEL15_LABELS) as NivelGRO15[]).reduce(
-      (acc, nivel) => ({ ...acc, [nivel]: itens.filter((i) => i.nivelKey === nivel).length }),
+      (acc, nivel) => ({ ...acc, [nivel]: avaliados.filter((i) => i.nivelKey === nivel).length }),
       {} as Record<NivelGRO15, number>
     );
     ensureSpace(10);
@@ -438,7 +444,8 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     doc.setTextColor(35, 35, 35);
     doc.text(
       s(
-        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)`
+        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)` +
+          (naoAvaliados > 0 ? ` · ${naoAvaliados} sem cobertura no instrumento` : "")
       ),
       marginX,
       y
@@ -451,8 +458,9 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   if (temGHE) {
     writeSubTitle("I.1. Consolidado da campanha (todos os GHEs)");
   }
+  const nAvaliados = inventario.filter((i) => i.avaliado !== false).length;
   writeParagraph(
-    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) de risco avaliado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo NR-01 / ISO 45003.`
+    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) do catálogo NR-01 / ISO 45003 inventariado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo — sendo ${nAvaliados} avaliado(s) diretamente pelos itens do instrumento aplicado e ${inventario.length - nAvaliados} sem cobertura direta no instrumento (mantidos no inventário para rastreabilidade e monitoramento).`
   );
   renderTabelaInventario(inventario);
   escreverResumoNiveis(inventario);
@@ -466,8 +474,9 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
       y = marginTop;
       const rotulo = [grupo.ghe_codigo, grupo.ghe_nome].filter(Boolean).join(" — ");
       writeSubTitle(`I.${idx + 2}. Inventário do GHE: ${rotulo}`);
+      const gheAvaliados = grupo.itens.filter((i) => i.avaliado !== false).length;
       writeParagraph(
-        `Respondentes: ${grupo.respondentes}${grupo.elegiveis ? ` de ${grupo.elegiveis} elegível(is)` : ""} · ${grupo.itens.length} fator(es) avaliado(s) exclusivamente com as respostas deste Grupo Homogêneo de Exposição.`
+        `Respondentes: ${grupo.respondentes}${grupo.elegiveis ? ` de ${grupo.elegiveis} elegível(is)` : ""} · ${grupo.itens.length} fator(es) do catálogo inventariado(s) (${gheAvaliados} avaliado(s) exclusivamente com as respostas deste Grupo Homogêneo de Exposição).`
       );
 
       // Composição cadastral do GHE (Setores x Funções) — exigência NR-01/NR-17
