@@ -399,7 +399,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
         s(item.fator),
         s(item.dimensoes.join(" • ")),
         s(item.norma),
-        `${item.scoreReal}%`,
+        item.avaliado === false ? "—" : `${item.scoreReal}%`,
         s(item.probabilidadeLabel),
         s(item.severidadeLabel),
         s(item.nivelLabel),
