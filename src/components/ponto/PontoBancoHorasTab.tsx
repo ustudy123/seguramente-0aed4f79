@@ -120,6 +120,20 @@ export function PontoBancoHorasTab() {
     await apurarBancoHoras(competencia);
   };
 
+  const handleReapurarFechadas = async () => {
+    const ok = await confirm({
+      title: "Reapurar competências já fechadas",
+      description:
+        "O sistema vai recalcular todas as competências já registradas no banco de horas, aplicando as regras vigentes de tolerância e jornada. Lançamentos manuais são preservados; apenas os valores apurados são atualizados.",
+      confirmLabel: "Reapurar agora",
+    });
+    if (!ok) return;
+    const res = await reapurarCompetencias({});
+    setReapuracaoResumo(res?.detalhes?.length ? res : null);
+  };
+
+
+
   const handleMovimentacao = async () => {
     if (!selectedBanco || movForm.minutos <= 0) { toast.error("Preencha os dados"); return; }
     await adicionarMovimentacao({
