@@ -24,6 +24,8 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { formatarHoraMinuto, abreviacaoDiaSemana, rotuloTipoDia } from "@/lib/ponto/diaSemana";
 import { ExcedenteRetidoPanel } from "./ExcedenteRetidoPanel";
+import { useFeriadosCompetencia, useFolgaCompensatoria } from "@/hooks/usePontoFeriados";
+import { FolgaCompensatoriaDialog } from "./FolgaCompensatoriaDialog";
 
 export function PontoBancoHorasTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -256,6 +258,17 @@ export function PontoBancoHorasTab() {
   });
 
 
+  // RN23 — feriados da competência do colaborador em edição: rótulo
+  // "FERIADO" na lista de dias e adicional de 100% quando trabalhado sem
+  // folga compensatória (Lei 605/1949, art. 9º; Súmula 146 TST).
+  const { porData: feriadosPorData } = useFeriadosCompetencia(editBanco?.colaborador_cpf, editComp);
+  const { remover: removerFolga } = useFolgaCompensatoria();
+  const [folgaDialog, setFolgaDialog] = useState<{
+    dataFeriado: string;
+    feriadoNome: string;
+    trabalhadoMin: number;
+  } | null>(null);
+
   const onlyDigits = (s: string) => (s || "").toString().replace(/\D/g, "");
 
   // Filtra bancos de colaboradores ativos (useColaboradores já exclui inativos/desligados)
@@ -486,6 +499,18 @@ export function PontoBancoHorasTab() {
       {/* RN17: excedente diário acima do teto legal aguardando decisão do RH.
           Só aparece quando há pendência. */}
       <ExcedenteRetidoPanel competencia={competencia} />
+
+      {folgaDialog && editBanco && (
+        <FolgaCompensatoriaDialog
+          open={!!folgaDialog}
+          onOpenChange={(v) => { if (!v) setFolgaDialog(null); }}
+          colaboradorId={editBanco.colaborador_id}
+          colaboradorCpf={editBanco.colaborador_cpf}
+          dataFeriado={folgaDialog.dataFeriado}
+          feriadoNome={folgaDialog.feriadoNome}
+          trabalhadoMin={folgaDialog.trabalhadoMin}
+        />
+      )}
 
       {/* Equalização mensal (RN04): valor necessário no mês para fechar 44h,
           visível desde o dia 1 — memória de cálculo (RN10) no ícone ⓘ. */}
@@ -1039,6 +1064,7 @@ export function PontoBancoHorasTab() {
                           const isCredito = saldoDia > 0;
                           const isDebito = saldoDia < 0;
                           const isNeutro = saldoDia === 0;
+                          const feriado = feriadosPorData.get(d.data);
                           return (
                             <TableRow key={d.id}>
                               <TableCell className="py-1.5 text-xs">
@@ -1060,6 +1086,55 @@ export function PontoBancoHorasTab() {
                                       DSR
                                     </Badge>
                                   ) : null}
+                                  {/* RN23: o rótulo vale para todo feriado do mês.
+                                      Trabalhado sem folga compensatória, mostra
+                                      também o adicional de 100% devido. */}
+                                  {feriado && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[9px] h-4 px-1 w-fit border-violet-500 text-violet-700"
+                                      title={`${feriado.feriado_nome} (${feriado.origem})`}
+                                    >
+                                      FERIADO
+                                    </Badge>
+                                  )}
+                                  {feriado && feriado.trabalhado_min > 0 && (
+                                    feriado.folga_compensatoria_em ? (
+                                      <button
+                                        type="button"
+                                        className="text-[9px] text-muted-foreground underline underline-offset-2 w-fit"
+                                        onClick={() =>
+                                          removerFolga.mutate({
+                                            colaboradorCpf: editBanco?.colaborador_cpf || "",
+                                            dataFeriado: d.data,
+                                          })
+                                        }
+                                        title="Remover a folga compensatória — o feriado volta a gerar adicional de 100%"
+                                      >
+                                        Compensado em {feriado.folga_compensatoria_em.split("-").reverse().join("/")}
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="w-fit"
+                                        onClick={() =>
+                                          setFolgaDialog({
+                                            dataFeriado: d.data,
+                                            feriadoNome: feriado.feriado_nome,
+                                            trabalhadoMin: feriado.trabalhado_min,
+                                          })
+                                        }
+                                        title="Trabalhou no feriado sem folga compensatória — clique para registrar a folga"
+                                      >
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[9px] h-4 px-1 border-violet-500 bg-violet-50 text-violet-700"
+                                        >
+                                          +100% {formatMinutos(feriado.adicional_100_min)}
+                                        </Badge>
+                                      </button>
+                                    )
+                                  )}
                                   {d.excedente_retido_min > 0 && (
                                     <Badge variant="outline" className="text-[9px] h-4 px-1 w-fit border-red-400 text-red-600">
                                       Retido {formatMinutos(d.excedente_retido_min)} (art. 61)
