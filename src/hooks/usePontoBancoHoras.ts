@@ -346,5 +346,8 @@ export function usePontoBancoHoras() {
     excluindoBancoHoras: excluirBancoHorasMutation.isPending,
     apurarBancoHoras: apurarBancoHorasMutation.mutateAsync,
     apurandoBancoHoras: apurarBancoHorasMutation.isPending,
+    reapurarCompetencias: reapurarCompetenciasMutation.mutateAsync,
+    reapurandoCompetencias: reapurarCompetenciasMutation.isPending,
+
   };
 }
