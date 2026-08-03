@@ -214,7 +214,6 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Suporte da Liderança',
-      'Suporte da',
       'Suporte do Gestor',
       'Liderança',
       'Suporte dos Pares',
