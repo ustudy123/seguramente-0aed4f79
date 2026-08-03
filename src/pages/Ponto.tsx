@@ -1167,7 +1167,13 @@ const Ponto = () => {
                                 <div className="text-center">
                                   <Badge variant="outline" className="font-mono text-[11px]">{marcs.length}</Badge>
                                 </div>
-                                <div className="text-center font-medium font-mono text-sm">{totalLabel}</div>
+                               <div
+                                 className="text-center font-medium font-mono text-sm"
+                                 title={saldoApurado
+                                   ? "Total apurado: bordas ajustadas pela tolerância da escala e intervalo previsto — mesma rotina do Banco de Horas."
+                                   : undefined}
+                               >{totalLabel}</div>
+
                                 <div className="text-center" />
                               </div>
                             </div>
