@@ -914,8 +914,9 @@ const Ponto = () => {
                   const saldoApurado = saldoDiaPorCpf.get(cpfKey);
                   const totalDiaMin = saldoApurado ? saldoApurado.trabalhadoMin : Math.max(0, totalMin);
                   const totalLabel = saldoApurado || marcs.length > 0
-                    ? `${Math.floor(totalDiaMin / 60).toString().padStart(2, "0")}h ${(totalDiaMin % 60).toString().padStart(2, "0")}min`
+                    ? formatarHoraMinuto(totalDiaMin)
                     : formatInterval(ponto.horas_trabalhadas);
+
                   const saldoCell = saldoApurado
                     ? (
                       <span
