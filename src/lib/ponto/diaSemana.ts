@@ -52,13 +52,6 @@ export function rotuloTipoDia(dataISO: string, opts?: { equalizacao?: boolean })
   return null; // sábado comum e dias úteis: basta a abreviação do dia da semana
 }
 
-/**
- * RN19 — "Xh YYmin" com minutos sempre em dois dígitos.
- * `sinal: true` prefixa "+"/"-" (usado nas colunas de saldo).
- */
-export function formatarHoraMinuto(min: number, opts?: { sinal?: boolean }): string {
-  const total = Math.round(Number(min) || 0);
-  const abs = Math.abs(total);
-  const prefixo = opts?.sinal ? (total < 0 ? "-" : "+") : total < 0 ? "-" : "";
-  return `${prefixo}${Math.floor(abs / 60)}h ${String(abs % 60).padStart(2, "0")}min`;
-}
+/** RN19 — reexport da fonte única (`@/lib/ponto/formatoHoras`). */
+export { formatarHoraMinuto } from "./formatoHoras";
+
