@@ -36,6 +36,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { usePonto, TIPO_MARCACAO_LABELS, STATUS_PONTO_CONFIG, type PontoDiario, type PontoAjuste } from "@/hooks/usePonto";
 import { calcularCoberturaJornada, formatarMinutosCurto } from "@/lib/ponto/alertasDia";
+import { formatarHoraMinuto } from "@/lib/ponto/formatoHoras";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
