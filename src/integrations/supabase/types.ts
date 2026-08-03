@@ -24467,6 +24467,21 @@ export type Database = {
         Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
         Returns: boolean
       }
+      ponto_saldo_dia_empresa: {
+        Args: { p_data: string; p_empresa_id: string; p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          dia: string
+          entrada: string
+          equalizacao: boolean
+          excedente_retido_min: number
+          jornada_min: number
+          protegido: boolean
+          saida: string
+          saldo_min: number
+          trabalhado_min: number
+        }[]
+      }
       ponto_saldo_dias_competencia: {
         Args: {
           p_colaborador_cpf: string
