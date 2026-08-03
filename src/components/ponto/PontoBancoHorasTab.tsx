@@ -55,7 +55,10 @@ export function PontoBancoHorasTab() {
     excluirBancoHoras,
     apurarBancoHoras,
     apurandoBancoHoras,
+    reapurarCompetencias,
+    reapurandoCompetencias,
   } = usePontoBancoHoras();
+
   const { colaboradores } = useColaboradores();
   const { tenantId } = useAuth();
 
