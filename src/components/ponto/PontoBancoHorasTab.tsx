@@ -394,6 +394,11 @@ export function PontoBancoHorasTab() {
             <RefreshCw className={`w-4 h-4 mr-2 ${apurandoBancoHoras ? "animate-spin" : ""}`} />
             {apurandoBancoHoras ? "Apurando..." : "Apurar agora"}
           </Button>
+          <Button variant="outline" onClick={handleReapurarFechadas} disabled={reapurandoCompetencias}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${reapurandoCompetencias ? "animate-spin" : ""}`} />
+            {reapurandoCompetencias ? "Reapurando..." : "Reapurar fechadas"}
+          </Button>
+
           <Button variant="outline" onClick={() => setShowImport(true)}>
             <Upload className="w-4 h-4 mr-2" /> Importar
           </Button>
