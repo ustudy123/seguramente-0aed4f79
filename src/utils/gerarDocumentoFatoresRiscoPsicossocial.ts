@@ -94,6 +94,7 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   responsavel,
   campanha,
   inventario,
+  inventarioPorGHE = [],
   acoes,
 }: GerarDocumentoParams): Promise<void> {
   const doc = new jsPDF({ format: "a4", unit: "mm" });
