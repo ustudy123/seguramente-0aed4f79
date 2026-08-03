@@ -52,11 +52,21 @@ export interface AcaoPlanoPGRDocumento {
   quanto?: string | null;
 }
 
+/** Inventário estratificado por Grupo Homogêneo de Exposição (NR-01 / NR-17). */
+export interface InventarioGHEDocumento {
+  ghe_nome: string;
+  ghe_codigo?: string | null;
+  respondentes: number;
+  elegiveis: number;
+  itens: ItemDiagnosticoPsicossocial[];
+}
+
 interface GerarDocumentoParams {
   empresa: EmpresaDocumento;
   responsavel: ResponsavelTecnicoDocumento;
   campanha: CampanhaDocumento;
   inventario: ItemDiagnosticoPsicossocial[];
+  inventarioPorGHE?: InventarioGHEDocumento[];
   acoes: AcaoPlanoPGRDocumento[];
 }
 
