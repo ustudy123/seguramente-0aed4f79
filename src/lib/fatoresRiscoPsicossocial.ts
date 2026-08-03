@@ -24,6 +24,7 @@ import { getSeveridadeInfo } from "@/lib/psicossocial-severidade";
 import {
   resolverFatorPorSubject,
   CATEGORIA_LABELS,
+  CATALOGO_RISCOS_PSICOSSOCIAIS,
 } from "@/data/catalogoRiscosPsicossociais";
 
 export interface FatorRiscoGHE {
