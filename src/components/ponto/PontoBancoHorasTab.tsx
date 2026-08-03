@@ -40,6 +40,18 @@ export function PontoBancoHorasTab() {
   } = usePontoEqualizacaoGerenciador(competencia);
   const eqComDeficit = equalizacoes.filter((e) => (e.total_equalizacao_min || 0) > 0);
   const [colaboradorFiltroId, setColaboradorFiltroId] = useState<string>("");
+  const [reapuracaoResumo, setReapuracaoResumo] = useState<null | {
+    registros_processados?: number;
+    registros_ajustados?: number;
+    detalhes?: Array<{
+      colaborador_nome: string | null;
+      competencia: string;
+      saldo_antes_minutos: number;
+      saldo_depois_minutos: number;
+      diferenca_minutos: number;
+    }>;
+  }>(null);
+
   const {
     useBancoHorasPorCompetencia,
     useMovimentacoes,
