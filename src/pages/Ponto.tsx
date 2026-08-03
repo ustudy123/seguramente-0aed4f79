@@ -1171,7 +1171,7 @@ const Ponto = () => {
                                <div
                                  className="text-center font-medium font-mono text-sm"
                                  title={saldoApurado
-                                   ? "Total apurado: bordas ajustadas pela tolerância da escala e intervalo previsto — mesma rotina do Banco de Horas."
+                                   ? "Total apurado: horas reais das batidas (menos o intervalo) — exatamente o mesmo valor usado no Banco de Horas. A tolerância de 10 min só influencia o saldo do dia."
                                    : undefined}
                                >{totalLabel}</div>
 
