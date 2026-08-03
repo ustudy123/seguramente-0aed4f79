@@ -156,6 +156,28 @@ export function useFeriadoTabelas() {
     onError: erro("Erro ao vincular filiais"),
   });
 
+  /** RN22 — define (ou remove) a tabela de feriados vinculada a uma única filial/empresa. */
+  const vincularEmpresa = useMutation({
+    mutationFn: async ({ empresaId, tabelaId }: { empresaId: string; tabelaId: string | null }) => {
+      if (!tenantId) throw new Error("Tenant não identificado.");
+      const { error: delErr } = await supabase
+        .from("feriado_tabela_empresas").delete().eq("empresa_id", empresaId);
+      if (delErr) throw delErr;
+      if (!tabelaId) return;
+      const { error } = await supabase
+        .from("feriado_tabela_empresas")
+        .insert({ tenant_id: tenantId, tabela_id: tabelaId, empresa_id: empresaId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["ponto-diario"] });
+      toast({ title: "Tabela de feriados atualizada" });
+    },
+    onError: erro("Erro ao vincular tabela de feriados"),
+  });
+
+
   return {
     tabelas: tabelasQuery.data || [],
     isLoading: tabelasQuery.isLoading,
