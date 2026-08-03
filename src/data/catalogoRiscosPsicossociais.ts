@@ -275,9 +275,10 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Reconhecimento',
-      'Reconhecimento e',
       'Reconhecimento e Justiça',
+      'Reconhecimento e Recompensas',
       'Recompensa',
+      'Recompensas',
       'Esforço-Recompensa',
       'Satisfação no Trabalho',
     ],
