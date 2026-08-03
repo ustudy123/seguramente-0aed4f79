@@ -171,9 +171,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     aliases: [
       'Clareza de Papéis',
       'Clareza de Função',
-      'Clareza de',
       'Definição de Papéis',
-      'Função',
       'Conflito de Papéis',
       'Exigências Contraditórias',
       'Ambiguidade de Papéis',
