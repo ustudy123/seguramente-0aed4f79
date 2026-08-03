@@ -980,7 +980,9 @@ const Ponto = () => {
 
                         const gridCols = "grid grid-cols-[1fr_7rem_7rem_8rem] gap-2 items-center";
                         return (
+                          <>
                           <TableCell colSpan={4}>
+
                             <div className="flex flex-col gap-1.5">
                               {atestadoInfo && (
                                 <span
