@@ -418,8 +418,12 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
       },
       didParseCell: (data) => {
         if (data.section === "body" && data.column.index === 6) {
-          const nivel = itens[data.row.index]?.nivelKey;
-          if (nivel && NIVEL_CORES[nivel]) data.cell.styles.textColor = NIVEL_CORES[nivel];
+          const item = itens[data.row.index];
+          if (item?.avaliado === false) {
+            data.cell.styles.textColor = [120, 120, 120];
+          } else if (item?.nivelKey && NIVEL_CORES[item.nivelKey]) {
+            data.cell.styles.textColor = NIVEL_CORES[item.nivelKey];
+          }
         }
       },
       didDrawPage: () => drawHeader(),
@@ -428,8 +432,10 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   };
 
   const escreverResumoNiveis = (itens: ItemDiagnosticoPsicossocial[]) => {
+    const avaliados = itens.filter((i) => i.avaliado !== false);
+    const naoAvaliados = itens.length - avaliados.length;
     const contagem = (Object.keys(NIVEL15_LABELS) as NivelGRO15[]).reduce(
-      (acc, nivel) => ({ ...acc, [nivel]: itens.filter((i) => i.nivelKey === nivel).length }),
+      (acc, nivel) => ({ ...acc, [nivel]: avaliados.filter((i) => i.nivelKey === nivel).length }),
       {} as Record<NivelGRO15, number>
     );
     ensureSpace(10);
@@ -438,7 +444,8 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
     doc.setTextColor(35, 35, 35);
     doc.text(
       s(
-        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)`
+        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)` +
+          (naoAvaliados > 0 ? ` · ${naoAvaliados} sem cobertura no instrumento` : "")
       ),
       marginX,
       y
