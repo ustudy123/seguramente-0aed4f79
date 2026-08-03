@@ -496,6 +496,35 @@ const Ponto = () => {
     );
   }, [colaboradores, pontosDiarios, empresaAtivaId, tenantIdAtivo, dataSelStr, desligadosPorCpf]);
 
+  // ── Fonte única de verdade do saldo diário ────────────────────────────
+  // O Espelho passa a EXIBIR exatamente o que a Apuração calcula: a RPC
+  // `ponto_saldo_dia_empresa` reaproveita `ponto_saldo_dias_competencia`
+  // (escala, tolerância de 10 min, atestado, feriado, equalização) para
+  // todos os colaboradores da empresa na data selecionada. Antes o Espelho
+  // recalculava as horas em TypeScript e divergia do Banco de Horas.
+  const { data: saldoDiaPorCpf = new Map<string, { trabalhadoMin: number; jornadaMin: number; saldoMin: number }>() } = useQuery({
+    queryKey: ["ponto-saldo-dia-espelho", tenantIdAtivo, empresaAtivaId, dataSelStr],
+    enabled: !!tenantIdAtivo,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("ponto_saldo_dia_empresa", {
+        p_tenant_id: tenantIdAtivo,
+        p_empresa_id: empresaAtivaId ?? null,
+        p_data: dataSelStr,
+      });
+      if (error) throw error;
+      const map = new Map<string, { trabalhadoMin: number; jornadaMin: number; saldoMin: number }>();
+      for (const d of (data || []) as any[]) {
+        map.set(String(d.colaborador_cpf || "").replace(/\D/g, ""), {
+          trabalhadoMin: Number(d.trabalhado_min) || 0,
+          jornadaMin: Number(d.jornada_min) || 0,
+          saldoMin: Number(d.saldo_min) || 0,
+        });
+      }
+      return map;
+    },
+  });
+
+
   const filteredPontos = espelhoRows.filter((ponto) => {
     // Só lista no espelho quem tem ao menos uma marcação no dia. Some quem
     // está sem batida (linhas virtuais "Pendente", além de Falta/Atestado/
