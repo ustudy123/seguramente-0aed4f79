@@ -408,6 +408,50 @@ export function PontoBancoHorasTab() {
         </div>
       </div>
 
+      {reapuracaoResumo && (
+        <Card className="border-primary/40">
+          <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm">
+              Reapuração concluída — {reapuracaoResumo.registros_ajustados ?? 0} de{" "}
+              {reapuracaoResumo.registros_processados ?? 0} competência(s) tiveram o saldo ajustado
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setReapuracaoResumo(null)}>
+              Fechar
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Colaborador</TableHead>
+                  <TableHead>Competência</TableHead>
+                  <TableHead className="text-right">Antes</TableHead>
+                  <TableHead className="text-right">Depois</TableHead>
+                  <TableHead className="text-right">Diferença</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(reapuracaoResumo.detalhes || []).map((d, i) => (
+                  <TableRow key={`${d.competencia}-${i}`}>
+                    <TableCell>{d.colaborador_nome || "—"}</TableCell>
+                    <TableCell>{d.competencia}</TableCell>
+                    <TableCell className="text-right">{formatMinutos(d.saldo_antes_minutos)}</TableCell>
+                    <TableCell className="text-right">{formatMinutos(d.saldo_depois_minutos)}</TableCell>
+                    <TableCell
+                      className={`text-right font-medium ${d.diferenca_minutos >= 0 ? "text-green-600" : "text-destructive"}`}
+                    >
+                      {d.diferenca_minutos >= 0 ? "+" : "-"}
+                      {formatMinutos(Math.abs(d.diferenca_minutos))}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
