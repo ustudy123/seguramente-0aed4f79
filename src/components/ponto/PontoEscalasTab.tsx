@@ -194,11 +194,8 @@ export function PontoEscalasTab() {
   const [atribBusca, setAtribBusca] = useState("");
   const [atribuindoLote, setAtribuindoLote] = useState(false);
 
-  const formatMinutos = (min: number) => {
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return `${h}h${m > 0 ? ` ${m}min` : ""}`;
-  };
+  const formatMinutos = (min: number) => formatarHoraMinuto(min);
+
 
   const handleSalvar = async () => {
     if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }
