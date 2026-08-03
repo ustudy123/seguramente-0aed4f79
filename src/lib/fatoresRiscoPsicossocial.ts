@@ -41,6 +41,8 @@ export interface FatorRiscoGHE {
   severidadeLabel: string;
   nivelLabel: string;
   nivelKey: NivelGRO15;
+  /** false = fator do catálogo sem item correspondente no instrumento aplicado */
+  avaliado?: boolean;
 }
 
 function normativaDoSubject(subject: string) {
