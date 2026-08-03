@@ -821,6 +821,8 @@ const Ponto = () => {
                   <TableHead className="text-center w-28">Registros</TableHead>
                   <TableHead className="text-center w-28">Total</TableHead>
                   <TableHead className="text-center w-32">Status</TableHead>
+                  <TableHead className="text-center w-28">Saldo do dia</TableHead>
+
                 </TableRow>
               </TableHeader>
               <TableBody>
