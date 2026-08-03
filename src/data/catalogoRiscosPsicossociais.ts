@@ -368,11 +368,11 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     aliases: [
       'Violência',
       'Eventos Traumáticos',
+      'Ameaças e Violência',
+      'Ameaças',
       'Trauma',
       'TEPT',
-      'Burnout',
-      'Sinais Precoces',
-      'Esgotamento',
+      'Agressões',
     ],
   },
 ];
