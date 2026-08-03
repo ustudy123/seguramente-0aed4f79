@@ -104,6 +104,22 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Trabalho Emocional',
       'Esgotamento Empático',
       'Demandas no Trabalho',
+      'Demanda',
+      'Organização do Trabalho',
+      'Sofrimento Patogênico',
+      'Danos Relacionados ao Trabalho',
+      'Demandas Quantitativas e Ritmo',
+      // Desfechos de sobrecarga / falta de recuperação
+      'Burnout',
+      'Burnout / Esgotamento',
+      'Esgotamento',
+      'Sinais Precoces',
+      'Sinais Precoces de Saúde',
+      'Recuperação e Equilíbrio',
+      'Equilíbrio Trabalho-Vida',
+      'Equilíbrio Trabalho–Vida',
+      'Equilíbrio Trabalho Vida',
+      'Conciliação Trabalho-Vida',
     ],
   },
   {
@@ -159,12 +175,12 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     aliases: [
       'Clareza de Papéis',
       'Clareza de Função',
-      'Clareza de',
       'Definição de Papéis',
-      'Função',
       'Conflito de Papéis',
       'Exigências Contraditórias',
       'Ambiguidade de Papéis',
+      'Função',
+      'Papel na Organização',
     ],
   },
   {
@@ -202,13 +218,13 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Suporte da Liderança',
-      'Suporte da',
       'Suporte do Gestor',
       'Liderança',
       'Suporte dos Pares',
       'Suporte dos Colegas',
       'Suporte Social',
       'Apoio Social',
+      'Estilo de Gestão',
     ],
   },
   {
@@ -226,11 +242,12 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Relacionamentos',
-      'Relacionamentos e',
-      'Qualidade das',
+      'Relacionamentos e Suporte',
       'Qualidade das Relações',
       'Clima de Equipe',
       'Conflitos Interpessoais',
+      'Laços Sociais',
+      'Relações Socioprofissionais',
     ],
   },
   {
@@ -263,9 +280,10 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     baseNormativa: ['NR-01', 'ISO 45003 §6.1.2.4'],
     aliases: [
       'Reconhecimento',
-      'Reconhecimento e',
       'Reconhecimento e Justiça',
+      'Reconhecimento e Recompensas',
       'Recompensa',
+      'Recompensas',
       'Esforço-Recompensa',
       'Satisfação no Trabalho',
     ],
@@ -286,6 +304,8 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     aliases: [
       'Assédio',
       'Assédio Moral',
+      'Assédio e Comportamentos Ofensivos',
+      'Comportamentos Ofensivos',
       'Assédio Sexual',
       'Hostilidade',
       'Discriminação',
@@ -313,10 +333,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Trabalho Isolado',
       'Isolamento',
       'Teletrabalho',
-      'Equilíbrio Trabalho-Vida',
-      'Recuperação e Equilíbrio',
-      'Recuperação e',
-      'Conciliação',
+      'Trabalho a Distância',
     ],
   },
   {
@@ -356,40 +373,53 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     aliases: [
       'Violência',
       'Eventos Traumáticos',
+      'Ameaças e Violência',
+      'Ameaças',
       'Trauma',
       'TEPT',
-      'Burnout',
-      'Sinais Precoces',
-      'Esgotamento',
+      'Agressões',
     ],
   },
 ];
 
+const normalizar = (v: string) =>
+  v
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+/** Comprimento mínimo de alias para permitir match parcial (evita fragmentos). */
+const MIN_ALIAS_PARCIAL = 8;
+
 /**
  * Resolve um subject vindo de instrumento (SIPRO/COPSOQ/HSE) ao fator do catálogo.
- * Faz match exato e, em seguida, busca por aliases (case-insensitive, contains).
+ * Ordem: nome exato → alias exato → alias contido no subject (alias longo, com
+ * fronteira de palavra), escolhendo sempre o alias mais específico (mais longo).
  */
 export function resolverFatorPorSubject(
   subject: string
 ): FatorRiscoPsicossocial | null {
   if (!subject) return null;
-  const norm = subject.trim().toLowerCase();
+  const norm = normalizar(subject);
+  if (!norm) return null;
 
-  // Match exato em nome ou alias
   for (const f of CATALOGO_RISCOS_PSICOSSOCIAIS) {
-    if (f.nome.toLowerCase() === norm) return f;
-    if (f.aliases.some((a) => a.toLowerCase() === norm)) return f;
+    if (normalizar(f.nome) === norm) return f;
+    if (f.aliases.some((a) => normalizar(a) === norm)) return f;
   }
-  // Match por contains (alias dentro do subject ou vice-versa)
+
+  let melhor: { fator: FatorRiscoPsicossocial; peso: number } | null = null;
   for (const f of CATALOGO_RISCOS_PSICOSSOCIAIS) {
-    if (
-      f.aliases.some(
-        (a) =>
-          norm.includes(a.toLowerCase()) || a.toLowerCase().includes(norm)
-      )
-    ) {
-      return f;
+    for (const alias of f.aliases) {
+      const a = normalizar(alias);
+      if (a.length < MIN_ALIAS_PARCIAL) continue;
+      const boundary = new RegExp(`(^|\\s)${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`);
+      if (!boundary.test(norm)) continue;
+      if (!melhor || a.length > melhor.peso) melhor = { fator: f, peso: a.length };
     }
   }
-  return null;
+  return melhor?.fator ?? null;
 }
