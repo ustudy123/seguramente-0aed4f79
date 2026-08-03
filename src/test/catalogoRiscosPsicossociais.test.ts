@@ -66,8 +66,8 @@ describe("catálogo de riscos psicossociais", () => {
   });
 
   it("não resolve fatores por fragmentos genéricos", () => {
-    expect(resolverFatorPorSubject("Função")).toBeNull();
     expect(resolverFatorPorSubject("Qualidade das")).toBeNull();
+    expect(resolverFatorPorSubject("Suporte da")).toBeNull();
     expect(resolverFatorPorSubject("")).toBeNull();
   });
 
