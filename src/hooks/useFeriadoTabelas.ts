@@ -6,6 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import type {
   FeriadoTabela, FeriadoTabelaItem, FeriadoTabelaVinculo,
 } from "@/lib/ponto/feriadoTabelas";
+import { payloadItem, payloadTabela } from "@/lib/ponto/feriadoTabelas";
+
+type TabelaPayload = ReturnType<typeof payloadTabela>;
+type ItemPayload = ReturnType<typeof payloadItem>;
 
 /** CRUD das tabelas nomeadas de feriados, itens e vínculos com filiais. */
 export function useFeriadoTabelas() {
@@ -78,7 +82,7 @@ export function useFeriadoTabelas() {
   }, [vinculosQuery.data]);
 
   const salvarTabela = useMutation({
-    mutationFn: async ({ id, payload }: { id?: string; payload: Record<string, unknown> }) => {
+    mutationFn: async ({ id, payload }: { id?: string; payload: TabelaPayload }) => {
       if (id) {
         const { error } = await supabase.from("feriado_tabelas").update(payload).eq("id", id);
         if (error) throw error;
@@ -114,7 +118,7 @@ export function useFeriadoTabelas() {
   });
 
   const salvarItem = useMutation({
-    mutationFn: async ({ id, payload }: { id?: string; payload: Record<string, unknown> }) => {
+    mutationFn: async ({ id, payload }: { id?: string; payload: ItemPayload }) => {
       if (id) {
         const { error } = await supabase.from("feriado_tabela_itens").update(payload).eq("id", id);
         if (error) throw error;
