@@ -474,8 +474,9 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
       y = marginTop;
       const rotulo = [grupo.ghe_codigo, grupo.ghe_nome].filter(Boolean).join(" — ");
       writeSubTitle(`I.${idx + 2}. Inventário do GHE: ${rotulo}`);
+      const gheAvaliados = grupo.itens.filter((i) => i.avaliado !== false).length;
       writeParagraph(
-        `Respondentes: ${grupo.respondentes}${grupo.elegiveis ? ` de ${grupo.elegiveis} elegível(is)` : ""} · ${grupo.itens.length} fator(es) avaliado(s) exclusivamente com as respostas deste Grupo Homogêneo de Exposição.`
+        `Respondentes: ${grupo.respondentes}${grupo.elegiveis ? ` de ${grupo.elegiveis} elegível(is)` : ""} · ${grupo.itens.length} fator(es) do catálogo inventariado(s) (${gheAvaliados} avaliado(s) exclusivamente com as respostas deste Grupo Homogêneo de Exposição).`
       );
 
       // Composição cadastral do GHE (Setores x Funções) — exigência NR-01/NR-17
