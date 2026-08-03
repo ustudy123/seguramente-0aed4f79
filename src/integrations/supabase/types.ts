@@ -26935,6 +26935,15 @@ export type Database = {
           veredito: string
         }[]
       }
+      reapurar_banco_horas_competencias: {
+        Args: {
+          p_ate?: string
+          p_desde?: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       reavaliar_validade_documentos: { Args: never; Returns: number }
       recalcular_status_terceiro: {
         Args: { p_terceiro_id: string }

@@ -283,7 +283,53 @@ export function usePontoBancoHoras() {
     onError: handleMutationError,
   });
 
+  // Reapuração automática das competências já fechadas: recalcula todos os
+  // registros de banco de horas existentes (afetados por correções de regra de
+  // cálculo) e devolve o resumo das diferenças encontradas.
+  type ReapuracaoDetalhe = {
+    colaborador_nome: string | null;
+    colaborador_cpf: string | null;
+    competencia: string;
+    saldo_antes_minutos: number;
+    saldo_depois_minutos: number;
+    diferenca_minutos: number;
+  };
+  type ReapuracaoResultado = {
+    success?: boolean;
+    registros_processados?: number;
+    registros_ajustados?: number;
+    detalhes?: ReapuracaoDetalhe[];
+    error?: string;
+  };
+
+  const reapurarCompetenciasMutation = useMutation({
+    mutationFn: async (params?: { desde?: string | null; ate?: string | null }) => {
+      if (!tenantId) throw new Error("Não autenticado");
+      const { data, error } = await (supabase.rpc as any)("reapurar_banco_horas_competencias", {
+        p_tenant_id: tenantId,
+        p_empresa_id: empresaAtivaId || null,
+        p_desde: params?.desde ?? null,
+        p_ate: params?.ate ?? null,
+      });
+      if (error) throw error;
+      const result = data as ReapuracaoResultado | null;
+      if (result && result.success !== true) {
+        throw new Error(result?.error || "Não foi possível reapurar as competências.");
+      }
+      return result as ReapuracaoResultado;
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      const proc = result?.registros_processados ?? 0;
+      const alt = result?.registros_ajustados ?? 0;
+      toast.success(`${proc} competência(s) reapurada(s) — ${alt} com saldo ajustado.`);
+    },
+    onError: handleMutationError,
+  });
+
   return {
+
     useBancoHorasPorCompetencia,
     useMovimentacoes,
     adicionarMovimentacao: adicionarMovimentacaoMutation.mutateAsync,
@@ -300,5 +346,8 @@ export function usePontoBancoHoras() {
     excluindoBancoHoras: excluirBancoHorasMutation.isPending,
     apurarBancoHoras: apurarBancoHorasMutation.mutateAsync,
     apurandoBancoHoras: apurarBancoHorasMutation.isPending,
+    reapurarCompetencias: reapurarCompetenciasMutation.mutateAsync,
+    reapurandoCompetencias: reapurarCompetenciasMutation.isPending,
+
   };
 }

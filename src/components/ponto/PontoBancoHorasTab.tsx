@@ -40,6 +40,18 @@ export function PontoBancoHorasTab() {
   } = usePontoEqualizacaoGerenciador(competencia);
   const eqComDeficit = equalizacoes.filter((e) => (e.total_equalizacao_min || 0) > 0);
   const [colaboradorFiltroId, setColaboradorFiltroId] = useState<string>("");
+  const [reapuracaoResumo, setReapuracaoResumo] = useState<null | {
+    registros_processados?: number;
+    registros_ajustados?: number;
+    detalhes?: Array<{
+      colaborador_nome: string | null;
+      competencia: string;
+      saldo_antes_minutos: number;
+      saldo_depois_minutos: number;
+      diferenca_minutos: number;
+    }>;
+  }>(null);
+
   const {
     useBancoHorasPorCompetencia,
     useMovimentacoes,
@@ -55,7 +67,10 @@ export function PontoBancoHorasTab() {
     excluirBancoHoras,
     apurarBancoHoras,
     apurandoBancoHoras,
+    reapurarCompetencias,
+    reapurandoCompetencias,
   } = usePontoBancoHoras();
+
   const { colaboradores } = useColaboradores();
   const { tenantId } = useAuth();
 
@@ -116,6 +131,20 @@ export function PontoBancoHorasTab() {
     if (!ok) return;
     await apurarBancoHoras(competencia);
   };
+
+  const handleReapurarFechadas = async () => {
+    const ok = await confirm({
+      title: "Reapurar competências já fechadas",
+      description:
+        "O sistema vai recalcular todas as competências já registradas no banco de horas, aplicando as regras vigentes de tolerância e jornada. Lançamentos manuais são preservados; apenas os valores apurados são atualizados.",
+      confirmLabel: "Reapurar agora",
+    });
+    if (!ok) return;
+    const res = await reapurarCompetencias({});
+    setReapuracaoResumo(res?.detalhes?.length ? res : null);
+  };
+
+
 
   const handleMovimentacao = async () => {
     if (!selectedBanco || movForm.minutos <= 0) { toast.error("Preencha os dados"); return; }
@@ -365,6 +394,11 @@ export function PontoBancoHorasTab() {
             <RefreshCw className={`w-4 h-4 mr-2 ${apurandoBancoHoras ? "animate-spin" : ""}`} />
             {apurandoBancoHoras ? "Apurando..." : "Apurar agora"}
           </Button>
+          <Button variant="outline" onClick={handleReapurarFechadas} disabled={reapurandoCompetencias}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${reapurandoCompetencias ? "animate-spin" : ""}`} />
+            {reapurandoCompetencias ? "Reapurando..." : "Reapurar fechadas"}
+          </Button>
+
           <Button variant="outline" onClick={() => setShowImport(true)}>
             <Upload className="w-4 h-4 mr-2" /> Importar
           </Button>
@@ -373,6 +407,50 @@ export function PontoBancoHorasTab() {
           </Button>
         </div>
       </div>
+
+      {reapuracaoResumo && (
+        <Card className="border-primary/40">
+          <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm">
+              Reapuração concluída — {reapuracaoResumo.registros_ajustados ?? 0} de{" "}
+              {reapuracaoResumo.registros_processados ?? 0} competência(s) tiveram o saldo ajustado
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setReapuracaoResumo(null)}>
+              Fechar
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Colaborador</TableHead>
+                  <TableHead>Competência</TableHead>
+                  <TableHead className="text-right">Antes</TableHead>
+                  <TableHead className="text-right">Depois</TableHead>
+                  <TableHead className="text-right">Diferença</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(reapuracaoResumo.detalhes || []).map((d, i) => (
+                  <TableRow key={`${d.competencia}-${i}`}>
+                    <TableCell>{d.colaborador_nome || "—"}</TableCell>
+                    <TableCell>{d.competencia}</TableCell>
+                    <TableCell className="text-right">{formatMinutos(d.saldo_antes_minutos)}</TableCell>
+                    <TableCell className="text-right">{formatMinutos(d.saldo_depois_minutos)}</TableCell>
+                    <TableCell
+                      className={`text-right font-medium ${d.diferenca_minutos >= 0 ? "text-green-600" : "text-destructive"}`}
+                    >
+                      {d.diferenca_minutos >= 0 ? "+" : "-"}
+                      {formatMinutos(Math.abs(d.diferenca_minutos))}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
