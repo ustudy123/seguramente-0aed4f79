@@ -509,14 +509,14 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
         writeParagraph("Composição do GHE não cadastrada (sem setores/funções vinculados).");
       }
 
-      if (grupo.itens.length === 0) {
+      if (itensGHE.length === 0) {
         writeParagraph(
           "Sem resultados estratificados para este GHE até a data de emissão (amostragem insuficiente ou respostas ainda não vinculadas ao grupo)."
         );
         return;
       }
-      renderTabelaInventario(grupo.itens);
-      escreverResumoNiveis(grupo.itens);
+      renderTabelaInventario(itensGHE);
+      escreverResumoNiveis(itensGHE);
     });
   }
 
