@@ -18804,6 +18804,62 @@ export type Database = {
           },
         ]
       }
+      ponto_excedente_decisao: {
+        Row: {
+          colaborador_cpf: string
+          colaborador_nome: string | null
+          created_at: string
+          decidido_em: string
+          decidido_por: string | null
+          decisao: string
+          dia: string
+          empresa_id: string | null
+          id: string
+          justificativa: string
+          minutos_no_momento: number | null
+          motivo_ajuste: string | null
+          tenant_id: string
+        }
+        Insert: {
+          colaborador_cpf: string
+          colaborador_nome?: string | null
+          created_at?: string
+          decidido_em?: string
+          decidido_por?: string | null
+          decisao: string
+          dia: string
+          empresa_id?: string | null
+          id?: string
+          justificativa: string
+          minutos_no_momento?: number | null
+          motivo_ajuste?: string | null
+          tenant_id: string
+        }
+        Update: {
+          colaborador_cpf?: string
+          colaborador_nome?: string | null
+          created_at?: string
+          decidido_em?: string
+          decidido_por?: string | null
+          decisao?: string
+          dia?: string
+          empresa_id?: string | null
+          id?: string
+          justificativa?: string
+          minutos_no_momento?: number | null
+          motivo_ajuste?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_excedente_decisao_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_exportacoes_folha: {
         Row: {
           arquivo_nome: string | null
@@ -19228,6 +19284,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_saldo_fix_intervalo_snapshot: {
+        Row: {
+          capturado_em: string
+          colaborador_cpf: string
+          competencia: string
+          dia: string
+          fase: string
+          id: number
+          jornada_min: number | null
+          protegido: boolean | null
+          saldo_min: number | null
+          tenant_id: string
+          trabalhado_min: number | null
+        }
+        Insert: {
+          capturado_em?: string
+          colaborador_cpf: string
+          competencia: string
+          dia: string
+          fase: string
+          id?: number
+          jornada_min?: number | null
+          protegido?: boolean | null
+          saldo_min?: number | null
+          tenant_id: string
+          trabalhado_min?: number | null
+        }
+        Update: {
+          capturado_em?: string
+          colaborador_cpf?: string
+          competencia?: string
+          dia?: string
+          fase?: string
+          id?: number
+          jornada_min?: number | null
+          protegido?: boolean | null
+          saldo_min?: number | null
+          tenant_id?: string
+          trabalhado_min?: number | null
+        }
+        Relationships: []
       }
       ponto_semanal: {
         Row: {
@@ -24318,6 +24416,41 @@ export type Database = {
               tolerancia_min: number
             }[]
           }
+      ponto_excedente_decidir: {
+        Args: {
+          p_colaborador_cpf: string
+          p_decisao: string
+          p_dia: string
+          p_justificativa: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
+      ponto_excedente_pendentes: {
+        Args: { p_competencia: string; p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          dia: string
+          dias_parado: number
+          excedente_retido_min: number
+          jornada_min: number
+          motivo_ajuste: string
+          trabalhado_min: number
+        }[]
+      }
+      ponto_intervalo_janela_do_dia: {
+        Args: {
+          p_colaborador_id: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: {
+          fim: string
+          inicio: string
+        }[]
+      }
       ponto_jornada_do_dia: {
         Args: {
           p_colaborador_id: string
