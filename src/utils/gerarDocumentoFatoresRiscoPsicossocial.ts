@@ -58,6 +58,12 @@ export interface InventarioGHEDocumento {
   ghe_codigo?: string | null;
   respondentes: number;
   elegiveis: number;
+  /** Setores (departamentos) que compõem o GHE */
+  setores?: string[];
+  /** Funções (cargos) que compõem o GHE */
+  funcoes?: string[];
+  /** Composição detalhada Setor -> Funções */
+  setorFuncoes?: { setor: string; funcoes: string[] }[];
   itens: ItemDiagnosticoPsicossocial[];
 }
 
