@@ -458,8 +458,9 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   if (temGHE) {
     writeSubTitle("I.1. Consolidado da campanha (todos os GHEs)");
   }
+  const nAvaliados = inventario.filter((i) => i.avaliado !== false).length;
   writeParagraph(
-    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) de risco avaliado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo NR-01 / ISO 45003.`
+    `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) do catálogo NR-01 / ISO 45003 inventariado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo — sendo ${nAvaliados} avaliado(s) diretamente pelos itens do instrumento aplicado e ${inventario.length - nAvaliados} sem cobertura direta no instrumento (mantidos no inventário para rastreabilidade e monitoramento).`
   );
   renderTabelaInventario(inventario);
   escreverResumoNiveis(inventario);
