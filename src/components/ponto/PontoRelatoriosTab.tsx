@@ -47,15 +47,11 @@ export function PontoRelatoriosTab() {
   const { data: bancosHoras = [] } = useBancoHorasPorCompetencia(competencia);
   const { data: registrosMes = [], isLoading: carregandoRegistros } = usePontoDiario(startDate, endDate);
 
-  const formatMinutos = (min: number) => {
-    const totalMinutos = Math.abs(min || 0);
-    const h = Math.floor(totalMinutos / 60);
-    const m = totalMinutos % 60;
-    return `${h}h ${m.toString().padStart(2, "0")}min`;
-  };
+  const formatMinutos = (min: number) => formatarHoraMinuto(Math.abs(min || 0));
 
   // Saldo com sinal (negativo = devendo horas).
-  const formatSaldo = (min: number) => `${(min || 0) < 0 ? "-" : ""}${formatMinutos(min)}`;
+  const formatSaldo = (min: number) => formatarHoraMinuto(min || 0);
+
 
   const gerarRelatorio = async () => {
     setGerando(true);
