@@ -81,6 +81,12 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
         ghe_codigo: g.ghe_codigo ?? null,
         respondentes: g.count,
         elegiveis: g.elegiveis,
+        setores: g.composicaoSetores ?? [],
+        funcoes: g.composicaoCargos ?? [],
+        setorFuncoes: (g.composicaoSetorCargos ?? []).map((s) => ({
+          setor: s.setor,
+          funcoes: s.cargos,
+        })),
         itens: calcularFatoresRisco(g.radar, { isSipro, severidades: sevCatalogo ?? null }),
       }))
       .sort((a, b) => (a.ghe_codigo || a.ghe_nome).localeCompare(b.ghe_codigo || b.ghe_nome));
