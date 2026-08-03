@@ -104,6 +104,10 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Trabalho Emocional',
       'Esgotamento Empático',
       'Demandas no Trabalho',
+      'Demanda',
+      'Organização do Trabalho',
+      'Sofrimento Patogênico',
+      'Danos Relacionados ao Trabalho',
       'Demandas Quantitativas e Ritmo',
       // Desfechos de sobrecarga / falta de recuperação
       'Burnout',
@@ -175,6 +179,8 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Conflito de Papéis',
       'Exigências Contraditórias',
       'Ambiguidade de Papéis',
+      'Função',
+      'Papel na Organização',
     ],
   },
   {
@@ -218,6 +224,7 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Suporte dos Colegas',
       'Suporte Social',
       'Apoio Social',
+      'Estilo de Gestão',
     ],
   },
   {
@@ -239,6 +246,8 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Qualidade das Relações',
       'Clima de Equipe',
       'Conflitos Interpessoais',
+      'Laços Sociais',
+      'Relações Socioprofissionais',
     ],
   },
   {
@@ -295,6 +304,8 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
     aliases: [
       'Assédio',
       'Assédio Moral',
+      'Assédio e Comportamentos Ofensivos',
+      'Comportamentos Ofensivos',
       'Assédio Sexual',
       'Hostilidade',
       'Discriminação',
