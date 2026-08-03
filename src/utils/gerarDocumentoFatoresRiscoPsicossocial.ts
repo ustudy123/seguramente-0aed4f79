@@ -469,6 +469,33 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
       writeParagraph(
         `Respondentes: ${grupo.respondentes}${grupo.elegiveis ? ` de ${grupo.elegiveis} elegível(is)` : ""} · ${grupo.itens.length} fator(es) avaliado(s) exclusivamente com as respostas deste Grupo Homogêneo de Exposição.`
       );
+
+      // Composição cadastral do GHE (Setores x Funções) — exigência NR-01/NR-17
+      const setorFuncoes = grupo.setorFuncoes ?? [];
+      const setores = grupo.setores ?? [];
+      const funcoes = grupo.funcoes ?? [];
+      if (setorFuncoes.length > 0) {
+        ensureSpace(20);
+        autoTable(doc, {
+          startY: y,
+          margin: { left: marginX, right: marginX, top: marginTop, bottom: marginBottom },
+          head: [["Setor / Departamento", "Funções (cargos)"]],
+          body: setorFuncoes.map((sf) => [s(sf.setor || "—"), s((sf.funcoes || []).join(", ") || "—")]),
+          styles: { font: "helvetica", fontSize: 7.6, cellPadding: 1.8, textColor: [45, 45, 45] },
+          headStyles: { fillColor: ROXO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7.8 },
+          alternateRowStyles: { fillColor: [248, 245, 253] },
+          columnStyles: { 0: { cellWidth: 55, fontStyle: "bold" }, 1: { cellWidth: contentW - 55 } },
+          didDrawPage: () => drawHeader(),
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+      } else if (setores.length > 0 || funcoes.length > 0) {
+        writeParagraph(
+          `Composição do GHE — Setores: ${setores.join(", ") || "—"} · Funções: ${funcoes.join(", ") || "—"}.`
+        );
+      } else {
+        writeParagraph("Composição do GHE não cadastrada (sem setores/funções vinculados).");
+      }
+
       if (grupo.itens.length === 0) {
         writeParagraph(
           "Sem resultados estratificados para este GHE até a data de emissão (amostragem insuficiente ou respostas ainda não vinculadas ao grupo)."
