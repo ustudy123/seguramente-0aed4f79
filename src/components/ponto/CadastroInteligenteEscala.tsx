@@ -15,6 +15,7 @@ import { usePontoEscalas } from "@/hooks/usePontoEscalas";
 import { usePontoEscalasAvancado } from "@/hooks/usePontoEscalasAvancado";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
+import { formatarMinutosCurto } from "@/lib/ponto/formatoHoras";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface BlocoDia {
@@ -171,11 +172,8 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
     }
   };
 
-  const formatMin = (min: number) => {
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return `${h}h${m > 0 ? `${m.toString().padStart(2, "0")}` : ""}`;
-  };
+  const formatMin = (min: number) => formatarMinutosCurto(min);
+
 
   const salvarEscala = async () => {
     if (!estrutura || !tenantId) return;

@@ -18,6 +18,7 @@ import { Plus, Calendar, Clock, Users, Settings, Sparkles, Pencil, Power, Trash2
 import { toast } from "sonner";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
+import { formatarHoraMinuto } from "@/lib/ponto/formatoHoras";
 
 export function PontoEscalasTab() {
   const { escalas, loadingEscalas, atribuicoes: atribuicoesRaw, criarEscala, criandoEscala, atualizarEscala, atualizandoEscala, excluirEscala, atribuirEscala } = usePontoEscalas();
@@ -194,11 +195,8 @@ export function PontoEscalasTab() {
   const [atribBusca, setAtribBusca] = useState("");
   const [atribuindoLote, setAtribuindoLote] = useState(false);
 
-  const formatMinutos = (min: number) => {
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return `${h}h${m > 0 ? ` ${m}min` : ""}`;
-  };
+  const formatMinutos = (min: number) => formatarHoraMinuto(min);
+
 
   const handleSalvar = async () => {
     if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }

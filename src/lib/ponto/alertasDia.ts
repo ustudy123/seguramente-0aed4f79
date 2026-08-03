@@ -63,8 +63,6 @@ export function calcularCoberturaJornada({
   };
 }
 
-/** "3h10" / "45min" — mesmo formato já usado nos selos do espelho. */
-export function formatarMinutosCurto(min: number): string {
-  const m = Math.max(0, Math.round(min));
-  return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}` : `${m}min`;
-}
+/** "3h10" / "45min" — reexport da fonte única (`@/lib/ponto/formatoHoras`). */
+export { formatarMinutosCurto } from "./formatoHoras";
+

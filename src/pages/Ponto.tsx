@@ -36,6 +36,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { usePonto, TIPO_MARCACAO_LABELS, STATUS_PONTO_CONFIG, type PontoDiario, type PontoAjuste } from "@/hooks/usePonto";
 import { calcularCoberturaJornada, formatarMinutosCurto } from "@/lib/ponto/alertasDia";
+import { formatarHoraMinuto } from "@/lib/ponto/formatoHoras";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -914,8 +915,9 @@ const Ponto = () => {
                   const saldoApurado = saldoDiaPorCpf.get(cpfKey);
                   const totalDiaMin = saldoApurado ? saldoApurado.trabalhadoMin : Math.max(0, totalMin);
                   const totalLabel = saldoApurado || marcs.length > 0
-                    ? `${Math.floor(totalDiaMin / 60).toString().padStart(2, "0")}h ${(totalDiaMin % 60).toString().padStart(2, "0")}min`
+                    ? formatarHoraMinuto(totalDiaMin)
                     : formatInterval(ponto.horas_trabalhadas);
+
                   const saldoCell = saldoApurado
                     ? (
                       <span
@@ -1048,7 +1050,7 @@ const Ponto = () => {
                               {excedeLimiteDiario && (
                                 <span
                                   className="inline-flex items-center gap-1 self-start rounded-md bg-red-100 text-red-800 px-2 py-0.5 text-[11px] font-semibold"
-                                  title={`Total do dia acima da jornada (${Math.floor(jornadaPrevistaMin / 60)}h${String(jornadaPrevistaMin % 60).padStart(2, "0")}) + 2h suplementares — art. 59, caput, CLT. Excedente: ${excedenteLabel}.`}
+                                  title={`Total do dia acima da jornada (${formatarMinutosCurto(jornadaPrevistaMin)}) + 2h suplementares — art. 59, caput, CLT. Excedente: ${excedenteLabel}.`}
                                 >
                                   <AlertTriangle className="w-3 h-3" /> EXCEDE LIMITE DIÁRIO · {excedenteLabel}
                                 </span>
@@ -1061,7 +1063,7 @@ const Ponto = () => {
                                   const [h1, mi1] = linha[0].hora.split(":").map(Number);
                                   const [h2, mi2] = linha[1].hora.split(":").map(Number);
                                   const min = Math.max(0, (h2 * 60 + mi2) - (h1 * 60 + mi1));
-                                  parLabel = `${Math.floor(min / 60).toString().padStart(2, "0")}h ${(min % 60).toString().padStart(2, "0")}min`;
+                                  parLabel = formatarHoraMinuto(min);
                                 }
                                 // Motivo do período: justificativa do ajuste aprovado
                                 // que criou qualquer marcação do par.
@@ -1088,9 +1090,8 @@ const Ponto = () => {
                                     }
                                     const dif = melhor ? melhor.fim - pFim : 0;
                                     if (melhor && dif > TOLERANCIA_SAIDA_MIN) {
-                                      saidaAntecipada = dif >= 60
-                                        ? `${Math.floor(dif / 60)}h${String(dif % 60).padStart(2, "0")}`
-                                        : `${dif}min`;
+                                      saidaAntecipada = formatarMinutosCurto(dif);
+
                                     }
                                   }
                                 }
