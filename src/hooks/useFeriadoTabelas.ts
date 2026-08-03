@@ -189,5 +189,7 @@ export function useFeriadoTabelas() {
     salvarItem,
     excluirItem,
     definirVinculos,
+    vincularEmpresa,
+
   };
 }
