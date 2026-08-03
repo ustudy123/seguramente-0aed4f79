@@ -104,6 +104,18 @@ export const CATALOGO_RISCOS_PSICOSSOCIAIS: FatorRiscoPsicossocial[] = [
       'Trabalho Emocional',
       'Esgotamento Empático',
       'Demandas no Trabalho',
+      'Demandas Quantitativas e Ritmo',
+      // Desfechos de sobrecarga / falta de recuperação
+      'Burnout',
+      'Burnout / Esgotamento',
+      'Esgotamento',
+      'Sinais Precoces',
+      'Sinais Precoces de Saúde',
+      'Recuperação e Equilíbrio',
+      'Equilíbrio Trabalho-Vida',
+      'Equilíbrio Trabalho–Vida',
+      'Equilíbrio Trabalho Vida',
+      'Conciliação Trabalho-Vida',
     ],
   },
   {
