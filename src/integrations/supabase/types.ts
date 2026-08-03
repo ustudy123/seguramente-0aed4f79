@@ -7554,6 +7554,146 @@ export type Database = {
         }
         Relationships: []
       }
+      feriado_tabela_empresas: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          id: string
+          tabela_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          id?: string
+          tabela_id: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          tabela_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feriado_tabela_empresas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feriado_tabela_empresas_tabela_id_fkey"
+            columns: ["tabela_id"]
+            isOneToOne: false
+            referencedRelation: "feriado_tabelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feriado_tabela_itens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data: string | null
+          dia: number | null
+          id: string
+          mes: number | null
+          nome: string
+          recorrente: boolean
+          tabela_id: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data?: string | null
+          dia?: number | null
+          id?: string
+          mes?: number | null
+          nome: string
+          recorrente?: boolean
+          tabela_id: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data?: string | null
+          dia?: number | null
+          id?: string
+          mes?: number | null
+          nome?: string
+          recorrente?: boolean
+          tabela_id?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feriado_tabela_itens_tabela_id_fkey"
+            columns: ["tabela_id"]
+            isOneToOne: false
+            referencedRelation: "feriado_tabelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feriado_tabelas: {
+        Row: {
+          ano: number | null
+          ativo: boolean
+          codigo_ibge: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          municipio: string | null
+          nome: string
+          numero: number | null
+          tenant_id: string
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          ano?: number | null
+          ativo?: boolean
+          codigo_ibge?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          municipio?: string | null
+          nome: string
+          numero?: number | null
+          tenant_id?: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ano?: number | null
+          ativo?: boolean
+          codigo_ibge?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          municipio?: string | null
+          nome?: string
+          numero?: number | null
+          tenant_id?: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feriados: {
         Row: {
           abrangencia: string
@@ -24096,6 +24236,10 @@ export type Database = {
       }
       feriado_do_dia: {
         Args: { p_colaborador_id: string; p_data: string; p_tenant_id: string }
+        Returns: string
+      }
+      feriado_tabela_duplicar: {
+        Args: { p_ano: number; p_nome?: string; p_tabela_id: string }
         Returns: string
       }
       ferias_dias_por_faltas_clt: {

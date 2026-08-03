@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
 import { FeriadoFormDialog } from "./FeriadoFormDialog";
+import { FeriadoTabelasPanel } from "./FeriadoTabelasPanel";
 import {
   type Feriado, type FeriadoForm, dataEfetiva, incideNoAno,
   validarFeriado, payloadFeriado, LABEL_ABRANGENCIA,
@@ -151,6 +152,8 @@ export function PontoFeriadosTab() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+      <FeriadoTabelasPanel />
+
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
