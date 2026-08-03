@@ -1117,7 +1117,10 @@ const Ponto = () => {
                               </div>
                             </div>
                           </TableCell>
+                          <TableCell className="text-center">{saldoCell}</TableCell>
+                          </>
                         );
+
                       })()}
                     </TableRow>
                   );
