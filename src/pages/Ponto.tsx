@@ -1050,7 +1050,7 @@ const Ponto = () => {
                               {excedeLimiteDiario && (
                                 <span
                                   className="inline-flex items-center gap-1 self-start rounded-md bg-red-100 text-red-800 px-2 py-0.5 text-[11px] font-semibold"
-                                  title={`Total do dia acima da jornada (${Math.floor(jornadaPrevistaMin / 60)}h${String(jornadaPrevistaMin % 60).padStart(2, "0")}) + 2h suplementares — art. 59, caput, CLT. Excedente: ${excedenteLabel}.`}
+                                  title={`Total do dia acima da jornada (${formatarMinutosCurto(jornadaPrevistaMin)}) + 2h suplementares — art. 59, caput, CLT. Excedente: ${excedenteLabel}.`}
                                 >
                                   <AlertTriangle className="w-3 h-3" /> EXCEDE LIMITE DIÁRIO · {excedenteLabel}
                                 </span>
