@@ -21,7 +21,10 @@ import {
   type Sev15,
 } from "@/lib/groPsicossocial15";
 import { getSeveridadeInfo } from "@/lib/psicossocial-severidade";
-import { resolverFatorPorSubject } from "@/data/catalogoRiscosPsicossociais";
+import {
+  resolverFatorPorSubject,
+  CATALOGO_RISCOS_PSICOSSOCIAIS,
+} from "@/data/catalogoRiscosPsicossociais";
 
 export interface ItemDiagnosticoPsicossocial {
   fator: string;
@@ -32,6 +35,38 @@ export interface ItemDiagnosticoPsicossocial {
   severidadeLabel: string;
   nivelLabel: string;
   nivelKey: NivelGRO15;
+  /** false = fator do catálogo sem item correspondente no instrumento aplicado */
+  avaliado?: boolean;
+}
+
+/**
+ * Completa a lista com os fatores do catálogo NR-01/ISO 45003 que o
+ * instrumento aplicado não cobriu, para que o inventário sempre apresente
+ * os 13 fatores padrão (exigência de rastreabilidade do PGR).
+ */
+export function completarComCatalogo<T extends ItemDiagnosticoPsicossocial>(
+  itens: T[],
+  sevCatalogo?: Map<string, Sev15> | null
+): ItemDiagnosticoPsicossocial[] {
+  const presentes = new Set(itens.map((i) => normalizarNomeFator(i.fator)));
+  const faltantes = CATALOGO_RISCOS_PSICOSSOCIAIS.filter(
+    (f) => !presentes.has(normalizarNomeFator(f.nome))
+  ).map<ItemDiagnosticoPsicossocial>((f) => {
+    const sev = (sevCatalogo?.get(normalizarNomeFator(f.nome)) ??
+      f.severidadePadrao) as Sev15;
+    return {
+      fator: f.nome,
+      dimensoes: ["Sem item no instrumento aplicado"],
+      norma: f.baseNormativa.join(" / "),
+      scoreReal: 0,
+      probabilidadeLabel: "Não avaliada",
+      severidadeLabel: getSeveridadeInfo(sev)?.label ?? String(sev),
+      nivelLabel: "Não avaliado",
+      nivelKey: "trivial",
+      avaliado: false,
+    };
+  });
+  return [...itens, ...faltantes];
 }
 
 /** Campanha tem diagnóstico liberado (radar + mínimo de respostas)? */
