@@ -293,9 +293,12 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
+    // GHEs excluídos do cadastro não podem voltar via snapshot antigo da resposta.
+    const gheExiste = (id: string) => gheNomeMap.has(id);
     const campanhaGheMap = new Map(
       campanhasGhe.map((c) => [c.id, (c.ghe_ids ?? []).filter(Boolean)])
     );
+
     const grupos = new Map<string, {
       nome: string;
       count: number;
@@ -343,14 +346,15 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     };
 
     for (const r of respostas) {
-      if (r.ghe_id_snapshot) {
+      if (r.ghe_id_snapshot && gheExiste(r.ghe_id_snapshot)) {
         addToGrupo(
           r.ghe_id_snapshot,
-          r.ghe_nome_snapshot ?? gheNomeMap.get(r.ghe_id_snapshot) ?? "GHE",
+          gheNomeMap.get(r.ghe_id_snapshot) ?? r.ghe_nome_snapshot ?? "GHE",
           r
         );
         continue;
       }
+
       // Fallback: só é seguro atribuir a resposta ao GHE da campanha quando a
       // campanha tem UM único GHE. Com vários GHEs, replicar a mesma resposta
       // em todos produzia scores idênticos em GHE 01, GHE 02 etc. — a mesma
