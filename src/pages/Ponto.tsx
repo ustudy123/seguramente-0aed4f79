@@ -1004,6 +1004,8 @@ const Ponto = () => {
                               </TableCell>
                               <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
                               <TableCell className="text-center">{statusDia}</TableCell>
+                              <TableCell className="text-center">{saldoCell}</TableCell>
+
                             </>
                           );
                         }
