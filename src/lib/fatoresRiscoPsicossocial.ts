@@ -120,10 +120,39 @@ export function calcularFatoresRisco(
       severidadeLabel: getSeveridadeInfo(sev)?.label ?? String(sev),
       nivelLabel: NIVEL15_LABELS[nivel],
       nivelKey: nivel,
+      avaliado: true,
     };
   });
 
-  return itens.sort(
-    (a, b) => (NIVEL15_ORDEM[a.nivelKey] ?? 5) - (NIVEL15_ORDEM[b.nivelKey] ?? 5),
+  // Completa com os fatores do catálogo não cobertos pelo instrumento,
+  // garantindo os 13 fatores padrão em todo inventário (rastreabilidade PGR).
+  const presentes = new Set(itens.map((i) => normalizarNomeFator(i.fator)));
+  const faltantes: FatorRiscoGHE[] = CATALOGO_RISCOS_PSICOSSOCIAIS.filter(
+    (f) => !presentes.has(normalizarNomeFator(f.nome)),
+  ).map((f) => {
+    const sevBruta =
+      opcoes.severidades?.get(normalizarNomeFator(f.nome)) ?? f.severidadePadrao;
+    const sev = Math.min(5, Math.max(1, Math.round(sevBruta))) as Sev15;
+    return {
+      fatorId: f.id,
+      fator: f.nome,
+      norma: f.baseNormativa.join(" / "),
+      descricao: f.descricao,
+      categoriaLabel: CATEGORIA_LABELS[f.categoria],
+      dimensoes: ["Sem item no instrumento aplicado"],
+      scoreReal: 0,
+      scoreRisco: 0,
+      probabilidadeLabel: "Não avaliada",
+      severidadeLabel: getSeveridadeInfo(sev)?.label ?? String(sev),
+      nivelLabel: "Não avaliado",
+      nivelKey: "trivial" as NivelGRO15,
+      avaliado: false,
+    };
+  });
+
+  return [...itens, ...faltantes].sort(
+    (a, b) =>
+      (a.avaliado === false ? 9 : NIVEL15_ORDEM[a.nivelKey] ?? 5) -
+      (b.avaliado === false ? 9 : NIVEL15_ORDEM[b.nivelKey] ?? 5),
   );
 }
