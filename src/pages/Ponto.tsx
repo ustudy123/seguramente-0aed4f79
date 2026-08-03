@@ -1090,9 +1090,8 @@ const Ponto = () => {
                                     }
                                     const dif = melhor ? melhor.fim - pFim : 0;
                                     if (melhor && dif > TOLERANCIA_SAIDA_MIN) {
-                                      saidaAntecipada = dif >= 60
-                                        ? `${Math.floor(dif / 60)}h${String(dif % 60).padStart(2, "0")}`
-                                        : `${dif}min`;
+                                      saidaAntecipada = formatarMinutosCurto(dif);
+
                                     }
                                   }
                                 }
