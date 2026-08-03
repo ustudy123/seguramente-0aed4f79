@@ -15,6 +15,7 @@ import { usePontoEscalas } from "@/hooks/usePontoEscalas";
 import { usePontoEscalasAvancado } from "@/hooks/usePontoEscalasAvancado";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
+import { formatarMinutosCurto } from "@/lib/ponto/formatoHoras";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface BlocoDia {

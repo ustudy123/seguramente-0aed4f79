@@ -17,6 +17,7 @@ import { FileDown, FileSpreadsheet, Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
+import { formatarHoraRelogio } from "@/lib/ponto/formatoHoras";
 
 type FormatoExport = "csv" | "txt" | "xlsx";
 

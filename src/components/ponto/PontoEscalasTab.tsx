@@ -18,6 +18,7 @@ import { Plus, Calendar, Clock, Users, Settings, Sparkles, Pencil, Power, Trash2
 import { toast } from "sonner";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
+import { formatarHoraMinuto } from "@/lib/ponto/formatoHoras";
 
 export function PontoEscalasTab() {
   const { escalas, loadingEscalas, atribuicoes: atribuicoesRaw, criarEscala, criandoEscala, atualizarEscala, atualizandoEscala, excluirEscala, atribuirEscala } = usePontoEscalas();
