@@ -7560,44 +7560,67 @@ export type Database = {
           ativo: boolean
           codigo_ibge: string | null
           created_at: string
-          data: string
+          data: string | null
+          dia: number | null
+          empresa_id: string | null
           id: string
+          mes: number | null
           municipio: string | null
           nome: string
           observacao: string | null
+          recorrente: boolean
           tenant_id: string | null
           tipo: string
           uf: string | null
+          updated_at: string
         }
         Insert: {
           abrangencia: string
           ativo?: boolean
           codigo_ibge?: string | null
           created_at?: string
-          data: string
+          data?: string | null
+          dia?: number | null
+          empresa_id?: string | null
           id?: string
+          mes?: number | null
           municipio?: string | null
           nome: string
           observacao?: string | null
+          recorrente?: boolean
           tenant_id?: string | null
           tipo?: string
           uf?: string | null
+          updated_at?: string
         }
         Update: {
           abrangencia?: string
           ativo?: boolean
           codigo_ibge?: string | null
           created_at?: string
-          data?: string
+          data?: string | null
+          dia?: number | null
+          empresa_id?: string | null
           id?: string
+          mes?: number | null
           municipio?: string | null
           nome?: string
           observacao?: string | null
+          recorrente?: boolean
           tenant_id?: string | null
           tipo?: string
           uf?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "feriados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ferias_assinatura_links: {
         Row: {
