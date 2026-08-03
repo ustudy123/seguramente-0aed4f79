@@ -1063,7 +1063,7 @@ const Ponto = () => {
                                   const [h1, mi1] = linha[0].hora.split(":").map(Number);
                                   const [h2, mi2] = linha[1].hora.split(":").map(Number);
                                   const min = Math.max(0, (h2 * 60 + mi2) - (h1 * 60 + mi1));
-                                  parLabel = `${Math.floor(min / 60).toString().padStart(2, "0")}h ${(min % 60).toString().padStart(2, "0")}min`;
+                                  parLabel = formatarHoraMinuto(min);
                                 }
                                 // Motivo do período: justificativa do ajuste aprovado
                                 // que criou qualquer marcação do par.
