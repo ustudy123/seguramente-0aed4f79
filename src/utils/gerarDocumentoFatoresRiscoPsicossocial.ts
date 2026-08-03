@@ -383,62 +383,96 @@ export async function gerarDocumentoFatoresRiscoPsicossocial({
   drawHeader();
   y = marginTop;
   writeTitle("ANEXO I — INVENTÁRIO DE RISCOS PSICOSSOCIAIS (GRO / NR-01)");
+
+  const renderTabelaInventario = (itens: ItemDiagnosticoPsicossocial[]) => {
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX, top: marginTop, bottom: marginBottom },
+      head: [["Fator de Risco", "Dimensões do Instrumento", "Base Normativa", "Score", "Probabilidade", "Severidade", "Grau de Risco"]],
+      body: itens.map((item) => [
+        s(item.fator),
+        s(item.dimensoes.join(" • ")),
+        s(item.norma),
+        `${item.scoreReal}%`,
+        s(item.probabilidadeLabel),
+        s(item.severidadeLabel),
+        s(item.nivelLabel),
+      ]),
+      styles: { font: "helvetica", fontSize: 7.4, cellPadding: 1.6, textColor: [45, 45, 45] },
+      headStyles: { fillColor: ROXO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7.6 },
+      alternateRowStyles: { fillColor: [248, 245, 253] },
+      columnStyles: {
+        0: { cellWidth: 34 },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 26 },
+        3: { cellWidth: 12, halign: "center" },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20, fontStyle: "bold" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 6) {
+          const nivel = itens[data.row.index]?.nivelKey;
+          if (nivel && NIVEL_CORES[nivel]) data.cell.styles.textColor = NIVEL_CORES[nivel];
+        }
+      },
+      didDrawPage: () => drawHeader(),
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+  };
+
+  const escreverResumoNiveis = (itens: ItemDiagnosticoPsicossocial[]) => {
+    const contagem = (Object.keys(NIVEL15_LABELS) as NivelGRO15[]).reduce(
+      (acc, nivel) => ({ ...acc, [nivel]: itens.filter((i) => i.nivelKey === nivel).length }),
+      {} as Record<NivelGRO15, number>
+    );
+    ensureSpace(10);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(35, 35, 35);
+    doc.text(
+      s(
+        `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)`
+      ),
+      marginX,
+      y
+    );
+    y += 8;
+  };
+
+  const temGHE = inventarioPorGHE.length > 0;
+
+  if (temGHE) {
+    writeSubTitle("I.1. Consolidado da campanha (todos os GHEs)");
+  }
   writeParagraph(
     `Diagnóstico psicossocial da campanha "${campanha.nome}": ${inventario.length} fator(es) de risco avaliado(s) pela Matriz GRO (Probabilidade x Severidade), com severidade fixa do catálogo NR-01 / ISO 45003.`
   );
+  renderTabelaInventario(inventario);
+  escreverResumoNiveis(inventario);
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: marginX, right: marginX, top: marginTop, bottom: marginBottom },
-    head: [["Fator de Risco", "Dimensões do Instrumento", "Base Normativa", "Score", "Probabilidade", "Severidade", "Grau de Risco"]],
-    body: inventario.map((item) => [
-      s(item.fator),
-      s(item.dimensoes.join(" • ")),
-      s(item.norma),
-      `${item.scoreReal}%`,
-      s(item.probabilidadeLabel),
-      s(item.severidadeLabel),
-      s(item.nivelLabel),
-    ]),
-    styles: { font: "helvetica", fontSize: 7.4, cellPadding: 1.6, textColor: [45, 45, 45] },
-    headStyles: { fillColor: ROXO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7.6 },
-    alternateRowStyles: { fillColor: [248, 245, 253] },
-    columnStyles: {
-      0: { cellWidth: 34 },
-      1: { cellWidth: 36 },
-      2: { cellWidth: 26 },
-      3: { cellWidth: 12, halign: "center" },
-      4: { cellWidth: 22 },
-      5: { cellWidth: 20 },
-      6: { cellWidth: 20, fontStyle: "bold" },
-    },
-    didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 6) {
-        const nivel = inventario[data.row.index]?.nivelKey;
-        if (nivel && NIVEL_CORES[nivel]) data.cell.styles.textColor = NIVEL_CORES[nivel];
+  // Estratificação obrigatória por GHE (NR-01 / NR-17): cada grupo tem o seu
+  // próprio inventário, calculado apenas com as respostas daquele GHE.
+  if (temGHE) {
+    inventarioPorGHE.forEach((grupo, idx) => {
+      doc.addPage();
+      drawHeader();
+      y = marginTop;
+      const rotulo = [grupo.ghe_codigo, grupo.ghe_nome].filter(Boolean).join(" — ");
+      writeSubTitle(`I.${idx + 2}. Inventário do GHE: ${rotulo}`);
+      writeParagraph(
+        `Respondentes: ${grupo.respondentes}${grupo.elegiveis ? ` de ${grupo.elegiveis} elegível(is)` : ""} · ${grupo.itens.length} fator(es) avaliado(s) exclusivamente com as respostas deste Grupo Homogêneo de Exposição.`
+      );
+      if (grupo.itens.length === 0) {
+        writeParagraph(
+          "Sem resultados estratificados para este GHE até a data de emissão (amostragem insuficiente ou respostas ainda não vinculadas ao grupo)."
+        );
+        return;
       }
-    },
-    didDrawPage: () => drawHeader(),
-  });
-  y = (doc as any).lastAutoTable.finalY + 6;
-
-  // Resumo por nível
-  const contagem = (Object.keys(NIVEL15_LABELS) as NivelGRO15[]).reduce(
-    (acc, nivel) => ({ ...acc, [nivel]: inventario.filter((i) => i.nivelKey === nivel).length }),
-    {} as Record<NivelGRO15, number>
-  );
-  ensureSpace(10);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(35, 35, 35);
-  doc.text(
-    s(
-      `Resumo: ${contagem.critico} crítico(s) · ${contagem.alto} alto(s) · ${contagem.medio} médio(s) · ${contagem.baixo} baixo(s) · ${contagem.trivial} trivial(is)`
-    ),
-    marginX,
-    y
-  );
-  y += 8;
+      renderTabelaInventario(grupo.itens);
+      escreverResumoNiveis(grupo.itens);
+    });
+  }
 
   // ═══════════════ ANEXO II — PLANO DE AÇÃO PGR (5W2H) ═══════════════
   doc.addPage();
