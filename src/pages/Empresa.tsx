@@ -542,9 +542,15 @@ export default function Empresa() {
               <CardTitle className="text-lg">Jornada e Condições Especiais</CardTitle>
               <CardDescription>Turnos, escalas e condições especiais de trabalho</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <EmpresaJornadaCondicoes data={formData} onChange={handleChange} />
+              <EmpresaFeriadoTabelaField
+                empresaId={viewMode === 'edit' ? (cadastro?.id ?? null) : null}
+                cidade={formData.cidade}
+                uf={formData.estado}
+              />
             </CardContent>
+
           </TabsContent>
 
           <TabsContent value="obrigacoes" className="mt-0">
