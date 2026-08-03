@@ -15,8 +15,10 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useSeveridadesCatalogo } from "@/hooks/useSeveridadesCatalogo";
+import { usePsicossocialResultadosGHE } from "@/hooks/usePsicossocialResultadosGHE";
+import { calcularFatoresRisco } from "@/lib/fatoresRiscoPsicossocial";
 import { NIVEL15_ORDEM, type NivelGRO15 } from "@/lib/groPsicossocial15";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { isEntrevistaInstrumento, type CampanhaPsicossocial } from "@/types/psicossocial";
 import {
   construirInventarioDiagnostico,
   campanhaTemDiagnostico,
@@ -24,6 +26,7 @@ import {
 import {
   gerarDocumentoFatoresRiscoPsicossocial,
   type AcaoPlanoPGRDocumento,
+  type InventarioGHEDocumento,
 } from "@/utils/gerarDocumentoFatoresRiscoPsicossocial";
 
 interface DocumentoFatoresRiscoPGRProps {
@@ -61,6 +64,28 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
         : [],
     [campanhaSelecionada, temDiagnostico, sevCatalogo]
   );
+
+  // Anexo I estratificado por GHE (NR-01/NR-17): usa as respostas agregadas de
+  // cada Grupo Homogêneo, e não a média consolidada da campanha.
+  const { resultadosPorGHE } = usePsicossocialResultadosGHE(campanhaId ? [campanhaId] : undefined);
+
+  const inventarioPorGHE = useMemo<InventarioGHEDocumento[]>(() => {
+    if (!campanhaSelecionada || !temDiagnostico) return [];
+    const isSipro =
+      campanhaSelecionada.instrumento === "sipro" ||
+      isEntrevistaInstrumento(campanhaSelecionada.tipo_instrumento);
+    return resultadosPorGHE
+      .filter((g) => g.ghe_id && g.radar.length > 0)
+      .map((g) => ({
+        ghe_nome: g.ghe_nome,
+        ghe_codigo: g.ghe_codigo ?? null,
+        respondentes: g.count,
+        elegiveis: g.elegiveis,
+        itens: calcularFatoresRisco(g.radar, { isSipro, severidades: sevCatalogo ?? null }),
+      }))
+      .sort((a, b) => (a.ghe_codigo || a.ghe_nome).localeCompare(b.ghe_codigo || b.ghe_nome));
+  }, [resultadosPorGHE, campanhaSelecionada, temDiagnostico, sevCatalogo]);
+
 
   // Anexo II: ações do Plano de Ação PGR vinculadas à campanha.
   // O vínculo que vale é ação <-> campanha (campanha_ids): NÃO filtra pela unidade
@@ -187,6 +212,7 @@ export function DocumentoFatoresRiscoPGR({ campanhas }: DocumentoFatoresRiscoPGR
           total_respostas: campanhaSelecionada.total_respostas,
         },
         inventario: inventarioPrevia,
+        inventarioPorGHE,
         acoes: acoesPGR,
       });
 
