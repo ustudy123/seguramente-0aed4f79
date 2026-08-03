@@ -125,10 +125,13 @@ export function construirInventarioDiagnostico(
       severidadeLabel: getSeveridadeInfo(sev)?.label ?? String(sev),
       nivelLabel: NIVEL15_LABELS[nivel],
       nivelKey: nivel,
+      avaliado: true,
     };
   });
 
-  return itens.sort(
-    (a, b) => (NIVEL15_ORDEM[a.nivelKey] ?? 5) - (NIVEL15_ORDEM[b.nivelKey] ?? 5)
+  return completarComCatalogo(itens, sevCatalogo).sort(
+    (a, b) =>
+      (a.avaliado === false ? 9 : NIVEL15_ORDEM[a.nivelKey] ?? 5) -
+      (b.avaliado === false ? 9 : NIVEL15_ORDEM[b.nivelKey] ?? 5)
   );
 }
