@@ -293,9 +293,12 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
+    // GHEs excluídos do cadastro não podem voltar via snapshot antigo da resposta.
+    const gheExiste = (id: string) => gheNomeMap.has(id);
     const campanhaGheMap = new Map(
       campanhasGhe.map((c) => [c.id, (c.ghe_ids ?? []).filter(Boolean)])
     );
+
     const grupos = new Map<string, {
       nome: string;
       count: number;
