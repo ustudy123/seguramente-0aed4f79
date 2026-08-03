@@ -496,6 +496,35 @@ const Ponto = () => {
     );
   }, [colaboradores, pontosDiarios, empresaAtivaId, tenantIdAtivo, dataSelStr, desligadosPorCpf]);
 
+  // ── Fonte única de verdade do saldo diário ────────────────────────────
+  // O Espelho passa a EXIBIR exatamente o que a Apuração calcula: a RPC
+  // `ponto_saldo_dia_empresa` reaproveita `ponto_saldo_dias_competencia`
+  // (escala, tolerância de 10 min, atestado, feriado, equalização) para
+  // todos os colaboradores da empresa na data selecionada. Antes o Espelho
+  // recalculava as horas em TypeScript e divergia do Banco de Horas.
+  const { data: saldoDiaPorCpf = new Map<string, { trabalhadoMin: number; jornadaMin: number; saldoMin: number }>() } = useQuery({
+    queryKey: ["ponto-saldo-dia-espelho", tenantIdAtivo, empresaAtivaId, dataSelStr],
+    enabled: !!tenantIdAtivo,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("ponto_saldo_dia_empresa", {
+        p_tenant_id: tenantIdAtivo,
+        p_empresa_id: empresaAtivaId ?? null,
+        p_data: dataSelStr,
+      });
+      if (error) throw error;
+      const map = new Map<string, { trabalhadoMin: number; jornadaMin: number; saldoMin: number }>();
+      for (const d of (data || []) as any[]) {
+        map.set(String(d.colaborador_cpf || "").replace(/\D/g, ""), {
+          trabalhadoMin: Number(d.trabalhado_min) || 0,
+          jornadaMin: Number(d.jornada_min) || 0,
+          saldoMin: Number(d.saldo_min) || 0,
+        });
+      }
+      return map;
+    },
+  });
+
+
   const filteredPontos = espelhoRows.filter((ponto) => {
     // Só lista no espelho quem tem ao menos uma marcação no dia. Some quem
     // está sem batida (linhas virtuais "Pendente", além de Falta/Atestado/
@@ -792,13 +821,15 @@ const Ponto = () => {
                   <TableHead className="text-center w-28">Registros</TableHead>
                   <TableHead className="text-center w-28">Total</TableHead>
                   <TableHead className="text-center w-32">Status</TableHead>
+                  <TableHead className="text-center w-28">Saldo do dia</TableHead>
+
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loadingPontos ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8">Carregando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8">Carregando...</TableCell></TableRow>
                 ) : filteredPontos.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</TableCell></TableRow>
                 ) : filteredPontos.map((ponto) => {
                   // Linha virtual (colaborador sem registro no dia) mostra
                   // "Pendente"; só registros reais com status pendente viram
@@ -879,24 +910,44 @@ const Ponto = () => {
                       pendingEntry = null;
                     }
                   }
-                  const totalLabel = marcs.length > 0
-                    ? `${Math.floor(Math.max(0, totalMin) / 60).toString().padStart(2, "0")}h ${(Math.max(0, totalMin) % 60).toString().padStart(2, "0")}min`
+                  // Saldo apurado do dia (RPC) — mesma fonte do Banco de Horas.
+                  const saldoApurado = saldoDiaPorCpf.get(cpfKey);
+                  const totalDiaMin = saldoApurado ? saldoApurado.trabalhadoMin : Math.max(0, totalMin);
+                  const totalLabel = saldoApurado || marcs.length > 0
+                    ? `${Math.floor(totalDiaMin / 60).toString().padStart(2, "0")}h ${(totalDiaMin % 60).toString().padStart(2, "0")}min`
                     : formatInterval(ponto.horas_trabalhadas);
+                  const saldoCell = saldoApurado
+                    ? (
+                      <span
+                        className={cn(
+                          "font-mono text-xs font-semibold",
+                          saldoApurado.saldoMin > 0 && "text-emerald-600",
+                          saldoApurado.saldoMin < 0 && "text-red-600",
+                          saldoApurado.saldoMin === 0 && "text-muted-foreground",
+                        )}
+                        title="Saldo apurado pela mesma rotina do Banco de Horas (escala, tolerância e abonos)"
+                      >
+                        {saldoApurado.saldoMin > 0 ? "+" : saldoApurado.saldoMin < 0 ? "−" : ""}
+                        {formatarMinutosCurto(Math.abs(saldoApurado.saldoMin))}
+                      </span>
+                    )
+                    : <span className="text-xs text-muted-foreground">—</span>;
 
                   // ── Cobertura da jornada e teto diário ────────────────────
                   // Atestado de HORAS do dia (parcial): a ausência é justificada.
                   const atestadoMin = atestadoRaw && (atestadoRaw.unidade_afastamento || "dias") === "horas"
                     ? (Number(atestadoRaw.horas_afastamento) || 0) * 60 + (Number(atestadoRaw.minutos_afastamento) || 0)
                     : 0;
-                  const jornadaPrevistaMin = jornadaPrevistaPorCpf.get(cpfKey) || 0;
+                  const jornadaPrevistaMin = saldoApurado?.jornadaMin || jornadaPrevistaPorCpf.get(cpfKey) || 0;
                   const { jornadaCoberta, excedenteLimiteMin, excedeLimiteDiario } =
                     calcularCoberturaJornada({
                       jornadaPrevistaMin,
                       atestadoMin,
-                      totalMin,
+                      totalMin: totalDiaMin,
                       toleranciaMin: TOLERANCIA_SAIDA_MIN,
                     });
                   const excedenteLabel = formatarMinutosCurto(excedenteLimiteMin);
+
                   return (
                     <TableRow key={ponto.id} className="hover:bg-muted/30">
                       <TableCell>
@@ -955,6 +1006,8 @@ const Ponto = () => {
                               </TableCell>
                               <TableCell className="text-center font-medium font-mono">{totalLabel}</TableCell>
                               <TableCell className="text-center">{statusDia}</TableCell>
+                              <TableCell className="text-center">{saldoCell}</TableCell>
+
                             </>
                           );
                         }
@@ -980,7 +1033,9 @@ const Ponto = () => {
 
                         const gridCols = "grid grid-cols-[1fr_7rem_7rem_8rem] gap-2 items-center";
                         return (
+                          <>
                           <TableCell colSpan={4}>
+
                             <div className="flex flex-col gap-1.5">
                               {atestadoInfo && (
                                 <span
@@ -1117,7 +1172,10 @@ const Ponto = () => {
                               </div>
                             </div>
                           </TableCell>
+                          <TableCell className="text-center">{saldoCell}</TableCell>
+                          </>
                         );
+
                       })()}
                     </TableRow>
                   );
