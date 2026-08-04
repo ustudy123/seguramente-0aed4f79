@@ -38,7 +38,8 @@ const STATUS_ESPELHO: Record<string, { label: string; color: string }> = {
 export function PontoFechamentoTab() {
   const { useFechamentos, useEspelhos, fecharPeriodo, fechandoPeriodo, confirmarEspelho, confirmandoEspelho } = usePontoFechamento();
   const { tenantId, user, profile } = useAuth();
-  const { empresaAtivaId } = useEmpresaAtiva();
+  const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
+  const nomeEmpresa = empresaAtiva?.razao_social || empresaAtiva?.nome_fantasia || null;
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const [showFechar, setShowFechar] = useState(false);
   const [showRessalva, setShowRessalva] = useState(false);
@@ -346,6 +347,22 @@ export function PontoFechamentoTab() {
             <DialogDescription>Ao fechar, os dados ficarão bloqueados para alteração e os espelhos serão gerados.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Quem está sendo fechado. O fechamento é da empresa
+                selecionada na barra do topo — deixar isso implícito foi o
+                que fez parecer que ele fechava o sistema inteiro. */}
+            <div className="p-3 rounded-lg border text-sm space-y-1">
+              <div>
+                <span className="text-muted-foreground">Empresa: </span>
+                <strong>{nomeEmpresa || "Todas as empresas"}</strong>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Competência: </span>
+                <strong>{competencia}</strong>
+                <span className="text-muted-foreground"> · </span>
+                <strong>{rowsToShow.length}</strong>
+                <span className="text-muted-foreground"> colaborador(es) serão fechados</span>
+              </div>
+            </div>
             <div className="p-3 bg-destructive/10 rounded-lg text-sm text-destructive">
               <strong>Atenção:</strong> Esta ação não pode ser desfeita. Certifique-se de que todos os ajustes foram processados.
             </div>

@@ -82,13 +82,17 @@ export function usePontoFechamento() {
 
   const useEspelhos = (competencia: string) => {
     return useQuery({
-      queryKey: ["ponto-espelhos", tenantId, competencia],
+      queryKey: ["ponto-espelhos", tenantId, empresaAtivaId, competencia],
       queryFn: async (): Promise<PontoEspelho[]> => {
         if (!tenantId) return [];
-        const { data, error } = await fromTable("ponto_espelhos")
+        // Por empresa, como a listagem de fechamentos logo acima: o
+        // espelho é da empresa que fechou, não do tenant inteiro.
+        let query = fromTable("ponto_espelhos")
           .select("*")
           .eq("tenant_id", tenantId)
-          .eq("competencia", competencia)
+          .eq("competencia", competencia);
+        if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+        const { data, error } = await query
           .order("colaborador_nome") as { data: PontoEspelho[] | null; error: Error | null };
         if (error) throw error;
         return data || [];
@@ -101,22 +105,35 @@ export function usePontoFechamento() {
     mutationFn: async ({ competencia, observacoes }: { competencia: string; observacoes?: string }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
-      // Get daily records for the period
-      const startDate = `${competencia}-01`;
-      const endMonth = parseInt(competencia.split("-")[1]);
-      const endYear = parseInt(competencia.split("-")[0]);
-      const lastDay = new Date(endYear, endMonth, 0).getDate();
-      const endDate = `${competencia}-${lastDay}`;
+      // A MESMA fonte da pré-visualização que aparece acima do botão:
+      // ponto_espelho_resumo_empresa já vem filtrada pela empresa
+      // selecionada na barra do topo. Antes daqui saía uma leitura de
+      // ponto_diario só por tenant — o fechamento pegava os
+      // colaboradores de TODAS as empresas e ainda carimbava cada um com
+      // a empresa da vez. Fechava e reatribuía gente que não era dela.
+      const { data: resumoRows, error: resumoErr } = await (supabase.rpc as any)(
+        "ponto_espelho_resumo_empresa",
+        {
+          p_tenant_id: tenantId,
+          p_empresa_id: empresaAtivaId || null,
+          p_competencia: competencia,
+        }
+      );
+      if (resumoErr) throw resumoErr;
 
-      const { data: pontos } = await fromTable("ponto_diario")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .gte("data", startDate)
-        .lte("data", endDate) as { data: any[] | null };
+      const linhas = (resumoRows || []) as any[];
+      if (linhas.length === 0) {
+        throw new Error(
+          "Nenhum colaborador desta empresa tem ponto apurado nesta competência."
+        );
+      }
 
-      const registros = pontos || [];
+      const somar = (campo: string) =>
+        linhas.reduce((acc, l) => acc + (Number(l[campo]) || 0), 0);
 
-      // Create/update fechamento
+      // Atraso não é apurado pelo modelo atual (o saldo é em minutos, não
+      // em ocorrências). Fica no que já estava gravado em vez de afirmar
+      // zero — ver a nota de HE 50/100 no espelho.
       const { data: fechamento, error: fechError } = await fromTable("ponto_fechamentos")
         .upsert({
           tenant_id: tenantId,
@@ -126,9 +143,10 @@ export function usePontoFechamento() {
           status: "fechado",
           fechado_por: user.id,
           fechado_por_nome: profile?.nome_completo,
-          total_colaboradores: new Set(registros.map((r: any) => r.colaborador_cpf)).size,
-          total_faltas: registros.filter((r: any) => r.status === "falta").length,
-          total_atrasos: registros.filter((r: any) => r.status === "atraso").length,
+          total_colaboradores: linhas.length,
+          total_horas_normais_minutos: somar("total_trabalhado_min"),
+          total_horas_extras_minutos: somar("total_creditos_min"),
+          total_faltas: somar("total_faltas"),
           observacoes,
         } as never, { onConflict: "tenant_id,empresa_id,competencia" })
         .select()
@@ -136,49 +154,31 @@ export function usePontoFechamento() {
 
       if (fechError) throw fechError;
 
-      // Generate espelhos for each colaborador
-      const colaboradores = new Map<string, any[]>();
-      registros.forEach((r: any) => {
-        const key = r.colaborador_cpf;
-        if (!colaboradores.has(key)) colaboradores.set(key, []);
-        colaboradores.get(key)!.push(r);
-      });
-
-      // Os totais vêm da APURAÇÃO, não das colunas de ponto_diario. As
-      // colunas de HE 50/100, adicional noturno e atraso deixaram de ser
-      // preenchidas quando a consolidação foi reescrita — somá-las gerava
-      // espelho zerado para todo mundo.
-      for (const [cpf, dias] of colaboradores) {
-        const primeiro = dias[0];
-        const cpfDigits = String(cpf || "").replace(/\D/g, "");
-
-        const { data: resumoRows, error: resumoErr } = await (supabase.rpc as any)(
-          "ponto_espelho_resumo",
-          { p_tenant_id: tenantId, p_colaborador_cpf: cpfDigits, p_competencia: competencia }
-        );
-        if (resumoErr) throw resumoErr;
-        const r = (resumoRows || [])[0] || {};
-
+      // Um espelho por colaborador da empresa. Os totais vêm da APURAÇÃO,
+      // não das colunas de ponto_diario: as de HE 50/100, adicional
+      // noturno e atraso deixaram de ser preenchidas quando a
+      // consolidação foi reescrita, e somá-las zerava o espelho inteiro.
+      for (const l of linhas) {
         await fromTable("ponto_espelhos")
           .upsert({
             tenant_id: tenantId,
             empresa_id: empresaAtivaId || null,
             fechamento_id: (fechamento as any).id,
-            colaborador_id: primeiro.colaborador_id,
-            colaborador_nome: primeiro.colaborador_nome,
-            colaborador_cpf: cpf,
+            colaborador_id: l.colaborador_id,
+            colaborador_nome: l.colaborador_nome,
+            colaborador_cpf: l.colaborador_cpf,
             competencia,
-            total_horas_normais_minutos: Number(r.total_trabalhado_min) || 0,
-            total_trabalhado_minutos: Number(r.total_trabalhado_min) || 0,
-            total_jornada_prevista_minutos: Number(r.total_jornada_prevista_min) || 0,
-            total_creditos_minutos: Number(r.total_creditos_min) || 0,
-            total_debitos_minutos: Number(r.total_debitos_min) || 0,
-            banco_horas_saldo_minutos: Number(r.saldo_min) || 0,
-            total_faltas: Number(r.total_faltas) || 0,
-            total_dias_trabalhados: Number(r.dias_trabalhados) || 0,
-            total_dias_protegidos: Number(r.dias_protegidos) || 0,
-            total_excedente_retido_minutos: Number(r.excedente_retido_min) || 0,
-            dia_equalizacao: r.dia_equalizacao || null,
+            total_horas_normais_minutos: Number(l.total_trabalhado_min) || 0,
+            total_trabalhado_minutos: Number(l.total_trabalhado_min) || 0,
+            total_jornada_prevista_minutos: Number(l.total_jornada_prevista_min) || 0,
+            total_creditos_minutos: Number(l.total_creditos_min) || 0,
+            total_debitos_minutos: Number(l.total_debitos_min) || 0,
+            banco_horas_saldo_minutos: Number(l.saldo_min) || 0,
+            total_faltas: Number(l.total_faltas) || 0,
+            total_dias_trabalhados: Number(l.dias_trabalhados) || 0,
+            total_dias_protegidos: Number(l.dias_protegidos) || 0,
+            total_excedente_retido_minutos: Number(l.excedente_retido_min) || 0,
+            dia_equalizacao: l.dia_equalizacao || null,
             status: "gerado",
           } as never, { onConflict: "tenant_id,colaborador_cpf,competencia" });
       }
