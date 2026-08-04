@@ -730,7 +730,17 @@ export function PontoBancoHorasTab() {
                   <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">Sem movimentações</TableCell></TableRow>
                 ) : movimentacoes.map(m => (
                   <TableRow key={m.id}>
-                    <TableCell>{m.data_referencia}</TableCell>
+                    {/* RN16: data legível + abreviação do dia da semana. */}
+                    <TableCell className="whitespace-nowrap">
+                      {m.data_referencia
+                        ? <>
+                            {String(m.data_referencia).slice(0, 10).split("-").reverse().join("/")}{" "}
+                            <span className="text-muted-foreground font-medium text-xs">
+                              {abreviacaoDiaSemana(String(m.data_referencia))}
+                            </span>
+                          </>
+                        : "-"}
+                    </TableCell>
                     <TableCell>
                       <Badge className={m.tipo === "credito" ? "bg-green-100 text-green-800" : m.tipo === "debito" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>
                         {m.tipo === "credito" && <ArrowUpRight className="w-3 h-3 mr-1" />}
