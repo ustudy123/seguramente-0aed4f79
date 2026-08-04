@@ -61,52 +61,48 @@ export function PontoFechamentoTab() {
     return { start: `${competencia}-01`, end: `${competencia}-${String(lastDay).padStart(2, "0")}` };
   })();
 
+  // Pré-visualização a partir da APURAÇÃO — a mesma fonte do Banco de
+  // Horas. Antes somava colunas de ponto_diario que a consolidação atual
+  // não preenche mais (HE 50/100, adicional noturno, atraso), e por isso
+  // o espelho saía inteiro zerado.
   const { data: previewEspelhos = [], isLoading: loadingPreview } = useQuery({
     queryKey: ["ponto-espelhos-preview", tenantId, empresaAtivaId, competencia],
     queryFn: async (): Promise<PontoEspelho[]> => {
       if (!tenantId) return [];
-      let q = fromTable("ponto_diario")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .gte("data", periodo.start)
-        .lte("data", periodo.end);
-      if (empresaAtivaId) q = q.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
-      const { data, error } = await q as { data: any[] | null; error: Error | null };
-      if (error) throw error;
-      const map = new Map<string, any>();
-      (data || []).forEach((r: any) => {
-        const key = r.colaborador_cpf || r.colaborador_id;
-        if (!key) return;
-        if (!map.has(key)) {
-          map.set(key, {
-            id: `preview-${key}`,
-            tenant_id: tenantId,
-            colaborador_id: r.colaborador_id,
-            colaborador_nome: r.colaborador_nome,
-            colaborador_cpf: r.colaborador_cpf,
-            competencia,
-            total_horas_normais_minutos: 0,
-            total_horas_extras_50_minutos: 0,
-            total_horas_extras_100_minutos: 0,
-            total_adicional_noturno_minutos: 0,
-            total_faltas: 0,
-            total_atrasos_minutos: 0,
-            total_dsr: 0,
-            banco_horas_saldo_minutos: 0,
-            status: "preview",
-            ressalva_texto: null,
-            data_confirmacao: null,
-            created_at: r.created_at,
-          });
-        }
-        const agg = map.get(key);
-        agg.total_horas_extras_50_minutos += Number(r.horas_extras_50_minutos || 0);
-        agg.total_horas_extras_100_minutos += Number(r.horas_extras_100_minutos || 0);
-        agg.total_adicional_noturno_minutos += Number(r.adicional_noturno_minutos || 0);
-        agg.total_atrasos_minutos += Number(r.atraso_minutos || 0);
-        if (r.status === "falta") agg.total_faltas += 1;
+      const { data, error } = await (supabase.rpc as any)("ponto_espelho_resumo_empresa", {
+        p_tenant_id: tenantId,
+        p_empresa_id: empresaAtivaId || null,
+        p_competencia: competencia,
       });
-      return Array.from(map.values()).sort((a, b) => (a.colaborador_nome || "").localeCompare(b.colaborador_nome || ""));
+      if (error) throw error;
+      return ((data || []) as any[]).map((r) => ({
+        id: `preview-${r.colaborador_cpf}`,
+        tenant_id: tenantId,
+        colaborador_id: r.colaborador_id,
+        colaborador_nome: r.colaborador_nome,
+        colaborador_cpf: r.colaborador_cpf,
+        competencia,
+        total_horas_normais_minutos: Number(r.total_trabalhado_min) || 0,
+        total_horas_extras_50_minutos: 0,
+        total_horas_extras_100_minutos: 0,
+        total_adicional_noturno_minutos: 0,
+        total_faltas: Number(r.total_faltas) || 0,
+        total_atrasos_minutos: 0,
+        total_dsr: 0,
+        banco_horas_saldo_minutos: Number(r.saldo_min) || 0,
+        total_trabalhado_minutos: Number(r.total_trabalhado_min) || 0,
+        total_jornada_prevista_minutos: Number(r.total_jornada_prevista_min) || 0,
+        total_creditos_minutos: Number(r.total_creditos_min) || 0,
+        total_debitos_minutos: Number(r.total_debitos_min) || 0,
+        total_dias_trabalhados: Number(r.dias_trabalhados) || 0,
+        total_dias_protegidos: Number(r.dias_protegidos) || 0,
+        total_excedente_retido_minutos: Number(r.excedente_retido_min) || 0,
+        dia_equalizacao: r.dia_equalizacao || null,
+        status: "preview",
+        ressalva_texto: null,
+        data_confirmacao: null,
+        created_at: null,
+      })) as PontoEspelho[];
     },
     enabled: !!tenantId && espelhos.length === 0,
   });
@@ -161,16 +157,37 @@ export function PontoFechamentoTab() {
     pdf.text(`CPF: ${espelho.colaborador_cpf}`, 20, 44);
     pdf.text(`Status: ${STATUS_ESPELHO[espelho.status]?.label || espelho.status}`, 20, 51);
 
+    const saldo = espelho.banco_horas_saldo_minutos ?? 0;
+    const sinal = saldo >= 0 ? "+" : "-";
+
     let y = 65;
     pdf.setFontSize(12);
     pdf.text("Resumo da Jornada", 20, y); y += 10;
     pdf.setFontSize(10);
-    pdf.text(`Horas Extras 50%: ${formatMinutos(espelho.total_horas_extras_50_minutos)}`, 20, y); y += 7;
-    pdf.text(`Horas Extras 100%: ${formatMinutos(espelho.total_horas_extras_100_minutos)}`, 20, y); y += 7;
-    pdf.text(`Adicional Noturno: ${formatMinutos(espelho.total_adicional_noturno_minutos)}`, 20, y); y += 7;
-    pdf.text(`Total Faltas: ${espelho.total_faltas}`, 20, y); y += 7;
-    pdf.text(`Total Atrasos: ${formatMinutos(espelho.total_atrasos_minutos)}`, 20, y); y += 7;
-    pdf.text(`Banco de Horas: ${formatMinutos(espelho.banco_horas_saldo_minutos)}`, 20, y); y += 14;
+    pdf.text(`Dias trabalhados: ${espelho.total_dias_trabalhados ?? 0}`, 20, y); y += 7;
+    pdf.text(`Horas trabalhadas: ${formatMinutos(espelho.total_trabalhado_minutos ?? 0)}`, 20, y); y += 7;
+    pdf.text(`Jornada prevista: ${formatMinutos(espelho.total_jornada_prevista_minutos ?? 0)}`, 20, y); y += 7;
+    pdf.text(`Creditos no periodo: ${formatMinutos(espelho.total_creditos_minutos ?? 0)}`, 20, y); y += 7;
+    pdf.text(`Debitos no periodo: ${formatMinutos(espelho.total_debitos_minutos ?? 0)}`, 20, y); y += 7;
+    pdf.text(`Saldo do periodo: ${sinal}${formatMinutos(saldo)}`, 20, y); y += 7;
+    pdf.text(`Faltas: ${espelho.total_faltas ?? 0}`, 20, y); y += 7;
+    pdf.text(`Dias abonados (atestado/ferias/afastamento/feriado): ${espelho.total_dias_protegidos ?? 0}`, 20, y); y += 7;
+    if ((espelho.total_excedente_retido_minutos ?? 0) > 0) {
+      pdf.text(`Excedente retido para decisao do RH: ${formatMinutos(espelho.total_excedente_retido_minutos ?? 0)}`, 20, y); y += 7;
+    }
+    if (espelho.dia_equalizacao) {
+      const [ea, em, ed] = String(espelho.dia_equalizacao).split("-");
+      pdf.text(`Dia de equalizacao: ${ed}/${em}/${ea}`, 20, y); y += 7;
+    }
+    y += 4;
+
+    // Campo que o modelo atual nao apura. Imprimir "0h 00min" aqui seria
+    // afirmar que nao houve hora extra classificada, num documento que o
+    // colaborador assina.
+    pdf.setFontSize(8);
+    pdf.text("Horas extras 50%/100% e adicional noturno nao sao apurados neste modelo:", 20, y); y += 4;
+    pdf.text("a apuracao trabalha em saldo de minutos. Consulte a folha para esses valores.", 20, y); y += 10;
+    pdf.setFontSize(10);
 
     if (espelho.status === "confirmado" || espelho.status === "ressalva") {
       pdf.text(`Confirmado em: ${espelho.data_confirmacao ? format(new Date(espelho.data_confirmacao), "dd/MM/yyyy HH:mm") : "-"}`, 20, y); y += 7;
@@ -263,30 +280,34 @@ export function PontoFechamentoTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Colaborador</TableHead>
-                <TableHead className="text-right">HE 50%</TableHead>
-                <TableHead className="text-right">HE 100%</TableHead>
-                <TableHead className="text-right">Adic. Noturno</TableHead>
+                <TableHead className="text-right">Trabalhado</TableHead>
+                <TableHead className="text-right">Previsto</TableHead>
+                <TableHead className="text-right">Créditos</TableHead>
+                <TableHead className="text-right">Débitos</TableHead>
+                <TableHead className="text-right">Saldo</TableHead>
                 <TableHead className="text-right">Faltas</TableHead>
-                <TableHead className="text-right">Atrasos</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(isLoading || loadingPreview) && rowsToShow.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando...</TableCell></TableRow>
               ) : rowsToShow.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Nenhum registro de ponto encontrado para {competencia}.
                 </TableCell></TableRow>
               ) : rowsToShow.map(e => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.colaborador_nome}</TableCell>
-                  <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_50_minutos)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_100_minutos)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatMinutos(e.total_adicional_noturno_minutos)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatMinutos(e.total_trabalhado_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground">{formatMinutos(e.total_jornada_prevista_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono text-green-600">{formatMinutos(e.total_creditos_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono text-red-600">{formatMinutos(e.total_debitos_minutos ?? 0)}</TableCell>
+                  <TableCell className={`text-right font-mono font-semibold ${(e.banco_horas_saldo_minutos ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {(e.banco_horas_saldo_minutos ?? 0) >= 0 ? "+" : "-"}{formatMinutos(e.banco_horas_saldo_minutos ?? 0)}
+                  </TableCell>
                   <TableCell className="text-right">{e.total_faltas}</TableCell>
-                  <TableCell className="text-right font-mono">{formatMinutos(e.total_atrasos_minutos)}</TableCell>
                   <TableCell>
                     <Badge className={STATUS_ESPELHO[e.status]?.color}>{STATUS_ESPELHO[e.status]?.label || e.status}</Badge>
                   </TableCell>
