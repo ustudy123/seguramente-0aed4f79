@@ -79,52 +79,46 @@ COMMENT ON FUNCTION public.ponto_empresa_atribuida_errada(uuid) IS
 
 
 -- REPARO ---------------------------------------------------------------
--- Dois mapas montados uma vez só, em vez de consultar as admissões linha
--- a linha (o que fez o script estourar o tempo limite do editor):
---   _empresa_do_cpf -> a empresa correta de cada CPF
---   _vinculos       -> todas as empresas em que cada CPF já teve admissão
-DROP TABLE IF EXISTS _empresa_do_cpf;
-CREATE TEMP TABLE _empresa_do_cpf AS
-SELECT DISTINCT ON (a.tenant_id, regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g'))
-       a.tenant_id,
-       regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
-       a.empresa_id
-FROM public.admissoes a
-WHERE a.empresa_id IS NOT NULL
-  AND COALESCE(a.cpf, '') <> ''
-ORDER BY a.tenant_id, 2, COALESCE(a.inativo, false), a.data_admissao DESC NULLS LAST;
+-- Cada UPDATE é um comando único e autossuficiente, com dois mapas como
+-- CTE MATERIALIZED:
+--   emp      -> a empresa correta de cada CPF
+--   vinculos -> todas as empresas em que aquele CPF já teve admissão
+--
+-- Nada de tabela temporária: o editor do Supabase não garante a mesma
+-- sessão entre um comando e outro, e a tabela criada num comando não era
+-- encontrada no seguinte. E nada de chamar a função por linha: em base
+-- grande isso esgota o tempo.
 
-CREATE INDEX ON _empresa_do_cpf (tenant_id, cpf);
-
-DROP TABLE IF EXISTS _vinculos;
-CREATE TEMP TABLE _vinculos AS
-SELECT DISTINCT a.tenant_id,
-       regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
-       a.empresa_id
-FROM public.admissoes a
-WHERE a.empresa_id IS NOT NULL
-  AND COALESCE(a.cpf, '') <> '';
-
-CREATE INDEX ON _vinculos (tenant_id, cpf, empresa_id);
-
-ANALYZE _empresa_do_cpf;
-ANALYZE _vinculos;
-
--- Uma tabela por bloco: se uma falhar, as outras seguem.
 DO $reparo$
 DECLARE
   v_n int := 0;
 BEGIN
   BEGIN
+    WITH emp AS MATERIALIZED (
+      SELECT DISTINCT ON (a.tenant_id, regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g'))
+             a.tenant_id,
+             regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+             a.empresa_id
+      FROM public.admissoes a
+      WHERE a.empresa_id IS NOT NULL AND COALESCE(a.cpf, '') <> ''
+      ORDER BY a.tenant_id, 2, COALESCE(a.inativo, false), a.data_admissao DESC NULLS LAST
+    ),
+    vinculos AS MATERIALIZED (
+      SELECT DISTINCT a.tenant_id,
+             regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+             a.empresa_id
+      FROM public.admissoes a
+      WHERE a.empresa_id IS NOT NULL AND COALESCE(a.cpf, '') <> ''
+    )
     UPDATE public.ponto_espelhos e
     SET empresa_id = m.empresa_id
-    FROM _empresa_do_cpf m
+    FROM emp m
     WHERE e.empresa_id IS NOT NULL
       AND m.tenant_id = e.tenant_id
       AND m.cpf = regexp_replace(COALESCE(e.colaborador_cpf, ''), '[^0-9]', '', 'g')
       AND m.empresa_id IS DISTINCT FROM e.empresa_id
       AND NOT EXISTS (
-        SELECT 1 FROM _vinculos v
+        SELECT 1 FROM vinculos v
         WHERE v.tenant_id = e.tenant_id AND v.cpf = m.cpf AND v.empresa_id = e.empresa_id
       );
     GET DIAGNOSTICS v_n = ROW_COUNT;
@@ -134,16 +128,32 @@ BEGIN
   END;
 
   BEGIN
+    WITH emp AS MATERIALIZED (
+      SELECT DISTINCT ON (a.tenant_id, regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g'))
+             a.tenant_id,
+             regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+             a.empresa_id
+      FROM public.admissoes a
+      WHERE a.empresa_id IS NOT NULL AND COALESCE(a.cpf, '') <> ''
+      ORDER BY a.tenant_id, 2, COALESCE(a.inativo, false), a.data_admissao DESC NULLS LAST
+    ),
+    vinculos AS MATERIALIZED (
+      SELECT DISTINCT a.tenant_id,
+             regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+             a.empresa_id
+      FROM public.admissoes a
+      WHERE a.empresa_id IS NOT NULL AND COALESCE(a.cpf, '') <> ''
+    )
     UPDATE public.ponto_banco_horas b
     SET empresa_id = m.empresa_id,
         updated_at = now()
-    FROM _empresa_do_cpf m
+    FROM emp m
     WHERE b.empresa_id IS NOT NULL
       AND m.tenant_id = b.tenant_id
       AND m.cpf = regexp_replace(COALESCE(b.colaborador_cpf, ''), '[^0-9]', '', 'g')
       AND m.empresa_id IS DISTINCT FROM b.empresa_id
       AND NOT EXISTS (
-        SELECT 1 FROM _vinculos v
+        SELECT 1 FROM vinculos v
         WHERE v.tenant_id = b.tenant_id AND v.cpf = m.cpf AND v.empresa_id = b.empresa_id
       );
     GET DIAGNOSTICS v_n = ROW_COUNT;
@@ -153,16 +163,32 @@ BEGIN
   END;
 
   BEGIN
+    WITH emp AS MATERIALIZED (
+      SELECT DISTINCT ON (a.tenant_id, regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g'))
+             a.tenant_id,
+             regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+             a.empresa_id
+      FROM public.admissoes a
+      WHERE a.empresa_id IS NOT NULL AND COALESCE(a.cpf, '') <> ''
+      ORDER BY a.tenant_id, 2, COALESCE(a.inativo, false), a.data_admissao DESC NULLS LAST
+    ),
+    vinculos AS MATERIALIZED (
+      SELECT DISTINCT a.tenant_id,
+             regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+             a.empresa_id
+      FROM public.admissoes a
+      WHERE a.empresa_id IS NOT NULL AND COALESCE(a.cpf, '') <> ''
+    )
     UPDATE public.ponto_diario d
     SET empresa_id = m.empresa_id,
         updated_at = now()
-    FROM _empresa_do_cpf m
+    FROM emp m
     WHERE d.empresa_id IS NOT NULL
       AND m.tenant_id = d.tenant_id
       AND m.cpf = regexp_replace(COALESCE(d.colaborador_cpf, ''), '[^0-9]', '', 'g')
       AND m.empresa_id IS DISTINCT FROM d.empresa_id
       AND NOT EXISTS (
-        SELECT 1 FROM _vinculos v
+        SELECT 1 FROM vinculos v
         WHERE v.tenant_id = d.tenant_id AND v.cpf = m.cpf AND v.empresa_id = d.empresa_id
       );
     GET DIAGNOSTICS v_n = ROW_COUNT;
@@ -171,6 +197,3 @@ BEGIN
     RAISE NOTICE 'ponto_diario não corrigido: %', SQLERRM;
   END;
 END $reparo$;
-
-DROP TABLE IF EXISTS _empresa_do_cpf;
-DROP TABLE IF EXISTS _vinculos;
