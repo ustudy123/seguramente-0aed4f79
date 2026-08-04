@@ -462,7 +462,11 @@ export function useAdmissoes() {
     if (!existingDoc && admissaoData && documentoData) {
       const { error: insertError } = await supabase.from('documentos').insert({
         tenant_id: docTenantId,
-        colaborador_id: null, // Colaborador ainda não tem profile
+        // Em admissão a pessoa ainda pode não existir como colaborador. Quando
+        // já existir, a trigger documento_resolver_dono_e_pasta resolve o dono
+        // pelo CPF e arquiva na pasta "Admissão" dela; concluída a admissão, a
+        // reconciliação cobre o que ficou para trás (ADM-101/102/103).
+        colaborador_id: null,
         colaborador_nome: admissaoData.nome_completo,
         colaborador_cpf: admissaoData.cpf,
         nome_arquivo: filePath,
