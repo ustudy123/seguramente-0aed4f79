@@ -1078,12 +1078,15 @@ const Ponto = () => {
                                 // Não se aplica quando a jornada do dia já está fechada
                                 // pela soma de atestado + trabalho: a ausência é amparada.
                                 let saidaAntecipada: string | null = null;
+                                // RN24 — atraso na entrada: mesma regra, espelhada
+                                // para o início do bloco previsto (art. 58, §1º CLT).
+                                let atrasoEntrada: string | null = null;
                                 if (parCompleto && !ehAusenciaPar && !jornadaCoberta) {
                                   const blocos = blocosPrevistosPorCpf.get(cpfKey);
                                   if (blocos?.length) {
                                     const pIni = hmToMin(linha[0].hora);
                                     const pFim = hmToMin(linha[1].hora);
-                                    let melhor: { fim: number } | null = null;
+                                    let melhor: { ini: number; fim: number } | null = null;
                                     let melhorOv = 0;
                                     for (const b of blocos) {
                                       const ov = Math.min(b.fim, pFim) - Math.max(b.ini, pIni);
@@ -1092,7 +1095,10 @@ const Ponto = () => {
                                     const dif = melhor ? melhor.fim - pFim : 0;
                                     if (melhor && dif > TOLERANCIA_SAIDA_MIN) {
                                       saidaAntecipada = formatarMinutosCurto(dif);
-
+                                    }
+                                    const difIni = melhor ? pIni - melhor.ini : 0;
+                                    if (melhor && difIni > TOLERANCIA_SAIDA_MIN) {
+                                      atrasoEntrada = formatarMinutosCurto(difIni);
                                     }
                                   }
                                 }
@@ -1104,9 +1110,12 @@ const Ponto = () => {
                                     ? { label: "Incompleto", color: "bg-orange-100 text-orange-800" }
                                     : excedeLimiteDiario
                                       ? { label: "Excede limite diário", color: "bg-red-100 text-red-800" }
-                                      : saidaAntecipada
-                                        ? { label: "Saída antecipada", color: "bg-amber-100 text-amber-800" }
-                                        : STATUS_PONTO_CONFIG.regular;
+                                      : atrasoEntrada
+                                        ? { label: "Atraso na entrada", color: "bg-amber-100 text-amber-800" }
+                                        : saidaAntecipada
+                                          ? { label: "Saída antecipada", color: "bg-amber-100 text-amber-800" }
+                                          : STATUS_PONTO_CONFIG.regular;
+
                                 return (
                                   <div key={li} className={gridCols}>
                                     <div className="grid grid-cols-2 gap-1.5">
