@@ -27351,6 +27351,7 @@ export type Database = {
         Args: { _limite?: number; _search?: string }
         Returns: Json
       }
+      tenant_e_sandbox: { Args: { p_tenant_id: string }; Returns: boolean }
       update_admissao_documento_by_token: {
         Args: {
           _arquivo_nome: string
