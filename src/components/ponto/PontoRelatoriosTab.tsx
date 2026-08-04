@@ -17,6 +17,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { formatarHoraMinuto } from "@/lib/ponto/formatoHoras";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import {
+  MARCA, ALTURA_CABECALHO, carregarLogo, desenharCabecalho, desenharRodape, estiloTabela,
+} from "@/lib/ponto/pdfMarca";
 
 type ReportType = "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
 
@@ -43,6 +49,29 @@ export function PontoRelatoriosTab() {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
 
+  const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
+
+  // Nome das empresas: o relatório de Banco de Horas mistura filiais e o RH
+  // pediu para identificar de quem é cada linha.
+  const { data: empresas = [] } = useQuery({
+    queryKey: ["ponto-relatorio-empresas", tenantId],
+    enabled: !!tenantId,
+    queryFn: async () => {
+      const { data, error } = await fromTable("empresa_cadastro")
+        .select("id, razao_social, nome_fantasia")
+        .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const nomeEmpresa = (id?: string | null) => {
+    if (!id) return "Sem empresa vinculada";
+    const e = empresas.find((x: any) => x.id === id);
+    return e?.nome_fantasia || e?.razao_social || "Sem empresa vinculada";
+  };
+  const empresaDoRelatorio = empresaAtivaId ? nomeEmpresa(empresaAtivaId) : null;
+
   const { data: espelhos = [] } = useEspelhos(competencia);
   const { data: bancosHoras = [] } = useBancoHorasPorCompetencia(competencia);
   const { data: registrosMes = [], isLoading: carregandoRegistros } = usePontoDiario(startDate, endDate);
@@ -62,7 +91,7 @@ export function PontoRelatoriosTab() {
       }
 
       if (formatoExport === "pdf") {
-        gerarPDF();
+        await gerarPDF();
       } else {
         gerarExcel();
       }
@@ -140,48 +169,36 @@ export function PontoRelatoriosTab() {
     toast.success(`AFD gerado com ${seq} marcações!`);
   };
 
-  const gerarPDF = () => {
+  const gerarPDF = async () => {
     const doc = new jsPDF();
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
-    const logoColor: [number, number, number] = [15, 23, 42]; // Slate 900
+    const subtitulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.desc;
+    const logo = await carregarLogo();
+    const geradoEm = format(new Date(), "dd/MM/yyyy 'às' HH:mm");
 
-    // Header logic
-    const addHeader = (data: any) => {
-      doc.setFontSize(20);
-      doc.setTextColor(logoColor[0], logoColor[1], logoColor[2]);
-      doc.text("YourEyes", 14, 22);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text("Controle de Ponto Inteligente", 14, 28);
-      
-      doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text(titulo.toUpperCase(), 14, 45);
-      
-      doc.setFontSize(10);
-      doc.text(`Período: ${competencia}`, 14, 52);
-      doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 57);
-      
-      doc.setDrawColor(logoColor[0], logoColor[1], logoColor[2]);
-      doc.setLineWidth(0.5);
-      doc.line(14, 62, 196, 62);
-    };
+    const cabecalho = () => desenharCabecalho(doc, {
+      titulo,
+      subtitulo,
+      empresa: empresaDoRelatorio,
+      competencia,
+      geradoEm,
+      logoDataUrl: logo,
+    });
 
     if (tipoRelatorio === "espelho") {
       const useEspelhoData = espelhos.length > 0;
-      
-      const head = [["Colaborador", "CPF", "HE 50%", "HE 100%", "Faltas", "Status"]];
+      const head = [["Colaborador", "CPF", "Trabalhado", "Previsto", "Saldo", "Faltas", "Situação"]];
       let body: any[] = [];
 
       if (useEspelhoData) {
         body = espelhos.map(e => [
           e.colaborador_nome,
           e.colaborador_cpf,
-          formatMinutos(e.total_horas_extras_50_minutos),
-          formatMinutos(e.total_horas_extras_100_minutos),
-          e.total_faltas,
-          e.status
+          formatMinutos(e.total_trabalhado_minutos ?? 0),
+          formatMinutos(e.total_jornada_prevista_minutos ?? 0),
+          formatSaldo(e.banco_horas_saldo_minutos ?? 0),
+          String(e.total_faltas ?? 0),
+          e.status,
         ]);
       } else {
         const colabs = Array.from(new Set(registrosMes.map(r => r.colaborador_cpf)));
@@ -189,103 +206,150 @@ export function PontoRelatoriosTab() {
           const r = registrosMes.find(reg => reg.colaborador_cpf === cpf);
           const regsColab = registrosMes.filter(reg => reg.colaborador_cpf === cpf);
           const totalFaltas = regsColab.filter(reg => reg.status === "falta").length;
-          return [
-            r?.colaborador_nome || "N/A",
-            cpf,
-            "-",
-            "-",
-            totalFaltas,
-            "Aberto"
-          ];
+          return [r?.colaborador_nome || "N/A", cpf, "-", "-", "-", String(totalFaltas), "Aberto"];
         });
       }
 
       autoTable(doc, {
-        head: head,
-        body: body,
-        startY: 70,
-        theme: 'striped',
-        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
-        didDrawPage: addHeader,
-        margin: { top: 70 }
+        ...estiloTabela(),
+        head,
+        body: body.length > 0 ? body : [["Nenhum registro no período", "", "", "", "", "", ""]],
+        columnStyles: {
+          2: { halign: "right" }, 3: { halign: "right" },
+          4: { halign: "right" }, 5: { halign: "center" },
+        },
+        didDrawPage: cabecalho,
       });
     } else if (tipoRelatorio === "horas_extras") {
-      const head = [["Colaborador", "HE 50%", "HE 100%"]];
-      const heColabs = espelhos.filter(e => e.total_horas_extras_50_minutos > 0 || e.total_horas_extras_100_minutos > 0);
-      
-      const body = heColabs.length > 0 
-        ? heColabs.map(e => [
+      // O modelo atual apura saldo em minutos, não percentuais: imprimir
+      // "0h 00min" em HE 50/100 afirmaria que não houve hora extra.
+      const head = [["Colaborador", "Trabalhado", "Previsto", "Excedente do período"]];
+      const comExcedente = espelhos.filter(e => (e.banco_horas_saldo_minutos ?? 0) > 0);
+      const body = comExcedente.length > 0
+        ? comExcedente.map(e => [
             e.colaborador_nome,
-            formatMinutos(e.total_horas_extras_50_minutos),
-            formatMinutos(e.total_horas_extras_100_minutos)
+            formatMinutos(e.total_trabalhado_minutos ?? 0),
+            formatMinutos(e.total_jornada_prevista_minutos ?? 0),
+            "+" + formatMinutos(e.banco_horas_saldo_minutos ?? 0),
           ])
-        : [["Nenhuma hora extra registrada no período", "", ""]];
+        : [["Nenhum excedente apurado no período", "", "", ""]];
 
       autoTable(doc, {
-        head: head,
-        body: body,
-        startY: 70,
-        theme: 'striped',
-        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
-        didDrawPage: addHeader,
-        margin: { top: 70 }
+        ...estiloTabela(),
+        head,
+        body,
+        columnStyles: { 1: { halign: "right" }, 2: { halign: "right" }, 3: { halign: "right" } },
+        didDrawPage: cabecalho,
       });
+
+      const yFim = (doc as any).lastAutoTable?.finalY || ALTURA_CABECALHO;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7.5);
+      doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+      doc.text(
+        "A separação entre hora extra 50% e 100% não é apurada neste modelo — a apuração trabalha em saldo de minutos.",
+        14, yFim + 6);
+      doc.text(
+        "O adicional de feriado trabalhado é calculado em campo próprio, na exportação da Folha.",
+        14, yFim + 10);
     } else if (tipoRelatorio === "absenteismo") {
       const head = [["Colaborador", "Faltas", "Atrasos"]];
       const faltosos = registrosMes.filter(r => r.status === "falta" || r.status === "atraso");
-      
       const body: any[] = [];
       if (faltosos.length > 0) {
         const colabNames = Array.from(new Set(faltosos.map(f => f.colaborador_nome)));
         colabNames.forEach(nome => {
           const totalFaltas = faltosos.filter(f => f.colaborador_nome === nome && f.status === "falta").length;
           const totalAtrasos = faltosos.filter(f => f.colaborador_nome === nome && f.status === "atraso").length;
-          body.push([nome, totalFaltas, totalAtrasos]);
+          body.push([nome, String(totalFaltas), String(totalAtrasos)]);
         });
       } else {
         body.push(["Nenhuma falta ou atraso registrado no período", "", ""]);
       }
 
       autoTable(doc, {
-        head: head,
-        body: body,
-        startY: 70,
-        theme: 'striped',
-        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
-        didDrawPage: addHeader,
-        margin: { top: 70 }
+        ...estiloTabela(),
+        head,
+        body,
+        columnStyles: { 1: { halign: "center" }, 2: { halign: "center" } },
+        didDrawPage: cabecalho,
       });
     } else if (tipoRelatorio === "banco_horas") {
-      // Usa o saldo REAL apurado/lançado em ponto_banco_horas (não mais o
-      // placeholder com saldo anterior zerado).
+      // Agrupado por empresa: o RH pediu para saber de quem é cada linha, e
+      // o subtotal por empresa é o que ele leva para a conferência.
       const head = [["Colaborador", "Saldo Anterior", "Créditos", "Débitos", "Compensados", "Saldo Atual"]];
-      const body = bancosHoras.map(b => [
-        b.colaborador_nome,
-        formatSaldo(b.saldo_anterior_minutos),
-        "+" + formatMinutos(b.creditos_minutos),
-        "-" + formatMinutos(b.debitos_minutos),
-        formatMinutos(b.compensados_minutos),
-        formatSaldo(b.saldo_atual_minutos),
-      ]);
+      const porEmpresa = new Map<string, any[]>();
+      bancosHoras.forEach(b => {
+        const chave = nomeEmpresa((b as any).empresa_id);
+        if (!porEmpresa.has(chave)) porEmpresa.set(chave, []);
+        porEmpresa.get(chave)!.push(b);
+      });
+
+      const body: any[] = [];
+      const estilosLinha: Record<number, any> = {};
+      let idx = 0;
+      let totalGeral = 0;
+
+      Array.from(porEmpresa.keys())
+        .sort((a, b) => a.localeCompare(b, "pt-BR"))
+        .forEach(emp => {
+          const lista = porEmpresa.get(emp)!;
+          estilosLinha[idx] = {
+            fillColor: [226, 236, 247],
+            fontStyle: "bold",
+            textColor: MARCA.navy,
+          };
+          body.push([emp, "", "", "", "", ""]);
+          idx += 1;
+
+          let soma = 0;
+          lista.forEach((b: any) => {
+            soma += b.saldo_atual_minutos || 0;
+            body.push([
+              "   " + b.colaborador_nome,
+              formatSaldo(b.saldo_anterior_minutos),
+              "+" + formatMinutos(b.creditos_minutos),
+              "-" + formatMinutos(b.debitos_minutos),
+              formatMinutos(b.compensados_minutos),
+              formatSaldo(b.saldo_atual_minutos),
+            ]);
+            idx += 1;
+          });
+
+          estilosLinha[idx] = { fillColor: MARCA.cinzaClaro, fontStyle: "bold" };
+          body.push([`   Subtotal — ${lista.length} colaborador(es)`, "", "", "", "", formatSaldo(soma)]);
+          idx += 1;
+          totalGeral += soma;
+        });
+
+      if (body.length > 0) {
+        estilosLinha[idx] = { fillColor: MARCA.navy, textColor: MARCA.branco, fontStyle: "bold" };
+        body.push(["TOTAL GERAL", "", "", "", "", formatSaldo(totalGeral)]);
+      }
 
       autoTable(doc, {
-        head: head,
-        body: body.length > 0 ? body : [["Nenhum saldo apurado nesta competência. Use \"Apurar agora\" no Banco de Horas.", "", "", "", "", ""]],
-        startY: 70,
-        theme: 'striped',
-        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
-        didDrawPage: addHeader,
-        margin: { top: 70 }
+        ...estiloTabela(),
+        head,
+        body: body.length > 0
+          ? body
+          : [['Nenhum saldo apurado nesta competência. Use "Apurar agora" no Banco de Horas.', "", "", "", "", ""]],
+        columnStyles: {
+          1: { halign: "right" }, 2: { halign: "right" }, 3: { halign: "right" },
+          4: { halign: "right" }, 5: { halign: "right" },
+        },
+        didParseCell: (data: any) => {
+          if (data.section === "body" && estilosLinha[data.row.index]) {
+            Object.assign(data.cell.styles, estilosLinha[data.row.index]);
+          }
+        },
+        didDrawPage: cabecalho,
       });
     }
 
-    // Add page numbers at the end
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text(`Página ${i} de ${pageCount}`, 196, 285, { align: "right" });
+      desenharRodape(doc, i, pageCount);
     }
 
     doc.save(`${titulo.replace(/\s/g, "_")}_${competencia}.pdf`);
@@ -298,6 +362,7 @@ export function PontoRelatoriosTab() {
 
     if (tipoRelatorio === "banco_horas") {
       dados = bancosHoras.map(b => ({
+        Empresa: nomeEmpresa((b as any).empresa_id),
         Colaborador: b.colaborador_nome,
         CPF: b.colaborador_cpf,
         "Saldo Anterior (min)": b.saldo_anterior_minutos,
