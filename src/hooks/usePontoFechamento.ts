@@ -41,10 +41,21 @@ export interface PontoEspelho {
   total_atrasos_minutos: number;
   total_dsr: number;
   banco_horas_saldo_minutos: number;
+  // Campos vindos da apuração (ponto_saldo_dias_competencia). Os de cima,
+  // de HE 50/100 e adicional noturno, permanecem para não quebrar espelho
+  // já emitido, mas a consolidação atual não os preenche.
+  total_trabalhado_minutos?: number | null;
+  total_jornada_prevista_minutos?: number | null;
+  total_creditos_minutos?: number | null;
+  total_debitos_minutos?: number | null;
+  total_dias_trabalhados?: number | null;
+  total_dias_protegidos?: number | null;
+  total_excedente_retido_minutos?: number | null;
+  dia_equalizacao?: string | null;
   status: string;
   ressalva_texto: string | null;
   data_confirmacao: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export function usePontoFechamento() {
@@ -133,10 +144,20 @@ export function usePontoFechamento() {
         colaboradores.get(key)!.push(r);
       });
 
+      // Os totais vêm da APURAÇÃO, não das colunas de ponto_diario. As
+      // colunas de HE 50/100, adicional noturno e atraso deixaram de ser
+      // preenchidas quando a consolidação foi reescrita — somá-las gerava
+      // espelho zerado para todo mundo.
       for (const [cpf, dias] of colaboradores) {
         const primeiro = dias[0];
-        const totalFaltas = dias.filter((d: any) => d.status === "falta").length;
-        const totalAtrasos = dias.reduce((s: number, d: any) => s + (d.atraso_minutos || 0), 0);
+        const cpfDigits = String(cpf || "").replace(/\D/g, "");
+
+        const { data: resumoRows, error: resumoErr } = await (supabase.rpc as any)(
+          "ponto_espelho_resumo",
+          { p_tenant_id: tenantId, p_colaborador_cpf: cpfDigits, p_competencia: competencia }
+        );
+        if (resumoErr) throw resumoErr;
+        const r = (resumoRows || [])[0] || {};
 
         await fromTable("ponto_espelhos")
           .upsert({
@@ -147,11 +168,17 @@ export function usePontoFechamento() {
             colaborador_nome: primeiro.colaborador_nome,
             colaborador_cpf: cpf,
             competencia,
-            total_horas_extras_50_minutos: dias.reduce((s: number, d: any) => s + (d.horas_extras_50_minutos || 0), 0),
-            total_horas_extras_100_minutos: dias.reduce((s: number, d: any) => s + (d.horas_extras_100_minutos || 0), 0),
-            total_adicional_noturno_minutos: dias.reduce((s: number, d: any) => s + (d.adicional_noturno_minutos || 0), 0),
-            total_faltas: totalFaltas,
-            total_atrasos_minutos: totalAtrasos,
+            total_horas_normais_minutos: Number(r.total_trabalhado_min) || 0,
+            total_trabalhado_minutos: Number(r.total_trabalhado_min) || 0,
+            total_jornada_prevista_minutos: Number(r.total_jornada_prevista_min) || 0,
+            total_creditos_minutos: Number(r.total_creditos_min) || 0,
+            total_debitos_minutos: Number(r.total_debitos_min) || 0,
+            banco_horas_saldo_minutos: Number(r.saldo_min) || 0,
+            total_faltas: Number(r.total_faltas) || 0,
+            total_dias_trabalhados: Number(r.dias_trabalhados) || 0,
+            total_dias_protegidos: Number(r.dias_protegidos) || 0,
+            total_excedente_retido_minutos: Number(r.excedente_retido_min) || 0,
+            dia_equalizacao: r.dia_equalizacao || null,
             status: "gerado",
           } as never, { onConflict: "tenant_id,colaborador_cpf,competencia" });
       }
