@@ -37,6 +37,9 @@ COMMENT ON FUNCTION public.ponto_empresa_do_cpf(uuid, text) IS
   'Empresa do colaborador segundo o cadastro de admissões, localizada por CPF. Usada para atribuir o ponto à empresa certa quando a linha do dia não tem empresa preenchida.';
 
 
+-- b) PREENCHER O QUE ESTÁ EM BRANCO ------------------------------------
+-- Só onde está NULL. Linha que já tem empresa não é tocada: se estiver
+-- errada, é caso de cadastro, e sobrescrever aqui esconderia o problema.
 -- c) APURAÇÃO POR EMPRESA ----------------------------------------------
 -- Patch sobre a definição viva: apurar_banco_horas já recebeu correções
 -- por esse caminho e reescrevê-la a partir do arquivo perderia o que veio
