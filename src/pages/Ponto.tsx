@@ -1160,7 +1160,16 @@ const Ponto = () => {
                                           {motivoPar}
                                         </span>
                                       )}
+                                      {atrasoEntrada && (
+                                        <span
+                                          className="inline-flex items-center rounded bg-amber-100 text-amber-800 px-1.5 py-0.5 text-[10px] font-semibold"
+                                          title={`Entrada após o horário previsto na escala (${atrasoEntrada} de atraso) — tolerância de 5 min por marcação (art. 58, §1º, CLT)`}
+                                        >
+                                          Atraso · {atrasoEntrada}
+                                        </span>
+                                      )}
                                       {saidaAntecipada && (
+
                                         <span
                                           className="inline-flex items-center rounded bg-amber-100 text-amber-800 px-1.5 py-0.5 text-[10px] font-semibold"
                                           title={`Saída antes do horário previsto na escala (${saidaAntecipada} antes)`}
