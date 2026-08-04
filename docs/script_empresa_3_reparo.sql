@@ -1,4 +1,15 @@
 -- =====================================================================
+-- Fechamento por empresa: devolver quem foi carimbado errado
+-- Parte 3 de 4 — rode UMA parte por vez, na ordem.
+--
+-- Por que em partes: o editor do Supabase roda o arquivo inteiro numa
+-- transação só e tem tempo limite. Se uma parte estourar, tudo o que
+-- veio antes é descartado. Em quatro execuções curtas, cada uma se
+-- garante sozinha.
+-- =====================================================================
+
+-- SET statement_timeout = '600s';
+-- =====================================================================
 -- Limpar o que o fechamento sem empresa deixou carimbado errado
 --
 -- Complemento do 20260804230000. Aquele conserta daqui para a frente e
