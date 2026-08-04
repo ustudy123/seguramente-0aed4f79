@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { formatarHoraRelogio } from "@/lib/ponto/formatoHoras";
+import { useFeriadoAdicionalCompetencia } from "@/hooks/usePontoFeriados";
 
 type FormatoExport = "csv" | "txt" | "xlsx";
 
@@ -59,6 +60,17 @@ export function PontoFolhaTab() {
 
   const formatMinutos = (min: number) => formatarHoraRelogio(min);
 
+  // RN23 — feriado trabalhado sem folga compensatória vai para a folha com
+  // adicional de 100% (Lei 605/1949, art. 9º; Súmula 146 TST), sem depender
+  // de lançamento manual do RH. Vem da apuração, não do espelho: a coluna
+  // legada de HE 100% do espelho não cobre feriado.
+  const { data: feriadoAdicional = [] } = useFeriadoAdicionalCompetencia(null, competencia);
+  const feriadoPorCpf = new Map<string, number>();
+  feriadoAdicional.forEach((f) => {
+    feriadoPorCpf.set(String(f.colaborador_cpf).replace(/\D/g, ""), Number(f.minutos_adicional_100) || 0);
+  });
+  const feriadoMinDoCpf = (cpf: string) => feriadoPorCpf.get(String(cpf || "").replace(/\D/g, "")) || 0;
+
 
   const gerarDadosFolha = () => {
     return espelhos.map((e: any) => ({
@@ -70,6 +82,7 @@ export function PontoFolhaTab() {
       he_50_min: e.total_horas_extras_50_minutos || 0,
       he_100_min: e.total_horas_extras_100_minutos || 0,
       adicional_noturno_min: e.total_adicional_noturno_minutos || 0,
+      feriado_100_min: feriadoMinDoCpf(e.colaborador_cpf),
       faltas: e.total_faltas || 0,
       atrasos_min: e.total_atrasos_minutos || 0,
       dsr_descontar: e.total_faltas > 0 ? 1 : 0,
@@ -99,6 +112,7 @@ export function PontoFolhaTab() {
           "HE 50%": formatMinutos(d.he_50_min),
           "HE 100%": formatMinutos(d.he_100_min),
           "Adic. Noturno": formatMinutos(d.adicional_noturno_min),
+          "Feriado 100%": formatMinutos(d.feriado_100_min),
           "Faltas": d.faltas,
           "Atrasos": formatMinutos(d.atrasos_min),
           "DSR Descontar": d.dsr_descontar,
@@ -109,9 +123,9 @@ export function PontoFolhaTab() {
         XLSX.writeFile(wb, `Folha_${competencia}.xlsx`);
         nomeArquivo = `Folha_${competencia}.xlsx`;
       } else if (formato === "csv") {
-        const headers = "CPF;NOME;COMPETENCIA;DIAS_TRAB;HORAS_NORMAIS;HE_50;HE_100;ADIC_NOT;FALTAS;ATRASOS;DSR_DESC";
+        const headers = "CPF;NOME;COMPETENCIA;DIAS_TRAB;HORAS_NORMAIS;HE_50;HE_100;ADIC_NOT;FALTAS;ATRASOS;DSR_DESC;FERIADO_100";
         const linhas = dados.map(d =>
-          `${d.cpf};${d.nome};${d.competencia};${d.dias_trabalhados};${d.horas_normais_min};${d.he_50_min};${d.he_100_min};${d.adicional_noturno_min};${d.faltas};${d.atrasos_min};${d.dsr_descontar}`
+          `${d.cpf};${d.nome};${d.competencia};${d.dias_trabalhados};${d.horas_normais_min};${d.he_50_min};${d.he_100_min};${d.adicional_noturno_min};${d.faltas};${d.atrasos_min};${d.dsr_descontar};${d.feriado_100_min}`
         );
         conteudo = [headers, ...linhas].join("\n");
         nomeArquivo = `Folha_${competencia}.csv`;
@@ -135,7 +149,8 @@ export function PontoFolhaTab() {
           const noturno = String(d.adicional_noturno_min).padStart(5, "0");
           const faltas = String(d.faltas).padStart(3, "0");
           const atrasos = String(d.atrasos_min).padStart(5, "0");
-          return `${cpf}${nome}${dias}${he50}${he100}${noturno}${faltas}${atrasos}`;
+          const feriado100 = String(d.feriado_100_min).padStart(5, "0");
+          return `${cpf}${nome}${dias}${he50}${he100}${noturno}${faltas}${atrasos}${feriado100}`;
         });
         conteudo = linhas.join("\n");
         nomeArquivo = `Folha_${competencia}.txt`;
@@ -228,13 +243,14 @@ export function PontoFolhaTab() {
                 <TableHead className="text-center">HE 50%</TableHead>
                 <TableHead className="text-center">HE 100%</TableHead>
                 <TableHead className="text-center">Noturno</TableHead>
+                <TableHead className="text-center">Feriado 100%</TableHead>
                 <TableHead className="text-center">Faltas</TableHead>
                 <TableHead className="text-center">Atrasos</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {espelhos.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Faça o fechamento da competência para ver os dados.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Faça o fechamento da competência para ver os dados.</TableCell></TableRow>
               ) : espelhos.map((e: any) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.colaborador_nome}</TableCell>
@@ -242,6 +258,7 @@ export function PontoFolhaTab() {
                   <TableCell className="text-center">{formatMinutos(e.total_horas_extras_50_minutos || 0)}</TableCell>
                   <TableCell className="text-center">{formatMinutos(e.total_horas_extras_100_minutos || 0)}</TableCell>
                   <TableCell className="text-center">{formatMinutos(e.total_adicional_noturno_minutos || 0)}</TableCell>
+                  <TableCell className="text-center">{formatMinutos(feriadoMinDoCpf(e.colaborador_cpf))}</TableCell>
                   <TableCell className="text-center">{e.total_faltas || 0}</TableCell>
                   <TableCell className="text-center">{formatMinutos(e.total_atrasos_minutos || 0)}</TableCell>
                 </TableRow>

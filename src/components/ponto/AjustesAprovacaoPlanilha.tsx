@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PontoAjuste } from "@/hooks/usePonto";
 import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
+import { abreviacaoDiaSemana } from "@/lib/ponto/diaSemana";
 
 const MOTIVOS_REJEICAO = [
   "Horário incoerente com a jornada",
@@ -303,7 +304,11 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                               return (
                                 <tr key={date} className={cn("border-t hover:bg-muted/20", !hasPendente && "opacity-90")}>
                                   <td className="py-2.5 px-3 font-mono font-semibold text-sm text-foreground/90 align-top">
-                                    {formatDate(date)}
+                                    {formatDate(date)}{" "}
+                                    {/* RN16: abreviação do dia da semana ao lado da data. */}
+                                    <span className="text-muted-foreground font-medium">
+                                      {abreviacaoDiaSemana(date)}
+                                    </span>
                                   </td>
 
                                   {(() => {

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { usePontoAlertas, ALERTA_TIPOS } from "@/hooks/usePontoAlertas";
 import { Bell, CheckCircle, AlertTriangle, AlertOctagon, Info, Sparkles } from "lucide-react";
 import { CriarAcaoAlertaModal } from "@/components/shared/CriarAcaoAlertaModal";
+import { abreviacaoDiaSemana } from "@/lib/ponto/diaSemana";
 
 const SEVERIDADE_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   baixa: { label: "Baixa", color: "bg-blue-100 text-blue-800", icon: <Info className="w-4 h-4" /> },
@@ -111,7 +112,17 @@ export function PontoAlertasTab() {
                     <TableCell>{a.colaborador_nome || "Geral"}</TableCell>
                     <TableCell className="font-medium">{a.titulo}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{a.descricao || "-"}</TableCell>
-                    <TableCell>{a.data_referencia || "-"}</TableCell>
+                    {/* RN16: data legível + abreviação do dia da semana. */}
+                    <TableCell className="whitespace-nowrap">
+                      {a.data_referencia
+                        ? <>
+                            {String(a.data_referencia).slice(0, 10).split("-").reverse().join("/")}{" "}
+                            <span className="text-muted-foreground font-medium text-xs">
+                              {abreviacaoDiaSemana(String(a.data_referencia))}
+                            </span>
+                          </>
+                        : "-"}
+                    </TableCell>
                     <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => resolverAlerta(a.id)}>
                         <CheckCircle className="w-3 h-3 mr-1" /> Resolver
