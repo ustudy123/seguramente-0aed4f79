@@ -229,7 +229,7 @@ export function PontoBancoHorasTab() {
         p_competencia: editComp,
       });
       if (error) throw error;
-      return ((data || []) as any[]).map((d) => ({
+      const mapear = (d: any) => ({
         id: String(d.dia),
         data: String(d.dia),
         horas_trabalhadas_minutos: Number(d.trabalhado_min) || 0,
@@ -253,7 +253,29 @@ export function PontoBancoHorasTab() {
           usouAjuste: true,
           diaProtegido: Boolean(d.protegido),
         },
-      }));
+      });
+
+      const lista = ((data || []) as any[]).map(mapear);
+
+      // RN14/RN15 — sábados e domingos SEMPRE constam na listagem, mesmo sem
+      // marcação. O banco só devolve dias com registro em `ponto_diario`, o que
+      // fazia o fim de semana sumir para uns colaboradores e aparecer para
+      // outros (comportamento inconsistente). Aqui completamos as lacunas de
+      // fim de semana da competência com linhas neutras (0 min), preservando o
+      // que o banco calculou para os dias existentes.
+      const existentes = new Set(lista.map((d) => d.data));
+      const [ano, mes] = editComp.split("-").map(Number);
+      const ultimoDia = new Date(ano, mes, 0).getDate();
+      for (let dia = 1; dia <= ultimoDia; dia++) {
+        const iso = `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+        if (existentes.has(iso)) continue;
+        const dow = new Date(ano, mes - 1, dia).getDay();
+        if (dow !== 0 && dow !== 6) continue;
+        lista.push(mapear({ dia: iso }));
+      }
+      lista.sort((a, b) => a.data.localeCompare(b.data));
+      return lista;
+
     },
   });
 
