@@ -83,7 +83,22 @@ const dataCurta = (iso: string) => {
   const [, m, d] = iso.split("-");
   return `${d}/${m}`;
 };
-const hm = (min: number) => (min > 0 ? formatarHoraMinuto(min).replace(/\s/g, "") : "");
+const hm = (min: number) => {
+  if (!min || min <= 0) return "";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+};
+
+/** Marcações em pares por linha — evita que a última batida seja cortada. */
+const marcacoesTexto = (marcacoes: CartaoMarcacao[]) => {
+  const tokens = marcacoes.map((m) => `${m.hora}-${m.origem === "A" ? "I" : "O"}`);
+  const linhas: string[] = [];
+  for (let i = 0; i < tokens.length; i += 2) {
+    linhas.push(tokens.slice(i, i + 2).join("  "));
+  }
+  return linhas.join("\n");
+};
 
 /** Colunas H.C./H.A./F.N./F.J. e o rótulo da ocorrência, na lógica do modelo. */
 function classificarDia(d: CartaoDia) {
