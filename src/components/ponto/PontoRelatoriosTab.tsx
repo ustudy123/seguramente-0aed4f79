@@ -682,12 +682,15 @@ export function PontoRelatoriosTab() {
         CPF: c.cpf,
         Data: dataBr(d.dia),
         "Dia da semana": diaDaSemana(d.dia),
+        "Marcações (O=original, A=ajuste)": marcacoesTexto(d),
         Entrada: d.entrada || "",
         Saída: d.saida || "",
         "Trabalhado (min)": d.trabalhado_min,
         "Previsto (min)": d.jornada_min,
+        "Extras (min)": d.saldo_min > 0 ? d.saldo_min : 0,
+        "% Extras": d.saldo_min > 0 ? percentualHE(d) : "",
         "Saldo (min)": d.saldo_min,
-        Situação: situacaoDia(d),
+        Ocorrência: situacaoDia(d),
       })));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), "Resumo");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diario), "Dia a dia");
