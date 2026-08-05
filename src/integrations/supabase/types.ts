@@ -24645,33 +24645,21 @@ export type Database = {
         }
         Returns: Json
       }
-      ponto_equalizacao_competencia_tenant:
-        | {
-            Args: { p_competencia: string; p_tenant_id: string }
-            Returns: {
-              dias_uteis_efetivos: number
-              escala_id: string
-              escala_nome: string
-              memoria: Json
-              qtd_feriados: number
-              total_equalizacao_min: number
-            }[]
-          }
-        | {
-            Args: {
-              p_competencia: string
-              p_empresa_id?: string
-              p_tenant_id: string
-            }
-            Returns: {
-              dias_uteis_efetivos: number
-              escala_id: string
-              escala_nome: string
-              memoria: Json
-              qtd_feriados: number
-              total_equalizacao_min: number
-            }[]
-          }
+      ponto_equalizacao_competencia_tenant: {
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: {
+          dias_uteis_efetivos: number
+          escala_id: string
+          escala_nome: string
+          memoria: Json
+          qtd_feriados: number
+          total_equalizacao_min: number
+        }[]
+      }
       ponto_equalizacao_definir: {
         Args: {
           p_colaborador_cpf: string
@@ -24681,37 +24669,23 @@ export type Database = {
         }
         Returns: Json
       }
-      ponto_equalizacao_listar:
-        | {
-            Args: { p_competencia: string; p_tenant_id: string }
-            Returns: {
-              art61_liberado: boolean
-              colaborador_cpf: string
-              colaborador_nome: string
-              data_marcada: string
-              escala_id: string
-              escala_nome: string
-              sabados: Json
-              total_equalizacao_min: number
-            }[]
-          }
-        | {
-            Args: {
-              p_competencia: string
-              p_empresa_id?: string
-              p_tenant_id: string
-            }
-            Returns: {
-              art61_liberado: boolean
-              colaborador_cpf: string
-              colaborador_nome: string
-              data_marcada: string
-              escala_id: string
-              escala_nome: string
-              sabados: Json
-              total_equalizacao_min: number
-            }[]
-          }
+      ponto_equalizacao_listar: {
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: {
+          art61_liberado: boolean
+          colaborador_cpf: string
+          colaborador_nome: string
+          data_marcada: string
+          escala_id: string
+          escala_nome: string
+          sabados: Json
+          total_equalizacao_min: number
+        }[]
+      }
       ponto_equalizacao_remover: {
         Args: {
           p_colaborador_cpf: string
@@ -24827,37 +24801,23 @@ export type Database = {
         }
         Returns: undefined
       }
-      ponto_excedente_pendentes:
-        | {
-            Args: { p_competencia: string; p_tenant_id: string }
-            Returns: {
-              colaborador_cpf: string
-              colaborador_nome: string
-              dia: string
-              dias_parado: number
-              excedente_retido_min: number
-              jornada_min: number
-              motivo_ajuste: string
-              trabalhado_min: number
-            }[]
-          }
-        | {
-            Args: {
-              p_competencia: string
-              p_empresa_id?: string
-              p_tenant_id: string
-            }
-            Returns: {
-              colaborador_cpf: string
-              colaborador_nome: string
-              dia: string
-              dias_parado: number
-              excedente_retido_min: number
-              jornada_min: number
-              motivo_ajuste: string
-              trabalhado_min: number
-            }[]
-          }
+      ponto_excedente_pendentes: {
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          dia: string
+          dias_parado: number
+          excedente_retido_min: number
+          jornada_min: number
+          motivo_ajuste: string
+          trabalhado_min: number
+        }[]
+      }
       ponto_intervalo_janela_do_dia: {
         Args: {
           p_colaborador_id: string
