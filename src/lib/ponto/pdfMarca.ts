@@ -35,7 +35,7 @@ let logoCache: string | null | undefined;
 export async function carregarLogo(): Promise<string | null> {
   if (logoCache !== undefined) return logoCache;
   try {
-    const resp = await fetch(logoYourEyes);
+    const resp = await fetch(logoAsset.url);
     const blob = await resp.blob();
     logoCache = await new Promise<string>((resolve, reject) => {
       const fr = new FileReader();
