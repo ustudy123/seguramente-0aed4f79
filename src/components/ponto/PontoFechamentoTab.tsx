@@ -93,7 +93,7 @@ export function PontoFechamentoTab() {
         total_faltas: Number(r.total_faltas) || 0,
         total_atrasos_minutos: Number(r.atrasos_min) || 0,
         total_dsr: 0,
-        banco_horas_saldo_minutos: Number(r.saldo_min) || 0,
+        banco_horas_saldo_minutos: Number(r.saldo_banco_min ?? r.saldo_min) || 0,
         total_trabalhado_minutos: Number(r.total_trabalhado_min) || 0,
         total_jornada_prevista_minutos: Number(r.total_jornada_prevista_min) || 0,
         total_creditos_minutos: Number(r.total_creditos_min) || 0,
