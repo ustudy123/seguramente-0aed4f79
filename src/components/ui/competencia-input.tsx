@@ -1,87 +1,91 @@
 /**
- * CompetenciaInput — exibe e aceita MM/YYYY mas armazena YYYY-MM internamente.
- * Props compatíveis com um input controlado simples.
+ * CompetenciaInput — seletor de competência (mês/ano).
+ *
+ * O RH reclamou de ter que apagar e digitar a competência toda vez; agora é
+ * uma lista pronta de meses. O valor continua em YYYY-MM para não afetar
+ * nenhum consumidor.
  */
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import { useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface CompetenciaInputProps {
-  value: string; // armazenado como YYYY-MM
+  value: string; // YYYY-MM
   onChange: (value: string) => void; // emite YYYY-MM
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Meses anteriores ao atual exibidos na lista. */
+  mesesAnteriores?: number;
+  /** Meses futuros exibidos na lista. */
+  mesesFuturos?: number;
 }
 
-/** Converte YYYY-MM → MM/YYYY para exibição */
-function toDisplay(val: string): string {
-  if (!val) return "";
-  const m = val.match(/^(\d{4})-(\d{2})$/);
-  if (m) return `${m[2]}/${m[1]}`;
-  return val;
-}
+const MESES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
 
-/** Converte MM/YYYY → YYYY-MM para persistência */
-function toStore(display: string): string {
-  const m = display.match(/^(\d{2})\/(\d{4})$/);
-  if (m) return `${m[2]}-${m[1]}`;
-  return display;
+function rotulo(comp: string): string {
+  const m = comp.match(/^(\d{4})-(\d{2})$/);
+  if (!m) return comp;
+  const idx = Number(m[2]) - 1;
+  return `${MESES[idx] ?? m[2]}/${m[1]}`;
 }
 
 export function CompetenciaInput({
   value,
   onChange,
-  placeholder = "MM/AAAA",
+  placeholder = "Selecione a competência",
   className,
   disabled,
+  mesesAnteriores = 24,
+  mesesFuturos = 6,
 }: CompetenciaInputProps) {
-  const [display, setDisplay] = useState(toDisplay(value));
-
-  // Sincroniza quando value externo muda (p.ex. reset do form)
-  useEffect(() => {
-    setDisplay(toDisplay(value));
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let raw = e.target.value.replace(/[^\d/]/g, "");
-
-    // Auto-inserção da barra após 2 dígitos
-    if (raw.length === 2 && !raw.includes("/")) {
-      raw = raw + "/";
+  const opcoes = useMemo(() => {
+    const hoje = new Date();
+    const lista: string[] = [];
+    for (let i = mesesFuturos; i >= -mesesAnteriores; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+      const comp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      lista.push(comp);
     }
-
-    // Limita a 7 caracteres: MM/AAAA
-    if (raw.length > 7) raw = raw.slice(0, 7);
-
-    setDisplay(raw);
-
-    // Emite YYYY-MM somente quando estiver completo
-    const stored = toStore(raw);
-    if (/^\d{4}-\d{2}$/.test(stored)) {
-      onChange(stored);
-    } else if (raw === "") {
-      onChange("");
+    // Garante que uma competência histórica já salva apareça na lista.
+    if (value && !lista.includes(value)) {
+      lista.push(value);
+      lista.sort((a, b) => b.localeCompare(a));
     }
-  };
-
-  const handleBlur = () => {
-    // Ao sair, normaliza o display baseado no valor salvo
-    if (value) {
-      setDisplay(toDisplay(value));
-    }
-  };
+    return lista;
+  }, [value, mesesAnteriores, mesesFuturos]);
 
   return (
-    <Input
-      value={display}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      placeholder={placeholder}
-      className={cn(className)}
-      disabled={disabled}
-      maxLength={7}
-      inputMode="numeric"
-    />
+    <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger className={cn("w-full", className)}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="max-h-72 bg-popover">
+        {opcoes.map((comp) => (
+          <SelectItem key={comp} value={comp}>
+            {rotulo(comp)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
