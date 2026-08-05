@@ -192,12 +192,25 @@ export function PontoRelatoriosTab() {
       .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
 
     // RN26 — todas as batidas da competência, com origem rastreável.
+    // Paginado: o limite padrão do PostgREST (1000 linhas) truncava as últimas batidas do dia.
     const ultimoDia = new Date(year, month, 0).getDate();
-    const { data: marcacoesMes } = await fromTable("ponto_marcacoes")
-      .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original")
-      .gte("data_marcacao", `${competencia}-01`)
-      .lte("data_marcacao", `${competencia}-${String(ultimoDia).padStart(2, "0")}`)
-      .order("hora_marcacao") as { data: any[] | null; error: any };
+    const marcacoesMes: any[] = [];
+    const PAGINA = 1000;
+    for (let offset = 0; ; offset += PAGINA) {
+      const { data: pagina, error: errMarc } = await fromTable("ponto_marcacoes")
+        .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original")
+        .eq("tenant_id", tenantId)
+        .gte("data_marcacao", `${competencia}-01`)
+        .lte("data_marcacao", `${competencia}-${String(ultimoDia).padStart(2, "0")}`)
+        .order("data_marcacao")
+        .order("hora_marcacao")
+        .range(offset, offset + PAGINA - 1) as { data: any[] | null; error: any };
+      if (errMarc) throw errMarc;
+      const linhas = pagina || [];
+      marcacoesMes.push(...linhas);
+      if (linhas.length < PAGINA) break;
+    }
+
 
     const porCpfDia = new Map<string, MarcacaoDia[]>();
     (marcacoesMes || []).forEach((m: any) => {
