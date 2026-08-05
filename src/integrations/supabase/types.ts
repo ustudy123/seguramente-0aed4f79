@@ -943,6 +943,36 @@ export type Database = {
           },
         ]
       }
+      admissoes_limpeza_duplicidade: {
+        Row: {
+          acao: string | null
+          admissao_id: string | null
+          empresa_de: string | null
+          empresa_para: string | null
+          executado_em: string
+          id: number
+          tenant_id: string | null
+        }
+        Insert: {
+          acao?: string | null
+          admissao_id?: string | null
+          empresa_de?: string | null
+          empresa_para?: string | null
+          executado_em?: string
+          id?: number
+          tenant_id?: string | null
+        }
+        Update: {
+          acao?: string | null
+          admissao_id?: string | null
+          empresa_de?: string | null
+          empresa_para?: string | null
+          executado_em?: string
+          id?: number
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       advertencia_links: {
         Row: {
           created_at: string
