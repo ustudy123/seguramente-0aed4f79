@@ -24,16 +24,20 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import {
   MARCA, ALTURA_CABECALHO, carregarLogo, desenharCabecalho, desenharRodape, estiloTabela,
 } from "@/lib/ponto/pdfMarca";
+import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
 
-type ReportType = "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
+
+type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
 
 const REPORT_TYPES: { value: ReportType; label: string; desc: string }[] = [
+  { value: "cartao_ponto", label: "Cartão Ponto", desc: "Modelo clássico dia a dia (H.D./H.N./H.E./H.C./H.A./F.N./F.J.)" },
   { value: "espelho", label: "Espelho de Ponto", desc: "Resumo mensal de marcações por colaborador" },
   { value: "horas_extras", label: "Horas Extras", desc: "Detalhamento de horas extras do período" },
   { value: "banco_horas", label: "Banco de Horas", desc: "Saldo e movimentações do banco de horas" },
   { value: "absenteismo", label: "Absenteísmo", desc: "Relatório de faltas e atrasos" },
   { value: "afd", label: "AFD (Arquivo Fonte de Dados)", desc: "Arquivo legal conforme Portaria 671" },
 ];
+
 
 export function PontoRelatoriosTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
@@ -60,7 +64,7 @@ export function PontoRelatoriosTab() {
     enabled: !!tenantId,
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj")
+        .select("id, razao_social, nome_fantasia, cnpj, endereco, numero, bairro, cidade, estado, cnae_descricao")
         .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
@@ -369,7 +373,72 @@ export function PontoRelatoriosTab() {
       logoDataUrl: logo,
     });
 
+    if (tipoRelatorio === "cartao_ponto") {
+      // Modelo clássico de cartão ponto: uma folha por colaborador, com a
+      // mesma apuração do Banco de Horas.
+      const detalhado = await carregarEspelhoDetalhado();
+      if (detalhado.length === 0) {
+        toast.warning("Nenhum colaborador com apuração nesta competência.");
+        return;
+      }
+
+      const emp: any = empresaPorId(empresaAtivaId) || {};
+      const enderecoCompleto = [emp.endereco, emp.numero, emp.bairro]
+        .filter(Boolean).join(", ") || null;
+      const ultimoDiaMes = new Date(year, month, 0).getDate();
+      const periodo = `01/${String(month).padStart(2, "0")}/${year} a ${ultimoDiaMes}/${String(month).padStart(2, "0")}/${year}`;
+
+      detalhado.forEach((c, i) => {
+        if (i > 0) doc.addPage();
+        const col = colaboradores.find((x: any) => soDigitos(x.cpf) === c.cpf) as any;
+        const banco: any = bancosHorasTodos.find(
+          (b: any) => soDigitos(b.colaborador_cpf) === c.cpf,
+        );
+
+        desenharCartaoPonto(doc, {
+          empregador: {
+            razaoSocial: empresaDoRelatorio || "—",
+            cnpj: cnpjDoRelatorio,
+            atividade: emp.cnae_descricao || null,
+            endereco: enderecoCompleto,
+            cidade: emp.cidade || null,
+            uf: emp.estado || null,
+          },
+          empregado: {
+            nome: c.nome,
+            cpf: c.cpf,
+            matricula: col?.matricula || null,
+            cargo: col?.cargo || null,
+            setor: col?.departamento || null,
+            admissao: col?.data_admissao
+              ? dataBr(String(col.data_admissao).substring(0, 10))
+              : null,
+            categoria: col?.tipo_contrato || "Mensalista",
+            horarios: col?.jornada_trabalho || null,
+          },
+          periodo,
+          emissao: geradoEm,
+          dias: c.dias,
+          banco: banco
+            ? {
+                saldoAnterior: banco.saldo_anterior_minutos ?? 0,
+                creditos: banco.creditos_minutos ?? c.creditos,
+                debitos: banco.debitos_minutos ?? c.debitos,
+                compensados: banco.compensados_minutos ?? 0,
+                saldoAtual: banco.saldo_atual_minutos ?? c.saldo,
+              }
+            : null,
+          logoDataUrl: logo,
+        });
+      });
+
+      doc.save(`cartao-ponto-${competencia}.pdf`);
+      toast.success("Cartão ponto gerado!");
+      return;
+    }
+
     if (tipoRelatorio === "espelho") {
+
       const detalhado = await carregarEspelhoDetalhado();
 
       if (detalhado.length === 0) {
@@ -662,7 +731,8 @@ export function PontoRelatoriosTab() {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
     const wb = XLSX.utils.book_new();
 
-    if (tipoRelatorio === "espelho") {
+    if (tipoRelatorio === "espelho" || tipoRelatorio === "cartao_ponto") {
+
       // Duas abas: resumo (mesmos números do Banco de Horas) e dia a dia.
       const detalhado = await carregarEspelhoDetalhado();
       const resumo = detalhado.map(c => ({
