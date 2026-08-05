@@ -121,6 +121,15 @@ export function desenharCabecalho(doc: jsPDF, o: CabecalhoOpts) {
   doc.setFontSize(10);
   doc.text(o.empresa || "Todas as empresas", 14, 40);
 
+  if (o.cnpj) {
+    const larguraNome = doc.getTextWidth(o.empresa || "Todas as empresas");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MARCA.cinza);
+    doc.text(`CNPJ ${o.cnpj}`, 14 + larguraNome + 4, 40);
+  }
+
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(...MARCA.cinza);
