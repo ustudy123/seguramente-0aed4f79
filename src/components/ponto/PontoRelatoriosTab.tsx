@@ -59,18 +59,35 @@ export function PontoRelatoriosTab() {
     enabled: !!tenantId,
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia")
+        .select("id, razao_social, nome_fantasia, cnpj")
         .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
     },
   });
+  const empresaPorId = (id?: string | null) =>
+    id ? empresas.find((x: any) => x.id === id) : undefined;
   const nomeEmpresa = (id?: string | null) => {
     if (!id) return "Sem empresa vinculada";
-    const e = empresas.find((x: any) => x.id === id);
+    const e = empresaPorId(id);
     return e?.nome_fantasia || e?.razao_social || "Sem empresa vinculada";
   };
-  const empresaDoRelatorio = empresaAtivaId ? nomeEmpresa(empresaAtivaId) : null;
+  // Razão social é o que vale juridicamente no cabeçalho do relatório.
+  const razaoSocialEmpresa = (id?: string | null) => {
+    const e = empresaPorId(id);
+    return e?.razao_social || e?.nome_fantasia || null;
+  };
+  const soDigitos = (v?: string | null) => (v || "").replace(/\D/g, "");
+  const formatarCnpj = (v?: string | null) => {
+    const d = soDigitos(v);
+    if (d.length !== 14) return null;
+    return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+  };
+  const empresaDoRelatorio = empresaAtivaId ? razaoSocialEmpresa(empresaAtivaId) : null;
+  const cnpjDoRelatorio = empresaAtivaId
+    ? formatarCnpj(empresaPorId(empresaAtivaId)?.cnpj)
+    : null;
+
 
   const { data: espelhos = [] } = useEspelhos(competencia);
   const { data: bancosHoras = [] } = useBancoHorasPorCompetencia(competencia);
