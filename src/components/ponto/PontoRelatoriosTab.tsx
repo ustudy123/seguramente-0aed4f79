@@ -432,8 +432,9 @@ export function PontoRelatoriosTab() {
         });
       });
 
-      doc.save(`cartao-ponto-${competencia}.pdf`);
-      toast.success("Cartão ponto gerado!");
+      const nomeArq = tipoRelatorio === "espelho" ? "espelho-ponto" : "cartao-ponto";
+      doc.save(`${nomeArq}-${competencia}.pdf`);
+      toast.success(tipoRelatorio === "espelho" ? "Espelho de ponto gerado!" : "Cartão ponto gerado!");
       return;
     }
 
