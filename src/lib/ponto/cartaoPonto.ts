@@ -70,6 +70,8 @@ export interface CartaoPontoInput {
   emissao: string;
   dias: CartaoDia[];
   banco?: CartaoBanco | null;
+  /** false = não desenhar o painel de banco de horas (folha sem banco). */
+  incluirBanco?: boolean;
   logoDataUrl?: string | null;
 }
 
@@ -423,7 +425,8 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     return topo + altura;
   };
 
-  const largura = (pageW - 24 - 4) / 2;
+  const mostrarBanco = input.incluirBanco !== false;
+  const largura = mostrarBanco ? (pageW - 24 - 4) / 2 : pageW - 24;
   const fim1 = painel("Resumo de horas do mês", [
     ["Horas normais", hm(totais.hn) || "00:00"],
     ["Horas trabalhadas", hm(totais.hd) || "00:00"],
@@ -435,7 +438,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     ["Faltas justificadas", hm(totais.fj) || "00:00"],
   ], 12, largura, y);
 
-  const fim2 = painel("Resumo do banco de horas", [
+  const fim2 = !mostrarBanco ? fim1 : painel("Resumo do banco de horas", [
     ["Saldo anterior", formatarHoraMinuto(b?.saldoAnterior ?? 0)],
     ["Crédito no período", formatarHoraMinuto(b?.creditos ?? totais.he)],
     ["Débito no período", formatarHoraMinuto(b?.debitos ?? totais.ha)],

@@ -19,6 +19,8 @@ import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { formatarHoraRelogio } from "@/lib/ponto/formatoHoras";
 import { useFeriadoAdicionalCompetencia } from "@/hooks/usePontoFeriados";
+import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
+import { usePontoBancoHoras } from "@/hooks/usePontoBancoHoras";
 
 type FormatoExport = "csv" | "txt" | "xlsx";
 
@@ -40,6 +42,13 @@ export function PontoFolhaTab() {
   const [formato, setFormato] = useState<FormatoExport>("xlsx");
   const [sistemaDestino, setSistemaDestino] = useState("generico");
   const [gerando, setGerando] = useState(false);
+  const [perguntandoBanco, setPerguntandoBanco] = useState(false);
+
+  const { useBancoHorasPorCompetencia } = usePontoBancoHoras();
+  const { data: bancosHoras = [] } = useBancoHorasPorCompetencia(competencia);
+  const soDigitos = (v: string) => String(v || "").replace(/\D/g, "");
+  const bancoDoCpf = (cpf: string) =>
+    bancosHoras.find((b: any) => soDigitos(b.colaborador_cpf) === soDigitos(cpf));
 
   const { useEspelhos } = usePontoFechamento();
   const { data: espelhos = [] } = useEspelhos(competencia);
@@ -89,7 +98,7 @@ export function PontoFolhaTab() {
     }));
   };
 
-  const gerarExportacao = async () => {
+  const gerarExportacao = async (comBanco: boolean) => {
     if (espelhos.length === 0) {
       toast.warning("Nenhum espelho encontrado para esta competência. Faça o fechamento primeiro.");
       return;
@@ -103,7 +112,9 @@ export function PontoFolhaTab() {
       let mimeType: string;
 
       if (formato === "xlsx") {
-        const wsData = dados.map(d => ({
+        const wsData = dados.map(d => {
+          const b: any = comBanco ? bancoDoCpf(d.cpf) : null;
+          return ({
           "CPF": d.cpf,
           "Nome": d.nome,
           "Competência": d.competencia,
@@ -116,7 +127,15 @@ export function PontoFolhaTab() {
           "Faltas": d.faltas,
           "Atrasos": formatMinutos(d.atrasos_min),
           "DSR Descontar": d.dsr_descontar,
-        }));
+          ...(comBanco ? {
+            "BH Saldo Anterior": formatMinutos(b?.saldo_anterior_minutos || 0),
+            "BH Créditos": formatMinutos(b?.creditos_minutos || 0),
+            "BH Débitos": formatMinutos(b?.debitos_minutos || 0),
+            "BH Compensados": formatMinutos(b?.compensados_minutos || 0),
+            "BH Saldo Atual": formatMinutos(b?.saldo_atual_minutos || 0),
+          } : {}),
+        });
+        });
         const ws = XLSX.utils.json_to_sheet(wsData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Folha");
@@ -190,6 +209,15 @@ export function PontoFolhaTab() {
 
   return (
     <div className="space-y-4">
+      <IncluirBancoHorasDialog
+        open={perguntandoBanco}
+        onOpenChange={setPerguntandoBanco}
+        titulo="Incluir banco de horas na exportação?"
+        onConfirm={(comBanco) => {
+          setPerguntandoBanco(false);
+          gerarExportacao(comBanco);
+        }}
+      />
       <div>
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <FileSpreadsheet className="w-5 h-5 text-primary" /> Integração Folha de Pagamento
@@ -224,7 +252,7 @@ export function PontoFolhaTab() {
         </div>
         <div className="space-y-2">
           <Label>&nbsp;</Label>
-          <Button onClick={gerarExportacao} disabled={gerando} className="w-full">
+          <Button onClick={() => setPerguntandoBanco(true)} disabled={gerando} className="w-full">
             <FileDown className="w-4 h-4 mr-2" />
             {gerando ? "Gerando..." : "Exportar"}
           </Button>

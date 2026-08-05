@@ -25,6 +25,7 @@ import {
   MARCA, ALTURA_CABECALHO, carregarLogo, desenharCabecalho, desenharRodape, estiloTabela,
 } from "@/lib/ponto/pdfMarca";
 import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
+import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
 
 
 type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
@@ -279,7 +280,19 @@ export function PontoRelatoriosTab() {
 
 
 
-  const gerarRelatorio = async () => {
+  const [perguntandoBanco, setPerguntandoBanco] = useState(false);
+
+  // Cartão Ponto/Espelho podem sair sem o bloco de banco de horas: há folhas
+  // que só apuram horas extras.
+  const solicitarRelatorio = () => {
+    if (tipoRelatorio === "espelho" || tipoRelatorio === "cartao_ponto") {
+      setPerguntandoBanco(true);
+      return;
+    }
+    gerarRelatorio(true);
+  };
+
+  const gerarRelatorio = async (comBanco: boolean) => {
     setGerando(true);
     try {
       if (tipoRelatorio === "afd") {
@@ -288,9 +301,9 @@ export function PontoRelatoriosTab() {
       }
 
       if (formatoExport === "pdf") {
-        await gerarPDF();
+        await gerarPDF(comBanco);
       } else {
-        await gerarExcel();
+        await gerarExcel(comBanco);
       }
     } catch (error) {
       toast.error("Erro ao gerar relatório");
@@ -368,7 +381,7 @@ export function PontoRelatoriosTab() {
     toast.success(`AFD gerado com ${seq} marcações!`);
   };
 
-  const gerarPDF = async () => {
+  const gerarPDF = async (comBanco = true) => {
     const doc = new jsPDF();
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
     const subtitulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.desc;
@@ -409,6 +422,7 @@ export function PontoRelatoriosTab() {
         );
 
         desenharCartaoPonto(doc, {
+          incluirBanco: comBanco,
           empregador: {
             razaoSocial: empresaDoRelatorio || "—",
             cnpj: cnpjDoRelatorio,
@@ -593,7 +607,7 @@ export function PontoRelatoriosTab() {
     toast.success("PDF gerado!");
   };
 
-  const gerarExcel = async () => {
+  const gerarExcel = async (comBanco = true) => {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
     const wb = XLSX.utils.book_new();
 
@@ -628,7 +642,10 @@ export function PontoRelatoriosTab() {
         "Saldo (min)": d.saldo_min,
         Ocorrência: situacaoDia(d),
       })));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), "Resumo");
+      const resumoFinal = comBanco
+        ? resumo
+        : resumo.map(({ "Créditos (min)": _c, "Débitos (min)": _d, "Saldo (min)": _s, ...r }) => r);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumoFinal), "Resumo");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diario), "Dia a dia");
       XLSX.writeFile(wb, `Espelho_de_Ponto_${competencia}.xlsx`);
       toast.success("Excel gerado!");
@@ -755,7 +772,16 @@ export function PontoRelatoriosTab() {
         </CardContent>
       </Card>
 
-      <Button onClick={gerarRelatorio} disabled={gerando} className="w-full md:w-auto">
+      <IncluirBancoHorasDialog
+        open={perguntandoBanco}
+        onOpenChange={setPerguntandoBanco}
+        onConfirm={(comBanco) => {
+          setPerguntandoBanco(false);
+          gerarRelatorio(comBanco);
+        }}
+      />
+
+      <Button onClick={solicitarRelatorio} disabled={gerando} className="w-full md:w-auto">
         <Download className="w-4 h-4 mr-2" />
         {gerando ? "Gerando..." : "Gerar Relatório"}
       </Button>
