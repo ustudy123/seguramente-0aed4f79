@@ -24646,7 +24646,11 @@ export type Database = {
         Returns: Json
       }
       ponto_equalizacao_competencia_tenant: {
-        Args: { p_competencia: string; p_tenant_id: string }
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
         Returns: {
           dias_uteis_efetivos: number
           escala_id: string
@@ -24666,7 +24670,11 @@ export type Database = {
         Returns: Json
       }
       ponto_equalizacao_listar: {
-        Args: { p_competencia: string; p_tenant_id: string }
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
         Returns: {
           art61_liberado: boolean
           colaborador_cpf: string
@@ -24794,7 +24802,11 @@ export type Database = {
         Returns: undefined
       }
       ponto_excedente_pendentes: {
-        Args: { p_competencia: string; p_tenant_id: string }
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
         Returns: {
           colaborador_cpf: string
           colaborador_nome: string

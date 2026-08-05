@@ -13,6 +13,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 
 export type DecisaoExcedente = "liberado" | "irregularidade";
@@ -32,9 +33,11 @@ export interface ExcedentePendente {
 
 export function usePontoExcedente(competencia: string) {
   const { tenantId } = useAuth();
+  // LGPD art. 6º I / 46 — a fila é da empresa selecionada, não do tenant.
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
-  const queryKey = ["ponto-excedente-pendentes", tenantId, competencia];
+  const queryKey = ["ponto-excedente-pendentes", tenantId, empresaAtivaId, competencia];
 
   const { data: pendentes = [], isLoading } = useQuery({
     queryKey,
@@ -43,6 +46,7 @@ export function usePontoExcedente(competencia: string) {
       const { data, error } = await (supabase.rpc as any)("ponto_excedente_pendentes", {
         p_tenant_id: tenantId,
         p_competencia: competencia,
+        p_empresa_id: empresaAtivaId || null,
       });
       if (error) throw error;
       return ((data || []) as any[]).map((d) => ({
