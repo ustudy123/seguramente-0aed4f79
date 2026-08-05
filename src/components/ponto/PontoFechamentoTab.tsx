@@ -377,7 +377,7 @@ export function PontoFechamentoTab() {
               </div>
             </div>
             <div className="p-3 bg-destructive/10 rounded-lg text-sm text-destructive">
-              <strong>Atenção:</strong> Esta ação não pode ser desfeita. Certifique-se de que todos os ajustes foram processados.
+              <strong>Atenção:</strong> Os dados ficam bloqueados para alteração. Se precisar corrigir depois, use "Reabrir Período".
             </div>
             <div className="space-y-2">
               <Label>Observações (opcional)</Label>
