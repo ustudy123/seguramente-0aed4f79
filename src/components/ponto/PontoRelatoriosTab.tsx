@@ -64,7 +64,7 @@ export function PontoRelatoriosTab() {
     enabled: !!tenantId,
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj")
+        .select("id, razao_social, nome_fantasia, cnpj, endereco, numero, bairro, cidade, estado, cnae_descricao")
         .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
