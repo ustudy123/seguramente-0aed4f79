@@ -218,6 +218,7 @@ export function usePontoFechamento() {
       return fechamento;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-fechamentos"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-espelhos"] });
       toast.success("Período fechado com sucesso!");
