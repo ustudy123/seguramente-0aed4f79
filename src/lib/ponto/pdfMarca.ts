@@ -13,7 +13,8 @@
  *   --brand-navy   215 65% 12%   → 11,  27,  50
  */
 import type jsPDF from "jspdf";
-import logoYourEyes from "@/assets/logo-youreyes.png";
+import logoAsset from "@/assets/logo-youreyes-mark.png.asset.json";
+
 
 export type RGB = [number, number, number];
 
