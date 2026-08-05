@@ -199,6 +199,8 @@ export function PontoRelatoriosTab() {
       titulo,
       subtitulo,
       empresa: empresaDoRelatorio,
+      cnpj: cnpjDoRelatorio,
+
       competencia,
       geradoEm,
       logoDataUrl: logo,
