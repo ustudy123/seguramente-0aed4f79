@@ -193,6 +193,51 @@ export function usePontoFechamento() {
     onError: (e: Error) => toast.error("Erro ao fechar período: " + e.message),
   });
 
+  /**
+   * Reabertura de competência já fechada. O fechamento não é definitivo:
+   * quando a apuração sai errada, o RH precisa corrigir e fechar de novo.
+   * Os espelhos ainda não assinados (gerado/enviado) são descartados para
+   * não conviverem dois documentos com números diferentes; os já
+   * confirmados ou com ressalva permanecem como prova do que foi aceito.
+   */
+  const reabrirPeriodoMutation = useMutation({
+    mutationFn: async ({ competencia, motivo }: { competencia: string; motivo?: string }) => {
+      if (!tenantId || !user) throw new Error("Não autenticado");
+
+      let del = fromTable("ponto_espelhos")
+        .delete()
+        .eq("tenant_id", tenantId)
+        .eq("competencia", competencia)
+        .in("status", ["gerado", "enviado"]);
+      if (empresaAtivaId) del = del.eq("empresa_id", empresaAtivaId);
+      const { error: delErr } = await del;
+      if (delErr) throw delErr;
+
+      let upd = fromTable("ponto_fechamentos")
+        .update({
+          status: "aberto",
+          data_fechamento: null,
+          fechado_por: null,
+          fechado_por_nome: null,
+          observacoes: motivo
+            ? `Reaberto em ${format(new Date(), "dd/MM/yyyy HH:mm")} por ${profile?.nome_completo || "usuário"}: ${motivo}`
+            : null,
+        } as any)
+        .eq("tenant_id", tenantId)
+        .eq("competencia", competencia);
+      if (empresaAtivaId) upd = upd.eq("empresa_id", empresaAtivaId);
+      const { error } = await upd;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-fechamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-espelhos"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-espelhos-preview"] });
+      toast.success("Período reaberto — pode corrigir e fechar novamente.");
+    },
+    onError: (e: Error) => toast.error("Erro ao reabrir período: " + e.message),
+  });
+
   const confirmarEspelhoMutation = useMutation({
     mutationFn: async ({ espelhoId, ressalva }: { espelhoId: string; ressalva?: string }) => {
       if (!user) throw new Error("Não autenticado");
