@@ -146,26 +146,29 @@ function classificarDia(d: CartaoDia) {
   return { ocorrencia, hc, ha, fn, fj, he };
 }
 
+/** Altura total da faixa de marca (banda + fio). */
+const ALTURA_FAIXA = 19;
+
 function faixaTitulo(doc: jsPDF, input: CartaoPontoInput, pagina: number) {
   const pageW = doc.internal.pageSize.getWidth();
 
   doc.setFillColor(...MARCA.navy);
-  doc.rect(0, 0, pageW, 24, "F");
-  const fio = 1.4;
+  doc.rect(0, 0, pageW, 18, "F");
+  const fio = 1.1;
   doc.setFillColor(...MARCA.azul);
-  doc.rect(0, 24, pageW * 0.55, fio, "F");
+  doc.rect(0, 18, pageW * 0.55, fio, "F");
   doc.setFillColor(...MARCA.verde);
-  doc.rect(pageW * 0.55, 24, pageW * 0.3, fio, "F");
+  doc.rect(pageW * 0.55, 18, pageW * 0.3, fio, "F");
   doc.setFillColor(...MARCA.laranja);
-  doc.rect(pageW * 0.85, 24, pageW * 0.15, fio, "F");
+  doc.rect(pageW * 0.85, 18, pageW * 0.15, fio, "F");
 
   let x = 12;
   if (input.logoDataUrl) {
     try {
       doc.setFillColor(...MARCA.branco);
-      doc.roundedRect(11, 4.5, 15, 15, 2, 2, "F");
-      doc.addImage(input.logoDataUrl, "PNG", 12.5, 6, 12, 12);
-      x = 30;
+      doc.roundedRect(11, 3, 12, 12, 1.8, 1.8, "F");
+      doc.addImage(input.logoDataUrl, "PNG", 12.2, 4.2, 9.6, 9.6);
+      x = 26;
     } catch {
       /* sem logo */
     }
@@ -173,21 +176,21 @@ function faixaTitulo(doc: jsPDF, input: CartaoPontoInput, pagina: number) {
 
   doc.setTextColor(...MARCA.branco);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("CARTÃO PONTO", x, 12);
+  doc.setFontSize(11);
+  doc.text("CARTÃO PONTO", x, 8.5);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(6.6);
   doc.setTextColor(200, 214, 232);
-  doc.text("YourEyes · Gestão de Jornada · Portaria 671/2021 MTP", x, 18);
+  doc.text("YourEyes · Gestão de Jornada · Portaria 671/2021 MTP", x, 13.5);
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(...MARCA.branco);
-  doc.text(`Período: ${input.periodo}`, pageW - 12, 11, { align: "right" });
+  doc.text(`Período: ${input.periodo}`, pageW - 12, 8, { align: "right" });
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(6.6);
   doc.setTextColor(200, 214, 232);
-  doc.text(`Emissão: ${input.emissao}   ·   Pág. ${pagina}`, pageW - 12, 17.5, { align: "right" });
+  doc.text(`Emissão: ${input.emissao}   ·   Pág. ${pagina}`, pageW - 12, 13.5, { align: "right" });
 }
 
 /** Bloco de identificação (empregador + empregado). Devolve o Y final. */
@@ -195,8 +198,8 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
   const pageW = doc.internal.pageSize.getWidth();
   const x = 12;
   const largura = pageW - 24;
-  const topo = 30;
-  const altura = 39;
+  const topo = ALTURA_FAIXA + 3;
+  const altura = 28;
 
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
@@ -205,59 +208,52 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
 
   const { empregador: er, empregado: eo } = input;
 
-  // Colunas com largura própria para permitir quebra de linha nos textos longos
-  // (atividade CNAE e endereço costumam estourar a coluna).
   const colX = [0, largura * 0.42, largura * 0.68];
-  const colW = [
-    largura * 0.42 - 6,
-    largura * 0.26 - 6,
-    largura * 0.32 - 6,
-  ];
+  const colW = [largura * 0.42 - 6, largura * 0.26 - 6, largura * 0.32 - 6];
 
   const linha = (
     y: number,
     campos: Array<[string, string | null | undefined]>,
-    maxLinhas = 2,
+    maxLinhas = 1,
   ) => {
     campos.forEach(([rotulo, valor], i) => {
       if (!valor) return;
       const cx = x + 3 + colX[i];
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(6.8);
+      doc.setFontSize(5.9);
       doc.setTextColor(...MARCA.cinza);
       doc.text(rotulo.toUpperCase(), cx, y);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.6);
+      doc.setFontSize(7);
       doc.setTextColor(...MARCA.navy);
       const linhas = doc.splitTextToSize(String(valor), colW[i]).slice(0, maxLinhas);
-      doc.text(linhas, cx, y + 3.8, { lineHeightFactor: 1.15 });
+      doc.text(linhas, cx, y + 3.3, { lineHeightFactor: 1.1 });
     });
   };
 
-  linha(topo + 5, [
+  linha(topo + 4, [
     ["Empregador", er.razaoSocial],
     ["CNPJ", er.cnpj],
     ["Atividade", er.atividade],
   ]);
-  linha(topo + 16, [
+  linha(topo + 12, [
     ["Endereço", er.endereco],
     ["Cidade / UF", [er.cidade, er.uf].filter(Boolean).join(" - ") || null],
     ["Categoria", eo.categoria || "Mensalista"],
   ]);
 
   doc.setDrawColor(226, 232, 240);
-  doc.line(x + 2, topo + 27, x + largura - 2, topo + 27);
+  doc.line(x + 2, topo + 17.5, x + largura - 2, topo + 17.5);
 
-  linha(topo + 31, [
+  linha(topo + 21, [
     ["Empregado", eo.nome],
     ["CPF", eo.cpf],
     ["Admissão", eo.admissao],
-  ], 1);
+  ]);
 
-
-  const y2 = topo + altura + 5;
+  const y2 = topo + altura + 4;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.2);
+  doc.setFontSize(6.4);
   doc.setTextColor(...MARCA.cinza);
   const rodapeIdent = [
     eo.cargo ? `Cargo: ${eo.cargo}` : null,
@@ -265,9 +261,9 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
     eo.matricula ? `Matrícula: ${eo.matricula}` : null,
     eo.horarios ? `Horários: ${eo.horarios}` : null,
   ].filter(Boolean).join("   ·   ");
-  if (rodapeIdent) doc.text(rodapeIdent, x, y2 - 1);
+  if (rodapeIdent) doc.text(rodapeIdent, x, y2 - 1.5);
 
-  return y2 + 2;
+  return y2 + 1;
 }
 
 /**
