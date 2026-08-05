@@ -731,7 +731,8 @@ export function PontoRelatoriosTab() {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
     const wb = XLSX.utils.book_new();
 
-    if (tipoRelatorio === "espelho") {
+    if (tipoRelatorio === "espelho" || tipoRelatorio === "cartao_ponto") {
+
       // Duas abas: resumo (mesmos números do Banco de Horas) e dia a dia.
       const detalhado = await carregarEspelhoDetalhado();
       const resumo = detalhado.map(c => ({
