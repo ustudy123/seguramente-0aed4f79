@@ -119,6 +119,13 @@ export function PontoRelatoriosTab() {
   // em `ponto_espelhos` no fechamento — por isso os dois relatórios não
   // batiam. Espelho é documento de conferência: precisa mostrar cada dia.
   // ---------------------------------------------------------------------
+  type MarcacaoDia = {
+    hora: string;
+    tipo: string | null;
+    /** RN26 — origem: O = original do colaborador, A = ajuste do RH. */
+    origem: "O" | "A";
+  };
+
   type DiaEspelho = {
     dia: string;
     entrada: string | null;
@@ -129,28 +136,43 @@ export function PontoRelatoriosTab() {
     protegido: boolean;
     equalizacao: boolean;
     excedente_retido_min: number;
+    marcacoes: MarcacaoDia[];
   };
 
-  const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const DIAS_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
   const diaDaSemana = (iso: string) => {
     const [a, m, d] = iso.split("-").map(Number);
     return DIAS_SEMANA[new Date(a, m - 1, d).getDay()];
   };
+  const ehDomingo = (iso: string) => diaDaSemana(iso) === "DOM";
+  const ehSabado = (iso: string) => diaDaSemana(iso) === "SAB";
   const dataBr = (iso: string) => {
     const [a, m, d] = iso.split("-");
     return `${d}/${m}/${a}`;
   };
 
+  /** RN25 — rótulo de ocorrência do dia. */
   const situacaoDia = (d: DiaEspelho) => {
     if (d.equalizacao) return "Equalização";
-    if (d.protegido) return "Justificado";
+    if (d.excedente_retido_min > 0) return "Excede limite diário";
+    if (d.protegido) return d.trabalhado_min > 0 ? "Justificado (com trabalho)" : "Justificado";
     if (d.trabalhado_min === 0 && d.jornada_min > 0) return "Falta";
-    if (d.trabalhado_min === 0) return "Sem jornada";
-    if (d.excedente_retido_min > 0) return "Excedente retido";
-    if (d.saldo_min > 0) return "Crédito";
-    if (d.saldo_min < 0) return "Débito";
-    return "Regular";
+    if (d.trabalhado_min === 0) return ehDomingo(d.dia) ? "DSR" : ehSabado(d.dia) ? "Sábado" : "Sem jornada";
+    if (d.jornada_min === 0) return ehDomingo(d.dia) ? "DSR trabalhado" : "Trabalho fora da escala";
+    if (d.saldo_min < 0) return "Atraso / débito";
+    if (d.saldo_min > 0) return "Trabalhando (crédito)";
+    return "Trabalhando";
   };
+
+  /** Percentual aplicável ao excedente do dia (RN17 / art. 59 CLT). */
+  const percentualHE = (d: DiaEspelho) =>
+    ehDomingo(d.dia) || d.jornada_min === 0 ? "100%" : "50%";
+
+  /** Marcações do dia formatadas com o indicador de origem (RN26). */
+  const marcacoesTexto = (d: DiaEspelho) =>
+    d.marcacoes.length > 0
+      ? d.marcacoes.map((m) => `${m.hora}${m.origem}`).join("  ")
+      : "—";
 
   const carregarEspelhoDetalhado = async () => {
     // Quem entra no espelho: os colaboradores do fechamento quando existe;
@@ -165,10 +187,31 @@ export function PontoRelatoriosTab() {
     const unicos = Array.from(new Map(base.filter(b => b.cpf).map(b => [b.cpf, b])).values())
       .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
 
+    // RN26 — todas as batidas da competência, com origem rastreável.
+    const ultimoDia = new Date(year, month, 0).getDate();
+    const { data: marcacoesMes } = await fromTable("ponto_marcacoes")
+      .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original")
+      .gte("data_marcacao", `${competencia}-01`)
+      .lte("data_marcacao", `${competencia}-${String(ultimoDia).padStart(2, "0")}`)
+      .order("hora_marcacao") as { data: any[] | null; error: any };
+
+    const porCpfDia = new Map<string, MarcacaoDia[]>();
+    (marcacoesMes || []).forEach((m: any) => {
+      const chave = `${soDigitos(m.colaborador_cpf)}|${m.data_marcacao}`;
+      const lista = porCpfDia.get(chave) || [];
+      lista.push({
+        hora: String(m.hora_marcacao || "").substring(0, 5),
+        tipo: m.tipo_marcacao ?? null,
+        origem: m.marcacao_original === false ? "A" : "O",
+      });
+      porCpfDia.set(chave, lista);
+    });
+
     const resultado: Array<{
       nome: string; cpf: string; dias: DiaEspelho[];
       trabalhado: number; previsto: number; creditos: number; debitos: number;
       saldo: number; faltas: number; protegidos: number;
+      he50: number; he100: number;
     }> = [];
 
     for (const c of unicos) {
@@ -189,6 +232,9 @@ export function PontoRelatoriosTab() {
         protegido: Boolean(d.protegido),
         equalizacao: Boolean(d.equalizacao),
         excedente_retido_min: Number(d.excedente_retido_min) || 0,
+        marcacoes: (porCpfDia.get(`${c.cpf}|${String(d.dia)}`) || [])
+          .slice()
+          .sort((a, b) => a.hora.localeCompare(b.hora)),
       })).sort((a, b) => a.dia.localeCompare(b.dia));
 
       resultado.push({
@@ -202,11 +248,16 @@ export function PontoRelatoriosTab() {
         saldo: dias.reduce((s, d) => s + d.saldo_min, 0),
         faltas: dias.filter(d => !d.protegido && d.jornada_min > 0 && d.trabalhado_min === 0).length,
         protegidos: dias.filter(d => d.protegido).length,
+        // Extras separadas por percentual (RN28): 100% em domingo/dia sem
+        // escala, 50% nos demais.
+        he50: dias.reduce((s, d) => s + (d.saldo_min > 0 && percentualHE(d) === "50%" ? d.saldo_min : 0), 0),
+        he100: dias.reduce((s, d) => s + (d.saldo_min > 0 && percentualHE(d) === "100%" ? d.saldo_min : 0), 0),
       });
     }
 
     return resultado;
   };
+
 
 
 
@@ -348,42 +399,128 @@ export function PontoRelatoriosTab() {
           didDrawPage: cabecalho,
         });
 
-        // 2) Detalhamento dia a dia — um bloco por colaborador.
+        // 2) Detalhamento dia a dia — um bloco por colaborador (RN25).
         detalhado.forEach(c => {
           doc.addPage();
           cabecalho();
+
+          const col = colaboradores.find((x: any) => soDigitos(x.cpf) === c.cpf) as any;
+          const banco: any = bancosHorasTodos.find(
+            (b: any) => soDigitos(b.colaborador_cpf) === c.cpf,
+          );
+
+          // Identificação do colaborador
           doc.setFont("helvetica", "bold");
           doc.setFontSize(10);
           doc.setTextColor(MARCA.navy[0], MARCA.navy[1], MARCA.navy[2]);
-          doc.text(`${c.nome}  ·  CPF ${c.cpf}`, 14, ALTURA_CABECALHO + 2);
+          doc.text(c.nome, 14, ALTURA_CABECALHO + 2);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+          const ident = [
+            `CPF ${c.cpf}`,
+            col?.cargo ? `Cargo: ${col.cargo}` : null,
+            col?.departamento ? `Setor: ${col.departamento}` : null,
+            col?.data_admissao ? `Admissão: ${dataBr(String(col.data_admissao).substring(0, 10))}` : null,
+            col?.tipo_contrato ? `Contrato: ${col.tipo_contrato}` : null,
+          ].filter(Boolean).join("   ·   ");
+          doc.text(ident, 14, ALTURA_CABECALHO + 7);
 
           autoTable(doc, {
-            ...estiloTabela(ALTURA_CABECALHO + 6),
-            head: [["Data", "Dia", "Entrada", "Saída", "Trabalhado", "Previsto", "Saldo", "Situação"]],
+            ...estiloTabela(ALTURA_CABECALHO + 11),
+            head: [["Data", "Dia", "Marcações", "H.D.", "H.N.", "H.E.", "A.N.", "Saldo", "Ocorrência"]],
             body: c.dias.length > 0
               ? c.dias.map(d => [
                   dataBr(d.dia), diaDaSemana(d.dia),
-                  d.entrada || "—", d.saida || "—",
+                  marcacoesTexto(d),
                   formatMinutos(d.trabalhado_min), formatMinutos(d.jornada_min),
+                  d.saldo_min > 0 ? `${formatMinutos(d.saldo_min)} (${percentualHE(d)})` : "—",
+                  "n/a",
                   formatSaldo(d.saldo_min), situacaoDia(d),
                 ])
-              : [["Sem dias apurados", "", "", "", "", "", "", ""]],
+              : [["Sem dias apurados", "", "", "", "", "", "", "", ""]],
             foot: [[
-              "Total", "", "", "",
+              "Total", "", "",
               formatMinutos(c.trabalhado), formatMinutos(c.previsto),
+              formatMinutos(c.he50 + c.he100), "n/a",
               formatSaldo(c.saldo), `${c.faltas} falta(s)`,
             ]],
             footStyles: {
               fillColor: MARCA.cinzaClaro, textColor: MARCA.navy, fontStyle: "bold" as const,
             },
+            styles: { ...estiloTabela().styles, fontSize: 7.5 },
             columnStyles: {
-              2: { halign: "center" }, 3: { halign: "center" }, 4: { halign: "right" },
-              5: { halign: "right" }, 6: { halign: "right" },
+              0: { cellWidth: 15 }, 1: { cellWidth: 10, halign: "center" },
+              2: { cellWidth: 42 },
+              3: { halign: "right" }, 4: { halign: "right" },
+              5: { halign: "right" }, 6: { halign: "center" }, 7: { halign: "right" },
             },
             didDrawPage: cabecalho,
           });
+
+          // Resumo de horas do mês + banco de horas (seções 3.2 e 3.3)
+          autoTable(doc, {
+            ...estiloTabela((doc as any).lastAutoTable.finalY + 6),
+            head: [["Resumo do mês", "", "Banco de horas", ""]],
+            body: [
+              ["Horas trabalhadas", formatMinutos(c.trabalhado),
+                "Saldo anterior", formatSaldo(banco?.saldo_anterior_minutos ?? 0)],
+              ["Horas normais previstas", formatMinutos(c.previsto),
+                "Créditos do período", formatMinutos(banco?.creditos_minutos ?? c.creditos)],
+              ["Extras 50%", formatMinutos(c.he50),
+                "Débitos do período", formatMinutos(banco?.debitos_minutos ?? c.debitos)],
+              ["Extras 100%", formatMinutos(c.he100),
+                "Compensados", formatMinutos(banco?.compensados_minutos ?? 0)],
+              ["Adicional noturno", "não apurado neste modelo",
+                "Saldo atual", formatSaldo(banco?.saldo_atual_minutos ?? c.saldo)],
+              ["Dias justificados (atestado/férias/afastamento)", String(c.protegidos),
+                "Faltas não justificadas", String(c.faltas)],
+            ],
+            columnStyles: { 1: { halign: "right" }, 3: { halign: "right" } },
+            didDrawPage: cabecalho,
+          });
+
+          // Legenda (3.4) e ciência do colaborador (RN27)
+          let y = (doc as any).lastAutoTable.finalY + 8;
+          const pageH = doc.internal.pageSize.getHeight();
+          if (y > pageH - 60) { doc.addPage(); cabecalho(); y = ALTURA_CABECALHO + 6; }
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.setTextColor(MARCA.navy[0], MARCA.navy[1], MARCA.navy[2]);
+          doc.text("Legenda", 14, y);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+          doc.setFontSize(7);
+          [
+            "H.D. horas do dia · H.N. horas normais previstas · H.E. horas extras · A.N. adicional noturno · Saldo crédito/débito no banco de horas.",
+            "Origem da marcação (Portaria MTP 671/2021): O = marcação original do colaborador; A = inclusão/ajuste posterior pelo RH.",
+            "Ocorrências: Equalização (compensação mensal), DSR (domingo), Sábado, Justificado (atestado/férias/afastamento), Falta, Atraso/débito, Excede limite diário (art. 59 CLT).",
+          ].forEach((linha, i) => {
+            doc.text(doc.splitTextToSize(linha, doc.internal.pageSize.getWidth() - 28), 14, y + 5 + i * 7);
+          });
+
+          y += 26;
+          doc.setFontSize(7.5);
+          doc.setTextColor(30, 41, 59);
+          doc.text(
+            doc.splitTextToSize(
+              "Estou de pleno acordo com o que demonstram as marcações acima, sendo que representam o ocorrido neste período. Ressalvas: ______________________________________________",
+              doc.internal.pageSize.getWidth() - 28,
+            ),
+            14, y,
+          );
+          y += 18;
+          doc.setDrawColor(148, 163, 184);
+          doc.line(14, y, 95, y);
+          doc.line(110, y, 190, y);
+          doc.setFontSize(7);
+          doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+          doc.text(`${c.nome} — colaborador`, 14, y + 4);
+          doc.text("Responsável pelo RH — data ___/___/______", 110, y + 4);
         });
       }
+
 
     } else if (tipoRelatorio === "horas_extras") {
       // O modelo atual apura saldo em minutos, não percentuais: imprimir
@@ -545,12 +682,15 @@ export function PontoRelatoriosTab() {
         CPF: c.cpf,
         Data: dataBr(d.dia),
         "Dia da semana": diaDaSemana(d.dia),
+        "Marcações (O=original, A=ajuste)": marcacoesTexto(d),
         Entrada: d.entrada || "",
         Saída: d.saida || "",
         "Trabalhado (min)": d.trabalhado_min,
         "Previsto (min)": d.jornada_min,
+        "Extras (min)": d.saldo_min > 0 ? d.saldo_min : 0,
+        "% Extras": d.saldo_min > 0 ? percentualHE(d) : "",
         "Saldo (min)": d.saldo_min,
-        Situação: situacaoDia(d),
+        Ocorrência: situacaoDia(d),
       })));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), "Resumo");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diario), "Dia a dia");
