@@ -521,8 +521,44 @@ export function PontoRelatoriosTab() {
     toast.success("PDF gerado!");
   };
 
-  const gerarExcel = () => {
+  const gerarExcel = async () => {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
+    const wb = XLSX.utils.book_new();
+
+    if (tipoRelatorio === "espelho") {
+      // Duas abas: resumo (mesmos números do Banco de Horas) e dia a dia.
+      const detalhado = await carregarEspelhoDetalhado();
+      const resumo = detalhado.map(c => ({
+        Colaborador: c.nome,
+        CPF: c.cpf,
+        "Trabalhado (min)": c.trabalhado,
+        "Previsto (min)": c.previsto,
+        "Créditos (min)": c.creditos,
+        "Débitos (min)": c.debitos,
+        "Saldo (min)": c.saldo,
+        Faltas: c.faltas,
+        "Dias justificados": c.protegidos,
+        Competência: competencia,
+      }));
+      const diario = detalhado.flatMap(c => c.dias.map(d => ({
+        Colaborador: c.nome,
+        CPF: c.cpf,
+        Data: dataBr(d.dia),
+        "Dia da semana": diaDaSemana(d.dia),
+        Entrada: d.entrada || "",
+        Saída: d.saida || "",
+        "Trabalhado (min)": d.trabalhado_min,
+        "Previsto (min)": d.jornada_min,
+        "Saldo (min)": d.saldo_min,
+        Situação: situacaoDia(d),
+      })));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), "Resumo");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diario), "Dia a dia");
+      XLSX.writeFile(wb, `Espelho_de_Ponto_${competencia}.xlsx`);
+      toast.success("Excel gerado!");
+      return;
+    }
+
     let dados: any[] = [];
 
     if (tipoRelatorio === "banco_horas") {
@@ -536,17 +572,6 @@ export function PontoRelatoriosTab() {
         "Compensados (min)": b.compensados_minutos,
         "Saldo Atual (min)": b.saldo_atual_minutos,
         Competência: b.competencia,
-      }));
-    } else if (espelhos.length > 0) {
-      dados = espelhos.map(e => ({
-        Colaborador: e.colaborador_nome,
-        CPF: e.colaborador_cpf,
-        "HE 50% (min)": e.total_horas_extras_50_minutos,
-        "HE 100% (min)": e.total_horas_extras_100_minutos,
-        "Adic. Noturno (min)": e.total_adicional_noturno_minutos,
-        Faltas: e.total_faltas,
-        "Atrasos (min)": e.total_atrasos_minutos,
-        Status: e.status,
       }));
     } else {
       dados = registrosMes.map(r => ({
@@ -563,11 +588,11 @@ export function PontoRelatoriosTab() {
     }
 
     const ws = XLSX.utils.json_to_sheet(dados);
-    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, titulo);
     XLSX.writeFile(wb, `${titulo.replace(/\s/g, "_")}_${competencia}.xlsx`);
     toast.success("Excel gerado!");
   };
+
 
   return (
     <div className="space-y-4">
