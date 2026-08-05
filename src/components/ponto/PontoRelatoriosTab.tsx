@@ -113,6 +113,103 @@ export function PontoRelatoriosTab() {
   // Saldo com sinal (negativo = devendo horas).
   const formatSaldo = (min: number) => formatarHoraMinuto(min || 0);
 
+  // ---------------------------------------------------------------------
+  // Espelho de ponto: dia a dia, da MESMA fonte do Banco de Horas
+  // (`ponto_saldo_dias_competencia`). Antes o espelho lia os totais gravados
+  // em `ponto_espelhos` no fechamento — por isso os dois relatórios não
+  // batiam. Espelho é documento de conferência: precisa mostrar cada dia.
+  // ---------------------------------------------------------------------
+  type DiaEspelho = {
+    dia: string;
+    entrada: string | null;
+    saida: string | null;
+    trabalhado_min: number;
+    jornada_min: number;
+    saldo_min: number;
+    protegido: boolean;
+    equalizacao: boolean;
+    excedente_retido_min: number;
+  };
+
+  const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaDaSemana = (iso: string) => {
+    const [a, m, d] = iso.split("-").map(Number);
+    return DIAS_SEMANA[new Date(a, m - 1, d).getDay()];
+  };
+  const dataBr = (iso: string) => {
+    const [a, m, d] = iso.split("-");
+    return `${d}/${m}/${a}`;
+  };
+
+  const situacaoDia = (d: DiaEspelho) => {
+    if (d.equalizacao) return "Equalização";
+    if (d.protegido) return "Justificado";
+    if (d.trabalhado_min === 0 && d.jornada_min > 0) return "Falta";
+    if (d.trabalhado_min === 0) return "Sem jornada";
+    if (d.excedente_retido_min > 0) return "Excedente retido";
+    if (d.saldo_min > 0) return "Crédito";
+    if (d.saldo_min < 0) return "Débito";
+    return "Regular";
+  };
+
+  const carregarEspelhoDetalhado = async () => {
+    // Quem entra no espelho: os colaboradores do fechamento quando existe;
+    // caso contrário, quem tem marcação na competência.
+    const base = espelhos.length > 0
+      ? espelhos.map((e: any) => ({ nome: e.colaborador_nome, cpf: soDigitos(e.colaborador_cpf) }))
+      : Array.from(new Set(registrosMes.map(r => soDigitos(r.colaborador_cpf)))).map(cpf => ({
+          nome: registrosMes.find(r => soDigitos(r.colaborador_cpf) === cpf)?.colaborador_nome || "N/A",
+          cpf,
+        }));
+
+    const unicos = Array.from(new Map(base.filter(b => b.cpf).map(b => [b.cpf, b])).values())
+      .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
+
+    const resultado: Array<{
+      nome: string; cpf: string; dias: DiaEspelho[];
+      trabalhado: number; previsto: number; creditos: number; debitos: number;
+      saldo: number; faltas: number; protegidos: number;
+    }> = [];
+
+    for (const c of unicos) {
+      const { data, error } = await (supabase.rpc as any)("ponto_saldo_dias_competencia", {
+        p_tenant_id: tenantId,
+        p_colaborador_cpf: c.cpf,
+        p_competencia: competencia,
+      });
+      if (error) throw error;
+
+      const dias: DiaEspelho[] = ((data || []) as any[]).map(d => ({
+        dia: String(d.dia),
+        entrada: d.entrada ? String(d.entrada).substring(0, 5) : null,
+        saida: d.saida ? String(d.saida).substring(0, 5) : null,
+        trabalhado_min: Number(d.trabalhado_min) || 0,
+        jornada_min: Number(d.jornada_min) || 0,
+        saldo_min: Number(d.saldo_min) || 0,
+        protegido: Boolean(d.protegido),
+        equalizacao: Boolean(d.equalizacao),
+        excedente_retido_min: Number(d.excedente_retido_min) || 0,
+      })).sort((a, b) => a.dia.localeCompare(b.dia));
+
+      resultado.push({
+        nome: c.nome,
+        cpf: c.cpf,
+        dias,
+        trabalhado: dias.reduce((s, d) => s + d.trabalhado_min, 0),
+        previsto: dias.reduce((s, d) => s + d.jornada_min, 0),
+        creditos: dias.reduce((s, d) => s + (d.saldo_min > 0 ? d.saldo_min : 0), 0),
+        debitos: dias.reduce((s, d) => s + (d.saldo_min < 0 ? -d.saldo_min : 0), 0),
+        saldo: dias.reduce((s, d) => s + d.saldo_min, 0),
+        faltas: dias.filter(d => !d.protegido && d.jornada_min > 0 && d.trabalhado_min === 0).length,
+        protegidos: dias.filter(d => d.protegido).length,
+      });
+    }
+
+    return resultado;
+  };
+
+
+
 
   const gerarRelatorio = async () => {
     setGerando(true);
