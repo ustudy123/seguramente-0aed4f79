@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 export interface EqualizacaoEscala {
   escala_id: string;
@@ -21,14 +22,16 @@ export interface EqualizacaoEscala {
  */
 export function usePontoEqualizacao(competencia: string) {
   const { tenantId } = useAuth();
+  // LGPD art. 6º I / 46 — o painel é da empresa selecionada, não do tenant.
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   return useQuery({
-    queryKey: ["ponto-equalizacao", tenantId, competencia],
+    queryKey: ["ponto-equalizacao", tenantId, empresaAtivaId, competencia],
     queryFn: async (): Promise<EqualizacaoEscala[]> => {
       if (!tenantId || !competencia) return [];
       const { data, error } = await (supabase.rpc as any)(
         "ponto_equalizacao_competencia_tenant",
-        { p_tenant_id: tenantId, p_competencia: competencia }
+        { p_tenant_id: tenantId, p_competencia: competencia, p_empresa_id: empresaAtivaId || null }
       );
       if (error) throw error;
       return (data || []) as EqualizacaoEscala[];
@@ -63,6 +66,7 @@ export interface EqualizacaoColaborador {
  */
 export function usePontoEqualizacaoGerenciador(competencia: string) {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   const invalidar = () => {
@@ -72,12 +76,13 @@ export function usePontoEqualizacaoGerenciador(competencia: string) {
   };
 
   const { data: colaboradores = [], isLoading } = useQuery({
-    queryKey: ["ponto-equalizacao", "listar", tenantId, competencia],
+    queryKey: ["ponto-equalizacao", "listar", tenantId, empresaAtivaId, competencia],
     queryFn: async (): Promise<EqualizacaoColaborador[]> => {
       if (!tenantId || !competencia) return [];
       const { data, error } = await (supabase.rpc as any)("ponto_equalizacao_listar", {
         p_tenant_id: tenantId,
         p_competencia: competencia,
+        p_empresa_id: empresaAtivaId || null,
       });
       if (error) throw error;
       return (data || []).map((c: any) => ({
