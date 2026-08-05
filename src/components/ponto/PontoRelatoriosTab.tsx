@@ -24,6 +24,8 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import {
   MARCA, ALTURA_CABECALHO, carregarLogo, desenharCabecalho, desenharRodape, estiloTabela,
 } from "@/lib/ponto/pdfMarca";
+import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
+
 
 type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
 
