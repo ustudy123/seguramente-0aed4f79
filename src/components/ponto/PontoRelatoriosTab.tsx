@@ -146,8 +146,10 @@ export function PontoRelatoriosTab() {
     // Registro tipo 1 - Cabeçalho
     const dataGeracao = format(new Date(), "ddMMyyyy");
     const horaGeracao = format(new Date(), "HHmmss");
-    const cnpj = "00000000000000"; // placeholder
-    const razaoSocial = "YourEyes".padEnd(150);
+    // AFD exige CNPJ e razão social do empregador (Portaria 671/MTP).
+    const cnpj = soDigitos(empresaPorId(empresaAtivaId)?.cnpj).padStart(14, "0").slice(0, 14);
+    const razaoSocial = (razaoSocialEmpresa(empresaAtivaId) || "YourEyes").slice(0, 150).padEnd(150);
+
     conteudo += `1${cnpj}${razaoSocial}${dataGeracao}${horaGeracao}\n`;
 
     // Registro tipo 2 - Identificação do REP-P
