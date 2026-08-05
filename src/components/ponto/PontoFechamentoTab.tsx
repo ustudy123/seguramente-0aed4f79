@@ -298,6 +298,8 @@ export function PontoFechamentoTab() {
                 <TableHead className="text-right">Previsto</TableHead>
                 <TableHead className="text-right">Créditos</TableHead>
                 <TableHead className="text-right">Débitos</TableHead>
+                <TableHead className="text-right">HE 50%</TableHead>
+                <TableHead className="text-right">HE 100%</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead className="text-right">Faltas</TableHead>
                 <TableHead>Status</TableHead>
