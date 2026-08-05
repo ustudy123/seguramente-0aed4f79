@@ -222,7 +222,7 @@ export function PontoRelatoriosTab() {
       if (formatoExport === "pdf") {
         await gerarPDF();
       } else {
-        gerarExcel();
+        await gerarExcel();
       }
     } catch (error) {
       toast.error("Erro ao gerar relatório");
