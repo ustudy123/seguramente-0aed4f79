@@ -83,7 +83,22 @@ const dataCurta = (iso: string) => {
   const [, m, d] = iso.split("-");
   return `${d}/${m}`;
 };
-const hm = (min: number) => (min > 0 ? formatarHoraMinuto(min).replace(/\s/g, "") : "");
+const hm = (min: number) => {
+  if (!min || min <= 0) return "";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+};
+
+/** Marcações em pares por linha — evita que a última batida seja cortada. */
+const marcacoesTexto = (marcacoes: CartaoMarcacao[]) => {
+  const tokens = marcacoes.map((m) => `${m.hora}-${m.origem === "A" ? "I" : "O"}`);
+  const linhas: string[] = [];
+  for (let i = 0; i < tokens.length; i += 2) {
+    linhas.push(tokens.slice(i, i + 2).join("  "));
+  }
+  return linhas.join("\n");
+};
 
 /** Colunas H.C./H.A./F.N./F.J. e o rótulo da ocorrência, na lógica do modelo. */
 function classificarDia(d: CartaoDia) {
@@ -273,9 +288,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     return [
       dataCurta(d.dia),
       diaSemana(d.dia),
-      d.marcacoes.length > 0
-        ? d.marcacoes.map((m) => `${m.hora}-${m.origem === "A" ? "I" : "O"}`).join(" ")
-        : "",
+      marcacoesTexto(d.marcacoes),
       k.ocorrencia,
       hm(d.trabalhado_min),
       hm(d.jornada_min),
@@ -325,14 +338,14 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     columnStyles: {
       0: { cellWidth: 12, halign: "center" },
       1: { cellWidth: 9, halign: "center" },
-      2: { cellWidth: 45 },
-      3: { cellWidth: 33 },
-      4: { cellWidth: 11, halign: "right" },
-      5: { cellWidth: 11, halign: "right" },
-      6: { cellWidth: 11, halign: "right" },
+      2: { cellWidth: 40, halign: "center" },
+      3: { cellWidth: 31 },
+      4: { cellWidth: 10, halign: "right" },
+      5: { cellWidth: 10, halign: "right" },
+      6: { cellWidth: 10, halign: "right" },
       7: { cellWidth: 10, halign: "right" },
-      8: { cellWidth: 11, halign: "right" },
-      9: { cellWidth: 11, halign: "right" },
+      8: { cellWidth: 10, halign: "right" },
+      9: { cellWidth: 10, halign: "right" },
       10: { cellWidth: 10, halign: "right" },
       11: { cellWidth: 10, halign: "right" },
     },
