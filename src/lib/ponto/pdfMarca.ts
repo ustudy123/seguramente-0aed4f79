@@ -54,10 +54,13 @@ export interface CabecalhoOpts {
   subtitulo?: string;
   /** Empresa/cliente a que o relatório se refere. */
   empresa?: string | null;
+  /** CNPJ da empresa/filial, já formatado. */
+  cnpj?: string | null;
   competencia?: string | null;
   geradoEm: string;
   logoDataUrl?: string | null;
 }
+
 
 /** Altura ocupada pelo cabeçalho — use como startY das tabelas. */
 export const ALTURA_CABECALHO = 46;
@@ -117,6 +120,15 @@ export function desenharCabecalho(doc: jsPDF, o: CabecalhoOpts) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text(o.empresa || "Todas as empresas", 14, 40);
+
+  if (o.cnpj) {
+    const larguraNome = doc.getTextWidth(o.empresa || "Todas as empresas");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MARCA.cinza);
+    doc.text(`CNPJ ${o.cnpj}`, 14 + larguraNome + 4, 40);
+  }
+
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
