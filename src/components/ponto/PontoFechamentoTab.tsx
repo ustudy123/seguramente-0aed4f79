@@ -192,12 +192,11 @@ export function PontoFechamentoTab() {
     }
     y += 4;
 
-    // Campo que o modelo atual nao apura. Imprimir "0h 00min" aqui seria
-    // afirmar que nao houve hora extra classificada, num documento que o
-    // colaborador assina.
+    // RN28: o crédito do banco de horas é a base de pagamento de hora extra.
+    pdf.text(`Horas extras 50%: ${formatMinutos(espelho.total_horas_extras_50_minutos ?? 0)}`, 20, y); y += 7;
+    pdf.text(`Horas extras 100% (domingo/feriado): ${formatMinutos(espelho.total_horas_extras_100_minutos ?? 0)}`, 20, y); y += 7;
     pdf.setFontSize(8);
-    pdf.text("Horas extras 50%/100% e adicional noturno nao sao apurados neste modelo:", 20, y); y += 4;
-    pdf.text("a apuracao trabalha em saldo de minutos. Consulte a folha para esses valores.", 20, y); y += 10;
+    pdf.text("Adicional noturno nao e apurado neste modelo; consulte a folha.", 20, y); y += 10;
     pdf.setFontSize(10);
 
     if (espelho.status === "confirmado" || espelho.status === "ressalva") {
