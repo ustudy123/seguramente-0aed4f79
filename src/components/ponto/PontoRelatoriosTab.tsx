@@ -419,15 +419,21 @@ export function PontoRelatoriosTab() {
           periodo,
           emissao: geradoEm,
           dias: c.dias,
-          banco: banco
-            ? {
-                saldoAnterior: banco.saldo_anterior_minutos ?? 0,
-                creditos: banco.creditos_minutos ?? c.creditos,
-                debitos: banco.debitos_minutos ?? c.debitos,
-                compensados: banco.compensados_minutos ?? 0,
-                saldoAtual: banco.saldo_atual_minutos ?? c.saldo,
-              }
-            : null,
+          // Crédito/débito do período vêm SEMPRE da apuração (mesma fonte da
+          // tabela dia a dia). A linha de ponto_banco_horas é zerada no
+          // fechamento, o que fazia o espelho mostrar crédito 0 e saldo
+          // divergente do resumo diário.
+          banco: {
+            saldoAnterior: banco?.saldo_anterior_minutos ?? 0,
+            creditos: c.creditos,
+            debitos: c.debitos,
+            compensados: banco?.compensados_minutos ?? 0,
+            saldoAtual:
+              (banco?.saldo_anterior_minutos ?? 0) +
+              c.saldo -
+              (banco?.compensados_minutos ?? 0),
+          },
+
           logoDataUrl: logo,
         });
       });
