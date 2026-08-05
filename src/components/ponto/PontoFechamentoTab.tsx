@@ -36,12 +36,14 @@ const STATUS_ESPELHO: Record<string, { label: string; color: string }> = {
 };
 
 export function PontoFechamentoTab() {
-  const { useFechamentos, useEspelhos, fecharPeriodo, fechandoPeriodo, confirmarEspelho, confirmandoEspelho } = usePontoFechamento();
+  const { useFechamentos, useEspelhos, fecharPeriodo, fechandoPeriodo, reabrirPeriodo, reabrindoPeriodo, confirmarEspelho, confirmandoEspelho } = usePontoFechamento();
   const { tenantId, user, profile } = useAuth();
   const { empresaAtiva, empresaAtivaId } = useEmpresaAtiva();
   const nomeEmpresa = empresaAtiva?.razao_social || empresaAtiva?.nome_fantasia || null;
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const [showFechar, setShowFechar] = useState(false);
+  const [showReabrir, setShowReabrir] = useState(false);
+  const [motivoReabertura, setMotivoReabertura] = useState("");
   const [showRessalva, setShowRessalva] = useState(false);
   const [selectedEspelho, setSelectedEspelho] = useState<PontoEspelho | null>(null);
   const [observacoes, setObservacoes] = useState("");
