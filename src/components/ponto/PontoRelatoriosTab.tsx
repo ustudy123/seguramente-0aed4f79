@@ -373,7 +373,7 @@ export function PontoRelatoriosTab() {
       logoDataUrl: logo,
     });
 
-    if (tipoRelatorio === "cartao_ponto") {
+    if (tipoRelatorio === "cartao_ponto" || tipoRelatorio === "espelho") {
       // Modelo clássico de cartão ponto: uma folha por colaborador, com a
       // mesma apuração do Banco de Horas.
       const detalhado = await carregarEspelhoDetalhado();
