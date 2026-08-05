@@ -39,17 +39,17 @@ export function IncluirBancoHorasDialog({
             ficam de fora para facilitar o entendimento.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2 sm:gap-2">
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:gap-2 sm:space-x-0">
+          <AlertDialogAction onClick={() => onConfirm(true)} className="w-full">
+            Com banco de horas
+          </AlertDialogAction>
           <AlertDialogAction
             onClick={() => onConfirm(false)}
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80"
           >
             Sem banco de horas (só horas extras)
           </AlertDialogAction>
-          <AlertDialogAction onClick={() => onConfirm(true)}>
-            Com banco de horas
-          </AlertDialogAction>
+          <AlertDialogCancel className="mt-0 w-full">Cancelar</AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
