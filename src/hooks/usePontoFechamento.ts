@@ -263,6 +263,9 @@ export function usePontoFechamento() {
     useEspelhos,
     fecharPeriodo: fecharPeriodoMutation.mutateAsync,
     fechandoPeriodo: fecharPeriodoMutation.isPending,
+    reabrirPeriodo: reabrirPeriodoMutation.mutateAsync,
+    reabrindoPeriodo: reabrirPeriodoMutation.isPending,
+
     confirmarEspelho: confirmarEspelhoMutation.mutateAsync,
     confirmandoEspelho: confirmarEspelhoMutation.isPending,
   };
