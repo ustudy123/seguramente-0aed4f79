@@ -18499,6 +18499,39 @@ export type Database = {
           },
         ]
       }
+      ponto_escala_copia_tenant: {
+        Row: {
+          atribuicoes_repontadas: number
+          escala_copia_id: string
+          escala_origem_id: string
+          escala_origem_tenant: string
+          executado_em: string
+          executado_por: string | null
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          atribuicoes_repontadas?: number
+          escala_copia_id: string
+          escala_origem_id: string
+          escala_origem_tenant: string
+          executado_em?: string
+          executado_por?: string | null
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          atribuicoes_repontadas?: number
+          escala_copia_id?: string
+          escala_origem_id?: string
+          escala_origem_tenant?: string
+          executado_em?: string
+          executado_por?: string | null
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       ponto_escala_historico_interpretacao: {
         Row: {
           ajuste_usuario: Json | null
@@ -18876,6 +18909,7 @@ export type Database = {
           confirmado_por: string | null
           created_at: string | null
           data_confirmacao: string | null
+          dia_equalizacao: string | null
           empresa_id: string | null
           fechamento_id: string | null
           id: string
@@ -18884,11 +18918,18 @@ export type Database = {
           tenant_id: string
           total_adicional_noturno_minutos: number | null
           total_atrasos_minutos: number | null
+          total_creditos_minutos: number | null
+          total_debitos_minutos: number | null
+          total_dias_protegidos: number | null
+          total_dias_trabalhados: number | null
           total_dsr: number | null
+          total_excedente_retido_minutos: number | null
           total_faltas: number | null
           total_horas_extras_100_minutos: number | null
           total_horas_extras_50_minutos: number | null
           total_horas_normais_minutos: number | null
+          total_jornada_prevista_minutos: number | null
+          total_trabalhado_minutos: number | null
           updated_at: string | null
         }
         Insert: {
@@ -18902,6 +18943,7 @@ export type Database = {
           confirmado_por?: string | null
           created_at?: string | null
           data_confirmacao?: string | null
+          dia_equalizacao?: string | null
           empresa_id?: string | null
           fechamento_id?: string | null
           id?: string
@@ -18910,11 +18952,18 @@ export type Database = {
           tenant_id: string
           total_adicional_noturno_minutos?: number | null
           total_atrasos_minutos?: number | null
+          total_creditos_minutos?: number | null
+          total_debitos_minutos?: number | null
+          total_dias_protegidos?: number | null
+          total_dias_trabalhados?: number | null
           total_dsr?: number | null
+          total_excedente_retido_minutos?: number | null
           total_faltas?: number | null
           total_horas_extras_100_minutos?: number | null
           total_horas_extras_50_minutos?: number | null
           total_horas_normais_minutos?: number | null
+          total_jornada_prevista_minutos?: number | null
+          total_trabalhado_minutos?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -18928,6 +18977,7 @@ export type Database = {
           confirmado_por?: string | null
           created_at?: string | null
           data_confirmacao?: string | null
+          dia_equalizacao?: string | null
           empresa_id?: string | null
           fechamento_id?: string | null
           id?: string
@@ -18936,11 +18986,18 @@ export type Database = {
           tenant_id?: string
           total_adicional_noturno_minutos?: number | null
           total_atrasos_minutos?: number | null
+          total_creditos_minutos?: number | null
+          total_debitos_minutos?: number | null
+          total_dias_protegidos?: number | null
+          total_dias_trabalhados?: number | null
           total_dsr?: number | null
+          total_excedente_retido_minutos?: number | null
           total_faltas?: number | null
           total_horas_extras_100_minutos?: number | null
           total_horas_extras_50_minutos?: number | null
           total_horas_normais_minutos?: number | null
+          total_jornada_prevista_minutos?: number | null
+          total_trabalhado_minutos?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -24481,6 +24538,27 @@ export type Database = {
         Returns: boolean
       }
       ponto_classifica_tipo: { Args: { p_tipo: string }; Returns: string }
+      ponto_colaboradores_sem_empresa: {
+        Args: { p_competencia: string; p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          dias_no_periodo: number
+          tem_admissao: boolean
+        }[]
+      }
+      ponto_corrigir_horas_arredondadas: {
+        Args: { p_desde?: string; p_tenant_id?: string }
+        Returns: Json
+      }
+      ponto_cpfs_em_mais_de_uma_empresa: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          empresas: number
+        }[]
+      }
       ponto_debito_batida_do_dia: {
         Args: {
           p_colaborador_cpf: string
@@ -24491,8 +24569,33 @@ export type Database = {
         }
         Returns: number
       }
+      ponto_dias_nao_materializados: {
+        Args: { p_competencia: string; p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          dias_sem_linha: number
+          primeiro: string
+          ultimo: string
+        }[]
+      }
+      ponto_empresa_atribuida_errada: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          competencia: string
+          empresa_atual: string
+          empresa_do_cadastro: string
+          tabela: string
+        }[]
+      }
       ponto_empresa_do_colaborador: {
         Args: { p_colaborador_id: string }
+        Returns: string
+      }
+      ponto_empresa_do_cpf: {
+        Args: { p_cpf: string; p_tenant_id: string }
         Returns: string
       }
       ponto_equalizacao_art61_liberar: {
@@ -24583,6 +24686,63 @@ export type Database = {
               tolerancia_min: number
             }[]
           }
+      ponto_escalas_corrigir_tenant: {
+        Args: { p_aplicar?: boolean; p_tenant_id?: string }
+        Returns: Json
+      }
+      ponto_escalas_cross_tenant: {
+        Args: never
+        Returns: {
+          colaboradores: number
+          escala_id: string
+          escala_nome: string
+          tenant_da_atribuicao: string
+          tenant_da_escala: string
+        }[]
+      }
+      ponto_espelho_resumo: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_tenant_id: string
+        }
+        Returns: {
+          dia_equalizacao: string
+          dias_com_registro: number
+          dias_protegidos: number
+          dias_trabalhados: number
+          excedente_retido_min: number
+          saldo_min: number
+          total_creditos_min: number
+          total_debitos_min: number
+          total_faltas: number
+          total_jornada_prevista_min: number
+          total_trabalhado_min: number
+        }[]
+      }
+      ponto_espelho_resumo_empresa: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          dia_equalizacao: string
+          dias_com_registro: number
+          dias_protegidos: number
+          dias_trabalhados: number
+          excedente_retido_min: number
+          saldo_min: number
+          total_creditos_min: number
+          total_debitos_min: number
+          total_faltas: number
+          total_jornada_prevista_min: number
+          total_trabalhado_min: number
+        }[]
+      }
       ponto_excedente_decidir: {
         Args: {
           p_colaborador_cpf: string
@@ -24629,6 +24789,14 @@ export type Database = {
           jornada_min: number
           tol_min: number
         }[]
+      }
+      ponto_materializar_faltas: {
+        Args: { p_fim?: string; p_ini: string; p_tenant_id?: string }
+        Returns: Json
+      }
+      ponto_minutos_das_marcacoes: {
+        Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
+        Returns: number
       }
       ponto_reordena_tipos_dia: {
         Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
