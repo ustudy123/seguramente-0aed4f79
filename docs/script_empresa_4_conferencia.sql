@@ -107,17 +107,23 @@ GROUP BY 1
 ORDER BY 1;
 
 
--- 5) MESMO CPF EM MAIS DE UMA EMPRESA ----------------------------------
--- Se voltar alguma linha, avise: o espelho e o banco de horas têm chave
--- única por CPF e competência, SEM a empresa, e as duas empresas
--- disputariam a mesma linha ao fechar. É correção à parte.
-SELECT regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
+-- 5) MESMO CPF EM MAIS DE UMA EMPRESA DO MESMO CLIENTE ----------------
+-- O agrupamento inclui o tenant DE PROPÓSITO. Sem ele, quem está
+-- cadastrado em dois clientes diferentes da base aparece como se
+-- tivesse duas empresas, e a lista sai enorme sem significar nada: a
+-- chave única do espelho e do banco de horas já inclui o tenant, então
+-- clientes distintos nunca disputam a mesma linha.
+--
+-- Se voltar alguma linha aqui, aí sim avise: são duas empresas DO MESMO
+-- cliente disputando o espelho da mesma pessoa. É correção à parte.
+SELECT a.tenant_id,
+       regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf,
        max(a.nome_completo) AS colaborador,
        count(DISTINCT a.empresa_id) AS empresas
 FROM public.admissoes a
 WHERE a.empresa_id IS NOT NULL
   AND COALESCE(a.inativo, false) = false
   AND COALESCE(a.cpf, '') <> ''
-GROUP BY 1
+GROUP BY 1, 2
 HAVING count(DISTINCT a.empresa_id) > 1
-ORDER BY 3 DESC, 2;
+ORDER BY 4 DESC, 3;

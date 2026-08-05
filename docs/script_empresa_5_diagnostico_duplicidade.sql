@@ -1,10 +1,14 @@
 -- =====================================================================
 -- Mesmo CPF em duas (ou três) empresas — o que é isso, afinal
 --
--- A conferência da parte 4 devolveu praticamente o quadro inteiro de
--- pessoal com 2 empresas, e algumas com 3. Duplo vínculo real é raro e
--- pontual; nesta escala, quase certamente é o CADASTRO que está
--- duplicado — a mesma pessoa admitida em mais de uma empresa do grupo.
+-- ATENÇÃO à leitura: só conta como duplicidade quando as duas empresas
+-- são DO MESMO cliente (mesmo tenant). A primeira versão desta consulta
+-- agrupava só por CPF e devolvia o quadro inteiro — eram pessoas
+-- cadastradas em clientes diferentes da base, o que não é duplicidade
+-- nenhuma: a chave única do espelho já inclui o tenant.
+--
+-- Duplo vínculo real, dentro do mesmo cliente, é raro e pontual. Se
+-- aparecer em escala, aí sim é o CADASTRO que está duplicado.
 --
 -- Antes de propor conserto é preciso saber QUAL das empresas é a boa. As
 -- cinco consultas abaixo respondem isso. TODAS são somente leitura: não
@@ -15,7 +19,8 @@
 -- Se duas linhas tiverem o mesmo CNPJ (ou nomes quase iguais), é
 -- empresa cadastrada em duplicidade. Repare em qual delas está o ponto:
 -- empresa sem nenhum dia de ponto é a cópia.
-SELECT e.id,
+SELECT e.tenant_id,
+       e.id,
        COALESCE(e.razao_social, e.nome_fantasia) AS empresa,
        e.cnpj,
        e.ativo,
@@ -58,13 +63,16 @@ ORDER BY 3 DESC;
 -- admissão, cargo, situação e quando o registro foi criado: cópia
 -- costuma ter a mesma data de admissão e criação em lote.
 WITH tres AS (
-  SELECT regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf
+  -- Agrupado por tenant: duas empresas de CLIENTES diferentes não são
+  -- duplicidade, e sem o tenant a lista viria cheia de falso positivo.
+  SELECT a.tenant_id,
+         regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') AS cpf
   FROM public.admissoes a
   WHERE a.empresa_id IS NOT NULL
     AND COALESCE(a.inativo, false) = false
     AND COALESCE(a.cpf, '') <> ''
-  GROUP BY 1
-  HAVING count(DISTINCT a.empresa_id) > 2
+  GROUP BY 1, 2
+  HAVING count(DISTINCT a.empresa_id) > 1
   LIMIT 3
 )
 SELECT a.nome_completo,
@@ -74,7 +82,11 @@ SELECT a.nome_completo,
        a.inativo, a.bate_ponto, a.created_at
 FROM public.admissoes a
 LEFT JOIN public.empresa_cadastro e ON e.id = a.empresa_id
-WHERE regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g') IN (SELECT cpf FROM tres)
+WHERE EXISTS (
+  SELECT 1 FROM tres t
+  WHERE t.tenant_id = a.tenant_id
+    AND t.cpf = regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g')
+)
 ORDER BY 2, a.created_at;
 
 
