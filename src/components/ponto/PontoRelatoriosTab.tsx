@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useColaboradores } from "@/hooks/useColaboradores";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +91,21 @@ export function PontoRelatoriosTab() {
 
 
   const { data: espelhos = [] } = useEspelhos(competencia);
-  const { data: bancosHoras = [] } = useBancoHorasPorCompetencia(competencia);
+  const { data: bancosHorasTodos = [] } = useBancoHorasPorCompetencia(competencia);
+  const { colaboradores } = useColaboradores();
+
+  // Demitido não entra no relatório de Banco de Horas: o saldo dele é
+  // quitado na rescisão, não na conferência mensal do RH.
+  // (useColaboradores já devolve apenas ativos — inativos/desligados ficam fora.)
+  const bancosHoras = useMemo(() => {
+    const cpfsAtivos = new Set(colaboradores.map((c) => soDigitos(c.cpf)));
+    const idsAtivos = new Set(colaboradores.map((c) => c.id));
+    return bancosHorasTodos.filter((b: any) => {
+      const cpf = soDigitos(b.colaborador_cpf);
+      if (cpf && cpfsAtivos.has(cpf)) return true;
+      return Boolean(b.colaborador_id && idsAtivos.has(b.colaborador_id));
+    });
+  }, [bancosHorasTodos, colaboradores]);
   const { data: registrosMes = [], isLoading: carregandoRegistros } = usePontoDiario(startDate, endDate);
 
   const formatMinutos = (min: number) => formatarHoraMinuto(Math.abs(min || 0));
