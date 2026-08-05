@@ -288,9 +288,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     return [
       dataCurta(d.dia),
       diaSemana(d.dia),
-      d.marcacoes.length > 0
-        ? d.marcacoes.map((m) => `${m.hora}-${m.origem === "A" ? "I" : "O"}`).join(" ")
-        : "",
+      marcacoesTexto(d.marcacoes),
       k.ocorrencia,
       hm(d.trabalhado_min),
       hm(d.jornada_min),
