@@ -399,42 +399,128 @@ export function PontoRelatoriosTab() {
           didDrawPage: cabecalho,
         });
 
-        // 2) Detalhamento dia a dia — um bloco por colaborador.
+        // 2) Detalhamento dia a dia — um bloco por colaborador (RN25).
         detalhado.forEach(c => {
           doc.addPage();
           cabecalho();
+
+          const col = colaboradores.find((x: any) => soDigitos(x.cpf) === c.cpf) as any;
+          const banco: any = bancosHorasTodos.find(
+            (b: any) => soDigitos(b.colaborador_cpf) === c.cpf,
+          );
+
+          // Identificação do colaborador
           doc.setFont("helvetica", "bold");
           doc.setFontSize(10);
           doc.setTextColor(MARCA.navy[0], MARCA.navy[1], MARCA.navy[2]);
-          doc.text(`${c.nome}  ·  CPF ${c.cpf}`, 14, ALTURA_CABECALHO + 2);
+          doc.text(c.nome, 14, ALTURA_CABECALHO + 2);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+          const ident = [
+            `CPF ${c.cpf}`,
+            col?.cargo ? `Cargo: ${col.cargo}` : null,
+            col?.departamento ? `Setor: ${col.departamento}` : null,
+            col?.data_admissao ? `Admissão: ${dataBr(String(col.data_admissao).substring(0, 10))}` : null,
+            col?.tipo_contrato ? `Contrato: ${col.tipo_contrato}` : null,
+          ].filter(Boolean).join("   ·   ");
+          doc.text(ident, 14, ALTURA_CABECALHO + 7);
 
           autoTable(doc, {
-            ...estiloTabela(ALTURA_CABECALHO + 6),
-            head: [["Data", "Dia", "Entrada", "Saída", "Trabalhado", "Previsto", "Saldo", "Situação"]],
+            ...estiloTabela(ALTURA_CABECALHO + 11),
+            head: [["Data", "Dia", "Marcações", "H.D.", "H.N.", "H.E.", "A.N.", "Saldo", "Ocorrência"]],
             body: c.dias.length > 0
               ? c.dias.map(d => [
                   dataBr(d.dia), diaDaSemana(d.dia),
-                  d.entrada || "—", d.saida || "—",
+                  marcacoesTexto(d),
                   formatMinutos(d.trabalhado_min), formatMinutos(d.jornada_min),
+                  d.saldo_min > 0 ? `${formatMinutos(d.saldo_min)} (${percentualHE(d)})` : "—",
+                  "n/a",
                   formatSaldo(d.saldo_min), situacaoDia(d),
                 ])
-              : [["Sem dias apurados", "", "", "", "", "", "", ""]],
+              : [["Sem dias apurados", "", "", "", "", "", "", "", ""]],
             foot: [[
-              "Total", "", "", "",
+              "Total", "", "",
               formatMinutos(c.trabalhado), formatMinutos(c.previsto),
+              formatMinutos(c.he50 + c.he100), "n/a",
               formatSaldo(c.saldo), `${c.faltas} falta(s)`,
             ]],
             footStyles: {
               fillColor: MARCA.cinzaClaro, textColor: MARCA.navy, fontStyle: "bold" as const,
             },
+            styles: { ...estiloTabela().styles, fontSize: 7.5 },
             columnStyles: {
-              2: { halign: "center" }, 3: { halign: "center" }, 4: { halign: "right" },
-              5: { halign: "right" }, 6: { halign: "right" },
+              0: { cellWidth: 15 }, 1: { cellWidth: 10, halign: "center" },
+              2: { cellWidth: 42 },
+              3: { halign: "right" }, 4: { halign: "right" },
+              5: { halign: "right" }, 6: { halign: "center" }, 7: { halign: "right" },
             },
             didDrawPage: cabecalho,
           });
+
+          // Resumo de horas do mês + banco de horas (seções 3.2 e 3.3)
+          autoTable(doc, {
+            ...estiloTabela((doc as any).lastAutoTable.finalY + 6),
+            head: [["Resumo do mês", "", "Banco de horas", ""]],
+            body: [
+              ["Horas trabalhadas", formatMinutos(c.trabalhado),
+                "Saldo anterior", formatSaldo(banco?.saldo_anterior_minutos ?? 0)],
+              ["Horas normais previstas", formatMinutos(c.previsto),
+                "Créditos do período", formatMinutos(banco?.creditos_minutos ?? c.creditos)],
+              ["Extras 50%", formatMinutos(c.he50),
+                "Débitos do período", formatMinutos(banco?.debitos_minutos ?? c.debitos)],
+              ["Extras 100%", formatMinutos(c.he100),
+                "Compensados", formatMinutos(banco?.compensados_minutos ?? 0)],
+              ["Adicional noturno", "não apurado neste modelo",
+                "Saldo atual", formatSaldo(banco?.saldo_atual_minutos ?? c.saldo)],
+              ["Dias justificados (atestado/férias/afastamento)", String(c.protegidos),
+                "Faltas não justificadas", String(c.faltas)],
+            ],
+            columnStyles: { 1: { halign: "right" }, 3: { halign: "right" } },
+            didDrawPage: cabecalho,
+          });
+
+          // Legenda (3.4) e ciência do colaborador (RN27)
+          let y = (doc as any).lastAutoTable.finalY + 8;
+          const pageH = doc.internal.pageSize.getHeight();
+          if (y > pageH - 60) { doc.addPage(); cabecalho(); y = ALTURA_CABECALHO + 6; }
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.setTextColor(MARCA.navy[0], MARCA.navy[1], MARCA.navy[2]);
+          doc.text("Legenda", 14, y);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+          doc.setFontSize(7);
+          [
+            "H.D. horas do dia · H.N. horas normais previstas · H.E. horas extras · A.N. adicional noturno · Saldo crédito/débito no banco de horas.",
+            "Origem da marcação (Portaria MTP 671/2021): O = marcação original do colaborador; A = inclusão/ajuste posterior pelo RH.",
+            "Ocorrências: Equalização (compensação mensal), DSR (domingo), Sábado, Justificado (atestado/férias/afastamento), Falta, Atraso/débito, Excede limite diário (art. 59 CLT).",
+          ].forEach((linha, i) => {
+            doc.text(doc.splitTextToSize(linha, doc.internal.pageSize.getWidth() - 28), 14, y + 5 + i * 7);
+          });
+
+          y += 26;
+          doc.setFontSize(7.5);
+          doc.setTextColor(30, 41, 59);
+          doc.text(
+            doc.splitTextToSize(
+              "Estou de pleno acordo com o que demonstram as marcações acima, sendo que representam o ocorrido neste período. Ressalvas: ______________________________________________",
+              doc.internal.pageSize.getWidth() - 28,
+            ),
+            14, y,
+          );
+          y += 18;
+          doc.setDrawColor(148, 163, 184);
+          doc.line(14, y, 95, y);
+          doc.line(110, y, 190, y);
+          doc.setFontSize(7);
+          doc.setTextColor(MARCA.cinza[0], MARCA.cinza[1], MARCA.cinza[2]);
+          doc.text(`${c.nome} — colaborador`, 14, y + 4);
+          doc.text("Responsável pelo RH — data ___/___/______", 110, y + 4);
         });
       }
+
 
     } else if (tipoRelatorio === "horas_extras") {
       // O modelo atual apura saldo em minutos, não percentuais: imprimir
