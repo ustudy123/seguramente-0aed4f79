@@ -90,15 +90,21 @@ const hm = (min: number) => {
   return `${h}:${String(m).padStart(2, "0")}`;
 };
 
-/** Marcações em pares por linha — evita que a última batida seja cortada. */
+/**
+ * Marcações em uma única linha (até 4 batidas). Só quebra em pares quando
+ * o dia tem 5+ batidas — assim cada dia ocupa uma única linha da tabela e o
+ * cartão inteiro cabe em uma página.
+ */
 const marcacoesTexto = (marcacoes: CartaoMarcacao[]) => {
   const tokens = marcacoes.map((m) => `${m.hora}-${m.origem === "A" ? "I" : "O"}`);
+  if (tokens.length <= 4) return tokens.join(" ");
   const linhas: string[] = [];
-  for (let i = 0; i < tokens.length; i += 2) {
-    linhas.push(tokens.slice(i, i + 2).join("  "));
+  for (let i = 0; i < tokens.length; i += 4) {
+    linhas.push(tokens.slice(i, i + 4).join(" "));
   }
   return linhas.join("\n");
 };
+
 
 /** Colunas H.C./H.A./F.N./F.J. e o rótulo da ocorrência, na lógica do modelo. */
 function classificarDia(d: CartaoDia) {
