@@ -209,6 +209,15 @@ export function PontoFolhaTab() {
 
   return (
     <div className="space-y-4">
+      <IncluirBancoHorasDialog
+        open={perguntandoBanco}
+        onOpenChange={setPerguntandoBanco}
+        titulo="Incluir banco de horas na exportação?"
+        onConfirm={(comBanco) => {
+          setPerguntandoBanco(false);
+          gerarExportacao(comBanco);
+        }}
+      />
       <div>
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <FileSpreadsheet className="w-5 h-5 text-primary" /> Integração Folha de Pagamento
@@ -243,7 +252,7 @@ export function PontoFolhaTab() {
         </div>
         <div className="space-y-2">
           <Label>&nbsp;</Label>
-          <Button onClick={gerarExportacao} disabled={gerando} className="w-full">
+          <Button onClick={() => setPerguntandoBanco(true)} disabled={gerando} className="w-full">
             <FileDown className="w-4 h-4 mr-2" />
             {gerando ? "Gerando..." : "Exportar"}
           </Button>
