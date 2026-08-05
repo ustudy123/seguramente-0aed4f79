@@ -281,7 +281,6 @@ export function PontoRelatoriosTab() {
 
 
   const [perguntandoBanco, setPerguntandoBanco] = useState(false);
-  const [incluirBanco, setIncluirBanco] = useState(true);
 
   // Cartão Ponto/Espelho podem sair sem o bloco de banco de horas: há folhas
   // que só apuram horas extras.
@@ -294,7 +293,6 @@ export function PontoRelatoriosTab() {
   };
 
   const gerarRelatorio = async (comBanco: boolean) => {
-    setIncluirBanco(comBanco);
     setGerando(true);
     try {
       if (tipoRelatorio === "afd") {
