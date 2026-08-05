@@ -393,6 +393,47 @@ export function PontoFechamentoTab() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog Reabrir */}
+      <Dialog open={showReabrir} onOpenChange={setShowReabrir}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reabrir Período</DialogTitle>
+            <DialogDescription>
+              A competência volta a ficar aberta para correção. Os espelhos ainda não
+              confirmados pelos colaboradores são descartados e serão gerados de novo no
+              próximo fechamento; os já confirmados ou com ressalva permanecem.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg border text-sm space-y-1">
+              <div>
+                <span className="text-muted-foreground">Empresa: </span>
+                <strong>{nomeEmpresa || "Todas as empresas"}</strong>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Competência: </span>
+                <strong>{competencia}</strong>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Motivo da reabertura</Label>
+              <Textarea
+                value={motivoReabertura}
+                onChange={e => setMotivoReabertura(e.target.value)}
+                placeholder="Ex.: apuração incorreta, atestado lançado após o fechamento..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReabrir(false)}>Cancelar</Button>
+            <Button onClick={handleReabrir} disabled={!motivoReabertura.trim() || reabrindoPeriodo}>
+              {reabrindoPeriodo ? "Reabrindo..." : "Confirmar Reabertura"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Ressalva */}
       <Dialog open={showRessalva} onOpenChange={setShowRessalva}>
         <DialogContent>
