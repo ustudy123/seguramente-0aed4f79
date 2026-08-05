@@ -319,40 +319,72 @@ export function PontoRelatoriosTab() {
     });
 
     if (tipoRelatorio === "espelho") {
-      const useEspelhoData = espelhos.length > 0;
-      const head = [["Colaborador", "CPF", "Trabalhado", "Previsto", "Saldo", "Faltas", "Situação"]];
-      let body: any[] = [];
+      const detalhado = await carregarEspelhoDetalhado();
 
-      if (useEspelhoData) {
-        body = espelhos.map(e => [
-          e.colaborador_nome,
-          e.colaborador_cpf,
-          formatMinutos(e.total_trabalhado_minutos ?? 0),
-          formatMinutos(e.total_jornada_prevista_minutos ?? 0),
-          formatSaldo(e.banco_horas_saldo_minutos ?? 0),
-          String(e.total_faltas ?? 0),
-          e.status,
-        ]);
-      } else {
-        const colabs = Array.from(new Set(registrosMes.map(r => r.colaborador_cpf)));
-        body = colabs.map(cpf => {
-          const r = registrosMes.find(reg => reg.colaborador_cpf === cpf);
-          const regsColab = registrosMes.filter(reg => reg.colaborador_cpf === cpf);
-          const totalFaltas = regsColab.filter(reg => reg.status === "falta").length;
-          return [r?.colaborador_nome || "N/A", cpf, "-", "-", "-", String(totalFaltas), "Aberto"];
+      if (detalhado.length === 0) {
+        autoTable(doc, {
+          ...estiloTabela(),
+          head: [["Colaborador"]],
+          body: [["Nenhum registro no período"]],
+          didDrawPage: cabecalho,
         });
       }
 
-      autoTable(doc, {
-        ...estiloTabela(),
-        head,
-        body: body.length > 0 ? body : [["Nenhum registro no período", "", "", "", "", "", ""]],
-        columnStyles: {
-          2: { halign: "right" }, 3: { halign: "right" },
-          4: { halign: "right" }, 5: { halign: "center" },
-        },
-        didDrawPage: cabecalho,
-      });
+      // 1) Resumo da competência — os mesmos números do Banco de Horas.
+      if (detalhado.length > 0) {
+        autoTable(doc, {
+          ...estiloTabela(),
+          head: [["Colaborador", "CPF", "Trabalhado", "Previsto", "Créditos", "Débitos", "Saldo", "Faltas"]],
+          body: detalhado.map(c => [
+            c.nome, c.cpf,
+            formatMinutos(c.trabalhado), formatMinutos(c.previsto),
+            formatMinutos(c.creditos), formatMinutos(c.debitos),
+            formatSaldo(c.saldo), String(c.faltas),
+          ]),
+          columnStyles: {
+            2: { halign: "right" }, 3: { halign: "right" }, 4: { halign: "right" },
+            5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "center" },
+          },
+          didDrawPage: cabecalho,
+        });
+
+        // 2) Detalhamento dia a dia — um bloco por colaborador.
+        detalhado.forEach(c => {
+          doc.addPage();
+          cabecalho();
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(MARCA.navy[0], MARCA.navy[1], MARCA.navy[2]);
+          doc.text(`${c.nome}  ·  CPF ${c.cpf}`, 14, ALTURA_CABECALHO + 2);
+
+          autoTable(doc, {
+            ...estiloTabela(ALTURA_CABECALHO + 6),
+            head: [["Data", "Dia", "Entrada", "Saída", "Trabalhado", "Previsto", "Saldo", "Situação"]],
+            body: c.dias.length > 0
+              ? c.dias.map(d => [
+                  dataBr(d.dia), diaDaSemana(d.dia),
+                  d.entrada || "—", d.saida || "—",
+                  formatMinutos(d.trabalhado_min), formatMinutos(d.jornada_min),
+                  formatSaldo(d.saldo_min), situacaoDia(d),
+                ])
+              : [["Sem dias apurados", "", "", "", "", "", "", ""]],
+            foot: [[
+              "Total", "", "", "",
+              formatMinutos(c.trabalhado), formatMinutos(c.previsto),
+              formatSaldo(c.saldo), `${c.faltas} falta(s)`,
+            ]],
+            footStyles: {
+              fillColor: MARCA.cinzaClaro, textColor: MARCA.navy, fontStyle: "bold" as const,
+            },
+            columnStyles: {
+              2: { halign: "center" }, 3: { halign: "center" }, 4: { halign: "right" },
+              5: { halign: "right" }, 6: { halign: "right" },
+            },
+            didDrawPage: cabecalho,
+          });
+        });
+      }
+
     } else if (tipoRelatorio === "horas_extras") {
       // O modelo atual apura saldo em minutos, não percentuais: imprimir
       // "0h 00min" em HE 50/100 afirmaria que não houve hora extra.
