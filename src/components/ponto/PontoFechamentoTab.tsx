@@ -138,6 +138,13 @@ export function PontoFechamentoTab() {
     setObservacoes("");
   };
 
+  const handleReabrir = async () => {
+    await reabrirPeriodo({ competencia, motivo: motivoReabertura });
+    setShowReabrir(false);
+    setMotivoReabertura("");
+  };
+
+
   const handleConfirmar = async (espelhoId: string) => {
     await confirmarEspelho({ espelhoId });
   };
