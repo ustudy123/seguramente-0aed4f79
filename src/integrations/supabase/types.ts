@@ -24737,11 +24737,16 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: {
+          atrasos_min: number
           dia_equalizacao: string
           dias_com_registro: number
           dias_protegidos: number
           dias_trabalhados: number
           excedente_retido_min: number
+          he_100_min: number
+          he_50_min: number
+          saldo_anterior_min: number
+          saldo_banco_min: number
           saldo_min: number
           total_creditos_min: number
           total_debitos_min: number
@@ -24757,6 +24762,7 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: {
+          atrasos_min: number
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -24765,6 +24771,10 @@ export type Database = {
           dias_protegidos: number
           dias_trabalhados: number
           excedente_retido_min: number
+          he_100_min: number
+          he_50_min: number
+          saldo_anterior_min: number
+          saldo_banco_min: number
           saldo_min: number
           total_creditos_min: number
           total_debitos_min: number
