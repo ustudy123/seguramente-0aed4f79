@@ -21,52 +21,12 @@
 -- desativada para a ativa de mesmo CNPJ.
 -- =====================================================================
 
--- ===================== PARTE 1 — SIMULAÇÃO (leitura) =================
--- Rode primeiro. Mostra o que a Parte 2 faria, sem fazer.
-WITH par AS (
-  SELECT morta.tenant_id,
-         morta.id  AS empresa_morta,
-         viva.id   AS empresa_viva,
-         COALESCE(viva.razao_social, viva.nome_fantasia) AS empresa,
-         viva.cnpj
-  FROM public.empresa_cadastro morta
-  JOIN public.empresa_cadastro viva
-    ON viva.tenant_id = morta.tenant_id
-   AND viva.ativo = true
-   AND regexp_replace(COALESCE(viva.cnpj, ''), '[^0-9]', '', 'g')
-       = regexp_replace(COALESCE(morta.cnpj, ''), '[^0-9]', '', 'g')
-   AND viva.id <> morta.id
-  WHERE morta.ativo = false
-    AND COALESCE(morta.cnpj, '') <> ''
-    AND (SELECT count(*) FROM public.empresa_cadastro v2
-          WHERE v2.tenant_id = morta.tenant_id
-            AND v2.ativo = true
-            AND v2.id <> morta.id
-            AND regexp_replace(COALESCE(v2.cnpj, ''), '[^0-9]', '', 'g')
-                = regexp_replace(COALESCE(morta.cnpj, ''), '[^0-9]', '', 'g')) = 1
-)
-SELECT p.empresa, p.cnpj, p.empresa_morta, p.empresa_viva,
-       count(*) FILTER (WHERE ja_tem_na_viva)     AS marcar_como_duplicada,
-       count(*) FILTER (WHERE NOT ja_tem_na_viva) AS transferir_para_a_ativa
-FROM par p
-JOIN LATERAL (
-  SELECT EXISTS (
-           SELECT 1 FROM public.admissoes b
-           WHERE b.tenant_id = a.tenant_id
-             AND b.empresa_id = p.empresa_viva
-             AND regexp_replace(COALESCE(b.cpf, ''), '[^0-9]', '', 'g')
-                 = regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g')
-         ) AS ja_tem_na_viva
-  FROM public.admissoes a
-  WHERE a.tenant_id = p.tenant_id
-    AND a.empresa_id = p.empresa_morta
-    -- Mesmo filtro da execução: admissão já inativa não é tocada, e
-    -- contá-la aqui faria a simulação prometer mais do que ela faz.
-    AND COALESCE(a.inativo, false) = false
-) x ON true
-GROUP BY 1, 2, 3, 4
-ORDER BY 1, 2;
-
+-- >>> ESTE ARQUIVO ALTERA DADOS. <<<
+-- Rode só depois de conferir os números do
+-- script_empresa_11a_simular.sql.
+--
+-- Nada é apagado: cada linha tocada fica registrada em
+-- admissoes_limpeza_duplicidade, com a empresa de origem e a ação.
 
 -- ===================== PARTE 2 — EXECUÇÃO ============================
 -- Só rode depois de conferir a simulação acima.
