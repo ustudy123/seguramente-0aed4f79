@@ -31,7 +31,7 @@ type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | 
 
 const REPORT_TYPES: { value: ReportType; label: string; desc: string }[] = [
   { value: "cartao_ponto", label: "Cartão Ponto", desc: "Modelo clássico dia a dia (H.D./H.N./H.E./H.C./H.A./F.N./F.J.)" },
-  { value: "espelho", label: "Espelho de Ponto", desc: "Resumo mensal de marcações por colaborador" },
+  { value: "espelho", label: "Espelho de Ponto", desc: "Detalhamento dia a dia por colaborador (modelo legal)" },
   { value: "horas_extras", label: "Horas Extras", desc: "Detalhamento de horas extras do período" },
   { value: "banco_horas", label: "Banco de Horas", desc: "Saldo e movimentações do banco de horas" },
   { value: "absenteismo", label: "Absenteísmo", desc: "Relatório de faltas e atrasos" },
