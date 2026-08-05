@@ -242,7 +242,11 @@ export function PontoFechamentoTab() {
         </div>
         <div className="flex items-center gap-2">
           <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
-          {!isFechado && (
+          {isFechado ? (
+            <Button variant="outline" onClick={() => setShowReabrir(true)}>
+              <Unlock className="w-4 h-4 mr-2" /> Reabrir Período
+            </Button>
+          ) : (
             <Button variant="destructive" onClick={() => setShowFechar(true)}>
               <Lock className="w-4 h-4 mr-2" /> Fechar Período
             </Button>
