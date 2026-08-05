@@ -308,9 +308,9 @@ export function PontoFechamentoTab() {
             </TableHeader>
             <TableBody>
               {(isLoading || loadingPreview) && rowsToShow.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={11} className="text-center py-8">Carregando...</TableCell></TableRow>
               ) : rowsToShow.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                   Nenhum registro de ponto encontrado para {competencia}.
                 </TableCell></TableRow>
               ) : rowsToShow.map(e => (
