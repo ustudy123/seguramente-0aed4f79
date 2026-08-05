@@ -113,6 +113,103 @@ export function PontoRelatoriosTab() {
   // Saldo com sinal (negativo = devendo horas).
   const formatSaldo = (min: number) => formatarHoraMinuto(min || 0);
 
+  // ---------------------------------------------------------------------
+  // Espelho de ponto: dia a dia, da MESMA fonte do Banco de Horas
+  // (`ponto_saldo_dias_competencia`). Antes o espelho lia os totais gravados
+  // em `ponto_espelhos` no fechamento — por isso os dois relatórios não
+  // batiam. Espelho é documento de conferência: precisa mostrar cada dia.
+  // ---------------------------------------------------------------------
+  type DiaEspelho = {
+    dia: string;
+    entrada: string | null;
+    saida: string | null;
+    trabalhado_min: number;
+    jornada_min: number;
+    saldo_min: number;
+    protegido: boolean;
+    equalizacao: boolean;
+    excedente_retido_min: number;
+  };
+
+  const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaDaSemana = (iso: string) => {
+    const [a, m, d] = iso.split("-").map(Number);
+    return DIAS_SEMANA[new Date(a, m - 1, d).getDay()];
+  };
+  const dataBr = (iso: string) => {
+    const [a, m, d] = iso.split("-");
+    return `${d}/${m}/${a}`;
+  };
+
+  const situacaoDia = (d: DiaEspelho) => {
+    if (d.equalizacao) return "Equalização";
+    if (d.protegido) return "Justificado";
+    if (d.trabalhado_min === 0 && d.jornada_min > 0) return "Falta";
+    if (d.trabalhado_min === 0) return "Sem jornada";
+    if (d.excedente_retido_min > 0) return "Excedente retido";
+    if (d.saldo_min > 0) return "Crédito";
+    if (d.saldo_min < 0) return "Débito";
+    return "Regular";
+  };
+
+  const carregarEspelhoDetalhado = async () => {
+    // Quem entra no espelho: os colaboradores do fechamento quando existe;
+    // caso contrário, quem tem marcação na competência.
+    const base = espelhos.length > 0
+      ? espelhos.map((e: any) => ({ nome: e.colaborador_nome, cpf: soDigitos(e.colaborador_cpf) }))
+      : Array.from(new Set(registrosMes.map(r => soDigitos(r.colaborador_cpf)))).map(cpf => ({
+          nome: registrosMes.find(r => soDigitos(r.colaborador_cpf) === cpf)?.colaborador_nome || "N/A",
+          cpf,
+        }));
+
+    const unicos = Array.from(new Map(base.filter(b => b.cpf).map(b => [b.cpf, b])).values())
+      .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
+
+    const resultado: Array<{
+      nome: string; cpf: string; dias: DiaEspelho[];
+      trabalhado: number; previsto: number; creditos: number; debitos: number;
+      saldo: number; faltas: number; protegidos: number;
+    }> = [];
+
+    for (const c of unicos) {
+      const { data, error } = await (supabase.rpc as any)("ponto_saldo_dias_competencia", {
+        p_tenant_id: tenantId,
+        p_colaborador_cpf: c.cpf,
+        p_competencia: competencia,
+      });
+      if (error) throw error;
+
+      const dias: DiaEspelho[] = ((data || []) as any[]).map(d => ({
+        dia: String(d.dia),
+        entrada: d.entrada ? String(d.entrada).substring(0, 5) : null,
+        saida: d.saida ? String(d.saida).substring(0, 5) : null,
+        trabalhado_min: Number(d.trabalhado_min) || 0,
+        jornada_min: Number(d.jornada_min) || 0,
+        saldo_min: Number(d.saldo_min) || 0,
+        protegido: Boolean(d.protegido),
+        equalizacao: Boolean(d.equalizacao),
+        excedente_retido_min: Number(d.excedente_retido_min) || 0,
+      })).sort((a, b) => a.dia.localeCompare(b.dia));
+
+      resultado.push({
+        nome: c.nome,
+        cpf: c.cpf,
+        dias,
+        trabalhado: dias.reduce((s, d) => s + d.trabalhado_min, 0),
+        previsto: dias.reduce((s, d) => s + d.jornada_min, 0),
+        creditos: dias.reduce((s, d) => s + (d.saldo_min > 0 ? d.saldo_min : 0), 0),
+        debitos: dias.reduce((s, d) => s + (d.saldo_min < 0 ? -d.saldo_min : 0), 0),
+        saldo: dias.reduce((s, d) => s + d.saldo_min, 0),
+        faltas: dias.filter(d => !d.protegido && d.jornada_min > 0 && d.trabalhado_min === 0).length,
+        protegidos: dias.filter(d => d.protegido).length,
+      });
+    }
+
+    return resultado;
+  };
+
+
+
 
   const gerarRelatorio = async () => {
     setGerando(true);
@@ -125,7 +222,7 @@ export function PontoRelatoriosTab() {
       if (formatoExport === "pdf") {
         await gerarPDF();
       } else {
-        gerarExcel();
+        await gerarExcel();
       }
     } catch (error) {
       toast.error("Erro ao gerar relatório");
@@ -222,40 +319,72 @@ export function PontoRelatoriosTab() {
     });
 
     if (tipoRelatorio === "espelho") {
-      const useEspelhoData = espelhos.length > 0;
-      const head = [["Colaborador", "CPF", "Trabalhado", "Previsto", "Saldo", "Faltas", "Situação"]];
-      let body: any[] = [];
+      const detalhado = await carregarEspelhoDetalhado();
 
-      if (useEspelhoData) {
-        body = espelhos.map(e => [
-          e.colaborador_nome,
-          e.colaborador_cpf,
-          formatMinutos(e.total_trabalhado_minutos ?? 0),
-          formatMinutos(e.total_jornada_prevista_minutos ?? 0),
-          formatSaldo(e.banco_horas_saldo_minutos ?? 0),
-          String(e.total_faltas ?? 0),
-          e.status,
-        ]);
-      } else {
-        const colabs = Array.from(new Set(registrosMes.map(r => r.colaborador_cpf)));
-        body = colabs.map(cpf => {
-          const r = registrosMes.find(reg => reg.colaborador_cpf === cpf);
-          const regsColab = registrosMes.filter(reg => reg.colaborador_cpf === cpf);
-          const totalFaltas = regsColab.filter(reg => reg.status === "falta").length;
-          return [r?.colaborador_nome || "N/A", cpf, "-", "-", "-", String(totalFaltas), "Aberto"];
+      if (detalhado.length === 0) {
+        autoTable(doc, {
+          ...estiloTabela(),
+          head: [["Colaborador"]],
+          body: [["Nenhum registro no período"]],
+          didDrawPage: cabecalho,
         });
       }
 
-      autoTable(doc, {
-        ...estiloTabela(),
-        head,
-        body: body.length > 0 ? body : [["Nenhum registro no período", "", "", "", "", "", ""]],
-        columnStyles: {
-          2: { halign: "right" }, 3: { halign: "right" },
-          4: { halign: "right" }, 5: { halign: "center" },
-        },
-        didDrawPage: cabecalho,
-      });
+      // 1) Resumo da competência — os mesmos números do Banco de Horas.
+      if (detalhado.length > 0) {
+        autoTable(doc, {
+          ...estiloTabela(),
+          head: [["Colaborador", "CPF", "Trabalhado", "Previsto", "Créditos", "Débitos", "Saldo", "Faltas"]],
+          body: detalhado.map(c => [
+            c.nome, c.cpf,
+            formatMinutos(c.trabalhado), formatMinutos(c.previsto),
+            formatMinutos(c.creditos), formatMinutos(c.debitos),
+            formatSaldo(c.saldo), String(c.faltas),
+          ]),
+          columnStyles: {
+            2: { halign: "right" }, 3: { halign: "right" }, 4: { halign: "right" },
+            5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "center" },
+          },
+          didDrawPage: cabecalho,
+        });
+
+        // 2) Detalhamento dia a dia — um bloco por colaborador.
+        detalhado.forEach(c => {
+          doc.addPage();
+          cabecalho();
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(MARCA.navy[0], MARCA.navy[1], MARCA.navy[2]);
+          doc.text(`${c.nome}  ·  CPF ${c.cpf}`, 14, ALTURA_CABECALHO + 2);
+
+          autoTable(doc, {
+            ...estiloTabela(ALTURA_CABECALHO + 6),
+            head: [["Data", "Dia", "Entrada", "Saída", "Trabalhado", "Previsto", "Saldo", "Situação"]],
+            body: c.dias.length > 0
+              ? c.dias.map(d => [
+                  dataBr(d.dia), diaDaSemana(d.dia),
+                  d.entrada || "—", d.saida || "—",
+                  formatMinutos(d.trabalhado_min), formatMinutos(d.jornada_min),
+                  formatSaldo(d.saldo_min), situacaoDia(d),
+                ])
+              : [["Sem dias apurados", "", "", "", "", "", "", ""]],
+            foot: [[
+              "Total", "", "", "",
+              formatMinutos(c.trabalhado), formatMinutos(c.previsto),
+              formatSaldo(c.saldo), `${c.faltas} falta(s)`,
+            ]],
+            footStyles: {
+              fillColor: MARCA.cinzaClaro, textColor: MARCA.navy, fontStyle: "bold" as const,
+            },
+            columnStyles: {
+              2: { halign: "center" }, 3: { halign: "center" }, 4: { halign: "right" },
+              5: { halign: "right" }, 6: { halign: "right" },
+            },
+            didDrawPage: cabecalho,
+          });
+        });
+      }
+
     } else if (tipoRelatorio === "horas_extras") {
       // O modelo atual apura saldo em minutos, não percentuais: imprimir
       // "0h 00min" em HE 50/100 afirmaria que não houve hora extra.
@@ -392,8 +521,44 @@ export function PontoRelatoriosTab() {
     toast.success("PDF gerado!");
   };
 
-  const gerarExcel = () => {
+  const gerarExcel = async () => {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
+    const wb = XLSX.utils.book_new();
+
+    if (tipoRelatorio === "espelho") {
+      // Duas abas: resumo (mesmos números do Banco de Horas) e dia a dia.
+      const detalhado = await carregarEspelhoDetalhado();
+      const resumo = detalhado.map(c => ({
+        Colaborador: c.nome,
+        CPF: c.cpf,
+        "Trabalhado (min)": c.trabalhado,
+        "Previsto (min)": c.previsto,
+        "Créditos (min)": c.creditos,
+        "Débitos (min)": c.debitos,
+        "Saldo (min)": c.saldo,
+        Faltas: c.faltas,
+        "Dias justificados": c.protegidos,
+        Competência: competencia,
+      }));
+      const diario = detalhado.flatMap(c => c.dias.map(d => ({
+        Colaborador: c.nome,
+        CPF: c.cpf,
+        Data: dataBr(d.dia),
+        "Dia da semana": diaDaSemana(d.dia),
+        Entrada: d.entrada || "",
+        Saída: d.saida || "",
+        "Trabalhado (min)": d.trabalhado_min,
+        "Previsto (min)": d.jornada_min,
+        "Saldo (min)": d.saldo_min,
+        Situação: situacaoDia(d),
+      })));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), "Resumo");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diario), "Dia a dia");
+      XLSX.writeFile(wb, `Espelho_de_Ponto_${competencia}.xlsx`);
+      toast.success("Excel gerado!");
+      return;
+    }
+
     let dados: any[] = [];
 
     if (tipoRelatorio === "banco_horas") {
@@ -407,17 +572,6 @@ export function PontoRelatoriosTab() {
         "Compensados (min)": b.compensados_minutos,
         "Saldo Atual (min)": b.saldo_atual_minutos,
         Competência: b.competencia,
-      }));
-    } else if (espelhos.length > 0) {
-      dados = espelhos.map(e => ({
-        Colaborador: e.colaborador_nome,
-        CPF: e.colaborador_cpf,
-        "HE 50% (min)": e.total_horas_extras_50_minutos,
-        "HE 100% (min)": e.total_horas_extras_100_minutos,
-        "Adic. Noturno (min)": e.total_adicional_noturno_minutos,
-        Faltas: e.total_faltas,
-        "Atrasos (min)": e.total_atrasos_minutos,
-        Status: e.status,
       }));
     } else {
       dados = registrosMes.map(r => ({
@@ -434,11 +588,11 @@ export function PontoRelatoriosTab() {
     }
 
     const ws = XLSX.utils.json_to_sheet(dados);
-    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, titulo);
     XLSX.writeFile(wb, `${titulo.replace(/\s/g, "_")}_${competencia}.xlsx`);
     toast.success("Excel gerado!");
   };
+
 
   return (
     <div className="space-y-4">
