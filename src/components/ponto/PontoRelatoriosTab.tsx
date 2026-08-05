@@ -119,6 +119,13 @@ export function PontoRelatoriosTab() {
   // em `ponto_espelhos` no fechamento — por isso os dois relatórios não
   // batiam. Espelho é documento de conferência: precisa mostrar cada dia.
   // ---------------------------------------------------------------------
+  type MarcacaoDia = {
+    hora: string;
+    tipo: string | null;
+    /** RN26 — origem: O = original do colaborador, A = ajuste do RH. */
+    origem: "O" | "A";
+  };
+
   type DiaEspelho = {
     dia: string;
     entrada: string | null;
@@ -129,28 +136,43 @@ export function PontoRelatoriosTab() {
     protegido: boolean;
     equalizacao: boolean;
     excedente_retido_min: number;
+    marcacoes: MarcacaoDia[];
   };
 
-  const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const DIAS_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
   const diaDaSemana = (iso: string) => {
     const [a, m, d] = iso.split("-").map(Number);
     return DIAS_SEMANA[new Date(a, m - 1, d).getDay()];
   };
+  const ehDomingo = (iso: string) => diaDaSemana(iso) === "DOM";
+  const ehSabado = (iso: string) => diaDaSemana(iso) === "SAB";
   const dataBr = (iso: string) => {
     const [a, m, d] = iso.split("-");
     return `${d}/${m}/${a}`;
   };
 
+  /** RN25 — rótulo de ocorrência do dia. */
   const situacaoDia = (d: DiaEspelho) => {
     if (d.equalizacao) return "Equalização";
-    if (d.protegido) return "Justificado";
+    if (d.excedente_retido_min > 0) return "Excede limite diário";
+    if (d.protegido) return d.trabalhado_min > 0 ? "Justificado (com trabalho)" : "Justificado";
     if (d.trabalhado_min === 0 && d.jornada_min > 0) return "Falta";
-    if (d.trabalhado_min === 0) return "Sem jornada";
-    if (d.excedente_retido_min > 0) return "Excedente retido";
-    if (d.saldo_min > 0) return "Crédito";
-    if (d.saldo_min < 0) return "Débito";
-    return "Regular";
+    if (d.trabalhado_min === 0) return ehDomingo(d.dia) ? "DSR" : ehSabado(d.dia) ? "Sábado" : "Sem jornada";
+    if (d.jornada_min === 0) return ehDomingo(d.dia) ? "DSR trabalhado" : "Trabalho fora da escala";
+    if (d.saldo_min < 0) return "Atraso / débito";
+    if (d.saldo_min > 0) return "Trabalhando (crédito)";
+    return "Trabalhando";
   };
+
+  /** Percentual aplicável ao excedente do dia (RN17 / art. 59 CLT). */
+  const percentualHE = (d: DiaEspelho) =>
+    ehDomingo(d.dia) || d.jornada_min === 0 ? "100%" : "50%";
+
+  /** Marcações do dia formatadas com o indicador de origem (RN26). */
+  const marcacoesTexto = (d: DiaEspelho) =>
+    d.marcacoes.length > 0
+      ? d.marcacoes.map((m) => `${m.hora}${m.origem}`).join("  ")
+      : "—";
 
   const carregarEspelhoDetalhado = async () => {
     // Quem entra no espelho: os colaboradores do fechamento quando existe;
@@ -165,10 +187,31 @@ export function PontoRelatoriosTab() {
     const unicos = Array.from(new Map(base.filter(b => b.cpf).map(b => [b.cpf, b])).values())
       .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
 
+    // RN26 — todas as batidas da competência, com origem rastreável.
+    const ultimoDia = new Date(year, month, 0).getDate();
+    const { data: marcacoesMes } = await fromTable("ponto_marcacoes")
+      .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original")
+      .gte("data_marcacao", `${competencia}-01`)
+      .lte("data_marcacao", `${competencia}-${String(ultimoDia).padStart(2, "0")}`)
+      .order("hora_marcacao") as { data: any[] | null; error: any };
+
+    const porCpfDia = new Map<string, MarcacaoDia[]>();
+    (marcacoesMes || []).forEach((m: any) => {
+      const chave = `${soDigitos(m.colaborador_cpf)}|${m.data_marcacao}`;
+      const lista = porCpfDia.get(chave) || [];
+      lista.push({
+        hora: String(m.hora_marcacao || "").substring(0, 5),
+        tipo: m.tipo_marcacao ?? null,
+        origem: m.marcacao_original === false ? "A" : "O",
+      });
+      porCpfDia.set(chave, lista);
+    });
+
     const resultado: Array<{
       nome: string; cpf: string; dias: DiaEspelho[];
       trabalhado: number; previsto: number; creditos: number; debitos: number;
       saldo: number; faltas: number; protegidos: number;
+      he50: number; he100: number;
     }> = [];
 
     for (const c of unicos) {
@@ -189,6 +232,9 @@ export function PontoRelatoriosTab() {
         protegido: Boolean(d.protegido),
         equalizacao: Boolean(d.equalizacao),
         excedente_retido_min: Number(d.excedente_retido_min) || 0,
+        marcacoes: (porCpfDia.get(`${c.cpf}|${String(d.dia)}`) || [])
+          .slice()
+          .sort((a, b) => a.hora.localeCompare(b.hora)),
       })).sort((a, b) => a.dia.localeCompare(b.dia));
 
       resultado.push({
@@ -202,11 +248,16 @@ export function PontoRelatoriosTab() {
         saldo: dias.reduce((s, d) => s + d.saldo_min, 0),
         faltas: dias.filter(d => !d.protegido && d.jornada_min > 0 && d.trabalhado_min === 0).length,
         protegidos: dias.filter(d => d.protegido).length,
+        // Extras separadas por percentual (RN28): 100% em domingo/dia sem
+        // escala, 50% nos demais.
+        he50: dias.reduce((s, d) => s + (d.saldo_min > 0 && percentualHE(d) === "50%" ? d.saldo_min : 0), 0),
+        he100: dias.reduce((s, d) => s + (d.saldo_min > 0 && percentualHE(d) === "100%" ? d.saldo_min : 0), 0),
       });
     }
 
     return resultado;
   };
+
 
 
 
