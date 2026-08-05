@@ -303,6 +303,22 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     ];
   });
 
+  const pageH = doc.internal.pageSize.getHeight();
+
+  // Espaço reservado abaixo da tabela (painéis + legenda + assinaturas) para
+  // que o cartão de cada colaborador caiba em uma única página.
+  const RESERVA_RODAPE = 76;
+  const espacoTabela = pageH - 14 - inicio - RESERVA_RODAPE;
+
+  // Linhas efetivas: dias com 5+ batidas ocupam mais de uma linha.
+  const linhasEfetivas = corpo.reduce(
+    (acc, l) => acc + String(l[2]).split("\n").length,
+    0,
+  ) + 2; // cabeçalho + totalização
+  const alturaLinha = espacoTabela / Math.max(linhasEfetivas, 1);
+  const padding = alturaLinha < 4.4 ? 0.7 : 1.2;
+  const fonte = Math.min(7, Math.max(4.6, (alturaLinha - 2 * padding) / 0.42));
+
   autoTable(doc, {
     startY: inicio,
     theme: "grid",
@@ -315,33 +331,34 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     ]],
     styles: {
       font: "helvetica",
-      fontSize: 6.8,
-      cellPadding: 1.3,
+      fontSize: fonte,
+      cellPadding: { top: padding, bottom: padding, left: 1, right: 1 },
       lineColor: [226, 232, 240],
       lineWidth: 0.15,
       textColor: [30, 41, 59],
       overflow: "linebreak",
+      valign: "middle",
     },
     headStyles: {
       fillColor: MARCA.azul,
       textColor: MARCA.branco,
       fontStyle: "bold",
-      fontSize: 6.8,
+      fontSize: fonte,
       halign: "center",
     },
     footStyles: {
       fillColor: MARCA.cinzaClaro,
       textColor: MARCA.navy,
       fontStyle: "bold",
-      fontSize: 6.8,
+      fontSize: fonte,
       halign: "right",
     },
     alternateRowStyles: { fillColor: [250, 251, 253] },
     columnStyles: {
-      0: { cellWidth: 12, halign: "center" },
+      0: { cellWidth: 11, halign: "center" },
       1: { cellWidth: 9, halign: "center" },
-      2: { cellWidth: 40, halign: "center" },
-      3: { cellWidth: 31 },
+      2: { cellWidth: 42, halign: "center" },
+      3: { cellWidth: 30 },
       4: { cellWidth: 10, halign: "right" },
       5: { cellWidth: 10, halign: "right" },
       6: { cellWidth: 10, halign: "right" },
@@ -358,7 +375,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
       if (texto === "Falta") dados.cell.styles.textColor = MARCA.vermelho;
       if (texto.startsWith("Soma")) dados.cell.styles.textColor = [22, 101, 52];
     },
-    margin: { left: 12, right: 12, top: 30 },
+    margin: { left: 12, right: 12, top: ALTURA_FAIXA + 5 },
     didDrawPage: () => {
       if (pagina > 1) faixaTitulo(doc, input, pagina);
       pagina += 1;
@@ -367,13 +384,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   // Resumos
   const b = input.banco;
-  let y = (doc as any).lastAutoTable.finalY + 5;
-  const pageH = doc.internal.pageSize.getHeight();
-  if (y > pageH - 70) {
-    doc.addPage();
-    faixaTitulo(doc, input, pagina);
-    y = 32;
-  }
+  let y = (doc as any).lastAutoTable.finalY + 4;
 
   const painel = (
     titulo: string,
@@ -382,28 +393,30 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     largura: number,
     topo: number,
   ) => {
-    const altura = 10 + Math.ceil(itens.length / 2) * 8;
+    const linhas = Math.ceil(itens.length / 2);
+    const altura = 8 + linhas * 5.6;
     doc.setFillColor(...MARCA.navy);
-    doc.roundedRect(x, topo, largura, 7, 1.2, 1.2, "F");
+    doc.roundedRect(x, topo, largura, 6, 1.2, 1.2, "F");
     doc.setFillColor(252, 253, 254);
     doc.setDrawColor(226, 232, 240);
-    doc.rect(x, topo + 7, largura, altura - 7, "FD");
+    doc.rect(x, topo + 6, largura, altura - 6, "FD");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.8);
     doc.setTextColor(...MARCA.branco);
-    doc.text(titulo.toUpperCase(), x + 3, topo + 4.8);
+    doc.text(titulo.toUpperCase(), x + 3, topo + 4.2);
 
     itens.forEach(([rotulo, valor], i) => {
+      if (!rotulo) return;
       const col = i % 2;
       const linhaIdx = Math.floor(i / 2);
       const cx = x + 3 + col * (largura / 2);
-      const cy = topo + 14 + linhaIdx * 8;
+      const cy = topo + 11 + linhaIdx * 5.6;
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(6.6);
+      doc.setFontSize(6);
       doc.setTextColor(...MARCA.cinza);
       doc.text(rotulo, cx, cy);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
+      doc.setFontSize(7);
       doc.setTextColor(...MARCA.navy);
       doc.text(valor, cx + largura / 2 - 6, cy, { align: "right" });
     });
@@ -431,45 +444,41 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     ["", ""],
   ], 12 + largura + 4, largura, y);
 
-  y = Math.max(fim1, fim2) + 6;
+  y = Math.max(fim1, fim2) + 5;
 
   // Legenda
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
+  doc.setFontSize(6.4);
   doc.setTextColor(...MARCA.navy);
   doc.text("Legenda", 12, y);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.4);
+  doc.setFontSize(5.8);
   doc.setTextColor(...MARCA.cinza);
   [
     "H.D. = Total de horas do dia   H.N. = Hora normal (prevista)   H.E. = Hora extra   A.N. = Adicional noturno",
     "H.C. = Hora compensada   H.A. = Hora de ausência   F.N. = Falta não justificada   F.J. = Falta justificada",
     "O = Marcação original   I = Marcação incluída manualmente pelo RH (Portaria MTP 671/2021)",
-  ].forEach((linha, i) => doc.text(linha, 12, y + 4 + i * 3.6));
+  ].forEach((linha, i) => doc.text(linha, 12, y + 3.4 + i * 3));
 
-  y += 18;
-  if (y > pageH - 30) {
-    doc.addPage();
-    faixaTitulo(doc, input, pagina);
-    y = 34;
-  }
+  y += 15;
 
-  doc.setFontSize(7);
+  doc.setFontSize(6.4);
   doc.setTextColor(30, 41, 59);
   doc.text(
     "Estou de pleno acordo com o que demonstram as marcações acima, sendo que representam o ocorrido neste período.",
     12, y,
   );
-  y += 16;
+  y += 12;
   doc.setDrawColor(148, 163, 184);
   doc.setLineWidth(0.3);
   doc.line(16, y, 90, y);
   doc.line(pageW - 90, y, pageW - 16, y);
-  doc.setFontSize(6.8);
+  doc.setFontSize(6.2);
   doc.setTextColor(...MARCA.cinza);
-  doc.text(input.empregado.nome, 53, y + 4, { align: "center" });
-  doc.text("Assinatura da chefia", pageW - 53, y + 4, { align: "center" });
+  doc.text(input.empregado.nome, 53, y + 3.5, { align: "center" });
+  doc.text("Assinatura da chefia", pageW - 53, y + 3.5, { align: "center" });
 
   const total = doc.getNumberOfPages();
   desenharRodape(doc, doc.getCurrentPageInfo().pageNumber, total);
 }
+
