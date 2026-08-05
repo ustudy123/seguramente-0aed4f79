@@ -188,6 +188,33 @@ export function usePontoFechamento() {
           } as never, { onConflict: "tenant_id,colaborador_cpf,competencia" });
       }
 
+
+      // RN29 — o crédito fechado foi pago como hora extra (HE 50/100) no
+      // espelho. Ele não pode continuar no Banco de Horas, senão o mesmo
+      // tempo seria pago duas vezes. Zeramos o crédito e o saldo anterior
+      // positivo; o débito permanece, porque continua devido pelo
+      // colaborador e será compensado nas competências seguintes.
+      let qBanco = fromTable("ponto_banco_horas")
+        .select("id, saldo_anterior_minutos, creditos_minutos, debitos_minutos, compensados_minutos")
+        .eq("tenant_id", tenantId)
+        .eq("competencia", competencia);
+      if (empresaAtivaId) qBanco = qBanco.eq("empresa_id", empresaAtivaId);
+      const { data: bancosComp } = await qBanco as { data: any[] | null };
+
+      for (const b of bancosComp || []) {
+        const anterior = Math.min(Number(b.saldo_anterior_minutos) || 0, 0);
+        const debitos = Number(b.debitos_minutos) || 0;
+        const compensados = Number(b.compensados_minutos) || 0;
+        await fromTable("ponto_banco_horas")
+          .update({
+            saldo_anterior_minutos: anterior,
+            creditos_minutos: 0,
+            saldo_atual_minutos: anterior - debitos - compensados,
+            convertido_extras: true,
+          } as any)
+          .eq("id", b.id);
+      }
+
       return fechamento;
     },
     onSuccess: () => {
