@@ -13,7 +13,8 @@
  *   --brand-navy   215 65% 12%   → 11,  27,  50
  */
 import type jsPDF from "jspdf";
-import logoYourEyes from "@/assets/logo-youreyes.png";
+import logoAsset from "@/assets/logo-youreyes-mark.png.asset.json";
+
 
 export type RGB = [number, number, number];
 
@@ -34,7 +35,7 @@ let logoCache: string | null | undefined;
 export async function carregarLogo(): Promise<string | null> {
   if (logoCache !== undefined) return logoCache;
   try {
-    const resp = await fetch(logoYourEyes);
+    const resp = await fetch(logoAsset.url);
     const blob = await resp.blob();
     logoCache = await new Promise<string>((resolve, reject) => {
       const fr = new FileReader();
