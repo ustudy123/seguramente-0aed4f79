@@ -86,13 +86,14 @@ export function PontoFechamentoTab() {
         colaborador_cpf: r.colaborador_cpf,
         competencia,
         total_horas_normais_minutos: Number(r.total_trabalhado_min) || 0,
-        total_horas_extras_50_minutos: 0,
-        total_horas_extras_100_minutos: 0,
+        // RN28: o crédito do banco de horas é a base de pagamento de HE.
+        total_horas_extras_50_minutos: Number(r.he_50_min) || 0,
+        total_horas_extras_100_minutos: Number(r.he_100_min) || 0,
         total_adicional_noturno_minutos: 0,
         total_faltas: Number(r.total_faltas) || 0,
-        total_atrasos_minutos: 0,
+        total_atrasos_minutos: Number(r.atrasos_min) || 0,
         total_dsr: 0,
-        banco_horas_saldo_minutos: Number(r.saldo_min) || 0,
+        banco_horas_saldo_minutos: Number(r.saldo_banco_min ?? r.saldo_min) || 0,
         total_trabalhado_minutos: Number(r.total_trabalhado_min) || 0,
         total_jornada_prevista_minutos: Number(r.total_jornada_prevista_min) || 0,
         total_creditos_minutos: Number(r.total_creditos_min) || 0,
@@ -191,12 +192,11 @@ export function PontoFechamentoTab() {
     }
     y += 4;
 
-    // Campo que o modelo atual nao apura. Imprimir "0h 00min" aqui seria
-    // afirmar que nao houve hora extra classificada, num documento que o
-    // colaborador assina.
+    // RN28: o crédito do banco de horas é a base de pagamento de hora extra.
+    pdf.text(`Horas extras 50%: ${formatMinutos(espelho.total_horas_extras_50_minutos ?? 0)}`, 20, y); y += 7;
+    pdf.text(`Horas extras 100% (domingo/feriado): ${formatMinutos(espelho.total_horas_extras_100_minutos ?? 0)}`, 20, y); y += 7;
     pdf.setFontSize(8);
-    pdf.text("Horas extras 50%/100% e adicional noturno nao sao apurados neste modelo:", 20, y); y += 4;
-    pdf.text("a apuracao trabalha em saldo de minutos. Consulte a folha para esses valores.", 20, y); y += 10;
+    pdf.text("Adicional noturno nao e apurado neste modelo; consulte a folha.", 20, y); y += 10;
     pdf.setFontSize(10);
 
     if (espelho.status === "confirmado" || espelho.status === "ressalva") {
@@ -298,6 +298,8 @@ export function PontoFechamentoTab() {
                 <TableHead className="text-right">Previsto</TableHead>
                 <TableHead className="text-right">Créditos</TableHead>
                 <TableHead className="text-right">Débitos</TableHead>
+                <TableHead className="text-right">HE 50%</TableHead>
+                <TableHead className="text-right">HE 100%</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead className="text-right">Faltas</TableHead>
                 <TableHead>Status</TableHead>
@@ -306,9 +308,9 @@ export function PontoFechamentoTab() {
             </TableHeader>
             <TableBody>
               {(isLoading || loadingPreview) && rowsToShow.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={11} className="text-center py-8">Carregando...</TableCell></TableRow>
               ) : rowsToShow.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                   Nenhum registro de ponto encontrado para {competencia}.
                 </TableCell></TableRow>
               ) : rowsToShow.map(e => (
@@ -318,6 +320,8 @@ export function PontoFechamentoTab() {
                   <TableCell className="text-right font-mono text-muted-foreground">{formatMinutos(e.total_jornada_prevista_minutos ?? 0)}</TableCell>
                   <TableCell className="text-right font-mono text-green-600">{formatMinutos(e.total_creditos_minutos ?? 0)}</TableCell>
                   <TableCell className="text-right font-mono text-red-600">{formatMinutos(e.total_debitos_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_50_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_100_minutos ?? 0)}</TableCell>
                   <TableCell className={`text-right font-mono font-semibold ${(e.banco_horas_saldo_minutos ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {(e.banco_horas_saldo_minutos ?? 0) >= 0 ? "+" : "-"}{formatMinutos(e.banco_horas_saldo_minutos ?? 0)}
                   </TableCell>
