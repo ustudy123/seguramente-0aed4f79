@@ -54,10 +54,13 @@ export interface CabecalhoOpts {
   subtitulo?: string;
   /** Empresa/cliente a que o relatório se refere. */
   empresa?: string | null;
+  /** CNPJ da empresa/filial, já formatado. */
+  cnpj?: string | null;
   competencia?: string | null;
   geradoEm: string;
   logoDataUrl?: string | null;
 }
+
 
 /** Altura ocupada pelo cabeçalho — use como startY das tabelas. */
 export const ALTURA_CABECALHO = 46;
