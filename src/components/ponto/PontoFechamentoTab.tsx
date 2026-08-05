@@ -320,6 +320,8 @@ export function PontoFechamentoTab() {
                   <TableCell className="text-right font-mono text-muted-foreground">{formatMinutos(e.total_jornada_prevista_minutos ?? 0)}</TableCell>
                   <TableCell className="text-right font-mono text-green-600">{formatMinutos(e.total_creditos_minutos ?? 0)}</TableCell>
                   <TableCell className="text-right font-mono text-red-600">{formatMinutos(e.total_debitos_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_50_minutos ?? 0)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatMinutos(e.total_horas_extras_100_minutos ?? 0)}</TableCell>
                   <TableCell className={`text-right font-mono font-semibold ${(e.banco_horas_saldo_minutos ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {(e.banco_horas_saldo_minutos ?? 0) >= 0 ? "+" : "-"}{formatMinutos(e.banco_horas_saldo_minutos ?? 0)}
                   </TableCell>
