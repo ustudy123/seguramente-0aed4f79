@@ -175,7 +175,7 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
   const x = 12;
   const largura = pageW - 24;
   const topo = 30;
-  const altura = 32;
+  const altura = 39;
 
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
@@ -184,45 +184,55 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
 
   const { empregador: er, empregado: eo } = input;
 
+  // Colunas com largura própria para permitir quebra de linha nos textos longos
+  // (atividade CNAE e endereço costumam estourar a coluna).
+  const colX = [0, largura * 0.42, largura * 0.68];
+  const colW = [
+    largura * 0.42 - 6,
+    largura * 0.26 - 6,
+    largura * 0.32 - 6,
+  ];
+
   const linha = (
     y: number,
     campos: Array<[string, string | null | undefined]>,
-    colunas: number[],
+    maxLinhas = 2,
   ) => {
     campos.forEach(([rotulo, valor], i) => {
       if (!valor) return;
-      const cx = x + 3 + colunas[i];
+      const cx = x + 3 + colX[i];
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.8);
       doc.setTextColor(...MARCA.cinza);
       doc.text(rotulo.toUpperCase(), cx, y);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
+      doc.setFontSize(7.6);
       doc.setTextColor(...MARCA.navy);
-      doc.text(String(valor), cx, y + 4);
+      const linhas = doc.splitTextToSize(String(valor), colW[i]).slice(0, maxLinhas);
+      doc.text(linhas, cx, y + 3.8, { lineHeightFactor: 1.15 });
     });
   };
 
-  const c = [0, largura * 0.42, largura * 0.68];
-  linha(topo + 6, [
+  linha(topo + 5, [
     ["Empregador", er.razaoSocial],
     ["CNPJ", er.cnpj],
     ["Atividade", er.atividade],
-  ], c);
-  linha(topo + 15, [
+  ]);
+  linha(topo + 16, [
     ["Endereço", er.endereco],
     ["Cidade / UF", [er.cidade, er.uf].filter(Boolean).join(" - ") || null],
     ["Categoria", eo.categoria || "Mensalista"],
-  ], c);
+  ]);
 
   doc.setDrawColor(226, 232, 240);
-  doc.line(x + 2, topo + 18.5, x + largura - 2, topo + 18.5);
+  doc.line(x + 2, topo + 27, x + largura - 2, topo + 27);
 
-  linha(topo + 24, [
+  linha(topo + 31, [
     ["Empregado", eo.nome],
     ["CPF", eo.cpf],
     ["Admissão", eo.admissao],
-  ], c);
+  ], 1);
+
 
   const y2 = topo + altura + 5;
   doc.setFont("helvetica", "normal");
