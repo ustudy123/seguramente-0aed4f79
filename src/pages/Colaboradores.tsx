@@ -609,6 +609,14 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                     <span>{colab.departamento}</span>
                   </div>
                 )}
+                {/* Estabelecimento / Obra — ícone distinto do departamento para
+                    que as duas linhas não se confundam quando aparecerem juntas. */}
+                {colab.filial && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <span>{colab.filial}</span>
+                  </div>
+                )}
                 {colab.data_admissao && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="w-4 h-4" />
