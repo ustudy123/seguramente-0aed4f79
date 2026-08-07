@@ -113,8 +113,6 @@ export function MarcacaoBadge({
 
   return (
     <>
-      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) setNovaHora(hora?.substring(0, 5) || ""); }}>
-        <PopoverTrigger asChild>
       <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) { setNovaHora(hora?.substring(0, 5) || ""); setMotivo(""); } }}>
         <PopoverTrigger asChild>
           <button type="button" className={badgeClasses} title="Clique para retificar ou excluir a marcação">
