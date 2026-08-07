@@ -24818,6 +24818,14 @@ export type Database = {
           trabalhado_min: number
         }[]
       }
+      ponto_fechar_competencia_banco: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
       ponto_intervalo_janela_do_dia: {
         Args: {
           p_colaborador_id: string
