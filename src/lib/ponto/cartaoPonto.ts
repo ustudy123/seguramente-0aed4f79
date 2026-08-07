@@ -16,7 +16,7 @@
 import type jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { MARCA, desenharRodape } from "./pdfMarca";
-import { formatarHoraMinuto } from "./formatoHoras";
+import { formatarHoraRelogio } from "./formatoHoras";
 
 export interface CartaoMarcacao {
   hora: string;
@@ -426,7 +426,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
   };
 
   const mostrarBanco = input.incluirBanco !== false;
-  const largura = mostrarBanco ? (pageW - 24 - 4) / 2 : pageW - 24;
+  const largura = pageW - 24;
   const fim1 = painel("Resumo de horas do mês", [
     ["Horas normais", hm(totais.hn) || "00:00"],
     ["Horas trabalhadas", hm(totais.hd) || "00:00"],
@@ -438,16 +438,51 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     ["Faltas justificadas", hm(totais.fj) || "00:00"],
   ], 12, largura, y);
 
-  const fim2 = !mostrarBanco ? fim1 : painel("Resumo do banco de horas", [
-    ["Saldo anterior", formatarHoraMinuto(b?.saldoAnterior ?? 0)],
-    ["Crédito no período", formatarHoraMinuto(b?.creditos ?? totais.he)],
-    ["Débito no período", formatarHoraMinuto(b?.debitos ?? totais.ha)],
-    ["Compensado", formatarHoraMinuto(b?.compensados ?? totais.hc)],
-    ["Saldo atual", formatarHoraMinuto(b?.saldoAtual ?? totais.he - totais.ha)],
-    ["", ""],
-  ], 12 + largura + 4, largura, y);
+  // RN44 — Resumo do Banco de Horas: faixa única ao final do cartão, no
+  // formato de referência da contabilidade (Saldo Anterior / Crédito /
+  // Débito / Saldo Atual em uma só linha). Não depende de coluna de
+  // acumulado diário: a evolução do dia já está na coluna "Ocorrência".
+  y = fim1 + 4;
+  if (mostrarBanco) {
+    const creditos = b?.creditos ?? totais.he;
+    const debitos = b?.debitos ?? totais.ha;
+    const saldoAnterior = b?.saldoAnterior ?? 0;
+    const saldoAtual = b?.saldoAtual ?? saldoAnterior + creditos - debitos;
+    const campos: Array<[string, string]> = [
+      ["Saldo Anterior:", formatarHoraRelogio(saldoAnterior)],
+      ["Crédito Banco de Horas:", formatarHoraRelogio(creditos)],
+      ["Débito Banco de Horas:", formatarHoraRelogio(debitos)],
+      ["Saldo Atual:", formatarHoraRelogio(saldoAtual)],
+    ];
+    const alturaFaixa = 6 + 7;
+    doc.setFillColor(...MARCA.navy);
+    doc.roundedRect(12, y, largura, 6, 1.2, 1.2, "F");
+    doc.setFillColor(252, 253, 254);
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(12, y + 6, largura, alturaFaixa - 6, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.8);
+    doc.setTextColor(...MARCA.branco);
+    doc.text("RESUMO DO BANCO DE HORAS", 15, y + 4.2);
 
-  y = Math.max(fim1, fim2) + 5;
+    const passo = largura / campos.length;
+    campos.forEach(([rotulo, valor], i) => {
+      const cx = 15 + i * passo;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.2);
+      doc.setTextColor(...MARCA.cinza);
+      doc.text(rotulo, cx, y + 10.6);
+      const larguraRotulo = doc.getTextWidth(rotulo);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.2);
+      doc.setTextColor(...MARCA.navy);
+      doc.text(valor, cx + larguraRotulo + 2, y + 10.6);
+    });
+    y += alturaFaixa;
+  }
+
+  y += 5;
+
 
   // Legenda
   doc.setFont("helvetica", "bold");
