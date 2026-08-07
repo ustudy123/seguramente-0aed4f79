@@ -176,12 +176,11 @@ serve(async (req) => {
   if (existingUser) {
     const { data: existingProfile } = await admin
       .from("profiles")
-      .select("id")
+      .select("id, tenant_id")
       .eq("user_id", existingUser.id)
-      .eq("tenant_id", tenantId)
       .maybeSingle();
 
-    if (existingProfile) {
+    if (existingProfile && existingProfile.tenant_id === tenantId) {
       return json({
         ok: true,
         userId: existingUser.id,
@@ -189,7 +188,23 @@ serve(async (req) => {
         alreadyExists: true,
       });
     }
+
+    // Conta já existe e pertence a OUTRA organização. Reaproveitar esse
+    // auth user vincularia o cadastro a um login de outro tenant — o perfil
+    // continuaria no tenant antigo e qualquer operação (definir senha,
+    // reenviar convite) falharia com 403. Bloqueia com mensagem clara.
+    if (existingProfile && existingProfile.tenant_id !== tenantId) {
+      return json(
+        {
+          error:
+            `O e-mail ${email} já possui uma conta vinculada a outra organização no sistema. ` +
+            `Utilize um e-mail diferente para este cadastro.`,
+        },
+        409
+      );
+    }
   }
+
 
   let newUserId: string;
 
