@@ -26,10 +26,11 @@ import {
 } from "@/lib/ponto/pdfMarca";
 import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
 import { gerarAFD671 } from "@/lib/ponto/afd671";
+import { gerarAEJ671, type AejMarcacao, type AejOcorrencia } from "@/lib/ponto/aej671";
 import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
 
 
-type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
+type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd" | "aej";
 
 const REPORT_TYPES: { value: ReportType; label: string; desc: string }[] = [
   { value: "cartao_ponto", label: "Cartão Ponto", desc: "Modelo clássico dia a dia (H.D./H.N./H.E./H.C./H.A./F.N./F.J.)" },
@@ -38,6 +39,7 @@ const REPORT_TYPES: { value: ReportType; label: string; desc: string }[] = [
   { value: "banco_horas", label: "Banco de Horas", desc: "Saldo e movimentações do banco de horas" },
   { value: "absenteismo", label: "Absenteísmo", desc: "Relatório de faltas e atrasos" },
   { value: "afd", label: "AFD (Arquivo Fonte de Dados)", desc: "Arquivo legal conforme Portaria 671" },
+  { value: "aej", label: "AEJ (Arquivo Eletrônico de Jornada)", desc: "Jornada apurada: marcações + ajustes aprovados (Portaria 671)" },
 ];
 
 
@@ -301,6 +303,11 @@ export function PontoRelatoriosTab() {
         return;
       }
 
+      if (tipoRelatorio === "aej") {
+        await gerarAEJ();
+        return;
+      }
+
       if (formatoExport === "pdf") {
         await gerarPDF(comBanco);
       } else {
@@ -383,6 +390,176 @@ export function PontoRelatoriosTab() {
     URL.revokeObjectURL(url);
     toast.success(
       `AFD gerado: ${totais.marcacoes} marcações, ${totais.empregados} empregados (${totais.registros} registros).`,
+    );
+  };
+
+  // AEJ — jornada APURADA da competência: horários contratuais, marcações
+  // originais do REP e ajustes já APROVADOS pelo RH (pendentes/rejeitados
+  // ficam de fora, conforme Portaria MTP 671/2021).
+  const gerarAEJ = async () => {
+    const inicio = `${competencia}-01`;
+    const mes = parseInt(competencia.split("-")[1]);
+    const ano = parseInt(competencia.split("-")[0]);
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const fim = `${competencia}-${String(ultimoDia).padStart(2, "0")}`;
+
+    const filtrarEmpresa = (q: any) => (empresaAtivaId ? q.eq("empresa_id", empresaAtivaId) : q);
+
+    const [marcRes, ajusteRes, escalaRes, atribRes] = await Promise.all([
+      filtrarEmpresa(
+        fromTable("ponto_marcacoes")
+          .select("colaborador_cpf, colaborador_nome, data_marcacao, hora_marcacao")
+          .gte("data_marcacao", inicio)
+          .lte("data_marcacao", fim)
+          .limit(50000),
+      ),
+      filtrarEmpresa(
+        fromTable("ponto_ajustes")
+          .select(
+            "colaborador_cpf, colaborador_nome, data_referencia, tipo_ajuste, hora_solicitada, motivo, dia_inteiro, horas_abonadas, status",
+          )
+          .eq("status", "aprovado")
+          .gte("data_referencia", inicio)
+          .lte("data_referencia", fim)
+          .limit(50000),
+      ),
+      filtrarEmpresa(
+        fromTable("ponto_escalas").select(
+          "id, nome, hora_entrada_padrao, hora_saida_padrao, intervalo_intrajornada_minutos, jornada_diaria_minutos",
+        ),
+      ),
+      fromTable("ponto_escala_atribuicoes")
+        .select("escala_id, colaborador_cpf, data_inicio, data_fim, ativa")
+        .lte("data_inicio", fim)
+        .limit(50000),
+    ]);
+
+    const erro = marcRes.error || ajusteRes.error || escalaRes.error || atribRes.error;
+    if (erro) {
+      toast.error("Erro ao montar AEJ: " + erro.message);
+      return;
+    }
+
+    const marcacoesDb: any[] = marcRes.data || [];
+    const ajustesDb: any[] = ajusteRes.data || [];
+    if (marcacoesDb.length === 0 && ajustesDb.length === 0) {
+      toast.warning("Nenhuma jornada apurada nesta competência.");
+      return;
+    }
+
+    // Empregados: união dos CPFs com movimento no período.
+    const nomePorCpf = new Map<string, string>();
+    [...marcacoesDb, ...ajustesDb].forEach((r) => {
+      const cpf = soDigitos(r.colaborador_cpf);
+      if (cpf.length === 11 && !nomePorCpf.has(cpf)) nomePorCpf.set(cpf, r.colaborador_nome || "");
+    });
+
+    // Horários contratuais e vínculos vigentes no período.
+    const escalas: any[] = escalaRes.data || [];
+    const escalaPorId = new Map(escalas.map((e: any) => [e.id, e]));
+    const atribuicoes = (atribRes.data || []).filter((a: any) => {
+      const cpf = soDigitos(a.colaborador_cpf);
+      if (!nomePorCpf.has(cpf)) return false;
+      return !a.data_fim || a.data_fim >= inicio;
+    });
+    const escalasUsadas = new Set(atribuicoes.map((a: any) => a.escala_id));
+
+    const horarios = escalas
+      .filter((e: any) => escalasUsadas.has(e.id))
+      .map((e: any) => {
+        const entrada = (e.hora_entrada_padrao || "").slice(0, 5) || null;
+        const saida = (e.hora_saida_padrao || "").slice(0, 5) || null;
+        const intervalo = Number(e.intervalo_intrajornada_minutos || 0);
+        // O intervalo é derivado do fim da jornada quando a escala não fixa horário de almoço.
+        const somarMin = (hora: string | null, min: number) => {
+          if (!hora) return null;
+          const [h, m] = hora.split(":").map(Number);
+          const t = h * 60 + m + min;
+          return `${String(Math.floor((t % 1440) / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+        };
+        const inicioIntervalo = entrada && intervalo > 0 ? somarMin(entrada, 4 * 60) : null;
+        return {
+          codigo: String(e.id).slice(0, 8).toUpperCase(),
+          descricao: e.nome || "ESCALA",
+          entrada,
+          saidaIntervalo: inicioIntervalo,
+          retornoIntervalo: somarMin(inicioIntervalo, intervalo),
+          saida,
+          cargaDiariaMinutos: Number(e.jornada_diaria_minutos || 0),
+        };
+      });
+
+    const vinculos = atribuicoes.map((a: any) => ({
+      cpf: soDigitos(a.colaborador_cpf),
+      codigoHorario: String(a.escala_id).slice(0, 8).toUpperCase(),
+      dataInicio: String(a.data_inicio || inicio).slice(0, 10),
+      dataFim: a.data_fim ? String(a.data_fim).slice(0, 10) : null,
+    }));
+    void escalaPorId;
+
+    const marcacoes: AejMarcacao[] = marcacoesDb
+      .filter((m) => soDigitos(m.colaborador_cpf).length === 11)
+      .map((m) => ({
+        cpf: soDigitos(m.colaborador_cpf),
+        data: String(m.data_marcacao).slice(0, 10),
+        hora: String(m.hora_marcacao || "00:00:00"),
+        origem: "O" as const,
+      }));
+
+    const ocorrencias: AejOcorrencia[] = [];
+    ajustesDb.forEach((a) => {
+      const cpf = soDigitos(a.colaborador_cpf);
+      if (cpf.length !== 11) return;
+      const data = String(a.data_referencia).slice(0, 10);
+      // Ajuste de horário aprovado vira marcação origem "A"; abono/dia inteiro vira ocorrência.
+      if (a.hora_solicitada && !a.dia_inteiro) {
+        marcacoes.push({
+          cpf,
+          data,
+          hora: String(a.hora_solicitada),
+          origem: "A",
+          justificativa: a.motivo || "AJUSTE APROVADO",
+        });
+      } else {
+        ocorrencias.push({
+          cpf,
+          data,
+          codigo: String(a.tipo_ajuste || "ABONO").toUpperCase(),
+          minutos: Math.round(Number(a.horas_abonadas || 0) * 60),
+          descricao: a.motivo || "",
+        });
+      }
+    });
+
+    const empresa = empresaPorId(empresaAtivaId);
+    const endereco = [empresa?.endereco, empresa?.numero, empresa?.bairro, empresa?.cidade, empresa?.estado]
+      .filter(Boolean)
+      .join(", ");
+
+    const { conteudo, totais } = gerarAEJ671({
+      empregador: {
+        documento: soDigitos(empresa?.cnpj),
+        razaoSocial: razaoSocialEmpresa(empresaAtivaId) || "YOUREYES",
+        localPrestacao: endereco,
+      },
+      empregados: Array.from(nomePorCpf, ([cpf, nome]) => ({ cpf, nome })),
+      horarios,
+      vinculos,
+      marcacoes,
+      ocorrencias,
+      dataInicial: inicio,
+      dataFinal: fim,
+    });
+
+    const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AEJ_${soDigitos(empresa?.cnpj) || "EMPRESA"}_${competencia.replace("-", "")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(
+      `AEJ gerado: ${totais.marcacoes} marcações (${totais.ajustes} ajustes aprovados), ${totais.ocorrencias} ocorrências, ${totais.empregados} empregados.`,
     );
   };
 
@@ -718,7 +895,7 @@ export function PontoRelatoriosTab() {
         </div>
         <div className="space-y-2">
           <Label>Formato</Label>
-          {tipoRelatorio === "afd" ? (
+          {tipoRelatorio === "afd" || tipoRelatorio === "aej" ? (
             <Input value="TXT (Portaria 671)" disabled />
           ) : (
             <Select value={formatoExport} onValueChange={v => setFormatoExport(v as "pdf" | "excel")}>
@@ -798,6 +975,7 @@ export function PontoRelatoriosTab() {
           <h4 className="font-medium mb-2">📋 Arquivos Legais (Portaria MTP 671/2021)</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• <strong>AFD</strong> — Arquivo Fonte de Dados: registro imutável de todas as marcações (.txt)</li>
+            <li>• <strong>AEJ</strong> — Arquivo Eletrônico de Jornada: jornada apurada com horários contratuais, marcações originais e ajustes aprovados (.txt)</li>
             <li>• <strong>AEFP</strong> — Espelho de Ponto: gerado automaticamente na aba Fechamento</li>
             <li>• Retenção mínima: 5 anos para fiscalização trabalhista</li>
           </ul>
