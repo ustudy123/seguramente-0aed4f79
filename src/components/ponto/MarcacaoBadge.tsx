@@ -31,6 +31,8 @@ export function MarcacaoBadge({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [novaHora, setNovaHora] = useState(hora?.substring(0, 5) || "");
+  const [motivo, setMotivo] = useState("");
+  const motivoValido = motivo.trim().length >= 10;
 
   const badgeClasses = cn(
     "flex items-center justify-between p-2 rounded-lg border transition-all w-full",
