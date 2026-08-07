@@ -408,7 +408,7 @@ export function PontoRelatoriosTab() {
     const [marcRes, ajusteRes, escalaRes, atribRes] = await Promise.all([
       filtrarEmpresa(
         fromTable("ponto_marcacoes")
-          .select("colaborador_cpf, colaborador_nome, data_marcacao, hora_marcacao")
+          .select("colaborador_cpf, colaborador_nome, data_marcacao, hora_marcacao, origem_marcacao")
           .gte("data_marcacao", inicio)
           .lte("data_marcacao", fim)
           .limit(50000),
