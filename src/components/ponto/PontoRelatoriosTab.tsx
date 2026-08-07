@@ -503,7 +503,7 @@ export function PontoRelatoriosTab() {
         cpf: soDigitos(m.colaborador_cpf),
         data: String(m.data_marcacao).slice(0, 10),
         hora: String(m.hora_marcacao || "00:00:00"),
-        origem: "O" as const,
+        origem: (m.origem_marcacao === "A" ? "A" : "O") as "O" | "A",
       }));
 
     const ocorrencias: AejOcorrencia[] = [];
