@@ -204,7 +204,10 @@ export function EquipeTab() {
                   <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@empresa.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Perfil de Acesso</Label>
+                  {/* Papel (admin/gestor/usuário) não é o Perfil de Acesso da
+                      tela de Perfis — o parecer de 07/08 pediu rótulos
+                      distintos para os dois conceitos. */}
+                  <Label>Papel na plataforma</Label>
                   <Select value={role} onValueChange={setRole}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -338,12 +341,12 @@ export function EquipeTab() {
       <Dialog open={!!editUser} onOpenChange={(v) => !v && setEditUser(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Perfil de Acesso</DialogTitle>
-            <DialogDescription>Altere o perfil de {editUser?.nome_completo}</DialogDescription>
+            <DialogTitle>Editar papel na plataforma</DialogTitle>
+            <DialogDescription>Altere o papel de {editUser?.nome_completo} (administrador, gestor ou usuário)</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Novo Perfil</Label>
+              <Label>Novo papel</Label>
               <Select value={editRole} onValueChange={setEditRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
