@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,7 +16,7 @@ interface Props {
   original: boolean;
   podeEditar: boolean;
   editando: boolean;
-  onSalvar: (args: { marcacaoId: string; novaHora: string }) => Promise<unknown>;
+  onSalvar: (args: { marcacaoId: string; novaHora: string; motivo: string }) => Promise<unknown>;
   onExcluir?: (args: { marcacaoId: string }) => Promise<unknown>;
   excluindo?: boolean;
   endereco?: string;
@@ -31,6 +32,8 @@ export function MarcacaoBadge({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [novaHora, setNovaHora] = useState(hora?.substring(0, 5) || "");
+  const [motivo, setMotivo] = useState("");
+  const motivoValido = motivo.trim().length >= 10;
 
   const badgeClasses = cn(
     "flex items-center justify-between p-2 rounded-lg border transition-all w-full",
@@ -111,17 +114,19 @@ export function MarcacaoBadge({
 
   return (
     <>
-      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) setNovaHora(hora?.substring(0, 5) || ""); }}>
+      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) { setNovaHora(hora?.substring(0, 5) || ""); setMotivo(""); } }}>
         <PopoverTrigger asChild>
-          <button type="button" className={badgeClasses} title="Clique para editar ou excluir a marcação">
+          <button type="button" className={badgeClasses} title="Clique para retificar ou excluir a marcação">
             {content}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 max-w-[calc(100vw-2rem)] p-3" align="start" collisionPadding={16}>
+        <PopoverContent className="w-72 max-w-[calc(100vw-2rem)] p-3" align="start" collisionPadding={16}>
           <div className="space-y-3">
             <div>
-              <p className="text-sm font-semibold">Editar marcação</p>
-              <p className="text-[11px] text-muted-foreground">A alteração será registrada como ajuste pelo gestor.</p>
+              <p className="text-sm font-semibold">Retificar marcação</p>
+              <p className="text-[11px] text-muted-foreground">
+                A marcação original é preservada. A retificação gera um ajuste auditável (Portaria MTP 671/2021).
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Nova hora</Label>
@@ -131,6 +136,19 @@ export function MarcacaoBadge({
                 onChange={(e) => setNovaHora(e.target.value)}
                 step={60}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Justificativa (obrigatória)</Label>
+              <Textarea
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                placeholder="Ex.: esquecimento de batida confirmado pelo gestor da área"
+                rows={3}
+                className="text-xs"
+              />
+              <p className={cn("text-[10px]", motivoValido ? "text-muted-foreground" : "text-destructive")}>
+                {motivo.trim().length}/10 caracteres mínimos
+              </p>
             </div>
             <div className="flex items-center gap-2">
               {onExcluir && (
@@ -160,13 +178,13 @@ export function MarcacaoBadge({
               <Button
                 size="sm"
                 className="flex-1 px-2"
-                disabled={editando || !novaHora || novaHora === hora?.substring(0, 5)}
+                disabled={editando || !novaHora || !motivoValido || novaHora === hora?.substring(0, 5)}
                 onClick={async () => {
-                  await onSalvar({ marcacaoId: id, novaHora });
+                  await onSalvar({ marcacaoId: id, novaHora, motivo: motivo.trim() });
                   setOpen(false);
                 }}
               >
-                {editando ? <Loader2 className="w-3 h-3 animate-spin" /> : "Salvar"}
+                {editando ? <Loader2 className="w-3 h-3 animate-spin" /> : "Retificar"}
               </Button>
             </div>
           </div>
