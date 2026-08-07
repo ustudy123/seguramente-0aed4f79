@@ -188,14 +188,31 @@ export function PontoLinksTab() {
       ) : (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
+            <CardTitle className="text-base flex items-center justify-between gap-2">
               <span>Link da empresa</span>
-              <Badge variant={link.ativo ? "default" : "secondary"}>{link.ativo ? "Ativo" : "Inativo"}</Badge>
+              <div className="flex items-center gap-1.5">
+                {expirado ? (
+                  <Badge variant="destructive">Expirado</Badge>
+                ) : expirandoEmBreve ? (
+                  <Badge variant="outline" className="border-amber-500/50 text-amber-600">Expira em {restantes}d</Badge>
+                ) : null}
+                <Badge variant={link.ativo && !expirado ? "default" : "secondary"}>
+                  {link.ativo && !expirado ? "Ativo" : "Inativo"}
+                </Badge>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2.5">
               <code className="text-xs sm:text-sm break-all flex-1">{url}</code>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <CalendarClock className="w-3.5 h-3.5" />
+              <span>
+                Validade do link: <strong>{formatarData(link.data_expiracao)}</strong>
+                {expirado ? " — renove para voltar a registrar por este link." : ""}
+              </span>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -206,11 +223,21 @@ export function PontoLinksTab() {
                 {link.ativo ? <ToggleRight className="w-4 h-4 mr-1.5 text-emerald-500" /> : <ToggleLeft className="w-4 h-4 mr-1.5" />}
                 {link.ativo ? "Desativar" : "Ativar"}
               </Button>
+              <Button
+                variant={expirado || expirandoEmBreve ? "default" : "outline"}
+                size="sm"
+                onClick={() => renovar.mutate(link.id)}
+                disabled={renovar.isPending}
+              >
+                {renovar.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <CalendarClock className="w-3.5 h-3.5 mr-1.5" />}
+                Renovar validade
+              </Button>
               <Button variant="outline" size="sm" onClick={() => handleRegerar(link.id)} disabled={busy}>
                 {busy ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
                 Gerar novo link
               </Button>
             </div>
+
 
             <div className="flex items-start gap-2 rounded-md border border-sky-500/30 bg-sky-500/5 p-3 text-xs text-muted-foreground">
               <ShieldCheck className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
