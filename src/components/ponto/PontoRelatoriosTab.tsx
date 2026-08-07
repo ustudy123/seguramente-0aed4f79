@@ -223,7 +223,7 @@ export function PontoRelatoriosTab() {
       lista.push({
         hora: String(m.hora_marcacao || "").substring(0, 5),
         tipo: m.tipo_marcacao ?? null,
-        origem: m.marcacao_original === false ? "A" : "O",
+        origem: (m.origem_marcacao ?? (m.marcacao_original === false ? "A" : "O")) === "O" ? "O" : "A",
       });
       porCpfDia.set(chave, lista);
     });
