@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search, Trash2, ShieldAlert } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PontoAjuste } from "@/hooks/usePonto";
 import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { abreviacaoDiaSemana } from "@/lib/ponto/diaSemana";
 
 const MOTIVOS_REJEICAO = [
