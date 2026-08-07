@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Link2, Copy, Send, ToggleLeft, ToggleRight, Loader2, ExternalLink, RefreshCw, ShieldCheck, Plus } from "lucide-react";
+import { Link2, Copy, Send, ToggleLeft, ToggleRight, Loader2, ExternalLink, RefreshCw, ShieldCheck, Plus, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +11,22 @@ import { useToast } from "@/hooks/use-toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 
 const SENTINELA_COLAB_ID = "00000000-0000-0000-0000-000000000000";
+const VALIDADE_DIAS = 180;
 
 function generateToken(): string {
   return crypto.randomUUID().replace(/-/g, "").substring(0, 16);
 }
+
+function formatarData(valor?: string | null): string {
+  if (!valor) return "—";
+  return new Date(valor).toLocaleDateString("pt-BR");
+}
+
+function diasRestantes(valor?: string | null): number | null {
+  if (!valor) return null;
+  return Math.ceil((new Date(valor).getTime() - Date.now()) / 86_400_000);
+}
+
 
 function getPontoExternoUrl(token: string): string {
   const customDomain = "https://youreyes.com.br";
