@@ -486,53 +486,44 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   y += 5;
 
-  // O rodapé institucional ocupa os últimos ~14mm da página. Sem essa
-  // reserva, a legenda e a linha de assinatura eram desenhadas por cima
-  // dele em cartões com muitos dias/ocorrências.
-  const LIMITE_UTIL = pageH - 18;
-  const novaPaginaSePreciso = (alturaNecessaria: number) => {
-    if (y + alturaNecessaria <= LIMITE_UTIL) return;
-    doc.addPage();
-    faixaTitulo(doc, input, pagina);
-    pagina += 1;
-    y = ALTURA_FAIXA + 8;
-  };
+  // Um colaborador = uma página. Nada aqui quebra: se a tabela empurrou o
+  // bloco final para baixo, ele é ancorado ao limite útil da página (acima
+  // do rodapé institucional) em vez de gerar uma segunda folha.
+  const ALTURA_BLOCO_FINAL = 44;
+  const LIMITE_UTIL = pageH - 16;
+  y = Math.min(y, LIMITE_UTIL - ALTURA_BLOCO_FINAL);
 
   // Legenda
-  novaPaginaSePreciso(14);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6.4);
   doc.setTextColor(...MARCA.navy);
   doc.text("Legenda", 12, y);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(5.8);
+  doc.setFontSize(5.4);
   doc.setTextColor(...MARCA.cinza);
   [
-    "H.D. = Total de horas do dia   H.N. = Hora normal (prevista)   H.E. = Hora extra   A.N. = Adicional noturno",
-    "H.C. = Hora compensada   H.A. = Hora de ausência   F.N. = Falta não justificada   F.J. = Falta justificada",
-    "O = Marcação original   I = Marcação incluída manualmente pelo RH (Portaria MTP 671/2021)",
-  ].forEach((linha, i) => doc.text(linha, 12, y + 3.4 + i * 3));
+    "H.D. = Total de horas do dia   H.N. = Hora normal (prevista)   H.E. = Hora extra   A.N. = Adicional noturno   H.C. = Hora compensada",
+    "H.A. = Hora de ausência   F.N. = Falta não justificada   F.J. = Falta justificada   O = Marcação original   I = Marcação incluída pelo RH",
+  ].forEach((linha, i) => doc.text(linha, 12, y + 3.2 + i * 2.8));
 
-  y += 15;
+  y += 11;
 
-  // Declaração + assinaturas viajam juntas: quebrar entre elas deixaria a
-  // linha de assinatura órfã no topo da página seguinte.
-  novaPaginaSePreciso(22);
-  doc.setFontSize(6.4);
+  doc.setFontSize(6.2);
   doc.setTextColor(30, 41, 59);
   doc.text(
     "Estou de pleno acordo com o que demonstram as marcações acima, sendo que representam o ocorrido neste período.",
     12, y,
   );
-  y += 12;
+  y += 10;
   doc.setDrawColor(148, 163, 184);
   doc.setLineWidth(0.3);
   doc.line(16, y, 90, y);
   doc.line(pageW - 90, y, pageW - 16, y);
-  doc.setFontSize(6.2);
+  doc.setFontSize(6);
   doc.setTextColor(...MARCA.cinza);
-  doc.text(input.empregado.nome, 53, y + 3.5, { align: "center" });
-  doc.text("Assinatura da chefia", pageW - 53, y + 3.5, { align: "center" });
+  doc.text(input.empregado.nome, 53, y + 3.2, { align: "center" });
+  doc.text("Assinatura da chefia", pageW - 53, y + 3.2, { align: "center" });
+
 
 
   const total = doc.getNumberOfPages();
