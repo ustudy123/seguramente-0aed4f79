@@ -125,6 +125,15 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     });
   };
 
+  const aprovarLote = async (pendentes: PontoAjuste[], observacao?: string) => {
+    // Processa todos menos o último silenciosamente
+    for (let i = 0; i < pendentes.length - 1; i++) {
+      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: true, observacao, multiple: true });
+    }
+    // O último dispara o feedback visual
+    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: true, observacao });
+  };
+
   const handleApprovarDia = async (items: PontoAjuste[]) => {
     const pendentesRaw = items.filter((a) => a.status === "pendente");
     if (pendentesRaw.length === 0) return;
@@ -135,12 +144,23 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
       (a, b) => String(a.hora_solicitada || "").localeCompare(String(b.hora_solicitada || ""))
     );
 
-    // Processa todos menos o último silenciosamente
-    for (let i = 0; i < pendentes.length - 1; i++) {
-      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: true, multiple: true });
+    // Auto-lançamento: exige justificativa antes de enviar ao backend
+    // (o RPC rejeita observação com menos de 10 caracteres).
+    if (pendentes.some(isAutoLancado)) {
+      setItemsAutoAprovar(pendentes);
+      setAutoJustificativa("");
+      setAutoDialogOpen(true);
+      return;
     }
-    // O último dispara o feedback visual
-    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: true });
+
+    await aprovarLote(pendentes);
+  };
+
+  const confirmarAutoAprovacao = async () => {
+    if (itemsAutoAprovar.length === 0) return;
+    await aprovarLote(itemsAutoAprovar, autoJustificativa.trim());
+    setAutoDialogOpen(false);
+    setItemsAutoAprovar([]);
   };
 
   const handleRejeitarDia = (items: PontoAjuste[]) => {
