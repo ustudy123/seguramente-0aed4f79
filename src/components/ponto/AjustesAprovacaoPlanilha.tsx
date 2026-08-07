@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle, XCircle, Paperclip, FileText, Shield, Search, Trash2, ShieldAlert } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PontoAjuste } from "@/hooks/usePonto";
 import { usePontoJustificativas } from "@/hooks/usePontoJustificativas";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { abreviacaoDiaSemana } from "@/lib/ponto/diaSemana";
 
 const MOTIVOS_REJEICAO = [
@@ -57,6 +58,18 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
   const [rejeitarObservacao, setRejeitarObservacao] = useState("");
   const [rejeitarMotivoPredefinido, setRejeitarMotivoPredefinido] = useState("");
   const [itemsParaRejeitar, setItemsParaRejeitar] = useState<PontoAjuste[]>([]);
+
+  // Segregação de funções (Bloco 3 / MTP 671): quem lançou o ajuste só pode
+  // aprová-lo com justificativa registrada; ninguém aprova o próprio ponto.
+  const { user, profile } = useAuthContext();
+  const soDigitos = (v?: string | null) => (v || "").replace(/\D/g, "");
+  const meuCpf = soDigitos((profile as { cpf?: string } | null)?.cpf);
+  const isProprioPonto = (aj: PontoAjuste) =>
+    !!meuCpf && soDigitos(aj.colaborador_cpf) === meuCpf;
+  const isAutoLancado = (aj: PontoAjuste) => !!user?.id && aj.created_by === user.id;
+  const [autoDialogOpen, setAutoDialogOpen] = useState(false);
+  const [autoJustificativa, setAutoJustificativa] = useState("");
+  const [itemsAutoAprovar, setItemsAutoAprovar] = useState<PontoAjuste[]>([]);
 
   // Regra de abono por justificativa (para sinalizar ao aprovador que aprovar
   // aquele item vai abonar o dia).
@@ -112,6 +125,15 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
     });
   };
 
+  const aprovarLote = async (pendentes: PontoAjuste[], observacao?: string) => {
+    // Processa todos menos o último silenciosamente
+    for (let i = 0; i < pendentes.length - 1; i++) {
+      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: true, observacao, multiple: true });
+    }
+    // O último dispara o feedback visual
+    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: true, observacao });
+  };
+
   const handleApprovarDia = async (items: PontoAjuste[]) => {
     const pendentesRaw = items.filter((a) => a.status === "pendente");
     if (pendentesRaw.length === 0) return;
@@ -122,12 +144,23 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
       (a, b) => String(a.hora_solicitada || "").localeCompare(String(b.hora_solicitada || ""))
     );
 
-    // Processa todos menos o último silenciosamente
-    for (let i = 0; i < pendentes.length - 1; i++) {
-      await processarAjuste({ ajusteId: pendentes[i].id, aprovado: true, multiple: true });
+    // Auto-lançamento: exige justificativa antes de enviar ao backend
+    // (o RPC rejeita observação com menos de 10 caracteres).
+    if (pendentes.some(isAutoLancado)) {
+      setItemsAutoAprovar(pendentes);
+      setAutoJustificativa("");
+      setAutoDialogOpen(true);
+      return;
     }
-    // O último dispara o feedback visual
-    await processarAjuste({ ajusteId: pendentes[pendentes.length - 1].id, aprovado: true });
+
+    await aprovarLote(pendentes);
+  };
+
+  const confirmarAutoAprovacao = async () => {
+    if (itemsAutoAprovar.length === 0) return;
+    await aprovarLote(itemsAutoAprovar, autoJustificativa.trim());
+    setAutoDialogOpen(false);
+    setItemsAutoAprovar([]);
   };
 
   const handleRejeitarDia = (items: PontoAjuste[]) => {
@@ -465,7 +498,37 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                   <td className="py-2.5 px-3 text-right align-top">
                                     <div className="flex items-center justify-end gap-1.5 flex-wrap">
                                       {hasPendente ? (
+                                        items.some(isProprioPonto) ? (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700">
+                                                <ShieldAlert className="w-3 h-3" /> Seu próprio ponto
+                                              </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="left" className="max-w-xs">
+                                              <p className="text-xs">
+                                                Segregação de funções: ajustes do seu próprio ponto devem ser analisados
+                                                por outro gestor/RH.
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        ) : (
                                         <>
+                                          {items.some(isAutoLancado) && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700">
+                                                  <ShieldAlert className="w-3 h-3" /> Auto-lançado
+                                                </Badge>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="left" className="max-w-xs">
+                                                <p className="text-xs">
+                                                  Você é o solicitante deste ajuste. A aprovação exige justificativa e fica
+                                                  registrada na auditoria.
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -485,6 +548,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                             <XCircle className="w-3.5 h-3.5 mr-1" /> Rejeitar
                                           </Button>
                                         </>
+                                        )
                                       ) : (
                                         <>
                                           {/* Sem a coluna Status, o selo do dia já processado
@@ -582,6 +646,42 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
             </Button>
             <Button variant="destructive" onClick={confirmarRejeicao} disabled={processando}>
               {processando ? "Processando..." : "Confirmar Rejeição"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Auto-lançamento: solicitante = aprovador (segregação de funções) */}
+      <Dialog open={autoDialogOpen} onOpenChange={setAutoDialogOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600" /> Justifique o auto-lançamento
+            </DialogTitle>
+            <DialogDescription>
+              Você foi quem solicitou {itemsAutoAprovar.length} ajuste(s) deste dia. Para aprovar, registre a
+              justificativa — ela fica gravada na auditoria (Portaria 671 MTP).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            <Label htmlFor="obs-auto" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Justificativa (mínimo 10 caracteres)
+            </Label>
+            <Textarea
+              id="obs-auto"
+              placeholder="Ex.: Correção solicitada pelo colaborador por e-mail, com comprovante anexado."
+              value={autoJustificativa}
+              onChange={(e) => setAutoJustificativa(e.target.value)}
+              className="min-h-[90px]"
+            />
+            <span className="text-[11px] text-muted-foreground">{autoJustificativa.trim().length}/10</span>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setAutoDialogOpen(false)} disabled={processando}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarAutoAprovacao} disabled={processando || autoJustificativa.trim().length < 10}>
+              {processando ? "Processando..." : "Aprovar com justificativa"}
             </Button>
           </DialogFooter>
         </DialogContent>

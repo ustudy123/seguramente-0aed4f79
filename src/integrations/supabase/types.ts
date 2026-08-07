@@ -17647,6 +17647,7 @@ export type Database = {
           anexos: Json
           aprovado_por: string | null
           aprovado_por_nome: string | null
+          auto_lancado: boolean
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -17676,6 +17677,7 @@ export type Database = {
           anexos?: Json
           aprovado_por?: string | null
           aprovado_por_nome?: string | null
+          auto_lancado?: boolean
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -17705,6 +17707,7 @@ export type Database = {
           anexos?: Json
           aprovado_por?: string | null
           aprovado_por_nome?: string | null
+          auto_lancado?: boolean
           colaborador_cpf?: string
           colaborador_id?: string
           colaborador_nome?: string
