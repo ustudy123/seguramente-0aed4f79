@@ -16,7 +16,7 @@
 import type jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { MARCA, desenharRodape } from "./pdfMarca";
-import { formatarHoraMinuto } from "./formatoHoras";
+import { formatarHoraMinuto, formatarHoraRelogio } from "./formatoHoras";
 
 export interface CartaoMarcacao {
   hora: string;
