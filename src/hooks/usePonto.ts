@@ -600,49 +600,41 @@ export function usePonto() {
     },
   });
 
-  // Editar marcação de ponto (gestor/RH) — atualiza hora e marca como ajustada
+  // Retificar marcação (gestor/RH) — a marcação original é imutável:
+  // a correção passa pela RPC que registra ajuste + auditoria (Portaria MTP 671/2021).
   const editarMarcacaoMutation = useMutation({
     mutationFn: async ({
       marcacaoId,
       novaHora,
+      motivo,
     }: {
       marcacaoId: string;
       novaHora: string;
+      motivo: string;
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
-      const hora = novaHora.length === 5 ? `${novaHora}:00` : novaHora;
-      const { error } = await fromTable("ponto_marcacoes")
-        .update({
-          hora_marcacao: hora,
-          marcacao_original: false,
-        } as any)
-        .eq("id", marcacaoId);
-      if (error) throw error;
-
-      // Reconsolida o dia para recalcular total de horas e status no
-      // espelho. Sem isso, a hora mudava na tabela mas o ponto_diario
-      // (total/status) ficava desatualizado até a próxima consolidação.
-      const { data: marc } = await fromTable("ponto_marcacoes")
-        .select("colaborador_cpf, data_marcacao")
-        .eq("id", marcacaoId)
-        .maybeSingle() as { data: { colaborador_cpf: string; data_marcacao: string } | null };
-      if (marc?.colaborador_cpf && marc?.data_marcacao) {
-        await (supabase as any).rpc("consolidar_ponto_diario_manual", {
-          p_tenant_id: tenantId,
-          p_colaborador_cpf: marc.colaborador_cpf,
-          p_data: marc.data_marcacao,
-        });
+      if (!motivo || motivo.trim().length < 10) {
+        throw new Error("Justificativa obrigatória (mínimo 10 caracteres)");
       }
+      const hora = novaHora.length === 5 ? `${novaHora}:00` : novaHora;
+      const { error } = await (supabase as any).rpc("ponto_retificar_marcacao", {
+        p_marcacao_id: marcacaoId,
+        p_nova_hora: hora,
+        p_motivo: motivo.trim(),
+      });
+      if (error) throw error;
       return marcacaoId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
-      toast.success("Marcação atualizada.");
+      queryClient.invalidateQueries({ queryKey: ["ponto-ajustes-pendentes"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-saldo-dias"] });
+      toast.success("Marcação retificada. Ajuste registrado na trilha de auditoria.");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao editar marcação: " + error.message);
+      toast.error("Erro ao retificar marcação: " + error.message);
     },
   });
 
