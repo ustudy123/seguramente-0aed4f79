@@ -107,7 +107,26 @@ export function PontoLinksTab() {
     onError: (e: any) => toast({ title: "Erro ao regerar", description: e.message, variant: "destructive" }),
   });
 
+  const renovar = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("ponto_link_renovar", {
+        p_link_id: id,
+        p_dias: VALIDADE_DIAS,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-link-compartilhado"] });
+      toast({ title: "Validade renovada!", description: `O link volta a valer por ${VALIDADE_DIAS} dias.` });
+    },
+    onError: (e: any) => toast({ title: "Erro ao renovar", description: e.message, variant: "destructive" }),
+  });
+
   const url = link ? getPontoExternoUrl(link.token) : "";
+  const restantes = diasRestantes(link?.data_expiracao);
+  const expirado = restantes !== null && restantes <= 0;
+  const expirandoEmBreve = restantes !== null && restantes > 0 && restantes <= 15;
+
 
   const copyLink = () => {
     navigator.clipboard.writeText(url);
