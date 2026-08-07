@@ -426,7 +426,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
   };
 
   const mostrarBanco = input.incluirBanco !== false;
-  const largura = mostrarBanco ? (pageW - 24 - 4) / 2 : pageW - 24;
+  const largura = pageW - 24;
   const fim1 = painel("Resumo de horas do mês", [
     ["Horas normais", hm(totais.hn) || "00:00"],
     ["Horas trabalhadas", hm(totais.hd) || "00:00"],
