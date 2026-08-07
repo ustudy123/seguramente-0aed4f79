@@ -26,10 +26,11 @@ import {
 } from "@/lib/ponto/pdfMarca";
 import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
 import { gerarAFD671 } from "@/lib/ponto/afd671";
+import { gerarAEJ671, type AejMarcacao, type AejOcorrencia } from "@/lib/ponto/aej671";
 import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
 
 
-type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
+type ReportType = "cartao_ponto" | "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd" | "aej";
 
 const REPORT_TYPES: { value: ReportType; label: string; desc: string }[] = [
   { value: "cartao_ponto", label: "Cartão Ponto", desc: "Modelo clássico dia a dia (H.D./H.N./H.E./H.C./H.A./F.N./F.J.)" },
@@ -38,6 +39,7 @@ const REPORT_TYPES: { value: ReportType; label: string; desc: string }[] = [
   { value: "banco_horas", label: "Banco de Horas", desc: "Saldo e movimentações do banco de horas" },
   { value: "absenteismo", label: "Absenteísmo", desc: "Relatório de faltas e atrasos" },
   { value: "afd", label: "AFD (Arquivo Fonte de Dados)", desc: "Arquivo legal conforme Portaria 671" },
+  { value: "aej", label: "AEJ (Arquivo Eletrônico de Jornada)", desc: "Jornada apurada: marcações + ajustes aprovados (Portaria 671)" },
 ];
 
 
@@ -298,6 +300,11 @@ export function PontoRelatoriosTab() {
     try {
       if (tipoRelatorio === "afd") {
         await gerarAFD();
+        return;
+      }
+
+      if (tipoRelatorio === "aej") {
+        await gerarAEJ();
         return;
       }
 
@@ -718,7 +725,7 @@ export function PontoRelatoriosTab() {
         </div>
         <div className="space-y-2">
           <Label>Formato</Label>
-          {tipoRelatorio === "afd" ? (
+          {tipoRelatorio === "afd" || tipoRelatorio === "aej" ? (
             <Input value="TXT (Portaria 671)" disabled />
           ) : (
             <Select value={formatoExport} onValueChange={v => setFormatoExport(v as "pdf" | "excel")}>
@@ -798,6 +805,7 @@ export function PontoRelatoriosTab() {
           <h4 className="font-medium mb-2">📋 Arquivos Legais (Portaria MTP 671/2021)</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• <strong>AFD</strong> — Arquivo Fonte de Dados: registro imutável de todas as marcações (.txt)</li>
+            <li>• <strong>AEJ</strong> — Arquivo Eletrônico de Jornada: jornada apurada com horários contratuais, marcações originais e ajustes aprovados (.txt)</li>
             <li>• <strong>AEFP</strong> — Espelho de Ponto: gerado automaticamente na aba Fechamento</li>
             <li>• Retenção mínima: 5 anos para fiscalização trabalhista</li>
           </ul>
