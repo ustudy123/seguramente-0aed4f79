@@ -15,7 +15,7 @@ interface Props {
   original: boolean;
   podeEditar: boolean;
   editando: boolean;
-  onSalvar: (args: { marcacaoId: string; novaHora: string }) => Promise<unknown>;
+  onSalvar: (args: { marcacaoId: string; novaHora: string; motivo: string }) => Promise<unknown>;
   onExcluir?: (args: { marcacaoId: string }) => Promise<unknown>;
   excluindo?: boolean;
   endereco?: string;
