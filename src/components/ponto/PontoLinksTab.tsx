@@ -244,6 +244,7 @@ export function PontoLinksTab() {
               <span>
                 A identificação é por CPF e a <strong>selfie é obrigatória</strong> no registro — a foto é a prova de quem bateu o ponto.
                 Geolocalização e horário são capturados automaticamente. Se o link vazar, use “Gerar novo link”.
+                Por exigência da LGPD, todo link tem <strong>validade de {VALIDADE_DIAS} dias</strong> e pode ser renovado a qualquer momento.
               </span>
             </div>
           </CardContent>
@@ -251,8 +252,9 @@ export function PontoLinksTab() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Links antigos por colaborador (se existirem) continuam funcionando normalmente.
+        Links individuais por colaborador são desativados automaticamente quando a pessoa é desligada ou deixa de bater ponto.
       </p>
+
     </motion.div>
   );
 }
