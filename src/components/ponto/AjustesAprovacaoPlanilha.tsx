@@ -59,6 +59,18 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
   const [rejeitarMotivoPredefinido, setRejeitarMotivoPredefinido] = useState("");
   const [itemsParaRejeitar, setItemsParaRejeitar] = useState<PontoAjuste[]>([]);
 
+  // Segregação de funções (Bloco 3 / MTP 671): quem lançou o ajuste só pode
+  // aprová-lo com justificativa registrada; ninguém aprova o próprio ponto.
+  const { user, profile } = useAuthContext();
+  const soDigitos = (v?: string | null) => (v || "").replace(/\D/g, "");
+  const meuCpf = soDigitos((profile as { cpf?: string } | null)?.cpf);
+  const isProprioPonto = (aj: PontoAjuste) =>
+    !!meuCpf && soDigitos(aj.colaborador_cpf) === meuCpf;
+  const isAutoLancado = (aj: PontoAjuste) => !!user?.id && aj.created_by === user.id;
+  const [autoDialogOpen, setAutoDialogOpen] = useState(false);
+  const [autoJustificativa, setAutoJustificativa] = useState("");
+  const [itemsAutoAprovar, setItemsAutoAprovar] = useState<PontoAjuste[]>([]);
+
   // Regra de abono por justificativa (para sinalizar ao aprovador que aprovar
   // aquele item vai abonar o dia).
   const { justificativas } = usePontoJustificativas();
