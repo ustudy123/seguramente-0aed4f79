@@ -25,6 +25,7 @@ import {
   MARCA, ALTURA_CABECALHO, carregarLogo, desenharCabecalho, desenharRodape, estiloTabela,
 } from "@/lib/ponto/pdfMarca";
 import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
+import { gerarAFD671 } from "@/lib/ponto/afd671";
 import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
 
 
