@@ -25,6 +25,7 @@ import {
   MARCA, ALTURA_CABECALHO, carregarLogo, desenharCabecalho, desenharRodape, estiloTabela,
 } from "@/lib/ponto/pdfMarca";
 import { desenharCartaoPonto } from "@/lib/ponto/cartaoPonto";
+import { gerarAFD671 } from "@/lib/ponto/afd671";
 import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
 
 
@@ -313,20 +314,24 @@ export function PontoRelatoriosTab() {
   };
 
   const gerarAFD = async () => {
-    // AFD - Arquivo Fonte de Dados (formato texto conforme Portaria 671)
-    // Puxa marcações REAIS da tabela ponto_marcacoes
+    // AFD posicional (Portaria MTP 671/2021, Anexo I — REP-P).
+    // Puxa marcações REAIS da tabela ponto_marcacoes da empresa ativa.
     const startDate2 = `${competencia}-01`;
     const endMonth2 = parseInt(competencia.split("-")[1]);
     const endYear2 = parseInt(competencia.split("-")[0]);
     const lastDay2 = new Date(endYear2, endMonth2, 0).getDate();
     const endDate2 = `${competencia}-${String(lastDay2).padStart(2, "0")}`;
 
-    const { data: marcacoes, error } = await fromTable("ponto_marcacoes")
-      .select("*")
+    let query = fromTable("ponto_marcacoes")
+      .select("colaborador_cpf, colaborador_nome, data_marcacao, hora_marcacao, hash_marcacao")
       .gte("data_marcacao", startDate2)
       .lte("data_marcacao", endDate2)
       .order("data_marcacao")
-      .order("hora_marcacao") as { data: any[] | null; error: any };
+      .order("hora_marcacao")
+      .limit(50000);
+    if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+    const { data: marcacoes, error } = (await query) as { data: any[] | null; error: any };
 
     if (error) {
       toast.error("Erro ao buscar marcações: " + error.message);
@@ -334,52 +339,53 @@ export function PontoRelatoriosTab() {
     }
 
     const registros = marcacoes || [];
-    let conteudo = "";
-
-    // Registro tipo 1 - Cabeçalho
-    const dataGeracao = format(new Date(), "ddMMyyyy");
-    const horaGeracao = format(new Date(), "HHmmss");
-    // AFD exige CNPJ e razão social do empregador (Portaria 671/MTP).
-    const cnpj = soDigitos(empresaPorId(empresaAtivaId)?.cnpj).padStart(14, "0").slice(0, 14);
-    const razaoSocial = (razaoSocialEmpresa(empresaAtivaId) || "YourEyes").slice(0, 150).padEnd(150);
-
-    conteudo += `1${cnpj}${razaoSocial}${dataGeracao}${horaGeracao}\n`;
-
-    // Registro tipo 2 - Identificação do REP-P
-    conteudo += `2YourEyes REP-P v1.0\n`;
-
-    // Registro tipo 3 - Marcações de ponto (uma por linha)
-    let seq = 0;
-    registros.forEach((m: any) => {
-      seq++;
-      const nsr = String(seq).padStart(10, "0");
-      const tipoReg = "3";
-      const dataMarcacao = (m.data_marcacao || "").replace(/-/g, "");
-      const horaMarcacao = (m.hora_marcacao || "").replace(/:/g, "").substring(0, 4);
-      const cpf = (m.colaborador_cpf || "").replace(/\D/g, "").padStart(11, "0");
-      
-      // Formato: 3 + NSR(10) + Tipo(1) + Data(8) + Hora(4) + CPF(11)
-      conteudo += `${tipoReg}${nsr}1${dataMarcacao}${horaMarcacao}${cpf}\n`;
-    });
-
-    // Registro tipo 9 - Trailer
-    const totalRegistros = String(seq + 2).padStart(10, "0");
-    conteudo += `9${totalRegistros}\n`;
-
-    if (seq === 0) {
+    if (registros.length === 0) {
       toast.warning("Nenhuma marcação encontrada para esta competência.");
       return;
     }
+
+    const empresa = empresaPorId(empresaAtivaId);
+    const endereco = [empresa?.endereco, empresa?.numero, empresa?.bairro, empresa?.cidade, empresa?.estado]
+      .filter(Boolean)
+      .join(", ");
+
+    // Registro tipo 5 exige um empregado por CPF, sem repetição.
+    const porCpf = new Map<string, string>();
+    registros.forEach((m: any) => {
+      const cpf = soDigitos(m.colaborador_cpf);
+      if (cpf.length === 11 && !porCpf.has(cpf)) porCpf.set(cpf, m.colaborador_nome || "");
+    });
+
+    const { conteudo, totais } = await gerarAFD671({
+      empregador: {
+        documento: soDigitos(empresa?.cnpj),
+        razaoSocial: razaoSocialEmpresa(empresaAtivaId) || "YOUREYES",
+        localPrestacao: endereco,
+      },
+      empregados: Array.from(porCpf, ([cpf, nome]) => ({ cpf, nome })),
+      marcacoes: registros.map((m: any) => ({
+        data: String(m.data_marcacao || "").slice(0, 10),
+        hora: String(m.hora_marcacao || "00:00:00"),
+        cpf: soDigitos(m.colaborador_cpf),
+        hash: m.hash_marcacao,
+      })),
+      dataInicial: startDate2,
+      dataFinal: endDate2,
+      identificadorRep: "YOUREYES REP-P",
+    });
 
     const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `AFD_${competencia}.txt`;
+    a.download = `AFD_${soDigitos(empresa?.cnpj) || "EMPRESA"}_${competencia.replace("-", "")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`AFD gerado com ${seq} marcações!`);
+    toast.success(
+      `AFD gerado: ${totais.marcacoes} marcações, ${totais.empregados} empregados (${totais.registros} registros).`,
+    );
   };
+
 
   const gerarPDF = async (comBanco = true) => {
     const doc = new jsPDF();
