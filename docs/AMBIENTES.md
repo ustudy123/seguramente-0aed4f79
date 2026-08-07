@@ -45,25 +45,57 @@ npm run build:production
 
 ## Criar o projeto Supabase de staging
 
-1. No dashboard do Supabase, crie um novo projeto em uma organização separada.
-2. Copie **Project URL** e **anon/public key** (Project Settings > API) para `.env.staging`.
-3. Atualize `VITE_SUPABASE_PROJECT_ID` com o identificador do novo projeto.
+Roteiro completo, na ordem. Nenhum arquivo da aplicação precisa ser alterado — o trabalho é de infraestrutura.
 
-### Sincronizar estrutura do banco
+### 1. Criar o projeto
 
-Aplique todas as migrations existentes no projeto de staging:
+No dashboard do Supabase, crie um novo projeto (ex.: `youreyes-staging`). Anote **Project URL**, **anon/public key** e o **project ref**.
+
+### 2. Preencher `.env.staging`
+
+Substitua os placeholders `<staging-project-id>` e `<staging-anon-key>` pelos valores reais. `VITE_APP_URL` deve apontar para a URL onde o staging será acessado.
+
+### 3. Replicar o schema (706 migrations)
 
 ```bash
-# Usando CLI do Supabase (se configurada localmente)
 supabase link --project-ref <staging-project-id>
 supabase db push
 ```
 
-Ou execute manualmente os arquivos em `supabase/migrations/` no SQL Editor do novo projeto.
+> Rodar as migrations manualmente no SQL Editor não é viável nesse volume — use a CLI.
 
-### Popular dados de teste
+### 4. Deployar as Edge Functions (71 funções)
 
-Após criar a estrutura e um usuário administrador no novo projeto, execute o seed no SQL Editor do staging:
+```bash
+supabase functions deploy --project-ref <staging-project-id>
+```
+
+### 5. Recadastrar os secrets
+
+Secrets **não** são copiados entre projetos. Configure em `Project Settings > Edge Functions > Secrets`:
+
+| Secret | Uso |
+|---|---|
+| `LOVABLE_API_KEY` | Lovable AI Gateway (geração de conteúdo, análises) |
+| `OPENAI_API_KEY` | Extrações e análises com GPT-4o |
+| `RESEND_API_KEY` | Envio de e-mails transacionais |
+| `EMAIL_FROM` | Remetente dos e-mails |
+| `APP_URL` / `SITE_URL` | Links públicos (assinaturas, convites) — apontar para a URL de staging |
+| `WHATSAPI_BASE_URL` / `WHATSAPI_TOKEN` | OTP e ponto via WhatsApp |
+| `MERCADOPAGO_ACCESS_TOKEN` | Cobrança/assinaturas |
+| `CONSULTACRM_KEY` | Consulta de conselhos profissionais |
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` são injetados automaticamente pela plataforma.
+
+> Em staging, use chaves de teste/sandbox sempre que o provedor oferecer (Mercado Pago, WhatsApp), para não disparar cobranças ou mensagens reais.
+
+### 6. Criar os buckets de Storage
+
+Execute `supabase/seeds/staging_buckets.sql` no SQL Editor do staging. Ele cria os 22 buckets com a mesma visibilidade e limites de produção (atestados, documentos, esocial-certificados, ponto-selfies, trilha-conteudo etc.). As policies de `storage.objects` já vêm nas migrations.
+
+### 7. Popular dados de teste
+
+Crie um usuário administrador no staging (Authentication > Users) e execute o seed no SQL Editor:
 
 ```sql
 -- Substitua o UUID abaixo pelo user_id do administrador criado em auth.users
@@ -80,15 +112,14 @@ O seed cria:
 - 20 colaboradores fictícios com CPFs seqüenciais.
 - Contexto de IA (`ai_context`) para testes de geração de funções.
 
-### Edge Functions no staging
+### 8. Validar
 
-Deploye as Edge Functions no ambiente de staging:
-
-```bash
-supabase functions deploy --project-ref <staging-project-id>
-```
-
-Configure os mesmos secrets de produção no staging em `Project Settings > Edge Functions > Secrets`.
+- [ ] Login com o usuário admin.
+- [ ] Empresa ativa carrega e o seletor de empresa funciona.
+- [ ] Módulo Ponto: marcação, apuração e banco de horas.
+- [ ] Geração de um PDF (Cartão Ponto ou Manual de Função).
+- [ ] Uma chamada de IA (Gerar Função com IA) — valida secret + Edge Function.
+- [ ] Upload de um documento — valida bucket + policies.
 
 ## Verificação de ambiente
 
@@ -98,23 +129,27 @@ Para garantir que nenhum valor de produção está hard-coded no código, execut
 rg -n "diayjpsrcerycycyaxst" src/ || echo "Nenhuma referência hard-coded encontrada em src/"
 ```
 
-Resultado esperado: nenhuma correspondência em `src/` (apenas fallbacks removidos). Os únicos arquivos com valores fixos devem ser `.env`, `.env.production` e `supabase/config.toml`.
+Resultado esperado: nenhuma correspondência em `src/`. Os únicos arquivos com valores fixos devem ser `.env`, `.env.production` e `supabase/config.toml`.
 
 ## Checklist antes de publicar
 
 - [ ] `.env` está com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` corretos para o ambiente desejado.
 - [ ] Migrations estão aplicadas no projeto.
 - [ ] Edge Functions estão deployadas e secrets configuradas.
+- [ ] Buckets de Storage criados.
 - [ ] Se for staging, execute `npm run build:staging` e confirme que aponta para o staging.
 - [ ] Nenhuma URL/key de produção foi commitada por engano.
 
 ## Dúvidas comuns
 
 **Posso ter dois bancos na mesma conta Supabase?**
-Sim, cada projeto Supabase é um banco isolado. Você pode ter quantos projetos quiser na mesma conta, respeitando os limites do plano.
+Sim, cada projeto Supabase é um banco isolado. Você pode ter quantos projetos quiser na mesma conta, respeitando os limites do plano. Não é preciso criar outra conta.
 
 **É preciso duas contas Lovable?**
-Não obrigatoriamente. A Lovable pode conectar um projeto por vez. Para testar staging no editor, você precisa alternar a conexão do Supabase nas configurações do projeto. O código compilado, no entanto, aponta para o ambiente escolhido no `.env` do build.
+Não. A Lovable conecta um projeto Supabase por vez — o editor continua apontando para produção. O staging é usado via build local (`npm run build:staging`) ou alternando temporariamente a conexão do Supabase nas configurações do projeto.
+
+**Como publico o staging em um domínio próprio?**
+A Lovable publica um único build por projeto (hoje, produção). Para um `teste.youreyes.com.br`, hospede o resultado de `npm run build:staging` em um host estático (Vercel, Netlify, Cloudflare Pages) apontando para o domínio de teste.
 
 **E o `supabase/config.toml`?**
 Ele mantém o `project_id` de produção como padrão. Quando for trabalhar localmente no staging via CLI, use `supabase link --project-ref <staging-project-id>` para sobrescrever temporariamente.
