@@ -24862,6 +24862,10 @@ export type Database = {
         Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
         Returns: boolean
       }
+      ponto_retificar_marcacao: {
+        Args: { p_marcacao_id: string; p_motivo: string; p_nova_hora: string }
+        Returns: Json
+      }
       ponto_saldo_dia_empresa: {
         Args: { p_data: string; p_empresa_id: string; p_tenant_id: string }
         Returns: {
