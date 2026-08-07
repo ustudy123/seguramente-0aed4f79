@@ -483,8 +483,20 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   y += 5;
 
+  // O rodapé institucional ocupa os últimos ~14mm da página. Sem essa
+  // reserva, a legenda e a linha de assinatura eram desenhadas por cima
+  // dele em cartões com muitos dias/ocorrências.
+  const LIMITE_UTIL = pageH - 18;
+  const novaPaginaSePreciso = (alturaNecessaria: number) => {
+    if (y + alturaNecessaria <= LIMITE_UTIL) return;
+    doc.addPage();
+    faixaTitulo(doc, input, pagina);
+    pagina += 1;
+    y = ALTURA_FAIXA + 8;
+  };
 
   // Legenda
+  novaPaginaSePreciso(14);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6.4);
   doc.setTextColor(...MARCA.navy);
@@ -500,6 +512,9 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   y += 15;
 
+  // Declaração + assinaturas viajam juntas: quebrar entre elas deixaria a
+  // linha de assinatura órfã no topo da página seguinte.
+  novaPaginaSePreciso(22);
   doc.setFontSize(6.4);
   doc.setTextColor(30, 41, 59);
   doc.text(
@@ -515,6 +530,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
   doc.setTextColor(...MARCA.cinza);
   doc.text(input.empregado.nome, 53, y + 3.5, { align: "center" });
   doc.text("Assinatura da chefia", pageW - 53, y + 3.5, { align: "center" });
+
 
   const total = doc.getNumberOfPages();
   desenharRodape(doc, doc.getCurrentPageInfo().pageNumber, total);
