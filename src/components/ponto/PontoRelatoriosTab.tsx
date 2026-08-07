@@ -202,7 +202,7 @@ export function PontoRelatoriosTab() {
     const PAGINA = 1000;
     for (let offset = 0; ; offset += PAGINA) {
       const { data: pagina, error: errMarc } = await fromTable("ponto_marcacoes")
-        .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original")
+        .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original, origem_marcacao")
         .eq("tenant_id", tenantId)
         .gte("data_marcacao", `${competencia}-01`)
         .lte("data_marcacao", `${competencia}-${String(ultimoDia).padStart(2, "0")}`)
