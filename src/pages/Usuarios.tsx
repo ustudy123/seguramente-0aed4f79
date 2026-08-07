@@ -373,13 +373,18 @@ export default function Usuarios() {
 
                     {(() => {
                       const perfil = perfilPorUsuario.get(u.id);
+                      // Ver comentário equivalente em UsuariosContent.tsx: perfil
+                      // de acesso (permissão) é distinto do tipo de usuário
+                      // (natureza), e ausência de perfil precisa dizer isso.
                       return perfil ? (
                         <Badge variant="outline" className="text-xs truncate" style={{ borderColor: perfil.cor, color: perfil.cor }}>
                           <span className="w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ backgroundColor: perfil.cor }} />
                           {perfil.nome}
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <Badge variant="secondary" className="text-xs text-muted-foreground truncate">
+                          Sem perfil
+                        </Badge>
                       );
                     })()}
 

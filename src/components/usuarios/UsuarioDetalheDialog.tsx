@@ -380,6 +380,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
       await refetchPerfilVinculos();
       queryClient.invalidateQueries({ queryKey: ["usuarios"] });
       queryClient.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
+      // A listagem usa outra chave para os mesmos vínculos; sem isto a coluna
+      // Perfil de Acesso segue vazia até recarregar a página.
+      queryClient.invalidateQueries({ queryKey: ["usuarios-perfil-vinculos-lista"] });
     }
 
     setEditando(false);

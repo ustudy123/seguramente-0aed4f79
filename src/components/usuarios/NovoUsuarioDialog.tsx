@@ -15,7 +15,7 @@ import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck, Build
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUsuarios, TIPO_USUARIO_LABELS, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
@@ -82,6 +82,7 @@ interface ColaboradorEncontrado {
 
 export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   const { tenantId } = useAuth();
+  const queryClient = useQueryClient();
   const { createUsuario, createVinculo, usuarios } = useUsuarios();
   const { grupos } = useGruposEconomicos();
   const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
@@ -358,6 +359,14 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           toast.error("Usuário criado, mas falhou ao vincular o perfil de acesso: " + vincError.message);
         }
       }
+
+      // O vínculo era gravado corretamente, mas nenhuma query era invalidada:
+      // a listagem seguia com o cache anterior e a coluna Perfil de Acesso
+      // aparecia vazia para o usuário recém-criado até recarregar a página.
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      queryClient.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios-perfil-vinculos-lista"] });
+      queryClient.invalidateQueries({ queryKey: ["usuario_vinculos"] });
 
       setNovoUsuarioId(usuario.id);
       setEtapa(3);

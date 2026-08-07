@@ -324,6 +324,11 @@ export function usePerfisAcesso() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["perfis_acesso"] });
     qc.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
+    // A listagem de Usuários lê os mesmos vínculos sob outra chave
+    // ("usuarios-perfil-vinculos-lista"). Sem invalidar aqui, ela continua
+    // servindo cache antigo e a coluna Perfil de Acesso aparece vazia até
+    // alguém recarregar a página.
+    qc.invalidateQueries({ queryKey: ["usuarios-perfil-vinculos-lista"] });
     qc.invalidateQueries({ queryKey: ["perfil_audit_log"] });
     qc.invalidateQueries({ queryKey: ["meu_perfil_vinculo"] });
     qc.invalidateQueries({ queryKey: ["minhas_perfil_permissoes"] });

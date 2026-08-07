@@ -300,13 +300,19 @@ export default function UsuariosContent() {
                     </div>
                     {(() => {
                       const perfil = perfilPorUsuario.get(u.id);
+                      // Perfil de acesso (permissão) e tipo de usuário (natureza)
+                      // são coisas distintas. Quando não há perfil atribuído,
+                      // dizer "Sem perfil" é mais honesto que "—", que parecia
+                      // falha de gravação.
                       return perfil ? (
                         <Badge variant="outline" className="text-xs truncate" style={{ borderColor: perfil.cor, color: perfil.cor }}>
                           <span className="w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ backgroundColor: perfil.cor }} />
                           {perfil.nome}
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <Badge variant="secondary" className="text-xs text-muted-foreground truncate">
+                          Sem perfil
+                        </Badge>
                       );
                     })()}
                     <div className="flex items-center gap-1 text-sm">
