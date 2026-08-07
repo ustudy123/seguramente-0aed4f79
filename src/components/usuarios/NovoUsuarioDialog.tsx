@@ -578,6 +578,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     </Select>
                     <p className="text-xs text-muted-foreground">
                       Define o nível de acesso e permissões deste usuário no sistema.
+                      Se nenhum perfil for selecionado, o perfil{" "}
+                      <strong>Colaborador (padrão)</strong> é aplicado
+                      automaticamente — auto-serviço apenas: a pessoa vê o
+                      próprio ponto, atestados e holerites, sem acesso a dados
+                      de outros colaboradores.
                     </p>
                   </div>
 
