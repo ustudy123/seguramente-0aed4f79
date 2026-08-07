@@ -19381,6 +19381,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           marcacao_original: boolean
+          origem_marcacao: string
           selfie_nome: string | null
           selfie_url: string | null
           tenant_id: string
@@ -19409,6 +19410,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           marcacao_original?: boolean
+          origem_marcacao?: string
           selfie_nome?: string | null
           selfie_url?: string | null
           tenant_id: string
@@ -19437,6 +19439,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           marcacao_original?: boolean
+          origem_marcacao?: string
           selfie_nome?: string | null
           selfie_url?: string | null
           tenant_id?: string
@@ -19537,6 +19540,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_retencao_config: {
+        Row: {
+          anos_retencao: number
+          created_at: string
+          empresa_id: string | null
+          expurgo_automatico: boolean
+          id: string
+          observacoes: string | null
+          tenant_id: string
+          ultimo_expurgo_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          anos_retencao?: number
+          created_at?: string
+          empresa_id?: string | null
+          expurgo_automatico?: boolean
+          id?: string
+          observacoes?: string | null
+          tenant_id: string
+          ultimo_expurgo_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anos_retencao?: number
+          created_at?: string
+          empresa_id?: string | null
+          expurgo_automatico?: boolean
+          id?: string
+          observacoes?: string | null
+          tenant_id?: string
+          ultimo_expurgo_em?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       ponto_saldo_fix_intervalo_snapshot: {
         Row: {
@@ -24820,6 +24859,14 @@ export type Database = {
           motivo_ajuste: string
           trabalhado_min: number
         }[]
+      }
+      ponto_expurgar_registros: {
+        Args: {
+          p_empresa_id?: string
+          p_simular?: boolean
+          p_tenant_id: string
+        }
+        Returns: Json
       }
       ponto_fechar_competencia_banco: {
         Args: {
