@@ -307,10 +307,13 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   const pageH = doc.internal.pageSize.getHeight();
 
-  // Espaço reservado abaixo da tabela (painéis + legenda + assinaturas) para
-  // que o cartão de cada colaborador caiba em uma única página.
-  const RESERVA_RODAPE = 76;
+  // Espaço reservado abaixo da tabela para que o cartão de cada colaborador
+  // caiba em UMA única página: painel de horas (30,4) + faixa de banco (17)
+  // + legenda (14) + declaração e assinaturas (30) + rodapé institucional
+  // (14). A tabela se comprime para caber no que sobra — nunca o contrário.
+  const RESERVA_RODAPE = 108;
   const espacoTabela = pageH - 14 - inicio - RESERVA_RODAPE;
+
 
   // Linhas efetivas: dias com 5+ batidas ocupam mais de uma linha.
   const linhasEfetivas = corpo.reduce(
