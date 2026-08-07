@@ -498,7 +498,37 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                   <td className="py-2.5 px-3 text-right align-top">
                                     <div className="flex items-center justify-end gap-1.5 flex-wrap">
                                       {hasPendente ? (
+                                        items.some(isProprioPonto) ? (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700">
+                                                <ShieldAlert className="w-3 h-3" /> Seu próprio ponto
+                                              </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="left" className="max-w-xs">
+                                              <p className="text-xs">
+                                                Segregação de funções: ajustes do seu próprio ponto devem ser analisados
+                                                por outro gestor/RH.
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        ) : (
                                         <>
+                                          {items.some(isAutoLancado) && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700">
+                                                  <ShieldAlert className="w-3 h-3" /> Auto-lançado
+                                                </Badge>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="left" className="max-w-xs">
+                                                <p className="text-xs">
+                                                  Você é o solicitante deste ajuste. A aprovação exige justificativa e fica
+                                                  registrada na auditoria.
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -518,6 +548,7 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
                                             <XCircle className="w-3.5 h-3.5 mr-1" /> Rejeitar
                                           </Button>
                                         </>
+                                        )
                                       ) : (
                                         <>
                                           {/* Sem a coluna Status, o selo do dia já processado
