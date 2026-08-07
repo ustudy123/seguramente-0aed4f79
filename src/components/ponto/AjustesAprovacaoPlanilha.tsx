@@ -650,6 +650,42 @@ export function AjustesAprovacaoPlanilha({ ajustes, processarAjuste, processando
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Auto-lançamento: solicitante = aprovador (segregação de funções) */}
+      <Dialog open={autoDialogOpen} onOpenChange={setAutoDialogOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600" /> Justifique o auto-lançamento
+            </DialogTitle>
+            <DialogDescription>
+              Você foi quem solicitou {itemsAutoAprovar.length} ajuste(s) deste dia. Para aprovar, registre a
+              justificativa — ela fica gravada na auditoria (Portaria 671 MTP).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            <Label htmlFor="obs-auto" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Justificativa (mínimo 10 caracteres)
+            </Label>
+            <Textarea
+              id="obs-auto"
+              placeholder="Ex.: Correção solicitada pelo colaborador por e-mail, com comprovante anexado."
+              value={autoJustificativa}
+              onChange={(e) => setAutoJustificativa(e.target.value)}
+              className="min-h-[90px]"
+            />
+            <span className="text-[11px] text-muted-foreground">{autoJustificativa.trim().length}/10</span>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setAutoDialogOpen(false)} disabled={processando}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarAutoAprovacao} disabled={processando || autoJustificativa.trim().length < 10}>
+              {processando ? "Processando..." : "Aprovar com justificativa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }
