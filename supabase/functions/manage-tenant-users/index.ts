@@ -256,7 +256,18 @@ serve(async (req) => {
       .eq("user_id", userId)
       .eq("tenant_id", tenantId)
       .maybeSingle();
-    if (!targetProfile) return json({ error: "Usuário não pertence a este tenant" }, 403);
+    if (!targetProfile) {
+      return json(
+        {
+          error:
+            "A conta de login deste usuário pertence a outra organização. " +
+            "Desvincule o acesso e cadastre um e-mail exclusivo desta empresa para definir a senha.",
+          code: "auth_outro_tenant",
+        },
+        403
+      );
+    }
+
 
     // Cannot set password for owner (unless superadmin)
     const { data: targetRoles } = await admin
