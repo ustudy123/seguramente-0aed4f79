@@ -24850,6 +24850,11 @@ export type Database = {
           tol_min: number
         }[]
       }
+      ponto_link_renovar: {
+        Args: { p_dias?: number; p_link_id: string }
+        Returns: string
+      }
+      ponto_links_revogar_desligados: { Args: never; Returns: number }
       ponto_materializar_faltas: {
         Args: { p_fim?: string; p_ini: string; p_tenant_id?: string }
         Returns: Json
