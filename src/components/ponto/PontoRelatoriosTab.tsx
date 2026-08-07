@@ -202,7 +202,7 @@ export function PontoRelatoriosTab() {
     const PAGINA = 1000;
     for (let offset = 0; ; offset += PAGINA) {
       const { data: pagina, error: errMarc } = await fromTable("ponto_marcacoes")
-        .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original")
+        .select("colaborador_cpf, data_marcacao, hora_marcacao, tipo_marcacao, marcacao_original, origem_marcacao")
         .eq("tenant_id", tenantId)
         .gte("data_marcacao", `${competencia}-01`)
         .lte("data_marcacao", `${competencia}-${String(ultimoDia).padStart(2, "0")}`)
@@ -223,7 +223,7 @@ export function PontoRelatoriosTab() {
       lista.push({
         hora: String(m.hora_marcacao || "").substring(0, 5),
         tipo: m.tipo_marcacao ?? null,
-        origem: m.marcacao_original === false ? "A" : "O",
+        origem: (m.origem_marcacao ?? (m.marcacao_original === false ? "A" : "O")) === "O" ? "O" : "A",
       });
       porCpfDia.set(chave, lista);
     });
@@ -408,7 +408,7 @@ export function PontoRelatoriosTab() {
     const [marcRes, ajusteRes, escalaRes, atribRes] = await Promise.all([
       filtrarEmpresa(
         fromTable("ponto_marcacoes")
-          .select("colaborador_cpf, colaborador_nome, data_marcacao, hora_marcacao")
+          .select("colaborador_cpf, colaborador_nome, data_marcacao, hora_marcacao, origem_marcacao")
           .gte("data_marcacao", inicio)
           .lte("data_marcacao", fim)
           .limit(50000),
@@ -503,7 +503,7 @@ export function PontoRelatoriosTab() {
         cpf: soDigitos(m.colaborador_cpf),
         data: String(m.data_marcacao).slice(0, 10),
         hora: String(m.hora_marcacao || "00:00:00"),
-        origem: "O" as const,
+        origem: (m.origem_marcacao === "A" ? "A" : "O") as "O" | "A",
       }));
 
     const ocorrencias: AejOcorrencia[] = [];
