@@ -18,7 +18,7 @@ describe("validarElegibilidadeGHE", () => {
     expect(
       validarElegibilidadeGHE({
         isEdicao: false,
-        vinculos: 0,
+        vinculos: 1,
         elegiveis: 0,
         baseRespondentes: 0,
         ausenciasJustificadas: 0,
