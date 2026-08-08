@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
-import { MIN_ELEGIVEIS_GHE, validarElegibilidadeGHE } from "@/lib/psicossocial-ghe";
+import { MIN_ELEGIVEIS_GHE, empresaAbaixoDoMinimo, validarElegibilidadeGHE } from "@/lib/psicossocial-ghe";
 import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
 
 /** Mínimo absoluto de respostas para liberar resultados (ISO 45003 / COPSOQ III) */
