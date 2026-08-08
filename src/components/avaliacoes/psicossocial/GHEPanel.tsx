@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
-import { MIN_ELEGIVEIS_GHE, validarElegibilidadeGHE } from "@/lib/psicossocial-ghe";
+import { MIN_ELEGIVEIS_GHE, empresaAbaixoDoMinimo, validarElegibilidadeGHE } from "@/lib/psicossocial-ghe";
 import { GHE_CATEGORIAS, type GHECategoria, type GHETemplate } from "./gheCatalog";
 
 /** Mínimo absoluto de respostas para liberar resultados (ISO 45003 / COPSOQ III) */
@@ -227,6 +227,17 @@ export function GHEPanel() {
     }).length;
   }, [form.pairs, admissoesEmpresa, cargosById, deptById]);
 
+  /** Universo elegível do CNPJ inteiro — define se o mínimo de anonimato é atingível. */
+  const totalElegiveisEmpresa = useMemo(
+    () =>
+      admissoesEmpresa.filter((a) => {
+        const status = (a.status || "").toLowerCase();
+        return !(status && ["desligado", "demitido", "inativo"].includes(status));
+      }).length,
+    [admissoesEmpresa],
+  );
+  const empresaPequena = empresaAbaixoDoMinimo(totalElegiveisEmpresa);
+
   const baseRespondentesForm = Math.max(0, elegiveisForm - Math.max(0, form.ausenciasJustificadas));
   const minRespostasForm = calcMinRespostas(elegiveisForm, form.ausenciasJustificadas, form.percentualMinimo);
 
@@ -243,8 +254,10 @@ export function GHEPanel() {
         elegiveis: elegiveisForm,
         baseRespondentes: baseRespondentesForm,
         ausenciasJustificadas: f.ausenciasJustificadas,
+        totalElegiveisEmpresa,
       });
       if (erroElegibilidade) throw new Error(erroElegibilidade);
+
       const payloadBase = {
         codigo: f.codigo.trim(),
         nome: f.nome.trim(),
@@ -796,7 +809,17 @@ export function GHEPanel() {
                 </div>
               </div>
 
-              {elegiveisForm > 0 && elegiveisForm < MIN_RESPOSTAS_ABS && (
+              {empresaPequena && (
+                <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 border rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Empresa com {totalElegiveisEmpresa} colaborador(es) elegível(is) — abaixo de {MIN_RESPOSTAS_ABS}.
+                    A criação do GHE está liberada para permitir o Plano de Ação; o anonimato é tratado na liberação
+                    dos resultados, com análise qualitativa quando não houver base estatística.
+                  </span>
+                </div>
+              )}
+              {!empresaPequena && elegiveisForm > 0 && elegiveisForm < MIN_RESPOSTAS_ABS && (
                 <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
@@ -812,7 +835,7 @@ export function GHEPanel() {
                   </span>
                 </div>
               )}
-              {elegiveisForm >= MIN_RESPOSTAS_ABS && baseRespondentesForm < MIN_RESPOSTAS_ABS && (
+              {!empresaPequena && elegiveisForm >= MIN_RESPOSTAS_ABS && baseRespondentesForm < MIN_RESPOSTAS_ABS && (
                 <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
@@ -820,6 +843,7 @@ export function GHEPanel() {
                   </span>
                 </div>
               )}
+
             </div>
 
 
