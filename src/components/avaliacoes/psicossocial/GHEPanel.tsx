@@ -809,7 +809,17 @@ export function GHEPanel() {
                 </div>
               </div>
 
-              {elegiveisForm > 0 && elegiveisForm < MIN_RESPOSTAS_ABS && (
+              {empresaPequena && (
+                <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 border rounded-md p-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Empresa com {totalElegiveisEmpresa} colaborador(es) elegível(is) — abaixo de {MIN_RESPOSTAS_ABS}.
+                    A criação do GHE está liberada para permitir o Plano de Ação; o anonimato é tratado na liberação
+                    dos resultados, com análise qualitativa quando não houver base estatística.
+                  </span>
+                </div>
+              )}
+              {!empresaPequena && elegiveisForm > 0 && elegiveisForm < MIN_RESPOSTAS_ABS && (
                 <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
@@ -825,7 +835,7 @@ export function GHEPanel() {
                   </span>
                 </div>
               )}
-              {elegiveisForm >= MIN_RESPOSTAS_ABS && baseRespondentesForm < MIN_RESPOSTAS_ABS && (
+              {!empresaPequena && elegiveisForm >= MIN_RESPOSTAS_ABS && baseRespondentesForm < MIN_RESPOSTAS_ABS && (
                 <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
@@ -833,6 +843,7 @@ export function GHEPanel() {
                   </span>
                 </div>
               )}
+
             </div>
 
 
