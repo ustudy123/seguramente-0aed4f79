@@ -24308,6 +24308,7 @@ export type Database = {
         }[]
       }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
+      cpf_do_usuario_logado: { Args: never; Returns: string }
       cpf_valido: { Args: { p_cpf: string }; Returns: boolean }
       current_user_tenant_id: { Args: never; Returns: string }
       delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
@@ -24605,6 +24606,14 @@ export type Database = {
       }
       obter_contrato_publico: { Args: { _token: string }; Returns: Json }
       obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
+      perfil_padrao_colaborador: {
+        Args: { p_tenant_id: string }
+        Returns: string
+      }
+      perfil_permite_modulo: {
+        Args: { p_modulos: string[]; p_tenant_id: string }
+        Returns: boolean
+      }
       pode_excluir_registro_ponto: {
         Args: { _tenant_id: string }
         Returns: boolean
@@ -26802,6 +26811,56 @@ export type Database = {
         }
       }
       qa_caso_org_022: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_perfil_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_perfil_002: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_perfil_003: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_perfil_004: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_perfil_005: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
