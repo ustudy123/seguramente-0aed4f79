@@ -227,6 +227,17 @@ export function GHEPanel() {
     }).length;
   }, [form.pairs, admissoesEmpresa, cargosById, deptById]);
 
+  /** Universo elegível do CNPJ inteiro — define se o mínimo de anonimato é atingível. */
+  const totalElegiveisEmpresa = useMemo(
+    () =>
+      admissoesEmpresa.filter((a) => {
+        const status = (a.status || "").toLowerCase();
+        return !(status && ["desligado", "demitido", "inativo"].includes(status));
+      }).length,
+    [admissoesEmpresa],
+  );
+  const empresaPequena = empresaAbaixoDoMinimo(totalElegiveisEmpresa);
+
   const baseRespondentesForm = Math.max(0, elegiveisForm - Math.max(0, form.ausenciasJustificadas));
   const minRespostasForm = calcMinRespostas(elegiveisForm, form.ausenciasJustificadas, form.percentualMinimo);
 
@@ -243,8 +254,10 @@ export function GHEPanel() {
         elegiveis: elegiveisForm,
         baseRespondentes: baseRespondentesForm,
         ausenciasJustificadas: f.ausenciasJustificadas,
+        totalElegiveisEmpresa,
       });
       if (erroElegibilidade) throw new Error(erroElegibilidade);
+
       const payloadBase = {
         codigo: f.codigo.trim(),
         nome: f.nome.trim(),
