@@ -38,3 +38,30 @@ describe("validarElegibilidadeGHE", () => {
     ).toContain("apenas 4");
   });
 });
+describe("empresas abaixo do mínimo", () => {
+  it("libera a criação de GHE quando a empresa tem menos de 5 elegíveis", () => {
+    expect(
+      validarElegibilidadeGHE({
+        isEdicao: false,
+        vinculos: 2,
+        elegiveis: 3,
+        baseRespondentes: 3,
+        ausenciasJustificadas: 0,
+        totalElegiveisEmpresa: 3,
+      }),
+    ).toBeNull();
+  });
+
+  it("mantém a regra quando a empresa tem 5 ou mais elegíveis", () => {
+    expect(
+      validarElegibilidadeGHE({
+        isEdicao: false,
+        vinculos: 2,
+        elegiveis: 3,
+        baseRespondentes: 3,
+        ausenciasJustificadas: 0,
+        totalElegiveisEmpresa: 12,
+      }),
+    ).toContain("mínimo permitido é 5");
+  });
+});
