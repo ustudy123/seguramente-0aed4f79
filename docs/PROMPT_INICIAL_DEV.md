@@ -29,7 +29,4 @@ Leia o CLAUDE.md e siga as regras da casa à risca — em especial:
 Tipo: [bug / ajuste / funcionalidade nova / investigação]
 Módulo: [ponto / saúde / psicossocial / admissões / financeiro / outro]
 Descrição: [o que acontece hoje e o que deveria acontecer]
-Contexto real (se for bug de cliente): [empresa/colaborador/data — só como
-pista de investigação; recrie a condição com dados fictícios no staging]
-Urgência: [normal / urgente]
 ```
