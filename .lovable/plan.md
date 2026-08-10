@@ -1,158 +1,54 @@
-# Conectar um segundo projeto Supabase (staging/testes) sem afetar a produção
+# Ambiente de testes (staging) — situação atual e o que falta
 
-## Resumo do funcionamento
+## Diagnóstico do que já existe (verificado no repositório)
 
-O projeto já está preparado para **dois ambientes independentes** usando variáveis de ambiente do Vite. Nada no código-fonte precisa mudar — a mesma aplicação é compilada apontando para projetos Supabase diferentes através de `.env` distintos.
+| Item | Estado |
+|---|---|
+| `.env.production` com dados reais | Pronto |
+| `.env.staging` | Existe, mas **ainda com placeholders** (`<staging-project-id>`, `<staging-anon-key>`) |
+| Scripts `build:staging` / `build:production` no `package.json` | Prontos (copiam o `.env` correto antes do build) |
+| Cliente Supabase lê só de env vars (`src/integrations/supabase/client.ts`) | Pronto — nenhuma URL fixa em `src/` |
+| Seed de dados fictícios (`supabase/seeds/staging.sql`) | Pronto (tenant, empresa, 4 setores, 4 cargos, 20 colaboradores, contexto de IA) |
+| Seed de buckets (`supabase/seeds/staging_buckets.sql`) | Pronto (22 buckets) |
+| Documentação (`docs/AMBIENTES.md`) | Pronta, porém desatualizada em 2 pontos |
+| Segundo projeto Supabase | **Não criado** — é o bloqueio real |
 
-O ambiente atual (`.env`) aponta para produção. Um segundo arquivo, `.env.staging`, foi criado com placeholders. A conexão com o novo Supabase acontece apenas trocando/gerando o build com o arquivo correto. O banco de dados de produção não é tocado.
+## Duas inconsistências encontradas
 
-## Mecanismo de isolamento
+1. **`.gitignore` não protege nenhum arquivo `.env`.** A documentação afirma que `.env`, `.env.production` e `.env.staging` estão protegidos, mas não há nenhuma regra `.env` no `.gitignore`. Hoje as chaves de produção estão versionadas.
+2. **Contagem de migrations desatualizada.** A documentação fala em 706 migrations; hoje são **739**. As Edge Functions continuam 71.
 
-```text
-┌─────────────────┐      .env.production       ┌──────────────────────┐
-│  Código-fonte   │  ───────────────────────>  │  Supabase Produção   │
-│  (mesmo repo)   │      build:production      │  (diayjpsrceryc...)  │
-└─────────────────┘                            └──────────────────────┘
-         │
-         │  .env.staging
-         │  build:staging
-         ▼
-        ┌──────────────────────┐
-        │  Supabase Staging      │
-        │  (novo projeto)        │
-        └──────────────────────┘
-```
+## Resposta objetiva
 
-- Cada projeto Supabase é um banco de dados PostgreSQL **totalmente isolado**.
-- Você pode ter quantos projetos quiser na mesma conta Supabase.
-- O editor da Lovable continua conectado ao projeto atual (produção). O staging é usado via build local ou, se quiser, publicado em outro host/domínio.
+- Sim, é preciso um **segundo projeto Supabase** (cada projeto é um banco isolado). **Não** precisa de outra conta Supabase nem de outro projeto Lovable.
+- Todo o trabalho de código já foi feito. O que resta é **infraestrutura** no Supabase, feita via CLI fora do editor Lovable.
 
-## Passo a passo para conectar o novo ambiente
+## Escopo proposto (o que eu faço no repositório)
 
-### 1. Criar o novo projeto Supabase
+1. Adicionar ao `.gitignore` as regras `.env`, `.env.local`, `.env.production`, `.env.staging`, mantendo `.env.example` versionado.
+2. Atualizar `docs/AMBIENTES.md`: contagem correta (739 migrations / 71 functions), correção da afirmação sobre o `.gitignore`, e um checklist final revisado.
+3. Adicionar ao `docs/AMBIENTES.md` um passo explícito de rotação de chaves caso opte por remover o `.env` do histórico do Git.
 
-No dashboard do Supabase, criar um projeto novo (ex.: `youreyes-staging`). Anotar:
+Observação: não posso criar o projeto Supabase de staging nem rodar `supabase link` / `db push` daqui — esses passos são executados por você, com a CLI, na sua máquina.
 
-- Project URL
-- Anon/public key
-- Project ref
-
-### 2. Preencher `.env.staging` no repositório
-
-Substituir os placeholders no arquivo já existente:
-
-```env
-SUPABASE_URL="https://<novo-project-ref>.supabase.co"
-VITE_SUPABASE_URL="https://<novo-project-ref>.supabase.co"
-SUPABASE_PUBLISHABLE_KEY="<novo-anon-key>"
-VITE_SUPABASE_PUBLISHABLE_KEY="<novo-anon-key>"
-VITE_SUPABASE_PROJECT_ID="<novo-project-ref>"
-VITE_APP_URL="https://<url-onde-staging-ficara>"
-```
-
-Não alterar `.env` neste momento — ele continua apontando para produção, então o editor/preview continuam inalterados.
-
-### 3. Replicar o banco (schema)
-
-Com a Supabase CLI, linkar o novo projeto e aplicar todas as migrations:
+## Passos que ficam do seu lado (CLI)
 
 ```bash
-supabase link --project-ref <novo-project-ref>
-supabase db push
+# 1. Criar o projeto no dashboard (ex.: youreyes-staging) e anotar URL, anon key e ref
+# 2. Preencher .env.staging com esses valores
+# 3. Schema
+supabase link --project-ref <staging-ref>
+supabase db push            # aplica as 739 migrations
+# 4. Edge Functions
+supabase functions deploy --project-ref <staging-ref>   # 71 funções
+# 5. Secrets: recadastrar no dashboard (LOVABLE_API_KEY, OPENAI_API_KEY, RESEND_API_KEY,
+#    EMAIL_FROM, APP_URL/SITE_URL, WHATSAPI_*, MERCADOPAGO_ACCESS_TOKEN, CONSULTACRM_KEY)
+#    — use chaves sandbox onde houver
+# 6. Buckets: rodar supabase/seeds/staging_buckets.sql no SQL Editor do staging
+# 7. Criar usuário admin em Authentication > Users e rodar supabase/seeds/staging.sql
+# 8. Validar: npm run build:staging && npm run preview
 ```
 
-Isso cria as 706 migrations no staging. Não é viável fazer pelo SQL Editor manualmente.
+## Decisão que preciso de você
 
-### 4. Deployar as Edge Functions
-
-```bash
-supabase functions deploy --project-ref <novo-project-ref>
-```
-
-São 71 funções. As mesmas do repositório vão para o novo projeto.
-
-### 5. Recadastrar os secrets
-
-Secrets não migram automaticamente. Configurar em `Project Settings > Edge Functions > Secrets` do novo projeto:
-
-- `LOVABLE_API_KEY`
-- `OPENAI_API_KEY`
-- `RESEND_API_KEY`
-- `EMAIL_FROM`
-- `APP_URL` / `SITE_URL` (apontar para URL de staging)
-- `WHATSAPI_BASE_URL` / `WHATSAPI_TOKEN`
-- `MERCADOPAGO_ACCESS_TOKEN`
-- `CONSULTACRM_KEY`
-
-`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` são injetados automaticamente.
-
-### 6. Criar os buckets de Storage
-
-Executar no SQL Editor do projeto staging:
-
-```sql
--- conteúdo de supabase/seeds/staging_buckets.sql
-```
-
-Isso cria os 22 buckets com as mesmas permissões de produção. As policies de `storage.objects` já vêm nas migrations.
-
-### 7. Popular dados de teste
-
-Criar um usuário administrador no staging (`Authentication > Users`) e rodar o seed:
-
-```sql
-SET LOCAL seed.user_id = '<uuid-do-admin-criado>';
-\i supabase/seeds/staging.sql
-```
-
-O seed cria tenant, empresa, departamentos, cargos, 20 colaboradores fictícios e contexto de IA.
-
-### 8. Validar o staging
-
-Buildar e rodar apontando para o novo banco:
-
-```bash
-npm run build:staging
-npm run preview
-```
-
-Checklist de validação:
-
-- Login com o admin do staging.
-- Empresa carrega e seletor de empresa funciona.
-- Módulo Ponto: marcação, apuração e banco de horas.
-- Geração de PDF.
-- Chamada de IA (Gerar Função com IA).
-- Upload de documento.
-
-### 9. (Opcional) Publicar o staging em domínio próprio
-
-A Lovable publica um único build por projeto (hoje, produção). Para ter `teste.youreyes.com.br` ou similar, hospedar o resultado de `npm run build:staging` em um serviço estático (Vercel, Netlify, Cloudflare Pages) apontando para o domínio de teste.
-
-## Como alternar sem afetar a produção
-
-### Desenvolvimento local
-
-```bash
-# Staging
-cp .env.staging .env
-npm run dev
-
-# Produção (padrão)
-cp .env.production .env
-npm run dev
-```
-
-### Build direcionado
-
-```bash
-npm run build:staging      # gera dist apontando para staging
-npm run build:production # gera dist apontando para produção
-```
-
-A troca é só no arquivo `.env` durante o build. Não muda código, não mexe no banco de produção e não quebra a conexão atual do editor.
-
-## Próxima decisão
-
-- O staging será usado apenas localmente/preview interno, ou você quer publicá-lo em um domínio de teste (ex.: `teste.youreyes.com.br`)?
-- Se for publicar, escolher o host (Vercel, Netlify, Cloudflare Pages) para configurar o deploy automático a partir de `npm run build:staging`.
+O staging será usado apenas em build local, ou também publicado em um domínio de teste (ex.: `teste.youreyes.com.br`)? A Lovable publica um único build por projeto, então o segundo caso exige um host estático adicional (Vercel/Netlify/Cloudflare Pages).
