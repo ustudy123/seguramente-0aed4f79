@@ -199,4 +199,8 @@ BEGIN
       r.tenant_id, r.colaborador_cpf, r.competencia, r.empresa_id
     );
   END LOOP;
+EXCEPTION WHEN foreign_key_violation OR not_null_violation THEN
+  -- [GUARDA DE AMBIENTE] Reapuração é sobre dados de produção; em banco novo
+  -- com dados órfãos/ausentes, avisa e segue — a função acima fica criada.
+  RAISE NOTICE 'Reapuração de banco de horas ignorada neste ambiente: %', SQLERRM;
 END $reapura$;

@@ -94,4 +94,7 @@ JOIN (VALUES
   ('camila.torres@demo.com', '3c7a47ec-5ee4-44bc-91c7-d9bfd418eef0'::uuid, 'Parecer Jurídico SST', 'Análise jurídica de conformidade com NRs e orientação preventiva.', 'CLT / NRs', 'online', 'Empresas com passivo trabalhista', 1500.00, 120),
   ('roberto.lima@demo.com', 'b8c6ced8-7e75-4b89-b44f-e2a14c160f28'::uuid, 'Ginástica Laboral - Plano Mensal', 'Programa mensal de ginástica laboral com sessões 3x/semana.', 'NR-17', 'presencial', 'Escritórios e Indústria', 2800.00, 60)
 ) AS s(prof_email, cat_id, nome, descricao, base_legal, modalidade, publico_alvo, preco, duracao)
-ON p.nome_completo = (SELECT nome_completo FROM marketplace_profissionais WHERE email = s.prof_email LIMIT 1);
+ON p.nome_completo = (SELECT nome_completo FROM marketplace_profissionais WHERE email = s.prof_email LIMIT 1)
+-- Só onde a categoria existe: em ambiente novo as categorias (criadas fora
+-- das migrations) não estão lá, e o seed de demonstração é dispensável.
+WHERE EXISTS (SELECT 1 FROM public.marketplace_categorias c WHERE c.id = s.cat_id);
