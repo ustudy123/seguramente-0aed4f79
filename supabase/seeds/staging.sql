@@ -100,13 +100,15 @@ DECLARE
   v_empresa_id uuid := current_setting('seed.empresa_id')::uuid;
 BEGIN
   INSERT INTO public.admissoes (
-    id, tenant_id, status, nome_completo, cpf, data_nascimento, estado_civil, genero,
+    id, tenant_id, empresa_id, status, nome_completo, cpf, data_nascimento, estado_civil, genero,
     email, telefone, cidade, estado, cargo, departamento, data_admissao,
     tipo_contrato, jornada_trabalho, salario, gestor_imediato, criado_por, created_at, updated_at
   )
   SELECT
     gen_random_uuid(),
     v_tenant_id,
+    -- sem empresa_id os painéis filtrados pela empresa do topo mostram zero
+    v_empresa_id,
     'concluido'::public.admissao_status,
     'Colaborador ' || n,
     -- CPFs fictícios com dígito verificador válido (o sistema valida)
