@@ -27,7 +27,9 @@ CREATE EXTENSION IF NOT EXISTS pg_net;
 
 DO $ext$
 BEGIN
-  -- Só cria o atalho se a função vive em extensions e ainda não em public.
+  -- Atalhos em public para as funções da pgcrypto usadas SEM prefixo pelas
+  -- migrations antigas (o db push não enxerga o schema extensions). O uso
+  -- COM prefixo (extensions.digest) continua funcionando normalmente.
   IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
              WHERE p.proname = 'gen_random_bytes' AND n.nspname = 'extensions')
      AND NOT EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
@@ -35,5 +37,17 @@ BEGIN
     CREATE FUNCTION public.gen_random_bytes(integer)
     RETURNS bytea LANGUAGE sql
     AS 'SELECT extensions.gen_random_bytes($1)';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+             WHERE p.proname = 'digest' AND n.nspname = 'extensions')
+     AND NOT EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+             WHERE p.proname = 'digest' AND n.nspname = 'public') THEN
+    CREATE FUNCTION public.digest(text, text)
+    RETURNS bytea LANGUAGE sql IMMUTABLE
+    AS 'SELECT extensions.digest($1, $2)';
+    CREATE FUNCTION public.digest(bytea, text)
+    RETURNS bytea LANGUAGE sql IMMUTABLE
+    AS 'SELECT extensions.digest($1, $2)';
   END IF;
 END $ext$;
