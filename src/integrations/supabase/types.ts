@@ -1759,6 +1759,24 @@ export type Database = {
           },
         ]
       }
+      app_config: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          valor: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          valor: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       assinaturas: {
         Row: {
           activation_email_sent_at: string | null
