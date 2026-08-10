@@ -113,6 +113,21 @@ O seed cria:
 - [ ] Uma chamada de IA (Gerar Função com IA) — valida secret + Edge Function.
 - [ ] Upload de um documento — valida bucket + policies.
 
+## Automação (GitHub Actions)
+
+O workflow `.github/workflows/staging.yml` mantém o staging atualizado sozinho: a cada mudança mesclada na `main`, ele aplica as migrations novas no projeto de staging, reimplanta as Edge Functions e — se os secrets do Netlify estiverem configurados — publica o site de teste. Ninguém precisa de CLI local para manter o ambiente.
+
+Secrets (Settings > Secrets and variables > Actions do repositório):
+
+| Secret | Para quê | Obrigatório |
+|---|---|---|
+| `SUPABASE_ACCESS_TOKEN` | Token pessoal do Supabase (Account > Access Tokens) | Sim |
+| `SUPABASE_DB_PASSWORD` | Senha do banco do projeto de staging | Sim |
+| `NETLIFY_AUTH_TOKEN` | Token do Netlify (User settings > Applications) | Só para o site de teste |
+| `NETLIFY_SITE_ID` | Site ID no Netlify (Site settings > General) | Só para o site de teste |
+
+O workflow tem trava contra apontar para a produção e pode ser disparado manualmente na aba Actions (`workflow_dispatch`).
+
 ## Verificação de ambiente
 
 Para garantir que nenhum valor de produção está hard-coded onde não deve, verifique o `src/` **e as migrations** (era nas migrations que o problema estava):

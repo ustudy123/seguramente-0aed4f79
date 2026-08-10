@@ -124,7 +124,7 @@ const App = () => (
       <Sonner />
       <VersionCheck />
       <ConfirmDialogProvider />
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>

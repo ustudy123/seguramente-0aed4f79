@@ -1,0 +1,84 @@
+# =====================================================================
+# Staging automático — YourEyes
+#
+# A cada mudança mesclada na main:
+#   1) aplica as migrations novas no projeto Supabase de STAGING
+#      (bmehdgthciuvdbvutsdv — nunca na produção, que não é gerida
+#      por CLI) e reimplanta as Edge Functions;
+#   2) publica o SITE DE TESTE (build com .env.staging) no Netlify,
+#      se os secrets do Netlify estiverem configurados; sem eles, o
+#      passo é pulado sem erro.
+#
+# Secrets necessários (Settings > Secrets and variables > Actions):
+#   SUPABASE_ACCESS_TOKEN  token pessoal (supabase.com/dashboard/account/tokens)
+#   SUPABASE_DB_PASSWORD   senha do banco do projeto de staging
+#   NETLIFY_AUTH_TOKEN     (opcional) token do Netlify para o site de teste
+#   NETLIFY_SITE_ID        (opcional) id do site no Netlify
+# =====================================================================
+name: staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+jobs:
+  banco:
+    name: Migrations e functions no staging
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      STAGING_REF: bmehdgthciuvdbvutsdv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Conferir que o alvo é o staging
+        run: |
+          if [ "$STAGING_REF" = "diayjpsrcerycycyaxst" ]; then
+            echo "::error::Alvo aponta para a producao — abortando."; exit 1
+          fi
+      - name: Aplicar migrations
+        run: |
+          supabase link --project-ref "$STAGING_REF"
+          supabase db push
+      - name: Reimplantar Edge Functions
+        run: supabase functions deploy --project-ref "$STAGING_REF"
+
+  site:
+    name: Site de teste (Netlify)
+    needs: banco
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar secrets do Netlify
+        id: netlify
+        run: |
+          if [ -n "${{ secrets.NETLIFY_AUTH_TOKEN }}" ] && [ -n "${{ secrets.NETLIFY_SITE_ID }}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "Secrets do Netlify ausentes — site de teste pulado (configure NETLIFY_AUTH_TOKEN e NETLIFY_SITE_ID para ativar)."
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.netlify.outputs.ok == 'true'
+        with:
+          node-version: 20
+          cache: npm
+      - name: Build de staging
+        if: steps.netlify.outputs.ok == 'true'
+        run: |
+          npm ci
+          npm run build:staging
+      - name: Publicar no Netlify
+        if: steps.netlify.outputs.ok == 'true'
+        run: npx --yes netlify-cli deploy --prod --dir dist --no-build
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
