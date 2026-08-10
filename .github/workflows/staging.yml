@@ -47,7 +47,18 @@ jobs:
           supabase link --project-ref "$STAGING_REF"
           supabase db push --include-all
       - name: Reimplantar Edge Functions
-        run: supabase functions deploy --project-ref "$STAGING_REF"
+        # O empacotamento baixa dependências de CDNs públicos que às vezes
+        # falham momentaneamente (522/timeout) — tenta até 3 vezes.
+        run: |
+          for i in 1 2 3; do
+            if supabase functions deploy --project-ref "$STAGING_REF"; then
+              exit 0
+            fi
+            echo "Tentativa $i falhou; aguardando 30s antes de tentar de novo..."
+            sleep 30
+          done
+          echo "::error::Functions deploy falhou após 3 tentativas."
+          exit 1
 
   site:
     name: Site de teste (GitHub Pages)
