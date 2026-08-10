@@ -95,10 +95,26 @@ nao_implementado | erro + `erro_tecnico`), executadas por
 (simulação por claims em transação). Ao mexer em área coberta, rode a bateria
 da família no staging e inclua-a na conferência do script de entrega.
 
+## Como fechar uma entrega (obrigatório)
+
+Ao terminar qualquer implementação, encerre a resposta com:
+1. o link do site de teste — https://ustudy123.github.io/seguramente-0aed4f79/ ;
+2. o que exatamente o usuário deve abrir/clicar lá para conferir (tela, caminho
+   no menu, o que deve aparecer) e, se for banco, a conferência SQL para o
+   SQL Editor do projeto de TESTE;
+3. o aviso de que a produção segue intacta.
+
+Então PARE e espere. Só depois de um "aprovado" explícito entregue o passo de
+produção (script para o SQL Editor de produção e/ou "requer Publicar no
+Lovable"). Nunca antecipe o passo de produção sem aprovação, e nunca sugira
+que o usuário aplique algo na produção sem ter conferido no teste antes.
+
 ## Convenções de trabalho
 
 - Branch própria por sessão (`claude/...`), PR para `main`, merge após testar.
-  O merge dispara a esteira do staging automaticamente.
+  O merge dispara a esteira do staging automaticamente. (Nas respostas ao
+  usuário, evite o jargão: fale em "registrar a mudança no projeto" e
+  "ambiente de teste", não em branch/PR/merge/staging.)
 - Antes de mexer em migrations, `git pull` — outras sessões e o Lovable também
   escrevem na `main`.
 - Respostas e PDFs de devolutiva para o usuário: didáticos, em português,
