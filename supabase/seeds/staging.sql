@@ -107,9 +107,10 @@ BEGIN
   SELECT
     gen_random_uuid(),
     v_tenant_id,
-    'ativo'::public.admissao_status,
+    'concluido'::public.admissao_status,
     'Colaborador ' || n,
-    LPAD(n::text, 11, '0'),
+    -- CPFs fictícios com dígito verificador válido (o sistema valida)
+    (ARRAY['90000000175','90000000256','90000000337','90000000418','90000000507','90000000680','90000000760','90000000841','90000000922','90000001066','90000001147','90000001228','90000001309','90000001490','90000001570','90000001651','90000001732','90000001813','90000001902','90000002038'])[n],
     '1990-01-01',
     'solteiro',
     'masculino',
@@ -144,5 +145,26 @@ END $$;
 UPDATE public.empresa_cadastro
 SET ai_context = 'Empresa de tecnologia e serviços de SST. Processos: financeiros, DP, operação de produção e desenvolvimento de software. Atividades esperadas: contas a pagar/receber, folha de pagamento, admissão/demissão, controle de EPIs, desenvolvimento de funcionalidades, suporte a clientes internos.'
 WHERE id = current_setting('seed.empresa_id')::uuid;
+
+-- 8. Acesso do administrador de teste: perfil, papel e vínculo com o tenant
+--    (sem isto, o login entra num sistema vazio)
+INSERT INTO public.profiles (user_id, tenant_id, nome_completo, onboarding_concluido)
+VALUES (current_setting('seed.user_id')::uuid,
+        current_setting('seed.tenant_id')::uuid,
+        'Administrador de Testes', true)
+ON CONFLICT (user_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id;
+
+INSERT INTO public.user_roles (user_id, role)
+VALUES (current_setting('seed.user_id')::uuid, 'owner')
+ON CONFLICT (user_id, role) DO NOTHING;
+
+INSERT INTO public.usuarios_base
+  (tenant_id, auth_user_id, nome_completo, email_principal, cpf, tipo_usuario, status)
+SELECT current_setting('seed.tenant_id')::uuid,
+       current_setting('seed.user_id')::uuid,
+       'Administrador de Testes', 'admin@teste.youreyes.local',
+       '90000009989', 'administrador', 'ativo'
+WHERE NOT EXISTS (SELECT 1 FROM public.usuarios_base
+                  WHERE auth_user_id = current_setting('seed.user_id')::uuid);
 
 COMMIT;
