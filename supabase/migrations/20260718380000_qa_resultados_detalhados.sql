@@ -11,6 +11,10 @@
 -- correcao sugerida). O front e o gerador de PDF/CSV passam a mostrar isso.
 -- =========================================================
 
+-- A assinatura (colunas OUT) muda: em banco onde a versão antiga existe,
+-- CREATE OR REPLACE falharia com "cannot change return type".
+DROP FUNCTION IF EXISTS public.qa_resultados_da_bateria(uuid);
+
 CREATE OR REPLACE FUNCTION public.qa_resultados_da_bateria(p_execucao_id uuid)
 RETURNS TABLE(
   codigo text, situacao text, passo_ordem int, passo_acao text,

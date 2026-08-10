@@ -66,15 +66,20 @@ ON public.user_roles FOR ALL
 USING (public.is_superadmin(auth.uid()))
 WITH CHECK (public.is_superadmin(auth.uid()));
 
--- 8. Inserir o primeiro superadmin
-INSERT INTO public.superadmins (user_id, email, nome)
-VALUES ('88e87842-d0e8-4443-93c6-77dcdc2d29f5', 'wallasmonteiro019@gmail.com', 'Wallas Monteiro')
-ON CONFLICT (user_id) DO NOTHING;
+-- 8/9. Inserir o primeiro superadmin (e o papel) — somente onde a conta
+-- de autenticação existe (produção). Em ambiente novo, não há o que inserir.
+DO $seed$
+BEGIN
+  IF EXISTS (SELECT 1 FROM auth.users WHERE id = '88e87842-d0e8-4443-93c6-77dcdc2d29f5') THEN
+    INSERT INTO public.superadmins (user_id, email, nome)
+    VALUES ('88e87842-d0e8-4443-93c6-77dcdc2d29f5', 'wallasmonteiro019@gmail.com', 'Wallas Monteiro')
+    ON CONFLICT (user_id) DO NOTHING;
 
--- 9. Adicionar role superadmin na tabela user_roles também
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('88e87842-d0e8-4443-93c6-77dcdc2d29f5', 'superadmin')
-ON CONFLICT (user_id, role) DO NOTHING;
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES ('88e87842-d0e8-4443-93c6-77dcdc2d29f5', 'superadmin')
+    ON CONFLICT (user_id, role) DO NOTHING;
+  END IF;
+END $seed$;
 
 -- 10. Trigger para updated_at
 DROP TRIGGER IF EXISTS update_superadmins_updated_at ON public.superadmins;

@@ -94,6 +94,11 @@ CREATE TABLE IF NOT EXISTS public.ponto_retencao_config (
   CONSTRAINT ponto_retencao_anos_chk CHECK (anos_retencao BETWEEN 5 AND 30)
 );
 
+-- Em produção a tabela pré-existia COM empresa_id; o CREATE TABLE IF NOT
+-- EXISTS acima não a traz em banco novo. Garante a coluna nos dois mundos.
+ALTER TABLE public.ponto_retencao_config
+  ADD COLUMN IF NOT EXISTS empresa_id uuid;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ponto_retencao_config_uniq
   ON public.ponto_retencao_config (tenant_id, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid));
 

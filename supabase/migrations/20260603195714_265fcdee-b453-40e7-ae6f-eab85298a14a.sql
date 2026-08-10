@@ -63,108 +63,119 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.ensure_admissao_documentos_by_token(uuid) TO anon, authenticated;
 
-WITH target_admissoes AS (
-  SELECT a.id, a.tenant_id, a.nome_completo
-  FROM public.admissoes a
-), missing_docs AS (
-  SELECT ta.id AS admissao_id, ta.tenant_id, doc.nome, doc.tipo, doc.obrigatorio
-  FROM target_admissoes ta
+
+-- [GUARDA DE AMBIENTE] O backfill abaixo preenche documentos/workflow/histórico
+-- para admissões JÁ EXISTENTES (dados de produção). Em banco novo não há o que
+-- preencher; se alguma referência faltar, o bloco avisa e sai — a função acima
+-- fica criada de qualquer forma.
+DO $prodseed$
+BEGIN
+  WITH target_admissoes AS (
+    SELECT a.id, a.tenant_id, a.nome_completo
+    FROM public.admissoes a
+  ), missing_docs AS (
+    SELECT ta.id AS admissao_id, ta.tenant_id, doc.nome, doc.tipo, doc.obrigatorio
+    FROM target_admissoes ta
+    CROSS JOIN (
+      VALUES
+        ('RG', 'identidade', true),
+        ('CPF', 'identidade', true),
+        ('Comprovante de Residência', 'endereco', true),
+        ('Título de Eleitor', 'identidade', true),
+        ('Carteira de Trabalho (CTPS)', 'trabalho', true),
+        ('Carteira de Reservista', 'identidade', false),
+        ('Certidão de Nascimento/Casamento', 'civil', true),
+        ('Foto 3x4', 'foto', true),
+        ('Comprovante de Escolaridade', 'formacao', true),
+        ('Exame Admissional', 'saude', true),
+        ('Certificado de Cursos', 'formacao', false),
+        ('Certidão de Nascimento dos Filhos', 'dependentes', false)
+    ) AS doc(nome, tipo, obrigatorio)
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM public.admissao_documentos d
+      WHERE d.admissao_id = ta.id
+        AND d.nome = doc.nome
+        AND d.tipo = doc.tipo
+    )
+  )
+  INSERT INTO public.admissao_documentos (
+    admissao_id,
+    tenant_id,
+    nome,
+    tipo,
+    obrigatorio,
+    status
+  )
+  SELECT
+    admissao_id,
+    tenant_id,
+    nome,
+    tipo,
+    obrigatorio,
+    'pendente'::public.documento_status
+  FROM missing_docs;
+  
+  WITH missing_workflow AS (
+    SELECT a.id AS admissao_id, a.tenant_id
+    FROM public.admissoes a
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM public.admissao_workflow w
+      WHERE w.admissao_id = a.id
+    )
+  )
+  INSERT INTO public.admissao_workflow (
+    admissao_id,
+    tenant_id,
+    etapa,
+    ordem,
+    status,
+    responsavel_nome,
+    data_acao
+  )
+  SELECT mw.admissao_id,
+         mw.tenant_id,
+         step.etapa,
+         step.ordem,
+         CASE WHEN step.ordem = 1 THEN 'aprovado'::public.workflow_status ELSE 'pendente'::public.workflow_status END,
+         CASE WHEN step.ordem = 1 THEN 'Sistema' ELSE 'Pendente' END,
+         CASE WHEN step.ordem = 1 THEN now() ELSE NULL END
+  FROM missing_workflow mw
   CROSS JOIN (
     VALUES
-      ('RG', 'identidade', true),
-      ('CPF', 'identidade', true),
-      ('Comprovante de Residência', 'endereco', true),
-      ('Título de Eleitor', 'identidade', true),
-      ('Carteira de Trabalho (CTPS)', 'trabalho', true),
-      ('Carteira de Reservista', 'identidade', false),
-      ('Certidão de Nascimento/Casamento', 'civil', true),
-      ('Foto 3x4', 'foto', true),
-      ('Comprovante de Escolaridade', 'formacao', true),
-      ('Exame Admissional', 'saude', true),
-      ('Certificado de Cursos', 'formacao', false),
-      ('Certidão de Nascimento dos Filhos', 'dependentes', false)
-  ) AS doc(nome, tipo, obrigatorio)
-  WHERE NOT EXISTS (
-    SELECT 1
-    FROM public.admissao_documentos d
-    WHERE d.admissao_id = ta.id
-      AND d.nome = doc.nome
-      AND d.tipo = doc.tipo
+      ('Cadastro Inicial', 1),
+      ('Análise Documental', 2),
+      ('Aprovação RH', 3),
+      ('Aprovação Final', 4)
+  ) AS step(etapa, ordem);
+  
+  WITH missing_history AS (
+    SELECT a.id AS admissao_id, a.tenant_id, a.nome_completo, a.criado_por
+    FROM public.admissoes a
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM public.admissao_historico h
+      WHERE h.admissao_id = a.id
+    )
   )
-)
-INSERT INTO public.admissao_documentos (
-  admissao_id,
-  tenant_id,
-  nome,
-  tipo,
-  obrigatorio,
-  status
-)
-SELECT
-  admissao_id,
-  tenant_id,
-  nome,
-  tipo,
-  obrigatorio,
-  'pendente'::public.documento_status
-FROM missing_docs;
+  INSERT INTO public.admissao_historico (
+    admissao_id,
+    tenant_id,
+    acao,
+    descricao,
+    usuario_id,
+    usuario_nome
+  )
+  SELECT
+    mh.admissao_id,
+    mh.tenant_id,
+    'Admissão criada',
+    'Histórico inicial recriado automaticamente para ' || coalesce(mh.nome_completo, 'colaborador'),
+    mh.criado_por,
+    'Sistema'
+  FROM missing_history mh;
 
-WITH missing_workflow AS (
-  SELECT a.id AS admissao_id, a.tenant_id
-  FROM public.admissoes a
-  WHERE NOT EXISTS (
-    SELECT 1
-    FROM public.admissao_workflow w
-    WHERE w.admissao_id = a.id
-  )
-)
-INSERT INTO public.admissao_workflow (
-  admissao_id,
-  tenant_id,
-  etapa,
-  ordem,
-  status,
-  responsavel_nome,
-  data_acao
-)
-SELECT mw.admissao_id,
-       mw.tenant_id,
-       step.etapa,
-       step.ordem,
-       CASE WHEN step.ordem = 1 THEN 'aprovado'::public.workflow_status ELSE 'pendente'::public.workflow_status END,
-       CASE WHEN step.ordem = 1 THEN 'Sistema' ELSE 'Pendente' END,
-       CASE WHEN step.ordem = 1 THEN now() ELSE NULL END
-FROM missing_workflow mw
-CROSS JOIN (
-  VALUES
-    ('Cadastro Inicial', 1),
-    ('Análise Documental', 2),
-    ('Aprovação RH', 3),
-    ('Aprovação Final', 4)
-) AS step(etapa, ordem);
-
-WITH missing_history AS (
-  SELECT a.id AS admissao_id, a.tenant_id, a.nome_completo, a.criado_por
-  FROM public.admissoes a
-  WHERE NOT EXISTS (
-    SELECT 1
-    FROM public.admissao_historico h
-    WHERE h.admissao_id = a.id
-  )
-)
-INSERT INTO public.admissao_historico (
-  admissao_id,
-  tenant_id,
-  acao,
-  descricao,
-  usuario_id,
-  usuario_nome
-)
-SELECT
-  mh.admissao_id,
-  mh.tenant_id,
-  'Admissão criada',
-  'Histórico inicial recriado automaticamente para ' || coalesce(mh.nome_completo, 'colaborador'),
-  mh.criado_por,
-  'Sistema'
-FROM missing_history mh;
+EXCEPTION WHEN foreign_key_violation OR not_null_violation THEN
+  RAISE NOTICE 'Backfill de dados de produção ignorado neste ambiente: %', SQLERRM;
+END $prodseed$;
