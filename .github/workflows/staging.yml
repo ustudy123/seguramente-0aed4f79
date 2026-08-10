@@ -47,7 +47,7 @@ jobs:
       - name: Aplicar migrations
         run: |
           supabase link --project-ref "$STAGING_REF"
-          supabase db push
+          supabase db push --include-all
       - name: Reimplantar Edge Functions
         run: supabase functions deploy --project-ref "$STAGING_REF"
 
