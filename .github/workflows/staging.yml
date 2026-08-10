@@ -5,15 +5,13 @@
 #   1) aplica as migrations novas no projeto Supabase de STAGING
 #      (bmehdgthciuvdbvutsdv — nunca na produção, que não é gerida
 #      por CLI) e reimplanta as Edge Functions;
-#   2) publica o SITE DE TESTE (build com .env.staging) no Netlify,
-#      se os secrets do Netlify estiverem configurados; sem eles, o
-#      passo é pulado sem erro.
+#   2) publica o SITE DE TESTE (build com .env.staging) no GitHub
+#      Pages do próprio repositório — sem contas nem secrets extras:
+#      https://ustudy123.github.io/seguramente-0aed4f79/
 #
 # Secrets necessários (Settings > Secrets and variables > Actions):
 #   SUPABASE_ACCESS_TOKEN  token pessoal (supabase.com/dashboard/account/tokens)
 #   SUPABASE_DB_PASSWORD   senha do banco do projeto de staging
-#   NETLIFY_AUTH_TOKEN     (opcional) token do Netlify para o site de teste
-#   NETLIFY_SITE_ID        (opcional) id do site no Netlify
 # =====================================================================
 name: staging
 
@@ -52,33 +50,33 @@ jobs:
         run: supabase functions deploy --project-ref "$STAGING_REF"
 
   site:
-    name: Site de teste (Netlify)
+    name: Site de teste (GitHub Pages)
     needs: banco
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Verificar secrets do Netlify
-        id: netlify
-        run: |
-          if [ -n "${{ secrets.NETLIFY_AUTH_TOKEN }}" ] && [ -n "${{ secrets.NETLIFY_SITE_ID }}" ]; then
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "Secrets do Netlify ausentes — site de teste pulado (configure NETLIFY_AUTH_TOKEN e NETLIFY_SITE_ID para ativar)."
-          fi
       - uses: actions/setup-node@v4
-        if: steps.netlify.outputs.ok == 'true'
         with:
           node-version: 20
           cache: npm
-      - name: Build de staging
-        if: steps.netlify.outputs.ok == 'true'
+      - name: Build de staging (sob o subcaminho do Pages)
         run: |
           npm ci
-          npm run build:staging
-      - name: Publicar no Netlify
-        if: steps.netlify.outputs.ok == 'true'
-        run: npx --yes netlify-cli deploy --prod --dir dist --no-build
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          npm run build:staging -- --base=/seguramente-0aed4f79/
+          # SPA em host estático: rota desconhecida cai no index
+          cp dist/index.html dist/404.html
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

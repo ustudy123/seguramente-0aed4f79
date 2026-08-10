@@ -123,8 +123,7 @@ Secrets (Settings > Secrets and variables > Actions do repositório):
 |---|---|---|
 | `SUPABASE_ACCESS_TOKEN` | Token pessoal do Supabase (Account > Access Tokens) | Sim |
 | `SUPABASE_DB_PASSWORD` | Senha do banco do projeto de staging | Sim |
-| `NETLIFY_AUTH_TOKEN` | Token do Netlify (User settings > Applications) | Só para o site de teste |
-| `NETLIFY_SITE_ID` | Site ID no Netlify (Site settings > General) | Só para o site de teste |
+O site de teste é publicado no **GitHub Pages** do próprio repositório — https://ustudy123.github.io/seguramente-0aed4f79/ — sem contas nem secrets adicionais. Ele aponta para o banco de STAGING (login com os usuários fictícios).
 
 O workflow tem trava contra apontar para a produção e pode ser disparado manualmente na aba Actions (`workflow_dispatch`).
 
