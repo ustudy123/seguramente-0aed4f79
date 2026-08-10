@@ -21,7 +21,7 @@ No painel do Supabase esse projeto aparece com o nome **“Ambiente Testes –
 YourEyes”**. Dados são todos fictícios: pode criar, alterar e apagar à vontade.
 
 **Usuário de teste padrão:** `ambienteteste@youreyes.com`
-(senha com o administrador do projeto — ou crie o seu, seção 4)
+(senha com o administrador do projeto — ou crie o seu, seção 5)
 
 ### Sistema real (só o que foi aprovado)
 
@@ -37,7 +37,30 @@ YourEyes”**. Dados são todos fictícios: pode criar, alterar e apagar à vont
 
 ---
 
-## 2. Prompt para abrir uma conversa no Claude Code
+## 2. As três etapas: desenvolvimento, testes e produção
+
+Times de software organizam o trabalho em três etapas. É um **funil de risco**:
+quanto mais à esquerda o erro acontece, mais barato ele é.
+
+| Etapa | Onde fica, no YourEyes | Quem vê | Se quebrar aqui |
+|---|---|---|---|
+| **1. Desenvolvimento** | O ensaio interno do Claude Code: uma réplica do banco, montada e destruída a cada mudança | Ninguém além do Claude | Custo zero — conserta em segundos, sem plateia |
+| **2. Testes** | “Ambiente Testes – YourEyes” + o site de teste. Estrutura igual à real, dados fictícios | Você e a equipe | Ótimo: é para isso que existe. Volta uma casa e conserta |
+| **3. Produção** | seguramente.lovable.app + banco real. Empresas e colaboradores de verdade | Os clientes | Caro: afeta cliente, dado sensível e reputação |
+
+**Por que a etapa 1 não aparece no seu dia a dia:** em times tradicionais, cada
+desenvolvedor tem o projeto instalado no próprio computador — é ali que o código
+nasce e quebra pela primeira vez. Aqui esse papel é do Claude Code, que monta um
+ensaio próprio para testar cada mudança antes de entregá-la. Você só vê o
+resultado que já passou por esse primeiro filtro.
+
+**A exceção que confirma a regra:** o chat do Lovable **pula o funil inteiro**
+quando mexe em banco de dados — por isso mudança de banco é sempre pelo Claude
+Code (seção 4).
+
+---
+
+## 3. Prompt para abrir uma conversa no Claude Code
 
 Uma conversa por demanda. Copie o bloco, preencha as três linhas do final e
 cole como primeira mensagem.
@@ -91,7 +114,7 @@ Descrição: [o que acontece hoje e o que deveria acontecer]
 
 ---
 
-## 3. O que NÃO fazer pelo chat do Lovable
+## 4. O que NÃO fazer pelo chat do Lovable
 
 O Lovable está ligado ao **banco de dados real**. Quando o agente dele decide
 criar uma tabela, alterar uma função ou mexer em qualquer estrutura do banco,
@@ -105,7 +128,7 @@ sem passar pelo ambiente de teste.
 
 ---
 
-## 4. Criar um usuário de teste
+## 5. Criar um usuário de teste
 
 Cada pessoa da equipe pode ter o seu, e vale criar usuários de tipos
 diferentes (gestor, colaborador) para conferir o que cada um enxerga.
@@ -189,7 +212,7 @@ e-mail e a senha que você definiu no passo 1.
 
 ---
 
-## 5. Lembretes rápidos
+## 6. Lembretes rápidos
 
 - **Nunca** copie dados reais (CPF, nome, atestado) para o ambiente de teste,
   nem para “facilitar a reprodução” de um problema. Recrie a situação com os
