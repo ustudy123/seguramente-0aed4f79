@@ -183,6 +183,17 @@ CREATE TRIGGER trg_youreyes_documentos_updated
   FOR EACH ROW EXECUTE FUNCTION public.youreyes_touch_updated_at();
 
 -- ═══ Dispatcher: dispara agentes com execução vencida ═══
+-- Configuração por ambiente: a URL do próprio projeto e a chave publicável
+-- ficam em app_config, nunca no código. Sem os valores, o dispatch não chama
+-- ninguém — impossível um staging disparar funções da produção.
+CREATE TABLE IF NOT EXISTS public.app_config (
+  chave text PRIMARY KEY,
+  valor text NOT NULL,
+  atualizado_em timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.app_config FROM PUBLIC, anon, authenticated;
+
 CREATE OR REPLACE FUNCTION public.youreyes_dispatch_agentes()
 RETURNS void
 LANGUAGE plpgsql
@@ -192,7 +203,16 @@ AS $$
 DECLARE
   v_agente RECORD;
   v_base timestamptz;
+  v_url text;
+  v_key text;
 BEGIN
+  SELECT valor INTO v_url FROM public.app_config WHERE chave = 'supabase_url';
+  SELECT valor INTO v_key FROM public.app_config WHERE chave = 'supabase_anon_key';
+  IF v_url IS NULL OR v_key IS NULL THEN
+    RAISE NOTICE 'youreyes_dispatch_agentes: app_config sem supabase_url/supabase_anon_key — nenhum agente disparado (proteção de ambiente).';
+    RETURN;
+  END IF;
+
   FOR v_agente IN
     SELECT id, periodicidade, dias_semana, dia_mes, horario
     FROM youreyes_agentes
@@ -201,10 +221,10 @@ BEGIN
       AND proxima_execucao <= now()
   LOOP
     PERFORM net.http_post(
-      url := 'https://diayjpsrcerycycyaxst.supabase.co/functions/v1/youreyes-run-agent',
+      url := v_url || '/functions/v1/youreyes-run-agent',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXlqcHNyY2VyeWN5Y3lheHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3Mjg3NTEsImV4cCI6MjA4MzMwNDc1MX0.5DUjPQQB-CKdiuERL3LBUX4g2yzDy_L5b-M8FQS-Dxo'
+        'Authorization', 'Bearer ' || v_key
       ),
       body := jsonb_build_object('agente_id', v_agente.id, 'origem', 'agendada')
     );

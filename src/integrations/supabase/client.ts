@@ -6,9 +6,11 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error(
+  // Sem as variáveis o client subiria apontando para lugar nenhum e o erro
+  // apareceria como falha de rede aleatória. Melhor quebrar o build/boot aqui.
+  throw new Error(
     "[Supabase Client] VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY são obrigatórios. " +
-    "Verifique o arquivo .env do ambiente."
+    "Verifique o arquivo .env do ambiente (produção: .env / staging: .env.staging via --mode staging)."
   );
 }
 
@@ -16,8 +18,8 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(
-  SUPABASE_URL || "",
-  SUPABASE_PUBLISHABLE_KEY || "",
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
       storage: localStorage,
