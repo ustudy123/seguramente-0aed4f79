@@ -7,6 +7,15 @@ DECLARE
   v_nome   text := 'Adriana Medeiros da Silva';
   v_emp    uuid;
 BEGIN
+  -- Reparo de dados DE PRODUÇÃO: restaura duas marcações de uma colaboradora
+  -- específica. Em ambiente novo (staging) o tenant não existe e não há o que
+  -- reparar — sem esta guarda, o bloco inseriria lixo e as URLs de selfie
+  -- abaixo apontariam para o storage de produção.
+  IF NOT EXISTS (SELECT 1 FROM public.tenants WHERE id = v_tenant) THEN
+    RAISE NOTICE 'Reparo 20260702174019 ignorado: tenant de produção ausente neste ambiente.';
+    RETURN;
+  END IF;
+
   v_emp := public.ponto_empresa_do_colaborador(v_cid);
   SET LOCAL session_replication_role = replica;
   IF NOT EXISTS (SELECT 1 FROM public.ponto_marcacoes WHERE id='f9fad61d-e6fe-4ad5-bce3-6b95361ae928') THEN

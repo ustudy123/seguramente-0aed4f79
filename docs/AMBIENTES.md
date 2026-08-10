@@ -4,33 +4,27 @@ Este projeto suporta múltiplos ambientes Supabase independentes: **produção**
 
 ## Arquivos de ambiente
 
-| Arquivo | Propósito | Deve estar no Git? |
+| Arquivo | Propósito | Está no Git? |
 |---|---|---|
-| `.env` | Ambiente ativo local/preview. Inicia com produção. | Não (já contém secrets de projeto) |
+| `.env` | Ambiente ativo local/preview (produção por padrão). | Sim |
 | `.env.example` | Template para novos desenvolvedores. | Sim |
-| `.env.production` | Configuração do projeto Supabase de produção atual. | Não |
-| `.env.staging` | Configuração do projeto Supabase de staging/testes. | Não |
+| `.env.production` | Configuração do projeto Supabase de produção. | Sim |
+| `.env.staging` | Configuração do projeto Supabase de staging/testes. | Sim |
 
-> **Nota:** `.gitignore` protege os arquivos `.env`, `.env.production`, `.env.staging` e `.env.local`. O arquivo `.env` atual já está versionado com os dados de produção; considere removê-lo do controle de versão no futuro se a política de segurança exigir.
+> **Sobre segurança:** esses arquivos estão **versionados de propósito** e só podem conter valores públicos — URL do projeto e chave anon/publishable (a mesma que qualquer navegador recebe). **Nunca** coloque neles `service_role`, senhas ou tokens privados; secrets vivem em `Project Settings > Edge Functions > Secrets`. Para sobrescritas locais privadas use `.env.local` / `.env.staging.local`, que o `.gitignore` ignora (regra `*.local`).
 
 ## Como alternar entre ambientes
 
 ### Para desenvolvimento local
 
-Copie o arquivo do ambiente desejado para `.env`:
+Não copie arquivos: o Vite carrega o `.env.<modo>` automaticamente pelo `--mode`, sem tocar no `.env` (que é versionado e deve continuar apontando para produção).
 
 ```bash
-# Staging
-cp .env.staging .env
-
 # Produção (padrão)
-cp .env.production .env
-```
-
-Depois inicie o servidor:
-
-```bash
 npm run dev
+
+# Staging
+npm run dev:staging
 ```
 
 ### Para build manual
@@ -42,6 +36,8 @@ npm run build:staging
 # Produção
 npm run build:production
 ```
+
+> Os scripts usam apenas `--mode`: nenhum deles sobrescreve o `.env`.
 
 ## Criar o projeto Supabase de staging
 
@@ -55,7 +51,7 @@ No dashboard do Supabase, crie um novo projeto (ex.: `youreyes-staging`). Anote 
 
 Substitua os placeholders `<staging-project-id>` e `<staging-anon-key>` pelos valores reais. `VITE_APP_URL` deve apontar para a URL onde o staging será acessado.
 
-### 3. Replicar o schema (706 migrations)
+### 3. Replicar o schema (todas as migrations do repositório)
 
 ```bash
 supabase link --project-ref <staging-project-id>
@@ -97,11 +93,7 @@ Execute `supabase/seeds/staging_buckets.sql` no SQL Editor do staging. Ele cria 
 
 Crie um usuário administrador no staging (Authentication > Users) e execute o seed no SQL Editor:
 
-```sql
--- Substitua o UUID abaixo pelo user_id do administrador criado em auth.users
-SET LOCAL seed.user_id = '00000000-0000-0000-0000-000000000000';
-\i supabase/seeds/staging.sql
-```
+No SQL Editor (que não entende comandos do psql como `\i`): abra o arquivo `supabase/seeds/staging.sql`, cole o conteúdo inteiro no editor, ajuste o UUID do administrador no topo e execute.
 
 O seed cria:
 
@@ -123,13 +115,31 @@ O seed cria:
 
 ## Verificação de ambiente
 
-Para garantir que nenhum valor de produção está hard-coded no código, execute:
+Para garantir que nenhum valor de produção está hard-coded onde não deve, verifique o `src/` **e as migrations** (era nas migrations que o problema estava):
 
 ```bash
-rg -n "diayjpsrcerycycyaxst" src/ || echo "Nenhuma referência hard-coded encontrada em src/"
+rg -n "diayjpsrcerycycyaxst" src/ supabase/migrations/
 ```
 
-Resultado esperado: nenhuma correspondência em `src/`. Os únicos arquivos com valores fixos devem ser `.env`, `.env.production` e `supabase/config.toml`.
+Resultado esperado: nenhuma ocorrência em `src/`; nas migrations, apenas as duas ocorrências **neutralizadas** e o script de entrega:
+
+- `20260702174019_…` — reparo de dados de produção com **guarda de ambiente**: em banco sem o tenant de produção, o bloco sai sem fazer nada (as URLs restantes são dados históricos de selfie, não chamadas);
+- `20260803100000_…` e `20260810100000_…` — o dispatch dos agentes lê URL e chave da tabela `app_config`; a URL fixa não existe mais no corpo da função.
+
+Os únicos arquivos com valores fixos legítimos são `.env`, `.env.production` e `supabase/config.toml`.
+
+### Agentes YourEyes no staging (`app_config`)
+
+O disparador dos agentes (roda a cada minuto) só chama a Edge Function se `app_config` tiver `supabase_url` e `supabase_anon_key`. **Num ambiente recém-criado ele não chama ninguém** — proteção para o staging nunca acionar a produção. Para ativar os agentes no staging, insira os valores DO STAGING:
+
+```sql
+INSERT INTO public.app_config (chave, valor) VALUES
+  ('supabase_url', 'https://<staging-project-id>.supabase.co'),
+  ('supabase_anon_key', '<staging-anon-key>')
+ON CONFLICT (chave) DO UPDATE SET valor = EXCLUDED.valor, atualizado_em = now();
+```
+
+Em produção, os valores são semeados pelo script `docs/script_app_config_producao.sql`.
 
 ## Checklist antes de publicar
 
@@ -137,8 +147,9 @@ Resultado esperado: nenhuma correspondência em `src/`. Os únicos arquivos com 
 - [ ] Migrations estão aplicadas no projeto.
 - [ ] Edge Functions estão deployadas e secrets configuradas.
 - [ ] Buckets de Storage criados.
-- [ ] Se for staging, execute `npm run build:staging` e confirme que aponta para o staging.
-- [ ] Nenhuma URL/key de produção foi commitada por engano.
+- [ ] Se for staging, execute `npm run build:staging` e confirme no build gerado que a URL é a do staging.
+- [ ] `app_config` do ambiente aponta para o próprio ambiente (agentes).
+- [ ] Nenhum secret privado (service_role, senhas) foi commitado — os arquivos `.env*` versionados só carregam URL e chave publishable.
 
 ## Dúvidas comuns
 
