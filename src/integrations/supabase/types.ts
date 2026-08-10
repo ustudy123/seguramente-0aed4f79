@@ -25303,6 +25303,36 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_cert_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cert_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_cert_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_colab_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -26420,6 +26450,46 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_mchk_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mchk_002: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mchk_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mchk_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_meta_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -26560,6 +26630,36 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_mevd_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mevd_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mevd_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_mind_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -26591,6 +26691,86 @@ export type Database = {
         }
       }
       qa_caso_mind_020: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mpar_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mpar_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mpar_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mpar_012: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mwkf_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mwkf_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mwkf_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_mwkf_012: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -26820,6 +27000,56 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_pass_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pchk_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pchk_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pdoc_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pdoc_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_perfil_001: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -26861,6 +27091,106 @@ export type Database = {
         }
       }
       qa_caso_perfil_005: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_plev_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_plev_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_plpa_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltf_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltf_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltf_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltm_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltm_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltp_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_pltp_010: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -26930,7 +27260,147 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_290: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_292: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_293: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_300: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_301: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_310: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_311: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_340: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_341: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_porte_005: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_proc_001: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_proc_002: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_proc_010: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_proc_011: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_proc_012: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -27230,6 +27700,7 @@ export type Database = {
       }
       qa_cpf: { Args: { p_semente: number }; Returns: string }
       qa_cron_sincronizar: { Args: never; Returns: string }
+      qa_dia_util_passado: { Args: { p_atras?: number }; Returns: string }
       qa_disparar_bateria: { Args: { p_modulo?: string }; Returns: string }
       qa_empresa: { Args: { p_nome: string }; Returns: string }
       qa_empresa_com_cota: {
@@ -27360,6 +27831,13 @@ export type Database = {
         Args: { p_nome: string; p_pasta?: string }
         Returns: string
       }
+      qa_novo_hub_processo: {
+        Args: {
+          p_tipo?: Database["public"]["Enums"]["hub_processo_tipo"]
+          p_titulo: string
+        }
+        Returns: string
+      }
       qa_novo_no_org: {
         Args: { p_parent?: string; p_titulo: string }
         Returns: string
@@ -27375,6 +27853,25 @@ export type Database = {
       qa_obrigacao_existe: {
         Args: { p_empresa: string; p_subcategoria: string }
         Returns: boolean
+      }
+      qa_ponto_admissao: {
+        Args: {
+          p_cpf_semente: number
+          p_data_admissao?: string
+          p_empresa_id?: string
+          p_nome: string
+        }
+        Returns: string
+      }
+      qa_ponto_dia: {
+        Args: {
+          p_cpf: string
+          p_data: string
+          p_empresa_id?: string
+          p_nome: string
+          p_status?: string
+        }
+        Returns: undefined
       }
       qa_relatorio_falhas: {
         Args: { p_modulo?: string }
@@ -27409,6 +27906,7 @@ export type Database = {
       }
       qa_sandbox_tenant_id: { Args: never; Returns: string }
       qa_sandbox2_tenant_id: { Args: never; Returns: string }
+      qa_um_usuario: { Args: never; Returns: string }
       qa_verifica_contaminacao: {
         Args: { p_execucao_id: string }
         Returns: {
