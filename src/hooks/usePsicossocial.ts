@@ -596,7 +596,6 @@ export function usePsicossocial() {
     const gheIds = (campanhaData?.ghe_ids || []) as string[];
     const temGHE = gheIds.length > 0;
     let elegiveisGHE = 0;
-    let respondidosGHE = 0;
     if (temGHE) {
       const { data: ghePairsData } = await supabase
         .from("psicossocial_ghe_cargos")
@@ -640,12 +639,6 @@ export function usePsicossocial() {
         return pairsKey.has(key);
       }).length;
 
-      // Numerador: toda resposta de uma campanha vinculada a GHE é, por definição,
-      // de alguém do GHE (a campanha é direcionada e o link é exclusivo dela).
-      // Por isso contamos o total de respostas da campanha — isso cobre tanto
-      // respostas anônimas de Link Geral (sem snapshot de cargo/setor) quanto
-      // respostas antigas, gravadas antes de o GHE ser vinculado.
-      respondidosGHE = respostas.length;
     }
 
     const participacoes = (participacoesRes.data || []) as Array<{ id: string; respondido: boolean | null }>;
