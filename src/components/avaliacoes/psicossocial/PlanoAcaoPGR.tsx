@@ -1,3 +1,4 @@
+import { isEntrevistaInstrumento } from "@/types/psicossocial";
 import { useEffect, useMemo, useState } from "react";
 import {
   ClipboardList,
@@ -119,6 +120,17 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
     return new Date();
   }, [selecionadas]);
 
+  // Entrevista guiada individual é nominal (não anônima): a regra de anonimato
+  // de 5 respostas não se aplica — o inventário e o plano valem a partir de 1.
+  const minimoGrupo = useMemo(
+    () =>
+      selecionadas.length > 0 &&
+      selecionadas.every(c => isEntrevistaInstrumento((c as any).tipo_instrumento))
+        ? 1
+        : MINIMO_ANONIMATO,
+    [selecionadas],
+  );
+
   // GHEs com respondentes suficientes para análise
   const ghes = useMemo(
     () =>
@@ -126,12 +138,12 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
         .filter(g => g.count > 0)
         .map(g => ({
           ...g,
-          liberado: g.count >= MINIMO_ANONIMATO,
-          fatores: g.count >= MINIMO_ANONIMATO
+          liberado: g.count >= minimoGrupo,
+          fatores: g.count >= minimoGrupo
             ? calcularFatoresRisco(g.radar, { isSipro, severidades })
             : [],
         })),
-    [resultadosPorGHE, isSipro, severidades],
+    [resultadosPorGHE, isSipro, severidades, minimoGrupo],
   );
 
   const acoesPorGhe = useMemo(() => {
@@ -584,7 +596,7 @@ export function PlanoAcaoPGR({ campanhas }: PlanoAcaoPGRProps) {
                   <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-800">
                     <Lock className="h-4 w-4 mt-0.5 shrink-0" />
                     <p>
-                      Este GHE tem {ghe.count} resposta(s). São necessárias {MINIMO_ANONIMATO} para
+                      Este GHE tem {ghe.count} resposta(s). São necessárias {minimoGrupo} para
                       liberar a análise sem risco de reidentificação (ISO 45003).
                     </p>
                   </div>

@@ -1,3 +1,4 @@
+import { isEntrevistaInstrumento } from "@/types/psicossocial";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -96,7 +97,9 @@ export function ResultadosPorGHEPanel() {
   const campanhasValidasTodas = useMemo(
     () => campanhas.filter(c =>
       c.ips_score != null &&
-      (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
+      // Entrevista guiada individual é nominal: não há regra de anonimato de 5
+      // respostas; o inventário/plano de ação valem a partir de 1 entrevista.
+      (c.total_respostas || 0) >= (isEntrevistaInstrumento((c as any).tipo_instrumento) ? 1 : MINIMO_ANONIMATO) &&
       Array.isArray(c.radar_data) &&
       c.radar_data.length > 0,
     ),
@@ -110,9 +113,18 @@ export function ResultadosPorGHEPanel() {
     [campanhasValidasTodas, campanhaFiltro],
   );
 
+  // Se o recorte é só de entrevistas guiadas, o mínimo por GHE cai para 1.
+  const minimoGrupo = useMemo(
+    () => campanhasValidas.length > 0 && campanhasValidas.every(c => isEntrevistaInstrumento((c as any).tipo_instrumento))
+      ? 1
+      : MINIMO_ANONIMATO,
+    [campanhasValidas],
+  );
+
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
   const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
   const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
+
 
 
   if (typeof window !== "undefined") {
@@ -134,7 +146,7 @@ export function ResultadosPorGHEPanel() {
       .map(g => {
         const fatores = avaliarFatores(g.radar, isSipro);
         fatores.sort((a, b) => (ordemNivel[a.nivelKey] ?? 4) - (ordemNivel[b.nivelKey] ?? 4));
-        const bloqueado = g.count < MINIMO_ANONIMATO;
+        const bloqueado = g.count < minimoGrupo;
         return {
           ...g,
           fatores: bloqueado ? [] : fatores,
@@ -153,7 +165,7 @@ export function ResultadosPorGHEPanel() {
         if (b.altos !== a.altos) return b.altos - a.altos;
         return (a.ipsMedio ?? 100) - (b.ipsMedio ?? 100);
       });
-  }, [resultadosPorGHE, isSipro]);
+  }, [resultadosPorGHE, isSipro, minimoGrupo]);
 
   const filtroCampanhaBar = (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-1">
@@ -196,7 +208,7 @@ export function ResultadosPorGHEPanel() {
             <Inbox className="h-8 w-8 text-muted-foreground opacity-40" />
             <p className="text-sm font-medium">Nenhuma campanha válida encontrada</p>
             <p className="text-xs text-muted-foreground max-w-md">
-              É necessário pelo menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas
+              É necessário pelo menos uma campanha com resultados (mín. {MINIMO_ANONIMATO} respostas em questionários; 1 em entrevista guiada)
               e dados do radar calculados.
             </p>
           </CardContent>
@@ -320,7 +332,7 @@ export function ResultadosPorGHEPanel() {
                       <div className="flex items-start gap-2 p-2 rounded-md border border-amber-200 bg-amber-50/60 text-[11px] text-amber-800">
                         <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                         <span>
-                          Mínimo de {MINIMO_ANONIMATO} respondentes não atingido —
+                          Mínimo de {minimoGrupo} respondentes não atingido —
                           análise bloqueada por anonimato (ISO 45003).
                         </span>
                       </div>
