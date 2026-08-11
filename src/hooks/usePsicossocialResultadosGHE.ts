@@ -126,7 +126,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         };
       }
 
-      const [respRes, campRes] = await Promise.all([
+      const [respRes, campRes, entRes] = await Promise.all([
         fromTable("questionario_psicossocial_respostas")
           .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, setor_snapshot, cargo_snapshot, indicadores")
           .eq("tenant_id", tenantId)
@@ -137,13 +137,34 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           .select("id, ghe_ids, empresa_id")
           .eq("tenant_id", tenantId)
           .in("id", campanhaIds),
+
+        // Entrevistas guiadas individuais concluídas — viram "respostas"
+        // equivalentes (radar/IPS derivados de resumo_ia) para entrar na
+        // estratificação por GHE.
+        fromTable("psicossocial_entrevistas")
+          .select("id, campanha_id, ghe_id_snapshot, resumo_ia")
+          .eq("tenant_id", tenantId)
+          .in("campanha_id", campanhaIds)
+          .eq("status", "concluida")
+          .not("resumo_ia", "is", null),
       ]);
 
       if (respRes.error) throw respRes.error;
       if (campRes.error) throw campRes.error;
+      if (entRes.error) throw entRes.error;
 
-      const respostas = (respRes.data ?? []) as unknown as RespostaRow[];
+      const respostasQuestionario = (respRes.data ?? []) as unknown as RespostaRow[];
       const campanhasGhe = (campRes.data ?? []) as unknown as CampanhaGheRow[];
+      const respostasEntrevista = entrevistasParaRespostas(
+        (entRes.data ?? []) as unknown as EntrevistaRow[],
+      );
+      const respostas = [...respostasQuestionario, ...respostasEntrevista];
+      const entrevistasPorGhe = new Map<string, number>();
+      for (const e of respostasEntrevista) {
+        if (!e.ghe_id_snapshot) continue;
+        entrevistasPorGhe.set(e.ghe_id_snapshot, (entrevistasPorGhe.get(e.ghe_id_snapshot) ?? 0) + 1);
+      }
+
 
       // Combina GHE ids da campanha + snapshots das respostas para carregar composição completa
       const allGheIds = Array.from(
