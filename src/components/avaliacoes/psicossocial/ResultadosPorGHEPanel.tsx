@@ -146,7 +146,7 @@ export function ResultadosPorGHEPanel() {
       .map(g => {
         const fatores = avaliarFatores(g.radar, isSipro);
         fatores.sort((a, b) => (ordemNivel[a.nivelKey] ?? 4) - (ordemNivel[b.nivelKey] ?? 4));
-        const bloqueado = g.count < MINIMO_ANONIMATO;
+        const bloqueado = g.count < minimoGrupo;
         return {
           ...g,
           fatores: bloqueado ? [] : fatores,
@@ -165,7 +165,7 @@ export function ResultadosPorGHEPanel() {
         if (b.altos !== a.altos) return b.altos - a.altos;
         return (a.ipsMedio ?? 100) - (b.ipsMedio ?? 100);
       });
-  }, [resultadosPorGHE, isSipro]);
+  }, [resultadosPorGHE, isSipro, minimoGrupo]);
 
   const filtroCampanhaBar = (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-1">
@@ -208,7 +208,7 @@ export function ResultadosPorGHEPanel() {
             <Inbox className="h-8 w-8 text-muted-foreground opacity-40" />
             <p className="text-sm font-medium">Nenhuma campanha válida encontrada</p>
             <p className="text-xs text-muted-foreground max-w-md">
-              É necessário pelo menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas
+              É necessário pelo menos uma campanha com resultados (mín. {MINIMO_ANONIMATO} respostas em questionários; 1 em entrevista guiada)
               e dados do radar calculados.
             </p>
           </CardContent>
@@ -332,7 +332,7 @@ export function ResultadosPorGHEPanel() {
                       <div className="flex items-start gap-2 p-2 rounded-md border border-amber-200 bg-amber-50/60 text-[11px] text-amber-800">
                         <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                         <span>
-                          Mínimo de {MINIMO_ANONIMATO} respondentes não atingido —
+                          Mínimo de {minimoGrupo} respondentes não atingido —
                           análise bloqueada por anonimato (ISO 45003).
                         </span>
                       </div>
