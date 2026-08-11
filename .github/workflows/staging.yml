@@ -112,6 +112,13 @@ jobs:
       CYPRESS_BASE_URL: https://ustudy123.github.io/seguramente-0aed4f79/
       CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+      # Caminho de volta do resultado para o painel de QA. O token tem de
+      # ser o mesmo nos dois lados: secret aqui e segredo QA_E2E_TOKEN na
+      # Edge Function do staging. Faltando qualquer um dos dois, a suíte
+      # roda igual e apenas não reporta — nunca quebra por causa disso.
+      QA_E2E_URL: https://bmehdgthciuvdbvutsdv.supabase.co/functions/v1/qa-registrar-e2e
+      QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN }}
+      QA_E2E_ORIGEM: esteira staging
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

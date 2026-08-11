@@ -41,9 +41,100 @@ function exigirAmbienteDeTeste(url: string): string {
   return url;
 }
 
+// =====================================================================
+// RELATÓRIO DE VOLTA PARA O MOTOR DE QA
+//
+// O motor SQL marca todo caso `nivel = 'e2e'` como "não implementado",
+// dizendo que a cobertura vive no Cypress. Faltava o caminho de volta:
+// a suíte rodava e o resultado morria no log da esteira.
+//
+// Isto usa o evento `after:run`, que dispara UMA vez no fim da corrida
+// inteira. Vantagem sobre um hook dentro dos testes: nenhum spec precisa
+// ser alterado, e a corrida vira uma execução só no histórico em vez de
+// uma por arquivo.
+//
+// Sem QA_E2E_URL/QA_E2E_TOKEN no ambiente, não envia nada e não reclama:
+// corrida local de quem está depurando não deve sujar o painel de QA.
+// =====================================================================
+
+interface TesteDaCorrida {
+  spec: string;
+  teste: string;
+  situacao: "passou" | "falhou" | "pulado";
+  duracao_ms?: number;
+  erro?: string;
+}
+
+function situacaoDoCypress(estado: string | undefined): TesteDaCorrida["situacao"] {
+  if (estado === "passed") return "passou";
+  if (estado === "failed") return "falhou";
+  return "pulado"; // pending, skipped, ou estado que o Cypress não classificou
+}
+
+async function enviarParaOQA(resultados: unknown): Promise<void> {
+  const url = process.env.QA_E2E_URL;
+  const token = process.env.QA_E2E_TOKEN;
+
+  if (!url || !token) {
+    console.log("[QA] QA_E2E_URL/QA_E2E_TOKEN ausentes — resultado não enviado ao painel.");
+    return;
+  }
+
+  // A forma de `results` muda entre versões do Cypress e vem vazia quando
+  // a corrida aborta antes de rodar. Nada disso pode derrubar a suíte:
+  // o valor da corrida são os testes, não o relatório.
+  const runs = (resultados as { runs?: unknown[] })?.runs;
+  if (!Array.isArray(runs)) {
+    console.log("[QA] Corrida sem resultados legíveis — nada a enviar.");
+    return;
+  }
+
+  const testes: TesteDaCorrida[] = [];
+
+  for (const corrida of runs as Array<Record<string, any>>) {
+    const spec: string = corrida?.spec?.relative ?? corrida?.spec?.name ?? "(spec desconhecido)";
+
+    for (const teste of corrida?.tests ?? []) {
+      const titulo: string[] = Array.isArray(teste?.title) ? teste.title : [String(teste?.title ?? "")];
+
+      testes.push({
+        spec,
+        // Último pedaço do título = o texto do it(). É por ele que a
+        // tabela qa_cobertura_e2e liga o teste ao caso documentado.
+        teste: titulo[titulo.length - 1] ?? "",
+        situacao: situacaoDoCypress(teste?.state),
+        duracao_ms: teste?.attempts?.[teste.attempts.length - 1]?.duration ?? teste?.duration,
+        erro: teste?.displayError ?? teste?.attempts?.[teste.attempts.length - 1]?.error?.message,
+      });
+    }
+  }
+
+  try {
+    const resposta = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-qa-token": token },
+      body: JSON.stringify({ origem: process.env.QA_E2E_ORIGEM || "esteira", resultados: testes }),
+    });
+
+    const corpo = await resposta.text();
+
+    if (!resposta.ok) {
+      console.log(`[QA] Painel recusou o resultado (HTTP ${resposta.status}): ${corpo}`);
+      return;
+    }
+
+    console.log(`[QA] ${testes.length} teste(s) enviados ao painel. Resposta: ${corpo}`);
+  } catch (erro) {
+    console.log(`[QA] Não consegui enviar ao painel: ${(erro as Error).message}`);
+  }
+}
+
 export default defineConfig({
   e2e: {
     baseUrl: exigirAmbienteDeTeste(process.env.CYPRESS_BASE_URL || SITE_DE_TESTE),
+    setupNodeEvents(on) {
+      on("after:run", enviarParaOQA);
+    },
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 120000,
     supportFile: "cypress/support/e2e.ts",
