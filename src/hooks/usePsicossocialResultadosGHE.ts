@@ -80,6 +80,53 @@ export interface ResultadoGHE {
  * quando os snapshots vierem vazios.
  */
 
+interface EntrevistaRow {
+  id: string;
+  campanha_id: string;
+  ghe_id_snapshot: string | null;
+  resumo_ia: {
+    riscos?: { risco_nome?: string; presente?: boolean; probabilidade?: number; severidade?: number }[];
+  } | null;
+}
+
+/**
+ * Converte entrevistas guiadas concluídas em "respostas" equivalentes:
+ * cada risco vira um eixo do radar (P × S × 4, escala 0-100) e o IPS é o
+ * índice protetivo (100 − risco médio) — mesma regra de
+ * `useEntrevistasGuiadasAggregates`, porém por entrevista (individual),
+ * para permitir a estratificação por GHE.
+ */
+function entrevistasParaRespostas(rows: EntrevistaRow[]): RespostaRow[] {
+  return rows.map((e) => {
+    const riscos = e.resumo_ia?.riscos ?? [];
+    const radar: RadarDimensao[] = [];
+    for (const r of riscos) {
+      if (!r.risco_nome) continue;
+      const prob = Number(r.probabilidade) || (r.presente === false ? 1 : 0);
+      const sev = Number(r.severidade) || (r.presente === false ? 1 : 0);
+      radar.push({
+        subject: r.risco_nome,
+        value: Math.min(100, Math.max(0, prob * sev * 4)),
+        fullMark: 100,
+      });
+    }
+    const riscoMedio = radar.length > 0
+      ? radar.reduce((a, b) => a + b.value, 0) / radar.length
+      : 0;
+    return {
+      id: e.id,
+      campanha_id: e.campanha_id,
+      ghe_id_snapshot: e.ghe_id_snapshot,
+      ghe_nome_snapshot: null,
+      setor_snapshot: null,
+      cargo_snapshot: null,
+      indicadores: radar.length > 0
+        ? { radar, IPS: Math.round(100 - riscoMedio) }
+        : null,
+    };
+  });
+}
+
 
 export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) {
   const { tenantId } = useTenant();
