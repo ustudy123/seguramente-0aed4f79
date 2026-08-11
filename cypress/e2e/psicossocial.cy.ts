@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { credenciaisDeTeste } from "../support/credenciais";
+
 Cypress.on("uncaught:exception", (err) => {
   if (/signal is aborted without reason|AbortError/i.test(err.message)) {
     return false;
@@ -19,9 +21,8 @@ Cypress.on("window:before:load", (win) => {
 });
 
 describe("Módulo Psicossocial NR-01", () => {
-  const email = "renata_sophia_cortereal@cafefrossard.com";
-  const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://YourEyes.app.br";
+  const { email, senha: password } = credenciaisDeTeste();
+  const baseUrl = Cypress.config("baseUrl") as string;
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
   const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;

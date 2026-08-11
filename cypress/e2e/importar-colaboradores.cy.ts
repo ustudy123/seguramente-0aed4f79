@@ -1,9 +1,10 @@
 /// <reference types="cypress" />
 
+import { credenciaisDeTeste } from "../support/credenciais";
+
 describe("Colaboradores - Modal de Importação", () => {
-  const email = "renata_sophia_cortereal@cafefrossard.com";
-  const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://YourEyes.app.br";
+  const { email, senha: password } = credenciaisDeTeste();
+  const baseUrl = Cypress.config("baseUrl") as string;
 
   function closeEmpresaModalIfNeeded() {
     cy.get("body", { timeout: 15000 }).then(($body) => {

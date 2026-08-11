@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Evidências das corridas do Cypress (prints e vídeos)
+cypress/screenshots
+cypress/videos
+cypress/downloads
