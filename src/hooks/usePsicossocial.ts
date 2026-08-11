@@ -41,6 +41,47 @@ function gerarToken(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
 }
 
+interface ContagemParticipacaoCampanhaInput {
+  temGHE: boolean;
+  isEntrevistaGuiada: boolean;
+  elegiveisGHE: number;
+  totalConvites: number;
+  totalParticipacoes: number;
+  totalRespostas: number;
+  totalEntrevistas: number;
+  colaboradoresAtivos: number;
+  concluidosConvites: number;
+  respondidosParticipacoes: number;
+  entrevistasConcluidas: number;
+}
+
+export function calcularContagemParticipacaoCampanha({
+  temGHE,
+  isEntrevistaGuiada,
+  elegiveisGHE,
+  totalConvites,
+  totalParticipacoes,
+  totalRespostas,
+  totalEntrevistas,
+  colaboradoresAtivos,
+  concluidosConvites,
+  respondidosParticipacoes,
+  entrevistasConcluidas,
+}: ContagemParticipacaoCampanhaInput): { concluidos: number; total: number } {
+  const respostasEfetivas = isEntrevistaGuiada
+    ? Math.max(totalRespostas, entrevistasConcluidas)
+    : totalRespostas;
+
+  const concluidos = temGHE
+    ? respostasEfetivas
+    : Math.max(respostasEfetivas, concluidosConvites, respondidosParticipacoes);
+  const total = temGHE
+    ? Math.max(elegiveisGHE, respostasEfetivas)
+    : Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas, colaboradoresAtivos);
+
+  return { concluidos, total };
+}
+
 /**
  * Calcular indicadores psicossociais a partir das respostas.
  *
@@ -632,16 +673,23 @@ export function usePsicossocial() {
     //   respostas da campanha (toda resposta é de alguém do GHE, por construção).
     // • Sem GHE → comportamento legado: convites nominais ou quadro ativo da empresa
     //   (Link Geral anônimo). O max() cobre haver mais respostas que cadastros ativos.
-    const concluidos = temGHE
-      ? respondidosGHE
-      : Math.max(totalRespostas, concluidosConvites, respondidosParticipacoes, entrevistasConcluidas);
-    const total = temGHE
-      ? Math.max(elegiveisGHE, respondidosGHE)
-      : Math.max(totalConvites, totalParticipacoes, totalRespostas, totalEntrevistas, colaboradoresAtivos);
+    const isEntrevistaGuiada =isEntrevistaInstrumento(campanhaRes.data?.tipo_instrumento);
+    const { concluidos, total } = calcularContagemParticipacaoCampanha({
+      temGHE,
+      isEntrevistaGuiada,
+      elegiveisGHE,
+      totalConvites,
+      totalParticipacoes,
+      totalRespostas,
+      totalEntrevistas,
+      colaboradoresAtivos,
+      concluidosConvites,
+      respondidosParticipacoes,
+      entrevistasConcluidas,
+    });
     // Pendentes = quem ainda não respondeu dentro do universo elegível
     const pendentes = Math.max(0, total - concluidos);
 
-    const isEntrevistaGuiada =isEntrevistaInstrumento(campanhaRes.data?.tipo_instrumento);
     const MINIMO_ANONIMATO = isEntrevistaGuiada ? 1 : 5;
     // Para entrevista guiada, as respostas vivem em `psicossocial_entrevistas` (concluídas).
     // Para questionários, contam as respostas reais salvas.
