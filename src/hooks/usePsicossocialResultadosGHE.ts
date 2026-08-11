@@ -96,13 +96,20 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     staleTime: 5 * 60_000,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)("preencher_ghe_snapshot_respostas", {
-        p_campanha_ids: campanhaIds,
-      });
-      if (error) throw error;
-      return Number(data ?? 0);
+      const rpc = supabase.rpc as any;
+      const [respRes, entRes] = await Promise.all([
+        rpc("preencher_ghe_snapshot_respostas", { p_campanha_ids: campanhaIds }),
+        // Entrevistas guiadas individuais: sem este passo, ao vincular o GHE à
+        // campanha as entrevistas já concluídas ficavam sem `ghe_id_snapshot` e
+        // o painel por GHE aparecia zerado.
+        rpc("preencher_ghe_snapshot_entrevistas", { p_campanha_ids: campanhaIds }),
+      ]);
+      if (respRes.error) throw respRes.error;
+      if (entRes.error) throw entRes.error;
+      return Number(respRes.data ?? 0) + Number(entRes.data ?? 0);
     },
   });
+
 
 
   const query = useQuery({
