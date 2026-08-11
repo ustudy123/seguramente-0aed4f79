@@ -4,11 +4,13 @@
 // Por que este arquivo existe: até 08/2026 os specs traziam o e-mail e a
 // senha de uma pessoa real de cliente escritos no código, versionados no
 // Git. Isso é dado pessoal exposto no repositório e senha em texto puro.
-// A conta de teste agora é uma conta de robô do ambiente de teste, e a
-// senha vive só nos secrets do GitHub (CYPRESS_EMAIL / CYPRESS_PASSWORD).
+// A conta de teste agora é uma conta de robô, descartável, do ambiente
+// de teste — o padrão vive no cypress.config.ts e pode ser trocado por
+// CYPRESS_EMAIL / CYPRESS_PASSWORD sem tocar no código.
 //
-// Se faltar credencial, a suíte para aqui com uma mensagem que diz o que
-// fazer — melhor do que quebrar lá na frente com "não achei o campo".
+// Se alguém esvaziar as duas, a suíte para aqui com uma mensagem que diz
+// o que fazer — melhor do que quebrar lá na frente com "não achei o
+// campo de senha".
 // =====================================================================
 
 export interface CredenciaisDeTeste {

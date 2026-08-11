@@ -49,11 +49,18 @@ export default defineConfig({
     supportFile: "cypress/support/e2e.ts",
     specPattern: "cypress/e2e/**/*.cy.ts",
     env: {
-      // Credenciais do usuário de teste. Vêm dos secrets do GitHub
-      // (CYPRESS_EMAIL / CYPRESS_PASSWORD) — nunca do código, nunca de
-      // uma conta de pessoa real. Ver cypress/support/credenciais.ts.
-      email: process.env.CYPRESS_EMAIL || "",
-      senha: process.env.CYPRESS_PASSWORD || "",
+      // Conta de teste do robô. É uma conta descartável do ambiente de
+      // teste, sobre dados fictícios — por decisão do dono do produto
+      // ela fica aqui mesmo, para a suíte rodar sem depender de secret.
+      //
+      // O que NÃO pode voltar a acontecer: conta de pessoa real, ou
+      // senha que também valha em produção. Foi assim que a senha de
+      // uma cliente acabou versionada nos specs até 08/2026.
+      //
+      // Quem quiser trocar sem mexer no código usa as variáveis de
+      // ambiente, que continuam tendo precedência.
+      email: process.env.CYPRESS_EMAIL || "teste@lucas.com",
+      senha: process.env.CYPRESS_PASSWORD || "7654321",
       // Projeto Supabase de produção — a suíte aborta se a aplicação
       // tentar falar com ele. Segunda trava, agora em tempo de execução.
       refProducao: "diayjpsrcerycycyaxst",

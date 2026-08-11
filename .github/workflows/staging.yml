@@ -100,9 +100,9 @@ jobs:
   # está no ar. O alvo é fixado aqui e conferido de novo pela trava do
   # cypress.config.ts — produção não é alcançável nem de propósito.
   #
-  # Enquanto os secrets CYPRESS_EMAIL/CYPRESS_PASSWORD não existirem, o
-  # job se anuncia e passa sem rodar nada. Criar os secrets é o que
-  # liga a suíte; nenhuma mudança de código é necessária para ativar.
+  # A conta de teste tem valor padrão no cypress.config.ts, então o job
+  # roda sem depender de secret. Os secrets abaixo, se existirem, têm
+  # precedência — é assim que se troca a conta sem mexer no código.
   # ===================================================================
   telas:
     name: Testes de tela (Cypress) no staging
@@ -114,32 +114,19 @@ jobs:
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-      - name: Há usuário de teste configurado?
-        id: cred
-        run: |
-          if [ -z "$CYPRESS_EMAIL" ] || [ -z "$CYPRESS_PASSWORD" ]; then
-            echo "::notice::Secrets CYPRESS_EMAIL/CYPRESS_PASSWORD ausentes — suite de tela pulada."
-            echo "rodar=nao" >> "$GITHUB_OUTPUT"
-          else
-            echo "rodar=sim" >> "$GITHUB_OUTPUT"
-          fi
       - uses: actions/setup-node@v4
-        if: steps.cred.outputs.rodar == 'sim'
         with:
           node-version: 20
           cache: npm
       - name: Cache do binário do Cypress
-        if: steps.cred.outputs.rodar == 'sim'
         uses: actions/cache@v4
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Instalar dependências
-        if: steps.cred.outputs.rodar == 'sim'
         run: npm ci
       - name: Esperar o site de teste responder
         # O deploy do Pages retorna antes do CDN servir a versão nova.
-        if: steps.cred.outputs.rodar == 'sim'
         run: |
           for i in $(seq 1 20); do
             if curl -fsS -o /dev/null "$CYPRESS_BASE_URL"; then
@@ -151,10 +138,9 @@ jobs:
           echo "::error::Site de teste não respondeu a tempo."
           exit 1
       - name: Rodar a suíte
-        if: steps.cred.outputs.rodar == 'sim'
         run: npm run test:e2e
       - name: Guardar prints e vídeos da corrida
-        if: always() && steps.cred.outputs.rodar == 'sim'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-evidencias

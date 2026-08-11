@@ -68,10 +68,18 @@ describe("Colaboradores - Modal de Importação", () => {
           cy.contains("Importar Colaboradores").should("be.visible");
         });
 
-      // Fecha o modal clicando no X ou fora
-      cy.get('button:contains("X"), [aria-label="Close"]').first().click({ force: true }).catch(() => {
-        // Fallback: pressiona ESC
-        cy.get("body").type("{esc}");
+      // Fecha o modal clicando no X, com ESC como plano B.
+      // (Antes isto era um .catch() encadeado no cy.get — método que não
+      // existe no Cypress: o passo quebrava sempre, nunca caía no plano
+      // B. Condição em Cypress se escreve olhando o DOM primeiro.)
+      cy.get("body").then(($body) => {
+        const $fechar = $body.find('button:contains("X"), [aria-label="Close"]');
+
+        if ($fechar.length > 0) {
+          cy.wrap($fechar.first()).click({ force: true });
+        } else {
+          cy.get("body").type("{esc}");
+        }
       });
       
       // Verifica se o modal fechou
