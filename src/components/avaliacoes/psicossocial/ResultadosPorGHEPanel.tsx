@@ -96,7 +96,9 @@ export function ResultadosPorGHEPanel() {
   const campanhasValidasTodas = useMemo(
     () => campanhas.filter(c =>
       c.ips_score != null &&
-      (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
+      // Entrevista guiada individual é nominal: não há regra de anonimato de 5
+      // respostas; o inventário/plano de ação valem a partir de 1 entrevista.
+      (c.total_respostas || 0) >= (isEntrevistaInstrumento((c as any).tipo_instrumento) ? 1 : MINIMO_ANONIMATO) &&
       Array.isArray(c.radar_data) &&
       c.radar_data.length > 0,
     ),
@@ -110,9 +112,18 @@ export function ResultadosPorGHEPanel() {
     [campanhasValidasTodas, campanhaFiltro],
   );
 
+  // Se o recorte é só de entrevistas guiadas, o mínimo por GHE cai para 1.
+  const minimoGrupo = useMemo(
+    () => campanhasValidas.length > 0 && campanhasValidas.every(c => isEntrevistaInstrumento((c as any).tipo_instrumento))
+      ? 1
+      : MINIMO_ANONIMATO,
+    [campanhasValidas],
+  );
+
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
   const campanhaIds = useMemo(() => campanhasValidas.map(c => c.id), [campanhasValidas]);
   const { resultadosPorGHE, isLoading, error } = usePsicossocialResultadosGHE(campanhaIds);
+
 
 
   if (typeof window !== "undefined") {
