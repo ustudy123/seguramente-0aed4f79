@@ -462,15 +462,15 @@ export function PsicossocialDashboard() {
         )}
 
             {/* Índices Derivados */}
-            <IndicesDerivadosDashboard campanhas={campanhas} />
+            <IndicesDerivadosDashboard campanhas={campanhasEnriquecidas} />
 
             {/* Documento oficial de Fatores de Risco Psicossociais (PGR/GRO) por campanha */}
-            <DocumentoFatoresRiscoPGR campanhas={campanhasAll} />
+            <DocumentoFatoresRiscoPGR campanhas={campanhasEnriquecidas} />
           </TabsContent>
 
           {/* Tab: Metodologia (agrupa Fatores de Riscos, Instrumentos e Índices) */}
           <TabsContent value="metodologia" className="mt-4">
-            <MetodologiaPanel campanhas={campanhas} />
+            <MetodologiaPanel campanhas={campanhasEnriquecidas} />
           </TabsContent>
 
           {/* Tab: GHE */}
@@ -480,24 +480,24 @@ export function PsicossocialDashboard() {
 
           {/* Tab: Resultados Psicossociais (unificado: Geral + GHE + Burnout/Boreout + Histórico IPS) */}
           <TabsContent value="resultados" className="mt-4">
-            <ResultadosPsicossociaisHub campanhas={campanhas} />
+            <ResultadosPsicossociaisHub campanhas={campanhasEnriquecidas} />
           </TabsContent>
 
           {/* Retrocompat: rotas antigas redirecionam para a Hub */}
           <TabsContent value="resultados-ghe" className="mt-4">
-            <ResultadosPsicossociaisHub campanhas={campanhas} />
+            <ResultadosPsicossociaisHub campanhas={campanhasEnriquecidas} />
           </TabsContent>
           <TabsContent value="burnout-boreout" className="mt-4">
-            <ResultadosPsicossociaisHub campanhas={campanhas} />
+            <ResultadosPsicossociaisHub campanhas={campanhasEnriquecidas} />
           </TabsContent>
           <TabsContent value="historico" className="mt-4 space-y-4">
-            <ResultadosPsicossociaisHub campanhas={campanhas} />
+            <ResultadosPsicossociaisHub campanhas={campanhasEnriquecidas} />
           </TabsContent>
 
           {/* Tab: Campanhas */}
           <TabsContent value="campanhas" className="mt-4">
             <CampanhaList 
-              campanhas={campanhas} 
+              campanhas={campanhasEnriquecidas} 
               onNovaCampanha={handleNovaCampanha} 
               onEditarCampanha={handleEditarCampanha} 
             />
