@@ -170,6 +170,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           ghes: [] as GheRow[],
           composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>(),
           elegiveisPorGhe: new Map<string, number>(),
+          entrevistasPorGhe: new Map<string, number>(),
         };
       }
 
@@ -329,7 +330,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       }
 
 
-      return { respostas, campanhasGhe, ghes, composicaoPorGhe, elegiveisPorGhe };
+      return { respostas, campanhasGhe, ghes, composicaoPorGhe, elegiveisPorGhe, entrevistasPorGhe };
     },
     staleTime: 60_000,
   });
@@ -365,6 +366,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     const ghes = data?.ghes ?? [];
     const composicaoPorGhe = data?.composicaoPorGhe ?? new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
     const elegiveisPorGhe = data?.elegiveisPorGhe ?? new Map<string, number>();
+    const entrevistasPorGhe = data?.entrevistasPorGhe ?? new Map<string, number>();
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
@@ -461,9 +463,14 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         ghe_id: realGheId,
         ghe_nome: g.nome,
         ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
-        count: realGheId && respondentesReais.has(realGheId)
-          ? respondentesReais.get(realGheId)!   // respondentes reais por GHE (via cpf_hash)
-          : g.count,                             // fallback: agrupamento (pode inflar sem ghe snapshot)
+        // Respondentes = questionários (via cpf_hash) + entrevistas guiadas
+        // individuais vinculadas ao GHE. Sem somar as entrevistas, campanhas
+        // 100% por entrevista ficavam com count 0 e o GHE era bloqueado.
+        count: realGheId
+          ? (respondentesReais.has(realGheId)
+              ? respondentesReais.get(realGheId)! + (entrevistasPorGhe.get(realGheId) ?? 0)
+              : Math.max(g.count, entrevistasPorGhe.get(realGheId) ?? 0))
+          : g.count,
         elegiveis: realGheId ? (elegiveisPorGhe.get(realGheId) ?? 0) : 0,
         radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
           subject,
