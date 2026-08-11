@@ -141,51 +141,78 @@ diferentes (gestor, colaborador) para conferir o que cada um enxerga.
 3. Preencha um e-mail fictício (ex.: `gestor@teste.youreyes.com`) e uma senha.
 4. Marque **Auto Confirm User** — sem isso a conta fica esperando uma
    confirmação de e-mail que nunca chega.
-5. Clique no usuário criado e **copie o UUID** (código longo).
+
+Só isso. Não precisa copiar código nenhum: o script do passo 2 encontra o
+usuário pelo e-mail.
 
 ### Passo 2 — dar identidade e permissão (SQL Editor do teste)
 
-Só criar o acesso não basta: sem cadastro interno, a pessoa entra num sistema
-vazio. Abra o SQL Editor do banco de **teste**, cole o script abaixo, ajuste as
-sete linhas do topo e execute.
+Só criar o acesso não basta: sem cadastro interno, a pessoa entra e vê
+**“Acesso Restrito — nenhuma empresa vinculada à sua conta”**. Abra o SQL Editor
+do banco de **teste**, cole o script abaixo, ajuste as linhas do topo e execute.
+Pode rodar quantas vezes quiser: ele também serve para corrigir um usuário que
+já existe (mudar tipo ou papel).
 
 ```sql
 DO $$
 DECLARE
-  -- >>> AJUSTE AS LINHAS ABAIXO <<<
-  v_uid    uuid := '00000000-0000-0000-0000-000000000000'; -- UUID copiado no passo 1
-  v_nome   text := 'Gestor de Testes';
+  -- >>> AJUSTE ESTAS LINHAS <<<
   v_email  text := 'gestor@teste.youreyes.com';
-  v_cpf    text := '90000010138';   -- use um CPF da lista abaixo (não repita)
+  v_nome   text := 'Gestor de Testes';
+  v_cpf    text := '90000010138';   -- um CPF da lista abaixo (não repita)
   v_tipo   text := 'gestor';        -- administrador | gestor | colaborador
   v_papel  text := 'manager';       -- owner | admin | manager | user
   v_tenant uuid := '11111111-1111-1111-1111-111111111111'; -- Empresa Staging (não mude)
+  v_uid    uuid;
+  v_dono   uuid;
 BEGIN
+  SELECT id INTO v_uid FROM auth.users WHERE lower(email) = lower(v_email);
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Não existe o usuário % em Authentication > Users deste projeto. Crie o acesso no painel primeiro (passo 1).', v_email;
+  END IF;
+
+  SELECT auth_user_id INTO v_dono FROM public.usuarios_base
+   WHERE tenant_id = v_tenant AND cpf = v_cpf;
+  IF v_dono IS NOT NULL AND v_dono <> v_uid THEN
+    RAISE EXCEPTION 'O CPF % já está em uso neste ambiente por outro usuário. Escolha outro da lista.', v_cpf;
+  END IF;
+
   INSERT INTO public.profiles (user_id, tenant_id, nome_completo, onboarding_concluido)
   VALUES (v_uid, v_tenant, v_nome, true)
-  ON CONFLICT (user_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id;
+  ON CONFLICT (user_id) DO UPDATE
+    SET tenant_id = EXCLUDED.tenant_id, nome_completo = EXCLUDED.nome_completo;
+
+  -- Garante EXATAMENTE o papel pedido. Papel esquecido faz um usuário que
+  -- deveria ser restrito ter acesso amplo em silêncio — e o teste passa a
+  -- mentir, dizendo "está protegido" quando não está.
+  DELETE FROM public.user_roles
+   WHERE user_id = v_uid AND role <> v_papel::public.app_role;
 
   INSERT INTO public.user_roles (user_id, role)
   VALUES (v_uid, v_papel::public.app_role)
   ON CONFLICT (user_id, role) DO NOTHING;
 
-  INSERT INTO public.usuarios_base
-    (tenant_id, auth_user_id, nome_completo, email_principal, cpf, tipo_usuario, status)
-  VALUES (v_tenant, v_uid, v_nome, v_email, v_cpf,
-          v_tipo::public.usuario_tipo, 'ativo'::public.usuario_status)
-  ON CONFLICT (auth_user_id) DO NOTHING;
-
-  RAISE NOTICE 'Usuario de teste pronto: % (%)', v_nome, v_email;
+  IF EXISTS (SELECT 1 FROM public.usuarios_base WHERE auth_user_id = v_uid) THEN
+    UPDATE public.usuarios_base
+       SET tenant_id = v_tenant, nome_completo = v_nome, email_principal = v_email,
+           cpf = v_cpf, tipo_usuario = v_tipo::public.usuario_tipo,
+           status = 'ativo'::public.usuario_status
+     WHERE auth_user_id = v_uid;
+  ELSE
+    INSERT INTO public.usuarios_base
+      (tenant_id, auth_user_id, nome_completo, email_principal, cpf, tipo_usuario, status)
+    VALUES (v_tenant, v_uid, v_nome, v_email, v_cpf,
+            v_tipo::public.usuario_tipo, 'ativo'::public.usuario_status);
+  END IF;
 END $$;
 
--- Conferência: deve listar o usuário criado
+-- Conferência: deve listar o usuário com UM único papel
 SELECT ub.nome_completo, ub.email_principal, ub.tipo_usuario::text AS tipo,
-       r.role::text AS papel, COALESCE(pa.nome, '(sem perfil de acesso)') AS perfil
+       r.role::text AS papel, t.nome AS empresa
 FROM public.usuarios_base ub
+JOIN public.tenants t ON t.id = ub.tenant_id
 LEFT JOIN public.user_roles r ON r.user_id = ub.auth_user_id
-LEFT JOIN public.usuario_perfil_vinculos v ON v.usuario_id = ub.id AND COALESCE(v.ativo, true)
-LEFT JOIN public.perfis_acesso pa ON pa.id = v.perfil_id
-WHERE ub.email_principal = 'gestor@teste.youreyes.com';
+WHERE lower(ub.email_principal) = lower('gestor@teste.youreyes.com');
 ```
 
 **Combinações que fazem sentido**
@@ -200,6 +227,11 @@ O colaborador comum recebe automaticamente o perfil **“Colaborador (padrão)�
 — auto-serviço puro: enxerga apenas os próprios dados. É o mesmo comportamento
 do sistema real para cadastros novos, e é a melhor forma de conferir se a
 camada de permissões está protegendo o dado dos colegas.
+
+> **Por que o script apaga papéis antigos:** um usuário de teste que deveria
+> ser restrito, mas carrega um papel esquecido de administrador, responde
+> “tem acesso” a tudo — e um teste de permissão feito com ele diz que está
+> tudo protegido quando não está. O script garante um papel só, o que você pediu.
 
 **CPFs fictícios prontos** (com dígito verificador válido; use um por usuário e
 não repita): `90000010138`, `90000010219`, `90000010308`, `90000010480`,
