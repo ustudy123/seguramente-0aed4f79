@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validarElegibilidadeGHE } from "@/lib/psicossocial-ghe";
+import { calcularContagemParticipacaoCampanha } from "@/hooks/usePsicossocial";
 
 describe("validarElegibilidadeGHE", () => {
   it("permite remover todos os vínculos de um GHE existente antes da exclusão", () => {
@@ -63,5 +64,39 @@ describe("empresas abaixo do mínimo", () => {
         totalElegiveisEmpresa: 12,
       }),
     ).toContain("mínimo permitido é 5");
+  });
+});
+
+describe("contagem de entrevistas após vincular GHE", () => {
+  it("preserva entrevistas guiadas concluídas como respostas", () => {
+    expect(calcularContagemParticipacaoCampanha({
+      temGHE: true,
+      isEntrevistaGuiada: true,
+      elegiveisGHE: 2,
+      totalConvites: 0,
+      totalParticipacoes: 0,
+      totalRespostas: 0,
+      totalEntrevistas: 2,
+      colaboradoresAtivos: 2,
+      concluidosConvites: 0,
+      respondidosParticipacoes: 0,
+      entrevistasConcluidas: 1,
+    })).toEqual({ concluidos: 1, total: 2 });
+  });
+
+  it("não altera a contagem de questionários vinculados a GHE", () => {
+    expect(calcularContagemParticipacaoCampanha({
+      temGHE: true,
+      isEntrevistaGuiada: false,
+      elegiveisGHE: 8,
+      totalConvites: 0,
+      totalParticipacoes: 0,
+      totalRespostas: 5,
+      totalEntrevistas: 0,
+      colaboradoresAtivos: 8,
+      concluidosConvites: 0,
+      respondidosParticipacoes: 0,
+      entrevistasConcluidas: 0,
+    })).toEqual({ concluidos: 5, total: 8 });
   });
 });
