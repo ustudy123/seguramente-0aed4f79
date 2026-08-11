@@ -28053,6 +28053,10 @@ export type Database = {
         Returns: Json
       }
       reavaliar_validade_documentos: { Args: never; Returns: number }
+      recalcular_agregados_entrevista_campanha: {
+        Args: { p_campanha_id: string }
+        Returns: undefined
+      }
       recalcular_status_terceiro: {
         Args: { p_terceiro_id: string }
         Returns: undefined
