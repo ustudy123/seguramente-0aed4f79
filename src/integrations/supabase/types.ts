@@ -24981,6 +24981,10 @@ export type Database = {
           trabalhado_min: number
         }[]
       }
+      preencher_ghe_snapshot_entrevistas: {
+        Args: { p_campanha_ids: string[] }
+        Returns: number
+      }
       preencher_ghe_snapshot_respostas: {
         Args: { p_campanha_ids: string[] }
         Returns: number

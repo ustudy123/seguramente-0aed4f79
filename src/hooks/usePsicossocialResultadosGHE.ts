@@ -80,6 +80,53 @@ export interface ResultadoGHE {
  * quando os snapshots vierem vazios.
  */
 
+interface EntrevistaRow {
+  id: string;
+  campanha_id: string;
+  ghe_id_snapshot: string | null;
+  resumo_ia: {
+    riscos?: { risco_nome?: string; presente?: boolean; probabilidade?: number; severidade?: number }[];
+  } | null;
+}
+
+/**
+ * Converte entrevistas guiadas concluídas em "respostas" equivalentes:
+ * cada risco vira um eixo do radar (P × S × 4, escala 0-100) e o IPS é o
+ * índice protetivo (100 − risco médio) — mesma regra de
+ * `useEntrevistasGuiadasAggregates`, porém por entrevista (individual),
+ * para permitir a estratificação por GHE.
+ */
+function entrevistasParaRespostas(rows: EntrevistaRow[]): RespostaRow[] {
+  return rows.map((e) => {
+    const riscos = e.resumo_ia?.riscos ?? [];
+    const radar: RadarDimensao[] = [];
+    for (const r of riscos) {
+      if (!r.risco_nome) continue;
+      const prob = Number(r.probabilidade) || (r.presente === false ? 1 : 0);
+      const sev = Number(r.severidade) || (r.presente === false ? 1 : 0);
+      radar.push({
+        subject: r.risco_nome,
+        value: Math.min(100, Math.max(0, prob * sev * 4)),
+        fullMark: 100,
+      });
+    }
+    const riscoMedio = radar.length > 0
+      ? radar.reduce((a, b) => a + b.value, 0) / radar.length
+      : 0;
+    return {
+      id: e.id,
+      campanha_id: e.campanha_id,
+      ghe_id_snapshot: e.ghe_id_snapshot,
+      ghe_nome_snapshot: null,
+      setor_snapshot: null,
+      cargo_snapshot: null,
+      indicadores: radar.length > 0
+        ? { radar, IPS: Math.round(100 - riscoMedio) }
+        : null,
+    };
+  });
+}
+
 
 export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) {
   const { tenantId } = useTenant();
@@ -96,13 +143,20 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     staleTime: 5 * 60_000,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)("preencher_ghe_snapshot_respostas", {
-        p_campanha_ids: campanhaIds,
-      });
-      if (error) throw error;
-      return Number(data ?? 0);
+      const rpc = supabase.rpc as any;
+      const [respRes, entRes] = await Promise.all([
+        rpc("preencher_ghe_snapshot_respostas", { p_campanha_ids: campanhaIds }),
+        // Entrevistas guiadas individuais: sem este passo, ao vincular o GHE à
+        // campanha as entrevistas já concluídas ficavam sem `ghe_id_snapshot` e
+        // o painel por GHE aparecia zerado.
+        rpc("preencher_ghe_snapshot_entrevistas", { p_campanha_ids: campanhaIds }),
+      ]);
+      if (respRes.error) throw respRes.error;
+      if (entRes.error) throw entRes.error;
+      return Number(respRes.data ?? 0) + Number(entRes.data ?? 0);
     },
   });
+
 
 
   const query = useQuery({
@@ -116,10 +170,11 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           ghes: [] as GheRow[],
           composicaoPorGhe: new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>(),
           elegiveisPorGhe: new Map<string, number>(),
+          entrevistasPorGhe: new Map<string, number>(),
         };
       }
 
-      const [respRes, campRes] = await Promise.all([
+      const [respRes, campRes, entRes] = await Promise.all([
         fromTable("questionario_psicossocial_respostas")
           .select("id, campanha_id, ghe_id_snapshot, ghe_nome_snapshot, setor_snapshot, cargo_snapshot, indicadores")
           .eq("tenant_id", tenantId)
@@ -130,13 +185,34 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
           .select("id, ghe_ids, empresa_id")
           .eq("tenant_id", tenantId)
           .in("id", campanhaIds),
+
+        // Entrevistas guiadas individuais concluídas — viram "respostas"
+        // equivalentes (radar/IPS derivados de resumo_ia) para entrar na
+        // estratificação por GHE.
+        fromTable("psicossocial_entrevistas")
+          .select("id, campanha_id, ghe_id_snapshot, resumo_ia")
+          .eq("tenant_id", tenantId)
+          .in("campanha_id", campanhaIds)
+          .eq("status", "concluida")
+          .not("resumo_ia", "is", null),
       ]);
 
       if (respRes.error) throw respRes.error;
       if (campRes.error) throw campRes.error;
+      if (entRes.error) throw entRes.error;
 
-      const respostas = (respRes.data ?? []) as unknown as RespostaRow[];
+      const respostasQuestionario = (respRes.data ?? []) as unknown as RespostaRow[];
       const campanhasGhe = (campRes.data ?? []) as unknown as CampanhaGheRow[];
+      const respostasEntrevista = entrevistasParaRespostas(
+        (entRes.data ?? []) as unknown as EntrevistaRow[],
+      );
+      const respostas = [...respostasQuestionario, ...respostasEntrevista];
+      const entrevistasPorGhe = new Map<string, number>();
+      for (const e of respostasEntrevista) {
+        if (!e.ghe_id_snapshot) continue;
+        entrevistasPorGhe.set(e.ghe_id_snapshot, (entrevistasPorGhe.get(e.ghe_id_snapshot) ?? 0) + 1);
+      }
+
 
       // Combina GHE ids da campanha + snapshots das respostas para carregar composição completa
       const allGheIds = Array.from(
@@ -254,7 +330,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       }
 
 
-      return { respostas, campanhasGhe, ghes, composicaoPorGhe, elegiveisPorGhe };
+      return { respostas, campanhasGhe, ghes, composicaoPorGhe, elegiveisPorGhe, entrevistasPorGhe };
     },
     staleTime: 60_000,
   });
@@ -290,6 +366,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     const ghes = data?.ghes ?? [];
     const composicaoPorGhe = data?.composicaoPorGhe ?? new Map<string, { setores: string[]; cargos: string[]; setorCargos: Map<string, Set<string>> }>();
     const elegiveisPorGhe = data?.elegiveisPorGhe ?? new Map<string, number>();
+    const entrevistasPorGhe = data?.entrevistasPorGhe ?? new Map<string, number>();
 
     const gheNomeMap = new Map(ghes.map((g) => [g.id, g.nome]));
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
@@ -386,9 +463,14 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         ghe_id: realGheId,
         ghe_nome: g.nome,
         ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
-        count: realGheId && respondentesReais.has(realGheId)
-          ? respondentesReais.get(realGheId)!   // respondentes reais por GHE (via cpf_hash)
-          : g.count,                             // fallback: agrupamento (pode inflar sem ghe snapshot)
+        // Respondentes = questionários (via cpf_hash) + entrevistas guiadas
+        // individuais vinculadas ao GHE. Sem somar as entrevistas, campanhas
+        // 100% por entrevista ficavam com count 0 e o GHE era bloqueado.
+        count: realGheId
+          ? (respondentesReais.has(realGheId)
+              ? respondentesReais.get(realGheId)! + (entrevistasPorGhe.get(realGheId) ?? 0)
+              : Math.max(g.count, entrevistasPorGhe.get(realGheId) ?? 0))
+          : g.count,
         elegiveis: realGheId ? (elegiveisPorGhe.get(realGheId) ?? 0) : 0,
         radar: Array.from(g.radarAcc.entries()).map(([subject, { soma, n }]) => ({
           subject,
