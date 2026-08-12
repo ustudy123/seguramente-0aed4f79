@@ -129,6 +129,7 @@ async function enviarParaOQA(resultados: unknown): Promise<void> {
   }
 
   const testes: TesteDaCorrida[] = [];
+  const prints: Array<{ spec: string; teste: string; evidencia_png: string }> = [];
   let gastoBase64 = 0;
   let printsPulados = 0; // falhas cujo print não coube no orçamento
 
@@ -139,30 +140,30 @@ async function enviarParaOQA(resultados: unknown): Promise<void> {
     for (const teste of corrida?.tests ?? []) {
       const titulo: string[] = Array.isArray(teste?.title) ? teste.title : [String(teste?.title ?? "")];
       const situacao = situacaoDoCypress(teste?.state);
-
-      // Print só em teste que falhou (o Cypress só fotografa falha), e só
-      // enquanto houver orçamento — senão a imagem fica de fora e é contada.
-      let evidencia: string | undefined;
-      if (situacao === "falhou") {
-        const png = acharPrintBase64(screenshots, titulo);
-        if (png && gastoBase64 + png.length <= ORCAMENTO_BASE64) {
-          evidencia = png;
-          gastoBase64 += png.length;
-        } else if (png) {
-          printsPulados++;
-        }
-      }
+      const nomeTeste = titulo[titulo.length - 1] ?? "";
 
       testes.push({
         spec,
         // Último pedaço do título = o texto do it(). É por ele que a
         // tabela qa_cobertura_e2e liga o teste ao caso documentado.
-        teste: titulo[titulo.length - 1] ?? "",
+        teste: nomeTeste,
         situacao,
         duracao_ms: teste?.attempts?.[teste.attempts.length - 1]?.duration ?? teste?.duration,
         erro: teste?.displayError ?? teste?.attempts?.[teste.attempts.length - 1]?.error?.message,
-        evidencia_png: evidencia,
       });
+
+      // Print só em teste que falhou (o Cypress só fotografa falha). Ele
+      // NÃO vai junto dos resultados — vai depois, um a um, para o corpo de
+      // cada requisição ficar pequeno (corpo grande dava HTTP 504).
+      if (situacao === "falhou") {
+        const png = acharPrintBase64(screenshots, titulo);
+        if (png && gastoBase64 + png.length <= ORCAMENTO_BASE64) {
+          prints.push({ spec, teste: nomeTeste, evidencia_png: png });
+          gastoBase64 += png.length;
+        } else if (png) {
+          printsPulados++;
+        }
+      }
     }
   }
 
@@ -173,29 +174,59 @@ async function enviarParaOQA(resultados: unknown): Promise<void> {
     );
   }
 
+  // POST com timeout: um envio travado não pode segurar a corrida.
+  const postar = async (corpo: unknown, ms: number): Promise<Response> => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+      return await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-qa-token": token },
+        body: JSON.stringify(corpo),
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(t);
+    }
+  };
+
+  // ── Fase 1: os resultados (sem imagem, corpo leve) ──
+  let execucaoId: string | undefined;
   try {
-    const resposta = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-qa-token": token },
-      body: JSON.stringify({ origem: process.env.QA_E2E_ORIGEM || "esteira", resultados: testes }),
-    });
-
+    const resposta = await postar(
+      { origem: process.env.QA_E2E_ORIGEM || "esteira", resultados: testes },
+      30_000,
+    );
     const corpo = await resposta.text();
-
     if (!resposta.ok) {
-      console.log(`[QA] Painel recusou o resultado (HTTP ${resposta.status}): ${corpo}`);
+      console.log(`[QA] Painel recusou os resultados (HTTP ${resposta.status}): ${corpo}`);
       return;
     }
-
-    const comPrint = testes.filter((t) => t.evidencia_png).length;
-    console.log(
-      `[QA] ${testes.length} teste(s) enviados ao painel` +
-        (comPrint > 0 ? ` (${comPrint} com print da falha)` : "") +
-        `. Resposta: ${corpo}`,
-    );
+    try {
+      execucaoId = JSON.parse(corpo)?.execucao_id;
+    } catch {
+      /* resposta sem JSON — segue sem anexar prints */
+    }
+    console.log(`[QA] ${testes.length} teste(s) enviados ao painel. Resposta: ${corpo}`);
   } catch (erro) {
-    console.log(`[QA] Não consegui enviar ao painel: ${(erro as Error).message}`);
+    console.log(`[QA] Não consegui enviar os resultados: ${(erro as Error).message}`);
+    return;
   }
+
+  // ── Fase 2: cada print numa requisição pequena e separada ──
+  if (!execucaoId || prints.length === 0) return;
+
+  let enviados = 0;
+  for (const p of prints) {
+    try {
+      const r = await postar({ execucao_id: execucaoId, ...p }, 30_000);
+      if (r.ok) enviados++;
+      else console.log(`[QA] Print de "${p.teste}" recusado (HTTP ${r.status}).`);
+    } catch (erro) {
+      console.log(`[QA] Print de "${p.teste}" não enviado: ${(erro as Error).message}`);
+    }
+  }
+  console.log(`[QA] ${enviados}/${prints.length} print(s) de falha anexados ao painel.`);
 }
 
 // Tira barra(s) final(is) do alvo. Sem isto, `${baseUrl}/login` nos specs
