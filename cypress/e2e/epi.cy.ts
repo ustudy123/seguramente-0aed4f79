@@ -1,9 +1,10 @@
 /// <reference types="cypress" />
 
+import { credenciaisDeTeste } from "../support/credenciais";
+
 describe("Módulo EPI - Gestão de EPIs", () => {
-  const email = "renata_sophia_cortereal@cafefrossard.com";
-  const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://YourEyes.app.br";
+  const { email, senha: password } = credenciaisDeTeste();
+  const baseUrl = Cypress.config("baseUrl") as string;
   const uniqueId = Date.now();
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -56,7 +57,9 @@ describe("Módulo EPI - Gestão de EPIs", () => {
           .should("exist").scrollIntoView().should("be.visible")
           .clear().type(password, { log: false, delay: 10 });
         cy.contains("button", /^Entrar$/).should("be.visible").click();
-        cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+        // Espera a autenticação persistir de verdade (ver support/e2e.ts). O
+        // antigo should("not.eq","/login") passava na hora sob o subcaminho.
+        cy.aguardarSessaoSupabase();
         closeEmpresaModalIfNeeded();
         cy.wait(1500);
       },

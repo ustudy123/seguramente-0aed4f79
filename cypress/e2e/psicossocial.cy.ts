@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { credenciaisDeTeste } from "../support/credenciais";
+
 Cypress.on("uncaught:exception", (err) => {
   if (/signal is aborted without reason|AbortError/i.test(err.message)) {
     return false;
@@ -19,9 +21,8 @@ Cypress.on("window:before:load", (win) => {
 });
 
 describe("Módulo Psicossocial NR-01", () => {
-  const email = "renata_sophia_cortereal@cafefrossard.com";
-  const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://YourEyes.app.br";
+  const { email, senha: password } = credenciaisDeTeste();
+  const baseUrl = Cypress.config("baseUrl") as string;
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
   const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;
@@ -111,7 +112,9 @@ describe("Módulo Psicossocial NR-01", () => {
           .clear()
           .type(password, { log: false, delay: 10 });
         cy.contains("button", /^Entrar$/).should("be.visible").click();
-        cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+        // Espera a autenticação persistir de verdade (ver support/e2e.ts). O
+        // antigo should("not.eq","/login") passava na hora sob o subcaminho.
+        cy.aguardarSessaoSupabase();
         closeEmpresaModalIfNeeded();
         cy.wait(1500);
       },

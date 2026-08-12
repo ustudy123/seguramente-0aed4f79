@@ -1,9 +1,10 @@
 /// <reference types="cypress" />
 
+import { credenciaisDeTeste } from "../support/credenciais";
+
 describe("Módulo Incidentes & Acidentes", () => {
-  const email = "renata_sophia_cortereal@cafefrossard.com";
-  const password = "123456";
-  const baseUrl = Cypress.config("baseUrl") || "https://YourEyes.app.br";
+  const { email, senha: password } = credenciaisDeTeste();
+  const baseUrl = Cypress.config("baseUrl") as string;
 
   const texts = {
     modulo: "Incidentes & Acidentes",
@@ -32,7 +33,9 @@ describe("Módulo Incidentes & Acidentes", () => {
       .clear()
       .type(password, { log: false });
     cy.contains("button", /^Entrar$/).click();
-    cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+    // Espera a autenticação persistir de verdade (ver support/e2e.ts). O
+    // antigo should("not.eq","/login") passava na hora sob o subcaminho.
+    cy.aguardarSessaoSupabase();
     cy.wait(1500);
   }
 
