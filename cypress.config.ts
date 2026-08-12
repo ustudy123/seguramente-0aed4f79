@@ -1,4 +1,5 @@
 import { defineConfig } from "cypress";
+import { readFileSync, statSync } from "fs";
 
 // =====================================================================
 // A suíte Cypress escreve dados (cria campanha, setor, função, EPI...).
@@ -63,12 +64,50 @@ interface TesteDaCorrida {
   situacao: "passou" | "falhou" | "pulado";
   duracao_ms?: number;
   erro?: string;
+  // Print da falha (PNG em base64, sem prefixo data:). Só em teste falho.
+  evidencia_png?: string;
 }
 
 function situacaoDoCypress(estado: string | undefined): TesteDaCorrida["situacao"] {
   if (estado === "passed") return "passou";
   if (estado === "failed") return "falhou";
   return "pulado"; // pending, skipped, ou estado que o Cypress não classificou
+}
+
+// Limites para o print não estourar o corpo do POST à Edge Function.
+const MAX_PRINT_BYTES = 1_000_000; // por imagem (arquivo cru); acima, pula
+const ORCAMENTO_BASE64 = 4_000_000; // teto do total de base64 numa corrida
+
+const soAlfaNum = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+// Acha o print da falha deste teste entre as screenshots da corrida e
+// devolve em base64. Casa pelo nome do arquivo — o Cypress batiza o print
+// com o caminho de títulos do teste. Nada aqui pode derrubar a corrida:
+// qualquer erro de leitura vira "sem print".
+function acharPrintBase64(
+  screenshots: Array<{ path?: string }> | undefined,
+  titulos: string[],
+): string | undefined {
+  if (!Array.isArray(screenshots) || screenshots.length === 0) return undefined;
+  const alvo = soAlfaNum(titulos.join(" "));
+  if (!alvo) return undefined;
+
+  const achado = screenshots.find((s) => {
+    if (!s?.path) return false;
+    const nome = soAlfaNum(s.path.split(/[/\\]/).pop() || "");
+    return nome.includes(alvo); // o nome do arquivo contém o título do teste
+  });
+  if (!achado?.path) return undefined;
+
+  try {
+    if (statSync(achado.path).size > MAX_PRINT_BYTES) {
+      console.log(`[QA] Print grande demais, enviado sem imagem: ${achado.path}`);
+      return undefined;
+    }
+    return readFileSync(achado.path).toString("base64");
+  } catch {
+    return undefined; // arquivo sumiu / sem permissão — segue sem print
+  }
 }
 
 async function enviarParaOQA(resultados: unknown): Promise<void> {
@@ -90,43 +129,104 @@ async function enviarParaOQA(resultados: unknown): Promise<void> {
   }
 
   const testes: TesteDaCorrida[] = [];
+  const prints: Array<{ spec: string; teste: string; evidencia_png: string }> = [];
+  let gastoBase64 = 0;
+  let printsPulados = 0; // falhas cujo print não coube no orçamento
 
   for (const corrida of runs as Array<Record<string, any>>) {
     const spec: string = corrida?.spec?.relative ?? corrida?.spec?.name ?? "(spec desconhecido)";
+    const screenshots = corrida?.screenshots as Array<{ path?: string }> | undefined;
 
     for (const teste of corrida?.tests ?? []) {
       const titulo: string[] = Array.isArray(teste?.title) ? teste.title : [String(teste?.title ?? "")];
+      const situacao = situacaoDoCypress(teste?.state);
+      const nomeTeste = titulo[titulo.length - 1] ?? "";
 
       testes.push({
         spec,
         // Último pedaço do título = o texto do it(). É por ele que a
         // tabela qa_cobertura_e2e liga o teste ao caso documentado.
-        teste: titulo[titulo.length - 1] ?? "",
-        situacao: situacaoDoCypress(teste?.state),
+        teste: nomeTeste,
+        situacao,
         duracao_ms: teste?.attempts?.[teste.attempts.length - 1]?.duration ?? teste?.duration,
         erro: teste?.displayError ?? teste?.attempts?.[teste.attempts.length - 1]?.error?.message,
       });
+
+      // Print só em teste que falhou (o Cypress só fotografa falha). Ele
+      // NÃO vai junto dos resultados — vai depois, um a um, para o corpo de
+      // cada requisição ficar pequeno (corpo grande dava HTTP 504).
+      if (situacao === "falhou") {
+        const png = acharPrintBase64(screenshots, titulo);
+        if (png && gastoBase64 + png.length <= ORCAMENTO_BASE64) {
+          prints.push({ spec, teste: nomeTeste, evidencia_png: png });
+          gastoBase64 += png.length;
+        } else if (png) {
+          printsPulados++;
+        }
+      }
     }
   }
 
+  if (printsPulados > 0) {
+    console.log(
+      `[QA] ${printsPulados} print(s) de falha ficaram de fora por limite de tamanho ` +
+        `(orçamento ${Math.round(ORCAMENTO_BASE64 / 1_000_000)}MB por corrida). Estão na esteira.`,
+    );
+  }
+
+  // POST com timeout: um envio travado não pode segurar a corrida.
+  const postar = async (corpo: unknown, ms: number): Promise<Response> => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+      return await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-qa-token": token },
+        body: JSON.stringify(corpo),
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(t);
+    }
+  };
+
+  // ── Fase 1: os resultados (sem imagem, corpo leve) ──
+  let execucaoId: string | undefined;
   try {
-    const resposta = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-qa-token": token },
-      body: JSON.stringify({ origem: process.env.QA_E2E_ORIGEM || "esteira", resultados: testes }),
-    });
-
+    const resposta = await postar(
+      { origem: process.env.QA_E2E_ORIGEM || "esteira", resultados: testes },
+      30_000,
+    );
     const corpo = await resposta.text();
-
     if (!resposta.ok) {
-      console.log(`[QA] Painel recusou o resultado (HTTP ${resposta.status}): ${corpo}`);
+      console.log(`[QA] Painel recusou os resultados (HTTP ${resposta.status}): ${corpo}`);
       return;
     }
-
+    try {
+      execucaoId = JSON.parse(corpo)?.execucao_id;
+    } catch {
+      /* resposta sem JSON — segue sem anexar prints */
+    }
     console.log(`[QA] ${testes.length} teste(s) enviados ao painel. Resposta: ${corpo}`);
   } catch (erro) {
-    console.log(`[QA] Não consegui enviar ao painel: ${(erro as Error).message}`);
+    console.log(`[QA] Não consegui enviar os resultados: ${(erro as Error).message}`);
+    return;
   }
+
+  // ── Fase 2: cada print numa requisição pequena e separada ──
+  if (!execucaoId || prints.length === 0) return;
+
+  let enviados = 0;
+  for (const p of prints) {
+    try {
+      const r = await postar({ execucao_id: execucaoId, ...p }, 30_000);
+      if (r.ok) enviados++;
+      else console.log(`[QA] Print de "${p.teste}" recusado (HTTP ${r.status}).`);
+    } catch (erro) {
+      console.log(`[QA] Print de "${p.teste}" não enviado: ${(erro as Error).message}`);
+    }
+  }
+  console.log(`[QA] ${enviados}/${prints.length} print(s) de falha anexados ao painel.`);
 }
 
 // Tira barra(s) final(is) do alvo. Sem isto, `${baseUrl}/login` nos specs

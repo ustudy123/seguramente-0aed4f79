@@ -154,6 +154,27 @@ function Relatorio({ execucaoId }: { execucaoId: string }) {
                   </p>
                 )}
 
+                {/* print da falha (corridas do Cypress) — a imagem da tela
+                    no momento em que quebrou, embutida aqui mesmo */}
+                {r.evidencia_png && (
+                  <div className="mt-1">
+                    <p className="text-muted-foreground mb-1">Tela no momento da falha:</p>
+                    <a
+                      href={`data:image/png;base64,${r.evidencia_png}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Abrir o print em tamanho cheio"
+                    >
+                      <img
+                        src={`data:image/png;base64,${r.evidencia_png}`}
+                        alt={`Print da falha de ${r.codigo}`}
+                        loading="lazy"
+                        className="max-w-full rounded border shadow-sm hover:opacity-90 transition-opacity"
+                      />
+                    </a>
+                  </div>
+                )}
+
                 {/* impacto e correção (observacoes do caso) */}
                 {r.observacoes && (
                   <p className="text-amber-800 bg-amber-50 rounded px-2 py-1">
