@@ -129,9 +129,15 @@ async function enviarParaOQA(resultados: unknown): Promise<void> {
   }
 }
 
+// Tira barra(s) final(is) do alvo. Sem isto, `${baseUrl}/login` nos specs
+// vira `.../seguramente-0aed4f79//login` — a esteira passa CYPRESS_BASE_URL
+// com barra final. A barra dupla ainda rotearia (o basename absorve), mas
+// URL suja em log de teste é pegadinha para o próximo que for depurar.
+const alvoNormalizado = (process.env.CYPRESS_BASE_URL || SITE_DE_TESTE).replace(/\/+$/, "");
+
 export default defineConfig({
   e2e: {
-    baseUrl: exigirAmbienteDeTeste(process.env.CYPRESS_BASE_URL || SITE_DE_TESTE),
+    baseUrl: exigirAmbienteDeTeste(alvoNormalizado),
     setupNodeEvents(on) {
       on("after:run", enviarParaOQA);
     },
