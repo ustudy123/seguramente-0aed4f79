@@ -58,20 +58,46 @@ serve(async (req) => {
     return json({ error: "Token invalido." }, 401);
   }
 
-  let payload: { origem?: string; resultados?: ResultadoDeTela[] };
+  let payload: {
+    origem?: string;
+    resultados?: ResultadoDeTela[];
+    // 2ª forma: anexar UM print a uma execução já criada.
+    execucao_id?: string;
+    spec?: string;
+    teste?: string;
+    evidencia_png?: string;
+  };
   try {
     payload = await req.json();
   } catch {
     return json({ error: "Corpo nao e JSON valido." }, 400);
   }
 
-  if (!Array.isArray(payload?.resultados)) {
-    return json({ error: 'Esperava { "resultados": [...] }.' }, 400);
-  }
-
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  // ── Modo 2: anexar um print a uma execução existente ──
+  // Corpo pequeno (uma imagem), para não estourar o gateway. É por isso
+  // que os prints vêm um a um, e não junto dos resultados.
+  if (payload.execucao_id && payload.evidencia_png) {
+    const { data, error } = await admin.rpc("qa_anexar_print_e2e", {
+      p_execucao_id: payload.execucao_id,
+      p_spec: payload.spec ?? "",
+      p_teste: payload.teste ?? "",
+      p_evidencia_png: payload.evidencia_png,
+    });
+    if (error) {
+      console.error("Falha ao anexar print:", error);
+      return json({ error: error.message }, 500);
+    }
+    return json({ anexado: data === true });
+  }
+
+  // ── Modo 1: gravar a corrida (resultados, SEM base64 — leve) ──
+  if (!Array.isArray(payload?.resultados)) {
+    return json({ error: 'Esperava { "resultados": [...] } ou um print.' }, 400);
+  }
 
   const { data, error } = await admin.rpc("qa_registrar_bateria_e2e", {
     p_payload: { origem: payload.origem ?? "nao informada", resultados: payload.resultados },
