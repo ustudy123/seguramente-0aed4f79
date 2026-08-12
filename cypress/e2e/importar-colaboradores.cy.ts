@@ -25,7 +25,9 @@ describe("Colaboradores - Modal de Importação", () => {
         cy.get('input[type="email"]', { timeout: 20000 }).type(email);
         cy.get('input[autocomplete="current-password"]').type(password);
         cy.contains("button", /^Entrar$/).click();
-        cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+        // Espera a autenticação persistir de verdade (ver support/e2e.ts). O
+        // antigo should("not.eq","/login") passava na hora sob o subcaminho.
+        cy.aguardarSessaoSupabase();
         closeEmpresaModalIfNeeded();
       },
       {

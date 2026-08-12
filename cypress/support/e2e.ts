@@ -43,6 +43,41 @@ Cypress.Commands.overwrite(
 );
 
 // =====================================================================
+// SINAL DE LOGIN CONFIÁVEL
+//
+// O jeito antigo de "confirmar que entrou" era should("not.eq","/login")
+// sobre o pathname. No site de teste o app roda sob /seguramente-0aed4f79/,
+// então o pathname é /seguramente-0aed4f79/login e NUNCA é igual a /login:
+// a asserção passava na hora, sem esperar a autenticação. Com cy.session, o
+// snapshot saía antes de o token persistir e a sessão ia vazia — e a falha
+// só aparecia lá na frente, ao abrir o módulo (foi o que a run #34 mostrou:
+// conta boa, login "ok", mas o módulo nunca carregava).
+//
+// Este comando espera o sinal real: o token de sessão do Supabase no
+// localStorage (chave sb-<ref>-auth-token, config padrão do client).
+// Independe de texto de tela, de rota e do basename.
+// =====================================================================
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    interface Chainable {
+      aguardarSessaoSupabase(): Chainable<void>;
+    }
+  }
+}
+
+Cypress.Commands.add("aguardarSessaoSupabase", () => {
+  cy.window({ timeout: 20000 }).should((win) => {
+    const autenticado = Object.keys(win.localStorage).some(
+      (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
+    );
+    expect(autenticado, "sessão Supabase persistida no localStorage").to.be.true;
+  });
+});
+
+export {};
+
+// =====================================================================
 // SEGUNDA TRAVA DE AMBIENTE
 //
 // A primeira trava está no cypress.config.ts e olha a URL do site. Ela

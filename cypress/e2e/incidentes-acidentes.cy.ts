@@ -33,7 +33,9 @@ describe("Módulo Incidentes & Acidentes", () => {
       .clear()
       .type(password, { log: false });
     cy.contains("button", /^Entrar$/).click();
-    cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+    // Espera a autenticação persistir de verdade (ver support/e2e.ts). O
+    // antigo should("not.eq","/login") passava na hora sob o subcaminho.
+    cy.aguardarSessaoSupabase();
     cy.wait(1500);
   }
 
