@@ -13,6 +13,36 @@ Cypress.on("window:before:load", (win) => {
 });
 
 // =====================================================================
+// DEEP-LINK DE SPA NO GITHUB PAGES = STATUS 404
+//
+// O site de teste é uma SPA servida sob /seguramente-0aed4f79/. O Pages
+// não tem arquivo para rotas como /login ou /estrategia, então serve o
+// 404.html (que a esteira copia do index.html) — a aplicação carrega e
+// roteia normalmente, porque o BrowserRouter usa o basename certo. Só que
+// o status HTTP é 404, e `cy.visit()` reprova qualquer status != 2xx por
+// padrão, derrubando o teste no `before each` antes de qualquer asserção.
+//
+// Este projeto já convivia com isso: as visitas a /questionario no spec
+// de psicossocial já passavam `failOnStatusCode: false` na mão. As de
+// login não passavam porque foram escritas contra a produção, onde /login
+// responde 200. Aqui isso vira o padrão de TODA visita — a validação real
+// continua sendo por conteúdo (o spec espera o campo de e-mail, o texto da
+// tela), não pelo código HTTP. Uma opção explícita no cy.visit ainda vence.
+// =====================================================================
+// Tipos como `any` de propósito: `cy.visit` é sobrecarregado (aceita
+// visit(url), visit(url, opts) e visit(opts)), e brigar com as sobrecargas
+// aqui não agrega — o corpo cobre as duas formas usadas nos specs.
+Cypress.Commands.overwrite(
+  "visit",
+  (originalFn: any, urlOrOpts: any, maybeOpts?: any) => {
+    if (urlOrOpts && typeof urlOrOpts === "object") {
+      return originalFn({ failOnStatusCode: false, ...urlOrOpts });
+    }
+    return originalFn(urlOrOpts, { failOnStatusCode: false, ...(maybeOpts || {}) });
+  },
+);
+
+// =====================================================================
 // SEGUNDA TRAVA DE AMBIENTE
 //
 // A primeira trava está no cypress.config.ts e olha a URL do site. Ela
