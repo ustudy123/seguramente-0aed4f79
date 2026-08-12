@@ -1,9 +1,10 @@
 /// <reference types="cypress" />
 
+import { credenciaisDeTeste } from "../support/credenciais";
+
 describe("Módulo SWOT — Estratégia & Governança", () => {
-  const email = "renata_sophia_cortereal@cafefrossard.com";
-  const password = "123456";
-  const baseUrl = Cypress.config("baseUrl") || "https://YourEyes.app.br";
+  const { email, senha: password } = credenciaisDeTeste();
+  const baseUrl = Cypress.config("baseUrl") as string;
   const uniqueId = Date.now();
 
   function closeEmpresaModalIfNeeded() {
