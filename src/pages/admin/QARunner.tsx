@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Play, Loader2, CheckCircle2, XCircle, AlertCircle,
   CircleDashed, Clock, ChevronRight, Bot, CalendarClock,
-  FileDown, Table2, Printer,
+  FileDown, Table2, Printer, Database, MonitorPlay, ExternalLink,
 } from "lucide-react";
 import {
   useQaRunner, useQaResultados, useQaAgendamento,
-  type QaSituacao, type QaBateria,
+  type QaSituacao, type QaBateria, type QaModuloTestavel,
 } from "@/hooks/useQaRunner";
 import { gerarPDF, gerarCSV, abrirImprimivel } from "@/lib/qaRelatorio";
 
@@ -297,13 +297,164 @@ function CardAgendamento() {
   );
 }
 
+// ── lista de execuções (reusada pelo motor SQL e pelo Cypress) ──
+function ListaExecucoes({
+  baterias, modulos, carregando, vazio, abrirId,
+}: {
+  baterias: QaBateria[];
+  modulos: QaModuloTestavel[];
+  carregando: boolean;
+  vazio: ReactNode;
+  // Quando muda, abre esse relatório (ex.: bateria recém-rodada no motor).
+  abrirId?: string | null;
+}) {
+  const [abertaId, setAbertaId] = useState<string | null>(null);
+  useEffect(() => {
+    if (abrirId) setAbertaId(abrirId);
+  }, [abrirId]);
+
+  if (carregando) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+      </div>
+    );
+  }
+  if (baterias.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          {vazio}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {baterias.map((b) => {
+        const aberta = abertaId === b.id;
+        const quando = new Date(b.iniciada_em).toLocaleString("pt-BR");
+        // Corrida do Cypress não tem módulo do catálogo — mostra "Testes de tela".
+        const modLabel =
+          b.disparo === "e2e"
+            ? "Testes de tela (Cypress)"
+            : modulos.find((m) => m.modulo_path === b.modulo_path)?.label ||
+              b.modulo_path;
+        return (
+          <Card key={b.id}>
+            <CardContent className="p-0">
+              <button
+                className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/40 transition-colors"
+                onClick={() => setAbertaId(aberta ? null : b.id)}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <ChevronRight
+                    className={`h-4 w-4 shrink-0 transition-transform ${
+                      aberta ? "rotate-90" : ""
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{modLabel}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {quando}
+                      {b.duracao_ms != null && ` · ${b.duracao_ms} ms`}
+                      {b.disparada_por_nome && ` · ${b.disparada_por_nome}`}
+                    </p>
+                  </div>
+                </div>
+                <Placar b={b} />
+              </button>
+
+              {aberta && (
+                <div className="px-4 pb-4">
+                  {b.observacao && b.observacao.startsWith(">>>") && (
+                    <div className="mb-3 text-xs text-red-700 bg-red-50 rounded px-3 py-2">
+                      {b.observacao}
+                    </div>
+                  )}
+                  <BarraExportar bateria={b} />
+                  <Relatorio execucaoId={b.id} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── painel do Cypress (testes de tela) ──────────────────
+function PainelCypress({
+  baterias, modulos, carregando,
+}: {
+  baterias: QaBateria[];
+  modulos: QaModuloTestavel[];
+  carregando: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6 space-y-2 text-sm">
+          <div className="flex items-start gap-2">
+            <MonitorPlay className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+            <div className="space-y-1">
+              <p className="font-medium">Testes de tela (Cypress)</p>
+              <p className="text-muted-foreground">
+                Estes testes abrem o site de teste num navegador de verdade e
+                clicam nas telas. Por isso <strong>não rodam a partir daqui</strong>:
+                eles rodam sozinhos na esteira, a cada mudança publicada no
+                ambiente de teste. Esta aba mostra o resultado de cada corrida —
+                o que passou e o que falhou, teste a teste.
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://github.com/ustudy123/seguramente-0aed4f79/actions/workflows/staging.yml"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Acompanhar as corridas na esteira (prints e vídeos das falhas)
+          </a>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-muted-foreground">Corridas</h2>
+        <ListaExecucoes
+          baterias={baterias}
+          modulos={modulos}
+          carregando={carregando}
+          vazio={
+            <span>
+              Nenhuma corrida do Cypress chegou ainda. Assim que a esteira rodar
+              a suíte e o envio ao painel estiver ligado, cada corrida aparece
+              aqui com o resultado teste a teste.
+            </span>
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function QARunner() {
   const navigate = useNavigate();
   const { modulos, carregandoModulos, baterias, carregandoBaterias, disparar } =
     useQaRunner();
 
+  const [vista, setVista] = useState<"motor" | "cypress">("motor");
   const [moduloSel, setModuloSel] = useState<string>("__todos__");
-  const [abertaId, setAbertaId] = useState<string | null>(null);
+  const [recemRodadaId, setRecemRodadaId] = useState<string | null>(null);
+
+  // Corridas do Cypress (origem 'e2e') ficam na sua própria aba; o motor SQL
+  // mostra só as suas (manual/agendado). Assim os dois não se misturam.
+  const bateriasSql = baterias.filter((b) => b.disparo !== "e2e");
+  const bateriasCypress = baterias.filter((b) => b.disparo === "e2e");
 
   const totalCasos = modulos.reduce((n, m) => n + Number(m.casos_executaveis), 0);
 
@@ -316,7 +467,7 @@ export default function QARunner() {
     // rodava só Documentos, contrariando o que a tela mostrava.
     const alvo = moduloSel === "__todos__" ? "" : moduloSel;
     const id = await disparar.mutateAsync(alvo);
-    setAbertaId(id); // abre o relatório da bateria recém-criada
+    setRecemRodadaId(id); // abre o relatório da bateria recém-criada
   };
 
   return (
@@ -332,121 +483,111 @@ export default function QARunner() {
         </div>
       </div>
 
-      {/* painel de disparo */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-            <div className="flex-1 space-y-1.5">
-              <label className="text-sm font-medium">Módulo</label>
-              <Select
-                value={moduloSel}
-                onValueChange={setModuloSel}
-                disabled={carregandoModulos || disparar.isPending}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha o que rodar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__todos__">
-                    Todos os módulos · {totalCasos} casos
-                  </SelectItem>
-                  {modulos.map((m) => (
-                    <SelectItem key={m.modulo_path} value={m.modulo_path}>
-                      {m.label} · {m.casos_executaveis} casos
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={rodar} disabled={disparar.isPending || carregandoModulos}>
-              {disparar.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Rodando…
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Rodar bateria
-                </>
-              )}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Os testes rodam em um ambiente isolado. Nenhum dado de cliente é
-            criado, alterado ou lido.
-          </p>
-        </CardContent>
-      </Card>
+      {/* alternador de visão: motor SQL × testes de tela (Cypress) */}
+      <div className="inline-flex rounded-lg border bg-muted/40 p-1">
+        <button
+          onClick={() => setVista("motor")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            vista === "motor"
+              ? "bg-background shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Database className="h-4 w-4" /> Motor (banco)
+        </button>
+        <button
+          onClick={() => setVista("cypress")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            vista === "cypress"
+              ? "bg-background shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <MonitorPlay className="h-4 w-4" /> Testes Cypress
+          {bateriasCypress.length > 0 && (
+            <span className="ml-1 rounded-full bg-muted px-1.5 text-xs">
+              {bateriasCypress.length}
+            </span>
+          )}
+        </button>
+      </div>
 
-      {/* agendamento */}
-      <CardAgendamento />
-
-      {/* histórico */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Execuções</h2>
-
-        {carregandoBaterias ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
-          </div>
-        ) : baterias.length === 0 ? (
+      {vista === "motor" ? (
+        <>
+          {/* painel de disparo */}
           <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Nenhuma bateria rodada ainda. Escolha um módulo e clique em
-              “Rodar bateria”.
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-sm font-medium">Módulo</label>
+                  <Select
+                    value={moduloSel}
+                    onValueChange={setModuloSel}
+                    disabled={carregandoModulos || disparar.isPending}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha o que rodar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__todos__">
+                        Todos os módulos · {totalCasos} casos
+                      </SelectItem>
+                      {modulos.map((m) => (
+                        <SelectItem key={m.modulo_path} value={m.modulo_path}>
+                          {m.label} · {m.casos_executaveis} casos
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={rodar} disabled={disparar.isPending || carregandoModulos}>
+                  {disparar.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Rodando…
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      Rodar bateria
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Os testes rodam em um ambiente isolado. Nenhum dado de cliente é
+                criado, alterado ou lido.
+              </p>
             </CardContent>
           </Card>
-        ) : (
-          baterias.map((b) => {
-            const aberta = abertaId === b.id;
-            const quando = new Date(b.iniciada_em).toLocaleString("pt-BR");
-            const modLabel =
-              modulos.find((m) => m.modulo_path === b.modulo_path)?.label ||
-              b.modulo_path;
-            return (
-              <Card key={b.id}>
-                <CardContent className="p-0">
-                  <button
-                    className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/40 transition-colors"
-                    onClick={() => setAbertaId(aberta ? null : b.id)}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <ChevronRight
-                        className={`h-4 w-4 shrink-0 transition-transform ${
-                          aberta ? "rotate-90" : ""
-                        }`}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{modLabel}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {quando}
-                          {b.duracao_ms != null && ` · ${b.duracao_ms} ms`}
-                          {b.disparada_por_nome && ` · ${b.disparada_por_nome}`}
-                        </p>
-                      </div>
-                    </div>
-                    <Placar b={b} />
-                  </button>
 
-                  {aberta && (
-                    <div className="px-4 pb-4">
-                      {b.observacao && b.observacao.startsWith(">>>") && (
-                        <div className="mb-3 text-xs text-red-700 bg-red-50 rounded px-3 py-2">
-                          {b.observacao}
-                        </div>
-                      )}
-                      <BarraExportar bateria={b} />
-                      <Relatorio execucaoId={b.id} />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
+          {/* agendamento */}
+          <CardAgendamento />
+
+          {/* histórico do motor SQL */}
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground">Execuções</h2>
+            <ListaExecucoes
+              baterias={bateriasSql}
+              modulos={modulos}
+              carregando={carregandoBaterias}
+              abrirId={recemRodadaId}
+              vazio={
+                <span>
+                  Nenhuma bateria rodada ainda. Escolha um módulo e clique em
+                  “Rodar bateria”.
+                </span>
+              }
+            />
+          </div>
+        </>
+      ) : (
+        <PainelCypress
+          baterias={bateriasCypress}
+          modulos={modulos}
+          carregando={carregandoBaterias}
+        />
+      )}
     </div>
   );
 }
