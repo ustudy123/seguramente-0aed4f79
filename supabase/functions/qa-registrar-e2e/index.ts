@@ -19,7 +19,11 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const QA_E2E_TOKEN = Deno.env.get("QA_E2E_TOKEN") ?? "";
+// .trim(): espaço/quebra de linha a mais no copiar-colar do segredo (no
+// GitHub ou no Supabase) é a causa mais comum de "Token invalido". Comparar
+// sem as pontas elimina essa classe de erro; valores de fato diferentes
+// continuam sendo recusados.
+const QA_E2E_TOKEN = (Deno.env.get("QA_E2E_TOKEN") ?? "").trim();
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -54,8 +58,15 @@ serve(async (req) => {
       503,
     );
   }
-  if (req.headers.get("x-qa-token") !== QA_E2E_TOKEN) {
-    return json({ error: "Token invalido." }, 401);
+  if ((req.headers.get("x-qa-token") ?? "").trim() !== QA_E2E_TOKEN) {
+    return json(
+      {
+        error:
+          "Token invalido: o valor de QA_E2E_TOKEN no GitHub difere do " +
+          "valor no Supabase. Confira que sao identicos nos dois lugares.",
+      },
+      401,
+    );
   }
 
   let payload: {
