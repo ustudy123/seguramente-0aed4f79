@@ -52,6 +52,8 @@ export interface QaResultado {
   passos?: QaPasso[] | null;
   resultado_esperado?: string | null;
   observacoes?: string | null;
+  // Print da falha (PNG base64) — só nas corridas do Cypress. Ver QARunner.
+  evidencia_png?: string | null;
 }
 
 export interface QaModuloTestavel {

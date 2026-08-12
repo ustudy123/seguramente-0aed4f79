@@ -1,6 +1,10 @@
 project_id = "diayjpsrcerycycyaxst"
 
 [functions]
+  # Chamada pela esteira (fora do app), autenticada pelo próprio header
+  # x-qa-token — por isso dispensa o JWT do gateway, como as demais abaixo.
+  [functions.qa-registrar-e2e]
+    verify_jwt = false
   [functions.ai-sst-investigacao]
     verify_jwt = false
   [functions.advertencia-link]
