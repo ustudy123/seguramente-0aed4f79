@@ -4703,6 +4703,7 @@ export type Database = {
           trabalho_altura: boolean | null
           turnos: Json | null
           updated_at: string
+          usa_controle_ponto: boolean
           website: string | null
         }
         Insert: {
@@ -4777,6 +4778,7 @@ export type Database = {
           trabalho_altura?: boolean | null
           turnos?: Json | null
           updated_at?: string
+          usa_controle_ponto?: boolean
           website?: string | null
         }
         Update: {
@@ -4851,6 +4853,7 @@ export type Database = {
           trabalho_altura?: boolean | null
           turnos?: Json | null
           updated_at?: string
+          usa_controle_ponto?: boolean
           website?: string | null
         }
         Relationships: [
@@ -18230,6 +18233,7 @@ export type Database = {
       ponto_configuracao: {
         Row: {
           bloquear_dispositivo_nao_autorizado: boolean
+          controle_ponto_ativo: boolean
           created_at: string
           exigir_localizacao: boolean
           exigir_selfie_interno: boolean
@@ -18254,6 +18258,7 @@ export type Database = {
         }
         Insert: {
           bloquear_dispositivo_nao_autorizado?: boolean
+          controle_ponto_ativo?: boolean
           created_at?: string
           exigir_localizacao?: boolean
           exigir_selfie_interno?: boolean
@@ -18278,6 +18283,7 @@ export type Database = {
         }
         Update: {
           bloquear_dispositivo_nao_autorizado?: boolean
+          controle_ponto_ativo?: boolean
           created_at?: string
           exigir_localizacao?: boolean
           exigir_selfie_interno?: boolean
@@ -18427,6 +18433,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_entrega_conferencia: {
+        Row: {
+          colaboradores_sem_linha: number | null
+          competencia: string
+          dias_sem_linha: number | null
+          linhas_de_ponto_sem_empresa: number | null
+          minutos_adicional_feriado: number | null
+          momento: string
+          observacao: string | null
+          registrado_em: string
+          tenant_id: string | null
+        }
+        Insert: {
+          colaboradores_sem_linha?: number | null
+          competencia: string
+          dias_sem_linha?: number | null
+          linhas_de_ponto_sem_empresa?: number | null
+          minutos_adicional_feriado?: number | null
+          momento: string
+          observacao?: string | null
+          registrado_em?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          colaboradores_sem_linha?: number | null
+          competencia?: string
+          dias_sem_linha?: number | null
+          linhas_de_ponto_sem_empresa?: number | null
+          minutos_adicional_feriado?: number | null
+          momento?: string
+          observacao?: string | null
+          registrado_em?: string
+          tenant_id?: string | null
+        }
+        Relationships: []
       }
       ponto_equalizacao_mensal: {
         Row: {
@@ -19562,9 +19604,11 @@ export type Database = {
       ponto_retencao_config: {
         Row: {
           anos_retencao: number
+          ativo: boolean
           created_at: string
           empresa_id: string | null
           expurgo_automatico: boolean
+          geolocalizacao_dias: number
           id: string
           observacoes: string | null
           tenant_id: string
@@ -19573,9 +19617,11 @@ export type Database = {
         }
         Insert: {
           anos_retencao?: number
+          ativo?: boolean
           created_at?: string
           empresa_id?: string | null
           expurgo_automatico?: boolean
+          geolocalizacao_dias?: number
           id?: string
           observacoes?: string | null
           tenant_id: string
@@ -19584,9 +19630,11 @@ export type Database = {
         }
         Update: {
           anos_retencao?: number
+          ativo?: boolean
           created_at?: string
           empresa_id?: string | null
           expurgo_automatico?: boolean
+          geolocalizacao_dias?: number
           id?: string
           observacoes?: string | null
           tenant_id?: string
@@ -23957,6 +24005,16 @@ export type Database = {
         Args: { p_modalidade: string; p_token: string }
         Returns: string
       }
+      afastamento_encerrar_vencidos: { Args: never; Returns: number }
+      afastamento_sem_prazo_e_legitimo: {
+        Args: {
+          p_prazo_indeterminado: boolean
+          p_status: string
+          p_status_geral: string
+          p_tipo_principal: string
+        }
+        Returns: boolean
+      }
       afastamento_vigente: {
         Args: { p_cpf: string; p_data: string; p_tenant_id: string }
         Returns: {
@@ -24658,6 +24716,12 @@ export type Database = {
           empresas: number
         }[]
       }
+      ponto_cpfs_em_regime: {
+        Args: { p_ref: string; p_tenant_id: string }
+        Returns: {
+          cpf: string
+        }[]
+      }
       ponto_debito_batida_do_dia: {
         Args: {
           p_colaborador_cpf: string
@@ -24696,6 +24760,12 @@ export type Database = {
       ponto_empresa_do_cpf: {
         Args: { p_cpf: string; p_tenant_id: string }
         Returns: string
+      }
+      ponto_empresas_em_regime: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          empresa_id: string
+        }[]
       }
       ponto_equalizacao_art61_liberar: {
         Args: {
@@ -24902,6 +24972,38 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: number
+      }
+      ponto_feriados_competencia: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_tenant_id: string
+        }
+        Returns: {
+          adicional_100_min: number
+          data: string
+          feriado_nome: string
+          folga_compensatoria_em: string
+          origem: string
+          trabalhado_min: number
+        }[]
+      }
+      ponto_feriados_trabalhados: {
+        Args: {
+          p_colaborador_cpf: string
+          p_fim: string
+          p_ini: string
+          p_tenant_id: string
+        }
+        Returns: {
+          adicional_100_min: number
+          comportamento: string
+          data: string
+          feriado_nome: string
+          folga_compensatoria_em: string
+          origem: string
+          trabalhado_min: number
+        }[]
       }
       ponto_intervalo_janela_do_dia: {
         Args: {
@@ -27292,6 +27394,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_023: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ponto_250: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -27824,6 +27936,10 @@ export type Database = {
           p_pct?: number
           p_total?: number
         }
+        Returns: string
+      }
+      qa_empresa_com_ponto: {
+        Args: { p_cnpj: string; p_nome: string }
         Returns: string
       }
       qa_executar_descartavel: {
