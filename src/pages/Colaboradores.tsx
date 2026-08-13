@@ -186,7 +186,8 @@ function resolveStatus(colab: { status: string; inativo?: boolean | null }): { k
 function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShowImport: (v: boolean) => void }) {
   const navigate = useNavigate();
   const { tenantId } = useAuth();
-  const { temPermissao, isOwner } = usePerfilPermissions();
+  const { temPermissao, isOwner, podeExportar, podeExcluir } = usePerfilPermissions();
+
   const queryClient = useQueryClient();
   const { empresaAtivaId } = useEmpresaAtiva();
   const { getAfastamento } = useAfastamentosAtivos();
@@ -466,9 +467,12 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               <SelectItem value="todos">Todos os vínculos</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={handleExportarColaboradores} title="Exportar colaboradores">
-            <Download className="w-4 h-4" />
-          </Button>
+          {podeExportar("colaboradores") && (
+            <Button variant="outline" size="icon" onClick={handleExportarColaboradores} title="Exportar colaboradores">
+              <Download className="w-4 h-4" />
+            </Button>
+          )}
+
         </div>
       </div>
 
