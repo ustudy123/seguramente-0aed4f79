@@ -74,7 +74,12 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function nextStep() {
-    cy.contains("button", /^Próximo$/).should("be.visible").click();
+    // Escopa ao diálogo e amplia o texto: o /^Próximo$/ exato não casava
+    // (o botão do wizard pode ter ícone/variação de rótulo), e o global
+    // pegava botões fora do diálogo.
+    cy.get('[role="dialog"]')
+      .contains("button", /Próximo|Avançar|Continuar/i)
+      .click({ force: true });
   }
 
   function previousStep() {

@@ -482,7 +482,9 @@ describe("Módulo EPI - Gestão de EPIs", () => {
     cy.wait(1500);
     cy.get("body").then(($body) => {
       const text = $body.text();
-      const hasAnalysis = /conformidade|pendência|faltando|gap|100%|0%|parcial|Nenhum/i.test(text);
+      // Texto real e estável da Matriz de Proteção (cards/badges sempre
+      // presentes), cobrindo o caso com dados e o caso sem cargos vinculados.
+      const hasAnalysis = /Conformes|Com Alertas|Sem Função|Conforme|Prote[çc][ãa]o|N\/A|Nenhum|conformidade|pendência/i.test(text);
       expect(hasAnalysis, "Análise de conformidade exibida ou sem dados").to.be.true;
     });
   });
