@@ -16,6 +16,7 @@ import { PopDiffModal } from "./PopDiffModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface PopEditorModalProps {
   open: boolean;
@@ -499,7 +500,9 @@ ${referencias ? `<h2>12. Referências</h2><p>${referencias}</p>` : ""}
 
               <div className="flex justify-between pt-4">
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={exportPDF} className="gap-1"><Download className="w-4 h-4" /> Exportar PDF</Button>
+                  <AcaoProtegida modulo="trilhas" acao="exportar">
+                    <Button variant="outline" onClick={exportPDF} className="gap-1"><Download className="w-4 h-4" /> Exportar PDF</Button>
+                  </AcaoProtegida>
                   <Button variant="outline" onClick={openDiff} className="gap-1"><GitCompareArrows className="w-4 h-4" /> Comparar Versões</Button>
                 </div>
                 <div className="flex gap-2">

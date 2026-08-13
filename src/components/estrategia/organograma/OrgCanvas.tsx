@@ -6,6 +6,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface OrgCanvasProps {
   children: ReactNode;
@@ -130,24 +131,26 @@ export function OrgCanvas({ children, className, onDropBackground }: OrgCanvasPr
 
         <div className="w-px h-5 bg-border mx-0.5" />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs" disabled={isExporting}>
-              {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-primary" />}
-              Exportar
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => exportAs("png")} className="gap-2 cursor-pointer">
-              <FileImage className="w-4 h-4 text-muted-foreground" />
-              <span>Imagem (PNG)</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => exportAs("pdf")} className="gap-2 cursor-pointer">
-              <FileText className="w-4 h-4 text-muted-foreground" />
-              <span>Documento (PDF)</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AcaoProtegida modulo="configuracoes" acao="exportar">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs" disabled={isExporting}>
+                {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-primary" />}
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportAs("png")} className="gap-2 cursor-pointer">
+                <FileImage className="w-4 h-4 text-muted-foreground" />
+                <span>Imagem (PNG)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportAs("pdf")} className="gap-2 cursor-pointer">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span>Documento (PDF)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </AcaoProtegida>
 
         <div className="w-px h-5 bg-border mx-1" />
 

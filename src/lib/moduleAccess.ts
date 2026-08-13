@@ -25,6 +25,10 @@ export const PATH_TO_MODULO: Record<string, string> = {
 
   // Saúde & Segurança
   "/compliance-sst": "sst",
+  // Faltava no mapa, e rota fora do mapa é rota BLOQUEADA para quem tem
+  // perfil vinculado: ninguém com perfil alcançava Saúde Ocupacional.
+  // Achado ao revisar as ressalvas do parecer de 07/08.
+  "/saude-ocupacional": "sst",
   "/incidentes-acidentes": "incidentes",
   "/ergonomia": "ergonomia",
   "/psicossocial": "psicossocial",
@@ -54,6 +58,9 @@ export const PATH_TO_MODULO: Record<string, string> = {
 
   // Documentos
   "/documentos": "configuracoes",
+
+  // Gestão de usuários — também faltava no mapa, com o mesmo efeito.
+  "/usuarios": "configuracoes",
 
   // Financeiro
   "/financeiro": "financeiro",
@@ -157,4 +164,69 @@ export function isAdminPath(pathname: string): boolean {
     if (cleanPath.startsWith(p + "/")) return true;
   }
   return false;
+}
+
+/**
+ * Rotas que NÃO precisam de módulo, declaradas de propósito.
+ *
+ * Existe por causa de uma ressalva do parecer de perfis de acesso (07/08):
+ * "rota nova esquecida fica inacessível a todos, inclusive a quem deveria
+ * ver. É falha visível — melhor que o contrário, mas gera chamado."
+ *
+ * O problema real não é o bloqueio: é não haver como distinguir a rota que
+ * ficou de fora POR ESQUECIMENTO da que está fora DE PROPÓSITO. Sem essa
+ * distinção, ninguém consegue auditar o mapa — foi assim que
+ * /saude-ocupacional e /usuarios ficaram inacessíveis a todo usuário com
+ * perfil vinculado, sem ninguém notar.
+ *
+ * Declarar aqui o que é intencional transforma o risco invisível numa
+ * conferência possível: `rotasNaoClassificadas` acusa o resto.
+ */
+export const ROTAS_PUBLICAS = new Set<string>([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/ativar-conta",
+  "/onboarding",
+  "/onboarding-rh-self",
+  "/admissao",
+  "/ponto-externo",          // batida por link externo, sem sessão
+  "/lp",
+  "/site",
+  "/politica-de-privacidade",
+  "/termos-de-uso",
+]);
+
+/** Rotas internas da YourEyes, liberadas apenas para superadmin. */
+export const ROTAS_SUPERADMIN = new Set<string>([
+  "/admin",
+  "/admin/blog",
+  "/admin/contratos",
+  "/admin/manual",
+  "/admin/qa",
+  "/admin/qa/docs",
+  "/admin/qa/runner",
+  "/admin/youreyes",
+]);
+
+/**
+ * Recebe as rotas declaradas na aplicação e devolve as que não estão em
+ * lugar nenhum: nem no mapa de módulos, nem entre as sempre liberadas,
+ * nem entre as públicas, nem entre as de superadmin.
+ *
+ * Cada rota devolvida aqui está hoje BLOQUEADA para todo usuário com
+ * perfil vinculado — ou é esquecimento, ou falta declarar a intenção.
+ */
+export function rotasNaoClassificadas(rotasDeclaradas: string[]): string[] {
+  return rotasDeclaradas
+    .filter((r) => !r.includes(":") && !r.includes("*"))
+    .filter(
+      (r) =>
+        !PATH_TO_MODULO[r] &&
+        !ALWAYS_ALLOWED_PATHS.has(r) &&
+        !ROTAS_PUBLICAS.has(r) &&
+        !ROTAS_SUPERADMIN.has(r)
+    )
+    .sort();
 }

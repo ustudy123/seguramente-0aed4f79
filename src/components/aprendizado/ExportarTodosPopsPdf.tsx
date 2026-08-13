@@ -6,6 +6,7 @@ import type { PopData } from "@/hooks/usePopAtividade";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface ExportarTodosPopsPdfProps {
   pops: PopData[];
@@ -380,9 +381,11 @@ export function ExportarTodosPopsPdf({ pops, funcaoNome }: ExportarTodosPopsPdfP
   };
 
   return (
-    <Button size="sm" variant="outline" className="gap-1" onClick={handleExport} disabled={loading}>
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-      {loading ? "Gerando PDF..." : `Baixar Todos POPs (${pops.length})`}
-    </Button>
+    <AcaoProtegida modulo="trilhas" acao="exportar">
+      <Button size="sm" variant="outline" className="gap-1" onClick={handleExport} disabled={loading}>
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+        {loading ? "Gerando PDF..." : `Baixar Todos POPs (${pops.length})`}
+      </Button>
+    </AcaoProtegida>
   );
 }
