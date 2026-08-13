@@ -128,13 +128,51 @@ export function usePerfilPermissions() {
     };
   }, [permissoes, isOwner]);
 
+  /**
+   * Verifica uma AÇÃO específica dentro do módulo (excluir, exportar, aprovar…).
+   *
+   * Regras:
+   *  - owner/superadmin → sempre liberado;
+   *  - usuário SEM perfil vinculado → mantém o comportamento legado por role
+   *    (não bloqueia, para não regredir contas antigas);
+   *  - com perfil vinculado → exige a ação explícita ou `administrar` no módulo.
+   */
+  const podeAcao = useMemo(() => {
+    return (modulo: string, acao: string): boolean => {
+      if (isOwner) return true;
+      if (!vinculo?.perfil_id) return true; // sem perfil: hierarquia de roles decide
+      return (
+        permissaoSet.has(`${modulo}:${acao}`) ||
+        permissaoSet.has(`${modulo}:administrar`)
+      );
+    };
+  }, [permissaoSet, isOwner, vinculo?.perfil_id]);
+
+  const podeExportar = useMemo(
+    () => (modulo: string) => podeAcao(modulo, "exportar"),
+    [podeAcao]
+  );
+  const podeExcluir = useMemo(
+    () => (modulo: string) => podeAcao(modulo, "excluir"),
+    [podeAcao]
+  );
+  const podeAprovar = useMemo(
+    () => (modulo: string) => podeAcao(modulo, "administrar") || podeAcao(modulo, "editar"),
+    [podeAcao]
+  );
+
   return {
     temPermissao,
     temAcessoModulo,
     temAcessoModuloAdmin,
+    podeAcao,
+    podeExportar,
+    podeExcluir,
+    podeAprovar,
     permissoes,
     isLoading,
     perfilVinculado: !!vinculo?.perfil_id,
     isOwner,
   };
 }
+
