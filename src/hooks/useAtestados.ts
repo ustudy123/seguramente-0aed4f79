@@ -13,6 +13,36 @@ import type {
   AtestadoFormData 
 } from "@/types/atestado";
 
+/**
+ * Afastamento sem previsão de retorno — benefício do INSS ou licença
+ * previdenciária. Só nesses casos é legítimo existir sem data de término,
+ * e é certo que o ponto siga bloqueado enquanto durar.
+ */
+function afastamentoSemPrazoDefinido(formData: AtestadoFormData): boolean {
+  return Boolean(formData.beneficio_especie)
+    || ['beneficio_b31', 'beneficio_b91', 'licenca_maternidade']
+         .includes(formData.tipo_principal_new ?? '');
+}
+
+/**
+ * Decide se o atestado abre um registro de Afastamento.
+ *
+ * Regra da casa (13/08/2026): todo atestado COM PERÍODO abre afastamento —
+ * absenteísmo, FAP/RAT, régua dos 15 dias e S-2230 dependem desses
+ * registros. Comparecimento médico (medido em horas, ou lançado com zero
+ * dias) NÃO abre: abona as horas e o colaborador segue batendo ponto.
+ *
+ * A trava real está na data de término: sem ela, o afastamento nasce eterno
+ * e impede a batida indefinidamente. Só passa sem data de fim quem
+ * legitimamente não tem previsão de retorno.
+ */
+function abreAfastamento(formData: AtestadoFormData): boolean {
+  if (afastamentoSemPrazoDefinido(formData)) return true;
+  if (formData.unidade_afastamento === 'horas') return false;
+  if ((formData.dias_afastamento ?? 0) <= 0 && !formData.data_fim_afastamento) return false;
+  return Boolean(formData.data_fim_afastamento);
+}
+
 export function useAtestados() {
   const { tenantId, user, profile } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
@@ -258,8 +288,14 @@ export function useAtestados() {
 
       if (error) throw error;
 
-      // Create/update afastamento if not occupational and with dates
-      if (formData.tipo !== 'ocupacional' && formData.data_inicio_afastamento) {
+      // Create/update afastamento if not occupational and with dates.
+      // Comparecimento médico (horas, ou zero dias) não é afastamento: abre-se
+      // apenas o atestado, e o colaborador segue batendo ponto normalmente.
+      // Sem essa trava nascia afastamento sem data de término — que a trava do
+      // ponto lê como fim no ano 9999 e bloqueia a batida para sempre.
+      if (formData.tipo !== 'ocupacional'
+          && formData.data_inicio_afastamento
+          && abreAfastamento(formData)) {
         const afastamentoId = await createOrUpdateAfastamento(data as Atestado, formData.tipo_principal_new);
 
         // Tarefa 4: registrar dados do acidente (CAT) e reconciliar pendência no RH
@@ -345,6 +381,10 @@ export function useAtestados() {
           colaborador_cpf: atestado.colaborador_cpf,
           data_inicio: atestado.data_inicio_afastamento,
           data_fim: atestado.data_fim_afastamento,
+          // Chegar aqui sem data de término só acontece no caso legítimo
+          // (benefício do INSS / licença previdenciária). O banco recusa
+          // qualquer outro afastamento sem fim.
+          prazo_indeterminado: !atestado.data_fim_afastamento,
           motivo_principal: atestado.grupo_clinico,
           nexo_trabalho: atestado.nexo_trabalho,
           tipo_principal_new: tipoPrincipalNew ?? null,

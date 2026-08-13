@@ -148,6 +148,18 @@ const formSchema = z.object({
 }, {
   message: "Registro profissional (CRM/RMS) é obrigatório",
   path: ["profissional_registro"],
+}).refine((data) => {
+  // Período informado exige data de início. Sem ela não há período, e o
+  // atestado era salvo anunciando "3 dias de afastamento" sem registrar
+  // afastamento nenhum — dias invisíveis para o absenteísmo, para a régua
+  // dos 15 dias e para o FAP/RAT. Recusa no formulário, não em silêncio.
+  const temPeriodo = (data.dias_afastamento ?? 0) > 0
+    || (data.horas_afastamento ?? 0) > 0
+    || (data.minutos_afastamento ?? 0) > 0;
+  return !temPeriodo || !!data.data_inicio_afastamento;
+}, {
+  message: "Informe a data de início do afastamento. Sem ela o período não é registrado e os dias não entram no absenteísmo.",
+  path: ["data_inicio_afastamento"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -252,6 +264,12 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
   const watchDataInicio = form.watch("data_inicio_afastamento");
   const watchDiasAfastamento = form.watch("dias_afastamento");
   const watchUnidade = form.watch("unidade_afastamento");
+
+  // Há período informado? Nesse caso a data de início deixa de ser opcional.
+  const periodoInformado =
+    (form.watch("dias_afastamento") ?? 0) > 0
+    || (form.watch("horas_afastamento") ?? 0) > 0
+    || (form.watch("minutos_afastamento") ?? 0) > 0;
 
   useEffect(() => {
     // Só calcula se for em dias e tiver data de início e quantidade de dias
@@ -518,6 +536,14 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
     }
   };
 
+  // O formulário é alto e a seção de período fica bem abaixo: a mensagem
+  // sob o campo pode nascer fora da área visível, e o clique em Salvar
+  // pareceria não fazer nada. O aviso sobe também como toast.
+  const handleInvalido = (errors: Record<string, { message?: string }>) => {
+    const primeiro = Object.values(errors).find((e) => e?.message)?.message;
+    toast.error(primeiro ?? "Confira os campos destacados antes de salvar.");
+  };
+
   const handleSubmitInterno = async (values: FormValues) => {
     // Validar se colaborador foi selecionado
     if (!colaboradorSelecionado) {
@@ -613,7 +639,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit, handleInvalido)} className="space-y-6">
             {/* Tarefa 1: Tipo de Lançamento (PRIMEIRO campo) — apenas fora da rota saude-ocupacional */}
             {!window.location.pathname.includes('saude-ocupacional') && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1555,7 +1581,10 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading, atestadoEd
                     name="data_inicio_afastamento"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data Início</FormLabel>
+                        <FormLabel>
+                          Data Início
+                          {periodoInformado && <span className="text-destructive"> *</span>}
+                        </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
