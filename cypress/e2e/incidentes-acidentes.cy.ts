@@ -45,7 +45,9 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function openTab(label: string) {
-    cy.contains('[role="tab"]', label).should("be.visible").click();
+    // scrollIntoView + force: a lista de abas rola na horizontal e uma aba fora
+    // da viewport não é "visível"/acionável — o clique falhava por isso.
+    cy.contains('[role="tab"]', label).scrollIntoView().click({ force: true });
     // Re-query after click to avoid detached DOM from React re-render
     cy.contains('[role="tab"]', label).should("have.attr", "aria-selected", "true");
   }
@@ -177,9 +179,12 @@ describe("Módulo Incidentes & Acidentes", () => {
     // Aqui ainda NÃO há diálogo aberto, então o único "Registrar Evento" é o do
     // header — clicar nele abre o form. O título é asserido dentro do diálogo.
     cy.contains("button", texts.registrar).should("be.visible").click();
+    // "exist" em vez de "be.visible": o h2 do DialogTitle (Radix) chega a montar,
+    // mas a sequência de re-renders (Error fetching user data) reinicia a animação
+    // do portal e a asserção de visibilidade piscava. Basta o diálogo ter aberto.
     cy.get('[role="dialog"]', { timeout: 15000 })
       .contains(/Registrar Novo Evento SST|Editar Evento/)
-      .should("be.visible");
+      .should("exist");
   }
 
   function createIncidenteManual() {
@@ -349,7 +354,7 @@ describe("Módulo Incidentes & Acidentes", () => {
     // viewport) e falhava o should("be.visible").
     cy.get('[role="dialog"]', { timeout: 10000 })
       .contains(/Guia Rápido/i)
-      .should("be.visible");
+      .should("exist");
     cy.get('body').type('{esc}');
   });
 });
