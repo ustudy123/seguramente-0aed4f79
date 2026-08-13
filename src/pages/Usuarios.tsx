@@ -40,9 +40,10 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 const TIPO_OPTIONS: { value: string; label: string }[] = [
-  { value: "todos", label: "Todos os tipos" },
+  { value: "todos", label: "Todos os tipos de usuário" },
   ...Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => ({ value: k, label: v })),
 ];
+
 
 export default function Usuarios() {
   const { tenantId } = useAuth();
