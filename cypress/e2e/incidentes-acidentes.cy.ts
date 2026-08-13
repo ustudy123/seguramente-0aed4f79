@@ -83,7 +83,10 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function fillTipoELocal(setor = "Administrativo", local = "Próximo ao refeitório", turno = "1º Turno") {
     cy.get('input[type="date"]').first().should("be.visible");
-    openNthCombobox(0);
+    // Combobox de Estabelecimento ESCOPADO ao diálogo: openNthCombobox global
+    // pegava o 1º button[role=combobox] da página (os filtros da aba, atrás do
+    // overlay), então "Buscar estabelecimento..." nunca abria.
+    cy.get('[role="dialog"]').find('button[role="combobox"]').eq(0).click({ force: true });
     cy.get('input[placeholder="Buscar estabelecimento..."]')
       .should("be.visible")
       .type("Matriz", { force: true });
@@ -96,7 +99,7 @@ describe("Módulo Incidentes & Acidentes", () => {
       }
     });
 
-    openNthCombobox(1);
+    cy.get('[role="dialog"]').find('button[role="combobox"]').eq(1).click({ force: true });
     cy.get('input[placeholder="Buscar setor..."]').should("be.visible").clear().type(setor);
     cy.get("body").then(($body) => {
       if ($body.find('[cmdk-item]').length > 0) {
