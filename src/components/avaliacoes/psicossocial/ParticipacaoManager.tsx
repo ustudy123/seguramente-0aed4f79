@@ -44,6 +44,7 @@ import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 import { formatCpf, cleanCpf, validateCpf } from "@/lib/cpf";
 import { useMinRespostasCampanha, MIN_RESPOSTAS_ABS } from "@/hooks/usePsicossocialMinRespostas";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface Participacao {
   id: string;
@@ -505,10 +506,12 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
         </div>
         <div className="flex gap-2">
           {total > 0 && (
-            <Button variant="outline" size="sm" onClick={exportarLinks}>
-              <Download className="h-4 w-4 mr-1" />
-              Exportar Links
-            </Button>
+            <AcaoProtegida modulo="psicossocial" acao="exportar">
+              <Button variant="outline" size="sm" onClick={exportarLinks}>
+                <Download className="h-4 w-4 mr-1" />
+                Exportar Links
+              </Button>
+            </AcaoProtegida>
           )}
           {campanha.status !== "encerrada" && (
             <Button size="sm" onClick={() => setShowAddDialog(true)}>

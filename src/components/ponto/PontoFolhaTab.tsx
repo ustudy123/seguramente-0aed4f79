@@ -21,6 +21,7 @@ import { formatarHoraRelogio } from "@/lib/ponto/formatoHoras";
 import { useFeriadoAdicionalCompetencia } from "@/hooks/usePontoFeriados";
 import { IncluirBancoHorasDialog } from "@/components/ponto/IncluirBancoHorasDialog";
 import { usePontoBancoHoras } from "@/hooks/usePontoBancoHoras";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 type FormatoExport = "csv" | "txt" | "xlsx";
 
@@ -252,10 +253,13 @@ export function PontoFolhaTab() {
         </div>
         <div className="space-y-2">
           <Label>&nbsp;</Label>
-          <Button onClick={() => setPerguntandoBanco(true)} disabled={gerando} className="w-full">
-            <FileDown className="w-4 h-4 mr-2" />
-            {gerando ? "Gerando..." : "Exportar"}
-          </Button>
+          <AcaoProtegida modulo="colaboradores" acao="exportar" modo="desabilitar"
+            motivo="Seu perfil de acesso não permite exportar a folha de ponto.">
+            <Button onClick={() => setPerguntandoBanco(true)} disabled={gerando} className="w-full">
+              <FileDown className="w-4 h-4 mr-2" />
+              {gerando ? "Gerando..." : "Exportar"}
+            </Button>
+          </AcaoProtegida>
         </div>
       </div>
 
