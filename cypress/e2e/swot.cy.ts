@@ -213,10 +213,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     // às vezes nenhum card era criado e o cy.get do card estourava em 15s.
     createSwot(`SWOT Nav ${uniqueId}`);
     openSwotTab();
-
-    // force: logo após criar, o re-render (Error fetching user data) deixava o
-    // card momentaneamente coberto/detached e o clique normal falhava.
-    cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().scrollIntoView().click({ force: true });
+    // Deixa a lista assentar após o re-render (Error fetching user data) antes
+    // de clicar; sem scrollIntoView, que abria janela para o card se desanexar.
+    cy.wait(2000);
+    cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().click({ force: true });
     cy.wait(2000);
 
     // Detalhe: botão Voltar e botão Excluir devem aparecer (por ID)
