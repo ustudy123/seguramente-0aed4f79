@@ -55,8 +55,10 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function selectRadixOption(optionText: string) {
+    // Sem should("be.visible") antes do force: o portal do Radix anima ao abrir
+    // e a asserção de visibilidade falhava durante a animação. cy.contains já
+    // espera o item existir no DOM; o force ignora a acionabilidade.
     cy.contains('[role="option"], [data-radix-collection-item], [cmdk-item]', optionText)
-      .should("be.visible")
       .click({ force: true });
   }
 
@@ -110,8 +112,10 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function fillEnvolvidosManual(nome: string, cargo: string) {
-    openRadixSelectByText("Selecione do cadastro ou digite");
-    selectRadixOption("✏️ Digitar manualmente");
+    // O Select "Colaborador Principal" já vem em "Digitar manualmente"
+    // (value default "manual"), então os inputs abaixo já estão renderizados.
+    // O placeholder "Selecione do cadastro ou digite" nunca aparece nesse
+    // estado, então abrir o Select por esse texto travava o passo.
     cy.get('input[placeholder="Nome completo"]').clear().type(nome);
     cy.get('input[placeholder="Ex: Operador"]').clear().type(cargo);
     cy.get('textarea[placeholder*="testemunhas"]').clear().type("Maria teste, Pedro teste");
@@ -160,13 +164,22 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function submitForm() {
-    cy.contains("button", /Registrar Evento|Salvar Alterações/i).should("be.visible").click();
+    // Escopar ao diálogo: existem DOIS botões "Registrar Evento" — o do header
+    // (sempre no DOM, coberto pelo overlay do Dialog) e o do rodapé do form.
+    // cy.contains global pegava o do header e o clique falhava (coberto).
+    cy.get('[role="dialog"]')
+      .contains("button", /Registrar Evento|Salvar Alterações/i)
+      .click();
     cy.contains("Registrar Novo Evento SST").should("not.exist");
   }
 
   function openRegistrarEvento() {
+    // Aqui ainda NÃO há diálogo aberto, então o único "Registrar Evento" é o do
+    // header — clicar nele abre o form. O título é asserido dentro do diálogo.
     cy.contains("button", texts.registrar).should("be.visible").click();
-    cy.contains(/Registrar Novo Evento SST|Editar Evento/).should("be.visible");
+    cy.get('[role="dialog"]', { timeout: 15000 })
+      .contains(/Registrar Novo Evento SST|Editar Evento/)
+      .should("be.visible");
   }
 
   function createIncidenteManual() {
@@ -331,7 +344,12 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   it("abre o guia rápido", () => {
     cy.contains("button", texts.guia).click();
-    cy.contains(/Guia|Rápido|Incidentes/i).should("be.visible");
+    // Assere DENTRO do diálogo: o regex amplo /...|Incidentes/i casava primeiro
+    // o link "Incidentes & Acidentes" do menu lateral (que pode estar fora da
+    // viewport) e falhava o should("be.visible").
+    cy.get('[role="dialog"]', { timeout: 10000 })
+      .contains(/Guia Rápido/i)
+      .should("be.visible");
     cy.get('body').type('{esc}');
   });
 });

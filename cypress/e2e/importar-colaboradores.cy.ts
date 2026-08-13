@@ -48,12 +48,13 @@ describe("Colaboradores - Modal de Importação", () => {
   });
 
   it("deve abrir o modal de importação ao clicar no botão 'Importar Colaboradores' em qualquer aba", () => {
-    const tabs = ["ativos", "admissoes", "desligados"];
+    // Textos EXATOS das abas (Radix TabsTrigger não emite data-value; "Admissões"
+    // tem acento e o antigo :contains("Admissoes") não casava).
+    const tabs = ["Ativos", "Admissões", "Desligados"];
 
     tabs.forEach((tab) => {
-      // Clica na aba
-      cy.get(`[role="tab"][data-value="${tab}"], [role="tab"]:contains("${tab.charAt(0).toUpperCase() + tab.slice(1)}")`)
-        .first()
+      // Clica na aba pelo texto real
+      cy.contains('[role="tab"]', tab)
         .click({ force: true });
       
       cy.wait(500);

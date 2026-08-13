@@ -52,7 +52,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   function goToEstrategia() {
     cy.visit(`${baseUrl}/estrategia`);
     closeEmpresaModalIfNeeded();
-    cy.contains(/Estratégia|Governança/i, { timeout: 20000 }).should("be.visible");
+    // Assere o h1 da PÁGINA (não o menu lateral): "Governança" também existe
+    // no grupo recolhido "Documentos & Governança" do sidebar, e o cy.contains
+    // pegava esse botão oculto -> should("be.visible") falhava.
+    cy.contains("h1", "Planejamento Estratégico", { timeout: 20000 }).should("be.visible");
   }
 
   function openSwotTab() {
