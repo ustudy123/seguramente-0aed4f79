@@ -240,6 +240,14 @@ export default defineConfig({
     baseUrl: exigirAmbienteDeTeste(alvoNormalizado),
     setupNodeEvents(on) {
       on("after:run", enviarParaOQA);
+      // Ponte para o diagnóstico de falha do support/e2e.ts: o que chega aqui
+      // é impresso no stdout do CI (o único canal de log legível de fora).
+      on("task", {
+        diag(mensagem: string) {
+          console.log("\n[DIAG] " + mensagem + "\n");
+          return null;
+        },
+      });
     },
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 120000,

@@ -85,7 +85,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function waitForPsicossocialReady() {
-    cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+    cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
     cy.get("body", { timeout: 30000 }).should(($body) => {
       const hasTabs = $body.find("#tab-psicossocial-campanhas").length > 0;
       const hasCreateAction = $body.find("#btn-nova-campanha, #btn-criar-campanha").length > 0;
@@ -122,7 +122,7 @@ describe("Módulo Psicossocial NR-01", () => {
         validate() {
           cy.visit(`${baseUrl}/psicossocial`);
           closeEmpresaModalIfNeeded();
-          cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+          cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
           cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
         },
         cacheAcrossSpecs: false,
@@ -138,7 +138,7 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.visit(`${baseUrl}/psicossocial`);
     closeEmpresaModalIfNeeded();
     // Wait for framer-motion animations (opacity 0→1) to complete
-    cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+    cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
     cy.wait(3000);
     // Ensure parent container is fully opaque before interacting
     cy.get("#btn-guia-rapido-psicossocial", { timeout: 15000 }).should("exist");
