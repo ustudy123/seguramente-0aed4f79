@@ -91,6 +91,23 @@ afterEach(function () {
 // continua sendo por conteúdo (o spec espera o campo de e-mail, o texto da
 // tela), não pelo código HTTP. Uma opção explícita no cy.visit ainda vence.
 // =====================================================================
+// BARRA DUPLA NA ROTA = 404 (causa real das 5 falhas de before each)
+//
+// Os specs montam a URL como `${baseUrl}/epis`. O baseUrl vem de
+// Cypress.config("baseUrl"), que a esteira passa por CYPRESS_BASE_URL COM
+// barra final (o Cypress restaura essa barra por cima da normalização do
+// cypress.config.ts). Resultado: `.../seguramente-0aed4f79//epis` — o
+// BrowserRouter trata `//epis` como rota inexistente e renderiza o 404
+// "Page not found", dentro do layout (por isso o menu lateral aparecia e
+// dava falso-positivo em asserções amplas). Aqui colapsamos barras
+// repetidas SÓ no caminho, preservando o `://` do esquema e a query.
+function colapsarBarrasNoCaminho(u: string): string {
+  return u.replace(
+    /^(https?:\/\/[^/]+)(\/[^?#]*)?/,
+    (m, base, caminho) => (caminho ? base + caminho.replace(/\/{2,}/g, "/") : m),
+  );
+}
+
 // Tipos como `any` de propósito: `cy.visit` é sobrecarregado (aceita
 // visit(url), visit(url, opts) e visit(opts)), e brigar com as sobrecargas
 // aqui não agrega — o corpo cobre as duas formas usadas nos specs.
@@ -98,9 +115,13 @@ Cypress.Commands.overwrite(
   "visit",
   (originalFn: any, urlOrOpts: any, maybeOpts?: any) => {
     if (urlOrOpts && typeof urlOrOpts === "object") {
-      return originalFn({ failOnStatusCode: false, ...urlOrOpts });
+      const opts = { ...urlOrOpts };
+      if (typeof opts.url === "string") opts.url = colapsarBarrasNoCaminho(opts.url);
+      return originalFn({ failOnStatusCode: false, ...opts });
     }
-    return originalFn(urlOrOpts, { failOnStatusCode: false, ...(maybeOpts || {}) });
+    const url =
+      typeof urlOrOpts === "string" ? colapsarBarrasNoCaminho(urlOrOpts) : urlOrOpts;
+    return originalFn(url, { failOnStatusCode: false, ...(maybeOpts || {}) });
   },
 );
 
