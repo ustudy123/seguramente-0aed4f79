@@ -585,9 +585,12 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                       }}>
                         Desligar
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
-                        Excluir
-                      </DropdownMenuItem>
+                      {podeExcluir("colaboradores") && (
+                        <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
+                          Excluir
+                        </DropdownMenuItem>
+                      )}
+
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -709,9 +712,12 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                         }}>
                           Desligar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
-                          Excluir
-                        </DropdownMenuItem>
+                        {podeExcluir("colaboradores") && (
+                          <DropdownMenuItem className="text-destructive" onClick={() => checkVinculosEAbrirExcluir(colab)}>
+                            Excluir
+                          </DropdownMenuItem>
+                        )}
+
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
