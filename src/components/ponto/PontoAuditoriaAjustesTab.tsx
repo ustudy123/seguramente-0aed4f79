@@ -16,6 +16,7 @@ import { ShieldAlert, FileDown, Paperclip, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 import { format, startOfMonth, subMonths } from "date-fns";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 import {
   usePontoAuditoriaAjustes,
   precisaConferencia,
@@ -126,9 +127,11 @@ export function PontoAuditoriaAjustesTab() {
           >
             Só o que precisa conferência ({totais.conferir})
           </Button>
-          <Button variant="outline" size="sm" onClick={exportar} disabled={!filtradas.length}>
-            <FileDown className="w-4 h-4 mr-1" /> Exportar
-          </Button>
+          <AcaoProtegida modulo="colaboradores" acao="exportar">
+            <Button variant="outline" size="sm" onClick={exportar} disabled={!filtradas.length}>
+              <FileDown className="w-4 h-4 mr-1" /> Exportar
+            </Button>
+          </AcaoProtegida>
         </CardContent>
       </Card>
 

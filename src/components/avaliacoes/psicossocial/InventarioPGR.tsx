@@ -55,6 +55,7 @@ import {
 } from "@/data/catalogoRiscosPsicossociais";
 import { ExplicacaoPGRGRO } from "./ExplicacaoPGRGRO";
 import { EvidenciasEntrevistaPanel } from "./EvidenciasEntrevistaPanel";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface InventarioPGRProps {
   campanhas: CampanhaPsicossocial[];
@@ -574,10 +575,12 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
               Enviar ao GRO
               {semEscopoGRO && <AlertTriangle className="h-3 w-3 text-amber-500" />}
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleExportarPDF} disabled={exportando}>
-              {exportando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              Exportar PDF
-            </Button>
+            <AcaoProtegida modulo="psicossocial" acao="exportar">
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleExportarPDF} disabled={exportando}>
+                {exportando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                Exportar PDF
+              </Button>
+            </AcaoProtegida>
           </div>
         </div>
       </CardHeader>

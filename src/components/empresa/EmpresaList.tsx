@@ -19,6 +19,8 @@ import { exportEmpresasToXlsx, exportEmpresasToPdf } from '@/utils/empresaExport
 import type { EmpresaCadastro } from '@/types/empresa';
 import type { GrupoEconomico } from '@/hooks/useGruposEconomicos';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface EmpresaListProps {
   empresas: (EmpresaCadastro & { ativo: boolean })[];
@@ -53,9 +55,13 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
   });
 
   const { hasRole, isSuperAdmin } = useAuthContext() as any;
-  // Exclusão liberada para todos os usuários autenticados — protegida por
-  // confirmação dupla (palavra "EXCLUIR") + RLS do banco.
-  const podeExcluir = true;
+  const { podeExcluir: perfilPodeExcluir } = usePerfilPermissions();
+  // Era `const podeExcluir = true` — liberado para qualquer usuário
+  // autenticado, apoiado só na confirmação dupla e na RLS. A confirmação
+  // evita o clique errado, não o usuário sem alçada. Passa a consultar o
+  // perfil de acesso (recomendação nº 3 do parecer de 07/08). Quem não tem
+  // perfil vinculado segue pela hierarquia de papéis, como antes.
+  const podeExcluir = perfilPodeExcluir("configuracoes");
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
@@ -360,6 +366,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
           )}
         </div>
         <div className="flex gap-2">
+          <AcaoProtegida modulo="configuracoes" acao="exportar">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -385,6 +392,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </AcaoProtegida>
           <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
             <Upload className="w-4 h-4 mr-1" />
             Importar

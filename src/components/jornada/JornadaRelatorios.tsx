@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { FileDown, FileSpreadsheet, FileText, Download } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 type TipoRelatorio = "individual" | "coletivo" | "conformidade" | "alertas" | "completo";
 
@@ -256,10 +257,13 @@ export function JornadaRelatorios() {
             </ul>
           </div>
 
-          <Button onClick={gerarRelatorio} disabled={gerando} className="w-full">
-            <Download className="h-4 w-4 mr-2" />
-            {gerando ? "Gerando..." : `Exportar ${formato === "pdf" ? "PDF" : "Excel"}`}
-          </Button>
+          <AcaoProtegida modulo="colaboradores" acao="exportar" modo="desabilitar"
+            motivo="Seu perfil de acesso não permite exportar relatórios de jornada.">
+            <Button onClick={gerarRelatorio} disabled={gerando} className="w-full">
+              <Download className="h-4 w-4 mr-2" />
+              {gerando ? "Gerando..." : `Exportar ${formato === "pdf" ? "PDF" : "Excel"}`}
+            </Button>
+          </AcaoProtegida>
         </CardContent>
       </Card>
     </div>
