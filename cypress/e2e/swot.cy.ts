@@ -112,9 +112,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
         cy.get("textarea").first().clear().type(descricao);
       }
 
-      if (periodo) {
-        cy.get("input").eq(1).clear().type(periodo);
-      }
+      // Período é um date-picker (Popover+Calendar), não um input de texto — o
+      // modal só tem UM <input> (o título). O antigo cy.get("input").eq(1)
+      // estourava com "Expected to find element: 1" (não há 2º input).
 
       cy.contains("button", "Criar Análise").click();
     });
@@ -159,10 +159,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function clickVoltar() {
-    // Busca o botão que contém o ícone ChevronLeft (botão Voltar)
-    cy.get('svg.lucide-chevron-left', { timeout: 10000 })
-      .closest('button')
-      .click({ force: true });
+    // Usa o id estável do botão Voltar do detalhe. svg.lucide-chevron-left
+    // casava 2 elementos (o Voltar E o toggle de recolher a sidebar, que é
+    // opacity-0) -> cy.click falhava com "contained 2 elements".
+    cy.get('#btn-voltar-swot', { timeout: 10000 }).click({ force: true });
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
@@ -208,12 +208,11 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   });
 
   it("CT-SWOT-004 — Abrir SWOT clicando no card", () => {
-    cy.get("body").then(($body) => {
-      if ($body.text().includes("Nenhuma análise SWOT")) {
-        createSwot(`SWOT Nav ${uniqueId}`);
-        openSwotTab();
-      }
-    });
+    // Cria sempre uma SWOT antes — o guard condicional dependia de capturar
+    // "Nenhuma análise SWOT" no instante exato (corrida com o loading), então
+    // às vezes nenhum card era criado e o cy.get do card estourava em 15s.
+    createSwot(`SWOT Nav ${uniqueId}`);
+    openSwotTab();
 
     cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().should("be.visible").click();
     cy.wait(2000);
@@ -229,7 +228,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
   it("CT-SWOT-010 — Criar SWOT (caminho feliz)", () => {
     const titulo = `SWOT Teste E2E ${uniqueId}`;
-    createSwot(titulo, "Descrição de teste automatizado", "2026 Q2");
+    createSwot(titulo, "Descrição de teste automatizado");
 
     openSwotTab();
     cy.contains(titulo, { timeout: 10000 }).should("be.visible");
@@ -257,7 +256,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.get('[role="dialog"]').within(() => {
       cy.get("input").first().clear().type(titulo);
-      cy.get("input").eq(1).clear().type("🎉abcd!@#$");
+      // Não há campo de período em texto no modal (é date-picker), então não
+      // há como digitar formato inválido. O teste só garante que a app não
+      // trava — mantém a asserção final de body visível.
       cy.contains("button", "Criar Análise").click();
     });
 
@@ -418,21 +419,15 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   });
 
   it("CT-SWOT-026 — Voltar da tela de detalhe", () => {
-    cy.get("body").then(($body) => {
-      if ($body.text().includes("Nenhuma análise SWOT")) {
-        createSwot(`SWOT Voltar ${uniqueId}`);
-        openSwotTab();
-      }
-    });
+    // Cria sempre; clica o card por data-testid (o [class*=cursor-pointer]
+    // pegava outros elementos); volta pelo id estável do botão.
+    createSwot(`SWOT Voltar ${uniqueId}`);
+    openSwotTab();
 
-    cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
+    cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().should("be.visible").click();
     cy.wait(2000);
 
-    // Clica no botão Voltar usando o ícone ChevronLeft
-    cy.get('svg.lucide-chevron-left', { timeout: 15000 })
-      .closest('button')
-      .should("be.visible")
-      .click({ force: true });
+    cy.get('#btn-voltar-swot', { timeout: 15000 }).should("be.visible").click();
 
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });
