@@ -541,8 +541,9 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   <div className="sm:col-span-2 space-y-1.5">
                     <Label className="flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      Perfil de Acesso
+                      Perfil de acesso (permissões)
                     </Label>
+
                     <Select
                       value={watchedValues.perfil_acesso_id || ""}
                       onValueChange={perfilId => {
@@ -606,6 +607,19 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   </div>
                 )}
 
+                {!watchedValues.perfil_acesso_id && (
+                  <div className="flex gap-2 items-start p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                    <span>
+                      <strong>Sem perfil de acesso selecionado.</strong> A pessoa
+                      entrará com o perfil <strong>Colaborador (padrão)</strong>:
+                      auto-serviço apenas (próprio ponto, atestados e holerites),
+                      sem acesso a dados de outros colaboradores. Volte à etapa
+                      anterior se ela precisar de mais acesso.
+                    </span>
+                  </div>
+                )}
+
                 {/* Resumo */}
                 <div className="p-3 bg-muted/40 rounded-lg text-sm space-y-1">
                   <p><span className="text-muted-foreground">Nome:</span> {watchedValues.nome_completo}</p>
@@ -613,13 +627,19 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   {watchedValues.cpf && (
                     <p><span className="text-muted-foreground">CPF:</span> {formatCpf(watchedValues.cpf)}</p>
                   )}
-                  <p><span className="text-muted-foreground">Tipo:</span> {TIPO_USUARIO_LABELS[watchedValues.tipo_usuario as UsuarioTipo] || watchedValues.tipo_usuario}</p>
+                  <p><span className="text-muted-foreground">Tipo de usuário (natureza):</span> {TIPO_USUARIO_LABELS[watchedValues.tipo_usuario as UsuarioTipo] || watchedValues.tipo_usuario}</p>
+                  <p>
+                    <span className="text-muted-foreground">Perfil de acesso (permissões):</span>{" "}
+                    {perfisAcesso.find((p: any) => p.id === watchedValues.perfil_acesso_id)?.nome
+                      || "Colaborador (padrão)"}
+                  </p>
                   {dadosReaproveitados && (
                     <p className="flex items-center gap-1 text-primary text-xs mt-1">
                       <UserCheck className="w-3 h-3" /> Dados reaproveitados do cadastro de colaborador
                     </p>
                   )}
                 </div>
+
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
