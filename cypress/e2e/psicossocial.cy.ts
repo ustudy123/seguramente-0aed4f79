@@ -36,12 +36,18 @@ describe("Módulo Psicossocial NR-01", () => {
     historico: "historico",
   } as const;
 
-  const TAB_SELECTOR: Record<(typeof TAB)[keyof typeof TAB], string> = {
-    campanhas: "#tab-psicossocial-campanhas",
-    indices: "#tab-psicossocial-indicadores",
-    pgr: "#tab-psicossocial-pgr",
-    historico: "#tab-psicossocial-historico",
+  // Navegação por URL (?tab=): a TabsList do dashboard é hidden — não há
+  // #tab-psicossocial-* clicável no DOM. "indices" é sub-aba de metodologia.
+  const TAB_URL: Record<(typeof TAB)[keyof typeof TAB], string> = {
+    campanhas: "?tab=campanhas",
+    indices: "?tab=metodologia&sub=indices",
+    pgr: "?tab=pgr",
+    historico: "?tab=historico",
   };
+
+  // Garante UMA campanha base por execução (algumas abas mostram conteúdo
+  // dependente de haver campanha).
+  let campanhaBaseCriada = false;
 
   function dispatchNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
     const prototype = Object.getPrototypeOf(element);
@@ -85,11 +91,10 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function waitForPsicossocialReady() {
+    // #tab-psicossocial-* não existe (TabsList hidden). Basta o título da
+    // página e a ausência de erro de autenticação.
     cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
     cy.get("body", { timeout: 30000 }).should(($body) => {
-      const hasTabs = $body.find("#tab-psicossocial-campanhas").length > 0;
-      const hasCreateAction = $body.find("#btn-nova-campanha, #btn-criar-campanha").length > 0;
-      expect(hasTabs || hasCreateAction, "dashboard psicossocial carregado").to.be.true;
       expect($body.text()).to.not.contain("Usuário não autenticado");
     });
   }
@@ -177,43 +182,22 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function ensureTabsDisponiveis() {
-    cy.get("body", { timeout: 15000 }).then(($body) => {
-      if ($body.find("#tab-psicossocial-campanhas").length > 0) return;
-
-      const estadoVazioVisivel =
-        $body.find("#btn-nova-campanha, #btn-criar-campanha").length > 0 ||
-        /Bem-vindo à Gestão Psicossocial|Nenhuma campanha criada/i.test($body.text());
-
-      if (!estadoVazioVisivel) {
-        cy.wait(3000);
-        cy.get("body").then(($body2) => {
-          if ($body2.find("#tab-psicossocial-campanhas").length > 0) return;
-          criarCampanhaRapida(campanhaBaseNome, setorBaseNome, funcaoBaseNome);
-          goToPsicossocial();
-          cy.get("#tab-psicossocial-campanhas", { timeout: 20000 }).should("exist");
-        });
-        return;
-      }
-
-      criarCampanhaRapida(campanhaBaseNome, setorBaseNome, funcaoBaseNome);
-      goToPsicossocial();
-      cy.get("#tab-psicossocial-campanhas", { timeout: 20000 }).should("exist");
-    });
+    // Cria UMA campanha base por execução. Não há mais como checar
+    // "#tab-psicossocial-campanhas" (TabsList hidden); a navegação é por URL,
+    // então só garantimos que exista uma campanha para as abas com conteúdo
+    // dependente de dados.
+    if (campanhaBaseCriada) return;
+    campanhaBaseCriada = true;
+    criarCampanhaRapida(campanhaBaseNome);
+    goToPsicossocial();
   }
 
   function openTab(label: string) {
     ensureTabsDisponiveis();
-    const sel = TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]];
-    cy.get(sel, { timeout: 20000 })
-      .should("exist")
-      .first()
-      .scrollIntoView()
-      .click({ force: true });
-    cy.wait(300);
-    cy.get(sel, { timeout: 10000 })
-      .first()
-      .should("have.attr", "aria-selected", "true");
-    cy.wait(300);
+    cy.visit(`${baseUrl}/psicossocial${TAB_URL[label as (typeof TAB)[keyof typeof TAB]]}`);
+    closeEmpresaModalIfNeeded();
+    cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
+    cy.wait(500);
   }
 
   function clickNovaCampanha() {
@@ -249,16 +233,14 @@ describe("Módulo Psicossocial NR-01", () => {
     preencherDatasCampanha(inicio, fim);
   }
 
-  function adicionarSetorFuncao(setor = setorBaseNome, funcao = funcaoBaseNome) {
-    cy.get("#situacoes-trabalho-section", { timeout: 10000 }).scrollIntoView();
-    cy.wait(300);
-    digitarNoComboboxSituacao("#combobox-setor-situacao", "#input-combobox-setor-situacao", setor);
-    digitarNoComboboxSituacao("#combobox-funcao-situacao", "#input-combobox-funcao-situacao", funcao);
-    cy.get("#btn-adicionar-situacao-trabalho").scrollIntoView().should("be.enabled").click({ force: true });
-    cy.get("#situacoes-trabalho-section").within(() => {
-      cy.contains(setor).should("exist");
-      cy.contains(funcao).should("exist");
-    });
+  // A seção manual "Setor + Função" foi REMOVIDA da tela (segmentação
+  // automática por CPF; vínculo opcional por GHE). A campanha salva só com
+  // nome+datas, então este passo virou no-op para os testes que só precisam
+  // de uma campanha existir. Os casos que testam a segmentação em si foram
+  // reescritos para o fluxo de GHE.
+  function adicionarSetorFuncao(_setor = setorBaseNome, _funcao = funcaoBaseNome) {
+    void _setor;
+    void _funcao;
   }
 
   function salvarCampanha() {
