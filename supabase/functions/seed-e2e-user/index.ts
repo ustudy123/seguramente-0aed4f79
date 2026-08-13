@@ -100,12 +100,24 @@ serve(async (req) => {
     );
   }
 
+  // O corpo é um override OPCIONAL das credenciais. Se vier vazio ou
+  // ilegível, NÃO derruba o seed: segue com os padrões (os mesmos de
+  // cypress.config.ts). Um corpo que não parseia nunca deve impedir a
+  // conta-robô de existir — isso só recriaria a falha de login que a
+  // função existe para evitar. Loga o bruto para diagnóstico.
   let body: { email?: string; senha?: string } = {};
-  try {
-    const texto = await req.text();
-    if (texto) body = JSON.parse(texto);
-  } catch {
-    return json({ error: "Corpo nao e JSON valido." }, 400);
+  const bruto = (await req.text()).trim();
+  if (bruto) {
+    try {
+      body = JSON.parse(bruto);
+    } catch (e) {
+      console.warn(
+        "Corpo ignorado (nao-JSON), usando credenciais padrao:",
+        (e as Error).message,
+        "| primeiros 80 chars:",
+        bruto.slice(0, 80),
+      );
+    }
   }
 
   const email = (body.email || EMAIL_PADRAO).trim();
