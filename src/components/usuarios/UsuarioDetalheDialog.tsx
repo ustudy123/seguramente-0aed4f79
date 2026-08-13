@@ -579,10 +579,12 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                     {perfilAtualObj.nome}
                   </span>
                 ) : (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-amber-600">
+                    Sem perfil de acesso · tipo de usuário:{" "}
                     {TIPO_USUARIO_LABELS[usuario.tipo_usuario] || usuario.tipo_usuario}
                   </span>
                 )}
+
                 <span className="text-muted-foreground/40">•</span>
                 <span className="text-xs text-muted-foreground">{vinculosAtivos.length} vínculo(s) ativo(s)</span>
                 <span className="text-muted-foreground/40">•</span>
@@ -803,7 +805,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                         onChange={v => setEditForm(f => ({ ...f, cpf: cleanCpf(v) }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Perfil de Acesso</Label>
+                      <Label>Perfil de acesso (permissões)</Label>
                       <Select value={editForm.perfil_acesso_id} onValueChange={v => setEditForm(f => ({ ...f, perfil_acesso_id: v }))}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione um perfil…" />
