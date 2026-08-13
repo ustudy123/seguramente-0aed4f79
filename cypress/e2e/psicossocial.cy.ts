@@ -210,7 +210,12 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function abrirNovaCampanha() {
-    goToPsicossocial();
+    // O botão "Nova Campanha" (#btn-nova-campanha) só existe na aba CAMPANHAS,
+    // não na aba padrão (visão). goToPsicossocial ia para /psicossocial (visão)
+    // e o clickNovaCampanha estourava em 20s. Navega direto para ?tab=campanhas.
+    cy.visit(`${baseUrl}/psicossocial?tab=campanhas`);
+    closeEmpresaModalIfNeeded();
+    cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
     clickNovaCampanha();
     cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 }).should("be.visible");
   }
