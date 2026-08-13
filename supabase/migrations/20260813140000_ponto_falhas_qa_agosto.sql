@@ -41,21 +41,10 @@
 -- real por esse caminho.
 --
 -- ── 4) PONTO-253 — duas configurações de retenção colidindo ─────────
--- Existem DOIS desenhos de retenção no repositório para a mesma tabela:
---   · 04/08: ponto_retencao_config(tenant_id PK, geolocalizacao_dias,
---     ativo) + ponto_expurgar_geolocalizacao() — este é o que existe;
---   · 07/08: um CREATE TABLE IF NOT EXISTS com outras colunas
---     (anos_retencao, expurgo_automatico, ...) que foi SILENCIOSAMENTE
---     PULADO, porque a tabela já existia — mas a função
---     ponto_expurgar_registros() daquele mesmo arquivo foi criada e lê
---     `anos_retencao`. Ela quebra na primeira execução real com
---     "column anos_retencao does not exist".
---
--- Os dois prazos são legitimamente distintos e devem coexistir: a
--- geolocalização é acessória e sua finalidade se esgota cedo (LGPD art.
--- 16); a MARCAÇÃO tem base própria no art. 74 da CLT e prazo maior. A
--- correção acrescenta as colunas que faltam em vez de escolher um dos
--- desenhos.
+-- Existem DOIS desenhos de retenção para a mesma tabela, e — descoberto
+-- depois, ao aplicar na produção — CADA BANCO FICOU COM UM DELES. O
+-- tratamento foi movido para 20260813170000, que garante as colunas dos
+-- dois desenhos nos dois bancos e aplica os comentários sob proteção.
 -- =====================================================================
 
 SET lock_timeout = '10s';
@@ -242,25 +231,13 @@ GRANT EXECUTE ON FUNCTION public.ponto_espelho_resumo_empresa(uuid, uuid, text) 
 -- desenho de 07/08 nunca chegaram porque o CREATE TABLE IF NOT EXISTS
 -- foi pulado — mas ponto_expurgar_registros() lê anos_retencao e quebra.
 -- ─────────────────────────────────────────────────────────────────────
-ALTER TABLE public.ponto_retencao_config
-  ADD COLUMN IF NOT EXISTS anos_retencao      integer     NOT NULL DEFAULT 5,
-  ADD COLUMN IF NOT EXISTS expurgo_automatico boolean     NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS ultimo_expurgo_em  timestamptz,
-  ADD COLUMN IF NOT EXISTS observacoes        text,
-  ADD COLUMN IF NOT EXISTS created_at         timestamptz NOT NULL DEFAULT now();
-
-DO $chk$
-BEGIN
-  ALTER TABLE public.ponto_retencao_config
-    ADD CONSTRAINT ponto_retencao_anos_chk CHECK (anos_retencao BETWEEN 5 AND 30);
-EXCEPTION WHEN duplicate_object OR duplicate_table THEN
-  NULL;  -- já existe
-END $chk$;
-
-COMMENT ON COLUMN public.ponto_retencao_config.geolocalizacao_dias IS
-  'Prazo de guarda da GEOLOCALIZAÇÃO, dado acessório cuja finalidade se esgota cedo (LGPD art. 16). Não confundir com o prazo da marcação.';
-COMMENT ON COLUMN public.ponto_retencao_config.anos_retencao IS
-  'Prazo de guarda da MARCAÇÃO, com base própria no art. 74 da CLT. Distinto e maior que o da geolocalização.';
+-- Esta parte foi movida para 20260813170000. Motivo: aqui eu supus que a
+-- tabela real fosse a do desenho de 04/08 (geolocalizacao_dias) — é o que
+-- existe num banco montado pelas migrations, mas NÃO é o que existe na
+-- produção, onde a tabela nasceu antes com outro desenho. O COMMENT sobre
+-- uma coluna inexistente derrubou a entrega inteira na primeira tentativa.
+-- A migration seguinte garante as colunas dos dois desenhos nos dois
+-- bancos e aplica os comentários sob proteção.
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 4) Tabelas novas do módulo entram na trava do cercado de QA
@@ -292,12 +269,8 @@ BEGIN
      ILIKE '%= p_empresa_id OR%empresa_id IS NULL%' THEN
     v_falta := v_falta || ' valvula_ainda_presente';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
-                  WHERE table_name = 'ponto_retencao_config' AND column_name = 'anos_retencao') THEN
-    v_falta := v_falta || ' anos_retencao';
-  END IF;
   IF v_falta <> '' THEN
     RAISE EXCEPTION 'Correção incompleta:%', v_falta;
   END IF;
-  RAISE NOTICE 'OK: dia sem batida materializa, válvula de empresa removida, retenção coerente.';
+  RAISE NOTICE 'OK: dia sem batida materializa e válvula de empresa removida.';
 END $verifica$;
