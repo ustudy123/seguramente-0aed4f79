@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import type { ErgonomiaAnalise, RiscoIdentificadoIA } from "@/hooks/useErgonomiaAnalises";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface InventarioRiscosProps {
   analises: ErgonomiaAnalise[];
@@ -168,10 +169,12 @@ export function InventarioRiscos({ analises }: InventarioRiscosProps) {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" size="sm" onClick={handleExportar} className="gap-2 shrink-0">
-          <Download className="h-4 w-4" />
-          Exportar CSV
-        </Button>
+        <AcaoProtegida modulo="ergonomia" acao="exportar">
+          <Button variant="outline" size="sm" onClick={handleExportar} className="gap-2 shrink-0">
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
+        </AcaoProtegida>
       </div>
 
       {/* Stats */}

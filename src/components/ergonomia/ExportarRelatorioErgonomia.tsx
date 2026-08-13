@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface ExportarRelatorioErgonomiaProps {
   riscos: GRORisco[];
@@ -451,12 +452,14 @@ export function ExportarRelatorioErgonomia({ riscos, empresaNome }: ExportarRela
   };
 
   return (
-    <Button variant="outline" className="gap-2" onClick={handleExportar} disabled={exportando}>
-      {exportando ? (
-        <><Loader2 className="h-4 w-4 animate-spin" /> Gerando PDF...</>
-      ) : (
-        <><FileText className="h-4 w-4" /> Exportar Metodologia PDF</>
-      )}
-    </Button>
+    <AcaoProtegida modulo="ergonomia" acao="exportar">
+      <Button variant="outline" className="gap-2" onClick={handleExportar} disabled={exportando}>
+        {exportando ? (
+          <><Loader2 className="h-4 w-4 animate-spin" /> Gerando PDF...</>
+        ) : (
+          <><FileText className="h-4 w-4" /> Exportar Metodologia PDF</>
+        )}
+      </Button>
+    </AcaoProtegida>
   );
 }

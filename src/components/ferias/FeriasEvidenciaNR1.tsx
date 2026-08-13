@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { INRColaborador } from "@/hooks/useINR";
 import { gerarEvidenciaNR1, NIVEL_LABEL } from "@/lib/feriasEvidenciaNR1";
 import { cn } from "@/lib/utils";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface Props {
   ranking: INRColaborador[];
@@ -128,10 +129,12 @@ export function FeriasEvidenciaNR1({ ranking, empresaNome }: Props) {
               monitoramento dos fatores que a Portaria MTE 1.419/2024 incorporou à NR-1.
             </p>
           </div>
-          <Button onClick={exportarPDF} disabled={exportando} className="gap-2">
-            {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Exportar para o inventário
-          </Button>
+          <AcaoProtegida modulo="colaboradores" acao="exportar">
+            <Button onClick={exportarPDF} disabled={exportando} className="gap-2">
+              {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar para o inventário
+            </Button>
+          </AcaoProtegida>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
