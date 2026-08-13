@@ -160,11 +160,14 @@ jobs:
           # Mesma conta que a suíte vai usar (mesmo fallback do cypress.config.ts).
           EMAIL="${CYPRESS_EMAIL:-teste@lucas.com}"
           SENHA="${CYPRESS_PASSWORD:-7654321}"
-          CORPO=$(printf '{"email":"%s","senha":"%s"}' "$EMAIL" "$SENHA")
+          # JSON montado por python (escapa certo, sem pegadinha de aspas de shell)
+          # e enviado como arquivo binário — o corpo chega byte a byte à função.
+          E="$EMAIL" S="$SENHA" python3 -c 'import json,os;open("/tmp/seed.json","w").write(json.dumps({"email":os.environ["E"],"senha":os.environ["S"]}))'
+          echo "Corpo do seed: $(cat /tmp/seed.json)"
           CODE=$(curl -sS -o /tmp/seed.out -w "%{http_code}" -X POST "$SEED_URL" \
             -H "Content-Type: application/json" \
             -H "x-qa-token: $QA_E2E_TOKEN" \
-            --data "$CORPO")
+            --data-binary @/tmp/seed.json)
           echo "Resposta do seed (HTTP $CODE): $(cat /tmp/seed.out)"
           if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
             echo "::error::Falha ao semear a conta-robô (HTTP $CODE) — a suíte iria falhar no login."
