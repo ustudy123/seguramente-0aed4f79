@@ -304,68 +304,70 @@ describe("Módulo Psicossocial NR-01", () => {
     });
   });
 
-  // 3. Impedir criação de campanha sem Setor + Função
+  // ─────────────────────────────────────────────────────────────
+  // Fluxo NOVO: a segmentação Setor+Função virou automática (por CPF) e o
+  // vínculo é por GHE (Grupo Homogêneo de Exposição). Os casos antigos de
+  // "Setor+Função manual" foram reescritos para o fluxo de GHE.
+  // ─────────────────────────────────────────────────────────────
+  function criarGHE(catIndex = 0) {
+    cy.visit(`${baseUrl}/psicossocial?tab=ghe`);
+    closeEmpresaModalIfNeeded();
+    cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
+    cy.get("#btn-novo-ghe", { timeout: 20000 }).click({ force: true });
+    cy.get('[data-testid="ghe-categoria-option"]', { timeout: 10000 })
+      .eq(catIndex)
+      .click({ force: true });
+    // Se a categoria tiver escolha de template, pega o primeiro.
+    cy.get("body").then(($b) => {
+      if ($b.find('[data-testid="ghe-template-option"]').length) {
+        cy.get('[data-testid="ghe-template-option"]').first().click({ force: true });
+      }
+    });
+    cy.get("#btn-salvar-ghe", { timeout: 10000 }).click({ force: true });
+    cy.get('[data-testid="ghe-card"]', { timeout: 20000 }).should("have.length.gte", 1);
+  }
+
+  // TC-03: sem cadastro manual de Setor+Função a campanha NÃO é mais bloqueada
+  // — a segmentação é automática por CPF. Submit habilitado + aviso na tela.
   it("TC-03: Bloquear criação sem Setor + Função", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
-    preencherCampanhaBasica(`Campanha Sem Setor ${uniqueId}`);
-
-    cy.get('[role="dialog"] button[type="submit"]').scrollIntoView().should("be.disabled");
-    // FIX: use .should("exist") instead of .should("be.visible") for text inside fixed dialog
-    cy.contains(/Obrigatório para criar a campanha|Setor\+Função|situação de trabalho/i, { timeout: 5000 }).should("exist");
+    preencherCampanhaBasica(`Campanha Auto Seg ${uniqueId}`);
+    cy.get('[role="dialog"] button[type="submit"]').scrollIntoView().should("not.be.disabled");
+    cy.get('[data-testid="info-segmentacao-automatica"]').should("exist");
   });
 
-  // 4. Adicionar Setor + Função usando autocomplete
+  // TC-04: a UI de autocomplete Setor+Função foi substituída pela seleção de
+  // GHEs vinculados — a seção (ou seu estado vazio) é exibida no formulário.
   it("TC-04: Autocomplete de Setor + Função funciona", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get("#combobox-setor-situacao", { timeout: 10000 }).first().scrollIntoView().click({ force: true });
-    cy.get("#input-combobox-setor-situacao", { timeout: 10000 })
-      .should("be.visible")
-      .clear({ force: true })
-      .type("Admin", { delay: 10, force: true })
-      .should("have.value", "Admin");
-
-    cy.get("#lista-combobox-setor-situacao", { timeout: 5000 })
-      .should("be.visible")
-      .then(($list) => {
-        const hasItems = $list.find("[cmdk-item]").length > 0;
-        const hasFeedback = /Pressione \+ para usar|Departamentos cadastrados|Buscar ou digitar|Nenhum resultado/i.test($list.text());
-
-        expect(hasItems || hasFeedback, "autocomplete renderiza opções ou estado vazio").to.be.true;
-      });
-
-    cy.get("body").click(0, 0, { force: true });
+    preencherCampanhaBasica(`Campanha GHE Sec ${uniqueId}`);
+    cy.get('[role="dialog"]').within(() => {
+      cy.get(
+        '[data-testid="ghe-vinculados-section"], [data-testid="ghe-vinculados-empty"]',
+        { timeout: 10000 },
+      ).should("exist");
+    });
   });
 
-  // 5. Adicionar novo Setor e nova Função manualmente
+  // TC-05: "cadastrar novo Setor/Função" virou criar um GHE (grupo homogêneo).
   it("TC-05: Cadastrar novo Setor/Função inexistente", () => {
-    abrirNovaCampanha();
-    selecionarInstrumentoNoAssistente();
-    const novoSetor = `Setor Novo ${uniqueId}`;
-    const novaFuncao = `Funcao Nova ${uniqueId}`;
-
-    adicionarSetorFuncao(novoSetor, novaFuncao);
+    criarGHE();
   });
 
-  // 6. Adicionar múltiplos pares Setor + Função
+  // TC-06: "múltiplos pares Setor+Função" virou vincular múltiplos GHEs.
   it("TC-06: Múltiplos pares Setor + Função", () => {
+    criarGHE(0);
+    criarGHE(1);
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
-    preencherCampanhaBasica(`Multi Pares ${uniqueId}`);
-    const segundoSetor = `Setor Extra ${uniqueId}`;
-    const segundaFuncao = `Funcao Extra ${uniqueId}`;
-
-    adicionarSetorFuncao();
-    adicionarSetorFuncao(segundoSetor, segundaFuncao);
-
-    cy.get("#situacoes-trabalho-section").within(() => {
-      cy.contains(setorBaseNome).should("exist");
-      cy.contains(funcaoBaseNome).should("exist");
-      cy.contains(segundoSetor).should("exist");
-      cy.contains(segundaFuncao).should("exist");
+    preencherCampanhaBasica(`Multi GHE ${uniqueId}`);
+    cy.get('[role="dialog"]').within(() => {
+      cy.get('[data-testid="ghe-option"]').should("have.length.gte", 2);
+      cy.get('[data-testid="ghe-option"]').eq(0).click({ force: true });
+      cy.get('[data-testid="ghe-option"]').eq(1).click({ force: true });
+      cy.get('[data-testid="ghe-vinculados-count"]').should("contain.text", "2 GHE");
     });
   });
 
@@ -774,20 +776,21 @@ describe("Módulo Psicossocial NR-01", () => {
 
   // 43. Duplicidade de pares Setor + Função
   it("TC-43: Impedir duplicidade de pares Setor + Função", () => {
+    // No modelo novo a "duplicidade de par Setor+Função" migrou para o GHE:
+    // cada GHE aparece UMA única vez na seleção da campanha (a seleção é por
+    // checkbox — não há como vincular o mesmo GHE duas vezes).
+    criarGHE();
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
-    preencherCampanhaBasica(`Dupla ${uniqueId}`);
-    const setorDuplicado = `Setor Duplicado ${uniqueId}`;
-    const funcaoDuplicada = `Funcao Duplicada ${uniqueId}`;
-
-    adicionarSetorFuncao(setorDuplicado, funcaoDuplicada);
-    adicionarSetorFuncao(setorDuplicado, funcaoDuplicada);
-
-    cy.get("#erro-situacao-trabalho", { timeout: 5000 })
-      .scrollIntoView()
-      .should("be.visible")
-      .and("contain.text", "já foi adicionado");
+    preencherCampanhaBasica(`Unicidade GHE ${uniqueId}`);
+    cy.get('[role="dialog"]').within(() => {
+      cy.get('[data-testid="ghe-option"]', { timeout: 10000 }).then(($opts) => {
+        const codigos = [...$opts].map((el) => el.getAttribute("data-ghe-codigo"));
+        const unicos = new Set(codigos);
+        expect(unicos.size, "sem GHEs duplicados na seleção").to.eq(codigos.length);
+        expect(codigos.length, "ao menos um GHE disponível").to.be.gte(1);
+      });
+    });
   });
 
   // 44. Risco Alto/Crítico sem 5W2H = defeito
