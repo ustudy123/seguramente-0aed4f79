@@ -156,14 +156,8 @@ export function PsicossocialDashboard() {
 
   const handleAssistenteSelect = (instrumento: string, _manual: boolean) => {
     setInstrumentoPreSelecionado(instrumento);
-    // Handoff sequenciado: fecha o assistente e só então abre o formulário.
-    // Alternar os dois Dialogs no MESMO tick fazia dois Radix Dialogs
-    // disputarem foco/scroll-lock; de forma intermitente o formulário montava
-    // mas não abria (ficava "exists but not visible"). Abrir depois que o
-    // assistente termina de fechar remove a corrida — melhora a UX real e
-    // estabiliza os testes de campanha (TC-01/03/17/35/43).
     setShowAssistente(false);
-    window.setTimeout(() => setShowForm(true), 220);
+    setShowForm(true);
   };
 
   const totalCampanhas = campanhas.length;

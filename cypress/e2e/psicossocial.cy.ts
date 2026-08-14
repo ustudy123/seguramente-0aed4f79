@@ -199,21 +199,20 @@ describe("Módulo Psicossocial NR-01", () => {
       });
     };
     tentar(tentativas);
-    // Confirmação final: se nem após as reaberturas apareceu, falha aqui com
-    // mensagem clara em vez de escondido lá dentro da recursão.
-    cy.get(alvoSel, { timeout: 15000 }).filter(":visible").first().should("be.visible");
+    // Confirmação final: usa o seletor :visible DIRETO no cy.get (retentável).
+    // .filter(":visible") quebrava com "cy.filter() requires a DOM element"
+    // quando o alvo ainda não existia no DOM.
+    cy.get(`${alvoSel}:visible`, { timeout: 15000 }).first().should("be.visible");
   }
 
   function waitForCampanhaForm() {
-    // Escopo :visible: sob a instabilidade de "Sincronizando empresas" chega a
-    // haver DOIS #input-campanha-nome (um em diálogo de fundo, oculto). Pegar
-    // o primeiro sem filtrar caía no oculto e o should("be.visible") falhava.
-    // Re-consulta a cada passo: encadear .scrollIntoView().should no MESMO
-    // subject quebrava com "subject no longer attached to the DOM" quando o
-    // formulário re-renderizava entre os comandos (causa do TC-04).
-    cy.get("#input-campanha-nome", { timeout: 15000 }).filter(":visible").first().should("exist");
+    // Espera o formulário abrir DE FATO (input de nome visível). Seletor
+    // :visible direto no cy.get, que é retentável e não quebra quando o input
+    // ainda não existe (o .filter estourava "requires a DOM element"). Sob
+    // "Sincronizando empresas" pode haver dois #input-campanha-nome (um de
+    // fundo, oculto); o :visible pega o certo.
+    cy.get("#input-campanha-nome:visible", { timeout: 20000 }).first().should("be.visible");
     cy.get("#input-campanha-nome:visible").first().scrollIntoView();
-    cy.get("#input-campanha-nome:visible").first().should("be.visible");
   }
 
   function preencherDatasCampanha(inicio: string, fim: string) {
@@ -284,15 +283,31 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function selecionarInstrumentoNoAssistente() {
-    // Clica "escolher instrumento manualmente" (handoff assistente→formulário).
-    // NÃO reabrimos aqui: o botão SOME no 1º clique (o assistente fecha), então
-    // reclicar não ajudava e só atrapalhava. O handoff agora é sequenciado no
-    // app (PsicossocialDashboard.handleAssistenteSelect), então basta clicar e
-    // esperar o formulário abrir de fato.
-    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
-      .filter(":visible")
-      .first()
-      .click({ force: true });
+    // Handoff assistente→formulário: clicar "escolher instrumento" fecha o
+    // assistente e abre o formulário (CampanhaForm). Isso É INSTÁVEL — dois
+    // Radix Dialogs trocando: às vezes o formulário abre e é fechado na hora
+    // (fica "exists but not visible"). Como o botão some no 1º clique, reclicar
+    // não ajuda. A saída robusta é dar TENTATIVAS INDEPENDENTES: se o formulário
+    // não abrir, fecha tudo, REABRE o assistente do zero (nova navegação =
+    // estado fresco) e tenta de novo. Teto de tentativas evita laço infinito.
+    const MAX = 4;
+    const tentar = (n: number) => {
+      cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
+        .filter(":visible")
+        .first()
+        .click({ force: true });
+      cy.wait(1500); // dá tempo do formulário montar/abrir
+      cy.get("body").then(($b) => {
+        const abriu = $b.find("#input-campanha-nome").filter(":visible").length > 0;
+        if (abriu || n >= MAX) return;
+        cy.log(`Formulário não abriu (tentativa ${n}/${MAX}); reabrindo o assistente do zero.`);
+        cy.get("body").type("{esc}", { force: true });
+        cy.wait(600);
+        abrirNovaCampanha();
+        tentar(n + 1);
+      });
+    };
+    tentar(1);
     waitForCampanhaForm();
   }
 
