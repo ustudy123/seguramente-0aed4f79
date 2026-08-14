@@ -88,11 +88,22 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function fillTipoELocal(setor = "Administrativo", local = "Próximo ao refeitório", turno = "1º Turno") {
     cy.get('input[type="date"]').first().should("be.visible");
+    // Trocar o tipo (incidente↔acidente) troca o array de passos e re-renderiza
+    // o passo 1. Sem deixar assentar, o clique no combobox de Estabelecimento
+    // caía no meio do re-render e a busca "Buscar estabelecimento..." nunca
+    // abria (era a causa das falhas dos dois casos de ACIDENTE).
+    cy.wait(600);
     // Combobox de Estabelecimento ESCOPADO ao diálogo: openNthCombobox global
     // pegava o 1º button[role=combobox] da página (os filtros da aba, atrás do
-    // overlay), então "Buscar estabelecimento..." nunca abria.
+    // overlay), então "Buscar estabelecimento..." nunca abria. Reabre se o
+    // primeiro clique não trouxe o campo de busca.
     cy.get('[role="dialog"]').find('button[role="combobox"]').eq(0).click({ force: true });
-    cy.get('input[placeholder="Buscar estabelecimento..."]')
+    cy.get("body").then(($b) => {
+      if (!$b.find('input[placeholder="Buscar estabelecimento..."]').length) {
+        cy.get('[role="dialog"]').find('button[role="combobox"]').eq(0).click({ force: true });
+      }
+    });
+    cy.get('input[placeholder="Buscar estabelecimento..."]', { timeout: 15000 })
       .should("be.visible")
       .type("Matriz", { force: true });
 
