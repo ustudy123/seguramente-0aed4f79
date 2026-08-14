@@ -14,8 +14,8 @@ import {
   FileDown, Table2, Printer, Database, MonitorPlay, ExternalLink,
 } from "lucide-react";
 import {
-  useQaRunner, useQaResultados, useQaAgendamento,
-  type QaSituacao, type QaBateria, type QaModuloTestavel,
+  useQaRunner, useQaResultados, useQaAgendamento, useQaAgendamentoE2E,
+  type QaSituacao, type QaBateria, type QaModuloTestavel, type QaDiaAgenda,
 } from "@/hooks/useQaRunner";
 import { gerarPDF, gerarCSV, abrirImprimivel } from "@/lib/qaRelatorio";
 
@@ -275,9 +275,22 @@ function LinhaDia({
   );
 }
 
-// ── card de agendamento (grade por dia) ─────────────────
-function CardAgendamento() {
-  const { dias, proxima, carregando, salvarDia } = useQaAgendamento();
+// ── grade de agendamento (base reusada pelo motor e pelo Cypress) ──
+function GradeAgendamento({
+  dias, proxima, carregando, salvarDia, titulo, legenda, rodape,
+}: {
+  dias: QaDiaAgenda[];
+  proxima: string | null | undefined;
+  carregando: boolean;
+  salvarDia: {
+    mutate: (x: { dia: number; ligado: boolean; hora: number; minuto: number }) => void;
+    isPending: boolean;
+  };
+  titulo: string;
+  // recebe (algumLigado, proxima) e devolve a linha de status do cabeçalho
+  legenda: (algumLigado: boolean, proxima: string | null | undefined) => string;
+  rodape?: ReactNode;
+}) {
   const algumLigado = dias.some((d) => d.ligado);
 
   return (
@@ -286,13 +299,9 @@ function CardAgendamento() {
         <div className="flex items-start gap-2 mb-2">
           <CalendarClock className="h-4 w-4 text-muted-foreground mt-0.5" />
           <div>
-            <p className="text-sm font-medium">Rodar automaticamente</p>
+            <p className="text-sm font-medium">{titulo}</p>
             <p className="text-xs text-muted-foreground">
-              {carregando
-                ? "Carregando…"
-                : algumLigado && proxima
-                ? `Próxima: ${proxima} · todos os módulos`
-                : "Nenhum dia agendado — o robô só roda quando você clicar"}
+              {carregando ? "Carregando…" : legenda(algumLigado, proxima)}
             </p>
           </div>
         </div>
@@ -313,8 +322,54 @@ function CardAgendamento() {
             ))
           )}
         </div>
+
+        {rodape}
       </CardContent>
     </Card>
+  );
+}
+
+// ── card de agendamento do motor SQL (grade por dia) ────
+function CardAgendamento() {
+  const { dias, proxima, carregando, salvarDia } = useQaAgendamento();
+  return (
+    <GradeAgendamento
+      dias={dias}
+      proxima={proxima}
+      carregando={carregando}
+      salvarDia={salvarDia}
+      titulo="Rodar automaticamente"
+      legenda={(algumLigado, prox) =>
+        algumLigado && prox
+          ? `Próxima: ${prox} · todos os módulos`
+          : "Nenhum dia agendado — o robô só roda quando você clicar"}
+    />
+  );
+}
+
+// ── card de agendamento do Cypress (dispara a esteira) ──
+function CardAgendamentoE2E() {
+  const { dias, proxima, carregando, salvarDia } = useQaAgendamentoE2E();
+  return (
+    <GradeAgendamento
+      dias={dias}
+      proxima={proxima}
+      carregando={carregando}
+      salvarDia={salvarDia}
+      titulo="Rodar automaticamente na esteira"
+      legenda={(algumLigado, prox) =>
+        algumLigado && prox
+          ? `Próxima corrida programada: ${prox}`
+          : "Nenhum dia agendado — a suíte só roda quando você publica uma mudança"}
+      rodape={
+        <p className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+          No horário marcado, o banco pede à esteira que rode a suíte — o mesmo
+          que acontece a cada publicação. Para isso funcionar, o ambiente
+          precisa de um token do GitHub guardado na configuração; sem ele, o
+          horário fica salvo mas nada é disparado.
+        </p>
+      }
+    />
   );
 }
 
@@ -443,6 +498,9 @@ function PainelCypress({
           </a>
         </CardContent>
       </Card>
+
+      {/* agendamento — pede à esteira que rode a suíte no horário marcado */}
+      <CardAgendamentoE2E />
 
       <div className="space-y-3">
         <h2 className="text-sm font-medium text-muted-foreground">Corridas</h2>

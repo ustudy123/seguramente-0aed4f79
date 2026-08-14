@@ -155,6 +155,20 @@ ON CONFLICT (chave) DO UPDATE SET valor = EXCLUDED.valor, atualizado_em = now();
 
 Em produção, os valores são semeados pelo script `docs/script_app_config_producao.sql`.
 
+### Agendar os Testes de tela (Cypress) — `github_dispatch_token`
+
+A aba "Testes Cypress" do painel de QA tem "Rodar automaticamente", igual ao Motor. Mas o Cypress roda na esteira do GitHub, não no banco: no horário marcado, o `pg_cron` do ambiente pede à esteira que rode (`workflow_dispatch`). Isso exige um token do GitHub em `app_config`. **Sem o token, o horário fica salvo mas nada é disparado** — mesma proteção de ambiente dos agentes.
+
+O token é um *fine-grained PAT* com permissão **Actions: Read and write** neste repositório. Crie em GitHub → Settings → Developer settings → Fine-grained tokens. Guarde-o no ambiente que deve disparar (normalmente o staging):
+
+```sql
+INSERT INTO public.app_config (chave, valor) VALUES
+  ('github_dispatch_token', '<cole-o-token-aqui>')
+ON CONFLICT (chave) DO UPDATE SET valor = EXCLUDED.valor, atualizado_em = now();
+```
+
+Opcionalmente, `github_dispatch_repo` (padrão `ustudy123/seguramente-0aed4f79`), `github_dispatch_workflow` (padrão `staging.yml`) e `github_dispatch_ref` (padrão `main`) sobrescrevem os alvos. **Nunca versione o token** — ele vive só no `app_config` do ambiente. O schema/funções são instalados pela migration `20260814120000_qa_agendamento_e2e_esteira.sql` (staging) e pelo script `docs/script_qa_agendamento_e2e.sql` (produção).
+
 ## Checklist antes de publicar
 
 - [ ] `.env` está com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` corretos para o ambiente desejado.
