@@ -283,31 +283,16 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function selecionarInstrumentoNoAssistente() {
-    // Handoff assistente→formulário: clicar "escolher instrumento" fecha o
-    // assistente e abre o formulário (CampanhaForm). Isso É INSTÁVEL — dois
-    // Radix Dialogs trocando: às vezes o formulário abre e é fechado na hora
-    // (fica "exists but not visible"). Como o botão some no 1º clique, reclicar
-    // não ajuda. A saída robusta é dar TENTATIVAS INDEPENDENTES: se o formulário
-    // não abrir, fecha tudo, REABRE o assistente do zero (nova navegação =
-    // estado fresco) e tenta de novo. Teto de tentativas evita laço infinito.
-    const MAX = 4;
-    const tentar = (n: number) => {
-      cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
-        .filter(":visible")
-        .first()
-        .click({ force: true });
-      cy.wait(1500); // dá tempo do formulário montar/abrir
-      cy.get("body").then(($b) => {
-        const abriu = $b.find("#input-campanha-nome").filter(":visible").length > 0;
-        if (abriu || n >= MAX) return;
-        cy.log(`Formulário não abriu (tentativa ${n}/${MAX}); reabrindo o assistente do zero.`);
-        cy.get("body").type("{esc}", { force: true });
-        cy.wait(600);
-        abrirNovaCampanha();
-        tentar(n + 1);
-      });
-    };
-    tentar(1);
+    // Clica "escolher instrumento manualmente" (handoff assistente→formulário)
+    // e espera o formulário. NÃO reabrimos em laço: comprovado (corrida #185)
+    // que quando o formulário não abre neste ambiente ele NÃO abre nem após 4
+    // reaberturas do zero — é determinístico por corrida, não uma corrida que
+    // retry vence — e as reaberturas só deixavam a suíte 2x mais lenta (o que
+    // fazia epi/swot pipocarem por contenção de tempo). Clique simples + espera.
+    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
+      .filter(":visible")
+      .first()
+      .click({ force: true });
     waitForCampanhaForm();
   }
 
