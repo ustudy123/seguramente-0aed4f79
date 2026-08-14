@@ -284,9 +284,15 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function selecionarInstrumentoNoAssistente() {
-    // Idem: clicar "escolher instrumento" abre o formulário, mas o clique pode
-    // se perder — reabre até o campo de nome da campanha ficar visível.
-    reabrirSePreciso("#btn-escolher-instrumento-manualmente", "#input-campanha-nome");
+    // Clica "escolher instrumento manualmente" (handoff assistente→formulário).
+    // NÃO reabrimos aqui: o botão SOME no 1º clique (o assistente fecha), então
+    // reclicar não ajudava e só atrapalhava. O handoff agora é sequenciado no
+    // app (PsicossocialDashboard.handleAssistenteSelect), então basta clicar e
+    // esperar o formulário abrir de fato.
+    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
+      .filter(":visible")
+      .first()
+      .click({ force: true });
     waitForCampanhaForm();
   }
 
