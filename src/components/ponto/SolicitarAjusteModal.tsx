@@ -435,13 +435,49 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
                 ref={scrollRef}
                 className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto border rounded-md ponto-scroll-visible"
               >
-                <div className="min-w-[760px] md:min-w-full min-h-full">
+                <div className={`${isMobile ? "w-full" : "min-w-[760px] md:min-w-full"} min-h-full`}>
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : diasMes.length === 0 ? (
                     <p className="text-center text-sm text-muted-foreground py-8">Nenhum dia disponível neste mês.</p>
+                  ) : isMobile ? (
+                    <div className="divide-y">
+                      {diasMes.map((data) => {
+                        const original = marcsPorDia[data] || [];
+                        const pendentes = pendentesPorDia[data] || [];
+                        const ed = editDia(data);
+                        const temAlteracao = ed.marcacoes !== undefined && (
+                          ed.marcacoes.length !== original.length ||
+                          ed.marcacoes.some((v, i) => (v || "") !== (original[i] || ""))
+                        );
+                        const isWeekend = [0,6].includes(new Date(data + "T12:00:00").getDay());
+                        return (
+                          <div
+                            key={data}
+                            className={`p-3 space-y-2 ${temAlteracao ? "bg-primary/5" : isWeekend ? "bg-muted/20" : ""}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-semibold text-sm">{isoToBR(data).slice(0,5)}</span>
+                              <span className="text-[11px] text-muted-foreground">{diaSemana(data)}</span>
+                              {pendentes.length > 0 && (
+                                <Badge variant="outline" className="text-[9px] border-amber-500 text-amber-700 dark:text-amber-400">
+                                  {pendentes.length} pend.
+                                </Badge>
+                              )}
+                            </div>
+                            {renderMarcacoes(data, original, ed, pendentes.length)}
+                            {temAlteracao && (
+                              <div className="space-y-1.5">
+                                <Label className="text-[11px]">Justificativa</Label>
+                                {renderJustificativa(data, ed)}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   ) : (
                     <table className="w-full text-[11px] table-fixed">
                     <thead className="bg-muted/50 sticky top-0 z-10">
@@ -456,7 +492,6 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
                         const original = marcsPorDia[data] || [];
                         const pendentes = pendentesPorDia[data] || [];
                         const ed = editDia(data);
-                        const marcs = marcacoesEfetivas(data);
                         const temAlteracao = ed.marcacoes !== undefined && (
                           ed.marcacoes.length !== original.length ||
                           ed.marcacoes.some((v, i) => (v || "") !== (original[i] || ""))
@@ -477,95 +512,10 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
                               )}
                             </td>
                             <td className="px-1.5 py-1.5 align-top">
-                              {diaBloqueado(data) ? (
-                                <div className="flex items-start gap-2 py-1.5">
-                                  <Clock className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
-                                  <div>
-                                    <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">Ajuste ainda pendente — aguarde a aprovação.</p>
-                                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                                      Este dia tem {pendentes.length} marcação(ões) aguardando o gestor. Não é possível alterar até ser aprovado ou rejeitado.
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : (
-                              <div className="flex flex-wrap items-start gap-2">
-                                {marcs.length === 0 && (
-                                  <span className="text-[10px] text-muted-foreground italic py-1.5">Sem marcações</span>
-                                )}
-                                {marcs.map((valor, i) => {
-                                  const orig = original[i] || "";
-                                  const novaMarc = i >= original.length;
-                                  const alterado = ed.marcacoes !== undefined && (valor || "") !== orig && !novaMarc;
-                                  const tipo = tipoPorIndice(i);
-                                  const ehUltima = i === marcs.length - 1;
-                                  return (
-                                    <div key={i} className="flex flex-col gap-0.5">
-                                      <span className={`text-[9px] font-semibold ${tipo === "entrada" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                                        {tipoLabelIndice(i)}
-                                      </span>
-                                      <div className="flex items-center gap-1">
-                                        <Input
-                                          type="time"
-                                          value={valor || ""}
-                                          onChange={(e) => setMarcacao(data, i, e.target.value)}
-                                          className={`h-8 text-xs font-mono px-1 w-[92px] ${
-                                            novaMarc ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                            : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                                            : ""
-                                          }`}
-                                        />
-                                        {ehUltima && (
-                                          <button
-                                            type="button"
-                                            onClick={() => removerMarcacao(data, i)}
-                                            className="text-muted-foreground hover:text-destructive shrink-0"
-                                            title="Remover marcação"
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        )}
-                                      </div>
-                                      {orig && alterado && (
-                                        <div className="text-[9px] text-muted-foreground line-through">orig: {orig}</div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                                <button
-                                  type="button"
-                                  onClick={() => adicionarMarcacao(data)}
-                                  className="h-8 mt-[14px] px-2 text-[10px] rounded border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary shrink-0"
-                                  title="Adicionar marcação"
-                                >
-                                  + marcação
-                                </button>
-                              </div>
-                              )}
+                              {renderMarcacoes(data, original, ed, pendentes.length)}
                             </td>
                             <td className="px-2 py-1.5 align-top">
-                              {temAlteracao ? (
-                                <div className="space-y-1.5">
-                                  <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
-                                    <SelectTrigger className="h-8 text-xs w-full bg-background">
-                                      <SelectValue placeholder="Selecione o motivo..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {opcoesJustificativa.map((j) => (
-                                        <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  {ed.justificativaPreset === "Outro (descrever)" && (
-                                    <Input
-                                      value={ed.justificativaOutro}
-                                      onChange={(e) => setJustificativaOutro(data, e.target.value)}
-                                      placeholder="Descreva o motivo"
-                                      className="h-8 text-xs bg-background"
-                                      maxLength={300}
-                                    />
-                                  )}
-                                </div>
-                              ) : (
+                              {temAlteracao ? renderJustificativa(data, ed) : (
                                 <span className="text-[10px] text-muted-foreground">—</span>
                               )}
                             </td>
@@ -578,6 +528,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
                 </div>
               </div>
             </div>
+
 
 
             {/* Rodapé com anexos + envio */}
