@@ -22,27 +22,6 @@ Cypress.on("window:before:load", (win) => {
     event.preventDefault();
   });
 
-  // ── Neutraliza o scroll-lock do Radix ──────────────────────────────
-  // Ao abrir um overlay (Dialog/Select/Popover), o Radix põe
-  // `style="pointer-events:none"` no <body> e conta os locks em
-  // data-scroll-locked. Quando dois overlays se empilham (ou um fecha e o
-  // contador não zera na hora), o lock fica "preso" e o Cypress recusa
-  // cliques/clears com "pointer-events: none prevents user mouse
-  // interaction" — mesmo em elementos DENTRO do diálogo, que deveriam ser
-  // clicáveis. Um usuário real nunca esbarra nisso (é um resíduo de
-  // animação, não um bloqueio de verdade). Uma regra !important vence o
-  // style inline (que não é !important) e libera a interação nos testes,
-  // sem afetar o comportamento em produção. Injetamos no <html>, que já
-  // existe neste momento (o <head> ainda pode não ter sido parseado).
-  try {
-    const st = win.document.createElement("style");
-    st.setAttribute("data-cypress-pointer-events", "");
-    st.innerHTML = "body { pointer-events: auto !important; }";
-    (win.document.head || win.document.documentElement).appendChild(st);
-  } catch {
-    /* nunca deixa o ajuste de teste derrubar o carregamento */
-  }
-
   // React registra erros de render via console.error ANTES do ErrorBoundary
   // assumir. Interceptar aqui é o jeito de capturar "por que a página não
   // montou" mesmo com as exceções sendo engolidas acima.
