@@ -178,6 +178,34 @@ serve(async (req) => {
       if (eErr) throw new Error("empresa_cadastro: " + eErr.message);
     }
 
+    // 2b) AMBIENTE DETERMINÍSTICO (uma empresa ativa só).
+    //     A conta-robô tem acesso global e enxerga TODAS as empresas ATIVAS do
+    //     tenant. Se corridas antigas (ou o onboarding) deixaram empresas
+    //     extras, a lista/ordenação de empresas oscila durante o login: a
+    //     "empresa ativa" pisca (o EmpresaAtivaContext re-seleciona empresas[0]
+    //     a cada mudança da lista) e o EmpresaSelector fica em "Sincronizando
+    //     empresas". Pior: um GHE criado sob a empresa A "some" da listagem
+    //     quando a ativa troca para B, porque a lista de GHE filtra por
+    //     empresa_id — daí o falso "Nenhum GHE cadastrado" que derrubava os
+    //     testes de GHE. Garantindo UMA única empresa ativa, não há o que
+    //     oscilar. É seguro: o portão STAGING_REF acima recusa fora do staging,
+    //     e mexemos apenas no tenant fixo de teste. Não-fatal por design
+    //     (console.error): o login já funciona sem isto, é só estabilidade.
+    const { error: reErr } = await admin
+      .from("empresa_cadastro")
+      .update({ ativo: true })
+      .eq("id", EMPRESA_ID)
+      .eq("tenant_id", TENANT_ID);
+    if (reErr) console.error("empresa_cadastro(reativar matriz):", reErr.message);
+
+    const { error: offErr } = await admin
+      .from("empresa_cadastro")
+      .update({ ativo: false })
+      .eq("tenant_id", TENANT_ID)
+      .neq("id", EMPRESA_ID)
+      .eq("ativo", true);
+    if (offErr) console.error("empresa_cadastro(desativar extras):", offErr.message);
+
     // 3) Conta de autenticação. Cria se não existe; se existe, garante a
     //    senha e o e-mail confirmado (sem confirmação, o login nunca entra).
     let userId: string;

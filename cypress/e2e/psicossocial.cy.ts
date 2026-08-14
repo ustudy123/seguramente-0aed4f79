@@ -29,6 +29,15 @@ describe("Módulo Psicossocial NR-01", () => {
   const setorBaseNome = `Setor Cypress ${uniqueId}`;
   const funcaoBaseNome = `Funcao Cypress ${uniqueId}`;
 
+  // Fixtures FIXAS do STAGING (seed-e2e-user / seeds/staging.sql). A conta-robô
+  // vive neste tenant, com a Empresa Staging LTDA como única empresa ativa.
+  // Fixar a empresa ativa no storage evita a oscilação de "empresa ativa" no
+  // login (o EmpresaAtivaContext restaura esta escolha em vez de re-selecionar
+  // empresas[0] a cada mudança da lista). Só staging — em produção esta suíte
+  // nem roda (a trava de ambiente derruba).
+  const STAGING_TENANT_ID = "11111111-1111-1111-1111-111111111111";
+  const STAGING_EMPRESA_ID = "22222222-2222-2222-2222-222222222222";
+
   const TAB = {
     campanhas: "campanhas",
     indices: "indices",
@@ -81,7 +90,13 @@ describe("Módulo Psicossocial NR-01", () => {
       if (!/Selecione a Empresa/i.test(pageText)) return;
 
       cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("be.visible");
-      cy.get("button.text-left:visible").first().click({ force: true });
+      // DETERMINÍSTICO: escolhe a "Empresa Staging" pelo texto, não "a primeira
+      // que aparecer" (que muda com a ordenação e era fonte de instabilidade).
+      // Fallback: primeira visível, se o texto mudar.
+      cy.get("button.text-left:visible").then(($btns) => {
+        const alvo = $btns.toArray().find((el) => /Empresa Staging/i.test(el.textContent || ""));
+        cy.wrap(alvo || $btns[0]).click({ force: true });
+      });
       cy.contains("button", /Acessar|Continuar|Confirmar|Entrar/i, { timeout: 10000 })
         .should("be.visible")
         .and("not.be.disabled")
@@ -120,6 +135,13 @@ describe("Módulo Psicossocial NR-01", () => {
         // Espera a autenticação persistir de verdade (ver support/e2e.ts). O
         // antigo should("not.eq","/login") passava na hora sob o subcaminho.
         cy.aguardarSessaoSupabase();
+        // Fixa a empresa ativa ANTES de o app resolver a lista de empresas.
+        // Chave/valor batem com setEmpresaAtiva (EmpresaAtivaContext): a chave é
+        // `empresa_ativa_<tenant>` e o valor é o id da empresa. Assim o app
+        // restaura a Empresa Staging em vez de auto-selecionar empresas[0].
+        cy.window().then((win) => {
+          win.localStorage.setItem(`empresa_ativa_${STAGING_TENANT_ID}`, STAGING_EMPRESA_ID);
+        });
         closeEmpresaModalIfNeeded();
         cy.wait(1500);
       },
@@ -151,13 +173,47 @@ describe("Módulo Psicossocial NR-01", () => {
     waitForPsicossocialReady();
   }
 
+  // Anti-flaky de diálogo: alguns diálogos do módulo montam mas ficam
+  // "exists but not visible" por vários segundos porque o clique de ABRIR se
+  // perde na animação do portal (framer-motion). Isso é intermitente — o
+  // MESMO caso (TC-03/17/35) passa numa corrida e falha noutra. Aqui reabrimos
+  // o gatilho, SEM duplicar (só reclica se o alvo ainda não está visível), até
+  // o alvo aparecer de fato. Padrão "clicar até aparecer", com teto de
+  // tentativas para nunca virar laço infinito.
+  function reabrirSePreciso(gatilhoSel: string, alvoSel: string, tentativas = 4) {
+    const tentar = (restantes: number) => {
+      cy.get("body").then(($b) => {
+        if ($b.find(alvoSel).filter(":visible").length > 0) return; // já visível
+        const $g = $b.find(gatilhoSel).filter(":visible");
+        if ($g.length > 0) {
+          cy.wrap($g.first()).scrollIntoView().click({ force: true });
+        }
+        cy.wait(1200);
+        if (restantes > 1) {
+          cy.get("body").then(($b2) => {
+            if ($b2.find(alvoSel).filter(":visible").length === 0) {
+              tentar(restantes - 1);
+            }
+          });
+        }
+      });
+    };
+    tentar(tentativas);
+    // Confirmação final: se nem após as reaberturas apareceu, falha aqui com
+    // mensagem clara em vez de escondido lá dentro da recursão.
+    cy.get(alvoSel, { timeout: 15000 }).filter(":visible").first().should("be.visible");
+  }
+
   function waitForCampanhaForm() {
-    // Re-consulta a cada passo: encadear .scrollIntoView().should("be.visible")
-    // no MESMO subject quebrava com "subject no longer attached to the DOM"
-    // quando o formulário re-renderizava entre os comandos (causa do TC-04).
-    cy.get("#input-campanha-nome", { timeout: 15000 }).should("exist");
-    cy.get("#input-campanha-nome").scrollIntoView();
-    cy.get("#input-campanha-nome").should("be.visible");
+    // Escopo :visible: sob a instabilidade de "Sincronizando empresas" chega a
+    // haver DOIS #input-campanha-nome (um em diálogo de fundo, oculto). Pegar
+    // o primeiro sem filtrar caía no oculto e o should("be.visible") falhava.
+    // Re-consulta a cada passo: encadear .scrollIntoView().should no MESMO
+    // subject quebrava com "subject no longer attached to the DOM" quando o
+    // formulário re-renderizava entre os comandos (causa do TC-04).
+    cy.get("#input-campanha-nome", { timeout: 15000 }).filter(":visible").first().should("exist");
+    cy.get("#input-campanha-nome:visible").first().scrollIntoView();
+    cy.get("#input-campanha-nome:visible").first().should("be.visible");
   }
 
   function preencherDatasCampanha(inicio: string, fim: string) {
@@ -218,15 +274,19 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.visit(`${baseUrl}/psicossocial?tab=campanhas`);
     closeEmpresaModalIfNeeded();
     cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
+    // Deixa a página assentar antes de abrir o diálogo — clicar durante a
+    // animação de entrada é o que fazia o clique se perder.
+    cy.wait(800);
     clickNovaCampanha();
-    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 }).should("be.visible");
+    // O clique de "Nova Campanha" às vezes se perde; reabre até o assistente
+    // (botão de escolher instrumento) aparecer de verdade.
+    reabrirSePreciso("#btn-nova-campanha, #btn-criar-campanha", "#btn-escolher-instrumento-manualmente");
   }
 
   function selecionarInstrumentoNoAssistente() {
-    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
-      .should("be.visible")
-      .click({ force: true });
-
+    // Idem: clicar "escolher instrumento" abre o formulário, mas o clique pode
+    // se perder — reabre até o campo de nome da campanha ficar visível.
+    reabrirSePreciso("#btn-escolher-instrumento-manualmente", "#input-campanha-nome");
     waitForCampanhaForm();
   }
 
