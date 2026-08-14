@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { Loader2, Paperclip, X, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Props {
   open: boolean;
@@ -74,6 +75,7 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
   const today = new Date().toISOString().slice(0, 10);
   const hojeDate = new Date();
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobile();
 
   const [loading, setLoading] = useState(false);
   const [marcacoes, setMarcacoes] = useState<Marcacao[]>([]);
