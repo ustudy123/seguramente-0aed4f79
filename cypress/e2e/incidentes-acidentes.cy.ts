@@ -83,7 +83,10 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function previousStep() {
-    cy.contains("button", /^Anterior$/).should("be.visible").click();
+    // O botão é "<ChevronLeft/> Anterior" — o texto tem um espaço à esquerda do
+    // ícone, então /^Anterior$/ (ancorado) nunca casava. Regex frouxa + escopo
+    // ao diálogo + force (o footer pode estar sob o scroll-lock por um instante).
+    cy.get('[role="dialog"]').contains("button", /Anterior/i).should("be.visible").click({ force: true });
   }
 
   function fillTipoELocal(setor = "Administrativo", local = "Próximo ao refeitório", turno = "1º Turno") {
