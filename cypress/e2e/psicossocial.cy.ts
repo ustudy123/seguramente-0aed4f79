@@ -88,6 +88,12 @@ describe("Módulo Psicossocial NR-01", () => {
         .click({ force: true });
       cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("not.exist");
     });
+    // Espera o contexto de empresa ESTABILIZAR. Enquanto "Sincronizando
+    // empresas" está na tela, a empresa ativa ainda está trocando e entidades
+    // criadas (campanha, GHE) podem ir para a empresa errada — e depois não
+    // aparecem na listagem (falhas intermitentes de TC-01/05/06). Se o texto
+    // não estiver presente, passa na hora.
+    cy.contains(/Sincronizando empresas/i, { timeout: 20000 }).should("not.exist");
   }
 
   function waitForPsicossocialReady() {
@@ -336,7 +342,11 @@ describe("Módulo Psicossocial NR-01", () => {
     // de decidir — sem corrida.
     cy.get('[data-testid="ghe-template-option"], #nome', { timeout: 15000 }).should("exist");
     cy.get("body").then(($b) => {
-      if ($b.find('[data-testid="ghe-template-option"]:visible').length) {
+      // SEM o filtro :visible — durante a animação do portal os modelos existem
+      // mas o jQuery :visible pode devolver false, e aí o modelo não era clicado,
+      // o passo travava em "template" e o #nome (form) nunca aparecia. Basta
+      // existir no DOM: o clique com force cuida da animação.
+      if ($b.find('[data-testid="ghe-template-option"]').length) {
         cy.get('[data-testid="ghe-template-option"]').first().click({ force: true });
       }
     });
@@ -373,7 +383,9 @@ describe("Módulo Psicossocial NR-01", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
     preencherCampanhaBasica(`Campanha GHE Sec ${uniqueId}`);
-    cy.get('[role="dialog"]').within(() => {
+    // Diálogo VISÍVEL do topo (dois [role="dialog"] coexistem durante
+    // "Sincronizando empresas" — mesmo cuidado do TC-02).
+    cy.get('[role="dialog"]:visible').last().within(() => {
       cy.get(
         '[data-testid="ghe-vinculados-section"], [data-testid="ghe-vinculados-empty"]',
         { timeout: 10000 },

@@ -25,6 +25,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
         .click({ force: true });
       cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("not.exist");
     });
+    // Espera o contexto de empresa estabilizar antes de criar/abrir SWOTs —
+    // enquanto "Sincronizando empresas" aparece, a SWOT criada pode ir para
+    // outra empresa e não aparecer na listagem (CT-SWOT-020). Ausente = passa já.
+    cy.contains(/Sincronizando empresas/i, { timeout: 20000 }).should("not.exist");
   }
 
   function login() {
