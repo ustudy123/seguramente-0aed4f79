@@ -216,3 +216,64 @@ export function useQaAgendamento() {
 
   return { dias, proxima, carregando, salvarDia };
 }
+
+/**
+ * Agendamento por dia da semana dos Testes de tela (Cypress).
+ *
+ * Espelha useQaAgendamento, mas a suíte Cypress NÃO roda no banco — ela roda
+ * na esteira do GitHub. No horário marcado, o banco PEDE à esteira que rode
+ * (workflow_dispatch). A grade aqui é a mesma; muda só o backend chamado.
+ */
+export function useQaAgendamentoE2E() {
+  const qc = useQueryClient();
+
+  const { data: dias = [], isLoading: carregando } = useQuery({
+    queryKey: ["qa_agendamento_e2e_dias"],
+    queryFn: async (): Promise<QaDiaAgenda[]> => {
+      const { data, error } = await rpc("qa_agendamento_e2e_ler_dias");
+      if (error) throw error;
+      return (data || []) as QaDiaAgenda[];
+    },
+  });
+
+  const { data: proxima } = useQuery({
+    queryKey: ["qa_agendamento_e2e_proxima"],
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await rpc("qa_agendamento_e2e_proxima");
+      if (error) throw error;
+      // escalar embrulhado em [{qa_agendamento_e2e_proxima: ...}]
+      if (Array.isArray(data)) {
+        const row = data[0] as Record<string, unknown> | undefined;
+        return (row ? Object.values(row)[0] : null) as string | null;
+      }
+      return (data as string) ?? null;
+    },
+  });
+
+  const salvarDia = useMutation({
+    mutationFn: async (d: {
+      dia: number;
+      ligado: boolean;
+      hora: number;
+      minuto: number;
+    }): Promise<string> => {
+      const { data, error } = await rpc("qa_agendamento_e2e_salvar_dia", {
+        p_dia: d.dia,
+        p_ligado: d.ligado,
+        p_hora: d.hora,
+        p_minuto: d.minuto,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["qa_agendamento_e2e_dias"] });
+      qc.invalidateQueries({ queryKey: ["qa_agendamento_e2e_proxima"] });
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar o dia");
+    },
+  });
+
+  return { dias, proxima, carregando, salvarDia };
+}
