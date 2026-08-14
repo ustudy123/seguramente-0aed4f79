@@ -66,7 +66,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function openNewSwotModal() {
-    cy.contains("button", "Nova SWOT").should("be.visible").click();
+    // force: o scroll-lock do Radix de um overlay anterior deixa o body com
+    // pointer-events:none por um instante e o clique em "Nova SWOT" (que abre
+    // o modal) era recusado (causa do CT-SWOT-004).
+    cy.contains("button", "Nova SWOT").should("be.visible").click({ force: true });
     cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
     cy.get('[role="dialog"]').contains("Nova Análise SWOT").should("be.visible");
   }

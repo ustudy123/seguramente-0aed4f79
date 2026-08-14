@@ -125,7 +125,9 @@ describe("Módulo Incidentes & Acidentes", () => {
       }
     });
 
-    cy.get('input[placeholder*="Linha 3"]').clear().type(local);
+    // force: o scroll-lock do Radix (aberto pelos comboboxes acima) deixa o
+    // body com pointer-events:none por um instante e o clear/type é recusado.
+    cy.get('input[placeholder*="Linha 3"]').clear({ force: true }).type(local, { force: true });
     cy.contains("label", "Turno").parent().within(() => {
       cy.get('button[role="combobox"]').click({ force: true });
     });
@@ -208,7 +210,7 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function createIncidenteManual() {
     openRegistrarEvento();
-    cy.contains("button", "Incidente").click();
+    cy.contains("button", "Incidente").click({ force: true });
     fillTipoELocal("Administrativo", `Próximo ao refeitório ${Date.now()}`, "1º Turno");
     nextStep();
     fillEnvolvidosManual(`João Incidente ${Date.now()}`, "Operador");
@@ -223,7 +225,7 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function createAcidenteManual(emitirCat = true) {
     openRegistrarEvento();
-    cy.contains("button", "Acidente").click();
+    cy.contains("button", "Acidente").click({ force: true });
     fillTipoELocal("Administrativo", `Área de produção ${Date.now()}`, "2º Turno");
     nextStep();
     fillEnvolvidosManual(`Maria Acidente ${Date.now()}`, "Auxiliar");
@@ -327,6 +329,11 @@ describe("Módulo Incidentes & Acidentes", () => {
       cy.get('button[title="Editar"]').click({ force: true });
     });
     cy.contains("Editar Evento").should("be.visible");
+    // A edição abre no PRIMEIRO passo (Tipo & Local), onde ainda não existe o
+    // botão "Anterior" (só aparece a partir do passo 2). Chamar previousStep
+    // aqui estourava. Avança um passo e volta — exercita a navegação nos dois
+    // sentidos sem depender de estar num passo intermediário.
+    nextStep();
     previousStep();
     cy.contains("Editar Evento").should("be.visible");
     cy.get('body').type('{esc}');
@@ -351,7 +358,7 @@ describe("Módulo Incidentes & Acidentes", () => {
       }
     });
 
-    cy.contains("button", "Desvio").click();
+    cy.contains("button", "Desvio").click({ force: true });
     cy.get('body').type('{esc}');
 
     [
