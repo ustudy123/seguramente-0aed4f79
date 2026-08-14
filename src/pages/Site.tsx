@@ -26,6 +26,7 @@ import {
   Clock,
   AlertTriangle,
   Compass,
+  LogIn,
 } from "lucide-react";
 
 // ---------------- Data ----------------
@@ -291,9 +292,18 @@ export default function Site() {
             <a href="#seguranca" className="hover:text-[#60ABEF]">Segurança</a>
             <a href="#contato" className="hover:text-[#60ABEF]">Contato</a>
           </nav>
+          {/* Desde que o site virou a porta do domínio principal, quem chega
+              aqui para TRABALHAR (cliente indo bater ponto, RH indo lançar
+              atestado) precisa achar a entrada em um segundo. Por isso o
+              acesso é um botão, não mais um texto discreto — e o rótulo diz
+              também "cadastrar", porque a tela de login é de onde se abre
+              conta nova ("Cadastre sua empresa"). */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-slate-200 hover:text-[#60ABEF]">
-              Entrar
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 border border-[#60ABEF]/70 text-[#60ABEF] hover:bg-[#60ABEF] hover:text-[#0B1D34] text-sm font-semibold px-4 py-2 rounded-md transition"
+            >
+              <LogIn className="w-4 h-4" /> Entrar / Cadastrar
             </Link>
             <a
               href="#contato"
@@ -302,13 +312,23 @@ export default function Site() {
               Medir maturidade <ArrowRight className="w-4 h-4" />
             </a>
           </div>
-          <button
-            className="lg:hidden text-white"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* No celular o acesso fica FORA do menu sanduíche: escondido atrás
+              de dois toques, ele não serve a quem só quer entrar. */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 border border-[#60ABEF]/70 text-[#60ABEF] hover:bg-[#60ABEF] hover:text-[#0B1D34] text-xs font-semibold px-3 py-1.5 rounded-md transition"
+            >
+              <LogIn className="w-4 h-4" /> Entrar
+            </Link>
+            <button
+              className="text-white"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
         {menuOpen && (
           <div className="lg:hidden border-t border-white/10 bg-[#0B1D34] px-6 py-4 space-y-3 text-sm text-slate-200">
@@ -317,7 +337,9 @@ export default function Site() {
                 {s === "niveis" ? "Níveis" : s === "seguranca" ? "Segurança" : s}
               </a>
             ))}
-            <Link to="/login" className="block text-[#60ABEF] font-semibold">Entrar na plataforma →</Link>
+            <Link to="/login" className="block text-[#60ABEF] font-semibold" onClick={() => setMenuOpen(false)}>
+              Entrar ou cadastrar sua empresa →
+            </Link>
           </div>
         )}
       </header>
@@ -858,7 +880,7 @@ export default function Site() {
             <ul className="space-y-2 text-sm">
               <li><a href="#sobre" className="hover:text-white">Sobre</a></li>
               <li><a href="#contato" className="hover:text-white">Contato</a></li>
-              <li><Link to="/login" className="hover:text-white">Entrar na plataforma</Link></li>
+              <li><Link to="/login" className="hover:text-white">Entrar ou cadastrar</Link></li>
             </ul>
           </div>
           <div>
