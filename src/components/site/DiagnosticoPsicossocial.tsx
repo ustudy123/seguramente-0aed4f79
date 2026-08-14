@@ -257,9 +257,25 @@ export function DiagnosticoPsicossocial() {
       toast.error("Preencha nome, empresa, e-mail e WhatsApp.");
       return;
     }
+    // Mesma regra do banco (constraint landing_leads_email_fmt). Precisa ser a
+    // mesma mesmo: o campo é type="email", mas ele só é validado pelo navegador
+    // dentro de um <form> que envia — aqui é botão, então o navegador não
+    // valida nada, e um "fulano@empresa" sem ponto batia direto na trava do
+    // banco. O visitante via "não conseguimos registrar" sem saber o motivo, e
+    // o lead ia embora.
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+      toast.error("E-mail inválido.", { description: "Confira o endereço — falta algo como @empresa.com.br." });
+      return;
+    }
     const tel = telefone.replace(/\D/g, "");
-    if (tel.length < 10) {
-      toast.error("WhatsApp inválido. Informe DDD + número.");
+    if (tel.length < 10 || tel.length > 13) {
+      toast.error("WhatsApp inválido.", { description: "Informe DDD + número, por exemplo (46) 99999-9999." });
+      return;
+    }
+    // Os limites de tamanho também são do banco. Cortar aqui é mais gentil do
+    // que deixar a gravação falhar por causa de um campo colado sem querer.
+    if (nome.trim().length > 200 || empresa.trim().length > 300 || cargo.trim().length > 200) {
+      toast.error("Algum campo está longo demais.", { description: "Reduza nome, empresa ou cargo." });
       return;
     }
 
@@ -296,7 +312,23 @@ export function DiagnosticoPsicossocial() {
       // WhatsApp na frente dele — a conversa é o que interessa.
       console.error("Falha ao registrar lead do diagnóstico:", e);
       setResultado(diag);
-      toast.error("Não conseguimos registrar seus dados, mas seu resultado está aqui. Fale com um especialista pelo WhatsApp.");
+
+      // "Não deu certo" sem motivo é o pior aviso possível: quem lê não sabe
+      // se tenta de novo, se corrige algo ou se desiste. Traduzimos o que o
+      // banco devolve nos dois casos que realmente acontecem.
+      const err = e as { code?: string; message?: string };
+      const limiteAtingido =
+        err?.code === "23514" && /rate limit/i.test(err?.message ?? "");
+      toast.error(
+        limiteAtingido
+          ? "Muitos envios deste mesmo acesso."
+          : "Não conseguimos registrar seus dados.",
+        {
+          description: limiteAtingido
+            ? "Aguarde alguns minutos e tente de novo. Seu resultado continua aqui."
+            : "Seu resultado está aqui do mesmo jeito — fale com um especialista pelo WhatsApp.",
+        },
+      );
     } finally {
       setEnviando(false);
     }
@@ -538,23 +570,23 @@ export function DiagnosticoPsicossocial() {
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Nome*</label>
-            <input className={inputCls} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" />
+            <input className={inputCls} value={nome} onChange={(e) => setNome(e.target.value)} maxLength={200} placeholder="Seu nome" />
           </div>
           <div>
             <label className={labelCls}>Empresa*</label>
-            <input className={inputCls} value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Nome da empresa" />
+            <input className={inputCls} value={empresa} onChange={(e) => setEmpresa(e.target.value)} maxLength={300} placeholder="Nome da empresa" />
           </div>
           <div>
             <label className={labelCls}>Cargo</label>
-            <input className={inputCls} value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Ex.: Gestor de RH" />
+            <input className={inputCls} value={cargo} onChange={(e) => setCargo(e.target.value)} maxLength={200} placeholder="Ex.: Gestor de RH" />
           </div>
           <div>
             <label className={labelCls}>E-mail corporativo*</label>
-            <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@empresa.com.br" />
+            <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={320} placeholder="voce@empresa.com.br" />
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>WhatsApp*</label>
-            <input className={inputCls} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(46) 99999-9999" />
+            <input className={inputCls} value={telefone} onChange={(e) => setTelefone(e.target.value)} inputMode="tel" maxLength={30} placeholder="(46) 99999-9999" />
           </div>
         </div>
         <button
