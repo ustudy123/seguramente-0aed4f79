@@ -25,6 +25,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
         .click({ force: true });
       cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("not.exist");
     });
+    // Espera o contexto de empresa estabilizar antes de criar/abrir SWOTs —
+    // enquanto "Sincronizando empresas" aparece, a SWOT criada pode ir para
+    // outra empresa e não aparecer na listagem (CT-SWOT-020). Ausente = passa já.
+    cy.contains(/Sincronizando empresas/i, { timeout: 20000 }).should("not.exist");
   }
 
   function login() {
@@ -52,7 +56,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   function goToEstrategia() {
     cy.visit(`${baseUrl}/estrategia`);
     closeEmpresaModalIfNeeded();
-    cy.contains(/Estratégia|Governança/i, { timeout: 20000 }).should("be.visible");
+    // Assere o h1 da PÁGINA (não o menu lateral): "Governança" também existe
+    // no grupo recolhido "Documentos & Governança" do sidebar, e o cy.contains
+    // pegava esse botão oculto -> should("be.visible") falhava.
+    cy.contains("h1", "Planejamento Estratégico", { timeout: 20000 }).should("be.visible");
   }
 
   function openSwotTab() {
@@ -63,7 +70,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function openNewSwotModal() {
-    cy.contains("button", "Nova SWOT").should("be.visible").click();
+    // force: o scroll-lock do Radix de um overlay anterior deixa o body com
+    // pointer-events:none por um instante e o clique em "Nova SWOT" (que abre
+    // o modal) era recusado (causa do CT-SWOT-004).
+    cy.contains("button", "Nova SWOT").should("be.visible").click({ force: true });
     cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
     cy.get('[role="dialog"]').contains("Nova Análise SWOT").should("be.visible");
   }
@@ -109,9 +119,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
         cy.get("textarea").first().clear().type(descricao);
       }
 
-      if (periodo) {
-        cy.get("input").eq(1).clear().type(periodo);
-      }
+      // Período é um date-picker (Popover+Calendar), não um input de texto — o
+      // modal só tem UM <input> (o título). O antigo cy.get("input").eq(1)
+      // estourava com "Expected to find element: 1" (não há 2º input).
 
       cy.contains("button", "Criar Análise").click();
     });
@@ -156,10 +166,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function clickVoltar() {
-    // Busca o botão que contém o ícone ChevronLeft (botão Voltar)
-    cy.get('svg.lucide-chevron-left', { timeout: 10000 })
-      .closest('button')
-      .click({ force: true });
+    // Usa o id estável do botão Voltar do detalhe. svg.lucide-chevron-left
+    // casava 2 elementos (o Voltar E o toggle de recolher a sidebar, que é
+    // opacity-0) -> cy.click falhava com "contained 2 elements".
+    cy.get('#btn-voltar-swot', { timeout: 10000 }).click({ force: true });
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
@@ -205,14 +215,15 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   });
 
   it("CT-SWOT-004 — Abrir SWOT clicando no card", () => {
-    cy.get("body").then(($body) => {
-      if ($body.text().includes("Nenhuma análise SWOT")) {
-        createSwot(`SWOT Nav ${uniqueId}`);
-        openSwotTab();
-      }
-    });
-
-    cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().should("be.visible").click();
+    // Cria sempre uma SWOT antes — o guard condicional dependia de capturar
+    // "Nenhuma análise SWOT" no instante exato (corrida com o loading), então
+    // às vezes nenhum card era criado e o cy.get do card estourava em 15s.
+    createSwot(`SWOT Nav ${uniqueId}`);
+    openSwotTab();
+    // Deixa a lista assentar após o re-render (Error fetching user data) antes
+    // de clicar; sem scrollIntoView, que abria janela para o card se desanexar.
+    cy.wait(2000);
+    cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().click({ force: true });
     cy.wait(2000);
 
     // Detalhe: botão Voltar e botão Excluir devem aparecer (por ID)
@@ -226,7 +237,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
   it("CT-SWOT-010 — Criar SWOT (caminho feliz)", () => {
     const titulo = `SWOT Teste E2E ${uniqueId}`;
-    createSwot(titulo, "Descrição de teste automatizado", "2026 Q2");
+    createSwot(titulo, "Descrição de teste automatizado");
 
     openSwotTab();
     cy.contains(titulo, { timeout: 10000 }).should("be.visible");
@@ -254,7 +265,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.get('[role="dialog"]').within(() => {
       cy.get("input").first().clear().type(titulo);
-      cy.get("input").eq(1).clear().type("🎉abcd!@#$");
+      // Não há campo de período em texto no modal (é date-picker), então não
+      // há como digitar formato inválido. O teste só garante que a app não
+      // trava — mantém a asserção final de body visível.
       cy.contains("button", "Criar Análise").click();
     });
 
@@ -415,21 +428,15 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   });
 
   it("CT-SWOT-026 — Voltar da tela de detalhe", () => {
-    cy.get("body").then(($body) => {
-      if ($body.text().includes("Nenhuma análise SWOT")) {
-        createSwot(`SWOT Voltar ${uniqueId}`);
-        openSwotTab();
-      }
-    });
+    // Cria sempre; clica o card por data-testid (o [class*=cursor-pointer]
+    // pegava outros elementos); volta pelo id estável do botão.
+    createSwot(`SWOT Voltar ${uniqueId}`);
+    openSwotTab();
 
-    cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
+    cy.get('[data-testid="swot-card"]', { timeout: 15000 }).first().should("be.visible").click();
     cy.wait(2000);
 
-    // Clica no botão Voltar usando o ícone ChevronLeft
-    cy.get('svg.lucide-chevron-left', { timeout: 15000 })
-      .closest('button')
-      .should("be.visible")
-      .click({ force: true });
+    cy.get('#btn-voltar-swot', { timeout: 15000 }).should("be.visible").click();
 
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });

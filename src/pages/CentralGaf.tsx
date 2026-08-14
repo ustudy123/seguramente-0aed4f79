@@ -23,6 +23,7 @@ import { AtestadoForm } from "@/components/atestados/AtestadoForm";
 import { AtestadoList } from "@/components/atestados/AtestadoList";
 import { AfastamentoList } from "@/components/atestados/AfastamentoList";
 import { useAtestados } from "@/hooks/useAtestados";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 import { Calendar } from "lucide-react";
 
 const CentralGaf = () => {
@@ -133,10 +134,12 @@ const CentralGaf = () => {
           <p className="text-muted-foreground">Gestão Inteligente de Atestados e Afastamentos</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportar}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
+          <AcaoProtegida modulo="atestados" acao="exportar">
+            <Button variant="outline" size="sm" onClick={handleExportar}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+          </AcaoProtegida>
 
           {(activeTab === "atestados" || activeTab === "afastamentos") && (
             <Button size="sm" onClick={() => setFormOpen(true)}>

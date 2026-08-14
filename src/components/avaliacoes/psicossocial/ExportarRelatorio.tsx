@@ -7,6 +7,7 @@ import type { CampanhaPsicossocial, IPSClassificacao } from "@/types/psicossocia
 import { calcularIPSClassificacao } from "@/types/psicossocial";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 interface ExportarRelatorioProps {
   campanha: CampanhaPsicossocial;
@@ -269,12 +270,14 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
   if (!stats?.anonimato_garantido) return null;
 
   return (
-    <Button variant="outline" className="gap-2" onClick={handleExportar} disabled={exportando}>
-      {exportando ? (
-        <><Loader2 className="h-4 w-4 animate-spin" /> Gerando PDF...</>
-      ) : (
-        <><FileText className="h-4 w-4" /> Exportar Relatório PDF</>
-      )}
-    </Button>
+    <AcaoProtegida modulo="psicossocial" acao="exportar">
+      <Button variant="outline" className="gap-2" onClick={handleExportar} disabled={exportando}>
+        {exportando ? (
+          <><Loader2 className="h-4 w-4 animate-spin" /> Gerando PDF...</>
+        ) : (
+          <><FileText className="h-4 w-4" /> Exportar Relatório PDF</>
+        )}
+      </Button>
+    </AcaoProtegida>
   );
 }

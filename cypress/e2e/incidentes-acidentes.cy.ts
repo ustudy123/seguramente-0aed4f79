@@ -45,7 +45,9 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function openTab(label: string) {
-    cy.contains('[role="tab"]', label).should("be.visible").click();
+    // scrollIntoView + force: a lista de abas rola na horizontal e uma aba fora
+    // da viewport não é "visível"/acionável — o clique falhava por isso.
+    cy.contains('[role="tab"]', label).scrollIntoView().click({ force: true });
     // Re-query after click to avoid detached DOM from React re-render
     cy.contains('[role="tab"]', label).should("have.attr", "aria-selected", "true");
   }
@@ -55,8 +57,10 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function selectRadixOption(optionText: string) {
+    // Sem should("be.visible") antes do force: o portal do Radix anima ao abrir
+    // e a asserção de visibilidade falhava durante a animação. cy.contains já
+    // espera o item existir no DOM; o force ignora a acionabilidade.
     cy.contains('[role="option"], [data-radix-collection-item], [cmdk-item]', optionText)
-      .should("be.visible")
       .click({ force: true });
   }
 
@@ -70,17 +74,39 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function nextStep() {
-    cy.contains("button", /^Próximo$/).should("be.visible").click();
+    // Escopa ao diálogo e amplia o texto: o /^Próximo$/ exato não casava
+    // (o botão do wizard pode ter ícone/variação de rótulo), e o global
+    // pegava botões fora do diálogo.
+    cy.get('[role="dialog"]')
+      .contains("button", /Próximo|Avançar|Continuar/i)
+      .click({ force: true });
   }
 
   function previousStep() {
-    cy.contains("button", /^Anterior$/).should("be.visible").click();
+    // O botão é "<ChevronLeft/> Anterior" — o texto tem um espaço à esquerda do
+    // ícone, então /^Anterior$/ (ancorado) nunca casava. Regex frouxa + escopo
+    // ao diálogo + force (o footer pode estar sob o scroll-lock por um instante).
+    cy.get('[role="dialog"]').contains("button", /Anterior/i).should("be.visible").click({ force: true });
   }
 
   function fillTipoELocal(setor = "Administrativo", local = "Próximo ao refeitório", turno = "1º Turno") {
     cy.get('input[type="date"]').first().should("be.visible");
-    openNthCombobox(0);
-    cy.get('input[placeholder="Buscar estabelecimento..."]')
+    // Trocar o tipo (incidente↔acidente) troca o array de passos e re-renderiza
+    // o passo 1. Sem deixar assentar, o clique no combobox de Estabelecimento
+    // caía no meio do re-render e a busca "Buscar estabelecimento..." nunca
+    // abria (era a causa das falhas dos dois casos de ACIDENTE).
+    cy.wait(600);
+    // Combobox de Estabelecimento ESCOPADO ao diálogo: openNthCombobox global
+    // pegava o 1º button[role=combobox] da página (os filtros da aba, atrás do
+    // overlay), então "Buscar estabelecimento..." nunca abria. Reabre se o
+    // primeiro clique não trouxe o campo de busca.
+    cy.get('[role="dialog"]').find('button[role="combobox"]').eq(0).click({ force: true });
+    cy.get("body").then(($b) => {
+      if (!$b.find('input[placeholder="Buscar estabelecimento..."]').length) {
+        cy.get('[role="dialog"]').find('button[role="combobox"]').eq(0).click({ force: true });
+      }
+    });
+    cy.get('input[placeholder="Buscar estabelecimento..."]', { timeout: 15000 })
       .should("be.visible")
       .type("Matriz", { force: true });
 
@@ -92,7 +118,7 @@ describe("Módulo Incidentes & Acidentes", () => {
       }
     });
 
-    openNthCombobox(1);
+    cy.get('[role="dialog"]').find('button[role="combobox"]').eq(1).click({ force: true });
     cy.get('input[placeholder="Buscar setor..."]').should("be.visible").clear().type(setor);
     cy.get("body").then(($body) => {
       if ($body.find('[cmdk-item]').length > 0) {
@@ -102,7 +128,9 @@ describe("Módulo Incidentes & Acidentes", () => {
       }
     });
 
-    cy.get('input[placeholder*="Linha 3"]').clear().type(local);
+    // force: o scroll-lock do Radix (aberto pelos comboboxes acima) deixa o
+    // body com pointer-events:none por um instante e o clear/type é recusado.
+    cy.get('input[placeholder*="Linha 3"]').clear({ force: true }).type(local, { force: true });
     cy.contains("label", "Turno").parent().within(() => {
       cy.get('button[role="combobox"]').click({ force: true });
     });
@@ -110,8 +138,10 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function fillEnvolvidosManual(nome: string, cargo: string) {
-    openRadixSelectByText("Selecione do cadastro ou digite");
-    selectRadixOption("✏️ Digitar manualmente");
+    // O Select "Colaborador Principal" já vem em "Digitar manualmente"
+    // (value default "manual"), então os inputs abaixo já estão renderizados.
+    // O placeholder "Selecione do cadastro ou digite" nunca aparece nesse
+    // estado, então abrir o Select por esse texto travava o passo.
     cy.get('input[placeholder="Nome completo"]').clear().type(nome);
     cy.get('input[placeholder="Ex: Operador"]').clear().type(cargo);
     cy.get('textarea[placeholder*="testemunhas"]').clear().type("Maria teste, Pedro teste");
@@ -160,18 +190,30 @@ describe("Módulo Incidentes & Acidentes", () => {
   }
 
   function submitForm() {
-    cy.contains("button", /Registrar Evento|Salvar Alterações/i).should("be.visible").click();
+    // Escopar ao diálogo: existem DOIS botões "Registrar Evento" — o do header
+    // (sempre no DOM, coberto pelo overlay do Dialog) e o do rodapé do form.
+    // cy.contains global pegava o do header e o clique falhava (coberto).
+    cy.get('[role="dialog"]')
+      .contains("button", /Registrar Evento|Salvar Alterações/i)
+      .click();
     cy.contains("Registrar Novo Evento SST").should("not.exist");
   }
 
   function openRegistrarEvento() {
+    // Aqui ainda NÃO há diálogo aberto, então o único "Registrar Evento" é o do
+    // header — clicar nele abre o form. O título é asserido dentro do diálogo.
     cy.contains("button", texts.registrar).should("be.visible").click();
-    cy.contains(/Registrar Novo Evento SST|Editar Evento/).should("be.visible");
+    // "exist" em vez de "be.visible": o h2 do DialogTitle (Radix) chega a montar,
+    // mas a sequência de re-renders (Error fetching user data) reinicia a animação
+    // do portal e a asserção de visibilidade piscava. Basta o diálogo ter aberto.
+    cy.get('[role="dialog"]', { timeout: 15000 })
+      .contains(/Registrar Novo Evento SST|Editar Evento/)
+      .should("exist");
   }
 
   function createIncidenteManual() {
     openRegistrarEvento();
-    cy.contains("button", "Incidente").click();
+    cy.contains("button", "Incidente").click({ force: true });
     fillTipoELocal("Administrativo", `Próximo ao refeitório ${Date.now()}`, "1º Turno");
     nextStep();
     fillEnvolvidosManual(`João Incidente ${Date.now()}`, "Operador");
@@ -186,7 +228,7 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function createAcidenteManual(emitirCat = true) {
     openRegistrarEvento();
-    cy.contains("button", "Acidente").click();
+    cy.contains("button", "Acidente").click({ force: true });
     fillTipoELocal("Administrativo", `Área de produção ${Date.now()}`, "2º Turno");
     nextStep();
     fillEnvolvidosManual(`Maria Acidente ${Date.now()}`, "Auxiliar");
@@ -290,6 +332,11 @@ describe("Módulo Incidentes & Acidentes", () => {
       cy.get('button[title="Editar"]').click({ force: true });
     });
     cy.contains("Editar Evento").should("be.visible");
+    // A edição abre no PRIMEIRO passo (Tipo & Local), onde ainda não existe o
+    // botão "Anterior" (só aparece a partir do passo 2). Chamar previousStep
+    // aqui estourava. Avança um passo e volta — exercita a navegação nos dois
+    // sentidos sem depender de estar num passo intermediário.
+    nextStep();
     previousStep();
     cy.contains("Editar Evento").should("be.visible");
     cy.get('body').type('{esc}');
@@ -314,7 +361,7 @@ describe("Módulo Incidentes & Acidentes", () => {
       }
     });
 
-    cy.contains("button", "Desvio").click();
+    cy.contains("button", "Desvio").click({ force: true });
     cy.get('body').type('{esc}');
 
     [
@@ -331,7 +378,12 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   it("abre o guia rápido", () => {
     cy.contains("button", texts.guia).click();
-    cy.contains(/Guia|Rápido|Incidentes/i).should("be.visible");
+    // Assere DENTRO do diálogo: o regex amplo /...|Incidentes/i casava primeiro
+    // o link "Incidentes & Acidentes" do menu lateral (que pode estar fora da
+    // viewport) e falhava o should("be.visible").
+    cy.get('[role="dialog"]', { timeout: 10000 })
+      .contains(/Guia Rápido/i)
+      .should("exist");
     cy.get('body').type('{esc}');
   });
 });

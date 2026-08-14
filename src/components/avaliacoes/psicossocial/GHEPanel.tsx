@@ -447,7 +447,7 @@ export function GHEPanel() {
             Agrupe departamentos e cargos com exposição a riscos psicossociais semelhantes.
           </p>
         </div>
-        <Button onClick={handleNovo} className="gap-2">
+        <Button id="btn-novo-ghe" onClick={handleNovo} className="gap-2">
           <Plus className="h-4 w-4" /> Selecionar GHE
         </Button>
       </div>
@@ -469,7 +469,7 @@ export function GHEPanel() {
             const deptIds = Array.from(new Set(assoc.map((a) => a.departamento_id).filter(Boolean) as string[]));
             const emUso = assoc.length > 0;
             return (
-              <motion.div key={g.id} whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+              <motion.div key={g.id} data-testid="ghe-card" data-ghe-codigo={g.codigo} whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
                 <Card className={`h-full ${g.ativo === false ? "opacity-60 border-dashed" : ""}`}>
                   <CardContent className="p-4 flex flex-col gap-3 h-full">
                     <div className="flex items-start justify-between gap-2">
@@ -625,6 +625,8 @@ export function GHEPanel() {
                 <button
                   key={cat.id}
                   type="button"
+                  data-testid="ghe-categoria-option"
+                  data-ghe-categoria={cat.id}
                   onClick={() => escolherCategoria(cat)}
                   className={`bg-gradient-to-br ${cat.cor} border rounded-lg p-3 text-left hover:shadow-md hover:-translate-y-0.5 transition-all`}
                 >
@@ -652,6 +654,8 @@ export function GHEPanel() {
                   <button
                     key={tpl.ref}
                     type="button"
+                    data-testid="ghe-template-option"
+                    data-ghe-template={tpl.ref}
                     onClick={() => aplicarTemplate(tpl)}
                     className="border rounded-lg p-3 text-left hover:bg-primary/5 hover:border-primary/40 transition"
                   >
@@ -1006,7 +1010,7 @@ export function GHEPanel() {
               Cancelar
             </Button>
             {step === "form" && (
-              <Button onClick={() => upsert.mutate(form)} disabled={upsert.isPending}>
+              <Button id="btn-salvar-ghe" onClick={() => upsert.mutate(form)} disabled={upsert.isPending}>
                 {upsert.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Salvar
               </Button>

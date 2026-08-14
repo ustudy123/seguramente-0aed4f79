@@ -5,8 +5,8 @@ import { VersionCheck } from "@/components/VersionCheck";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
@@ -105,6 +105,43 @@ const ContratosAceite = lazy(() => import("./pages/admin/ContratosAceite"));
 const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
 const TenantDetalhe = lazy(() => import("./pages/admin/TenantDetalhe"));
 
+/**
+ * Porta de entrada do domínio principal (https://youreyes.com.br/).
+ *
+ * Antes, quem digitava o endereço sem estar logado caía direto na tela de
+ * login: o site institucional existia só em /site, endereço que visitante
+ * nenhum adivinha. Agora a raiz mostra o site — é a vitrine — e o painel
+ * continua exatamente em "/" para quem já tem sessão, de modo que nenhum
+ * favorito, link interno ou redirecionamento de login precisou mudar.
+ *
+ * Este componente é o elemento do grupo de rotas protegidas: fora da raiz
+ * ele se comporta como sempre (ProtectedRoute + MainLayout). Só na raiz, e
+ * só para quem não tem sessão, ele entrega o site no lugar do painel.
+ */
+const RaizDoDominio = () => {
+  const { user, loading } = useAuthContext();
+  const { pathname } = useLocation();
+  const naRaiz = pathname === "/";
+
+  // Enquanto a sessão não é conhecida, não decidir: piscar o site
+  // institucional na cara de quem já está logado seria pior que esperar.
+  if (naRaiz && loading) return <PageLoader />;
+
+  if (naRaiz && !user) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Site />
+      </Suspense>
+    );
+  }
+
+  return (
+    <ProtectedRoute>
+      <MainLayout />
+    </ProtectedRoute>
+  );
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -156,7 +193,11 @@ const App = () => (
               <Route path="/ativar-conta" element={<AtivarConta />} />
               <Route path="/marketplace" element={<div className="min-h-screen bg-background p-4 md:p-8"><Marketplace /></div>} />
               <Route path="/lp" element={<LandingPage />} />
-              <Route path="/site" element={<Suspense fallback={<PageLoader />}><Site /></Suspense>} />
+              {/* O site institucional mudou de endereço: agora é a raiz do
+                  domínio. /site continua atendendo — links antigos, anúncios e
+                  perfis de rede social não podem quebrar — mas encaminha para
+                  o endereço novo, para não existirem duas páginas iguais. */}
+              <Route path="/site" element={<Navigate to="/" replace />} />
               <Route path="/termos-de-uso" element={<TermosDeUso />} />
               <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
 
@@ -176,7 +217,7 @@ const App = () => (
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingProtegido /></ProtectedRoute>} />
 
               {/* Protected App Routes */}
-              <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+              <Route element={<RaizDoDominio />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/pendencias" element={<Pendencias />} />
                 <Route path="/feed" element={<Feed />} />

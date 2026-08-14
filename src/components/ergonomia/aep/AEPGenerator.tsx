@@ -30,6 +30,7 @@ import { AEPAssistenteIA } from "./AEPAssistenteIA";
 
 import type { AEPDocumento, AEPDescricaoAtividade, AEPRiscosFisicos, AEPRiscosCognitivos, AEPAcaoRecomendada } from "@/types/aep";
 import { getDefaultAEPDocumento } from "@/types/aep";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 const STEPS = [
   { id: 1, title: "Identificação", description: "Dados da empresa e avaliação" },
@@ -244,18 +245,20 @@ export function AEPGenerator({ onSave, initialData }: AEPGeneratorProps) {
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
                   <span>Pré-visualização do Documento AEP</span>
-                  <Button 
-                    onClick={handleGeneratePDF} 
-                    disabled={isGeneratingPDF}
-                    className="gap-2"
-                  >
-                    {isGeneratingPDF ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    Exportar PDF
-                  </Button>
+                  <AcaoProtegida modulo="ergonomia" acao="exportar">
+                    <Button 
+                      onClick={handleGeneratePDF} 
+                      disabled={isGeneratingPDF}
+                      className="gap-2"
+                    >
+                      {isGeneratingPDF ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      Exportar PDF
+                    </Button>
+                  </AcaoProtegida>
                 </DialogTitle>
               </DialogHeader>
               <ScrollArea className="h-[70vh]">

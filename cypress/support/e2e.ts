@@ -1,6 +1,17 @@
 // Suppress ALL application-originated errors to prevent flaky test failures.
 // The tests validate behavior via assertions, not by relying on zero app errors.
-Cypress.on("uncaught:exception", (_err) => {
+// Antes de engolir, guardamos a mensagem para o diagnóstico de falha (abaixo):
+// quando um teste quebra sem achar o conteúdo esperado, saber QUAL erro a app
+// jogou (ex.: um throw que caiu no ErrorBoundary "Algo deu errado") é o que
+// separa "spec desatualizado" de "tela realmente quebrada".
+const errosCapturados: string[] = [];
+
+Cypress.on("uncaught:exception", (err) => {
+  try {
+    errosCapturados.push("uncaught: " + (err?.message || String(err)));
+  } catch {
+    /* nunca deixa o diagnóstico derrubar o teste */
+  }
   // Return false to prevent ALL uncaught exceptions from failing the test.
   // This covers: ResizeObserver, AbortError, auth errors, signal aborted, etc.
   return false;
@@ -9,6 +20,58 @@ Cypress.on("uncaught:exception", (_err) => {
 Cypress.on("window:before:load", (win) => {
   win.addEventListener("unhandledrejection", (event) => {
     event.preventDefault();
+  });
+
+  // React registra erros de render via console.error ANTES do ErrorBoundary
+  // assumir. Interceptar aqui é o jeito de capturar "por que a página não
+  // montou" mesmo com as exceções sendo engolidas acima.
+  try {
+    const orig = win.console.error;
+    win.console.error = (...args: unknown[]) => {
+      try {
+        errosCapturados.push(
+          "console.error: " +
+            args
+              .map((a) => (a && (a as Error).stack ? (a as Error).message : String(a)))
+              .join(" "),
+        );
+      } catch {
+        /* idem */
+      }
+      orig.apply(win.console, args as []);
+    };
+  } catch {
+    /* idem */
+  }
+});
+
+// Diagnóstico de falha: quando um teste falha (inclusive no before each, que é
+// onde toda a suíte está caindo), despeja no LOG DO CI a rota, o texto visível
+// da página e os erros capturados. É o único canal legível daqui — os prints
+// vão para o painel/artefato, mas o texto no log conta a história na hora.
+// Roda ~1x por arquivo (os demais testes ficam pending e não disparam hooks).
+afterEach(function () {
+  const estado = this.currentTest?.state;
+  if (estado === "passed") {
+    errosCapturados.length = 0;
+    return;
+  }
+  cy.document({ log: false }).then((doc) => {
+    let rota = "?";
+    let corpo = "";
+    try {
+      rota = doc.location ? doc.location.pathname + doc.location.search : "?";
+      corpo = (doc.body?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 900);
+    } catch {
+      /* segue com o que tiver */
+    }
+    const erros = errosCapturados.slice(0, 6).join("  ||  ") || "(nenhum)";
+    errosCapturados.length = 0;
+    cy.task(
+      "diag",
+      `[FALHA] ${this.currentTest?.title}\n  rota=${rota}\n  erros=${erros}\n  corpo="${corpo}"`,
+      { log: false },
+    );
   });
 });
 
@@ -29,6 +92,23 @@ Cypress.on("window:before:load", (win) => {
 // continua sendo por conteúdo (o spec espera o campo de e-mail, o texto da
 // tela), não pelo código HTTP. Uma opção explícita no cy.visit ainda vence.
 // =====================================================================
+// BARRA DUPLA NA ROTA = 404 (causa real das 5 falhas de before each)
+//
+// Os specs montam a URL como `${baseUrl}/epis`. O baseUrl vem de
+// Cypress.config("baseUrl"), que a esteira passa por CYPRESS_BASE_URL COM
+// barra final (o Cypress restaura essa barra por cima da normalização do
+// cypress.config.ts). Resultado: `.../seguramente-0aed4f79//epis` — o
+// BrowserRouter trata `//epis` como rota inexistente e renderiza o 404
+// "Page not found", dentro do layout (por isso o menu lateral aparecia e
+// dava falso-positivo em asserções amplas). Aqui colapsamos barras
+// repetidas SÓ no caminho, preservando o `://` do esquema e a query.
+function colapsarBarrasNoCaminho(u: string): string {
+  return u.replace(
+    /^(https?:\/\/[^/]+)(\/[^?#]*)?/,
+    (m, base, caminho) => (caminho ? base + caminho.replace(/\/{2,}/g, "/") : m),
+  );
+}
+
 // Tipos como `any` de propósito: `cy.visit` é sobrecarregado (aceita
 // visit(url), visit(url, opts) e visit(opts)), e brigar com as sobrecargas
 // aqui não agrega — o corpo cobre as duas formas usadas nos specs.
@@ -36,9 +116,13 @@ Cypress.Commands.overwrite(
   "visit",
   (originalFn: any, urlOrOpts: any, maybeOpts?: any) => {
     if (urlOrOpts && typeof urlOrOpts === "object") {
-      return originalFn({ failOnStatusCode: false, ...urlOrOpts });
+      const opts = { ...urlOrOpts };
+      if (typeof opts.url === "string") opts.url = colapsarBarrasNoCaminho(opts.url);
+      return originalFn({ failOnStatusCode: false, ...opts });
     }
-    return originalFn(urlOrOpts, { failOnStatusCode: false, ...(maybeOpts || {}) });
+    const url =
+      typeof urlOrOpts === "string" ? colapsarBarrasNoCaminho(urlOrOpts) : urlOrOpts;
+    return originalFn(url, { failOnStatusCode: false, ...(maybeOpts || {}) });
   },
 );
 

@@ -38,6 +38,7 @@ import { AEPFormAssinaturas } from "./AEPFormAssinaturas";
 import { AEPDocumentoPreviewMulti } from "./AEPDocumentoPreviewMulti";
 import { useAEPMulti } from "@/hooks/useAEPMulti";
 import { AEP_MULTI_STEPS, AEPDocumentoMulti } from "@/types/aep-multi";
+import { AcaoProtegida } from "@/components/shared/AcaoProtegida";
 
 const STEP_ICONS = [Building2, Camera, Brain, ClipboardCheck, FileCheck, PenLine];
 
@@ -315,18 +316,20 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
                   <span>Pré-visualização do Documento AEP</span>
-                  <Button 
-                    onClick={handleGeneratePDF} 
-                    disabled={isGeneratingPDF}
-                    className="gap-2"
-                  >
-                    {isGeneratingPDF ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    Exportar PDF
-                  </Button>
+                  <AcaoProtegida modulo="ergonomia" acao="exportar">
+                    <Button 
+                      onClick={handleGeneratePDF} 
+                      disabled={isGeneratingPDF}
+                      className="gap-2"
+                    >
+                      {isGeneratingPDF ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      Exportar PDF
+                    </Button>
+                  </AcaoProtegida>
                 </DialogTitle>
               </DialogHeader>
               <ScrollArea className="h-[70vh]">

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { DiagnosticoPsicossocial } from "@/components/site/DiagnosticoPsicossocial";
 import logoAsset from "@/assets/logo-youreyes-3.png.asset.json";
 import mascot from "@/assets/mascot-ye.png.asset.json";
 import {
@@ -26,6 +27,7 @@ import {
   Clock,
   AlertTriangle,
   Compass,
+  LogIn,
 } from "lucide-react";
 
 // ---------------- Data ----------------
@@ -285,39 +287,61 @@ export default function Site() {
           </a>
           <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-200">
             <a href="#problema" className="hover:text-[#60ABEF]">Problema</a>
+            <a href="#diagnostico" className="hover:text-[#60ABEF]">Diagnóstico</a>
             <a href="#niveis" className="hover:text-[#60ABEF]">Níveis</a>
             <a href="#plataforma" className="hover:text-[#60ABEF]">Plataforma</a>
             <a href="#planos" className="hover:text-[#60ABEF]">Planos</a>
             <a href="#seguranca" className="hover:text-[#60ABEF]">Segurança</a>
             <a href="#contato" className="hover:text-[#60ABEF]">Contato</a>
           </nav>
+          {/* Desde que o site virou a porta do domínio principal, quem chega
+              aqui para TRABALHAR (cliente indo bater ponto, RH indo lançar
+              atestado) precisa achar a entrada em um segundo. Por isso o
+              acesso é um botão, não mais um texto discreto — e o rótulo diz
+              também "cadastrar", porque a tela de login é de onde se abre
+              conta nova ("Cadastre sua empresa"). */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-slate-200 hover:text-[#60ABEF]">
-              Entrar
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 border border-[#60ABEF]/70 text-[#60ABEF] hover:bg-[#60ABEF] hover:text-[#0B1D34] text-sm font-semibold px-4 py-2 rounded-md transition"
+            >
+              <LogIn className="w-4 h-4" /> Entrar / Cadastrar
             </Link>
             <a
-              href="#contato"
+              href="#diagnostico"
               className="inline-flex items-center gap-2 bg-[#FF8A00] hover:bg-[#e67a00] text-white text-sm font-semibold px-4 py-2 rounded-md transition"
             >
-              Medir maturidade <ArrowRight className="w-4 h-4" />
+              Diagnóstico grátis <ArrowRight className="w-4 h-4" />
             </a>
           </div>
-          <button
-            className="lg:hidden text-white"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* No celular o acesso fica FORA do menu sanduíche: escondido atrás
+              de dois toques, ele não serve a quem só quer entrar. */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 border border-[#60ABEF]/70 text-[#60ABEF] hover:bg-[#60ABEF] hover:text-[#0B1D34] text-xs font-semibold px-3 py-1.5 rounded-md transition"
+            >
+              <LogIn className="w-4 h-4" /> Entrar
+            </Link>
+            <button
+              className="text-white"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
         {menuOpen && (
           <div className="lg:hidden border-t border-white/10 bg-[#0B1D34] px-6 py-4 space-y-3 text-sm text-slate-200">
-            {["problema", "niveis", "plataforma", "planos", "seguranca", "contato"].map((s) => (
+            {["problema", "diagnostico", "niveis", "plataforma", "planos", "seguranca", "contato"].map((s) => (
               <a key={s} href={`#${s}`} className="block capitalize" onClick={() => setMenuOpen(false)}>
-                {s === "niveis" ? "Níveis" : s === "seguranca" ? "Segurança" : s}
+                {s === "niveis" ? "Níveis" : s === "seguranca" ? "Segurança" : s === "diagnostico" ? "Diagnóstico" : s}
               </a>
             ))}
-            <Link to="/login" className="block text-[#60ABEF] font-semibold">Entrar na plataforma →</Link>
+            <Link to="/login" className="block text-[#60ABEF] font-semibold" onClick={() => setMenuOpen(false)}>
+              Entrar ou cadastrar sua empresa →
+            </Link>
           </div>
         )}
       </header>
@@ -339,10 +363,10 @@ export default function Site() {
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <a
-                href="#contato"
+                href="#diagnostico"
                 className="inline-flex items-center gap-2 bg-[#FF8A00] hover:bg-[#e67a00] text-white font-semibold px-6 py-3 rounded-md transition"
               >
-                Medir a maturidade da minha empresa <ArrowRight className="w-4 h-4" />
+                Fazer o diagnóstico gratuito <ArrowRight className="w-4 h-4" />
               </a>
               <a
                 href="#plataforma"
@@ -447,6 +471,47 @@ export default function Site() {
         </div>
       </section>
 
+      {/* DIAGNÓSTICO PSICOSSOCIAL — destino dos CTAs e isca do tráfego pago */}
+      <section id="diagnostico" className="py-24 bg-white/[0.02] border-y border-white/10">
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-start">
+          <div className="lg:col-span-5 lg:sticky lg:top-24">
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-3">
+              Diagnóstico gratuito
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              Sua empresa está preparada para a cobrança de riscos psicossociais da NR-1?
+            </h2>
+            <p className="mt-4 text-slate-300 leading-relaxed">
+              Oito perguntas, menos de três minutos. No fim você recebe o índice de exposição da sua
+              empresa, onde estão as lacunas e por onde começar — na tela, na hora.
+            </p>
+
+            <ul className="mt-8 space-y-3 text-sm text-slate-300">
+              {[
+                "Feito sobre a NR-1: identificar, registrar, tratar e comprovar",
+                "Resultado por dimensão, não uma nota solta",
+                "Avalia a empresa, não as pessoas — nenhum dado de saúde é coletado",
+                "Grátis e sem compromisso",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#34D399] shrink-0 mt-0.5" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 border-l-4 border-[#FF8A00] pl-4 py-1 text-sm text-slate-300 leading-relaxed">
+              Desde a atualização da NR-1, risco psicossocial não é mais tema de RH: é item de
+              inventário de riscos, cobrado em fiscalização como qualquer outro.
+            </div>
+          </div>
+
+          <div className="lg:col-span-7">
+            <DiagnosticoPsicossocial />
+          </div>
+        </div>
+      </section>
+
       {/* NÍVEIS DE MATURIDADE */}
       <section id="niveis" className="py-24">
         <div className="max-w-7xl mx-auto px-6">
@@ -479,7 +544,7 @@ export default function Site() {
           </div>
           <div className="mt-10 text-center">
             <a
-              href="#contato"
+              href="#diagnostico"
               className="inline-flex items-center gap-2 bg-[#FF8A00] hover:bg-[#e67a00] text-white font-semibold px-6 py-3 rounded-md transition"
             >
               Descobrir meu nível agora <ArrowRight className="w-4 h-4" />
@@ -858,7 +923,7 @@ export default function Site() {
             <ul className="space-y-2 text-sm">
               <li><a href="#sobre" className="hover:text-white">Sobre</a></li>
               <li><a href="#contato" className="hover:text-white">Contato</a></li>
-              <li><Link to="/login" className="hover:text-white">Entrar na plataforma</Link></li>
+              <li><Link to="/login" className="hover:text-white">Entrar ou cadastrar</Link></li>
             </ul>
           </div>
           <div>

@@ -36,7 +36,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Versão FIXA (não "latest"): com "latest" a esteira pergunta ao
+          # GitHub "qual a release mais nova?" a cada corrida, e essa consulta
+          # (sem autenticação) estoura o limite compartilhado do GitHub
+          # ("rate limit exceeded"), derrubando a corrida logo no 1º passo.
+          # Fixando a versão, ela baixa direto, sem essa consulta. Para subir
+          # a ferramenta um dia, basta trocar este número por outro publicado.
+          version: 2.113.0
       - name: Conferir que o alvo é o staging
         run: |
           if [ "$STAGING_REF" = "diayjpsrcerycycyaxst" ]; then
@@ -144,6 +150,36 @@ jobs:
           done
           echo "::error::Site de teste não respondeu a tempo."
           exit 1
+      - name: Semear a conta-robô no staging
+        # A suíte loga com uma conta fixa (padrão em cypress.config.ts). Se
+        # ela não existir no banco de teste, o login falha e TODOS os specs
+        # caem no beforeEach. Este passo garante a conta antes de rodar.
+        # A função de seed já ficou de pé no job `banco` (functions deploy).
+        env:
+          SEED_URL: https://bmehdgthciuvdbvutsdv.supabase.co/functions/v1/seed-e2e-user
+          QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN }}
+        run: |
+          if [ -z "$QA_E2E_TOKEN" ]; then
+            echo "::warning::QA_E2E_TOKEN ausente — conta-robô não semeada. Se a suíte falhar no login, é isto."
+            exit 0
+          fi
+          # Mesma conta que a suíte vai usar (mesmo fallback do cypress.config.ts).
+          EMAIL="${CYPRESS_EMAIL:-teste@lucas.com}"
+          SENHA="${CYPRESS_PASSWORD:-7654321}"
+          # JSON montado por python (escapa certo, sem pegadinha de aspas de shell)
+          # e enviado como arquivo binário — o corpo chega byte a byte à função.
+          E="$EMAIL" S="$SENHA" python3 -c 'import json,os;open("/tmp/seed.json","w").write(json.dumps({"email":os.environ["E"],"senha":os.environ["S"]}))'
+          echo "Corpo do seed: $(cat /tmp/seed.json)"
+          CODE=$(curl -sS -o /tmp/seed.out -w "%{http_code}" -X POST "$SEED_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-qa-token: $QA_E2E_TOKEN" \
+            --data-binary @/tmp/seed.json)
+          echo "Resposta do seed (HTTP $CODE): $(cat /tmp/seed.out)"
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
+            echo "::error::Falha ao semear a conta-robô (HTTP $CODE) — a suíte iria falhar no login."
+            exit 1
+          fi
+
       - name: Rodar a suíte
         run: npm run test:e2e
       - name: Guardar prints e vídeos da corrida
