@@ -388,6 +388,107 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
     return `${nomes[m-1]} ${y}`;
   }, [mesAtivo]);
 
+  // Blocos reutilizados no layout de tabela (desktop) e em cartões (mobile).
+  const renderMarcacoes = (
+    data: string,
+    original: string[],
+    ed: DiaEdit,
+    qtdPendentes: number,
+  ) => {
+    if (diaBloqueado(data)) {
+      return (
+        <div className="flex items-start gap-2 py-1.5">
+          <Clock className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">Ajuste ainda pendente — aguarde a aprovação.</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Este dia tem {qtdPendentes} marcação(ões) aguardando o gestor. Não é possível alterar até ser aprovado ou rejeitado.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    const marcs = marcacoesEfetivas(data);
+    return (
+      <div className="flex flex-wrap items-start gap-2">
+        {marcs.length === 0 && (
+          <span className="text-[10px] text-muted-foreground italic py-1.5">Sem marcações</span>
+        )}
+        {marcs.map((valor, i) => {
+          const orig = original[i] || "";
+          const novaMarc = i >= original.length;
+          const alterado = ed.marcacoes !== undefined && (valor || "") !== orig && !novaMarc;
+          const tipo = tipoPorIndice(i);
+          const ehUltima = i === marcs.length - 1;
+          return (
+            <div key={i} className="flex flex-col gap-0.5">
+              <span className={`text-[9px] font-semibold ${tipo === "entrada" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                {tipoLabelIndice(i)}
+              </span>
+              <div className="flex items-center gap-1">
+                <Input
+                  type="time"
+                  value={valor || ""}
+                  onChange={(e) => setMarcacao(data, i, e.target.value)}
+                  className={`h-9 text-xs font-mono px-1 w-[92px] ${
+                    novaMarc ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                    : alterado ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                    : ""
+                  }`}
+                />
+                {ehUltima && (
+                  <button
+                    type="button"
+                    onClick={() => removerMarcacao(data, i)}
+                    className="text-muted-foreground hover:text-destructive shrink-0 p-1"
+                    title="Remover marcação"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              {orig && alterado && (
+                <div className="text-[9px] text-muted-foreground line-through">orig: {orig}</div>
+              )}
+            </div>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => adicionarMarcacao(data)}
+          className="h-9 mt-[14px] px-2 text-[10px] rounded border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary shrink-0"
+          title="Adicionar marcação"
+        >
+          + marcação
+        </button>
+      </div>
+    );
+  };
+
+  const renderJustificativa = (data: string, ed: DiaEdit) => (
+    <div className="space-y-1.5">
+      <Select value={ed.justificativaPreset} onValueChange={(v) => setJustificativaPreset(data, v)}>
+        <SelectTrigger className="h-9 text-xs w-full bg-background">
+          <SelectValue placeholder="Selecione o motivo..." />
+        </SelectTrigger>
+        <SelectContent className="max-h-[50vh]">
+          {opcoesJustificativa.map((j) => (
+            <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {ed.justificativaPreset === "Outro (descrever)" && (
+        <Input
+          value={ed.justificativaOutro}
+          onChange={(e) => setJustificativaOutro(data, e.target.value)}
+          placeholder="Descreva o motivo"
+          className="h-9 text-xs bg-background"
+          maxLength={300}
+        />
+      )}
+    </div>
+  );
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
