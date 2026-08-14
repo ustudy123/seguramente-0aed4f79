@@ -152,10 +152,12 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function waitForCampanhaForm() {
-    cy.get("#input-campanha-nome", { timeout: 15000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible");
+    // Re-consulta a cada passo: encadear .scrollIntoView().should("be.visible")
+    // no MESMO subject quebrava com "subject no longer attached to the DOM"
+    // quando o formulário re-renderizava entre os comandos (causa do TC-04).
+    cy.get("#input-campanha-nome", { timeout: 15000 }).should("exist");
+    cy.get("#input-campanha-nome").scrollIntoView();
+    cy.get("#input-campanha-nome").should("be.visible");
   }
 
   function preencherDatasCampanha(inicio: string, fim: string) {
@@ -259,7 +261,12 @@ describe("Módulo Psicossocial NR-01", () => {
           .click({ force: true });
       });
     cy.wait(2000);
-    cy.get('[role="dialog"]:visible', { timeout: 20000 }).should("not.exist");
+    // Confirma que o FORMULÁRIO de campanha fechou (nome sumiu do DOM), em vez
+    // de exigir que NENHUM diálogo visível exista: ao salvar, a tela pode abrir
+    // um diálogo de sucesso/distribuição por cima, e o "não existir diálogo"
+    // ficava preso nele (causa do TC-01). O sumiço do #input-campanha-nome já
+    // prova que a campanha foi salva e o form desmontou.
+    cy.get("#input-campanha-nome", { timeout: 20000 }).should("not.exist");
   }
 
   function criarCampanhaRapida(nome: string, setor = setorBaseNome, funcao = funcaoBaseNome) {
@@ -314,16 +321,34 @@ describe("Módulo Psicossocial NR-01", () => {
     closeEmpresaModalIfNeeded();
     cy.contains("Gestão Psicossocial", { timeout: 30000 }).should("exist");
     cy.get("#btn-novo-ghe", { timeout: 20000 }).click({ force: true });
+
+    // Passo 1: escolher a categoria.
     cy.get('[data-testid="ghe-categoria-option"]', { timeout: 10000 })
       .eq(catIndex)
       .click({ force: true });
-    // Se a categoria tiver escolha de template, pega o primeiro.
+
+    // Passo 2 (opcional): categorias com >1 modelo abrem a escolha de template;
+    // com 1 modelo, o app pula direto para o formulário (#nome). O antigo
+    // cy.get("body").then() corria contra o re-render e nem clicava o modelo
+    // nem chegava ao form. Aqui esperamos QUALQUER um dos dois aparecer antes
+    // de decidir — sem corrida.
+    cy.get('[data-testid="ghe-template-option"], #nome', { timeout: 15000 }).should("exist");
     cy.get("body").then(($b) => {
-      if ($b.find('[data-testid="ghe-template-option"]').length) {
+      if ($b.find('[data-testid="ghe-template-option"]:visible').length) {
         cy.get('[data-testid="ghe-template-option"]').first().click({ force: true });
       }
     });
+
+    // Passo 3: no formulário, GARANTE um nome (Código é automático; Nome é
+    // obrigatório no upsert). Mesmo quando o template preenche, reescrever é
+    // inofensivo e blinda o caso de o template não ter aplicado.
+    cy.get("#nome", { timeout: 15000 })
+      .should("be.visible")
+      .clear()
+      .type(`GHE Cypress ${Date.now()}`);
     cy.get("#btn-salvar-ghe", { timeout: 10000 }).click({ force: true });
+
+    // Salvou → o diálogo fecha (onSuccess) e um card aparece na lista.
     cy.get('[data-testid="ghe-card"]', { timeout: 20000 }).should("have.length.gte", 1);
   }
 
