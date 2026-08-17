@@ -8,8 +8,9 @@ const PROJETO_PRODUCAO = "diayjpsrcerycycyaxst";
 const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
 const isProducao = projectId === PROJETO_PRODUCAO;
 
-const versao = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "1.0.0";
-const buildTime = typeof __APP_BUILD_TIME__ !== "undefined" ? __APP_BUILD_TIME__ : "";
+const g = globalThis as unknown as { __APP_VERSION__?: string; __APP_BUILD_TIME__?: string };
+const versao = g.__APP_VERSION__ ?? "1.0.0";
+const buildTime = g.__APP_BUILD_TIME__ ?? "";
 
 function formatarDataHora(iso: string): string {
   if (!iso) return "Não disponível";
