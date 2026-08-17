@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+    "import.meta.env.VITE_APP_BUILD_TIME": JSON.stringify(new Date().toISOString()),
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(process.env.npm_package_version || "1.0.0"),
   },
 }));
