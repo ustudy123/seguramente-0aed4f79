@@ -265,7 +265,7 @@ export default function Cargos() {
           </Button>
           <Button onClick={handleOpenCreate} className="gap-2">
             <Plus className="w-4 h-4" />
-            Nova Cargo
+            Novo Cargo
           </Button>
         </div>
       </motion.div>
