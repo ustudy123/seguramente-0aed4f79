@@ -265,7 +265,7 @@ export default function Cargos() {
           </Button>
           <Button onClick={handleOpenCreate} className="gap-2">
             <Plus className="w-4 h-4" />
-            Nova Cargo
+            Novo Cargo
           </Button>
         </div>
       </motion.div>
@@ -427,9 +427,9 @@ export default function Cargos() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedCargo ? "Editar Cargo" : "Nova Cargo"}</DialogTitle>
+            <DialogTitle>{selectedCargo ? "Editar Cargo" : "Novo Cargo"}</DialogTitle>
             <DialogDescription>
-              {selectedCargo ? "Edite as informações da cargo" : "Preencha os dados da nova cargo"}
+              {selectedCargo ? "Edite as informações da cargo" : "Preencha os dados do novo cargo"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
