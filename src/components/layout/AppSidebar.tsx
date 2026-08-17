@@ -41,6 +41,7 @@ import {
   Brain,
   BarChart3,
   LifeBuoy,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -105,6 +106,7 @@ const SEARCH_KEYWORDS: Record<string, string[]> = {
   "/hub-contabil": ["contabil", "hub", "competencia", "folha"],
   "/configuracoes": ["configuracao", "usuario", "perfil", "acesso", "auditoria"],
   "/suporte": ["suporte", "ticket", "ajuda", "bug"],
+  "/sobre-sistema": ["sobre", "versao", "versão", "ambiente", "publicacao", "publicação", "build"],
   "/meu-perfil": ["meu perfil", "conta", "avatar", "senha", "email"],
 };
 
@@ -253,6 +255,7 @@ const menuSections: MenuSection[] = [
     items: [
       { title: "Suporte", icon: LifeBuoy, path: "/suporte" },
       { title: "Configurações", icon: Settings, path: "/configuracoes" },
+      { title: "Sobre o Sistema", icon: Info, path: "/sobre-sistema" },
     ],
   },
 ];

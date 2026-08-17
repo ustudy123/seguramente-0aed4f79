@@ -28,4 +28,8 @@ export default defineConfig(({ mode }) => ({
       include: [/node_modules/],
     },
   },
+  define: {
+    "import.meta.env.VITE_APP_BUILD_TIME": JSON.stringify(new Date().toISOString()),
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(process.env.npm_package_version || "1.0.0"),
+  },
 }));
