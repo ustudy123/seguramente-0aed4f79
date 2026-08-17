@@ -50,6 +50,7 @@ import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
 import HubContabil from "./pages/HubContabil";
 import Configuracoes from "./pages/Configuracoes";
 import Suporte from "./pages/Suporte";
+import SobreSistema from "./pages/SobreSistema";
 import Usuarios from "./pages/Usuarios";
 import PerfisAcesso from "./pages/PerfisAcesso";
 import MeuPerfil from "./pages/MeuPerfil";
@@ -260,6 +261,7 @@ const App = () => (
                 <Route path="/usuarios" element={<Usuarios />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/suporte" element={<Suporte />} />
+                <Route path="/sobre-sistema" element={<SobreSistema />} />
                 <Route path="/meu-perfil" element={<MeuPerfil />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
