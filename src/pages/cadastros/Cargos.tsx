@@ -427,9 +427,9 @@ export default function Cargos() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedCargo ? "Editar Cargo" : "Nova Cargo"}</DialogTitle>
+            <DialogTitle>{selectedCargo ? "Editar Cargo" : "Novo Cargo"}</DialogTitle>
             <DialogDescription>
-              {selectedCargo ? "Edite as informações da cargo" : "Preencha os dados da nova cargo"}
+              {selectedCargo ? "Edite as informações da cargo" : "Preencha os dados do novo cargo"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
