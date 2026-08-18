@@ -439,7 +439,13 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
 
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        onEscapeKeyDown={() => console.error("[VFX] form DialogContent onEscapeKeyDown")}
+        onPointerDownOutside={(e) => console.error("[VFX] form DialogContent onPointerDownOutside target=", (e.target as HTMLElement)?.id || (e.target as HTMLElement)?.tagName)}
+        onInteractOutside={() => console.error("[VFX] form DialogContent onInteractOutside")}
+        onFocusOutside={() => console.error("[VFX] form DialogContent onFocusOutside")}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isEdicao ? (

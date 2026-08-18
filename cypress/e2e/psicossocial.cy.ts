@@ -309,9 +309,10 @@ describe("Módulo Psicossocial NR-01", () => {
         const btnNova = doc.querySelector("#btn-nova-campanha, #btn-criar-campanha") ? "presente" : "ausente";
         const bodyPE = cs(doc.body).pointerEvents;
         const ariaHidden = doc.querySelectorAll('[aria-hidden="true"]').length;
+        const spinner = doc.querySelectorAll(".animate-spin").length;
         cy.task(
           "diag",
-          `HANDOFF[${label}] marker=${marker} dialogs=${dialogs.length} :: ${dialogs.join(" | ")}\n` +
+          `HANDOFF[${label}] marker=${marker} spinner=${spinner} dialogs=${dialogs.length} :: ${dialogs.join(" | ")}\n` +
             `  input-nome: ${inpInfo}\n` +
             `  btnManual=${btnManual} btnNovaCampanha=${btnNova} bodyPointerEvents=${bodyPE} ariaHiddenTrue=${ariaHidden}`,
           { log: false },
@@ -333,11 +334,18 @@ describe("Módulo Psicossocial NR-01", () => {
       .filter(":visible")
       .first()
       .click({ force: true });
-    // DIAGNÓSTICO TEMPORÁRIO: dois retratos do DOM após o clique.
+    // DIAGNÓSTICO TEMPORÁRIO: retratos do DOM ao longo da janela em que o
+    // formulário abre e depois some (cobre até ~15s).
     cy.wait(800);
     dumpHandoffState("t+800ms");
     cy.wait(2500);
     dumpHandoffState("t+3300ms");
+    cy.wait(2700);
+    dumpHandoffState("t+6000ms");
+    cy.wait(4000);
+    dumpHandoffState("t+10000ms");
+    cy.wait(5000);
+    dumpHandoffState("t+15000ms");
     waitForCampanhaForm();
   }
 
