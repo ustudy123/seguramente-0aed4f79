@@ -173,6 +173,7 @@ export function PsicossocialDashboard() {
     // assistente durava mais que o atraso e a sobreposição voltava.
     setInstrumentoPendente(instrumento);
     setShowAssistente(false);
+    console.error("[VFX] handleAssistenteSelect", instrumento); // DIAG temporário
   };
 
   // Abre o formulário assim que o assistente deixa a árvore (showAssistente
@@ -181,6 +182,7 @@ export function PsicossocialDashboard() {
     if (!showAssistente && instrumentoPendente) {
       setInstrumentoPendente(null);
       setShowForm(true);
+      console.error("[VFX] efeito: abre formulário (assistente saiu)"); // DIAG temporário
     }
   }, [showAssistente, instrumentoPendente]);
 
@@ -229,6 +231,7 @@ export function PsicossocialDashboard() {
   const ipsClassificacao: IPSClassificacao | null = ipsConsolidado != null ? calcularIPSClassificacao(ipsConsolidado) : null;
 
   if (isLoadingCampanhas) {
+    console.error("[VFX] isLoadingCampanhas=true -> spinner (desmonta diálogos)", { showForm, showAssistente }); // DIAG temporário
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -561,6 +564,7 @@ export function PsicossocialDashboard() {
         <CampanhaForm
           open={showForm}
           onOpenChange={(o) => {
+            console.error("[VFX] form.onOpenChange ->", o); // DIAG temporário
             setShowForm(o);
             if (!o) setCampanhaParaEditar(undefined);
           }}

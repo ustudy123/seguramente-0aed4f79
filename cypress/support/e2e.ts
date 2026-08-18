@@ -66,10 +66,13 @@ afterEach(function () {
       /* segue com o que tiver */
     }
     const erros = errosCapturados.slice(0, 6).join("  ||  ") || "(nenhum)";
+    // DIAGNÓSTICO TEMPORÁRIO: breadcrumbs [VFX] do ciclo de vida do formulário
+    // (abertura/fechamento do CampanhaForm) — despejados sem cap, em ordem.
+    const vfx = errosCapturados.filter((e) => e.includes("[VFX]")).join("\n    ");
     errosCapturados.length = 0;
     cy.task(
       "diag",
-      `[FALHA] ${this.currentTest?.title}\n  rota=${rota}\n  erros=${erros}\n  corpo="${corpo}"`,
+      `[FALHA] ${this.currentTest?.title}\n  rota=${rota}\n  erros=${erros}\n  vfx=\n    ${vfx || "(nenhum)"}\n  corpo="${corpo}"`,
       { log: false },
     );
   });
