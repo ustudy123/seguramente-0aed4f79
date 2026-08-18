@@ -71,6 +71,11 @@ const EMPRESAS_CONSOLIDADO_LIBERADO = new Set<string>([
 export function PsicossocialDashboard() {
   const [showAssistente, setShowAssistente] = useState(false);
    const [showForm, setShowForm] = useState(false);
+  // Instrumento escolhido no assistente aguardando a abertura do formulário.
+  // O formulário só abre DEPOIS que o assistente saiu da árvore (ver efeito
+  // abaixo) — nunca no mesmo tick — para os dois Radix Dialogs jamais
+  // coexistirem no DOM.
+  const [instrumentoPendente, setInstrumentoPendente] = useState<string | null>(null);
   const [showDashboardAvancado, setShowDashboardAvancado] = useState(false);
   const [campanhaParaEditar, setCampanhaParaEditar] = useState<CampanhaPsicossocial | undefined>();
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
@@ -156,9 +161,28 @@ export function PsicossocialDashboard() {
 
   const handleAssistenteSelect = (instrumento: string, _manual: boolean) => {
     setInstrumentoPreSelecionado(instrumento);
+    // Handoff assistente → formulário SEM sobreposição de diálogos.
+    // Antes: fechar o assistente e abrir o formulário no MESMO tick. Como o
+    // assistente é montado condicionalmente (some da árvore ao fechar, sem a
+    // animação de saída do Radix/framer o segurando), basta guardar o
+    // instrumento e fechar o assistente aqui. O efeito abaixo abre o formulário
+    // só quando o assistente já saiu — dois commits, nunca dois Dialogs juntos.
+    // Era essa coexistência (disputa de foco/scroll-lock entre dois Radix
+    // Dialogs) que deixava o formulário "montado mas não visível" e derrubava
+    // TC-01/03/04/17/35/43. Timer não resolvia: a animação de saída do
+    // assistente durava mais que o atraso e a sobreposição voltava.
+    setInstrumentoPendente(instrumento);
     setShowAssistente(false);
-    setShowForm(true);
   };
+
+  // Abre o formulário assim que o assistente deixa a árvore (showAssistente
+  // false) havendo um instrumento pendente. Sequencia o handoff sem timer.
+  useEffect(() => {
+    if (!showAssistente && instrumentoPendente) {
+      setInstrumentoPendente(null);
+      setShowForm(true);
+    }
+  }, [showAssistente, instrumentoPendente]);
 
   const totalCampanhas = campanhas.length;
   const campanhasEncerradas = campanhas.filter(c => c.status === 'encerrada').length;
@@ -227,11 +251,16 @@ export function PsicossocialDashboard() {
         </div>
         <OnboardingEmptyState onNovaCampanha={handleNovaCampanha} />
 
-        <AssistenteSelecaoInstrumento
-          open={showAssistente}
-          onOpenChange={setShowAssistente}
-          onSelectInstrumento={handleAssistenteSelect}
-        />
+        {/* Montado condicionalmente: ao fechar, sai da árvore de imediato em
+            vez de ficar no DOM pela animação de saída — evita coexistir com o
+            formulário durante o handoff. */}
+        {showAssistente && (
+          <AssistenteSelecaoInstrumento
+            open={showAssistente}
+            onOpenChange={setShowAssistente}
+            onSelectInstrumento={handleAssistenteSelect}
+          />
+        )}
         <CampanhaForm
           open={showForm}
           onOpenChange={setShowForm}
@@ -517,11 +546,16 @@ export function PsicossocialDashboard() {
         </Tabs>
 
         {/* Assistente de Seleção */}
-        <AssistenteSelecaoInstrumento
-          open={showAssistente}
-          onOpenChange={setShowAssistente}
-          onSelectInstrumento={handleAssistenteSelect}
-        />
+        {/* Montado condicionalmente: ao fechar, sai da árvore de imediato em
+            vez de ficar no DOM pela animação de saída — evita coexistir com o
+            formulário durante o handoff. */}
+        {showAssistente && (
+          <AssistenteSelecaoInstrumento
+            open={showAssistente}
+            onOpenChange={setShowAssistente}
+            onSelectInstrumento={handleAssistenteSelect}
+          />
+        )}
 
         {/* Modal de Nova Campanha / Edição */}
         <CampanhaForm
