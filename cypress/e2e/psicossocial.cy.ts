@@ -282,47 +282,6 @@ describe("Módulo Psicossocial NR-01", () => {
     reabrirSePreciso("#btn-nova-campanha, #btn-criar-campanha", "#btn-escolher-instrumento-manualmente");
   }
 
-  // DIAGNÓSTICO TEMPORÁRIO do handoff assistente→formulário. Despeja no log do
-  // CI (via task "diag") o estado do DOM logo após clicar "Escolher
-  // manualmente": quantos diálogos, data-state de cada um, se o input de nome
-  // existe e seu display/visibility/tamanho, se o botão do assistente ainda
-  // está na tela, e o marcador de versão do bundle (para descartar staleness).
-  function dumpHandoffState(label: string) {
-    cy.document({ log: false }).then((doc) => {
-      try {
-        const win = doc.defaultView as unknown as Window;
-        const cs = (el: Element) => win.getComputedStyle(el as Element);
-        const dialogs = Array.from(doc.querySelectorAll('[role="dialog"]')).map((d, i) => {
-          const st = cs(d);
-          const he = d as HTMLElement;
-          return `#${i} state=${d.getAttribute("data-state")} ariaHidden=${d.getAttribute("aria-hidden")} display=${st.display} vis=${st.visibility} opacity=${st.opacity} w=${he.offsetWidth} h=${he.offsetHeight} txt="${(d.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40)}"`;
-        });
-        const inp = doc.querySelector("#input-campanha-nome") as HTMLElement | null;
-        let inpInfo = "AUSENTE";
-        if (inp) {
-          const st = cs(inp);
-          const dlg = inp.closest('[role="dialog"]');
-          inpInfo = `existe display=${st.display} vis=${st.visibility} w=${inp.offsetWidth} h=${inp.offsetHeight} dlgState=${dlg?.getAttribute("data-state")}`;
-        }
-        const marker = doc.querySelector('[data-fix-marker="handoff-v2"]') ? "PRESENTE(bundle novo)" : "AUSENTE(bundle antigo?)";
-        const btnManual = doc.querySelector("#btn-escolher-instrumento-manualmente") ? "PRESENTE(assistente ainda aberto)" : "ausente";
-        const btnNova = doc.querySelector("#btn-nova-campanha, #btn-criar-campanha") ? "presente" : "ausente";
-        const bodyPE = cs(doc.body).pointerEvents;
-        const ariaHidden = doc.querySelectorAll('[aria-hidden="true"]').length;
-        const spinner = doc.querySelectorAll(".animate-spin").length;
-        cy.task(
-          "diag",
-          `HANDOFF[${label}] marker=${marker} spinner=${spinner} dialogs=${dialogs.length} :: ${dialogs.join(" | ")}\n` +
-            `  input-nome: ${inpInfo}\n` +
-            `  btnManual=${btnManual} btnNovaCampanha=${btnNova} bodyPointerEvents=${bodyPE} ariaHiddenTrue=${ariaHidden}`,
-          { log: false },
-        );
-      } catch (e) {
-        cy.task("diag", `HANDOFF[${label}] erro no diagnóstico: ${(e as Error).message}`, { log: false });
-      }
-    });
-  }
-
   function selecionarInstrumentoNoAssistente() {
     // Clica "escolher instrumento manualmente" (handoff assistente→formulário)
     // e espera o formulário. NÃO reabrimos em laço: comprovado (corrida #185)
@@ -334,18 +293,6 @@ describe("Módulo Psicossocial NR-01", () => {
       .filter(":visible")
       .first()
       .click({ force: true });
-    // DIAGNÓSTICO TEMPORÁRIO: retratos do DOM ao longo da janela em que o
-    // formulário abre e depois some (cobre até ~15s).
-    cy.wait(800);
-    dumpHandoffState("t+800ms");
-    cy.wait(2500);
-    dumpHandoffState("t+3300ms");
-    cy.wait(2700);
-    dumpHandoffState("t+6000ms");
-    cy.wait(4000);
-    dumpHandoffState("t+10000ms");
-    cy.wait(5000);
-    dumpHandoffState("t+15000ms");
     waitForCampanhaForm();
   }
 
