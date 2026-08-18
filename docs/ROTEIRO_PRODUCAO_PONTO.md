@@ -44,6 +44,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 5 | Onda 1 (parte 2) — vínculo/empresa na chave | `docs/script_ponto_onda1_vinculo_na_chave.sql` | **#3** | ⏳ | ⬜ |
 | 6 | Onda 1 (parte 3) — versionamento + memória de cálculo | `docs/script_ponto_onda1_versionamento_e_memoria.sql` | — | ⏳ | ⬜ |
 | 7 | Onda 3 (parte 1) — tolerância cumulativa dos dois tetos legais | `docs/script_ponto_onda3_tolerancia.sql` | — | ⏳ | ⬜ |
+| 8 | Onda 3 (parte 2) — jornada da escala + hora extra sem truncar | `docs/script_ponto_onda3_jornada_escala_he.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -147,6 +148,27 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   aplicado** — é o comportamento seguro, me avise para reconciliarmos.
 - **Sem backfill** — muda só a leitura/apuração, não grava nada em massa.
 
+### 8 · Onda 3 (parte 2) — jornada da escala + hora extra sem truncar
+- **Arquivo:** `docs/script_ponto_onda3_jornada_escala_he.sql`
+- **O que faz:** na função de cálculo de hora extra e adicional noturno,
+  (a) a jornada esperada do dia passa a vir da **escala vigente do vínculo**
+  (respeitando o versionamento da onda 1), em vez das 8h fixas — assim a hora
+  extra de quem tem jornada contratual menor deixa de ser apagada (CLT art. 58;
+  CF art. 7º, XIII); (b) remove o corte que truncava a hora extra em 2h — apura
+  **todo** o tempo trabalhado além da jornada (continua devido, art. 59) e
+  **sinaliza** o excesso ao RH com um alerta (um por colaborador/dia).
+- **Muda o cálculo de HE** (na bateria só PONTO-091 e PONTO-092 passaram a
+  passar; PONTO-110/111 do adicional noturno seguem idênticos — regressão zero).
+- **`CREATE OR REPLACE` limpo** (esta função tem definição única, sem remendos
+  próprios de produção) — seguro e idempotente.
+- **Conferência esperada:** `t | t | t | OK` — lê a jornada da escala, não trunca
+  mais em 2h, e sinaliza o excesso.
+- **Observação:** esta função de cálculo **ainda não é consumida pelo fluxo vivo
+  de apuração** (nenhuma tela/gatilho a chama hoje). A correção deixa o cálculo
+  certo para quando ele for ligado — por si só não muda os números que já
+  aparecem hoje. Ligar o cálculo ao fluxo é passo à parte, de uma onda adiante.
+- **Sem backfill.**
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -184,9 +206,10 @@ com seu pacote. A ordem prevista:
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
   versionamento da onda 1 no lugar.* **Em andamento**, entregue em partes:
-  parte 1 (tolerância, pacote #7) pronta no teste; faltam a jornada da escala +
-  hora extra sem truncar, o turno da virada e o adicional noturno prorrogado.
-  O regime rural (PONTO-113) fica como evolução condicional a cliente do agro.
+  parte 1 (tolerância, pacote #7) e parte 2 (jornada da escala + hora extra sem
+  truncar, pacote #8) prontas no teste; faltam o turno da virada e o adicional
+  noturno prorrogado. O regime rural (PONTO-113) fica como evolução condicional
+  a cliente do agro.
 - **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
   enquadramento e prevenção.
 
