@@ -27,7 +27,12 @@ SET LOCAL lock_timeout = '10s';
 
 -- ---------------------------------------------------------------------------
 -- PONTO-396 — Colaborador comum lê apenas o próprio ponto
--- LGPD arts. 6º e 46. Mesmo portão já usado em 20 tabelas sensíveis
+-- LGPD arts. 6º e 46. Vale para as duas tabelas com dado sensível nominal:
+-- as batidas (com geolocalização e selfie) e os espelhos. NÃO alcança
+-- ponto_diario, que é lida de forma agregada por telas de outros módulos
+-- (contraprova do psicossocial, Hub Contábil) — restringi-la faria esses
+-- indicadores somarem só os dias do próprio leitor, errando em silêncio.
+-- Mesmo portão já usado em 20 tabelas sensíveis
 -- (saúde, férias, psicossocial): perfil_permite_modulo libera superadmin,
 -- papel de gestão para cima, tipo administrador/gestor e perfil de escopo
 -- amplo. Quem não passa cai no próprio CPF.
@@ -36,7 +41,7 @@ DO $ponto396$
 DECLARE
   v_tabela text;
 BEGIN
-  FOREACH v_tabela IN ARRAY ARRAY['ponto_marcacoes', 'ponto_espelhos', 'ponto_diario'] LOOP
+  FOREACH v_tabela IN ARRAY ARRAY['ponto_marcacoes', 'ponto_espelhos'] LOOP
     BEGIN
       IF to_regclass('public.' || v_tabela) IS NULL THEN
         RAISE NOTICE 'Tabela % nao existe: politica ignorada.', v_tabela;
@@ -223,7 +228,7 @@ END $ponto270$;
 
 -- ============================================================================
 -- CONFERÊNCIA — o SQL Editor mostra apenas o último resultado.
--- Esperado: 3 políticas, 4 gatilhos, situacao = 'OK'.
+-- Esperado: 2 políticas, 4 gatilhos, situacao = 'OK'.
 -- As três últimas colunas devem idealmente ser 0. Se vierem acima de zero,
 -- são cadastros ANTIGOS fora da faixa legal: continuam funcionando, mas
 -- produzem apuração irregular e precisam de correção manual na tela.
@@ -232,8 +237,7 @@ SELECT
   (SELECT count(*) FROM pg_policies
     WHERE schemaname = 'public'
       AND policyname IN ('perfil_restringe_leitura_ponto_marcacoes',
-                         'perfil_restringe_leitura_ponto_espelhos',
-                         'perfil_restringe_leitura_ponto_diario'))                AS politicas_de_leitura,
+                         'perfil_restringe_leitura_ponto_espelhos'))              AS politicas_de_leitura,
 
   (SELECT count(*) FROM pg_trigger
     WHERE NOT tgisinternal
@@ -257,8 +261,7 @@ SELECT
     WHEN (SELECT count(*) FROM pg_policies
            WHERE schemaname = 'public'
              AND policyname IN ('perfil_restringe_leitura_ponto_marcacoes',
-                                'perfil_restringe_leitura_ponto_espelhos',
-                                'perfil_restringe_leitura_ponto_diario')) < 3
+                                'perfil_restringe_leitura_ponto_espelhos')) < 2
       THEN 'ERRO: faltou politica de leitura — a exposicao de dados segue aberta'
     WHEN (SELECT count(*) FROM pg_trigger
            WHERE NOT tgisinternal
