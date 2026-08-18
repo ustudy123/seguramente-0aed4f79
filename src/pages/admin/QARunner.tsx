@@ -18,6 +18,8 @@ import {
   type QaSituacao, type QaBateria, type QaModuloTestavel, type QaDiaAgenda,
 } from "@/hooks/useQaRunner";
 import { gerarPDF, gerarCSV, abrirImprimivel } from "@/lib/qaRelatorio";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ── aparência de cada situação ──────────────────────────
 const SITUACAO: Record<
@@ -470,32 +472,92 @@ function PainelCypress({
   modulos: QaModuloTestavel[];
   carregando: boolean;
 }) {
+  const [disparando, setDisparando] = useState(false);
+
+  // Pede à esteira para rodar a suíte Cypress agora. O navegador não roda
+  // Cypress; a Edge Function qa-disparar-cypress aciona o workflow no GitHub
+  // Actions (o token do GitHub fica só no servidor). Só superadmin dispara.
+  const rodarCypress = async () => {
+    setDisparando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("qa-disparar-cypress");
+      if (error) {
+        // A função devolve a causa no corpo (401/403/503/502); o error.message
+        // do supabase-js é genérico, então tentamos ler o corpo da resposta.
+        let msg = error.message;
+        const ctx = (error as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const body = await ctx.json();
+            if (body?.error) msg = body.error;
+          } catch {
+            /* mantém msg genérica */
+          }
+        }
+        toast.error("Não deu para disparar os testes", { description: msg });
+        return;
+      }
+      toast.success("Corrida disparada", {
+        description:
+          (data as { mensagem?: string })?.mensagem ??
+          "Ela aparece na esteira em instantes; o resultado volta para esta aba.",
+      });
+    } catch (e) {
+      toast.error("Não deu para disparar os testes", {
+        description: (e as Error).message,
+      });
+    } finally {
+      setDisparando(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="pt-6 space-y-2 text-sm">
+        <CardContent className="pt-6 space-y-3 text-sm">
           <div className="flex items-start gap-2">
             <MonitorPlay className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
             <div className="space-y-1">
               <p className="font-medium">Testes de tela (Cypress)</p>
               <p className="text-muted-foreground">
                 Estes testes abrem o site de teste num navegador de verdade e
-                clicam nas telas. Por isso <strong>não rodam a partir daqui</strong>:
-                eles rodam sozinhos na esteira, a cada mudança publicada no
-                ambiente de teste. Esta aba mostra o resultado de cada corrida —
-                o que passou e o que falhou, teste a teste.
+                clicam nas telas. Eles rodam na esteira (não no seu navegador):
+                o botão abaixo pede à esteira para rodar a suíte agora, contra o
+                site de teste como está publicado. Esta aba mostra o resultado de
+                cada corrida — o que passou e o que falhou, teste a teste.
               </p>
             </div>
           </div>
-          <a
-            href="https://github.com/ustudy123/seguramente-0aed4f79/actions/workflows/staging.yml"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-          >
-            <ExternalLink className="h-3 w-3" />
-            Acompanhar as corridas na esteira (prints e vídeos das falhas)
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              id="btn-rodar-cypress"
+              size="sm"
+              onClick={rodarCypress}
+              disabled={disparando}
+              className="gap-2"
+            >
+              {disparando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              {disparando ? "Disparando..." : "Rodar testes"}
+            </Button>
+            <a
+              href="https://github.com/ustudy123/seguramente-0aed4f79/actions/workflows/cypress.yml"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Acompanhar as corridas na esteira (prints e vídeos das falhas)
+            </a>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A corrida leva ~10 min e testa o site de teste como está publicado
+            agora; para checar mudanças novas, publique antes. O resultado
+            aparece aqui em “Corridas” quando terminar.
+          </p>
         </CardContent>
       </Card>
 
