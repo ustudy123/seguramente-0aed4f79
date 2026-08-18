@@ -46,6 +46,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 7 | Onda 3 (parte 1) — tolerância cumulativa dos dois tetos legais | `docs/script_ponto_onda3_tolerancia.sql` | — | ⏳ | ⬜ |
 | 8 | Onda 3 (parte 2) — jornada da escala + hora extra sem truncar | `docs/script_ponto_onda3_jornada_escala_he.sql` | — | ⏳ | ⬜ |
 | 9 | Onda 3 (parte 3) — adicional noturno prorrogado (Súmula 60, II) | `docs/script_ponto_onda3_adicional_noturno_prorrogado.sql` | inclui #8 | ⏳ | ⬜ |
+| 10 | Onda 3 (parte 4) — turno da virada pertence ao dia de início | `docs/script_ponto_onda3_turno_da_virada.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -189,6 +190,23 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Mesma observação de escopo:** a função ainda não é consumida pelo fluxo vivo
   de apuração. **Sem backfill.**
 
+### 10 · Onda 3 (parte 4) — turno da virada pertence ao dia de início
+- **Arquivo:** `docs/script_ponto_onda3_turno_da_virada.sql`
+- **O que faz:** a jornada que cruza a meia-noite (ex.: entrada 22:00, saída
+  06:00 do dia seguinte, lançadas no dia de início) passa a pertencer inteira ao
+  dia em que começou — 8h no dia de início, **sem falta fictícia** no dia
+  seguinte. A reordenação de rótulos e a consolidação diária passam a ler as
+  batidas em ordem **cíclica** (o turno começa logo após o maior vão do dia),
+  reconhecendo a virada. **Nenhum horário é alterado** — muda só a ordem de
+  leitura das batidas.
+- **Cria uma função nova** (`ponto_corte_virada`) usada pelas duas.
+- **`CREATE OR REPLACE` limpo** (sem remendos próprios de produção) — idempotente.
+- **Conferência esperada:** `t | t | t | OK` — corte criado, reordenação e
+  consolidação lendo em ordem cíclica.
+- **Na bateria** só PONTO-022 passou a passar; dias comuns não mudaram
+  (regressão zero em 120 casos).
+- **Sem backfill.**
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -225,11 +243,11 @@ com seu pacote. A ordem prevista:
   hash, competência fechada). *Mexe em tela — vai exigir Publicar no Lovable.*
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
-  versionamento da onda 1 no lugar.* **Em andamento**, entregue em partes:
-  partes 1 (tolerância, #7), 2 (jornada da escala + hora extra sem truncar, #8)
-  e 3 (adicional noturno prorrogado, #9) prontas no teste; falta o turno da
-  virada (PONTO-022). O regime rural (PONTO-113) fica como evolução condicional
-  a cliente do agro.
+  versionamento da onda 1 no lugar.* **Concluída no teste**, entregue em quatro
+  partes: 1 (tolerância, #7), 2 (jornada da escala + hora extra sem truncar,
+  #8), 3 (adicional noturno prorrogado, #9) e 4 (turno da virada, #10). Sete
+  casos da bateria passaram a passar, regressão zero. O regime rural
+  (PONTO-113) fica como evolução condicional a cliente do agro.
 - **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
   enquadramento e prevenção.
 
