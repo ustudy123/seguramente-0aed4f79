@@ -43,6 +43,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 4 | Onda 1 (parte 1) — preenchimento histórico do NSR | `docs/script_ponto210_backfill_nsr.sql` | **#3** | ⏳ | ⬜ |
 | 5 | Onda 1 (parte 2) — vínculo/empresa na chave | `docs/script_ponto_onda1_vinculo_na_chave.sql` | **#3** | ⏳ | ⬜ |
 | 6 | Onda 1 (parte 3) — versionamento + memória de cálculo | `docs/script_ponto_onda1_versionamento_e_memoria.sql` | — | ⏳ | ⬜ |
+| 7 | Onda 3 (parte 1) — tolerância cumulativa dos dois tetos legais | `docs/script_ponto_onda3_tolerancia.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -124,6 +125,28 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 
 ---
 
+### 7 · Onda 3 (parte 1) — tolerância cumulativa dos dois tetos legais
+- **Arquivo:** `docs/script_ponto_onda3_tolerancia.sql`
+- **O que faz:** a apuração passa a aplicar os dois tetos de tolerância do
+  art. 58, §1º da CLT (Súmula 366 do TST) de forma cumulativa: o
+  atraso/antecipação é absorvido só até **5 minutos por marcação**; a sobra no
+  dia mantém o teto de **10 minutos diários**. Estourou qualquer um, computa-se
+  a totalidade que excede a jornada — não só o que passou da tolerância. Corrige
+  também o padrão de encaixe de batida (era 10 por marcação, o dobro do legal).
+- **Muda o cálculo de saldo** (é a onda do dinheiro) — mas de forma provada:
+  na bateria do teste, só PONTO-041, PONTO-042 e PONTO-352 passaram a passar, e
+  **nenhum outro caso mudou** (regressão zero).
+- **Este script é cirúrgico, não cola o corpo inteiro.** O corpo desta função,
+  em produção, foi remendado à mão no passado e não bate com o repositório. O
+  script lê o corpo vivo em produção e troca **apenas** os trechos de
+  tolerância. Se o corpo tiver sido remendado também nessas linhas, ele **não
+  altera nada e avisa** — aí me mande o corpo atual que eu reconcilio antes.
+- **Conferência esperada:** `t | t | t | OK` — marcador aplicado, padrão de 5
+  por marcação no lugar, e o padrão antigo de 10 removido.
+- **Atenção:** se a conferência vier `PENDENTE`, o corpo divergiu e **nada foi
+  aplicado** — é o comportamento seguro, me avise para reconciliarmos.
+- **Sem backfill** — muda só a leitura/apuração, não grava nada em massa.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -160,7 +183,10 @@ com seu pacote. A ordem prevista:
   hash, competência fechada). *Mexe em tela — vai exigir Publicar no Lovable.*
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
-  versionamento da onda 1 no lugar.*
+  versionamento da onda 1 no lugar.* **Em andamento**, entregue em partes:
+  parte 1 (tolerância, pacote #7) pronta no teste; faltam a jornada da escala +
+  hora extra sem truncar, o turno da virada e o adicional noturno prorrogado.
+  O regime rural (PONTO-113) fica como evolução condicional a cliente do agro.
 - **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
   enquadramento e prevenção.
 
