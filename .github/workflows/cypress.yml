@@ -1,0 +1,103 @@
+# =====================================================================
+# Testes de tela (Cypress) sob demanda — YourEyes
+#
+# Roda SÓ a suíte Cypress contra o site de teste JÁ publicado
+# (https://ustudy123.github.io/seguramente-0aed4f79/) — não aplica
+# migrations, não reimplanta functions e não republica o site. É a corrida
+# rápida (~10 min) acionada pelo botão "Rodar testes" do painel de QA
+# (/admin/qa/runner, aba Cypress), via a Edge Function qa-disparar-cypress.
+#
+# workflow_dispatch: pode ser disparado pela API do GitHub (o botão) e
+# também pelo próprio GitHub (Actions > cypress > Run workflow).
+#
+# Testa o código da ÚLTIMA publicação na main (é o que está no ar no site de
+# teste). Para testar código novo, é preciso publicar antes (merge na main,
+# que dispara a esteira staging.yml completa).
+#
+# A conta-robô tem valor padrão em cypress.config.ts, então roda sem depender
+# de secret; CYPRESS_EMAIL/PASSWORD, se existirem, têm precedência.
+# =====================================================================
+name: cypress
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cypress
+  cancel-in-progress: false
+
+jobs:
+  telas:
+    name: Testes de tela (Cypress) no staging
+    runs-on: ubuntu-latest
+    env:
+      CYPRESS_BASE_URL: https://ustudy123.github.io/seguramente-0aed4f79/
+      CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
+      CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+      # Caminho de volta do resultado para o painel de QA. Mesmo token dos dois
+      # lados (secret aqui e QA_E2E_TOKEN na Edge Function do staging). Faltando
+      # qualquer um, a suíte roda igual e só não reporta — nunca quebra por isso.
+      QA_E2E_URL: https://bmehdgthciuvdbvutsdv.supabase.co/functions/v1/qa-registrar-e2e
+      QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN }}
+      QA_E2E_ORIGEM: botão Rodar testes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Cache do binário do Cypress
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Instalar dependências
+        run: npm ci
+      - name: Esperar o site de teste responder
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS -o /dev/null "$CYPRESS_BASE_URL"; then
+              echo "Site de teste no ar."; exit 0
+            fi
+            echo "Ainda não respondeu (tentativa $i); aguardando 15s..."
+            sleep 15
+          done
+          echo "::error::Site de teste não respondeu a tempo."
+          exit 1
+      - name: Semear a conta-robô no staging
+        # A suíte loga com uma conta fixa (padrão em cypress.config.ts). Se ela
+        # não existir no banco de teste, o login falha e TODOS os specs caem no
+        # beforeEach. Este passo garante a conta antes de rodar.
+        env:
+          SEED_URL: https://bmehdgthciuvdbvutsdv.supabase.co/functions/v1/seed-e2e-user
+          QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN }}
+        run: |
+          if [ -z "$QA_E2E_TOKEN" ]; then
+            echo "::warning::QA_E2E_TOKEN ausente — conta-robô não semeada. Se a suíte falhar no login, é isto."
+            exit 0
+          fi
+          EMAIL="${CYPRESS_EMAIL:-teste@lucas.com}"
+          SENHA="${CYPRESS_PASSWORD:-7654321}"
+          E="$EMAIL" S="$SENHA" python3 -c 'import json,os;open("/tmp/seed.json","w").write(json.dumps({"email":os.environ["E"],"senha":os.environ["S"]}))'
+          echo "Corpo do seed: $(cat /tmp/seed.json)"
+          CODE=$(curl -sS -o /tmp/seed.out -w "%{http_code}" -X POST "$SEED_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-qa-token: $QA_E2E_TOKEN" \
+            --data-binary @/tmp/seed.json)
+          echo "Resposta do seed (HTTP $CODE): $(cat /tmp/seed.out)"
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
+            echo "::error::Falha ao semear a conta-robô (HTTP $CODE) — a suíte iria falhar no login."
+            exit 1
+          fi
+      - name: Rodar a suíte
+        run: npm run test:e2e
+      - name: Guardar prints e vídeos da corrida
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-evidencias
+          path: |
+            cypress/screenshots
+            cypress/videos
+          if-no-files-found: ignore
+          retention-days: 7
