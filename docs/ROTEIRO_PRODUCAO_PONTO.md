@@ -45,6 +45,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 6 | Onda 1 (parte 3) — versionamento + memória de cálculo | `docs/script_ponto_onda1_versionamento_e_memoria.sql` | — | ⏳ | ⬜ |
 | 7 | Onda 3 (parte 1) — tolerância cumulativa dos dois tetos legais | `docs/script_ponto_onda3_tolerancia.sql` | — | ⏳ | ⬜ |
 | 8 | Onda 3 (parte 2) — jornada da escala + hora extra sem truncar | `docs/script_ponto_onda3_jornada_escala_he.sql` | — | ⏳ | ⬜ |
+| 9 | Onda 3 (parte 3) — adicional noturno prorrogado (Súmula 60, II) | `docs/script_ponto_onda3_adicional_noturno_prorrogado.sql` | inclui #8 | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -169,6 +170,25 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   aparecem hoje. Ligar o cálculo ao fluxo é passo à parte, de uma onda adiante.
 - **Sem backfill.**
 
+### 9 · Onda 3 (parte 3) — adicional noturno prorrogado (Súmula 60, II do TST)
+- **Arquivo:** `docs/script_ponto_onda3_adicional_noturno_prorrogado.sql`
+- **O que faz:** quando a jornada é cumprida integralmente no período noturno
+  (entrada até as 22h, cobrindo toda a janela 22h–05h) e **prorrogada** além das
+  05h, o adicional noturno acompanha as horas prorrogadas — em vez de cessar em
+  05:00 fixo (Súmula 60, II do TST). A parte noturna mantém a hora ficta; as
+  horas prorrogadas entram pelo tempo real (critério conservador, porque aplicar
+  a ficta à prorrogação é controvertido — registrado no comentário da função).
+- **Este pacote INCLUI o #8.** É a mesma função da parte 2: o corpo aqui já traz
+  a jornada da escala e a hora extra sem truncar. Rodar o #8 antes é inofensivo
+  (o #9 o substitui com o corpo final); rodar só o #9 também fica completo.
+- **`CREATE OR REPLACE` limpo** (definição única, sem remendos) — idempotente.
+- **Conferência esperada:** `t | t | t | t | OK` — jornada da escala, sem corte
+  em 2h, alerta do art. 59 e prorrogação do adicional, todos presentes.
+- **Na bateria** só PONTO-112 passou a passar; PONTO-110/111 (janela e ficta)
+  seguem idênticos — regressão zero.
+- **Mesma observação de escopo:** a função ainda não é consumida pelo fluxo vivo
+  de apuração. **Sem backfill.**
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -206,9 +226,9 @@ com seu pacote. A ordem prevista:
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
   versionamento da onda 1 no lugar.* **Em andamento**, entregue em partes:
-  parte 1 (tolerância, pacote #7) e parte 2 (jornada da escala + hora extra sem
-  truncar, pacote #8) prontas no teste; faltam o turno da virada e o adicional
-  noturno prorrogado. O regime rural (PONTO-113) fica como evolução condicional
+  partes 1 (tolerância, #7), 2 (jornada da escala + hora extra sem truncar, #8)
+  e 3 (adicional noturno prorrogado, #9) prontas no teste; falta o turno da
+  virada (PONTO-022). O regime rural (PONTO-113) fica como evolução condicional
   a cliente do agro.
 - **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
   enquadramento e prevenção.
