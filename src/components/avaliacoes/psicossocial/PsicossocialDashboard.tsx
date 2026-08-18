@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -76,6 +76,9 @@ export function PsicossocialDashboard() {
   // abaixo) — nunca no mesmo tick — para os dois Radix Dialogs jamais
   // coexistirem no DOM.
   const [instrumentoPendente, setInstrumentoPendente] = useState<string | null>(null);
+  // Trava do spinner: vira true no 1º carregamento e nunca mais volta (ver o
+  // early-return do spinner abaixo — refetch não pode desmontar a tela).
+  const jaCarregouCampanhasRef = useRef(false);
   const [showDashboardAvancado, setShowDashboardAvancado] = useState(false);
   const [campanhaParaEditar, setCampanhaParaEditar] = useState<CampanhaPsicossocial | undefined>();
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
@@ -228,7 +231,15 @@ export function PsicossocialDashboard() {
     : null;
   const ipsClassificacao: IPSClassificacao | null = ipsConsolidado != null ? calcularIPSClassificacao(ipsConsolidado) : null;
 
-  if (isLoadingCampanhas) {
+  // O spinner de carregamento só pode aparecer no PRIMEIRO carregamento. Depois
+  // que as campanhas carregam uma vez, isLoadingCampanhas pode voltar a true
+  // numa troca de queryKey (empresa/tenant assentando, refetch) — e o
+  // early-return abaixo DESMONTAVA todo o dashboard, inclusive um diálogo
+  // aberto (era o que fechava o formulário de "Nova Campanha" segundos depois
+  // de abrir). Trancando o spinner ao 1º load, um refetch nunca mais desmonta a
+  // tela: mostra os dados que já tem e recarrega por baixo.
+  if (!isLoadingCampanhas) jaCarregouCampanhasRef.current = true;
+  if (isLoadingCampanhas && !jaCarregouCampanhasRef.current) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
