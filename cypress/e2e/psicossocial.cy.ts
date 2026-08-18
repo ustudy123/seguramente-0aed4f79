@@ -206,13 +206,17 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function waitForCampanhaForm() {
-    // Espera o formulário abrir DE FATO (input de nome visível). Seletor
-    // :visible direto no cy.get, que é retentável e não quebra quando o input
-    // ainda não existe (o .filter estourava "requires a DOM element"). Sob
-    // "Sincronizando empresas" pode haver dois #input-campanha-nome (um de
-    // fundo, oculto); o :visible pega o certo.
-    cy.get("#input-campanha-nome:visible", { timeout: 20000 }).first().should("be.visible");
-    cy.get("#input-campanha-nome:visible").first().scrollIntoView();
+    // O formulário abre num diálogo com `overflow-y-auto` e o campo Nome fica
+    // ABAIXO da dobra (vem depois de tipo/periodicidade/modalidade/instrumento).
+    // O Cypress considera "não visível" um elemento fora da área visível de um
+    // container com overflow — por isso "#input-campanha-nome:visible" NUNCA
+    // casava, mesmo com o formulário aberto e o input no DOM (a sonda de falha
+    // mostrava estado=spinner=0 dialogs=1 input-campanha-nome=existe h=40).
+    // Basta esperar o input EXISTIR (só existe quando o diálogo está aberto) e
+    // rolar até ele; a visibilidade é conferida no preenchimento (preencherCampo
+    // já faz scrollIntoView + should("be.visible")).
+    cy.get("#input-campanha-nome", { timeout: 20000 }).should("exist");
+    cy.get("#input-campanha-nome").first().scrollIntoView();
   }
 
   function preencherDatasCampanha(inicio: string, fim: string) {
