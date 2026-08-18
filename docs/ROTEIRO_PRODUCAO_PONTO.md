@@ -1,0 +1,168 @@
+# Roteiro de produção — módulo Ponto
+
+Este documento é a **lista mestra** dos pacotes SQL que precisam ser colados,
+**em ordem**, no SQL Editor do banco de **produção** (projeto
+`diayjpsrcerycycyaxst`) quando a implantação do módulo Ponto for aprovada.
+
+Ele existe para que, ao final de tudo, **nenhum passo se perca e nenhuma
+sequência se inverta**. É um documento vivo: cada onda nova entra aqui assim
+que é entregue no ambiente de teste.
+
+---
+
+## O princípio (não esquecer nunca)
+
+1. **Nada vai para produção antes de ser validado no ambiente de teste.**
+   Toda mudança nasce no teste (pela automação), é conferida por uma pessoa, e
+   **só então** o pacote correspondente é colado em produção.
+2. **A produção só muda por gesto manual seu.** A automação nunca toca o banco
+   real. Você cola o script no SQL Editor de produção — nada mais faz isso.
+3. **Ordem importa.** Rode os pacotes na numeração abaixo. Alguns dependem de
+   outro ter rodado antes (a coluna "Depende de" avisa).
+4. **Antes de colar qualquer coisa, confira o nome do projeto no topo da tela
+   do Supabase.** Ele abre sempre no último projeto usado. Tem que estar escrito
+   o projeto de **produção**.
+5. Todos os pacotes são **idempotentes**: rodar duas vezes não quebra nem
+   duplica. Se ficar na dúvida se rodou, rode de novo e olhe a conferência.
+
+---
+
+## Estado atual
+
+**Nenhum pacote foi aplicado em produção ainda.** Todos estão validados (ou em
+validação) apenas no ambiente de teste. Esta é a fila para quando você decidir
+implantar.
+
+Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no teste
+
+| # | Pacote | Arquivo | Depende de | Teste | Produção |
+|---|--------|---------|-----------|:-----:|:--------:|
+| 1 | PONTO-004 — marcação imutável + remove e-mail hardcoded | `docs/script_ponto004_imutabilidade.sql` | — | ⏳ | ⬜ |
+| 2 | Onda 0 — travas legais de risco aberto | `docs/script_ponto_onda0_travas_legais.sql` | — | ⏳ | ⬜ |
+| 3 | Onda 1 (parte 1) — NSR e histórico de lotação | `docs/script_ponto_onda1_nsr_e_lotacao.sql` | — | ⏳ | ⬜ |
+| 4 | Onda 1 (parte 1) — preenchimento histórico do NSR | `docs/script_ponto210_backfill_nsr.sql` | **#3** | ⏳ | ⬜ |
+| 5 | Onda 1 (parte 2) — vínculo/empresa na chave | `docs/script_ponto_onda1_vinculo_na_chave.sql` | **#3** | ⏳ | ⬜ |
+| 6 | Onda 1 (parte 3) — versionamento + memória de cálculo | `docs/script_ponto_onda1_versionamento_e_memoria.sql` | — | ⏳ | ⬜ |
+
+> Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
+> **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
+> pacote no banco real e a conferência der `OK`.
+
+---
+
+## Detalhe de cada pacote
+
+### 1 · PONTO-004 — marcação imutável + remoção do e-mail hardcoded
+- **Arquivo:** `docs/script_ponto004_imutabilidade.sql`
+- **O que faz:** impede que a marcação de ponto original seja apagada
+  diretamente por papel de gestão (a correção passa a ser por acréscimo) e
+  remove um e-mail real que estava fixo no código como exceção (backdoor + LGPD).
+- **Não altera cálculo de jornada.**
+- **Conferência esperada (última linha do resultado):** `true | true | true | 3 | OK`
+  — e-mail removido, marcação blindada, exclusão de ajustes preservada, 3
+  gatilhos de proteção, situação OK.
+
+### 2 · Onda 0 — travas legais de risco aberto
+- **Arquivo:** `docs/script_ponto_onda0_travas_legais.sql`
+- **O que faz:** seis travas de cadastro/acesso — colaborador comum passa a ler
+  só o próprio ponto (LGPD); marcação no futuro é recusada; tolerância acima do
+  teto legal, CCT abaixo do piso de intervalo e "registro por exceção" sem
+  acordo passam a ser recusados no cadastro; instala a trava de teste na tabela
+  que faltava.
+- **Não altera cálculo de jornada.**
+- **Conferência esperada:** `2 | 4 | 0 | 0 | 0 | OK` — 2 políticas de leitura, 4
+  gatilhos de validação, e **três zeros** de cadastros legados fora da faixa.
+- **Atenção:** se os três zeros **não** vierem zero, existem cadastros antigos
+  fora da faixa legal (tolerância/intervalo/exceção). Eles continuam
+  funcionando, mas produzem apuração irregular — me avise os números que eu
+  ajudo a tratar um a um.
+
+### 3 · Onda 1 (parte 1) — NSR e histórico de lotação
+- **Arquivo:** `docs/script_ponto_onda1_nsr_e_lotacao.sql`
+- **O que faz:** cria o NSR (numeração sequencial e imutável de cada marcação,
+  exigida pela Portaria 671) e o histórico de lotação por estabelecimento.
+  Estruturas novas ao lado do que já existe; **não altera cálculo.**
+- **Conferência esperada:** `t | t | t | t | t | t | OK`. A coluna
+  `marcacoes_sem_nsr` dá o tamanho do preenchimento histórico do passo 4.
+- **Depois deste, rode o passo 4.**
+
+### 4 · Onda 1 (parte 1) — preenchimento histórico do NSR
+- **Arquivo:** `docs/script_ponto210_backfill_nsr.sql`
+- **Rodar SOMENTE depois do #3.**
+- **O que faz:** dá NSR às marcações **antigas** (as novas já nascem com NSR).
+  É separado de propósito: cada atualização gera uma linha de auditoria, então
+  o preenchimento é feito **em lotes** de 20 mil, no seu ritmo.
+- **Como rodar:** cole e rode. A cada execução ele numera um lote e avisa quanto
+  falta (`Faltam: N`). **Repita até `Faltam: 0`.** É seguro parar e retomar.
+- **Conferência esperada ao terminar:** `faltam_nsr = 0` e situação `OK` (ou
+  `OK, com ressalva` se houver `orfas_sem_tenant` — ver abaixo).
+- **Atenção:** a coluna `orfas_sem_tenant` conta marcações que apontam para um
+  empregador que não existe mais. Elas ficam de fora de propósito e merecem
+  investigação à parte — me avise se vier acima de zero.
+
+### 5 · Onda 1 (parte 2) — vínculo/empresa na chave da apuração
+- **Arquivo:** `docs/script_ponto_onda1_vinculo_na_chave.sql`
+- **Depende do #3** (usa a mesma base estrutural).
+- **O que faz:** inclui a empresa na chave da apuração diária, para que dois
+  vínculos do mesmo trabalhador (duas empresas do grupo) tenham cada um a sua
+  linha. Para quem tem um vínculo só, o dia continua uma linha — **não altera
+  cálculo.** Um gatilho de reconciliação garante que nenhum dia de vínculo
+  único se parta.
+- **Conferência esperada:** `t | t | t | 5 | OK` — chave por vínculo, gatilho de
+  reconciliação, escritores sem o arbiter antigo, 5 escritores migrados, OK.
+- **Sem backfill** — o gatilho de reconciliação dispensa.
+
+### 6 · Onda 1 (parte 3) — versionamento de parâmetros + memória de cálculo
+- **Arquivo:** `docs/script_ponto_onda1_versionamento_e_memoria.sql`
+- **O que faz:** os parâmetros da escala passam a ser versionados por vigência
+  (editar a escala hoje deixa de reescrever a apuração de um mês passado) e cria
+  a memória de cálculo por competência (fonte + resultado). **A mudança é inerte
+  até alguém editar uma escala** — sem edição, a apuração sai idêntica à de hoje.
+- **Conferência esperada:** `t | t | 4 | t | OK` — tabela de versões, gatilho de
+  arquivamento, 4 leitores com o overlay, tabela de memória, OK.
+- **Sem backfill** — a tabela de versões nasce vazia.
+
+---
+
+## Regras gerais dos pacotes
+
+- **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
+  **olhe a última linha do resultado** (o editor só mostra o último) — ela é a
+  conferência. Só passe ao próximo quando ela der `OK`.
+- **Se a conferência não der `OK`,** pare e me mostre o resultado. Não siga
+  adiante.
+- **Nenhum destes pacotes exige "Publicar no Lovable".** Nenhum mexe em tela —
+  são todos de banco. O passo do Lovable só aparece quando uma onda mexer em
+  tela (a partir da onda 2, "desconsiderar em vez de apagar", e outras).
+
+---
+
+## O que NÃO faz parte deste roteiro
+
+Existem em `docs/` dois scripts de ponto de **trabalhos anteriores**, fora deste
+plano das ondas:
+
+- `docs/script_ponto_controle_por_empresa.sql`
+- `docs/script_ponto_correcoes_bateria_12ago.sql`
+
+**Não sei o estado de produção deles** (podem já ter sido aplicados por outra
+pessoa). Não os inclua nesta sequência sem confirmar com quem os escreveu — eles
+não pertencem à jornada das ondas 0/1.
+
+---
+
+## Próximas ondas (ainda não entregues)
+
+Conforme cada uma for entregue e validada no teste, ela entra na tabela acima
+com seu pacote. A ordem prevista:
+
+- **Onda 2** — registro imutável de verdade (correção por acréscimo, cadeia de
+  hash, competência fechada). *Mexe em tela — vai exigir Publicar no Lovable.*
+- **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
+  virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
+  versionamento da onda 1 no lugar.*
+- **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
+  enquadramento e prevenção.
+
+O plano completo, com o detalhe de cada onda, está no documento de planejamento
+(artefato "Ponto Redondo").
