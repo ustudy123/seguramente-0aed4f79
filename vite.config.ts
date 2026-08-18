@@ -28,4 +28,18 @@ export default defineConfig(({ mode }) => ({
       include: [/node_modules/],
     },
   },
+  define: {
+    "import.meta.env.VITE_APP_BUILD_TIME": JSON.stringify(new Date().toISOString()),
+    // Versão base vem do package.json (fonte única da verdade).
+    // Builds fora de produção ganham sufixo de pré-lançamento (SemVer),
+    // ex.: 1.0.0-homolog.20260817 — mesma base, origem inconfundível.
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(
+      (() => {
+        const base = process.env.npm_package_version || "1.0.0";
+        if (mode === "production") return base;
+        const carimbo = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        return `${base}-${mode === "staging" ? "homolog" : mode}.${carimbo}`;
+      })(),
+    ),
+  },
 }));
