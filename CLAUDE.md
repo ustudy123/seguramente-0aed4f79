@@ -95,6 +95,26 @@ nao_implementado | erro + `erro_tecnico`), executadas por
 (simulação por claims em transação). Ao mexer em área coberta, rode a bateria
 da família no staging e inclua-a na conferência do script de entrega.
 
+### Testes de tela (Cypress) — documentação vem antes do teste
+
+Regra da casa: **todo teste de tela nasce de um caso documentado**. A
+Documentação de testes (`qa_casos_teste`) é a fonte da verdade; cada caso tem
+`nivel` `'api'` (roda no motor SQL) ou `'e2e'` (roda no browser, via Cypress).
+O Cypress só implementa casos de nível `e2e` **já documentados** — nunca o
+contrário. Consequências práticas:
+- **Não invente teste de tela** sem um caso `e2e` documentado. Módulo sem
+  documentação `e2e` fica sem teste de tela (e sem problema).
+- Ao **documentar** casos `e2e` novos para um módulo, aí sim adicione os `it()`
+  correspondentes em `cypress/e2e/<modulo>.cy.ts`.
+- A ligação caso ↔ `it()` vive em `qa_cobertura_e2e (codigo, spec, teste)`, onde
+  `teste` é o **título exato** do `it()`. Renomear um `it()` sem atualizar a
+  ponte quebra a ligação.
+- **Guarda automática** (reprova a esteira): o passo `npm run qa:cobertura-e2e`
+  (`scripts/verificar-cobertura-e2e.mjs`) lê os casos `e2e` da função read-only
+  `qa-cobertura-e2e` (fechada por `QA_E2E_TOKEN`) e cruza com os `it()` reais.
+  Falha a corrida se houver `it()` sem caso documentado (inventado); avisa (sem
+  reprovar) sobre casos `e2e` documentados ainda sem teste e pontes quebradas.
+
 ## Como fechar uma entrega (obrigatório)
 
 Ao terminar qualquer implementação, encerre a resposta com:

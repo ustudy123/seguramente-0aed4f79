@@ -53,6 +53,13 @@ jobs:
           key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Instalar dependências
         run: npm ci
+      - name: Guarda — teste de tela só existe se documentado (nível e2e)
+        # Reprova a corrida se houver it() no Cypress sem caso documentado.
+        # Sem QA_E2E_TOKEN, a guarda se pula sozinha (não bloqueia).
+        env:
+          QA_COBERTURA_URL: https://bmehdgthciuvdbvutsdv.supabase.co/functions/v1/qa-cobertura-e2e
+          QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN }}
+        run: npm run qa:cobertura-e2e
       - name: Esperar o site de teste responder
         run: |
           for i in $(seq 1 20); do

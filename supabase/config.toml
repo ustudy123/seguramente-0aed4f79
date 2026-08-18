@@ -10,6 +10,10 @@ project_id = "diayjpsrcerycycyaxst"
   # do gateway (para tratar o preflight OPTIONS e devolver 401/403 claros).
   [functions.qa-disparar-cypress]
     verify_jwt = false
+  # Leitura para a guarda da esteira: casos e2e documentados + ponte com o
+  # Cypress. Fechada pelo x-qa-token (a esteira não tem sessão de superadmin).
+  [functions.qa-cobertura-e2e]
+    verify_jwt = false
   [functions.ai-sst-investigacao]
     verify_jwt = false
   [functions.advertencia-link]
