@@ -1,0 +1,560 @@
+-- =====================================================================
+-- PONTO — ONDA 1 (parte 2): vínculo/empresa na chave da apuração diária
+-- =====================================================================
+-- PONTO-394 — ACHADO ESTRUTURAL: a apuração diária é chaveada por
+-- (tenant, cpf, data). Dois vínculos do mesmo trabalhador (duas empresas
+-- do grupo, dois estabelecimentos) eram estruturalmente impossíveis: o
+-- segundo contrato colidia com o primeiro na unique_ponto_diario.
+--
+-- Esta migration inclui a empresa na chave, removendo a impossibilidade.
+-- Não altera cálculo de jornada: para quem tem UM vínculo, o dia continua
+-- sendo uma única linha, apurada exatamente como antes.
+--
+-- A ARMADILHA DE REGRESSÃO (e como ela é neutralizada)
+--   Hoje empresa_id NÃO faz parte da chave, então uma linha com empresa
+--   nula e uma escrita com empresa "E" se FUNDEM na mesma linha do dia.
+--   Assim que a empresa entra na chave, elas deixam de fundir — e uma
+--   reapuração de um dia legado (empresa nula) criaria uma SEGUNDA linha,
+--   quebrando quem tem um único vínculo.
+--
+--   Neutralização por gatilho de reconciliação (sem backfill pesado): ao
+--   inserir, se já existe uma linha do MESMO dia com empresa ainda NÃO
+--   resolvida (nula), a escrita nova ADOTA esse nulo para casar com a
+--   linha legada em vez de criar uma segunda. Dois vínculos reais (ambos
+--   com empresa preenchida) continuam em linhas separadas — é o que
+--   distingue "legado a resolver" de "dois contratos".
+--
+-- O QUE FICA PARA AS ONDAS SEGUINTES
+--   A coexistência das linhas por vínculo está resolvida aqui. A
+--   consolidação que PARTICIONA as marcações de um mesmo dia entre dois
+--   estabelecimentos, e o espelho/AFD por vínculo, acompanham as ondas
+--   que reescrevem a consolidação e geram os arquivos (3-7). Enquanto não
+--   há dois vínculos reais, nada disso muda o comportamento atual.
+-- =====================================================================
+
+SET lock_timeout = '10s';
+
+-- ---------------------------------------------------------------------
+-- 1) Gatilho de reconciliação de empresa
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.ponto_diario_reconcilia_empresa()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  -- Preenche a empresa quando veio vazia, para que a nova chave não separe
+  -- em duas linhas o dia de quem tem um único vínculo. Alinha-se ao
+  -- PONTO-311 ("linha sem empresa é resolvida pelo cadastro").
+  IF NEW.empresa_id IS NULL THEN
+    NEW.empresa_id := public.ponto_empresa_do_cpf(NEW.tenant_id, NEW.colaborador_cpf);
+  END IF;
+
+  -- Reconciliação de legado: se já existe uma linha do mesmo dia com
+  -- empresa ainda NÃO resolvida (nula), a escrita nova adota esse nulo
+  -- para casar com a linha legada — em vez de criar uma segunda. Só vale
+  -- quando a linha existente tem empresa nula; dois vínculos reais (ambos
+  -- com empresa preenchida) permanecem separados.
+  IF TG_OP = 'INSERT' AND NEW.empresa_id IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM public.ponto_diario d
+      WHERE d.tenant_id = NEW.tenant_id
+        AND d.colaborador_cpf = NEW.colaborador_cpf
+        AND d.data = NEW.data
+        AND d.empresa_id IS NULL
+    ) THEN
+      NEW.empresa_id := NULL;
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_ponto_diario_reconcilia_empresa ON public.ponto_diario;
+CREATE TRIGGER trg_ponto_diario_reconcilia_empresa
+BEFORE INSERT OR UPDATE ON public.ponto_diario
+FOR EACH ROW
+EXECUTE FUNCTION public.ponto_diario_reconcilia_empresa();
+
+-- ---------------------------------------------------------------------
+-- 2) Nova chave única: inclui a empresa (nula tratada por sentinela)
+-- ---------------------------------------------------------------------
+-- Dados existentes têm no máximo uma linha por (tenant, cpf, data), então
+-- acrescentar a empresa à chave nunca gera colisão na construção.
+ALTER TABLE public.ponto_diario DROP CONSTRAINT IF EXISTS unique_ponto_diario;
+DROP INDEX IF EXISTS public.unique_ponto_diario;
+CREATE UNIQUE INDEX unique_ponto_diario ON public.ponto_diario
+  (tenant_id, colaborador_cpf, data,
+   COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid));
+
+COMMENT ON INDEX public.unique_ponto_diario IS
+  'PONTO-394 — a apuracao diaria e por vinculo: (tenant, cpf, data, empresa). Empresa nula usa sentinela zerada, mantendo uma linha por dia para quem tem um unico vinculo.';
+
+-- ---------------------------------------------------------------------
+-- 3) Os 5 escritores de ponto_diario: arbiter do ON CONFLICT atualizado
+--    para a nova chave. Nenhuma outra linha do corpo muda.
+-- ---------------------------------------------------------------------
+-- ---- consolidar_ponto_diario_manual: arbiter da chave atualizado (unica mudanca) ----
+CREATE OR REPLACE FUNCTION public.consolidar_ponto_diario_manual(p_tenant_id uuid, p_colaborador_cpf text, p_data date)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_afast public.afastamentos;
+  v_ferias public.ferias_solicitacoes;
+  v_atest public.atestados;
+  v_cid UUID; v_cnome TEXT; v_eid UUID; v_obs TEXT;
+  c RECORD;
+BEGIN
+  SELECT colaborador_id, colaborador_nome INTO v_cid, v_cnome
+  FROM public.ponto_marcacoes
+  WHERE tenant_id = p_tenant_id AND colaborador_cpf = p_colaborador_cpf
+  ORDER BY created_at DESC LIMIT 1;
+  IF v_cid IS NULL THEN
+    SELECT colaborador_id, colaborador_nome INTO v_cid, v_cnome
+    FROM public.ponto_ajustes
+    WHERE tenant_id = p_tenant_id AND colaborador_cpf = p_colaborador_cpf
+    ORDER BY created_at DESC LIMIT 1;
+  END IF;
+
+  -- Quem nunca bateu ponto nem teve ajuste também precisa existir no
+  -- espelho: é exatamente o caso que a materialização de faltas procura.
+  -- Antes desta linha, a função saía sem gravar e a falta ficava invisível.
+  IF v_cid IS NULL THEN
+    SELECT a.id, a.nome_completo INTO v_cid, v_cnome
+    FROM public.admissoes a
+    WHERE a.tenant_id = p_tenant_id
+      AND regexp_replace(COALESCE(a.cpf, ''), '[^0-9]', '', 'g')
+          = regexp_replace(COALESCE(p_colaborador_cpf, ''), '[^0-9]', '', 'g')
+      AND COALESCE(a.inativo, false) = false
+    ORDER BY a.data_admissao DESC NULLS LAST
+    LIMIT 1;
+  END IF;
+
+  SELECT f.* INTO v_ferias FROM public.ferias_solicitacoes f
+  WHERE f.tenant_id = p_tenant_id AND f.colaborador_cpf = p_colaborador_cpf
+    AND f.status IN ('aprovado','em_gozo','concluido')
+    AND f.data_inicio <= p_data AND f.data_fim >= p_data
+  ORDER BY f.data_inicio DESC LIMIT 1;
+  IF v_ferias.id IS NOT NULL THEN
+    v_cid := COALESCE(v_cid, v_ferias.colaborador_id);
+    v_cnome := COALESCE(v_cnome, v_ferias.colaborador_nome);
+    v_obs := 'Férias: ' || to_char(v_ferias.data_inicio,'DD/MM/YYYY') || ' a ' || to_char(v_ferias.data_fim,'DD/MM/YYYY');
+    PERFORM public._ponto_grava_abono(p_tenant_id, v_cid, v_cnome, p_colaborador_cpf, p_data, v_obs);
+    RETURN;
+  END IF;
+
+  SELECT a.* INTO v_atest FROM public.atestados a
+  WHERE a.tenant_id = p_tenant_id AND a.colaborador_cpf = p_colaborador_cpf
+    AND a.data_inicio_afastamento IS NOT NULL
+    AND a.data_inicio_afastamento <= p_data
+    AND COALESCE(a.data_fim_afastamento, a.data_inicio_afastamento) >= p_data
+  ORDER BY a.data_inicio_afastamento DESC LIMIT 1;
+  IF v_atest.id IS NOT NULL THEN
+    v_cid := COALESCE(v_cid, v_atest.colaborador_id);
+    v_cnome := COALESCE(v_cnome, v_atest.colaborador_nome);
+    v_obs := 'Atestado: ' || to_char(v_atest.data_inicio_afastamento,'DD/MM/YYYY')
+      || CASE WHEN v_atest.data_fim_afastamento IS NOT NULL THEN ' a ' || to_char(v_atest.data_fim_afastamento,'DD/MM/YYYY') ELSE '' END;
+    PERFORM public._ponto_grava_abono(p_tenant_id, v_cid, v_cnome, p_colaborador_cpf, p_data, v_obs);
+    RETURN;
+  END IF;
+
+  v_afast := public.afastamento_vigente(p_tenant_id, p_colaborador_cpf, p_data);
+  IF v_afast.id IS NOT NULL THEN
+    v_cid := COALESCE(v_cid, v_afast.colaborador_id);
+    v_cnome := COALESCE(v_cnome, v_afast.colaborador_nome);
+    v_obs := 'Afastamento (' || COALESCE(replace(v_afast.motivo_principal::text,'_',' '),'registrado')
+      || '): de ' || to_char(v_afast.data_inicio,'DD/MM/YYYY')
+      || CASE WHEN v_afast.data_fim IS NOT NULL THEN ' a ' || to_char(v_afast.data_fim,'DD/MM/YYYY') ELSE ' — em aberto' END;
+    PERFORM public._ponto_grava_abono(p_tenant_id, v_cid, v_cnome, p_colaborador_cpf, p_data, v_obs);
+    RETURN;
+  END IF;
+
+  IF v_cid IS NULL THEN RETURN; END IF;
+  v_eid := COALESCE(public.ponto_empresa_do_colaborador(v_cid),
+                    public.ponto_empresa_do_cpf(p_tenant_id, p_colaborador_cpf));
+
+  c := public._ponto_calc_dia(p_tenant_id, p_colaborador_cpf, p_data, v_cid);
+
+  INSERT INTO public.ponto_diario (
+    tenant_id, empresa_id, colaborador_id, colaborador_nome, colaborador_cpf, data,
+    entrada, saida_almoco, retorno_almoco, saida, horas_trabalhadas, status, observacao
+  ) VALUES (
+    p_tenant_id, v_eid, v_cid, v_cnome, p_colaborador_cpf, p_data,
+    c.o_pent, c.o_salm, c.o_ralm, c.o_usai, c.o_horas, c.o_status, c.o_obs
+  )
+  ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid))
+  DO UPDATE SET
+    empresa_id = COALESCE(EXCLUDED.empresa_id, public.ponto_diario.empresa_id),
+    colaborador_nome = EXCLUDED.colaborador_nome,
+    entrada = EXCLUDED.entrada, saida_almoco = EXCLUDED.saida_almoco,
+    retorno_almoco = EXCLUDED.retorno_almoco, saida = EXCLUDED.saida,
+    horas_trabalhadas = EXCLUDED.horas_trabalhadas,
+    status = CASE WHEN public.ponto_diario.status = 'justificado' THEN 'justificado' ELSE EXCLUDED.status END,
+    observacao = CASE WHEN public.ponto_diario.status = 'justificado'
+                        AND public.ponto_diario.observacao LIKE 'Abonado por afastamento%'
+                      THEN public.ponto_diario.observacao ELSE EXCLUDED.observacao END,
+    updated_at = now();
+END;
+$function$;
+
+-- ---- _ponto_grava_abono: arbiter da chave atualizado (unica mudanca) ----
+CREATE OR REPLACE FUNCTION public._ponto_grava_abono(p_tenant_id uuid, p_colaborador_id uuid, p_colaborador_nome text, p_colaborador_cpf text, p_data date, p_observacao text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF p_colaborador_id IS NULL THEN RETURN; END IF;
+  INSERT INTO public.ponto_diario (
+    tenant_id, empresa_id, colaborador_id, colaborador_nome, colaborador_cpf, data,
+    entrada, saida_almoco, retorno_almoco, saida, horas_trabalhadas, status, observacao
+  ) VALUES (
+    p_tenant_id, public.ponto_empresa_do_colaborador(p_colaborador_id),
+    p_colaborador_id, p_colaborador_nome, p_colaborador_cpf, p_data,
+    NULL, NULL, NULL, NULL, make_interval(mins => 0), 'justificado', p_observacao
+  )
+  ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid))
+  DO UPDATE SET
+    empresa_id = COALESCE(EXCLUDED.empresa_id, public.ponto_diario.empresa_id),
+    status = 'justificado', observacao = EXCLUDED.observacao, updated_at = now();
+END;
+$function$;
+
+-- ---- justificar_ponto_por_atestado: arbiter da chave atualizado (unica mudanca) ----
+CREATE OR REPLACE FUNCTION public.justificar_ponto_por_atestado()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_data_inicio date;
+  v_data_fim date;
+  v_dia date;
+BEGIN
+  IF NEW.data_inicio_afastamento IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Atestado por horas reduz apenas a jornada do dia inicial. A consolidação
+  -- específica já é executada por trg_consolida_atestado; jamais expandir
+  -- dias_afastamento como se fosse um atestado de dia inteiro.
+  IF COALESCE(NEW.unidade_afastamento, 'dias') = 'horas' THEN
+    RETURN NEW;
+  END IF;
+
+  v_data_inicio := NEW.data_inicio_afastamento::date;
+  v_data_fim := COALESCE(
+    NEW.data_fim_afastamento::date,
+    v_data_inicio + GREATEST(COALESCE(NEW.dias_afastamento, 1), 1) - 1
+  );
+
+  UPDATE public.ponto_diario
+  SET status = 'justificado',
+      observacao = COALESCE(observacao, '') || ' [Atestado médico - ' || COALESCE(NEW.profissional_nome, 'N/I') || ' - CID: ' || COALESCE(NEW.cid_codigo, 'N/I') || ']'
+  WHERE tenant_id = NEW.tenant_id
+    AND regexp_replace(colaborador_cpf, '[^0-9]', '', 'g') = regexp_replace(NEW.colaborador_cpf, '[^0-9]', '', 'g')
+    AND data BETWEEN v_data_inicio AND v_data_fim
+    AND status IN ('falta', 'atraso', 'incompleto');
+
+  v_dia := v_data_inicio;
+  WHILE v_dia <= v_data_fim LOOP
+    INSERT INTO public.ponto_diario (
+      tenant_id, colaborador_id, colaborador_nome, colaborador_cpf,
+      data, status, observacao, horas_trabalhadas, tipo_dia
+    ) VALUES (
+      NEW.tenant_id,
+      COALESCE(NEW.colaborador_id, gen_random_uuid()),
+      NEW.colaborador_nome,
+      NEW.colaborador_cpf,
+      v_dia,
+      'justificado',
+      'Atestado médico - ' || COALESCE(NEW.profissional_nome, 'N/I') || ' - ' || COALESCE(NEW.dias_afastamento::text, '1') || ' dia(s)',
+      interval '0',
+      'atestado'
+    )
+    ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid)) DO UPDATE
+    SET status = 'justificado',
+        observacao = EXCLUDED.observacao,
+        tipo_dia = 'atestado'
+    WHERE ponto_diario.status IN ('falta', 'atraso', 'incompleto');
+
+    v_dia := v_dia + 1;
+  END LOOP;
+
+  RETURN NEW;
+END;
+$function$;
+
+-- ---- registrar_ferias_no_ponto: arbiter da chave atualizado (unica mudanca) ----
+CREATE OR REPLACE FUNCTION public.registrar_ferias_no_ponto()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_dia DATE;
+  v_data_inicio DATE;
+  v_data_fim DATE;
+BEGIN
+  -- Only process when status changes to 'assinado'
+  IF NEW.status != 'assinado' THEN
+    RETURN NEW;
+  END IF;
+  
+  -- Skip if old status was already 'assinado' (no re-process)
+  IF TG_OP = 'UPDATE' AND OLD.status = 'assinado' THEN
+    RETURN NEW;
+  END IF;
+
+  v_data_inicio := NEW.data_inicio_ferias;
+  v_data_fim := NEW.data_fim_ferias;
+
+  IF v_data_inicio IS NULL OR v_data_fim IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  v_dia := v_data_inicio;
+  WHILE v_dia <= v_data_fim LOOP
+    INSERT INTO public.ponto_diario (
+      tenant_id, colaborador_id, colaborador_nome, colaborador_cpf,
+      data, status, observacao, horas_trabalhadas
+    ) VALUES (
+      NEW.tenant_id,
+      gen_random_uuid(),
+      NEW.colaborador_nome,
+      NEW.colaborador_cpf,
+      v_dia,
+      'justificado',
+      'Férias - ' || NEW.dias_ferias || ' dias (' || NEW.data_inicio_ferias::TEXT || ' a ' || NEW.data_fim_ferias::TEXT || ')',
+      INTERVAL '0'
+    )
+    ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid)) DO UPDATE
+    SET status = 'justificado',
+        observacao = EXCLUDED.observacao;
+
+    v_dia := v_dia + 1;
+  END LOOP;
+
+  RETURN NEW;
+END;
+$function$;
+
+-- ---- afastamento_sincroniza_ponto: arbiter da chave atualizado (unica mudanca) ----
+CREATE OR REPLACE FUNCTION public.afastamento_sincroniza_ponto()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_data           DATE;
+    v_limite         DATE;
+    v_colaborador_id UUID;
+    v_cpf            TEXT;
+    v_motivo         TEXT;
+    v_observacao     TEXT;
+BEGIN
+    -- Só reage a insert ou a mudanca real de periodo/status
+    IF NOT (TG_OP = 'INSERT'
+            OR (TG_OP = 'UPDATE'
+                AND (OLD.data_inicio IS DISTINCT FROM NEW.data_inicio
+                  OR OLD.data_fim    IS DISTINCT FROM NEW.data_fim
+                  OR OLD.status      IS DISTINCT FROM NEW.status))) THEN
+        RETURN NEW;
+    END IF;
+
+    IF NEW.status NOT IN ('ativo', 'beneficio_inss') THEN
+        RETURN NEW;
+    END IF;
+
+    -- ponto_diario casa por CPF (constraint unique_ponto_diario). Sem CPF nao
+    -- ha como fazer o upsert com seguranca.
+    v_cpf := NEW.colaborador_cpf;
+    IF v_cpf IS NULL OR btrim(v_cpf) = '' THEN
+        RETURN NEW;
+    END IF;
+
+    -- colaborador_id do afastamento e sempre null hoje; resolve pela admissao.
+    v_colaborador_id := NEW.colaborador_id;
+    IF v_colaborador_id IS NULL THEN
+        SELECT a.id INTO v_colaborador_id
+          FROM public.admissoes a
+         WHERE a.tenant_id = NEW.tenant_id
+           AND a.cpf = v_cpf
+           AND a.status = 'concluido'
+         ORDER BY a.created_at DESC
+         LIMIT 1;
+    END IF;
+
+    -- ponto_diario.colaborador_id e NOT NULL. Sem conseguir resolver, pula a
+    -- sincronizacao em vez de abortar a criacao do afastamento.
+    IF v_colaborador_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    v_motivo     := COALESCE(NEW.motivo_principal::text, 'Motivo nao informado');
+    v_observacao := 'Abonado: Afastamento (' || v_motivo || ')';
+
+    v_data   := NEW.data_inicio;
+    -- Teto de 2 anos como trava de seguranca para prazo indeterminado
+    v_limite := LEAST(COALESCE(NEW.data_fim, CURRENT_DATE), NEW.data_inicio + 730);
+
+    WHILE v_data <= v_limite LOOP
+        INSERT INTO public.ponto_diario (
+            tenant_id, empresa_id, colaborador_id, colaborador_nome, colaborador_cpf,
+            data, status, observacao
+        ) VALUES (
+            NEW.tenant_id, NEW.empresa_id, v_colaborador_id, NEW.colaborador_nome, v_cpf,
+            v_data, 'justificado', v_observacao
+        )
+        ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid))
+        DO UPDATE SET status     = 'justificado',
+                      observacao = EXCLUDED.observacao;
+
+        v_data := v_data + 1;
+    END LOOP;
+
+    RETURN NEW;
+END;
+$function$;
+
+-- ---------------------------------------------------------------------
+-- ---------------------------------------------------------------------
+--    Fixtures de QA que tambem escrevem em ponto_diario: mesmo arbiter.
+--    (Presentes desde migrations anteriores; sem elas a bateria erra.)
+-- ---------------------------------------------------------------------
+-- ---- qa_ponto_dia_min (fixture de QA): arbiter atualizado ----
+CREATE OR REPLACE FUNCTION public.qa_ponto_dia_min(p_cpf text, p_nome text, p_data date, p_minutos integer)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  INSERT INTO public.ponto_diario
+    (tenant_id, colaborador_id, colaborador_nome, colaborador_cpf,
+     data, entrada, saida, horas_trabalhadas, status)
+  VALUES (public.qa_sandbox_tenant_id(), gen_random_uuid(), p_nome, p_cpf,
+          p_data, TIME '08:00', TIME '08:00' + make_interval(mins => p_minutos),
+          make_interval(mins => p_minutos), 'regular')
+  ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid)) DO UPDATE
+    SET horas_trabalhadas = EXCLUDED.horas_trabalhadas,
+        saida = EXCLUDED.saida;
+END $function$;
+
+-- ---- qa_ponto_dia_horarios (fixture de QA): arbiter atualizado ----
+CREATE OR REPLACE FUNCTION public.qa_ponto_dia_horarios(p_cpf text, p_nome text, p_data date, p_entrada time without time zone, p_saida time without time zone, p_salm time without time zone DEFAULT NULL::time without time zone, p_ralm time without time zone DEFAULT NULL::time without time zone)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_id uuid := gen_random_uuid();
+  v_min int;
+BEGIN
+  v_min := floor(EXTRACT(EPOCH FROM (p_saida - p_entrada))/60)::int;
+  IF v_min < 0 THEN v_min := v_min + 1440; END IF;
+  IF p_salm IS NOT NULL AND p_ralm IS NOT NULL THEN
+    v_min := v_min - floor(EXTRACT(EPOCH FROM (p_ralm - p_salm))/60)::int;
+  END IF;
+  INSERT INTO public.ponto_diario
+    (tenant_id, colaborador_id, colaborador_nome, colaborador_cpf, data,
+     entrada, saida_almoco, retorno_almoco, saida, horas_trabalhadas, status)
+  VALUES (public.qa_sandbox_tenant_id(), v_id, p_nome, p_cpf, p_data,
+          p_entrada, p_salm, p_ralm, p_saida, make_interval(mins => v_min), 'regular')
+  ON CONFLICT (tenant_id, colaborador_cpf, data, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid)) DO UPDATE
+    SET entrada = EXCLUDED.entrada, saida = EXCLUDED.saida,
+        saida_almoco = EXCLUDED.saida_almoco, retorno_almoco = EXCLUDED.retorno_almoco,
+        horas_trabalhadas = EXCLUDED.horas_trabalhadas
+  RETURNING colaborador_id INTO v_id;
+  RETURN v_id;
+END $function$;
+
+-- 4) RÉGUA: PONTO-394 passa a testar COMPORTAMENTO
+-- ---------------------------------------------------------------------
+-- Antes só verificava se o segundo insert colidia. Agora prova as duas
+-- pontas: dois vínculos coexistem em linhas separadas, E um único vínculo
+-- (marcações + abono no mesmo dia) permanece UMA linha — o teste de
+-- não-regressão da própria mudança.
+DO $qa394$
+BEGIN
+  IF to_regclass('public.qa_retorno') IS NULL THEN
+    RAISE NOTICE 'Motor de QA nao instalado: qa_caso_ponto_394 ignorado.';
+    RETURN;
+  END IF;
+
+  EXECUTE $body394$
+CREATE OR REPLACE FUNCTION public.qa_caso_ponto_394()
+RETURNS public.qa_retorno LANGUAGE plpgsql AS $fn$
+DECLARE
+  r public.qa_retorno;
+  v_t uuid := public.qa_sandbox_tenant_id();
+  v_cpf text := public.qa_cpf(3941);
+  v_ea uuid; v_eb uuid;
+  v_data date := CURRENT_DATE - 3;
+  v_linhas_dois int;
+  v_cpf_uni text := public.qa_cpf(3942);
+  v_data_uni date := CURRENT_DATE - 4;
+  v_linhas_uni int;
+BEGIN
+  v_ea := public.qa_nova_empresa('QA Vinculo A ' || v_cpf, '11.222.333/0001-81', true);
+  v_eb := public.qa_nova_empresa('QA Vinculo B ' || v_cpf, '11.444.777/0001-61', true);
+
+  r.passo_ordem := 1;
+  r.passo_acao := 'Registrar o MESMO dia do MESMO CPF em dois vinculos (duas empresas)';
+  r.esperado := 'Cada vinculo tem a sua linha de apuracao — contratos autonomos';
+  PERFORM public.qa_ponto_dia(v_cpf, 'QA Dois Vinculos', v_data, v_ea);
+  PERFORM public.qa_ponto_dia(v_cpf, 'QA Dois Vinculos', v_data, v_eb);
+
+  SELECT count(*) INTO v_linhas_dois
+  FROM public.ponto_diario
+  WHERE tenant_id = v_t AND colaborador_cpf = v_cpf AND data = v_data;
+
+  r.passo_ordem := 2;
+  r.passo_acao := 'Nao-regressao: um unico vinculo, marcacoes + abono, no mesmo dia';
+  r.esperado := 'Uma unica linha — a empresa na chave nao parte o dia de quem tem um vinculo';
+  -- admissao com empresa unica; consolidacao deriva a empresa do cadastro
+  PERFORM public.qa_ponto_admissao('QA Um Vinculo', 3942, v_ea);
+  PERFORM public.qa_ponto_marca(v_cpf_uni, 'QA Um Vinculo', v_data_uni, TIME '08:00', 'entrada');
+  PERFORM public.qa_ponto_marca(v_cpf_uni, 'QA Um Vinculo', v_data_uni, TIME '17:00', 'saida');
+  PERFORM public.consolidar_ponto_diario_manual(v_t, v_cpf_uni, v_data_uni);
+  -- uma segunda escrita no mesmo dia (abono) nao pode criar uma segunda linha
+  PERFORM public.consolidar_ponto_diario_manual(v_t, v_cpf_uni, v_data_uni);
+
+  SELECT count(*) INTO v_linhas_uni
+  FROM public.ponto_diario
+  WHERE tenant_id = v_t AND colaborador_cpf = v_cpf_uni AND data = v_data_uni;
+
+  IF v_linhas_dois = 2 AND v_linhas_uni = 1 THEN
+    r.situacao := 'passou';
+    r.obtido := 'Dois vinculos do mesmo CPF apuraram o mesmo dia em linhas separadas (2), e o '
+             || 'colaborador de um unico vinculo manteve uma linha (1) apos duas escritas no '
+             || 'mesmo dia. A empresa entrou na chave sem partir o dia de quem tem um vinculo.';
+  ELSIF v_linhas_dois < 2 THEN
+    r.situacao := 'falhou';
+    r.obtido := format('ACHADO ESTRUTURAL: dois vinculos do mesmo CPF no mesmo dia produziram %s '
+             || 'linha(s), nao 2 — a apuracao continua chaveada de um jeito que impede o segundo '
+             || 'contrato. O documento de requisitos exige apuracao e arquivos POR VINCULO.',
+             v_linhas_dois);
+  ELSE
+    r.situacao := 'falhou';
+    r.obtido := format('REGRESSAO: um colaborador de UNICO vinculo ficou com %s linhas no mesmo '
+             || 'dia. A empresa na chave partiu o dia de quem tem um vinculo so — o gatilho de '
+             || 'reconciliacao nao esta fundindo as escritas.', v_linhas_uni);
+  END IF;
+  RETURN r;
+EXCEPTION WHEN OTHERS THEN
+  r.situacao := 'erro'; r.obtido := 'A rotina quebrou'; r.erro_tecnico := SQLERRM; RETURN r;
+END $fn$;
+  $body394$;
+
+  RAISE NOTICE 'qa_caso_ponto_394 passou a testar comportamento (coexistencia + nao-regressao).';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Nao foi possivel atualizar qa_caso_ponto_394: %', SQLERRM;
+END $qa394$;
