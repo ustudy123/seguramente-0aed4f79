@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { supabasePublic } from "@/lib/supabasePublic";
@@ -250,6 +250,13 @@ export function usePsicossocial() {
       })) as unknown as CampanhaPsicossocial[];
     },
     enabled: !!tenantId,
+    // Mantém os dados anteriores enquanto a queryKey muda (empresa/tenant
+    // assentando após o login). Sem isto, isLoading voltava a true a cada
+    // troca de chave e o PsicossocialDashboard caía no early-return do spinner
+    // — desmontando QUALQUER diálogo aberto (era o que fechava o formulário de
+    // "Nova Campanha" segundos depois de abrir). Com placeholderData o spinner
+    // só aparece no 1º carregamento; trocas seguintes não desmontam a tela.
+    placeholderData: keepPreviousData,
   });
 
   // Criar nova campanha
