@@ -59,9 +59,17 @@ afterEach(function () {
   cy.document({ log: false }).then((doc) => {
     let rota = "?";
     let corpo = "";
+    let estado = "";
     try {
       rota = doc.location ? doc.location.pathname + doc.location.search : "?";
       corpo = (doc.body?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 900);
+      // Sonda compacta (só aparece em falha): spinner de carregamento, diálogos
+      // e o input de nome de campanha — para diagnosticar sem re-instrumentar.
+      const spinner = doc.querySelectorAll(".animate-spin").length;
+      const dialogs = doc.querySelectorAll('[role="dialog"]').length;
+      const inp = doc.querySelector("#input-campanha-nome") as HTMLElement | null;
+      const inpInfo = inp ? `existe h=${inp.offsetHeight}` : "ausente";
+      estado = `spinner=${spinner} dialogs=${dialogs} input-campanha-nome=${inpInfo}`;
     } catch {
       /* segue com o que tiver */
     }
@@ -69,7 +77,7 @@ afterEach(function () {
     errosCapturados.length = 0;
     cy.task(
       "diag",
-      `[FALHA] ${this.currentTest?.title}\n  rota=${rota}\n  erros=${erros}\n  corpo="${corpo}"`,
+      `[FALHA] ${this.currentTest?.title}\n  rota=${rota}\n  estado=${estado}\n  erros=${erros}\n  corpo="${corpo}"`,
       { log: false },
     );
   });
