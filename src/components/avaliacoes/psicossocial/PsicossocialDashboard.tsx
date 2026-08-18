@@ -273,7 +273,7 @@ export function PsicossocialDashboard() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
+      <div className="space-y-6" data-fix-marker="handoff-v2">
         {/* Header */}
         {activeTab === "campanhas" && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
