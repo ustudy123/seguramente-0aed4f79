@@ -61,6 +61,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 21 | Onda 5 (parte 1) — banco de horas só com instrumento vigente (CLT art. 59) | `docs/script_ponto_onda5_banco_instrumento_vigente.sql` | — | ⏳ | ⬜ |
 | 22 | Onda 5 (parte 2) — prazo de vencimento em cada crédito (CLT art. 59, §§5º/6º) | `docs/script_ponto_onda5_prazo_vencimento_saldo.sql` | **#21** | ⏳ | ⬜ |
 | 23 | Onda 5 (parte 3) — alertas de vencimento e teto de acúmulo do banco | `docs/script_ponto_onda5_alertas_banco.sql` | **#21** | ⏳ | ⬜ |
+| 24 | Onda 5 (parte 4) — limite de 10h diárias no regime de compensação (CLT art. 59, §2º) | `docs/script_ponto_onda5_limite_diario_compensacao.sql` | **#21** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -508,6 +509,25 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   teto (90/100 min contra teto de 60) → alerta de teto; a 2ª execução não duplica
   (devolve 0).
 
+### 24 · Onda 5 (parte 4) — limite de 10h diárias no regime de compensação (CLT art. 59, §2º)
+- **Arquivo:** `docs/script_ponto_onda5_limite_diario_compensacao.sql`
+- **Depende da parte 1 (#21).** Usa o `ponto_banco_regime_vigente`.
+- **O que faz:** em regime de compensação (banco de horas), a jornada do dia não
+  pode passar de **10 horas** (CLT art. 59, §2º) — limite **do regime**, que
+  independe do teto de 2h extras: um dia de 11h com banco é irregular mesmo que o
+  saldo compense depois. Cria o monitor `ponto_banco_limite_diario_monitorar`,
+  que sinaliza os dias acima de **600 minutos** para quem está em regime de
+  compensação vigente.
+- **Baixo risco:** só insere alertas, idempotente por colaborador/dia. Nada roda
+  sozinho — sem gatilho em tabela quente, sem tocar no motor de saldo. Pode ser
+  agendado (pg_cron) junto do monitor da parte 3.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** só PONTO-172 passou a passar; regressão zero. Provado em
+  transação: sem regime, dia de 11h → nenhum alerta (é hora extra normal); com
+  regime, dia de 11h (660 min) → alerta; dias de 10h (600) e de 9h → nenhum; a 2ª
+  execução não duplica.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -561,9 +581,9 @@ com seu pacote. A ordem prevista:
   passar na onda (062, 060, 061, 064, 130, 132, 133), regressão zero.
 - **Onda 5** — banco de horas e escalas especiais. **Em andamento**, em seis
   partes: parte 1 (banco só com instrumento vigente, #21), parte 2 (prazo de
-  vencimento do saldo, #22) e parte 3 (alertas de vencimento e teto, #23)
-  prontas no teste; faltam o limite de 10h no regime de compensação (172), a
-  liquidação do saldo na rescisão (173) e a escala 12x36 por ciclo (150/151).
+  vencimento do saldo, #22), parte 3 (alertas de vencimento e teto, #23) e parte
+  4 (limite de 10h no regime, #24) prontas no teste; faltam a liquidação do saldo
+  na rescisão (173) e a escala 12x36 por ciclo (150/151).
 - **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
   prevenção.
 
