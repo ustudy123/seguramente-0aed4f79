@@ -54,6 +54,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 15 | Onda 2 (parte 5) — correção por acréscimo (desconsiderar) — banco | `docs/script_ponto_onda2_desconsiderar_marcacao.sql` | — | ⏳ | ⬜ |
 | 15-tela | Onda 2 (parte 5) — botão "Desconsiderar" | **Publicar no Lovable** (não é script) | #15 | ⏳ | ⬜ |
 | 16 | Onda 4 (parte 1) — faixas de intervalo (art. 71) | `docs/script_ponto_onda4_faixas_intervalo.sql` | — | ⏳ | ⬜ |
+| 17 | Onda 4 (parte 2) — supressão de intervalo (indenização 50%) | `docs/script_ponto_onda4_supressao_intervalo.sql` | **#16** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -329,6 +330,24 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   **Sem backfill.**
 - **Conferência esperada:** `t | 0 | 15 | 15 | 60 | OK`.
 - **Na bateria** só PONTO-062 passou a passar; regressão zero.
+
+### 17 · Onda 4 (parte 2) — supressão de intervalo (indenização de 50%)
+- **Arquivo:** `docs/script_ponto_onda4_supressao_intervalo.sql`
+- **Depende da parte 1 (#16).** Usa as faixas de intervalo.
+- **O que faz (CLT art. 71, §4º pós-2017):** jornada acima de 6h com pausa menor
+  que a devida gera **supressão** — indenização de **50% sobre apenas os minutos
+  suprimidos**, natureza **indenizatória** (sem reflexos em DSR/férias/13º/FGTS;
+  a regra antiga da hora cheia salarial foi revogada em 2017). A função calcula;
+  um gatilho na consolidação grava os minutos suprimidos em
+  `ponto_diario.he_intervalo_suprimido_minutos` e **alerta o RH** (parcial ou
+  total), idempotente por colaborador/dia. A supressão total (jornada corrida
+  sem nenhuma pausa) deixa de passar invisível.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`, `DROP TRIGGER IF EXISTS` +
+  `CREATE TRIGGER`). **Sem backfill.**
+- **Conferência esperada:** `t | t | 60 | 0 | OK`.
+- **Na bateria** só PONTO-060 e PONTO-061 passaram a passar; regressão zero.
+  Provado: 8h30 sem pausa → 60 min suprimidos e alerta; 8h com 60min de pausa →
+  nada; jornada de 4h sem pausa → nada (≤4h não exige intervalo).
 
 ## Regras gerais dos pacotes
 
