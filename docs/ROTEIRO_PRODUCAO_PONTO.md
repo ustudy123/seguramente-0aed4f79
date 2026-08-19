@@ -48,6 +48,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 9 | Onda 3 (parte 3) — adicional noturno prorrogado (Súmula 60, II) | `docs/script_ponto_onda3_adicional_noturno_prorrogado.sql` | inclui #8 | ⏳ | ⬜ |
 | 10 | Onda 3 (parte 4) — turno da virada pertence ao dia de início | `docs/script_ponto_onda3_turno_da_virada.sql` | — | ⏳ | ⬜ |
 | 11 | Onda 2 (parte 1) — cadeia de hash encadeado + verificação | `docs/script_ponto_onda2_cadeia_hash.sql` | **#3, #4** (NSR) | ⏳ | ⬜ |
+| 12 | Onda 2 (parte 2) — relógio confiável + origem da batida | `docs/script_ponto_onda2_relogio_e_origem.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -229,6 +230,25 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Na bateria** só PONTO-191 passou a passar; regressão zero. Além da régua,
   provei o mecanismo de verdade: base legada limpa, novas marcações encadeiam, e
   a remoção de uma marcação do meio é detectada.
+
+### 12 · Onda 2 (parte 2) — relógio confiável + origem da batida
+- **Arquivo:** `docs/script_ponto_onda2_relogio_e_origem.sql`
+- **O que faz (requisitos do REP-P):** (378) a marcação passa a registrar se
+  nasceu **on-line ou off-line** (`origem_offline`) e o momento da sincronização
+  (`sincronizado_em`), preservando a hora da batida como a oficial; (379) uma
+  rotina monitora o **relógio do servidor contra a Hora Legal Brasileira**
+  (Observatório Nacional), com trilha das checagens (`ponto_relogio_checagens`)
+  e alerta quando o desvio passa da tolerância. A hora oficial é fornecida por
+  quem chama (uma Edge Function que consulta a fonte).
+- **Puramente aditivo** — colunas novas com padrão neutro e mecanismos ao lado
+  do que já existe; nada do fluxo atual muda.
+- **`ADD COLUMN IF NOT EXISTS` + `CREATE TABLE IF NOT EXISTS` + `CREATE OR
+  REPLACE`** — idempotente. **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK` — colunas de origem, trilha do
+  relógio e rotina de monitoração presentes.
+- **Na bateria** só PONTO-378 e PONTO-379 passaram a passar; regressão zero.
+  Provado de verdade: desvio dentro da tolerância não alerta, desvio acima
+  alerta (uma vez por dia), e a trilha registra cada checagem.
 
 ## Regras gerais dos pacotes
 
