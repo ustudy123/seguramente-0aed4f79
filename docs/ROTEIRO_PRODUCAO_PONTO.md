@@ -53,6 +53,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 14 | Onda 2 (parte 4) — reabertura formal de competência + versão do espelho | `docs/script_ponto_onda2_reabertura_competencia.sql` | — | ⏳ | ⬜ |
 | 15 | Onda 2 (parte 5) — correção por acréscimo (desconsiderar) — banco | `docs/script_ponto_onda2_desconsiderar_marcacao.sql` | — | ⏳ | ⬜ |
 | 15-tela | Onda 2 (parte 5) — botão "Desconsiderar" | **Publicar no Lovable** (não é script) | #15 | ⏳ | ⬜ |
+| 16 | Onda 4 (parte 1) — faixas de intervalo (art. 71) | `docs/script_ponto_onda4_faixas_intervalo.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -318,6 +319,17 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   antigo já **desconsidera** (não apaga), só com o rótulo antigo. Publicar o
   Lovable troca o rótulo e passa a pedir o motivo.
 
+### 16 · Onda 4 (parte 1) — faixas de intervalo (art. 71)
+- **Arquivo:** `docs/script_ponto_onda4_faixas_intervalo.sql`
+- **O que faz:** cria a função canônica do mínimo de intervalo intrajornada por
+  **faixa de jornada** (CLT art. 71): até 4h nenhum; 4-6h 15 min; acima de 6h
+  60 min. É a base do cálculo de supressão (parte 2) — sem as faixas, aplicar
+  "1 hora para todos" criaria supressão fictícia nas jornadas curtas.
+- **Função pura (`IMMUTABLE`), aditiva e idempotente** (`CREATE OR REPLACE`).
+  **Sem backfill.**
+- **Conferência esperada:** `t | 0 | 15 | 15 | 60 | OK`.
+- **Na bateria** só PONTO-062 passou a passar; regressão zero.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -364,8 +376,12 @@ com seu pacote. A ordem prevista:
   #8), 3 (adicional noturno prorrogado, #9) e 4 (turno da virada, #10). Sete
   casos da bateria passaram a passar, regressão zero. O regime rural
   (PONTO-113) fica como evolução condicional a cliente do agro.
-- **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
-  enquadramento e prevenção.
+- **Onda 4** — intervalo, descanso e DSR. **Em andamento**, em partes: parte 1
+  (faixas de intervalo, #16) pronta no teste; faltam a supressão de intervalo
+  (060/061), a pré-assinalação formal (064), o domingo em dobro (130) e o DSR
+  (132/133).
+- **Ondas 5 a 8** — banco de horas e escalas, fechamento e folha, arquivos
+  legais, enquadramento e prevenção.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
