@@ -63,6 +63,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 23 | Onda 5 (parte 3) — alertas de vencimento e teto de acúmulo do banco | `docs/script_ponto_onda5_alertas_banco.sql` | **#21** | ⏳ | ⬜ |
 | 24 | Onda 5 (parte 4) — limite de 10h diárias no regime de compensação (CLT art. 59, §2º) | `docs/script_ponto_onda5_limite_diario_compensacao.sql` | **#21** | ⏳ | ⬜ |
 | 25 | Onda 5 (parte 5) — liquidação do saldo de banco na rescisão (CLT art. 59, §3º) | `docs/script_ponto_onda5_liquidar_banco_rescisao.sql` | **#21** | ⏳ | ⬜ |
+| 26 | Onda 5 (parte 6) — escala 12x36 por ciclo (CLT art. 59-A) | `docs/script_ponto_onda5_escala_12x36.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -554,6 +555,31 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   e calcula o valor sobre a remuneração da rescisão — ligar isso na
   `folha_rescisoes` é de tela, por Publicar no Lovable. O banco já registra.
 
+### 26 · Onda 5 (parte 6) — escala 12x36 por ciclo (CLT art. 59-A)
+- **Arquivo:** `docs/script_ponto_onda5_escala_12x36.sql`
+- **O que faz:** os campos de ciclo existiam na escala (`tipo '12x36'`,
+  `ciclo_horas_trabalho/descanso`, `ciclo_inicio_data`) e **nenhuma apuração os
+  lia** — o plantonista 12x36 teria 4h de "extra" em todo plantão e "falta" em
+  toda folga, e o feriado trabalhado geraria dobra indevida (a 12x36 já compensa
+  por lei — CLT art. 59-A e §2º). Passa a existir a função
+  `ponto_apurar_ciclo_plantao_do_dia` (diz se o dia é plantão ou folga e a
+  jornada do plantão), e três apurações passam a lê-la: `ponto_jornada_do_dia`
+  (jornada do ciclo no plantão, 0 na folga), o motor de saldo
+  (`ponto_saldo_dias_competencia_bruto` — plantão sem HE, folga **sem falta**) e
+  `ponto_feriados_trabalhados` (**pula a dobra** de feriado na 12x36).
+- **Injeções guardadas (mesmo padrão da onda 3):** as três apurações são
+  patcheadas pelo corpo vivo, de forma **idempotente e guardada por âncora** —
+  se o corpo em produção divergir, **nada é alterado** e a conferência acusa o
+  que faltou (aí me envie o `pg_get_functiondef` da função para reconciliar).
+- **Só muda quem é 12x36.** Para todo o resto, a função devolve `eh_ciclo=false`
+  e nada muda. Sem âncora (`ciclo_inicio_data`) a apuração diária fica como está.
+- **Aditivo e idempotente.** **Sem backfill.**
+- **Conferência esperada:** `t | t | t | t | OK`.
+- **Na bateria** PONTO-150 e PONTO-151 passaram a passar; regressão zero. Provado
+  em transação (12x36 com âncora numa segunda): a função alterna plantão (720
+  min) / folga (0); no saldo, o plantão de 12h dá **saldo 0** (sem HE) e a folga
+  dá **saldo 0** (sem falta).
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -605,11 +631,12 @@ com seu pacote. A ordem prevista:
   #17), parte 3 (pré-assinalação formal, #18), parte 4 (domingo em dobro, #19) e
   parte 5 (DSR + repouso semanal de 24h, #20). Sete casos da bateria passaram a
   passar na onda (062, 060, 061, 064, 130, 132, 133), regressão zero.
-- **Onda 5** — banco de horas e escalas especiais. **Em andamento**, em seis
-  partes: parte 1 (banco só com instrumento vigente, #21), parte 2 (prazo de
-  vencimento do saldo, #22), parte 3 (alertas de vencimento e teto, #23) e parte
-  4 (limite de 10h no regime, #24) e parte 5 (liquidação na rescisão, #25)
-  prontas no teste; falta a escala 12x36 por ciclo (150/151).
+- **Onda 5** — banco de horas e escalas especiais. **Concluída no teste**, em
+  seis partes: banco só com instrumento vigente (#21), prazo de vencimento do
+  saldo (#22), alertas de vencimento e teto (#23), limite de 10h no regime (#24),
+  liquidação na rescisão (#25) e a escala 12x36 por ciclo (#26). Oito casos da
+  bateria passaram a passar na onda (170, 354, 171, 355, 356, 172, 173, 150,
+  151), regressão zero.
 - **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
   prevenção.
 
