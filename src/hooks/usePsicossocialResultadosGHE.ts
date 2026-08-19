@@ -25,6 +25,7 @@ interface GheRow {
   id: string;
   nome: string;
   codigo?: string | null;
+  empresa_id?: string | null;
 }
 
 interface GheCargoRow {
