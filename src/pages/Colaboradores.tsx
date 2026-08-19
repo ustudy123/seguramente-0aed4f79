@@ -551,7 +551,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 <div onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button data-testid="colab-menu" variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -579,7 +579,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                       <DropdownMenuItem onClick={() => { setInativarColab(colab); setInativarMotivo(""); }}>
                         {(colab as any).inativo ? "Reativar" : "Inativar"}
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => {
+                      <DropdownMenuItem data-testid="colab-desligar" className="text-destructive" onClick={() => {
                         if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
                         setDesligarColab(colab);
                       }}>
@@ -683,7 +683,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button data-testid="colab-menu" variant="ghost" size="icon" className="h-8 w-8">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -706,7 +706,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                         <DropdownMenuItem onClick={() => { setInativarColab(colab); setInativarMotivo(""); }}>
                           {(colab as any).inativo ? "Reativar" : "Inativar"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => {
+                        <DropdownMenuItem data-testid="colab-desligar" className="text-destructive" onClick={() => {
                           if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
                           setDesligarColab(colab);
                         }}>
