@@ -459,7 +459,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       // em todos produzia scores idênticos em GHE 01, GHE 02 etc. — a mesma
       // média global repetida. Nesse caso a resposta fica fora da
       // estratificação até o snapshot ser resolvido no servidor.
-      const ids = campanhaGheMap.get(r.campanha_id) ?? [];
+      const ids = (campanhaGheMap.get(r.campanha_id) ?? []).filter(gheExiste);
       if (ids.length === 1) {
         addToGrupo(ids[0], gheNomeMap.get(ids[0]) ?? "GHE", r);
       } else {
