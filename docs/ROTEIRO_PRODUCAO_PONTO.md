@@ -59,6 +59,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 19 | Onda 4 (parte 4) — domingo trabalhado em dobro (Lei 605/49, Súm. 146) | `docs/script_ponto_onda4_domingo_em_dobro.sql` | — | ⏳ | ⬜ |
 | 20 | Onda 4 (parte 5) — DSR e repouso semanal de 24h (Lei 605/49, CLT art. 67) | `docs/script_ponto_onda4_dsr.sql` | — | ⏳ | ⬜ |
 | 21 | Onda 5 (parte 1) — banco de horas só com instrumento vigente (CLT art. 59) | `docs/script_ponto_onda5_banco_instrumento_vigente.sql` | — | ⏳ | ⬜ |
+| 22 | Onda 5 (parte 2) — prazo de vencimento em cada crédito (CLT art. 59, §§5º/6º) | `docs/script_ponto_onda5_prazo_vencimento_saldo.sql` | **#21** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -465,6 +466,27 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   config inativa, com início futuro, ou que exige acordo sem anexo → regime nulo
   (não credita); com o acordo anexado → regime presente.
 
+### 22 · Onda 5 (parte 2) — prazo de vencimento em cada crédito (CLT art. 59, §§5º/6º)
+- **Arquivo:** `docs/script_ponto_onda5_prazo_vencimento_saldo.sql`
+- **Depende da parte 1 (#21).** Usa o `ponto_banco_regime_vigente`.
+- **O que faz:** a conversão de saldo vencido em hora extra **já existe e
+  funciona** (`converter_banco_horas_vencido`), mas **nunca dispara** porque a
+  apuração jamais gravava `prazo_compensacao` — nenhum saldo tinha vencimento.
+  Agora `apurar_banco_horas_colaborador` grava `prazo_compensacao = fim da
+  competência + prazo_compensacao_dias do regime` (6 meses no acordo individual,
+  até 12 no coletivo). Com o prazo na linha, o saldo que passa do limite vira
+  hora extra a pagar, em vez de ficar pendurado para sempre.
+- **Só acrescenta o prazo.** Sem regime, não há crédito nem prazo (segue a parte
+  1); e um prazo já existente na linha é preservado (não apaga vencimento de
+  saldo acumulado sob regime anterior). Não altera a conversão nem o motor de
+  saldo.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** PONTO-171 e PONTO-354 passaram a passar; regressão zero. Provado
+  em transação: regime de 180 dias na competência 03/2026 → prazo gravado
+  27/09/2026 (31/03 + 180); sem regime → prazo nulo e crédito zero; saldo com
+  prazo vencido ontem → convertido em HE com a movimentação de conversão.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -517,8 +539,8 @@ com seu pacote. A ordem prevista:
   parte 5 (DSR + repouso semanal de 24h, #20). Sete casos da bateria passaram a
   passar na onda (062, 060, 061, 064, 130, 132, 133), regressão zero.
 - **Onda 5** — banco de horas e escalas especiais. **Em andamento**, em seis
-  partes: parte 1 (banco só com instrumento vigente, #21) pronta no teste;
-  faltam o prazo de vencimento do saldo (171/354), os alertas de vencimento e
+  partes: parte 1 (banco só com instrumento vigente, #21) e parte 2 (prazo de
+  vencimento do saldo, #22) prontas no teste; faltam os alertas de vencimento e
   teto (355/356), o limite de 10h no regime de compensação (172), a liquidação
   do saldo na rescisão (173) e a escala 12x36 por ciclo (150/151).
 - **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
