@@ -638,11 +638,14 @@ export function usePonto() {
     },
   });
 
-  // Excluir marcação de ponto (gestor/RH) — via RPC autorizado
+  // Desconsiderar marcação de ponto (gestor/RH) — via RPC autorizado.
+  // Correção por acréscimo: a batida NÃO é apagada, fica no acervo marcada como
+  // desconsiderada (com motivo e responsável) e sai do cálculo do dia.
   const excluirMarcacaoMutation = useMutation({
-    mutationFn: async ({ marcacaoId }: { marcacaoId: string }) => {
-      const { data, error } = await (supabase as any).rpc("excluir_marcacao_ponto", {
+    mutationFn: async ({ marcacaoId, motivo }: { marcacaoId: string; motivo?: string }) => {
+      const { data, error } = await (supabase as any).rpc("desconsiderar_marcacao_ponto", {
         p_marcacao_id: marcacaoId,
+        p_motivo: motivo?.trim() || null,
       });
       if (error) throw error;
       return data;
@@ -651,10 +654,10 @@ export function usePonto() {
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-dia"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes"] });
-      toast.success("Marcação excluída.");
+      toast.success("Marcação desconsiderada (mantida no acervo, fora do cálculo).");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir marcação: " + error.message);
+      toast.error("Erro ao desconsiderar marcação: " + error.message);
     },
   });
 
