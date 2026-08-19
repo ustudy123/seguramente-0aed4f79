@@ -56,6 +56,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 16 | Onda 4 (parte 1) — faixas de intervalo (art. 71) | `docs/script_ponto_onda4_faixas_intervalo.sql` | — | ⏳ | ⬜ |
 | 17 | Onda 4 (parte 2) — supressão de intervalo (indenização 50%) | `docs/script_ponto_onda4_supressao_intervalo.sql` | **#16** | ⏳ | ⬜ |
 | 18 | Onda 4 (parte 3) — pré-assinalação formal do intervalo (Súm. 338) | `docs/script_ponto_onda4_pre_assinalacao.sql` | **#16 #17** | ⏳ | ⬜ |
+| 19 | Onda 4 (parte 4) — domingo trabalhado em dobro (Lei 605/49, Súm. 146) | `docs/script_ponto_onda4_domingo_em_dobro.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -384,6 +385,35 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   pré-assinalado" no espelho e o cadastro da declaração são de tela; entram por
   Publicar no Lovable quando forem construídos. O banco já guarda tudo.
 
+### 19 · Onda 4 (parte 4) — domingo trabalhado em dobro (Lei 605/49, Súmula 146)
+- **Arquivo:** `docs/script_ponto_onda4_domingo_em_dobro.sql`
+- **O que faz:** o trabalho em **domingo** (descanso semanal) sem folga
+  compensatória é pago **em dobro por inteiro** — a jornada normal inclusive —,
+  não apenas o que excede a jornada (Lei 605/1949, art. 9º; Súmula 146 do TST).
+  Até aqui o cálculo tratava o domingo como mera hora extra 100%, dobrando só o
+  excedente. Agora, na `calcular_he_adicional_noturno_dia`, quando o domingo
+  **não é dia de trabalho previsto na escala** (é o repouso da semana), a
+  jornada trabalhada inteira vira 100%.
+- **Só muda o domingo de repouso trabalhado.** Domingo **previsto na escala**
+  (6x1 e afins) já carrega o repouso noutro dia → cai no cálculo normal, sem
+  dobra. Dia útil e sábado ficam idênticos. **Não toca no motor de saldo** (ele
+  lê `horas_extras`/`horas_faltantes`, não `horas_extras_100_minutos`); o alerta
+  do art. 59 segue igual.
+- **Substitui a função inteira** (mantém as partes 2 e 3 da onda 3: jornada pela
+  escala, HE sem truncar, adicional noturno prorrogado — a conferência confirma).
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | t | t | t | OK`.
+- **Na bateria** só PONTO-130 passou a passar; regressão zero. Provado em
+  transação: domingo-repouso de 8h → 480 min a 100% (dobra da jornada inteira);
+  domingo-repouso de 11h corridas → 660 min a 100%; **domingo previsto na escala
+  → sem dobra** (0); dia útil de 11h → 180 min a 50%; sábado de 11h → 180 min a
+  50%. *Obs.: PONTO-132 (reflexo do DSR) segue pendente — é a parte 5; não foi
+  tocado por esta parte.*
+- **Limitação conhecida:** escala legada sem `dias_config` reporta o domingo como
+  dia útil e não dobra (critério conservador, não cobra a mais). Compensação
+  ad-hoc de domingo, se necessária, é evolução à parte (espelhando o mecanismo
+  de `feriado_folga_compensatoria`).
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -431,9 +461,9 @@ com seu pacote. A ordem prevista:
   casos da bateria passaram a passar, regressão zero. O regime rural
   (PONTO-113) fica como evolução condicional a cliente do agro.
 - **Onda 4** — intervalo, descanso e DSR. **Em andamento**, em partes: parte 1
-  (faixas de intervalo, #16), parte 2 (supressão de intervalo, #17) e parte 3
-  (pré-assinalação formal, #18) prontas no teste; faltam o domingo em dobro
-  (130) e o DSR (132/133).
+  (faixas de intervalo, #16), parte 2 (supressão de intervalo, #17), parte 3
+  (pré-assinalação formal, #18) e parte 4 (domingo em dobro, #19) prontas no
+  teste; falta o DSR — reflexo e desconto por falta (132/133).
 - **Ondas 5 a 8** — banco de horas e escalas, fechamento e folha, arquivos
   legais, enquadramento e prevenção.
 
