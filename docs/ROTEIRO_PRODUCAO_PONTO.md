@@ -50,6 +50,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 11 | Onda 2 (parte 1) — cadeia de hash encadeado + verificação | `docs/script_ponto_onda2_cadeia_hash.sql` | **#3, #4** (NSR) | ⏳ | ⬜ |
 | 12 | Onda 2 (parte 2) — relógio confiável + origem da batida | `docs/script_ponto_onda2_relogio_e_origem.sql` | — | ⏳ | ⬜ |
 | 13 | Onda 2 (parte 3) — detecção de marcações uniformes ("britânico") | `docs/script_ponto_onda2_marcacoes_uniformes.sql` | — | ⏳ | ⬜ |
+| 14 | Onda 2 (parte 4) — reabertura formal de competência + versão do espelho | `docs/script_ponto_onda2_reabertura_competencia.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -265,6 +266,30 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Na bateria** só PONTO-377 passou a passar; regressão zero. Provado de
   verdade: um colaborador com horários idênticos por 14 dias é sinalizado como
   uniforme (e alertado); um com variação de minutos, não.
+
+### 14 · Onda 2 (parte 4) — reabertura formal de competência + versão do espelho
+- **Arquivo:** `docs/script_ponto_onda2_reabertura_competencia.sql`
+- **O que faz:** cria a saída **formal** para o erro legítimo descoberto após o
+  fechamento. `ponto_reabrir_competencia` valida que a competência está fechada,
+  **exige motivo**, confere a **alçada** (papéis de gestão), **arquiva** a versão
+  corrente dos espelhos (a que o colaborador recebeu) num histórico recuperável,
+  marca o fechamento como `reaberto` e registra a **trilha**. O re-fechamento
+  seguinte gera a próxima versão, sem regravar a anterior.
+- **A tabela nova (`ponto_espelhos_historico`) recebe a trava do cercado** do QA,
+  como toda tabela de ponto — sem isso a rotina PONTO-270 acusaria.
+- **Aditivo e idempotente** (`ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT
+  EXISTS`, `CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | t | t | OK` — colunas de reabertura,
+  histórico do espelho, trava do cercado na tabela nova, e a função de
+  reabertura.
+- **Na bateria** PONTO-358 passou a passar; regressão zero. Provado de verdade:
+  reabertura sem motivo é recusada; com motivo, arquiva a versão e marca
+  `reaberto`; e reabrir uma competência já reaberta é recusado.
+- **Nota honesta:** o PONTO-194 (geração transacional dos espelhos) também
+  aparece verde na bateria depois desta parte, mas por **coincidência** — a
+  régua dele só procura uma função que toque `ponto_espelhos` com `INSERT`, e a
+  reabertura casa esse padrão. A geração transacional dos espelhos de verdade
+  (hoje o frontend grava linha a linha) segue como item próprio, a fazer.
 
 ## Regras gerais dos pacotes
 
