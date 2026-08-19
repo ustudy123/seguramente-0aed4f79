@@ -60,6 +60,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 20 | Onda 4 (parte 5) — DSR e repouso semanal de 24h (Lei 605/49, CLT art. 67) | `docs/script_ponto_onda4_dsr.sql` | — | ⏳ | ⬜ |
 | 21 | Onda 5 (parte 1) — banco de horas só com instrumento vigente (CLT art. 59) | `docs/script_ponto_onda5_banco_instrumento_vigente.sql` | — | ⏳ | ⬜ |
 | 22 | Onda 5 (parte 2) — prazo de vencimento em cada crédito (CLT art. 59, §§5º/6º) | `docs/script_ponto_onda5_prazo_vencimento_saldo.sql` | **#21** | ⏳ | ⬜ |
+| 23 | Onda 5 (parte 3) — alertas de vencimento e teto de acúmulo do banco | `docs/script_ponto_onda5_alertas_banco.sql` | **#21** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -487,6 +488,26 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   27/09/2026 (31/03 + 180); sem regime → prazo nulo e crédito zero; saldo com
   prazo vencido ontem → convertido em HE com a movimentação de conversão.
 
+### 23 · Onda 5 (parte 3) — alertas de vencimento e teto de acúmulo do banco
+- **Arquivo:** `docs/script_ponto_onda5_alertas_banco.sql`
+- **Depende da parte 1 (#21).** Usa o `ponto_banco_regime_vigente`.
+- **O que faz:** cria o monitor `ponto_banco_alertas_monitorar(dias_aviso)`, que
+  gera dois avisos no `ponto_alertas`:
+  - **(355) vencimento próximo** — X dias antes do `prazo_compensacao` (parte 2),
+    com a ação sugerida (programar compensação ou pagar). Sem isso, o RH só
+    descobria o saldo vencido quando já era passivo (CLT art. 59, §5º);
+  - **(356) teto de acúmulo** — o `limite_acumulo_horas` da configuração, antes
+    decorativo, passa a ser comparado com o saldo e a sinalizar o excedente.
+- **Baixo risco:** só insere alertas, idempotente por colaborador/prazo e por
+  colaborador/competência. Nada roda sozinho — sem gatilho em tabela quente, sem
+  tocar no motor de saldo. Pode ser agendado (pg_cron) para rodar diariamente.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** PONTO-355 e PONTO-356 passaram a passar; regressão zero. Provado
+  em transação: saldo vencendo em 10 dias → alerta de vencimento; saldo acima do
+  teto (90/100 min contra teto de 60) → alerta de teto; a 2ª execução não duplica
+  (devolve 0).
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -539,10 +560,10 @@ com seu pacote. A ordem prevista:
   parte 5 (DSR + repouso semanal de 24h, #20). Sete casos da bateria passaram a
   passar na onda (062, 060, 061, 064, 130, 132, 133), regressão zero.
 - **Onda 5** — banco de horas e escalas especiais. **Em andamento**, em seis
-  partes: parte 1 (banco só com instrumento vigente, #21) e parte 2 (prazo de
-  vencimento do saldo, #22) prontas no teste; faltam os alertas de vencimento e
-  teto (355/356), o limite de 10h no regime de compensação (172), a liquidação
-  do saldo na rescisão (173) e a escala 12x36 por ciclo (150/151).
+  partes: parte 1 (banco só com instrumento vigente, #21), parte 2 (prazo de
+  vencimento do saldo, #22) e parte 3 (alertas de vencimento e teto, #23)
+  prontas no teste; faltam o limite de 10h no regime de compensação (172), a
+  liquidação do saldo na rescisão (173) e a escala 12x36 por ciclo (150/151).
 - **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
   prevenção.
 
