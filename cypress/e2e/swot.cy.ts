@@ -156,6 +156,14 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
+    // O formulário de adicionar item só monta depois que a tela de detalhe
+    // termina de buscar os itens da SWOT — mais lento logo após um reload
+    // (fallback do openSwotByTitle). Espera generosa aqui evita o flake
+    // "Expected to find input Descreva o item, but never found it" do CT-SWOT-020.
+    cy.get('input[placeholder*="Descreva o item"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView();
+
     // 1. Selecionar tipo (primeiro select trigger)
     clickSelectTrigger(0);
     selectRadixOption(tipo);
