@@ -5,7 +5,7 @@
 //
 // Regra da casa: todo it() aqui corresponde a um caso e2e DOCUMENTADO
 // (Documentação de testes). A ponte caso ↔ it() vive em qa_cobertura_e2e
-// (ver migration 20260819180000_qa_cobertura_desligamento_lote1.sql).
+// (ver migration 20260819181500_qa_cobertura_desligamento_lote1.sql).
 //
 // Casos cobertos nesta leva:
 //   DESL-011 — Data de desligamento não pode ser anterior à admissão
