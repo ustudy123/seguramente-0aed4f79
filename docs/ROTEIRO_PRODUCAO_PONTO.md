@@ -51,6 +51,8 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 12 | Onda 2 (parte 2) — relógio confiável + origem da batida | `docs/script_ponto_onda2_relogio_e_origem.sql` | — | ⏳ | ⬜ |
 | 13 | Onda 2 (parte 3) — detecção de marcações uniformes ("britânico") | `docs/script_ponto_onda2_marcacoes_uniformes.sql` | — | ⏳ | ⬜ |
 | 14 | Onda 2 (parte 4) — reabertura formal de competência + versão do espelho | `docs/script_ponto_onda2_reabertura_competencia.sql` | — | ⏳ | ⬜ |
+| 15 | Onda 2 (parte 5) — correção por acréscimo (desconsiderar) — banco | `docs/script_ponto_onda2_desconsiderar_marcacao.sql` | — | ⏳ | ⬜ |
+| 15-tela | Onda 2 (parte 5) — botão "Desconsiderar" | **Publicar no Lovable** (não é script) | #15 | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -291,6 +293,31 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   reabertura casa esse padrão. A geração transacional dos espelhos de verdade
   (hoje o frontend grava linha a linha) segue como item próprio, a fazer.
 
+### 15 · Onda 2 (parte 5) — correção por acréscimo: desconsiderar, nunca apagar
+- **Arquivo (banco):** `docs/script_ponto_onda2_desconsiderar_marcacao.sql`
+- **O que faz:** a batida original **nunca é apagada**. Passa a ser
+  **desconsiderada**: fica no acervo e na cadeia de hash, marcada com motivo e
+  responsável, e sai do cálculo do dia. Fecha o buraco dos RPCs
+  (`excluir_marcacao_ponto`, `processar_ajuste_ponto` tipo correção) que ainda
+  apagavam pelo flag de sessão. Portaria 671 veda apagar; CLT art. 74; Súmula
+  338 do TST.
+- **`ADD COLUMN IF NOT EXISTS` + `CREATE OR REPLACE`** — idempotente. **Sem
+  backfill.**
+- **Conferência esperada:** `t | t | t | t | t | OK` — coluna de desconsideração,
+  RPC próprio, o antigo "excluir" delegando (não apaga), o cálculo ignorando
+  desconsideradas, e o ajuste sem apagar.
+- **Na bateria:** PONTO-004 segue passando; **regressão zero**. Provado de
+  verdade: desconsiderar tira a batida do cálculo, mas ela **continua no acervo**
+  e a **cadeia de hash segue intacta** (a prova fica).
+
+#### 15-tela · o botão "Desconsiderar" (Publicar no Lovable)
+- **Não é um script.** A tela (o botão "Excluir" do espelho vira "Desconsiderar",
+  com o motivo obrigatório) está no código do frontend e entra em produção pelo
+  **Publicar no Lovable**, depois que o pacote #15 (banco) estiver em produção.
+- **Enquanto a tela não é publicada:** o banco já protege — o botão "Excluir"
+  antigo já **desconsidera** (não apaga), só com o rótulo antigo. Publicar o
+  Lovable troca o rótulo e passa a pedir o motivo.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -324,11 +351,12 @@ Conforme cada uma for entregue e validada no teste, ela entra na tabela acima
 com seu pacote. A ordem prevista:
 
 - **Onda 2** — registro imutável de verdade (correção por acréscimo, cadeia de
-  hash, competência fechada). *Mexe em tela — vai exigir Publicar no Lovable.*
-  **Em andamento**, em partes: parte 1 (cadeia de hash, #11) pronta no teste;
-  faltam relógio/origem da batida (378/379), marcações uniformes (377),
-  reabertura formal de competência (358) e a correção por acréscimo /
-  desconsiderar (PONTO-004 resto — a parte que mexe em tela).
+  hash, competência fechada). **Concluída no teste**, em cinco partes: cadeia de
+  hash (#11), relógio/origem da batida (#12), marcações uniformes (#13),
+  reabertura formal de competência (#14) e correção por acréscimo/desconsiderar
+  (#15 banco + #15-tela). *A parte 5 tem componente de tela — o botão
+  "Desconsiderar" entra por Publicar no Lovable.* A geração transacional dos
+  espelhos (PONTO-194) fica como item próprio, a fazer.
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
   versionamento da onda 1 no lugar.* **Concluída no teste**, entregue em quatro
