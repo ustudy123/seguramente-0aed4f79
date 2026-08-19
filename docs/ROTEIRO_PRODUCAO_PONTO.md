@@ -57,6 +57,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 17 | Onda 4 (parte 2) — supressão de intervalo (indenização 50%) | `docs/script_ponto_onda4_supressao_intervalo.sql` | **#16** | ⏳ | ⬜ |
 | 18 | Onda 4 (parte 3) — pré-assinalação formal do intervalo (Súm. 338) | `docs/script_ponto_onda4_pre_assinalacao.sql` | **#16 #17** | ⏳ | ⬜ |
 | 19 | Onda 4 (parte 4) — domingo trabalhado em dobro (Lei 605/49, Súm. 146) | `docs/script_ponto_onda4_domingo_em_dobro.sql` | — | ⏳ | ⬜ |
+| 20 | Onda 4 (parte 5) — DSR e repouso semanal de 24h (Lei 605/49, CLT art. 67) | `docs/script_ponto_onda4_dsr.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -414,6 +415,33 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   ad-hoc de domingo, se necessária, é evolução à parte (espelhando o mecanismo
   de `feriado_folga_compensatoria`).
 
+### 20 · Onda 4 (parte 5) — DSR e repouso semanal de 24h (Lei 605/49, CLT art. 67)
+- **Arquivo:** `docs/script_ponto_onda4_dsr.sql`
+- **O que faz:** fecha a onda 4 com o repouso semanal, até aqui ausente do
+  cálculo. Três funções novas:
+  - `ponto_dsr_competencia` (**132**) — apuração semanal que alimenta a folha
+    com o **reflexo das horas extras sobre o repouso** (Súmula 172 do TST: a
+    média das HE da semana entra no valor do DSR) e a **perda do DSR por falta
+    injustificada** na semana (Lei 605/49, art. 6º);
+  - `ponto_repouso_semanal_verificar` (**133**) — detecta **sete dias seguidos
+    de trabalho sem 24 horas consecutivas de repouso** (CLT art. 67);
+  - `ponto_repouso_semanal_monitorar` (**133**) — varre a competência e alerta o
+    gestor sobre a violação, idempotente por colaborador/sequência.
+- **Baixo risco:** duas funções somente-leitura e um monitor que só insere
+  alertas. Nada é chamado automaticamente, **sem gatilho em tabela quente, sem
+  tocar no motor de saldo e sem tabela nova** (sem cerca a instalar). A folha e o
+  espelho consomem estas funções quando forem ligados.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** só PONTO-132 e PONTO-133 passaram a passar; regressão zero.
+  Provado em transação: semana com 120 min de HE em 5 dias úteis → reflexo de 24
+  min no DSR; semana com falta injustificada → `dsr_perdido = true`; sequência de
+  7 dias trabalhados → violação do art. 67 sinalizada; o monitor cria o alerta na
+  1ª execução e devolve 0 na 2ª (idempotente).
+- **Tela (Publicar no Lovable) — quando o RH for usar:** o evento de DSR na folha
+  e a coluna do espelho (`total_dsr`) passam a ter fonte; ligá-los na exportação
+  e no espelho é de tela, por Publicar no Lovable. O banco já apura.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -460,10 +488,11 @@ com seu pacote. A ordem prevista:
   #8), 3 (adicional noturno prorrogado, #9) e 4 (turno da virada, #10). Sete
   casos da bateria passaram a passar, regressão zero. O regime rural
   (PONTO-113) fica como evolução condicional a cliente do agro.
-- **Onda 4** — intervalo, descanso e DSR. **Em andamento**, em partes: parte 1
-  (faixas de intervalo, #16), parte 2 (supressão de intervalo, #17), parte 3
-  (pré-assinalação formal, #18) e parte 4 (domingo em dobro, #19) prontas no
-  teste; falta o DSR — reflexo e desconto por falta (132/133).
+- **Onda 4** — intervalo, descanso e DSR. **Concluída no teste**, em cinco
+  partes: parte 1 (faixas de intervalo, #16), parte 2 (supressão de intervalo,
+  #17), parte 3 (pré-assinalação formal, #18), parte 4 (domingo em dobro, #19) e
+  parte 5 (DSR + repouso semanal de 24h, #20). Sete casos da bateria passaram a
+  passar na onda (062, 060, 061, 064, 130, 132, 133), regressão zero.
 - **Ondas 5 a 8** — banco de horas e escalas, fechamento e folha, arquivos
   legais, enquadramento e prevenção.
 
