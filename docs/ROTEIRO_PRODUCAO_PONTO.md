@@ -62,6 +62,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 22 | Onda 5 (parte 2) — prazo de vencimento em cada crédito (CLT art. 59, §§5º/6º) | `docs/script_ponto_onda5_prazo_vencimento_saldo.sql` | **#21** | ⏳ | ⬜ |
 | 23 | Onda 5 (parte 3) — alertas de vencimento e teto de acúmulo do banco | `docs/script_ponto_onda5_alertas_banco.sql` | **#21** | ⏳ | ⬜ |
 | 24 | Onda 5 (parte 4) — limite de 10h diárias no regime de compensação (CLT art. 59, §2º) | `docs/script_ponto_onda5_limite_diario_compensacao.sql` | **#21** | ⏳ | ⬜ |
+| 25 | Onda 5 (parte 5) — liquidação do saldo de banco na rescisão (CLT art. 59, §3º) | `docs/script_ponto_onda5_liquidar_banco_rescisao.sql` | **#21** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -528,6 +529,31 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   regime, dia de 11h (660 min) → alerta; dias de 10h (600) e de 9h → nenhum; a 2ª
   execução não duplica.
 
+### 25 · Onda 5 (parte 5) — liquidação do saldo de banco na rescisão (CLT art. 59, §3º)
+- **Arquivo:** `docs/script_ponto_onda5_liquidar_banco_rescisao.sql`
+- **O que faz:** o desligamento não conversava com o banco de horas — o
+  colaborador desligado com saldo positivo perdia o registro. A CLT art. 59, §3º
+  manda pagar as horas não compensadas na rescisão, sobre a **remuneração da data
+  da rescisão**. Passa a existir `ponto_banco_liquidar_rescisao` (apura o saldo
+  final e registra a liquidação — movimentação `liquidacao_rescisao` com os
+  minutos a pagar) e um **gatilho no desligamento** (`admissoes`) que a dispara.
+- **Blindado:** qualquer falha na liquidação **não quebra o desligamento**
+  (`EXCEPTION → NOTICE`). Idempotente (não liquida duas vezes); saldo
+  zero/negativo não gera crédito. Não altera o motor de saldo nem a apuração —
+  só lê o banco e registra a liquidação; nada é apagado.
+- **`admissoes` já tem vários gatilhos de desligamento** — este é mais um, no
+  mesmo padrão. `SET lock_timeout` curto na criação do gatilho.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`; `DROP TRIGGER IF EXISTS` +
+  `CREATE TRIGGER`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** só PONTO-173 passou a passar; regressão zero. Provado em
+  transação: saldo +240 → liquida 240; 2ª chamada → 0 (idempotente); saldo −60 →
+  0 (sem crédito); e o desligamento (status → `desligado`) disparou a liquidação
+  ponta a ponta.
+- **Tela (Publicar no Lovable):** a folha lê a movimentação `liquidacao_rescisao`
+  e calcula o valor sobre a remuneração da rescisão — ligar isso na
+  `folha_rescisoes` é de tela, por Publicar no Lovable. O banco já registra.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -582,8 +608,8 @@ com seu pacote. A ordem prevista:
 - **Onda 5** — banco de horas e escalas especiais. **Em andamento**, em seis
   partes: parte 1 (banco só com instrumento vigente, #21), parte 2 (prazo de
   vencimento do saldo, #22), parte 3 (alertas de vencimento e teto, #23) e parte
-  4 (limite de 10h no regime, #24) prontas no teste; faltam a liquidação do saldo
-  na rescisão (173) e a escala 12x36 por ciclo (150/151).
+  4 (limite de 10h no regime, #24) e parte 5 (liquidação na rescisão, #25)
+  prontas no teste; falta a escala 12x36 por ciclo (150/151).
 - **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
   prevenção.
 
