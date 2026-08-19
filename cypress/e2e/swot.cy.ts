@@ -146,24 +146,24 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
         cy.wait(1500);
       }
     });
-    cy.contains(titulo, { timeout: 15000 })
-      .should("be.visible")
-      .closest('[class*="cursor-pointer"]')
-      .click();
-    // Aguarda a tela de detalhe renderizar — busca o ícone ChevronLeft que acompanha "Voltar"
-    cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.wait(1000);
+    cy.contains(titulo, { timeout: 15000 }).should("be.visible");
+    // Re-query o card imediatamente antes do clique: após um reload a lista
+    // re-renderiza e o elemento anterior pode ter se destacado (clique num nó
+    // detached vira no-op — a tela de detalhe não abre).
+    cy.contains(titulo).closest('[class*="cursor-pointer"]').click();
+    // Confirma que a tela de DETALHE abriu de verdade pelo id estável do botão
+    // Voltar (#btn-voltar-swot). NÃO usar svg.lucide-chevron-left: ele também
+    // casa o toggle de recolher a sidebar (sempre presente, mesmo na lista) —
+    // era um falso positivo que deixava o openSwotByTitle "passar" ainda na
+    // lista, e aí o addSwotItem não achava o form (flake do CT-SWOT-020).
+    cy.get('#btn-voltar-swot', { timeout: 15000 }).should("exist");
+    // O form de adicionar item é irmão do botão Voltar no mesmo render — se o
+    // Voltar existe, o input existe. Confirma antes de devolver o controle.
+    cy.get('input[placeholder*="Descreva o item"]', { timeout: 15000 }).should("exist");
+    cy.wait(500);
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
-    // O formulário de adicionar item só monta depois que a tela de detalhe
-    // termina de buscar os itens da SWOT — mais lento logo após um reload
-    // (fallback do openSwotByTitle). Espera generosa aqui evita o flake
-    // "Expected to find input Descreva o item, but never found it" do CT-SWOT-020.
-    cy.get('input[placeholder*="Descreva o item"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView();
-
     // 1. Selecionar tipo (primeiro select trigger)
     clickSelectTrigger(0);
     selectRadixOption(tipo);
