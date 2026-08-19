@@ -297,13 +297,13 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Espera toast de sucesso ou dialog fechar
     cy.get('[data-sonner-toaster] [data-sonner-toast]', { timeout: 15000 }).should("exist");
-    cy.wait(3000);
 
     openSwotTab();
-    cy.get("body").then(($body) => {
-      const matches = $body.text().match(new RegExp(titulo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"));
-      expect(matches?.length || 0).to.be.gte(1);
-    });
+    // Espera RETENTÁVEL o card da SWOT aparecer na lista — a lista pode demorar
+    // a atualizar após o clique. Substitui o snapshot único (cy.get("body")
+    // .then + match), que checava num instante só e dava flake ("expected 0 to
+    // be at least 1"). cy.contains reexecuta até achar ou estourar o timeout.
+    cy.contains(titulo, { timeout: 15000 }).should("exist");
   });
 
   // ═══════════════════════════════════════════════

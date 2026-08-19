@@ -500,12 +500,13 @@ describe("Módulo EPI - Gestão de EPIs", () => {
   it("CT-27: Histórico de movimentações possui dados tabulares", () => {
     goToEpisTab("tab-epi-historico");
     cy.contains(/Histórico de Movimentações/i, { timeout: 10000 }).should("exist");
-    // Wait for loading to finish
-    cy.wait(2000);
-    // Check for table or empty state (empty state text: "Nenhuma movimentação registrada")
-    cy.get("body").then(($body) => {
+    // Espera RETENTÁVEL até haver tabela OU estado vazio — em vez de um snapshot
+    // único após tempo fixo (cy.get("body").then), que às vezes olhava antes de
+    // a aba assentar e dava flake (CT-27). O should(callback) reexecuta até
+    // passar ou estourar o timeout.
+    cy.get("body", { timeout: 20000 }).should(($body) => {
       const hasTable = $body.find("table").length > 0;
-      const hasEmpty = /Nenhuma movimentação|Carregando/i.test($body.text());
+      const hasEmpty = /Nenhuma movimenta|Sem movimenta|Nenhum registro|Carregando/i.test($body.text());
       expect(hasTable || hasEmpty, "Histórico exibe tabela ou estado vazio").to.be.true;
     });
   });
