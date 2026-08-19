@@ -220,7 +220,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       if (allGheIds.length > 0) {
         const [ghesRes, ghesCargosRes] = await Promise.all([
           fromTable("psicossocial_ghe")
-            .select("id, nome, codigo")
+            .select("id, nome, codigo, empresa_id")
             .in("id", allGheIds),
           fromTable("psicossocial_ghe_cargos")
             .select("ghe_id, cargo_id, departamento_id")
@@ -230,8 +230,22 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         if (ghesRes.error) throw ghesRes.error;
         if (ghesCargosRes.error) throw ghesCargosRes.error;
 
-        ghes = (ghesRes.data ?? []) as unknown as GheRow[];
-        const gheCargos = (ghesCargosRes.data ?? []) as unknown as GheCargoRow[];
+        // Só entram no relatório os GHEs da(s) empresa(s) da campanha. Um
+        // snapshot antigo pode apontar para um GHE homônimo de OUTRA empresa
+        // do mesmo tenant (ex.: "GHE 01" de outra filial) — se entrasse, o
+        // relatório ganhava um bloco extra com os mesmos setores/funções e a
+        // soma de respondentes ultrapassava o total da campanha.
+        const empresasCampanha = new Set(
+          campanhasGhe.map((c) => c.empresa_id).filter(Boolean) as string[]
+        );
+        ghes = ((ghesRes.data ?? []) as unknown as (GheRow & { empresa_id: string | null })[])
+          .filter((g) =>
+            empresasCampanha.size === 0 || !g.empresa_id || empresasCampanha.has(g.empresa_id)
+          );
+        const gheIdsValidos = new Set(ghes.map((g) => g.id));
+        const gheCargos = ((ghesCargosRes.data ?? []) as unknown as GheCargoRow[])
+          .filter((gc) => gheIdsValidos.has(gc.ghe_id));
+
 
         const cargoIds = Array.from(new Set(gheCargos.map((g) => g.cargo_id).filter(Boolean) as string[]));
         const deptIds = Array.from(new Set(gheCargos.map((g) => g.departamento_id).filter(Boolean) as string[]));
