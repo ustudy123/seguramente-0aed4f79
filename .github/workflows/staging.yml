@@ -20,14 +20,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
-concurrency:
-  group: staging
-  cancel-in-progress: false
-
 jobs:
   banco:
     name: Migrations e functions no staging
     runs-on: ubuntu-latest
+    # Serializa SÓ o deploy de banco — dois `db push` nunca rodam concorrentes
+    # (era o motivo da concorrência) —, sem que o job de testes de tela (`telas`,
+    # lento e às vezes vermelho por conta própria) segure a fila das próximas
+    # entregas. Antes a trava era no nível do WORKFLOW: a corrida inteira só
+    # "terminava" quando o Cypress terminava, e a leva seguinte ficava presa
+    # (pending) atrás dele. Agora a próxima corrida começa na hora; apenas o
+    # passo de banco espera o banco anterior — o Cypress roda ao lado, sem travar.
+    concurrency:
+      group: staging-banco
+      cancel-in-progress: false
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
