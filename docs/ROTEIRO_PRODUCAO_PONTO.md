@@ -49,6 +49,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 10 | Onda 3 (parte 4) — turno da virada pertence ao dia de início | `docs/script_ponto_onda3_turno_da_virada.sql` | — | ⏳ | ⬜ |
 | 11 | Onda 2 (parte 1) — cadeia de hash encadeado + verificação | `docs/script_ponto_onda2_cadeia_hash.sql` | **#3, #4** (NSR) | ⏳ | ⬜ |
 | 12 | Onda 2 (parte 2) — relógio confiável + origem da batida | `docs/script_ponto_onda2_relogio_e_origem.sql` | — | ⏳ | ⬜ |
+| 13 | Onda 2 (parte 3) — detecção de marcações uniformes ("britânico") | `docs/script_ponto_onda2_marcacoes_uniformes.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -249,6 +250,21 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Na bateria** só PONTO-378 e PONTO-379 passaram a passar; regressão zero.
   Provado de verdade: desvio dentro da tolerância não alerta, desvio acima
   alerta (uma vez por dia), e a trilha registra cada checagem.
+
+### 13 · Onda 2 (parte 3) — detecção de marcações uniformes ("britânico")
+- **Arquivo:** `docs/script_ponto_onda2_marcacoes_uniformes.sql`
+- **O que faz:** por colaborador na competência, mede o desvio-padrão dos
+  horários de entrada e saída ao longo dos dias. Desvio quase nulo por muitos
+  dias = espelho **uniforme** ("britânico"), que a Súmula 338, III, do TST
+  considera **inválido como prova**. Uma rotina companheira alerta o RH,
+  idempotente por competência.
+- **Somente leitura** sobre `ponto_diario`; aditivo e idempotente
+  (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK` — rotina de verificação e companheira
+  de alerta presentes.
+- **Na bateria** só PONTO-377 passou a passar; regressão zero. Provado de
+  verdade: um colaborador com horários idênticos por 14 dias é sinalizado como
+  uniforme (e alertado); um com variação de minutos, não.
 
 ## Regras gerais dos pacotes
 
