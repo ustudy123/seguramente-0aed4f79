@@ -55,6 +55,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 15-tela | Onda 2 (parte 5) — botão "Desconsiderar" | **Publicar no Lovable** (não é script) | #15 | ⏳ | ⬜ |
 | 16 | Onda 4 (parte 1) — faixas de intervalo (art. 71) | `docs/script_ponto_onda4_faixas_intervalo.sql` | — | ⏳ | ⬜ |
 | 17 | Onda 4 (parte 2) — supressão de intervalo (indenização 50%) | `docs/script_ponto_onda4_supressao_intervalo.sql` | **#16** | ⏳ | ⬜ |
+| 18 | Onda 4 (parte 3) — pré-assinalação formal do intervalo (Súm. 338) | `docs/script_ponto_onda4_pre_assinalacao.sql` | **#16 #17** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -349,6 +350,40 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   Provado: 8h30 sem pausa → 60 min suprimidos e alerta; 8h com 60min de pausa →
   nada; jornada de 4h sem pausa → nada (≤4h não exige intervalo).
 
+### 18 · Onda 4 (parte 3) — pré-assinalação formal do intervalo (Súmula 338)
+- **Arquivo:** `docs/script_ponto_onda4_pre_assinalacao.sql`
+- **Depende das partes 1 e 2 (#16/#17).**
+- **O que faz (Súmula 338, III do TST; Portaria MTP 671/2021):** a jornada de
+  **duas batidas** (entra e sai, sem marcar o almoço) só é válida quando o
+  intervalo é **expressamente pré-assinalado**. Passa a existir a **declaração
+  formal** — tabela `ponto_pre_assinalacao`, por escala (ampla) ou por
+  colaborador (específica, que prevalece), com **vigência** e **lastro**
+  (CCT/acordo). O espelho ganha duas colunas em `ponto_diario`
+  (`intervalo_origem` = `marcado`/`pre_assinalado` e
+  `intervalo_pre_assinalado_minutos`) que **mostram** de onde veio o intervalo
+  do dia. E a supressão (parte 2) deixa de acusar **falsa "supressão total"**
+  num dia legitimamente pré-assinalado.
+- **Desligado por padrão.** Sem declaração cadastrada, nada muda: a origem fica
+  `marcado` (dia com almoço batido) ou `NULL`, e a supressão fica idêntica à
+  parte 2. **Não altera** `ponto_marcacoes`, `horas_trabalhadas` nem o motor de
+  saldo — a dedução do intervalo na apuração segue exatamente como já era.
+- **Batida real sempre vence o declarado.**
+- **Aditivo e idempotente** (`ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT
+  EXISTS`, `CREATE OR REPLACE`, `DROP TRIGGER IF EXISTS` + `CREATE TRIGGER`).
+  **Sem backfill.** Um único gatilho de `ponto_diario` é (re)criado; a tabela
+  nova nasce vazia (sem contenção) — sem risco de deadlock entre tabelas.
+- **Conferência esperada:** `t | t | t | t | t | t | OK`.
+- **Na bateria** só PONTO-064 passou a passar; regressão zero (270 da cerca
+  segue verde, 060/061/062 seguem verdes). Provado em transação: dia de 2
+  batidas sem declaração → nada muda (`60` min de supressão, igual à parte 2);
+  almoço batido → `marcado`, sem supressão; 2 batidas + declaração de 60 min →
+  `pre_assinalado`, **sem supressão**, `horas_trabalhadas` intactas; declaração
+  existente mas com almoço batido → `marcado` (real vence); declaração de 30 min
+  (abaixo do mínimo) → supressão **parcial** de 30 min mantida.
+- **Tela (Publicar no Lovable) — quando o RH for usar:** a exibição de "intervalo
+  pré-assinalado" no espelho e o cadastro da declaração são de tela; entram por
+  Publicar no Lovable quando forem construídos. O banco já guarda tudo.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -396,9 +431,9 @@ com seu pacote. A ordem prevista:
   casos da bateria passaram a passar, regressão zero. O regime rural
   (PONTO-113) fica como evolução condicional a cliente do agro.
 - **Onda 4** — intervalo, descanso e DSR. **Em andamento**, em partes: parte 1
-  (faixas de intervalo, #16) pronta no teste; faltam a supressão de intervalo
-  (060/061), a pré-assinalação formal (064), o domingo em dobro (130) e o DSR
-  (132/133).
+  (faixas de intervalo, #16), parte 2 (supressão de intervalo, #17) e parte 3
+  (pré-assinalação formal, #18) prontas no teste; faltam o domingo em dobro
+  (130) e o DSR (132/133).
 - **Ondas 5 a 8** — banco de horas e escalas, fechamento e folha, arquivos
   legais, enquadramento e prevenção.
 
