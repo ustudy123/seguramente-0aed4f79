@@ -192,3 +192,36 @@ A Lovable publica um único build por projeto (hoje, produção). Para um `teste
 
 **E o `supabase/config.toml`?**
 Ele mantém o `project_id` de produção como padrão. Quando for trabalhar localmente no staging via CLI, use `supabase link --project-ref <staging-project-id>` para sobrescrever temporariamente.
+
+## Conferir se a produção está alinhada com o repositório
+
+O ambiente de teste recebe **toda** mudança automaticamente pela esteira; a
+produção só recebe o que é colado no SQL Editor. A cada script não colado, os
+dois se afastam — e a diferença só aparece quando algo quebra na hora errada.
+Já aconteceu duas vezes: um script de entrega abortou por causa de uma coluna
+que existia no teste e não na produção, e a rotina de QA `FERIAS-017` quebrou
+porque duas funções auxiliares nunca foram entregues.
+
+Para medir essa distância antes que ela cobre o preço, existem duas consultas
+**somente leitura** para colar no SQL Editor da produção:
+
+| Arquivo | Compara |
+|---|---|
+| `docs/script_divergencia_producao_parte1.sql` | tabelas, colunas e tipos (enums) |
+| `docs/script_divergencia_producao_parte2.sql` | funções, gatilhos e políticas de segurança |
+
+Elas listam **só as diferenças**, nos dois sentidos:
+
+- **só no repositório** → falta aplicar na produção;
+- **só na produção** → objeto criado direto no banco que ninguém trouxe de volta
+  para o código (precedentes: `feriados`, `feriado_comportamento`);
+- **difere** → o conjunto mudou; a coluna `detalhe` mostra o que a produção tem
+  hoje, para comparação.
+
+Em ambiente alinhado o resultado é uma linha só, a de resumo.
+
+> **Os arquivos envelhecem.** Cada um carrega uma fotografia do repositório na
+> data em que foi gerado. Depois de novas migrations, precisa regerar — é rápido:
+> extrai-se o inventário de uma réplica com todas as migrations aplicadas.
+
+Vale rodar antes de uma entrega grande e depois de um período sem colar scripts.
