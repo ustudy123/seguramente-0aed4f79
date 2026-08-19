@@ -26404,6 +26404,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ferias_017: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_hier_005: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
