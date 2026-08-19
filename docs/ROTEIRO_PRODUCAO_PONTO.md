@@ -58,6 +58,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 18 | Onda 4 (parte 3) — pré-assinalação formal do intervalo (Súm. 338) | `docs/script_ponto_onda4_pre_assinalacao.sql` | **#16 #17** | ⏳ | ⬜ |
 | 19 | Onda 4 (parte 4) — domingo trabalhado em dobro (Lei 605/49, Súm. 146) | `docs/script_ponto_onda4_domingo_em_dobro.sql` | — | ⏳ | ⬜ |
 | 20 | Onda 4 (parte 5) — DSR e repouso semanal de 24h (Lei 605/49, CLT art. 67) | `docs/script_ponto_onda4_dsr.sql` | — | ⏳ | ⬜ |
+| 21 | Onda 5 (parte 1) — banco de horas só com instrumento vigente (CLT art. 59) | `docs/script_ponto_onda5_banco_instrumento_vigente.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -442,6 +443,28 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   e a coluna do espelho (`total_dsr`) passam a ter fonte; ligá-los na exportação
   e no espelho é de tela, por Publicar no Lovable. O banco já apura.
 
+### 21 · Onda 5 (parte 1) — banco de horas só com instrumento vigente (CLT art. 59)
+- **Arquivo:** `docs/script_ponto_onda5_banco_instrumento_vigente.sql`
+- **O que faz:** o banco de horas creditava para **todo mundo**, sem regime nem
+  acordo. Sem instrumento válido e vigente (CLT art. 59, §§2º e 5º), a hora extra
+  é devida em **dinheiro** na competência — mandá-la para o banco é postergar
+  pagamento devido. Agora a apuração só **credita/debita** o banco quando existe
+  regime de compensação **vigente** para o vínculo (`ponto_banco_horas_config`
+  ativo, dentro da vigência, e com o acordo/CCT anexado quando o regime o exige).
+  Sem regime, o excedente **segue apurado no dia** e vai para a folha — não some.
+- **Duas peças:** a função nova `ponto_banco_regime_vigente` (resolve o regime do
+  vínculo, específico da escala > empresa > tenant) e o portão dentro de
+  `apurar_banco_horas_colaborador`. A rotina de empresa `apurar_banco_horas` só
+  repassa para essa função — o comportamento propaga sozinho.
+- **Só muda quem NÃO tem regime.** Vínculo com regime vigente segue idêntico.
+  **Não apaga nada** — a hora extra continua apurada (`horas_extras_*` do dia).
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** só PONTO-170 passou a passar; regressão zero. Provado em
+  transação: sem config → sem crédito; config ativa e vigente → regime presente;
+  config inativa, com início futuro, ou que exige acordo sem anexo → regime nulo
+  (não credita); com o acordo anexado → regime presente.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -493,8 +516,13 @@ com seu pacote. A ordem prevista:
   #17), parte 3 (pré-assinalação formal, #18), parte 4 (domingo em dobro, #19) e
   parte 5 (DSR + repouso semanal de 24h, #20). Sete casos da bateria passaram a
   passar na onda (062, 060, 061, 064, 130, 132, 133), regressão zero.
-- **Ondas 5 a 8** — banco de horas e escalas, fechamento e folha, arquivos
-  legais, enquadramento e prevenção.
+- **Onda 5** — banco de horas e escalas especiais. **Em andamento**, em seis
+  partes: parte 1 (banco só com instrumento vigente, #21) pronta no teste;
+  faltam o prazo de vencimento do saldo (171/354), os alertas de vencimento e
+  teto (355/356), o limite de 10h no regime de compensação (172), a liquidação
+  do saldo na rescisão (173) e a escala 12x36 por ciclo (150/151).
+- **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
+  prevenção.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
