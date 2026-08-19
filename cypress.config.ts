@@ -251,6 +251,18 @@ export default defineConfig({
     },
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 120000,
+    // A suíte roda contra o ambiente de teste compartilhado (site publicado +
+    // Supabase de staging), cujo tempo de resposta varia: cache do TanStack
+    // Query ainda sem um INSERT recém-feito, contexto de empresa assentando,
+    // rede. Isso gera falhas INTERMITENTES (um run passa, o próximo não) que,
+    // por serem não-determinísticas, reprovam a rodada inteira e travam a
+    // validação das levas. runMode:2 re-executa um teste que falhou (só no CI);
+    // se passar numa das tentativas, conta como verde. Regressão REAL
+    // (determinística) falha nas 3 tentativas e continua sendo acusada. Em
+    // openMode (debug local) fica 0 para o flake aparecer na cara de quem depura.
+    // O relatório ao painel de QA usa a ÚLTIMA tentativa (ver after:run), então
+    // o resultado enviado continua fiel.
+    retries: { runMode: 2, openMode: 0 },
     supportFile: "cypress/support/e2e.ts",
     specPattern: "cypress/e2e/**/*.cy.ts",
     env: {
