@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogIn, LogOut, Pencil, Loader2, Trash2, MapPin, Camera, Clock } from "lucide-react";
+import { LogIn, LogOut, Pencil, Loader2, EyeOff, MapPin, Camera, Clock } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ interface Props {
   podeEditar: boolean;
   editando: boolean;
   onSalvar: (args: { marcacaoId: string; novaHora: string; motivo: string }) => Promise<unknown>;
-  onExcluir?: (args: { marcacaoId: string }) => Promise<unknown>;
+  onExcluir?: (args: { marcacaoId: string; motivo: string }) => Promise<unknown>;
   excluindo?: boolean;
   endereco?: string;
   selfieUrl?: string;
@@ -116,7 +116,7 @@ export function MarcacaoBadge({
     <>
       <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) { setNovaHora(hora?.substring(0, 5) || ""); setMotivo(""); } }}>
         <PopoverTrigger asChild>
-          <button type="button" className={badgeClasses} title="Clique para retificar ou excluir a marcação">
+          <button type="button" className={badgeClasses} title="Clique para retificar ou desconsiderar a marcação">
             {content}
           </button>
         </PopoverTrigger>
@@ -155,21 +155,20 @@ export function MarcacaoBadge({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="flex-1 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  disabled={editando || excluindo}
+                  className="flex-1 px-2 text-amber-700 hover:text-amber-800 hover:bg-amber-500/10"
+                  disabled={editando || excluindo || !motivoValido}
                   onClick={async () => {
                     setOpen(false);
                     const ok = await confirm({
-                      title: "Excluir marcação?",
-                      description: `A marcação das ${hora?.substring(0, 5)} será excluída permanentemente e a jornada do dia será recalculada. Use apenas para batidas duplicadas ou incorretas.`,
-                      confirmLabel: "Excluir",
-                      variant: "destructive",
+                      title: "Desconsiderar marcação?",
+                      description: `A marcação das ${hora?.substring(0, 5)} será desconsiderada: fica registrada no acervo (a prova não é apagada), mas sai do cálculo da jornada do dia. Use para batidas duplicadas ou incorretas.`,
+                      confirmLabel: "Desconsiderar",
                     });
-                    if (ok) await onExcluir({ marcacaoId: id });
+                    if (ok) await onExcluir({ marcacaoId: id, motivo: motivo.trim() });
                   }}
-                  title="Excluir esta marcação (para batidas duplicadas/incorretas)"
+                  title="Desconsiderar esta marcação (mantida no acervo, fora do cálculo) — informe o motivo acima"
                 >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
+                  <EyeOff className="w-3.5 h-3.5 mr-1" /> Desconsiderar
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="flex-1 px-2" onClick={() => setOpen(false)} disabled={editando}>

@@ -48,6 +48,13 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 9 | Onda 3 (parte 3) — adicional noturno prorrogado (Súmula 60, II) | `docs/script_ponto_onda3_adicional_noturno_prorrogado.sql` | inclui #8 | ⏳ | ⬜ |
 | 10 | Onda 3 (parte 4) — turno da virada pertence ao dia de início | `docs/script_ponto_onda3_turno_da_virada.sql` | — | ⏳ | ⬜ |
 | 11 | Onda 2 (parte 1) — cadeia de hash encadeado + verificação | `docs/script_ponto_onda2_cadeia_hash.sql` | **#3, #4** (NSR) | ⏳ | ⬜ |
+| 12 | Onda 2 (parte 2) — relógio confiável + origem da batida | `docs/script_ponto_onda2_relogio_e_origem.sql` | — | ⏳ | ⬜ |
+| 13 | Onda 2 (parte 3) — detecção de marcações uniformes ("britânico") | `docs/script_ponto_onda2_marcacoes_uniformes.sql` | — | ⏳ | ⬜ |
+| 14 | Onda 2 (parte 4) — reabertura formal de competência + versão do espelho | `docs/script_ponto_onda2_reabertura_competencia.sql` | — | ⏳ | ⬜ |
+| 15 | Onda 2 (parte 5) — correção por acréscimo (desconsiderar) — banco | `docs/script_ponto_onda2_desconsiderar_marcacao.sql` | — | ⏳ | ⬜ |
+| 15-tela | Onda 2 (parte 5) — botão "Desconsiderar" | **Publicar no Lovable** (não é script) | #15 | ⏳ | ⬜ |
+| 16 | Onda 4 (parte 1) — faixas de intervalo (art. 71) | `docs/script_ponto_onda4_faixas_intervalo.sql` | — | ⏳ | ⬜ |
+| 17 | Onda 4 (parte 2) — supressão de intervalo (indenização 50%) | `docs/script_ponto_onda4_supressao_intervalo.sql` | **#16** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -230,6 +237,118 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   provei o mecanismo de verdade: base legada limpa, novas marcações encadeiam, e
   a remoção de uma marcação do meio é detectada.
 
+### 12 · Onda 2 (parte 2) — relógio confiável + origem da batida
+- **Arquivo:** `docs/script_ponto_onda2_relogio_e_origem.sql`
+- **O que faz (requisitos do REP-P):** (378) a marcação passa a registrar se
+  nasceu **on-line ou off-line** (`origem_offline`) e o momento da sincronização
+  (`sincronizado_em`), preservando a hora da batida como a oficial; (379) uma
+  rotina monitora o **relógio do servidor contra a Hora Legal Brasileira**
+  (Observatório Nacional), com trilha das checagens (`ponto_relogio_checagens`)
+  e alerta quando o desvio passa da tolerância. A hora oficial é fornecida por
+  quem chama (uma Edge Function que consulta a fonte).
+- **Puramente aditivo** — colunas novas com padrão neutro e mecanismos ao lado
+  do que já existe; nada do fluxo atual muda.
+- **`ADD COLUMN IF NOT EXISTS` + `CREATE TABLE IF NOT EXISTS` + `CREATE OR
+  REPLACE`** — idempotente. **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK` — colunas de origem, trilha do
+  relógio e rotina de monitoração presentes.
+- **Na bateria** só PONTO-378 e PONTO-379 passaram a passar; regressão zero.
+  Provado de verdade: desvio dentro da tolerância não alerta, desvio acima
+  alerta (uma vez por dia), e a trilha registra cada checagem.
+
+### 13 · Onda 2 (parte 3) — detecção de marcações uniformes ("britânico")
+- **Arquivo:** `docs/script_ponto_onda2_marcacoes_uniformes.sql`
+- **O que faz:** por colaborador na competência, mede o desvio-padrão dos
+  horários de entrada e saída ao longo dos dias. Desvio quase nulo por muitos
+  dias = espelho **uniforme** ("britânico"), que a Súmula 338, III, do TST
+  considera **inválido como prova**. Uma rotina companheira alerta o RH,
+  idempotente por competência.
+- **Somente leitura** sobre `ponto_diario`; aditivo e idempotente
+  (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK` — rotina de verificação e companheira
+  de alerta presentes.
+- **Na bateria** só PONTO-377 passou a passar; regressão zero. Provado de
+  verdade: um colaborador com horários idênticos por 14 dias é sinalizado como
+  uniforme (e alertado); um com variação de minutos, não.
+
+### 14 · Onda 2 (parte 4) — reabertura formal de competência + versão do espelho
+- **Arquivo:** `docs/script_ponto_onda2_reabertura_competencia.sql`
+- **O que faz:** cria a saída **formal** para o erro legítimo descoberto após o
+  fechamento. `ponto_reabrir_competencia` valida que a competência está fechada,
+  **exige motivo**, confere a **alçada** (papéis de gestão), **arquiva** a versão
+  corrente dos espelhos (a que o colaborador recebeu) num histórico recuperável,
+  marca o fechamento como `reaberto` e registra a **trilha**. O re-fechamento
+  seguinte gera a próxima versão, sem regravar a anterior.
+- **A tabela nova (`ponto_espelhos_historico`) recebe a trava do cercado** do QA,
+  como toda tabela de ponto — sem isso a rotina PONTO-270 acusaria.
+- **Aditivo e idempotente** (`ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT
+  EXISTS`, `CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | t | t | OK` — colunas de reabertura,
+  histórico do espelho, trava do cercado na tabela nova, e a função de
+  reabertura.
+- **Na bateria** PONTO-358 passou a passar; regressão zero. Provado de verdade:
+  reabertura sem motivo é recusada; com motivo, arquiva a versão e marca
+  `reaberto`; e reabrir uma competência já reaberta é recusado.
+- **Nota honesta:** o PONTO-194 (geração transacional dos espelhos) também
+  aparece verde na bateria depois desta parte, mas por **coincidência** — a
+  régua dele só procura uma função que toque `ponto_espelhos` com `INSERT`, e a
+  reabertura casa esse padrão. A geração transacional dos espelhos de verdade
+  (hoje o frontend grava linha a linha) segue como item próprio, a fazer.
+
+### 15 · Onda 2 (parte 5) — correção por acréscimo: desconsiderar, nunca apagar
+- **Arquivo (banco):** `docs/script_ponto_onda2_desconsiderar_marcacao.sql`
+- **O que faz:** a batida original **nunca é apagada**. Passa a ser
+  **desconsiderada**: fica no acervo e na cadeia de hash, marcada com motivo e
+  responsável, e sai do cálculo do dia. Fecha o buraco dos RPCs
+  (`excluir_marcacao_ponto`, `processar_ajuste_ponto` tipo correção) que ainda
+  apagavam pelo flag de sessão. Portaria 671 veda apagar; CLT art. 74; Súmula
+  338 do TST.
+- **`ADD COLUMN IF NOT EXISTS` + `CREATE OR REPLACE`** — idempotente. **Sem
+  backfill.**
+- **Conferência esperada:** `t | t | t | t | t | OK` — coluna de desconsideração,
+  RPC próprio, o antigo "excluir" delegando (não apaga), o cálculo ignorando
+  desconsideradas, e o ajuste sem apagar.
+- **Na bateria:** PONTO-004 segue passando; **regressão zero**. Provado de
+  verdade: desconsiderar tira a batida do cálculo, mas ela **continua no acervo**
+  e a **cadeia de hash segue intacta** (a prova fica).
+
+#### 15-tela · o botão "Desconsiderar" (Publicar no Lovable)
+- **Não é um script.** A tela (o botão "Excluir" do espelho vira "Desconsiderar",
+  com o motivo obrigatório) está no código do frontend e entra em produção pelo
+  **Publicar no Lovable**, depois que o pacote #15 (banco) estiver em produção.
+- **Enquanto a tela não é publicada:** o banco já protege — o botão "Excluir"
+  antigo já **desconsidera** (não apaga), só com o rótulo antigo. Publicar o
+  Lovable troca o rótulo e passa a pedir o motivo.
+
+### 16 · Onda 4 (parte 1) — faixas de intervalo (art. 71)
+- **Arquivo:** `docs/script_ponto_onda4_faixas_intervalo.sql`
+- **O que faz:** cria a função canônica do mínimo de intervalo intrajornada por
+  **faixa de jornada** (CLT art. 71): até 4h nenhum; 4-6h 15 min; acima de 6h
+  60 min. É a base do cálculo de supressão (parte 2) — sem as faixas, aplicar
+  "1 hora para todos" criaria supressão fictícia nas jornadas curtas.
+- **Função pura (`IMMUTABLE`), aditiva e idempotente** (`CREATE OR REPLACE`).
+  **Sem backfill.**
+- **Conferência esperada:** `t | 0 | 15 | 15 | 60 | OK`.
+- **Na bateria** só PONTO-062 passou a passar; regressão zero.
+
+### 17 · Onda 4 (parte 2) — supressão de intervalo (indenização de 50%)
+- **Arquivo:** `docs/script_ponto_onda4_supressao_intervalo.sql`
+- **Depende da parte 1 (#16).** Usa as faixas de intervalo.
+- **O que faz (CLT art. 71, §4º pós-2017):** jornada acima de 6h com pausa menor
+  que a devida gera **supressão** — indenização de **50% sobre apenas os minutos
+  suprimidos**, natureza **indenizatória** (sem reflexos em DSR/férias/13º/FGTS;
+  a regra antiga da hora cheia salarial foi revogada em 2017). A função calcula;
+  um gatilho na consolidação grava os minutos suprimidos em
+  `ponto_diario.he_intervalo_suprimido_minutos` e **alerta o RH** (parcial ou
+  total), idempotente por colaborador/dia. A supressão total (jornada corrida
+  sem nenhuma pausa) deixa de passar invisível.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`, `DROP TRIGGER IF EXISTS` +
+  `CREATE TRIGGER`). **Sem backfill.**
+- **Conferência esperada:** `t | t | 60 | 0 | OK`.
+- **Na bateria** só PONTO-060 e PONTO-061 passaram a passar; regressão zero.
+  Provado: 8h30 sem pausa → 60 min suprimidos e alerta; 8h com 60min de pausa →
+  nada; jornada de 4h sem pausa → nada (≤4h não exige intervalo).
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -263,11 +382,12 @@ Conforme cada uma for entregue e validada no teste, ela entra na tabela acima
 com seu pacote. A ordem prevista:
 
 - **Onda 2** — registro imutável de verdade (correção por acréscimo, cadeia de
-  hash, competência fechada). *Mexe em tela — vai exigir Publicar no Lovable.*
-  **Em andamento**, em partes: parte 1 (cadeia de hash, #11) pronta no teste;
-  faltam relógio/origem da batida (378/379), marcações uniformes (377),
-  reabertura formal de competência (358) e a correção por acréscimo /
-  desconsiderar (PONTO-004 resto — a parte que mexe em tela).
+  hash, competência fechada). **Concluída no teste**, em cinco partes: cadeia de
+  hash (#11), relógio/origem da batida (#12), marcações uniformes (#13),
+  reabertura formal de competência (#14) e correção por acréscimo/desconsiderar
+  (#15 banco + #15-tela). *A parte 5 tem componente de tela — o botão
+  "Desconsiderar" entra por Publicar no Lovable.* A geração transacional dos
+  espelhos (PONTO-194) fica como item próprio, a fazer.
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
   versionamento da onda 1 no lugar.* **Concluída no teste**, entregue em quatro
@@ -275,8 +395,12 @@ com seu pacote. A ordem prevista:
   #8), 3 (adicional noturno prorrogado, #9) e 4 (turno da virada, #10). Sete
   casos da bateria passaram a passar, regressão zero. O regime rural
   (PONTO-113) fica como evolução condicional a cliente do agro.
-- **Ondas 4 a 8** — intervalo/DSR, banco de horas, fechamento, arquivos legais,
-  enquadramento e prevenção.
+- **Onda 4** — intervalo, descanso e DSR. **Em andamento**, em partes: parte 1
+  (faixas de intervalo, #16) pronta no teste; faltam a supressão de intervalo
+  (060/061), a pré-assinalação formal (064), o domingo em dobro (130) e o DSR
+  (132/133).
+- **Ondas 5 a 8** — banco de horas e escalas, fechamento e folha, arquivos
+  legais, enquadramento e prevenção.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").

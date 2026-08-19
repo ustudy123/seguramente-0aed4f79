@@ -25,6 +25,7 @@ interface GheRow {
   id: string;
   nome: string;
   codigo?: string | null;
+  empresa_id?: string | null;
 }
 
 interface GheCargoRow {
@@ -220,7 +221,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       if (allGheIds.length > 0) {
         const [ghesRes, ghesCargosRes] = await Promise.all([
           fromTable("psicossocial_ghe")
-            .select("id, nome, codigo")
+            .select("id, nome, codigo, empresa_id")
             .in("id", allGheIds),
           fromTable("psicossocial_ghe_cargos")
             .select("ghe_id, cargo_id, departamento_id")
@@ -230,8 +231,20 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         if (ghesRes.error) throw ghesRes.error;
         if (ghesCargosRes.error) throw ghesCargosRes.error;
 
-        ghes = (ghesRes.data ?? []) as unknown as GheRow[];
-        const gheCargos = (ghesCargosRes.data ?? []) as unknown as GheCargoRow[];
+        // Isolamento por empresa: um snapshot antigo pode apontar para um GHE
+        // de OUTRA empresa do mesmo tenant (nomes iguais, ex.: "GHE 01").
+        // Só entram no relatório os GHEs da(s) empresa(s) das campanhas.
+        const empresasCampanha = new Set(
+          campanhasGhe.map((c) => c.empresa_id).filter(Boolean) as string[],
+        );
+        ghes = ((ghesRes.data ?? []) as unknown as GheRow[]).filter((g) => {
+          if (empresasCampanha.size === 0) return true;
+          if (!g.empresa_id) return true;
+          return empresasCampanha.has(g.empresa_id);
+        });
+        const gheIdsValidos = new Set(ghes.map((g) => g.id));
+        const gheCargos = ((ghesCargosRes.data ?? []) as unknown as GheCargoRow[])
+          .filter((gc) => gheIdsValidos.has(gc.ghe_id));
 
         const cargoIds = Array.from(new Set(gheCargos.map((g) => g.cargo_id).filter(Boolean) as string[]));
         const deptIds = Array.from(new Set(gheCargos.map((g) => g.departamento_id).filter(Boolean) as string[]));
@@ -446,7 +459,7 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
       // em todos produzia scores idênticos em GHE 01, GHE 02 etc. — a mesma
       // média global repetida. Nesse caso a resposta fica fora da
       // estratificação até o snapshot ser resolvido no servidor.
-      const ids = campanhaGheMap.get(r.campanha_id) ?? [];
+      const ids = (campanhaGheMap.get(r.campanha_id) ?? []).filter(gheExiste);
       if (ids.length === 1) {
         addToGrupo(ids[0], gheNomeMap.get(ids[0]) ?? "GHE", r);
       } else {
