@@ -47,6 +47,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 8 | Onda 3 (parte 2) — jornada da escala + hora extra sem truncar | `docs/script_ponto_onda3_jornada_escala_he.sql` | — | ⏳ | ⬜ |
 | 9 | Onda 3 (parte 3) — adicional noturno prorrogado (Súmula 60, II) | `docs/script_ponto_onda3_adicional_noturno_prorrogado.sql` | inclui #8 | ⏳ | ⬜ |
 | 10 | Onda 3 (parte 4) — turno da virada pertence ao dia de início | `docs/script_ponto_onda3_turno_da_virada.sql` | — | ⏳ | ⬜ |
+| 11 | Onda 2 (parte 1) — cadeia de hash encadeado + verificação | `docs/script_ponto_onda2_cadeia_hash.sql` | **#3, #4** (NSR) | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -207,6 +208,28 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   (regressão zero em 120 casos).
 - **Sem backfill.**
 
+### 11 · Onda 2 (parte 1) — cadeia de hash encadeado + verificação
+- **Arquivo:** `docs/script_ponto_onda2_cadeia_hash.sql`
+- **Depende do NSR (#3 e #4).** O encadeamento usa a numeração sequencial das
+  marcações — rode os pacotes do NSR antes deste.
+- **O que faz:** o hash de cada marcação nova passa a **incorporar o hash da
+  anterior** (por NSR/estabelecimento) — remover uma linha passa a quebrar a
+  cadeia. Uma rotina recomputa cada hash (detecta alteração de conteúdo) e
+  confere o encadeamento e a continuidade da NSR (detecta remoção), com alerta
+  ao RH. É o que transforma "não editamos" em prova (registro tipo 7 do AFD).
+- **Retrocompatível.** O append do hash anterior é vazio para as marcações
+  antigas, e append de vazio não muda o hash — as marcações já gravadas
+  continuam com o **mesmo hash** e verificam limpas. **Sem backfill.**
+- **`ADD COLUMN IF NOT EXISTS` + `CREATE OR REPLACE`** — idempotente. A geração
+  do hash é defensiva: nunca deixa de gravar a marcação.
+- **Conferência esperada:** `t | t | t | 0 | OK` — coluna criada, hash encadeado,
+  rotina de verificação, e **zero quebras** na base atual (sem falso positivo).
+- **Atenção:** se `quebras_hoje` vier acima de zero, há marcação adulterada ou
+  removida em produção — me avise para investigar.
+- **Na bateria** só PONTO-191 passou a passar; regressão zero. Além da régua,
+  provei o mecanismo de verdade: base legada limpa, novas marcações encadeiam, e
+  a remoção de uma marcação do meio é detectada.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -241,6 +264,10 @@ com seu pacote. A ordem prevista:
 
 - **Onda 2** — registro imutável de verdade (correção por acréscimo, cadeia de
   hash, competência fechada). *Mexe em tela — vai exigir Publicar no Lovable.*
+  **Em andamento**, em partes: parte 1 (cadeia de hash, #11) pronta no teste;
+  faltam relógio/origem da batida (378/379), marcações uniformes (377),
+  reabertura formal de competência (358) e a correção por acréscimo /
+  desconsiderar (PONTO-004 resto — a parte que mexe em tela).
 - **Onda 3** — cálculo (hora extra, jornada da escala, tolerância, turno da
   virada, adicional noturno). *Onde está o dinheiro; agora segura, com o
   versionamento da onda 1 no lugar.* **Concluída no teste**, entregue em quatro
