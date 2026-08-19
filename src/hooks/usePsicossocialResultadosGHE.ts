@@ -365,9 +365,23 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     const gheCodigoMap = new Map(ghes.map((g) => [g.id, g.codigo ?? null]));
     // GHEs excluídos do cadastro não podem voltar via snapshot antigo da resposta.
     const gheExiste = (id: string) => gheNomeMap.has(id);
+    // GHE excluído/mesclado: a resposta guarda o id antigo, mas o nome do
+    // snapshot ainda casa com um GHE vivo (ex.: GHE 3 mesclado no GHE 01).
+    // Sem esta resolução a resposta caía em "Sem GHE definido" E continuava
+    // contada no GHE real (respondentes vêm por cpf_hash), inflando a soma
+    // dos respondentes e repetindo as mesmas funções em dois blocos.
+    const gheIdPorNome = new Map(
+      ghes.map((g) => [(g.nome ?? "").trim().toLowerCase(), g.id]),
+    );
+    const resolverGhe = (r: RespostaRow): string | null => {
+      if (r.ghe_id_snapshot && gheExiste(r.ghe_id_snapshot)) return r.ghe_id_snapshot;
+      const porNome = gheIdPorNome.get((r.ghe_nome_snapshot ?? "").trim().toLowerCase());
+      return porNome ?? null;
+    };
     const campanhaGheMap = new Map(
       campanhasGhe.map((c) => [c.id, (c.ghe_ids ?? []).filter(Boolean)])
     );
+
 
     const grupos = new Map<string, {
       nome: string;
@@ -416,14 +430,16 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     };
 
     for (const r of respostas) {
-      if (r.ghe_id_snapshot && gheExiste(r.ghe_id_snapshot)) {
+      const gheResolvido = resolverGhe(r);
+      if (gheResolvido) {
         addToGrupo(
-          r.ghe_id_snapshot,
-          gheNomeMap.get(r.ghe_id_snapshot) ?? r.ghe_nome_snapshot ?? "GHE",
+          gheResolvido,
+          gheNomeMap.get(gheResolvido) ?? r.ghe_nome_snapshot ?? "GHE",
           r
         );
         continue;
       }
+
 
       // Fallback: só é seguro atribuir a resposta ao GHE da campanha quando a
       // campanha tem UM único GHE. Com vários GHEs, replicar a mesma resposta

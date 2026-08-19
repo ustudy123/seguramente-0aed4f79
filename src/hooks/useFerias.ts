@@ -80,7 +80,7 @@ export interface CriarFeriasInput {
 }
 
 export function useFerias() {
-  const { tenantId, profile } = useAuth();
+  const { tenantId, profile, user } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
@@ -160,6 +160,14 @@ export function useFerias() {
         .from("ferias_solicitacoes" as any)
         .update({
           status: "aprovado",
+          // Quem aprovou precisa ser o USUÁRIO, não um nome de exibição.
+          // Até 14/08 gravávamos só `aprovado_por_nome` — texto livre, que
+          // não prova nada: 19 das 19 solicitações da produção estavam sem
+          // autor identificável. Aprovação de férias é ato com efeito
+          // trabalhista; sem o autor, não há trilha auditável (RNF-003 do
+          // documento de requisitos) e nenhuma trava de segregação tem
+          // sobre o que agir.
+          aprovado_por: user?.id ?? null,
           aprovado_por_nome: profile?.nome_completo || "Gestor",
           data_aprovacao: new Date().toISOString(),
         } as any)
@@ -177,7 +185,15 @@ export function useFerias() {
     mutationFn: async ({ id, motivo }: { id: string; motivo?: string }) => {
       const { error } = await supabase
         .from("ferias_solicitacoes" as any)
-        .update({ status: "recusado", motivo_recusa: motivo || null } as any)
+        // Recusar também é decisão, e também precisa de autor: negar férias
+        // pedidas é o lado da mesma moeda do aprovar.
+        .update({
+          status: "recusado",
+          motivo_recusa: motivo || null,
+          aprovado_por: user?.id ?? null,
+          aprovado_por_nome: profile?.nome_completo || "Gestor",
+          data_aprovacao: new Date().toISOString(),
+        } as any)
         .eq("id", id);
       if (error) throw error;
     },
