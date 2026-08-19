@@ -132,6 +132,20 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function openSwotByTitle(titulo: string) {
+    // A lista pode mostrar SWOTs antigas mas não a recém-criada: o cache do
+    // TanStack Query ainda não reflete o INSERT (ou o contexto de empresa
+    // assentou só depois da criação). Isso dava o flake do CT-SWOT-020
+    // ("Expected to find content 'SWOT Força …' but never did"). Se o card não
+    // estiver presente, um reload força a rebusca no banco antes de procurá-lo.
+    cy.wait(1000);
+    cy.get("body", { timeout: 10000 }).then(($body) => {
+      if (!$body.text().includes(titulo)) {
+        cy.reload();
+        closeEmpresaModalIfNeeded();
+        openSwotTab();
+        cy.wait(1500);
+      }
+    });
     cy.contains(titulo, { timeout: 15000 })
       .should("be.visible")
       .closest('[class*="cursor-pointer"]')
