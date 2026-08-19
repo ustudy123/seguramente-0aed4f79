@@ -430,14 +430,16 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     };
 
     for (const r of respostas) {
-      if (r.ghe_id_snapshot && gheExiste(r.ghe_id_snapshot)) {
+      const gheResolvido = resolverGhe(r);
+      if (gheResolvido) {
         addToGrupo(
-          r.ghe_id_snapshot,
-          gheNomeMap.get(r.ghe_id_snapshot) ?? r.ghe_nome_snapshot ?? "GHE",
+          gheResolvido,
+          gheNomeMap.get(gheResolvido) ?? r.ghe_nome_snapshot ?? "GHE",
           r
         );
         continue;
       }
+
 
       // Fallback: só é seguro atribuir a resposta ao GHE da campanha quando a
       // campanha tem UM único GHE. Com vários GHEs, replicar a mesma resposta
