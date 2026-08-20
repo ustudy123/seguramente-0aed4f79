@@ -73,6 +73,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 33 | Onda 7 (parte 2) — AEJ (Arquivo Eletrônico de Jornada, Portaria 671) | `docs/script_ponto_onda7_aej.sql` | — | ⏳ | ⬜ |
 | 34 | Onda 7 (parte 3) — importação de AFD que confere (CRC, cadeia, lacuna, quarentena) | `docs/script_ponto_onda7_afd_importacao.sql` | — | ⏳ | ⬜ |
 | 35 | Onda 7 (parte 4) — gestão do certificado digital (ICP-Brasil) | `docs/script_ponto_onda7_certificado_digital.sql` | — | ⏳ | ⬜ |
+| 36 | Onda 7 (parte 5) — dossiê de fiscalização + arquivamento no módulo Documentos | `docs/script_ponto_onda7_dossie_fiscalizacao.sql` | #33 #34 #35 | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -829,6 +830,39 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** a tela de cadastro do certificado e o painel de
   alertas chamam essas funções; o cadastro, a vigência e o alerta já estão no banco.
 
+### 36 · Onda 7 (parte 5) — dossiê de fiscalização + arquivamento (fecha a onda 7)
+- **Arquivo:** `docs/script_ponto_onda7_dossie_fiscalizacao.sql`
+- **Depende das partes 2, 3 e 4 (#33, #34, #35)** — reúne as peças que elas criam.
+- **O que faz:** faltavam as duas pontas do acervo de provas. **(1)** Diante do
+  Auditor-Fiscal, o DP teria de caçar peça por peça — não havia um empacotador que
+  reunisse AFD, AEJ, comprovantes, espelhos e a trilha num pacote com **índice e
+  verificação de assinaturas (hashes)**. **(2)** As peças ficavam soltas nas
+  tabelas do ponto, sem a **classificação por pasta e o vínculo** do módulo
+  Documentos, dependendo de upload manual. Passam a existir:
+  - **`ponto_dossies_fiscalizacao`** — o pacote da competência: o **índice** das
+    peças com contagens e hashes, e o **hash do pacote** (integridade do conjunto),
+    com trava do cercado e RLS.
+  - **`ponto_arquivar_documento`** — grava a referência de uma peça no **módulo
+    Documentos** (`public.documentos`) com pasta/classificação e vínculo
+    (empresa/colaborador), conferindo o objeto no repositório de arquivos, **sem
+    upload manual**; idempotente por caminho de arquivo.
+  - **`ponto_gerar_dossie_fiscalizacao`** — monta o dossiê da competência a partir
+    das peças (AEJ, comprovantes, espelhos, AFD importado) e o **arquiva** no
+    módulo Documentos.
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem as
+  peças. Só **lê** as peças, monta o pacote e registra a referência. **Aditivo e
+  idempotente.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** dois casos passaram a passar na parte (392, 393), regressão zero
+  (100→102). Provado em transação (dados fictícios): o dossiê soma as 5 peças da
+  competência (1 AEJ, 2 comprovantes, 1 espelho, 1 AFD), monta o índice com um
+  hash por tipo e o hash do pacote, e **arquiva** o dossiê no módulo Documentos
+  (tipo, classificação, vínculo à empresa, "Ponto (automático)"); regerar **não
+  duplica** nem o dossiê nem o documento.
+- **Tela (Publicar no Lovable):** o botão "gerar dossiê / modo fiscalização" e a
+  lista de documentos do ponto chamam essas funções; o pacote, o índice, os hashes
+  e o arquivamento já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -893,18 +927,20 @@ com seu pacote. A ordem prevista:
   Cinco casos passaram a passar na onda (194, 388, 387, 361, 398), regressão
   zero.
 - **Onda 7** — arquivos legais e prova documental (REP-P/AFD/AEJ, certificado
-  digital, dossiê de fiscalização). **Em andamento no teste.** Entregues: parte 1,
+  digital, dossiê de fiscalização). **Concluída no teste**, em cinco partes:
   comprovante como documento (#32) — a tabela `ponto_comprovantes`, a emissão
   idempotente com NSR e hash, a vigilância do prazo de 48h e a extração por
-  período pelo próprio trabalhador (380, 381, 359); parte 2, o AEJ — Arquivo
-  Eletrônico de Jornada (#33) — a tabela `ponto_arquivos_aej`, o gerador a partir
-  da apuração fechada em registros tipados e assinado, e a extração para
-  fiscalização (211); parte 3, a importação de AFD que confere (#34) — CRC-16,
-  cadeia SHA-256, recusa por lacuna de NSR e quarentena, a chave natural de origem
-  na marcação e a trilha dos eventos do equipamento (382, 383, 384, 212); parte 4,
-  a gestão do certificado digital (#35) — o cadastro ICP-Brasil por empresa, o
-  certificado vigente que assina o `.p7s` e o alerta de vencimento (360). A
-  seguir: o dossiê de fiscalização.
+  período pelo próprio trabalhador (380, 381, 359); o AEJ — Arquivo Eletrônico de
+  Jornada (#33) — a tabela `ponto_arquivos_aej`, o gerador a partir da apuração
+  fechada em registros tipados e assinado, e a extração (211); a importação de AFD
+  que confere (#34) — CRC-16, cadeia SHA-256, recusa por lacuna de NSR e
+  quarentena, a chave natural de origem na marcação e a trilha dos eventos do
+  equipamento (382, 383, 384, 212); a gestão do certificado digital (#35) — o
+  cadastro ICP-Brasil por empresa, o certificado vigente que assina o `.p7s` e o
+  alerta de vencimento (360); e o dossiê de fiscalização + arquivamento (#36) — o
+  empacotador com índice e hashes e o arquivamento automático no módulo Documentos
+  (392, 393). Onze casos passaram a passar na onda (380, 381, 359, 211, 382, 383,
+  384, 212, 360, 392, 393), regressão zero.
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
   ação).
 
