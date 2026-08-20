@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "dev:staging": "vite --mode staging",
+    "dev:homologacao": "vite --mode homologacao",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "build:staging": "vite build --mode staging",
+    "build:homologacao": "vite build --mode homologacao",
     "build:production": "vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview",
