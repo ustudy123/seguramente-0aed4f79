@@ -1063,6 +1063,31 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Sobra em vermelho** só o **PONTO-113** (trabalhador rural), que é evolução
   condicional a cliente do agronegócio — fora do escopo de conformidade geral.
 
+### Item condicional — trabalhador rural (PONTO-113), parado por decisão
+
+Não implementado **de propósito**: só compensa quando houver cliente do agro —
+antes disso seria código mantido sem uso. Fica **parado e documentado**. Enquanto
+nenhum vínculo for marcado como rural, todo o cálculo continua urbano como hoje
+(risco zero para quem não é do agro). Escopo já medido, para não redescobrir:
+
+- **Regra legal (Lei 5.889/73, três eixos ao mesmo tempo):** janela noturna
+  **lavoura 21h–5h / pecuária 20h–4h** (urbano 22h–5h); adicional **25%** (urbano
+  20%); **hora cheia de 60 min, sem hora ficta** (urbano usa a ficta de 52min30s).
+- **Banco (uma onda pequena):** (1) campo de **regime** no vínculo/admissão
+  (`urbano` [padrão] / `rural_lavoura` / `rural_pecuaria`), irmão do enquadramento
+  do art. 62 que já vive em `admissoes` — fica no trabalhador, não na empresa
+  (o mesmo empregador tem gente de campo e de escritório); (2) `calcular_he_adicional_noturno_dia`
+  passa a aplicar os três eixos quando o vínculo é rural — a função **já sabe**
+  usar janela/percentual/ficta parametrizados (hoje lê de `ponto_cct_config`),
+  falta só ligar a fonte "rural" e o padrão legal; (3) caso funcional provando os
+  três eixos juntos (lavoura e pecuária) com regressão zero no urbano.
+- **Tela (Publicar no Lovable):** campo de enquadramento rural no cadastro do
+  vínculo, para o RH marcar quem é rural. Sem ele, o banco funciona mas ninguém
+  marca pela tela.
+- **Decisões de produto pendentes:** confirmar as janelas legais lavoura/pecuária;
+  default urbano para quem não tem enquadramento; e se a convenção coletiva pode
+  sobrepor o piso rural (em regra só para melhorar) — este último é mais código.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
