@@ -77,6 +77,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 37 | Onda 8 (parte 1) — enquadramento do art. 62 (dispensa) + teletrabalho por jornada | `docs/script_ponto_onda8_enquadramento_art62.sql` | — | ⏳ | ⬜ |
 | 38 | Onda 8 (parte 2) — controle de fato descaracteriza a dispensa (art. 62) | `docs/script_ponto_onda8_descaracterizacao_art62.sql` | **#37** | ⏳ | ⬜ |
 | 39 | Onda 8 (parte 3) — obrigatoriedade do controle por estabelecimento (>20) | `docs/script_ponto_onda8_obrigatoriedade_estabelecimento.sql` | — | ⏳ | ⬜ |
+| 40 | Onda 8 (parte 4) — sistema alternativo (REP-A) só com instrumento coletivo | `docs/script_ponto_onda8_rep_alternativo_instrumento.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -934,6 +935,30 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** a sinalização e o alerta aparecem no cadastro do
   estabelecimento; a contagem e a regra já estão no banco.
 
+### 40 · Onda 8 (parte 4) — sistema alternativo (REP-A) só com instrumento coletivo
+- **Arquivo:** `docs/script_ponto_onda8_rep_alternativo_instrumento.sql`
+- **O que faz:** o sistema alternativo de controle de jornada (REP-A: registro por
+  link/app) só é admitido quando **autorizado por convenção ou acordo coletivo**
+  (Portaria 671; CLT art. 74, §4º). O modo `link_externo` podia ser ativado **sem
+  nenhum lastro documental** — e registro alternativo sem autorização invalida o
+  controle perante a fiscalização. Passa a ser **recusado** sem autorização:
+  espelhando a trava que já existe para o registro por exceção, ativar
+  `modo_registro='link_externo'` exige o documento do instrumento coletivo anexado
+  (`link_externo_acordo_url`) **ou** um acordo **coletivo** (act/cct) vigente em
+  `ponto_acordos`. Um acordo **individual** não autoriza.
+- **Baixo risco:** não altera o motor de saldo, o espelho nem o fechamento; só
+  valida a ativação do modo alternativo. Os modos `interno` e `ambos` não são
+  afetados, e o gatilho só dispara quando se mexe no modo ou na autorização.
+  **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** um caso passou a passar na parte (213), regressão zero (106→107).
+  Provado em transação (dados fictícios): `link_externo` **sem** autorização é
+  recusado; **com** o documento anexado é aceito; **com** um acordo coletivo
+  vigente é aceito; um acordo **individual** é recusado (exige coletivo); e o modo
+  `interno` passa normalmente.
+- **Tela (Publicar no Lovable):** a tela de configuração passa a pedir o
+  instrumento coletivo ao ativar o modo por link; a trava já está no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -1017,8 +1042,9 @@ com seu pacote. A ordem prevista:
   vínculo, com a regra da dispensa (teletrabalho por jornada continua controlado) e
   a coerência do `bate_ponto` (#37; casos 373, 374); e o controle de fato que
   descaracteriza a dispensa (#38; caso 375); e a obrigatoriedade do controle por
-  estabelecimento acima de 20 (#39; caso 370). A seguir, no banco: sistema
-  alternativo só com instrumento coletivo (213); a trilha de auditoria de acesso a dado sensível e exportação
+  estabelecimento acima de 20 (#39; caso 370); e o sistema alternativo (REP-A) só
+  com instrumento coletivo (#40; caso 213). A seguir, no banco: a trilha de
+  auditoria de acesso a dado sensível e exportação
   (397) e a contenção de enumeração de CPF no link (362); e a integração do Plano
   de Ação (alerta vira ação com 5W2H, verificação de eficácia na conclusão, e a IA
   que sugere mas nunca decide — 389, 390, 391). *Cinco casos desta onda são de
