@@ -61,6 +61,11 @@ describe("Módulo Empresa — checklist de cadastro", () => {
       .should("be.visible")
       .click({ force: true });
     cy.get('[data-testid="tab-dados"]', { timeout: 20000 }).should("be.visible");
+    // O modal "Selecione a Empresa" pode reabrir pela carga tardia de dados
+    // (visto nas falhas: body com data-scroll-locked). Fecha de novo e espera
+    // o body destravar antes de qualquer digitação.
+    closeEmpresaModalIfNeeded();
+    cy.get("body", { timeout: 15000 }).should("not.have.attr", "data-scroll-locked");
   }
 
   // Navega para uma aba do formulário pelo id estável do TabsTrigger.
@@ -132,7 +137,7 @@ describe("Módulo Empresa — checklist de cadastro", () => {
       .should("contain.text", "CNPJ");
     // Preenche o CNPJ → o checklist deixa de cobrá-lo imediatamente.
     irAba("dados");
-    cy.get('[data-testid="input-cnpj"]').clear().type("11222333000181");
+    cy.get('[data-testid="input-cnpj"]').clear({ force: true }).type("11222333000181", { force: true });
     irAba("checklist");
     cy.get('[data-testid="checklist-pendencias"]', { timeout: 15000 })
       .should("not.contain.text", "CNPJ");
@@ -147,7 +152,7 @@ describe("Módulo Empresa — checklist de cadastro", () => {
       .should("contain.text", "Total de colaboradores");
     // Informa zero → mesmo sendo 0, conta como preenchido e sai das pendências.
     irAba("dados");
-    cy.get('[data-testid="input-total-colaboradores"]').clear().type("0");
+    cy.get('[data-testid="input-total-colaboradores"]').clear({ force: true }).type("0", { force: true });
     irAba("checklist");
     cy.get('[data-testid="checklist-pendencias"]', { timeout: 15000 })
       .should("not.contain.text", "Total de colaboradores");
@@ -174,7 +179,7 @@ describe("Módulo Empresa — checklist de cadastro", () => {
     abrirNovaEmpresa();
     const nome = `Rascunho Teste ${Date.now()}`;
     irAba("dados");
-    cy.get('[data-testid="input-razao-social"]').clear().type(nome);
+    cy.get('[data-testid="input-razao-social"]').clear({ force: true }).type(nome, { force: true });
     // Espera o debounce do saveDraft (300ms) gravar no localStorage.
     cy.wait(1200);
     // Recarrega: a navegação mantém o modo "novo", e o rascunho é restaurado.
@@ -192,7 +197,7 @@ describe("Módulo Empresa — checklist de cadastro", () => {
     abrirNovaEmpresa();
     const nome = `Rascunho Antigo ${Date.now()}`;
     irAba("dados");
-    cy.get('[data-testid="input-razao-social"]').clear().type(nome);
+    cy.get('[data-testid="input-razao-social"]').clear({ force: true }).type(nome, { force: true });
     cy.wait(1200); // deixa o saveDraft gravar
     // Volta para a lista e abre "Nova Empresa" de novo.
     cy.get('[data-testid="btn-voltar-empresa"]').click({ force: true });
