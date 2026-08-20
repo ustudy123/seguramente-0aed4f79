@@ -68,6 +68,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 28 | Onda 6 (parte 2) — pendência crítica bloqueia o fechamento | `docs/script_ponto_onda6_fechamento_pendencias.sql` | — | ⏳ | ⬜ |
 | 29 | Onda 6 (parte 3) — espelho sem ciência bloqueia o fechamento (Súm. 338) | `docs/script_ponto_onda6_fechamento_ciencia_espelho.sql` | **#28** | ⏳ | ⬜ |
 | 30 | Onda 6 (parte 4) — pacote da folha com naturezas corretas (vencimento/desconto/indenizatória) | `docs/script_ponto_onda6_pacote_folha.sql` | — | ⏳ | ⬜ |
+| 31 | Onda 6 (parte 5) — fila da folha com estados e reenvio idempotente | `docs/script_ponto_onda6_fila_folha_reenvio.sql` | **#30** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -675,6 +676,29 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   pacote e disparar o envio é de tela/edge, por Publicar no Lovable. O banco já
   compõe o conteúdo com as naturezas certas.
 
+### 31 · Onda 6 (parte 5) — fila da folha com estados e reenvio idempotente
+- **Arquivo:** `docs/script_ponto_onda6_fila_folha_reenvio.sql`
+- **Depende da parte 4 (#30).**
+- **O que faz:** a exportação era um registro passivo — sem fila, sem reenvio,
+  sem confirmação. A coluna `status` já tinha os quatro estados (gerado/enviado/
+  processado/erro ≈ pendente/enviado/confirmado/falha), mas nada os movimentava.
+  Passam a existir `ponto_folha_marcar_status` (transição de estado **validada** —
+  só as transições legítimas: gerado→enviado→processado; →erro na falha;
+  erro→gerado no reenvio — com trilha no próprio pacote) e `ponto_folha_reenviar`
+  (**reenvio idempotente**: reencaminha só os pacotes ainda em erro, incrementando
+  as tentativas, **sem duplicar nem perder** — atualiza o registro existente).
+- **É o conteúdo real do PONTO-398**, que já vinha verde desde a parte 4 (as duas
+  rotinas checam a mesma condição frouxa). Agora está legítimo.
+- **Baixo risco:** não cria exportação nova; não altera o motor de saldo, o
+  espelho nem o fechamento. **Aditivo e idempotente.** **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** sem mudança de contagem (398 já estava verde); regressão zero.
+  Provado em transação: gerado→enviado→processado (válidas); gerado→processado
+  **abortada** (inválida); um pacote em erro → reenvia 1 e depois 0 (idempotente),
+  `tentativas=1`, sem duplicar (continua um pacote na competência).
+- **Tela (Publicar no Lovable):** o disparo do envio e a confirmação de
+  recebimento chamam essas transições; a fila e o reenvio já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -732,12 +756,14 @@ com seu pacote. A ordem prevista:
   liquidação na rescisão (#25) e a escala 12x36 por ciclo (#26). Oito casos da
   bateria passaram a passar na onda (170, 354, 171, 355, 356, 172, 173, 150,
   151), regressão zero.
-- **Onda 6** — fechamento e folha. **Em andamento**, em cinco partes: parte 1
-  (geração transacional dos espelhos, #27), parte 2 (pendência crítica bloqueia
-  o fechamento, #28), parte 3 (espelho sem ciência bloqueia, #29) e parte 4
-  (pacote da folha com naturezas corretas, #30) prontas no teste; falta a fila
-  com estados e reenvio idempotente (398).
-- **Ondas 7 e 8** — arquivos legais, enquadramento e prevenção.
+- **Onda 6** — fechamento e folha. **Concluída no teste**, em cinco partes:
+  geração transacional dos espelhos (#27), pendência crítica bloqueia o
+  fechamento (#28), espelho sem ciência bloqueia (#29), pacote da folha com
+  naturezas corretas (#30) e a fila com estados e reenvio idempotente (#31).
+  Cinco casos passaram a passar na onda (194, 388, 387, 361, 398), regressão
+  zero.
+- **Ondas 7 e 8** — arquivos legais (AFD/AEJ/REP-P), enquadramento (art. 62,
+  teletrabalho) e prevenção (LGPD, plano de ação).
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
