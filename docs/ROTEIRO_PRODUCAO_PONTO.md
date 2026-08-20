@@ -70,6 +70,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 30 | Onda 6 (parte 4) — pacote da folha com naturezas corretas (vencimento/desconto/indenizatória) | `docs/script_ponto_onda6_pacote_folha.sql` | — | ⏳ | ⬜ |
 | 31 | Onda 6 (parte 5) — fila da folha com estados e reenvio idempotente | `docs/script_ponto_onda6_fila_folha_reenvio.sql` | **#30** | ⏳ | ⬜ |
 | 32 | Onda 7 (parte 1) — comprovante como documento (Portaria 671/REP-P) | `docs/script_ponto_onda7_comprovantes.sql` | — | ⏳ | ⬜ |
+| 33 | Onda 7 (parte 2) — AEJ (Arquivo Eletrônico de Jornada, Portaria 671) | `docs/script_ponto_onda7_aej.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -733,6 +734,36 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   o "extrair meus comprovantes" do trabalhador chamam essas funções; o documento,
   o hash e a extração já estão no banco.
 
+### 33 · Onda 7 (parte 2) — AEJ (Arquivo Eletrônico de Jornada, Portaria 671)
+- **Arquivo:** `docs/script_ponto_onda7_aej.sql`
+- **O que faz:** o AEJ é a saída **obrigatória** do "programa de tratamento" na
+  Portaria 671 (ele substituiu o AFDT/ACJEF da 1510/2009) e a peça que a
+  fiscalização pede **junto com o AFD**. Não existia em lugar nenhum do banco —
+  nem função, nem coluna, nem tabela. Passam a existir: a tabela
+  **`ponto_arquivos_aej`** (o arquivo gerado e **arquivado** — empregador,
+  período, conteúdo em registros tipados, versão estruturada, **assinatura por
+  hash** e contagens, com a trava do cercado e RLS por tenant); o gerador
+  **`ponto_gerar_aej(tenant, empresa, competência)`** (monta o AEJ **a partir da
+  apuração fechada** — `ponto_espelhos` — mais o contrato (`admissoes`) e as
+  marcações **tratadas** (`ponto_marcacoes` não desconsideradas, com origem e
+  NSR), em registros tipados: 1 cabeçalho, 2 contrato, 3 marcação, 4 apuração,
+  9 trailer; **idempotente**, refaz o arquivo da competência); e
+  **`ponto_aej_extrair(tenant, empresa, competência)`** (devolve o arquivo
+  arquivado + assinatura para download/fiscalização).
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem as
+  marcações. Só **lê** a apuração e grava o arquivo. **Aditivo e idempotente.**
+  **Sem backfill** — o AEJ nasce sob demanda pela geração.
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** um caso passou a passar na parte (211), regressão zero (94→95).
+  Provado em transação (dados fictícios): o gerador monta o cabeçalho com o
+  empregador e o período, um registro de contrato por trabalhador, um registro
+  por marcação **tratada** (a desconsiderada fica de fora, e some da contagem),
+  o registro de apuração da competência e o trailer com as contagens; assina com
+  hash sha256; regerar **não duplica** (um arquivo por competência); a extração
+  devolve o arquivo assinado.
+- **Tela (Publicar no Lovable):** o botão "gerar/baixar AEJ" da competência chama
+  essas funções; o arquivo, a assinatura e a extração já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -797,12 +828,14 @@ com seu pacote. A ordem prevista:
   Cinco casos passaram a passar na onda (194, 388, 387, 361, 398), regressão
   zero.
 - **Onda 7** — arquivos legais e prova documental (REP-P/AFD/AEJ, certificado
-  digital, dossiê de fiscalização). **Em andamento no teste.** Parte 1 entregue:
+  digital, dossiê de fiscalização). **Em andamento no teste.** Entregues: parte 1,
   comprovante como documento (#32) — a tabela `ponto_comprovantes`, a emissão
   idempotente com NSR e hash, a vigilância do prazo de 48h e a extração por
-  período pelo próprio trabalhador (380, 381, 359 passaram a passar; regressão
-  zero). A seguir: AEJ (Arquivo Eletrônico de Jornada), importação de AFD que
-  confere, gestão do certificado digital e o dossiê de fiscalização.
+  período pelo próprio trabalhador (380, 381, 359); parte 2, o AEJ — Arquivo
+  Eletrônico de Jornada (#33) — a tabela `ponto_arquivos_aej`, o gerador a partir
+  da apuração fechada em registros tipados e assinado, e a extração para
+  fiscalização (211). A seguir: importação de AFD que confere, gestão do
+  certificado digital e o dossiê de fiscalização.
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
   ação).
 
