@@ -122,4 +122,48 @@ describe("Módulo Empresa — checklist de cadastro", () => {
       .should("not.contain.text", "Mandato da CIPA")
       .and("not.contain.text", "Membros da CIPA");
   });
+
+  // CHK-001: o checklist reage ao preenchimento na hora (sem salvar).
+  it("CHK-001: Checklist reflete o preenchimento em tempo real", () => {
+    abrirNovaEmpresa();
+    // CNPJ começa como pendência (PJ, campo vazio).
+    irAba("checklist");
+    cy.get('[data-testid="checklist-pendencias"]', { timeout: 15000 })
+      .should("contain.text", "CNPJ");
+    // Preenche o CNPJ → o checklist deixa de cobrá-lo imediatamente.
+    irAba("dados");
+    cy.get('[data-testid="input-cnpj"]').clear().type("11222333000181");
+    irAba("checklist");
+    cy.get('[data-testid="checklist-pendencias"]', { timeout: 15000 })
+      .should("not.contain.text", "CNPJ");
+  });
+
+  // CHK-003: um valor numérico zero conta como preenchido (não fica pendente).
+  it("CHK-003: Quantidade zero conta como preenchida", () => {
+    abrirNovaEmpresa();
+    // "Total de colaboradores" começa pendente (nada informado).
+    irAba("checklist");
+    cy.get('[data-testid="checklist-pendencias"]', { timeout: 15000 })
+      .should("contain.text", "Total de colaboradores");
+    // Informa zero → mesmo sendo 0, conta como preenchido e sai das pendências.
+    irAba("dados");
+    cy.get('[data-testid="input-total-colaboradores"]').clear().type("0");
+    irAba("checklist");
+    cy.get('[data-testid="checklist-pendencias"]', { timeout: 15000 })
+      .should("not.contain.text", "Total de colaboradores");
+  });
+
+  // HIER-003: alternar tipo de unidade limpa o vínculo com a matriz.
+  it("HIER-003: Alternar entre matriz e filial limpa o vínculo anterior", () => {
+    abrirNovaEmpresa();
+    irAba("dados");
+    // Padrão é Matriz → não existe seletor de matriz de referência.
+    cy.get('[data-testid="select-matriz"]').should("not.exist");
+    // Vira Filial → o seletor de matriz aparece.
+    selecionar("select-tipo-unidade", "Filial");
+    cy.get('[data-testid="select-matriz"]', { timeout: 10000 }).should("exist");
+    // Volta para Matriz → o seletor some (o vínculo com a matriz é limpo).
+    selecionar("select-tipo-unidade", "Matriz");
+    cy.get('[data-testid="select-matriz"]').should("not.exist");
+  });
 });

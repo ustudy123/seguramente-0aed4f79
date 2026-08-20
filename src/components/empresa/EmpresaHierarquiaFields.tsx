@@ -107,7 +107,7 @@ export function EmpresaHierarquiaFields({ data, onChange, matrizes, currentEmpre
               onChange(updates);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger data-testid="select-tipo-unidade">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -128,7 +128,7 @@ export function EmpresaHierarquiaFields({ data, onChange, matrizes, currentEmpre
               value={data.matriz_id || '_none'}
               onValueChange={v => onChange({ matriz_id: v === '_none' ? null : v })}
             >
-              <SelectTrigger>
+              <SelectTrigger data-testid="select-matriz">
                 <SelectValue placeholder="Selecione a matriz" />
               </SelectTrigger>
               <SelectContent>
