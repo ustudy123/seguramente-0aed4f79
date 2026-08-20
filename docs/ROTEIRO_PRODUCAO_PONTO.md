@@ -1142,6 +1142,35 @@ não pertencem à jornada das ondas 0/1.
 
 ---
 
+## Playbooks operacionais (não são pacotes de produção)
+
+Notas de "se acontecer X, faça Y" — não entram na fila de produção; ficam
+registradas para não se perderem.
+
+### Corretor de RLS do QA — destrave do seed (hoje NÃO aplicável)
+
+Existe um prompt-corretor (arquivo `CORRETOR-QA-DESTRAVE.md`, fora do repo) para
+o caso de a RLS apertada (correção do vazamento de salários/admissões) voltar a
+**bloquear as rotinas de *seed* do QA** — o sintoma seria uma **onda de "erro"**
+na bateria com a mensagem *"new row violates row-level security policy"* ao
+semear fixtures (não "falhou"). A correção proposta é tornar as funções de seed
+`qa_*` **`SECURITY DEFINER` com trava obrigatória de sandbox**
+(`IF tenant <> public.qa_sandbox_tenant_id() THEN RAISE`), **sem tocar na RLS
+real** e re-provando que o colaborador comum não vê salário de colega.
+
+- **Estado em 20/08/2026:** **não aplicável.** A bateria roda com **0 erros**
+  (113 passou · 1 falhou · 6 sem rotina) e `admissoes` tem só políticas de INSERT
+  **permissivas** — o seed não está travado. O corretor mira um estado que o
+  sistema já superou.
+- **Não rodar por prevenção:** converter ~50 funções para `SECURITY DEFINER` sem
+  o bloqueio existir **eleva privilégio à toa** (aumenta a superfície de
+  segurança). Só usar se o sintoma (onda de "erro" de RLS no seed) reaparecer.
+- **Se um dia for usado:** a trava de sandbox precisa cobrir **todo alvo de
+  escrita** dentro de cada função de seed (algumas gravam em várias tabelas), e é
+  mudança de banco → migration + `docs/script_*.sql`, como as demais.
+
+---
+
 ## Próximas ondas (ainda não entregues)
 
 Conforme cada uma for entregue e validada no teste, ela entra na tabela acima
