@@ -71,6 +71,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 31 | Onda 6 (parte 5) — fila da folha com estados e reenvio idempotente | `docs/script_ponto_onda6_fila_folha_reenvio.sql` | **#30** | ⏳ | ⬜ |
 | 32 | Onda 7 (parte 1) — comprovante como documento (Portaria 671/REP-P) | `docs/script_ponto_onda7_comprovantes.sql` | — | ⏳ | ⬜ |
 | 33 | Onda 7 (parte 2) — AEJ (Arquivo Eletrônico de Jornada, Portaria 671) | `docs/script_ponto_onda7_aej.sql` | — | ⏳ | ⬜ |
+| 34 | Onda 7 (parte 3) — importação de AFD que confere (CRC, cadeia, lacuna, quarentena) | `docs/script_ponto_onda7_afd_importacao.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -764,6 +765,42 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** o botão "gerar/baixar AEJ" da competência chama
   essas funções; o arquivo, a assinatura e a extração já estão no banco.
 
+### 34 · Onda 7 (parte 3) — importação de AFD que confere
+- **Arquivo:** `docs/script_ponto_onda7_afd_importacao.sql`
+- **O que faz:** a importação de AFD (o arquivo-fonte do relógio de terceiro) só
+  conferia, quando conferia, **na tela**. Importação por API entrava **sem
+  conferência**: arquivo corrompido, com a sequência de números de registro (NSR)
+  quebrada, reimportado depois de uma falha no meio, ou com os registros que não
+  são batida (ajuste do relógio, eventos do equipamento) simplesmente jogados
+  fora. Passa a existir a conferência **no banco**:
+  - **`ponto_afd_crc16`** — o dígito verificador (CRC-16) de cada registro, para
+    pegar corrupção byte a byte (confere o valor-padrão: `123456789` → `10673`).
+  - **`ponto_afd_validar_importacao`** — confere o CRC de cada registro, a cadeia
+    (SHA-256 do fecho do arquivo), o veredito da assinatura e a **lacuna** na
+    sequência de NSR; **arquivo com buraco na sequência é recusado por inteiro**
+    (registro removido não entra como prova), com **quarentena** do reprovado e
+    relatório. Só guarda os eventos do equipamento quando o arquivo é aprovado.
+  - **`ponto_repc_importacoes`** ganha a **unicidade do arquivo** (a mesma remessa
+    não entra duas vezes) e o veredito (CRC/cadeia/assinatura/quarentena).
+  - **`ponto_marcacoes`** ganha a **chave natural de origem** (`nsr_origem` +
+    `equipamento`) — o NSR que veio no arquivo e o relógio que o emitiu, para
+    reimportação **idempotente** (o NSR próprio, gerado aqui, não deduplica
+    arquivo de terceiro).
+  - **`ponto_afd_eventos_equipamento`** — a casa dos registros não-batida (ajuste
+    do relógio, evento sensível), visíveis na trilha; um relógio ajustado perto de
+    uma marcação suspeita é o que a fiscalização procura.
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem grava
+  batida — a persistência das batidas validadas segue pelo fluxo existente, agora
+  com este veredito como porteiro. **Aditivo e idempotente.** **Sem backfill.**
+- **Conferência esperada:** `t | t | t | t | t | OK`.
+- **Na bateria** quatro casos passaram a passar na parte (382, 383, 384, 212),
+  regressão zero (95→99). Provado em transação (dados fictícios): arquivo válido
+  guarda os eventos do equipamento; **lacuna** de NSR (falta o 101 entre 100 e
+  102) manda o arquivo **inteiro** para a quarentena e **nenhum evento** entra;
+  registro com CRC errado também vai para a quarentena, com o rejeitado contado.
+- **Tela (Publicar no Lovable):** a tela de importação de AFD passa a chamar o
+  validador e a mostrar a quarentena e o relatório; a conferência já está no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -834,8 +871,10 @@ com seu pacote. A ordem prevista:
   período pelo próprio trabalhador (380, 381, 359); parte 2, o AEJ — Arquivo
   Eletrônico de Jornada (#33) — a tabela `ponto_arquivos_aej`, o gerador a partir
   da apuração fechada em registros tipados e assinado, e a extração para
-  fiscalização (211). A seguir: importação de AFD que confere, gestão do
-  certificado digital e o dossiê de fiscalização.
+  fiscalização (211); parte 3, a importação de AFD que confere (#34) — CRC-16,
+  cadeia SHA-256, recusa por lacuna de NSR e quarentena, a chave natural de origem
+  na marcação e a trilha dos eventos do equipamento (382, 383, 384, 212). A
+  seguir: gestão do certificado digital e o dossiê de fiscalização.
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
   ação).
 
