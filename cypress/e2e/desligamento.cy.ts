@@ -72,6 +72,19 @@ describe("Módulo Desligamento", () => {
       .should("be.visible");
   }
 
+  // Abre o Select (Radix) de motivo do desligamento e espera o listbox no portal.
+  function abrirSelectMotivo() {
+    cy.get('[data-testid="select-motivo-desligamento"]').click({ force: true });
+    cy.get('[role="listbox"]', { timeout: 10000 }).should("be.visible");
+  }
+
+  // Abre o select de motivo e escolhe a opção pelo texto (label da UI).
+  function selecionarMotivo(label: string) {
+    abrirSelectMotivo();
+    cy.contains('[role="option"]', label, { timeout: 10000 }).click({ force: true });
+    cy.get('[role="listbox"]').should("not.exist");
+  }
+
   beforeEach(() => {
     login();
     goToColaboradores();
@@ -98,5 +111,49 @@ describe("Módulo Desligamento", () => {
     // Mesmo motivo do DESL-011: mensagem condicional dentro do diálogo fixo com
     // scroll — basta existir no DOM para provar que a regra bloqueou a data.
     cy.contains(/não pode ser futura/i, { timeout: 10000 }).should("exist");
+  });
+
+  // DESL-010: sem data, não dá para confirmar (RNDES: o botão fica desabilitado).
+  // Zero mutação: só verifica o estado do formulário, não confirma o desligamento.
+  it("DESL-010: Data de desligamento é obrigatória", () => {
+    abrirDesligamento();
+    // Escolhe um motivo para isolar a DATA como o campo que ainda falta.
+    selecionarMotivo("Pedido de demissão");
+    cy.get('[data-testid="input-data-desligamento"]').should("have.value", "");
+    // Sem data, o botão de confirmar permanece desabilitado.
+    cy.get('[data-testid="btn-confirmar-desligamento"]').should("be.disabled");
+  });
+
+  // DESL-020: sem motivo, não dá para confirmar (mtvDeslig é obrigatório no S-2299).
+  // Zero mutação: preenche uma data válida mas deixa o motivo em branco.
+  it("DESL-020: Motivo do desligamento é obrigatório", () => {
+    abrirDesligamento();
+    // Data de hoje é válida (não futura, não anterior à admissão do staging).
+    const hoje = new Date().toISOString().split("T")[0];
+    cy.get('[data-testid="input-data-desligamento"]').clear().type(hoje);
+    // Motivo continua no placeholder (nada escolhido).
+    cy.get('[data-testid="select-motivo-desligamento"]').should("contain.text", "Selecione o motivo");
+    // Mesmo com data válida, sem motivo o botão de confirmar fica desabilitado.
+    cy.get('[data-testid="btn-confirmar-desligamento"]').should("be.disabled");
+  });
+
+  // DESL-021: a lista de motivos cobre as hipóteses legais de extinção do contrato.
+  it("DESL-021: Motivos disponíveis cobrem as hipóteses legais de extinção", () => {
+    abrirDesligamento();
+    abrirSelectMotivo();
+    const motivosLegais = [
+      "Dispensa sem justa causa",
+      "Dispensa com justa causa (art. 482 CLT)",
+      "Pedido de demissão",
+      "Acordo mútuo (art. 484-A CLT)",
+      "Término de contrato",
+      "Aposentadoria",
+      "Falecimento",
+      "Rescisão indireta (art. 483 CLT)",
+      "Culpa recíproca",
+    ];
+    motivosLegais.forEach((motivo) => {
+      cy.contains('[role="option"]', motivo, { timeout: 10000 }).should("exist");
+    });
   });
 });
