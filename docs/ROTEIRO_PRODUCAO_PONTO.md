@@ -78,6 +78,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 38 | Onda 8 (parte 2) — controle de fato descaracteriza a dispensa (art. 62) | `docs/script_ponto_onda8_descaracterizacao_art62.sql` | **#37** | ⏳ | ⬜ |
 | 39 | Onda 8 (parte 3) — obrigatoriedade do controle por estabelecimento (>20) | `docs/script_ponto_onda8_obrigatoriedade_estabelecimento.sql` | — | ⏳ | ⬜ |
 | 40 | Onda 8 (parte 4) — sistema alternativo (REP-A) só com instrumento coletivo | `docs/script_ponto_onda8_rep_alternativo_instrumento.sql` | — | ⏳ | ⬜ |
+| 41 | Onda 8 (parte 5) — LGPD: trilha de acesso a dado sensível + contenção de enumeração | `docs/script_ponto_onda8_lgpd_trilha_e_enumeracao.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -959,6 +960,32 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** a tela de configuração passa a pedir o
   instrumento coletivo ao ativar o modo por link; a trava já está no banco.
 
+### 41 · Onda 8 (parte 5) — LGPD: trilha de acesso a dado sensível + enumeração
+- **Arquivo:** `docs/script_ponto_onda8_lgpd_trilha_e_enumeracao.sql`
+- **O que faz:** duas frentes de LGPD. **(397)** A trilha de auditoria só
+  registrava **escrita** — visualizar a selfie ou a geolocalização de uma marcação
+  e **exportar** relatórios (AFD/AEJ) não deixavam rastro; a LGPD (arts. 11 e 46)
+  pede registro do tratamento de dado sensível. Passam a existir um **log imutável**
+  (`ponto_acesso_sensivel_log`, append-only) e as funções que registram **quem viu**
+  dado sensível (`ponto_log_acesso_sensivel`) e **quem exportou**, com escopo e
+  destinatário (`ponto_log_exportacao`). **(362)** O link compartilhado identifica o
+  trabalhador por CPF; tentativas em sequência com CPFs diferentes (**enumeração**)
+  passavam sem contenção. `ponto_links` ganha `tentativas_frustradas` e
+  `bloqueado_ate`, e **`ponto_link_registrar_tentativa`** conta as tentativas por
+  link, **bloqueia temporariamente** ao estourar o limite e registra o evento na
+  trilha (LGPD arts. 46-49).
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem as
+  marcações. Só registra acesso e contém enumeração. **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | t | t | t | OK`.
+- **Na bateria** dois casos passaram a passar na parte (397, 362), regressão zero
+  (107→109). Provado em transação (dados fictícios): a visualização de selfie e a
+  exportação de AFD gravam no log; o log **recusa** UPDATE e DELETE (imutável); no
+  link, cinco tentativas frustradas **bloqueiam** o link e geram um evento de
+  enumeração na trilha, e um acesso bem-sucedido **zera** o contador.
+- **Tela (Publicar no Lovable):** a tela que serve a selfie/geolocalização e os
+  botões de exportação passam a chamar o registro; a contenção do link também. A
+  trilha, a imutabilidade e a contagem já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -1043,9 +1070,9 @@ com seu pacote. A ordem prevista:
   a coerência do `bate_ponto` (#37; casos 373, 374); e o controle de fato que
   descaracteriza a dispensa (#38; caso 375); e a obrigatoriedade do controle por
   estabelecimento acima de 20 (#39; caso 370); e o sistema alternativo (REP-A) só
-  com instrumento coletivo (#40; caso 213). A seguir, no banco: a trilha de
-  auditoria de acesso a dado sensível e exportação
-  (397) e a contenção de enumeração de CPF no link (362); e a integração do Plano
+  com instrumento coletivo (#40; caso 213); e a LGPD — trilha de auditoria de
+  acesso a dado sensível e exportação, e a contenção de enumeração de CPF no link
+  (#41; casos 397, 362). A seguir, no banco: a integração do Plano
   de Ação (alerta vira ação com 5W2H, verificação de eficácia na conclusão, e a IA
   que sugere mas nunca decide — 389, 390, 391). *Cinco casos desta onda são de
   **tela** (comprovante após a batida, cerca que sinaliza sem bloquear, aviso de
