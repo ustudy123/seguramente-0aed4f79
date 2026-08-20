@@ -64,7 +64,28 @@ describe("Módulo Desligamento", () => {
   // estiver desligado, ele mostra um toast e não abre — por isso confirmamos
   // que o campo de data do formulário apareceu de verdade.
   function abrirDesligamento() {
-    cy.get('[data-testid="colab-menu"]:visible').first().click({ force: true });
+    cy.get('[data-testid="colab-menu"]:visible', { timeout: 20000 })
+      .should("have.length.greaterThan", 0);
+
+    // Cold start: desligamento.cy.ts é o 1º spec da suíte (ordem alfabética),
+    // então paga o aquecimento do ambiente ("Error fetching user data" na
+    // primeira carga). Enquanto a lista re-renderiza, o clique no menu às vezes
+    // não abre o dropdown e o item "Desligar" não chega a aparecer. Reabre o
+    // menu até o item surgir — cada tentativa também dá tempo de esquentar.
+    const abrirMenu = (tentativas: number) => {
+      cy.get('[data-testid="colab-menu"]:visible').first().click({ force: true });
+      cy.wait(700);
+      cy.get("body").then(($b) => {
+        const achou = $b.find('[data-testid="colab-desligar"]').length > 0;
+        if (!achou && tentativas > 1) {
+          cy.get("body").type("{esc}", { force: true });
+          cy.wait(1500);
+          abrirMenu(tentativas - 1);
+        }
+      });
+    };
+    abrirMenu(8);
+
     cy.get('[data-testid="colab-desligar"]:visible', { timeout: 10000 })
       .first()
       .click({ force: true });
@@ -84,6 +105,19 @@ describe("Módulo Desligamento", () => {
     cy.contains('[role="option"]', label, { timeout: 10000 }).click({ force: true });
     cy.get('[role="listbox"]').should("not.exist");
   }
+
+  // Aquecimento único: como este é o 1º spec da suíte, ele absorve o cold start
+  // do ambiente de teste (a 1ª carga de /colaboradores costuma dar "Error
+  // fetching user data" enquanto a conexão/consulta esquenta). Loga e abre a
+  // lista uma vez antes do 1º teste real. Tolerante: NÃO assere a lista para
+  // não derrubar o spec inteiro se o cold start demorar — só dá tempo de
+  // esquentar; o beforeEach real (e os retries) validam de verdade.
+  before(() => {
+    login();
+    cy.visit(`${baseUrl}/colaboradores`);
+    closeEmpresaModalIfNeeded();
+    cy.wait(6000);
+  });
 
   beforeEach(() => {
     login();
