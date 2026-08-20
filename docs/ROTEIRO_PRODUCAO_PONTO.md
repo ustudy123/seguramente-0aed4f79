@@ -80,6 +80,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 40 | Onda 8 (parte 4) — sistema alternativo (REP-A) só com instrumento coletivo | `docs/script_ponto_onda8_rep_alternativo_instrumento.sql` | — | ⏳ | ⬜ |
 | 41 | Onda 8 (parte 5) — LGPD: trilha de acesso a dado sensível + contenção de enumeração | `docs/script_ponto_onda8_lgpd_trilha_e_enumeracao.sql` | — | ⏳ | ⬜ |
 | 42 | Onda 8 (parte 6) — Plano de Ação: alerta→ação 5W2H + eficácia + IA sugere/humano decide | `docs/script_ponto_onda8_plano_de_acao.sql` | — | ⏳ | ⬜ |
+| 43 | Onda 8 (correção) — competência fechada bloqueia até para gestão (remove a válvula) | `docs/script_ponto_onda8_competencia_fechada.sql` | **#14** (reabertura) | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1016,6 +1017,30 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** o botão "gerar ação do alerta", a conclusão com
   eficácia e o "Analisar com IA" chamam essas funções; a integração já está no banco.
 
+### 43 · Onda 8 (correção) — competência fechada bloqueia até para gestão
+- **Arquivo:** `docs/script_ponto_onda8_competencia_fechada.sql`
+- **Por que existe:** ao rodar a bateria do ponto no ambiente de teste **por um
+  usuário de gestão**, o caso PONTO-193 reprovou: uma competência **fechada**
+  aceitou marcação nova sem reabertura. O guard de período (`validar_periodo_aberto_ponto`)
+  abria uma **exceção para papéis de gestão** — a "válvula" já apontada como
+  risco. Sem sessão (a réplica local roda sem usuário) o caso passava; **como
+  gestão** — o cenário real do teste — a válvula deixava a marcação entrar por
+  baixo dos panos, alterando um espelho já entregue e assinado.
+- **O que faz:** **remove a válvula.** Competência **fechada** passa a bloquear
+  marcação nova para **todos**. O único caminho para mexer continua sendo a
+  **reabertura formal** (pacote #14, PONTO-358), que muda o status para
+  *reaberto* — e aí o guard naturalmente libera (ele só bloqueia *fechado*). O
+  gatilho é *BEFORE INSERT*, então só afeta marcação **nova**; a correção por
+  acréscimo (desconsiderar) não é tocada.
+- **Baixo risco:** não altera o motor de saldo, o espelho nem o fechamento. Só
+  fecha a válvula do guard de período. **Aditivo (substitui a função) e idempotente.**
+- **Conferência esperada:** `t | t | f | f | OK` — a função existe, ainda bloqueia
+  competência fechada, e **não** contém mais `has_role` nem a lógica `pode_burlar`.
+- **Na bateria:** rodando **como gestão** (o cenário que reprovava), o PONTO-193
+  passou a **passar**; sem sessão, a bateria segue em 112 casos passando, com os
+  mesmos dois em vermelho (113 rural e 386 vigência de CCT, itens de onda futura),
+  regressão zero.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -1103,7 +1128,12 @@ com seu pacote. A ordem prevista:
   exportação, e a contenção de enumeração de CPF no link (#41; casos 397, 362); e a
   integração do Plano de Ação — alerta vira ação 5W2H, verificação de eficácia na
   conclusão, e a IA que sugere mas nunca decide (#42; casos 389, 390, 391). Dez
-  casos passaram a passar na onda, regressão zero. *Cinco casos desta onda são de
+  casos passaram a passar na onda, regressão zero. **Correção pós-bateria (#43):**
+  a bateria rodada no teste por um usuário de gestão pegou o PONTO-193 — uma
+  competência fechada aceitava marcação de gestão sem reabertura (a "válvula" do
+  guard de período); o pacote #43 remove a válvula e a competência fechada passa a
+  bloquear todos, até a reabertura formal (#14, PONTO-358). Restam vermelhos só o
+  113 (rural) e o 386 (vigência de CCT), itens de onda futura. *Cinco casos desta onda são de
   **tela** (comprovante após a batida, cerca que sinaliza sem bloquear, aviso de
   tratamento de dados, selfie como dado comum, e não restringir horário de
   marcação — 002, 005, 006, 254, 363): não têm rotina de banco e entram por
