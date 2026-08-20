@@ -91,23 +91,91 @@ existe para impedir.
 Este é o passo que diferencia a homologação do teste. Ela **não** nasce das
 migrations: nasce de um retrato da produção, com o drift que a produção tem.
 
-```bash
-# 1) Retrato da estrutura de produção — sem uma linha de dado
-supabase link --project-ref <producao-project-ref>
-supabase db dump --schema-only -f /tmp/estrutura_producao.sql
+**Por que este passo sai do SQL Editor.** O retrato da estrutura tem cerca de
+2,4 MB e 68 mil linhas. Não é algo que se cole numa tela — precisa de terminal.
+É o único passo do processo que exige isso, e é uma vez só.
 
-# 2) Restaurar na homologação
-supabase link --project-ref <homologacao-project-ref>
-psql "$HOMOLOGACAO_DB_URL" -f /tmp/estrutura_producao.sql
+#### Antes de começar
+
+Você vai precisar de:
+
+- **Node instalado** (já tem, é o que roda o projeto). Isso basta: o Supabase CLI
+  é chamado com `npx`, sem instalar nada permanente.
+- **A senha do banco de cada projeto**. No painel do Supabase:
+  **Project Settings → Database → Database password**. Se não souber, use
+  *Reset database password* — trocar a senha do banco não derruba a aplicação,
+  que usa a chave anon, não a senha.
+- **A connection string de cada projeto**: no painel, botão **Connect**, no topo.
+  Copie a que o painel oferecer; se sua internet for só IPv4, prefira a opção
+  **Session pooler** (a conexão direta do Supabase é IPv6 e falha em muitas redes
+  domésticas — se der "could not translate host name" ou "network unreachable",
+  é isso).
+
+#### Os comandos
+
+Abra o terminal numa pasta qualquer e rode, na ordem:
+
+```bash
+# 1. Entrar na sua conta Supabase (abre o navegador para autorizar)
+npx supabase login
+
+# 2. Tirar o retrato da estrutura da PRODUÇÃO — só o schema public, sem dados
+npx supabase db dump \
+  --db-url "<connection string da PRODUÇÃO>" \
+  --schema public \
+  -f estrutura_producao.sql
 ```
 
-**Por que só a estrutura, e nunca os dados.** Copiar a base de produção significaria
-mover CPF, salário, atestado e resposta de questionário psicossocial de gente real
-para outro banco, sem finalidade que a justifique — e dado de saúde é sensível
-(LGPD art. 11). O que os scripts de entrega precisam encontrar aqui é a **estrutura**;
-o que depende de dado real (quantos registros violam uma regra nova, por exemplo)
-se mede na produção, por consulta somente leitura — foi assim que fizemos com as
-regras de férias.
+Confira que o arquivo nasceu com tamanho de megabytes:
+
+```bash
+ls -lh estrutura_producao.sql
+```
+
+Agora a restauração na homologação. O jeito sem instalar mais nada é usar o
+próprio CLI, numa pasta descartável:
+
+```bash
+# 3. Pasta temporária com um projeto Supabase vazio
+mkdir /tmp/homolog && cd /tmp/homolog
+npx supabase init
+
+# 4. O retrato vira a única migration desta pasta
+mkdir -p supabase/migrations
+cp <caminho>/estrutura_producao.sql \
+   supabase/migrations/00000000000000_estrutura_producao.sql
+
+# 5. Apontar para a HOMOLOGAÇÃO e aplicar
+npx supabase link --project-ref fgsblefvdabgdouipigz
+npx supabase db push
+```
+
+> Se você já tiver o `psql` instalado, o passo 3 a 5 vira um comando só:
+> `psql "<connection string da HOMOLOGAÇÃO>" -f estrutura_producao.sql`
+
+#### O que esperar
+
+**Alguns erros são normais** e não significam fracasso. Um retrato de banco
+restaurado em projeto novo costuma reclamar de coisas que o Supabase já criou
+sozinho (extensões, papéis, permissões) ou de objetos que dependem de schemas
+gerenciados por ele. Guarde a saída inteira do comando: o que interessa é o que
+falhou, não o que reclamou.
+
+Se aparecerem erros, mande a saída — as lacunas se fecham com um script pequeno,
+e é justamente para isso que o retrato existe.
+
+#### Como saber que deu certo
+
+Rode na **homologação** os mesmos scripts de conferência que você rodou na
+produção:
+
+- `docs/script_divergencia_producao_parte1.sql`
+- `docs/script_divergencia_producao_parte2.sql`
+
+**O resultado tem que ser igual ao da produção** — as mesmas tabelas faltando, as
+mesmas colunas, o mesmo motor de QA incompleto. Igualdade aqui não é defeito: é a
+prova de que a cópia é fiel. Se der diferente, compare os dois resultados; a
+diferença é o que a restauração não trouxe.
 
 ### 4. Semear dados fictícios
 
