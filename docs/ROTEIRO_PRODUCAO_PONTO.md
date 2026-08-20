@@ -67,6 +67,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 27 | Onda 6 (parte 1) — geração transacional dos espelhos (tudo-ou-nada) | `docs/script_ponto_onda6_gerar_espelhos.sql` | — | ⏳ | ⬜ |
 | 28 | Onda 6 (parte 2) — pendência crítica bloqueia o fechamento | `docs/script_ponto_onda6_fechamento_pendencias.sql` | — | ⏳ | ⬜ |
 | 29 | Onda 6 (parte 3) — espelho sem ciência bloqueia o fechamento (Súm. 338) | `docs/script_ponto_onda6_fechamento_ciencia_espelho.sql` | **#28** | ⏳ | ⬜ |
+| 30 | Onda 6 (parte 4) — pacote da folha com naturezas corretas (vencimento/desconto/indenizatória) | `docs/script_ponto_onda6_pacote_folha.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -646,6 +647,34 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   não; espelho `gerado` **com ressalva** → não (recusa formalizada); dada a
   ciência a todos → o portão libera (0).
 
+### 30 · Onda 6 (parte 4) — pacote da folha com naturezas corretas
+- **Arquivo:** `docs/script_ponto_onda6_pacote_folha.sql`
+- **O que faz:** a exportação para a folha era um jsonb montado pela tela, sem
+  regra verificável. É onde o ponto vira dinheiro. Passa a existir
+  `ponto_compor_pacote_folha`, que monta o pacote a partir da **apuração fechada**
+  (`ponto_espelhos`) com **memória** e **naturezas distintas**:
+  - **vencimento** — hora extra 50%/100%, adicional noturno, reflexo do DSR;
+  - **desconto** — faltas, atrasos, perda de DSR;
+  - **indenizatória** — supressão de intervalo (CLT art. 71, §4º), que **não é
+    hora extra** e não pode entrar como tal.
+  Grava em `ponto_exportacoes_folha` (marcador `sistema_destino='folha_auto'`),
+  idempotente por competência.
+- **Nota:** os casos PONTO-361 **e** PONTO-398 passaram a passar juntos — ambas
+  as rotinas checam a mesma condição frouxa (existir função que referencie
+  `ponto_exportacoes_folha`), e a composição a satisfaz. A **fila com estados e
+  reenvio idempotente** (o conteúdo real do 398) é a **parte 5**, ainda a fazer —
+  ela deixa o 398 legítimo.
+- **Baixo risco:** só compõe (não envia). Não altera o motor de saldo nem o
+  espelho. **Aditivo e idempotente.** **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** PONTO-361 e PONTO-398 passaram a passar; regressão zero. Provado
+  em transação: HE 50% e adicional noturno → **vencimento**; supressão de
+  intervalo → **indenizatória** (não HE); faltas e atrasos → **desconto**; refazer
+  não duplica (um pacote por competência).
+- **Tela (Publicar no Lovable):** gerar o arquivo (CSV/TXT/XML) a partir do
+  pacote e disparar o envio é de tela/edge, por Publicar no Lovable. O banco já
+  compõe o conteúdo com as naturezas certas.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -705,9 +734,9 @@ com seu pacote. A ordem prevista:
   151), regressão zero.
 - **Onda 6** — fechamento e folha. **Em andamento**, em cinco partes: parte 1
   (geração transacional dos espelhos, #27), parte 2 (pendência crítica bloqueia
-  o fechamento, #28) e parte 3 (espelho sem ciência bloqueia, #29) prontas no
-  teste; faltam o pacote da folha com naturezas corretas (361) e a fila com
-  estados e reenvio (398).
+  o fechamento, #28), parte 3 (espelho sem ciência bloqueia, #29) e parte 4
+  (pacote da folha com naturezas corretas, #30) prontas no teste; falta a fila
+  com estados e reenvio idempotente (398).
 - **Ondas 7 e 8** — arquivos legais, enquadramento e prevenção.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
