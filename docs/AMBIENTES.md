@@ -153,6 +153,53 @@ npx supabase db push
 > Se você já tiver o `psql` instalado, o passo 3 a 5 vira um comando só:
 > `psql "<connection string da HOMOLOGAÇÃO>" -f estrutura_producao.sql`
 
+#### No Windows (PowerShell)
+
+Os comandos acima são de Mac/Linux. No PowerShell há três diferenças que quebram
+a cópia direta, e todas dão erro confuso:
+
+| | Mac/Linux | PowerShell |
+|---|---|---|
+| Quebra de linha num comando longo | `\` no fim da linha | crase `` ` `` — ou escreva tudo numa linha só |
+| Pasta temporária | `/tmp/homolog` | `C:\temp\homolog` |
+| Aspas na connection string | duplas | **simples** — em aspas duplas o PowerShell tenta interpretar o `$` da senha |
+
+Versão pronta para colar, uma linha por comando:
+
+```powershell
+# Conferir que o Node está instalado (tem que responder algo como v20.x)
+node -v
+
+# 1. Entrar na conta Supabase
+npx supabase login
+
+# 2. Ir para uma pasta conhecida e tirar o retrato da PRODUÇÃO
+cd $HOME\Documents
+npx supabase db dump --db-url '<connection string da PRODUÇÃO>' --schema public -f estrutura_producao.sql
+
+# Conferir que o arquivo nasceu com alguns megabytes
+dir estrutura_producao.sql
+
+# 3. Pasta descartável
+mkdir C:\temp\homolog
+cd C:\temp\homolog
+npx supabase init
+
+# 4. O retrato vira a única migration desta pasta
+mkdir supabase\migrations
+copy $HOME\Documents\estrutura_producao.sql supabase\migrations\00000000000000_estrutura_producao.sql
+
+# 5. Apontar para a HOMOLOGAÇÃO e aplicar
+npx supabase link --project-ref fgsblefvdabgdouipigz
+npx supabase db push
+```
+
+> **Aspas simples na connection string** não é preciosismo: senha de banco costuma
+> ter `$`, e o PowerShell lê `$alguma` dentro de aspas duplas como variável — some
+> um pedaço da senha e o erro que aparece é "autenticação falhou", que manda você
+> procurar no lugar errado.
+
+
 #### O que esperar
 
 **Alguns erros são normais** e não significam fracasso. Um retrato de banco
