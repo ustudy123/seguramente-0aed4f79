@@ -680,7 +680,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               <div>
                 <Label>Motivo *</Label>
                 <Select value={form.motivo_desligamento} onValueChange={v => set("motivo_desligamento", v)}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o motivo" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-motivo-desligamento"><SelectValue placeholder="Selecione o motivo" /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(MOTIVOS_DESLIGAMENTO).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -978,6 +978,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               Cancelar
             </Button>
             <Button
+              data-testid="btn-confirmar-desligamento"
               variant="destructive"
               onClick={handleSubmit}
               disabled={
