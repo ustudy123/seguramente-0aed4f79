@@ -411,7 +411,7 @@ export default function Empresa() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
+          <Button variant="ghost" size="icon" onClick={handleBack} data-testid="btn-voltar-empresa">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>

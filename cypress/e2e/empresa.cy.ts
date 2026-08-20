@@ -166,4 +166,43 @@ describe("Módulo Empresa — checklist de cadastro", () => {
     selecionar("select-tipo-unidade", "Matriz");
     cy.get('[data-testid="select-matriz"]').should("not.exist");
   });
+
+  // RASC-001: o rascunho (localStorage) é restaurado ao reabrir sem ter salvo.
+  // "Voltar sem salvar" = recarregar a página em modo "novo" (a navegação fica
+  // no sessionStorage), quando o rascunho é restaurado automaticamente.
+  it("RASC-001: Rascunho é restaurado ao voltar sem ter salvo", () => {
+    abrirNovaEmpresa();
+    const nome = `Rascunho Teste ${Date.now()}`;
+    irAba("dados");
+    cy.get('[data-testid="input-razao-social"]').clear().type(nome);
+    // Espera o debounce do saveDraft (300ms) gravar no localStorage.
+    cy.wait(1200);
+    // Recarrega: a navegação mantém o modo "novo", e o rascunho é restaurado.
+    cy.reload();
+    closeEmpresaModalIfNeeded();
+    cy.get('[data-testid="tab-dados"]', { timeout: 20000 }).should("be.visible");
+    irAba("dados");
+    cy.get('[data-testid="input-razao-social"]', { timeout: 15000 })
+      .should("have.value", nome);
+  });
+
+  // RASC-004: abrir "Nova Empresa" NÃO herda o rascunho de uma tentativa
+  // anterior — o handleNew limpa o rascunho de propósito.
+  it("RASC-004: Novo cadastro não herda rascunho de tentativa anterior", () => {
+    abrirNovaEmpresa();
+    const nome = `Rascunho Antigo ${Date.now()}`;
+    irAba("dados");
+    cy.get('[data-testid="input-razao-social"]').clear().type(nome);
+    cy.wait(1200); // deixa o saveDraft gravar
+    // Volta para a lista e abre "Nova Empresa" de novo.
+    cy.get('[data-testid="btn-voltar-empresa"]').click({ force: true });
+    cy.get('[data-testid="btn-nova-empresa"]', { timeout: 20000 })
+      .should("be.visible")
+      .click({ force: true });
+    // O novo cadastro vem limpo — Razão Social vazia (não herdou o rascunho).
+    cy.get('[data-testid="tab-dados"]', { timeout: 20000 }).should("be.visible");
+    irAba("dados");
+    cy.get('[data-testid="input-razao-social"]', { timeout: 15000 })
+      .should("have.value", "");
+  });
 });
