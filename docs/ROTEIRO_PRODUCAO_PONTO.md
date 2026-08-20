@@ -69,6 +69,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 29 | Onda 6 (parte 3) — espelho sem ciência bloqueia o fechamento (Súm. 338) | `docs/script_ponto_onda6_fechamento_ciencia_espelho.sql` | **#28** | ⏳ | ⬜ |
 | 30 | Onda 6 (parte 4) — pacote da folha com naturezas corretas (vencimento/desconto/indenizatória) | `docs/script_ponto_onda6_pacote_folha.sql` | — | ⏳ | ⬜ |
 | 31 | Onda 6 (parte 5) — fila da folha com estados e reenvio idempotente | `docs/script_ponto_onda6_fila_folha_reenvio.sql` | **#30** | ⏳ | ⬜ |
+| 32 | Onda 7 (parte 1) — comprovante como documento (Portaria 671/REP-P) | `docs/script_ponto_onda7_comprovantes.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -699,6 +700,39 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** o disparo do envio e a confirmação de
   recebimento chamam essas transições; a fila e o reenvio já estão no banco.
 
+### 32 · Onda 7 (parte 1) — comprovante como documento (Portaria 671/REP-P)
+- **Arquivo:** `docs/script_ponto_onda7_comprovantes.sql`
+- **O que faz:** hoje o comprovante é só um booleano
+  (`ponto_marcacoes.comprovante_gerado`). A Portaria MTP 671/2021 (REP-P) trata o
+  comprovante como o **recibo legal do trabalhador**: um artefato com
+  identificação do empregador e do trabalhador, data/hora e **NSR**, arquivado e
+  vinculado à marcação, disponibilizado em até 48h e extraível por período pelo
+  próprio trabalhador. O NSR já existe na marcação (desde a onda 1); faltava o
+  documento. Passam a existir: a tabela **`ponto_comprovantes`** (o documento, com
+  empregador, trabalhador, data/hora, NSR, conteúdo mínimo, hash de integridade e
+  vínculo à marcação — com a trava do cercado e RLS por tenant);
+  **`ponto_gerar_comprovante`** (emite o comprovante da marcação, **idempotente** —
+  um por marcação —, atribuindo o NSR quando falta e disponibilizando na hora);
+  **`ponto_comprovante_vigiar_48h`** (vigia o prazo de 48h — marcação sem
+  comprovante perto de estourar vira alerta **preventivo**, estourada vira
+  **crítico**); e **`ponto_comprovantes_extrair`** (extração por período,
+  **restrita ao próprio CPF** — direito do trabalhador).
+- **Baixo risco:** não altera o motor de saldo, o espelho nem o fechamento. Só
+  cria o documento, a emissão, a vigilância e a extração. **Aditivo e
+  idempotente** (roda duas vezes sem quebrar nem duplicar). **Sem backfill** —
+  comprovantes nascem sob demanda pela emissão.
+- **Conferência esperada:** `t | t | t | t | t | OK`.
+- **Na bateria** três casos passaram a passar na parte (380, 381, 359),
+  regressão zero (91→94). Provado em transação: emissão atribui o NSR quando
+  falta (0→1), monta o conteúdo com empregador/trabalhador/data/hora/NSR, grava o
+  hash sha256 e marca `comprovante_gerado=true`; 2ª chamada devolve **o mesmo**
+  comprovante (não duplica); a vigilância gera 1 alerta crítico numa marcação
+  vencida e 0 na 2ª rodada (idempotente); a extração devolve 1 para o próprio CPF
+  (mesmo com máscara) e 0 para outro CPF.
+- **Tela (Publicar no Lovable):** a emissão do comprovante ao registrar o ponto e
+  o "extrair meus comprovantes" do trabalhador chamam essas funções; o documento,
+  o hash e a extração já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -762,8 +796,15 @@ com seu pacote. A ordem prevista:
   naturezas corretas (#30) e a fila com estados e reenvio idempotente (#31).
   Cinco casos passaram a passar na onda (194, 388, 387, 361, 398), regressão
   zero.
-- **Ondas 7 e 8** — arquivos legais (AFD/AEJ/REP-P), enquadramento (art. 62,
-  teletrabalho) e prevenção (LGPD, plano de ação).
+- **Onda 7** — arquivos legais e prova documental (REP-P/AFD/AEJ, certificado
+  digital, dossiê de fiscalização). **Em andamento no teste.** Parte 1 entregue:
+  comprovante como documento (#32) — a tabela `ponto_comprovantes`, a emissão
+  idempotente com NSR e hash, a vigilância do prazo de 48h e a extração por
+  período pelo próprio trabalhador (380, 381, 359 passaram a passar; regressão
+  zero). A seguir: AEJ (Arquivo Eletrônico de Jornada), importação de AFD que
+  confere, gestão do certificado digital e o dossiê de fiscalização.
+- **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
+  ação).
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
