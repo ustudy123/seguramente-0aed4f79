@@ -111,118 +111,93 @@ Você vai precisar de:
   domésticas — se der "could not translate host name" ou "network unreachable",
   é isso).
 
+#### Atenção: `supabase db dump` exige Docker
+
+O CLI do Supabase roda o `pg_dump` **dentro de um contêiner**, então o comando
+`supabase db dump` falha com *"failed to run docker. Docker Desktop is a
+prerequisite"* em máquina sem Docker.
+
+Instalar o Docker Desktop só para isso é desproporcional (vários GB, WSL2 no
+Windows). **O caminho leve é usar o `pg_dump` direto**, que vem nas ferramentas
+de linha de comando do PostgreSQL — cerca de 100 MB, e resolve a cópia e a
+restauração com um comando cada.
+
+No Windows: baixe o instalador oficial do PostgreSQL (enterprisedb.com/downloads),
+e na tela de componentes **desmarque tudo menos "Command Line Tools"**. Não é
+preciso instalar o servidor.
+
+Depois, feche e reabra o PowerShell para que ele enxergue os comandos novos.
+
 #### Os comandos
 
-Abra o terminal numa pasta qualquer e rode, na ordem:
+Dois comandos: um tira o retrato da produção, o outro o aplica na homologação.
 
 ```bash
-# 1. Entrar na sua conta Supabase (abre o navegador para autorizar)
-npx supabase login
-
-# 2. Tirar o retrato da estrutura da PRODUÇÃO — só o schema public, sem dados
-npx supabase db dump \
-  --db-url "<connection string da PRODUÇÃO>" \
-  --schema public \
+# 1. Retrato da estrutura da PRODUÇÃO — só o schema public, sem uma linha de dado.
+#    A connection string vai SEM a senha: o pg_dump pergunta, e o que você
+#    digitar não aparece na tela (nem em print).
+pg_dump "<connection string da PRODUÇÃO, sem a senha>" \
+  --schema-only --schema=public --no-owner --no-privileges \
   -f estrutura_producao.sql
+
+# 2. Aplicar na HOMOLOGAÇÃO (também pergunta a senha)
+psql "<connection string da HOMOLOGAÇÃO, sem a senha>" -f estrutura_producao.sql
 ```
 
-Confira que o arquivo nasceu com tamanho de megabytes:
+**Como montar a connection string sem a senha.** No painel, botão **Connect** →
+aba **Direct / Connection string** → bloco **Session pooler** (prefira este; a
+conexão direta é IPv6 e falha em muitas redes domésticas). A string vem assim:
+
+```
+postgresql://postgres.<ref>:[YOUR-PASSWORD]@<host>:5432/postgres
+```
+
+Apague o trecho `:[YOUR-PASSWORD]` inteiro — os dois-pontos, os colchetes e o
+marcador. Fica:
+
+```
+postgresql://postgres.<ref>@<host>:5432/postgres
+```
+
+Assim a senha nunca vai para a linha de comando: ela é pedida na hora, com o que
+você digita invisível. Isso não é firula — senha em linha de comando fica no
+histórico do terminal e aparece em qualquer print.
+
+Confira que o arquivo nasceu com tamanho de megabytes (perto de 2,4 MB):
 
 ```bash
-ls -lh estrutura_producao.sql
+ls -lh estrutura_producao.sql     # Mac/Linux
+dir estrutura_producao.sql        # Windows
 ```
-
-Agora a restauração na homologação. O jeito sem instalar mais nada é usar o
-próprio CLI, numa pasta descartável:
-
-```bash
-# 3. Pasta temporária com um projeto Supabase vazio
-mkdir /tmp/homolog && cd /tmp/homolog
-npx supabase init
-
-# 4. O retrato vira a única migration desta pasta
-mkdir -p supabase/migrations
-cp <caminho>/estrutura_producao.sql \
-   supabase/migrations/00000000000000_estrutura_producao.sql
-
-# 5. Apontar para a HOMOLOGAÇÃO e aplicar
-npx supabase link --project-ref fgsblefvdabgdouipigz
-npx supabase db push
-```
-
-> Se você já tiver o `psql` instalado, o passo 3 a 5 vira um comando só:
-> `psql "<connection string da HOMOLOGAÇÃO>" -f estrutura_producao.sql`
 
 #### No Windows (PowerShell)
 
-Os comandos acima são de Mac/Linux. No PowerShell há três diferenças que quebram
-a cópia direta, e todas dão erro confuso:
+Instale as **Command Line Tools** do PostgreSQL (instalador oficial em
+enterprisedb.com/downloads — na tela de componentes, desmarque tudo menos elas).
+Feche e reabra o PowerShell depois.
 
-| | Mac/Linux | PowerShell |
-|---|---|---|
-| Quebra de linha num comando longo | `\` no fim da linha | crase `` ` `` — ou escreva tudo numa linha só |
-| Pasta temporária | `/tmp/homolog` | `C:\temp\homolog` |
-| Aspas na connection string | duplas | **simples** — em aspas duplas o PowerShell tenta interpretar o `$` da senha |
-
-Versão pronta para colar, uma linha por comando:
+Duas diferenças do PowerShell que quebram a cópia direta dos comandos acima:
+a quebra de linha é crase `` ` `` (aqui escrevemos tudo numa linha), e strings
+vão entre **aspas simples** — em aspas duplas o PowerShell interpreta o `$`.
 
 ```powershell
-# Conferir que o Node está instalado (tem que responder algo como v20.x)
-node -v
+# Conferir que as ferramentas apareceram
+pg_dump --version
 
-# 1. Entrar na conta Supabase
-npx supabase login
-
-# 2. Ir para uma pasta conhecida e tirar o retrato da PRODUÇÃO
+# 1. Retrato da PRODUÇÃO (pergunta a senha; o que você digita não aparece)
 cd $HOME\Documents
-npx supabase db dump --db-url '<connection string da PRODUÇÃO>' --schema public -f estrutura_producao.sql
+pg_dump 'postgresql://postgres.diayjpsrcerycycyaxst@<host-do-pooler>:5432/postgres' --schema-only --schema=public --no-owner --no-privileges -f estrutura_producao.sql
 
-# Conferir que o arquivo nasceu com alguns megabytes
+# Conferir o tamanho — perto de 2,4 MB
 dir estrutura_producao.sql
 
-# 3. Pasta descartável
-mkdir C:\temp\homolog
-cd C:\temp\homolog
-npx supabase init
-
-# 4. O retrato vira a única migration desta pasta
-mkdir supabase\migrations
-copy $HOME\Documents\estrutura_producao.sql supabase\migrations\00000000000000_estrutura_producao.sql
-
-# 5. Apontar para a HOMOLOGAÇÃO e aplicar
-npx supabase link --project-ref fgsblefvdabgdouipigz
-npx supabase db push
+# 2. Aplicar na HOMOLOGAÇÃO (pergunta a senha da homologação)
+psql 'postgresql://postgres.fgsblefvdabgdouipigz@<host-do-pooler>:5432/postgres' -f estrutura_producao.sql
 ```
 
-> **Aspas simples na connection string** não é preciosismo: senha de banco costuma
-> ter `$`, e o PowerShell lê `$alguma` dentro de aspas duplas como variável — some
-> um pedaço da senha e o erro que aparece é "autenticação falhou", que manda você
-> procurar no lugar errado.
-
-
-#### O que esperar
-
-**Alguns erros são normais** e não significam fracasso. Um retrato de banco
-restaurado em projeto novo costuma reclamar de coisas que o Supabase já criou
-sozinho (extensões, papéis, permissões) ou de objetos que dependem de schemas
-gerenciados por ele. Guarde a saída inteira do comando: o que interessa é o que
-falhou, não o que reclamou.
-
-Se aparecerem erros, mande a saída — as lacunas se fecham com um script pequeno,
-e é justamente para isso que o retrato existe.
-
-#### Como saber que deu certo
-
-Rode na **homologação** os mesmos scripts de conferência que você rodou na
-produção:
-
-- `docs/script_divergencia_producao_parte1.sql`
-- `docs/script_divergencia_producao_parte2.sql`
-
-**O resultado tem que ser igual ao da produção** — as mesmas tabelas faltando, as
-mesmas colunas, o mesmo motor de QA incompleto. Igualdade aqui não é defeito: é a
-prova de que a cópia é fiel. Se der diferente, compare os dois resultados; a
-diferença é o que a restauração não trouxe.
+> **Quando o terminal faz uma pergunta, ele não aceita comando** — só a resposta.
+> Digite a senha e Enter antes de colar qualquer outra coisa. Colar o comando
+> seguinte no meio de um prompt é o erro mais comum deste roteiro.
 
 ### 4. Semear dados fictícios
 
