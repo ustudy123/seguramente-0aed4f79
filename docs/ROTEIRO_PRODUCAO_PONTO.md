@@ -66,6 +66,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 26 | Onda 5 (parte 6) — escala 12x36 por ciclo (CLT art. 59-A) | `docs/script_ponto_onda5_escala_12x36.sql` | — | ⏳ | ⬜ |
 | 27 | Onda 6 (parte 1) — geração transacional dos espelhos (tudo-ou-nada) | `docs/script_ponto_onda6_gerar_espelhos.sql` | — | ⏳ | ⬜ |
 | 28 | Onda 6 (parte 2) — pendência crítica bloqueia o fechamento | `docs/script_ponto_onda6_fechamento_pendencias.sql` | — | ⏳ | ⬜ |
+| 29 | Onda 6 (parte 3) — espelho sem ciência bloqueia o fechamento (Súm. 338) | `docs/script_ponto_onda6_fechamento_ciencia_espelho.sql` | **#28** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -626,6 +627,25 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   exibir a lista de pendências é de tela, por Publicar no Lovable. O banco já
   guarda e bloqueia.
 
+### 29 · Onda 6 (parte 3) — espelho sem ciência bloqueia o fechamento (Súmula 338)
+- **Arquivo:** `docs/script_ponto_onda6_fechamento_ciencia_espelho.sql`
+- **Depende da parte 2 (#28).** Estende as duas funções (`CREATE OR REPLACE`).
+- **O que faz:** a tabela `ponto_espelhos` tem `status`, `data_confirmacao` e
+  `assinatura_hash`, mas o fechamento não os consultava — fechava com espelho
+  ainda pendente de confirmação. Espelho sem ciência enfraquece a prova (Súmula
+  338 do TST). A lista de pendências e o portão passam a considerar também o
+  **espelho sem ciência** (status não confirmado/assinado, sem confirmação e sem
+  assinatura). Espelho com **ressalva formal** registrada **não bloqueia** (a
+  recusa está formalizada).
+- **Baixo risco:** só leitura + o guardião que aborta. Não altera o motor de
+  saldo, o espelho nem a transição de banco.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** só PONTO-387 passou a passar; regressão zero. Provado em
+  transação: espelho `gerado` sem confirmação → bloqueia; espelho `confirmado` →
+  não; espelho `gerado` **com ressalva** → não (recusa formalizada); dada a
+  ciência a todos → o portão libera (0).
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -684,10 +704,10 @@ com seu pacote. A ordem prevista:
   bateria passaram a passar na onda (170, 354, 171, 355, 356, 172, 173, 150,
   151), regressão zero.
 - **Onda 6** — fechamento e folha. **Em andamento**, em cinco partes: parte 1
-  (geração transacional dos espelhos, #27) e parte 2 (pendência crítica bloqueia
-  o fechamento, #28) prontas no teste; faltam o espelho sem ciência que bloqueia
-  (387), o pacote da folha com naturezas corretas (361) e a fila com estados e
-  reenvio (398).
+  (geração transacional dos espelhos, #27), parte 2 (pendência crítica bloqueia
+  o fechamento, #28) e parte 3 (espelho sem ciência bloqueia, #29) prontas no
+  teste; faltam o pacote da folha com naturezas corretas (361) e a fila com
+  estados e reenvio (398).
 - **Ondas 7 e 8** — arquivos legais, enquadramento e prevenção.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
