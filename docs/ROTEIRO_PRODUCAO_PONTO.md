@@ -65,6 +65,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 25 | Onda 5 (parte 5) — liquidação do saldo de banco na rescisão (CLT art. 59, §3º) | `docs/script_ponto_onda5_liquidar_banco_rescisao.sql` | **#21** | ⏳ | ⬜ |
 | 26 | Onda 5 (parte 6) — escala 12x36 por ciclo (CLT art. 59-A) | `docs/script_ponto_onda5_escala_12x36.sql` | — | ⏳ | ⬜ |
 | 27 | Onda 6 (parte 1) — geração transacional dos espelhos (tudo-ou-nada) | `docs/script_ponto_onda6_gerar_espelhos.sql` | — | ⏳ | ⬜ |
+| 28 | Onda 6 (parte 2) — pendência crítica bloqueia o fechamento | `docs/script_ponto_onda6_fechamento_pendencias.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -602,6 +603,29 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   Provado em transação: dois colaboradores → dois espelhos gerados numa chamada;
   confirmar um e regerar → números atualizados, **status `confirmado` preservado**.
 
+### 28 · Onda 6 (parte 2) — pendência crítica bloqueia o fechamento
+- **Arquivo:** `docs/script_ponto_onda6_fechamento_pendencias.sql`
+- **O que faz:** o fechamento não verificava pendências — com ajuste pendente de
+  aprovação ou dia incompleto sem tratamento, a competência fechava por cima e
+  mandava o dado errado para a folha (e depois de fechada não se mexe). Passam a
+  existir `ponto_fechamento_pendencias_criticas` (lista as pendências
+  bloqueantes: ajustes pendentes e dias incompletos) e
+  `ponto_fechar_competencia_verificar` (o **portão**: aborta com a lista se
+  houver pendência; devolve 0 quando pode fechar). A tela chama o portão antes de
+  concluir o fechamento.
+- **Baixo risco:** só leitura + um guardião que aborta quando não pode fechar.
+  Não altera o motor de saldo, o espelho nem a transição de banco. Não roda por
+  gatilho.
+- **Aditivo e idempotente** (`CREATE OR REPLACE`). **Sem backfill.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** só PONTO-388 passou a passar; regressão zero. Provado em
+  transação: competência limpa → portão devolve 0 (pode fechar); com um ajuste
+  pendente e um dia incompleto → a lista traz os dois e o portão **aborta** com a
+  contagem ("2 pendências críticas — 1 ajuste pendente e 1 dia incompleto").
+- **Tela (Publicar no Lovable):** ligar o botão de fechar para chamar o portão e
+  exibir a lista de pendências é de tela, por Publicar no Lovable. O banco já
+  guarda e bloqueia.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -660,8 +684,8 @@ com seu pacote. A ordem prevista:
   bateria passaram a passar na onda (170, 354, 171, 355, 356, 172, 173, 150,
   151), regressão zero.
 - **Onda 6** — fechamento e folha. **Em andamento**, em cinco partes: parte 1
-  (geração transacional dos espelhos, #27) pronta no teste; faltam a pendência
-  crítica que bloqueia o fechamento (388), o espelho sem ciência que bloqueia
+  (geração transacional dos espelhos, #27) e parte 2 (pendência crítica bloqueia
+  o fechamento, #28) prontas no teste; faltam o espelho sem ciência que bloqueia
   (387), o pacote da folha com naturezas corretas (361) e a fila com estados e
   reenvio (398).
 - **Ondas 7 e 8** — arquivos legais, enquadramento e prevenção.
