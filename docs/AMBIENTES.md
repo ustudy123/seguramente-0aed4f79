@@ -1,6 +1,22 @@
 # Ambientes YourEyes
 
-Este projeto suporta múltiplos ambientes Supabase independentes: **produção** e **staging**. Cada ambiente possui seu próprio arquivo `.env` e os URLs/keys são injetados no build via Vite.
+Este projeto suporta três ambientes Supabase independentes: **produção**, **teste**
+(staging) e **homologação**. Cada um tem seu próprio arquivo `.env`, e as URLs/chaves
+são injetadas no build pelo Vite conforme o `--mode`.
+
+| | TESTE (staging) | HOMOLOGAÇÃO | PRODUÇÃO |
+|---|---|---|---|
+| Como recebe mudança | esteira automática, a cada merge | **o mesmo script colado à mão** | script colado à mão |
+| Estrutura | a do repositório | **cópia fiel da produção**, drift incluído | a real |
+| Dados | fictícios | fictícios | reais |
+| Responde a | "a mudança funciona?" | **"o script aplica na estrutura real?"** | — |
+
+A homologação existe por causa de uma diferença que custou caro duas vezes: o teste
+recebe tudo automaticamente e a produção só recebe o que é colado, então os dois se
+afastam. Um script de entrega já abortou na produção por uma coluna que existia no
+teste, e uma rotina de QA quebrou por funções auxiliares que nunca chegaram lá. A
+homologação é onde o script encontra a estrutura real **antes** de a produção
+encontrá-lo.
 
 ## Arquivos de ambiente
 
@@ -9,7 +25,8 @@ Este projeto suporta múltiplos ambientes Supabase independentes: **produção**
 | `.env` | Ambiente ativo local/preview (produção por padrão). | Sim |
 | `.env.example` | Template para novos desenvolvedores. | Sim |
 | `.env.production` | Configuração do projeto Supabase de produção. | Sim |
-| `.env.staging` | Configuração do projeto Supabase de staging/testes. | Sim |
+| `.env.staging` | Configuração do projeto Supabase de teste. | Sim |
+| `.env.homologacao` | Configuração do projeto Supabase de homologação. | Sim |
 
 > **Sobre segurança:** esses arquivos estão **versionados de propósito** e só podem conter valores públicos — URL do projeto e chave anon/publishable (a mesma que qualquer navegador recebe). **Nunca** coloque neles `service_role`, senhas ou tokens privados; secrets vivem em `Project Settings > Edge Functions > Secrets`. Para sobrescritas locais privadas use `.env.local` / `.env.staging.local`, que o `.gitignore` ignora (regra `*.local`).
 
@@ -23,21 +40,131 @@ Não copie arquivos: o Vite carrega o `.env.<modo>` automaticamente pelo `--mode
 # Produção (padrão)
 npm run dev
 
-# Staging
+# Teste (staging)
 npm run dev:staging
+
+# Homologação
+npm run dev:homologacao
 ```
 
 ### Para build manual
 
 ```bash
-# Staging
+# Teste (staging)
 npm run build:staging
+
+# Homologação
+npm run build:homologacao
 
 # Produção
 npm run build:production
 ```
 
 > Os scripts usam apenas `--mode`: nenhum deles sobrescreve o `.env`.
+
+## Criar a homologação
+
+Roteiro completo, na ordem. Só o passo 1 depende do painel do Supabase; o resto é
+linha de comando e cópia de arquivo.
+
+### 1. Criar o projeto
+
+No painel do Supabase, crie um projeto novo (sugestão de nome: `youreyes-homologacao`).
+Anote **Project URL**, **anon/public key** e o **project ref**.
+
+> Escolha a mesma região da produção. Diferença de região muda latência e, em
+> alguns casos, comportamento de fuso em função de data — e a graça da
+> homologação é justamente não ter diferença nenhuma.
+
+### 2. Preencher `.env.homologacao`
+
+Substitua os três placeholders pelos valores reais. O arquivo já está no
+repositório com os avisos.
+
+Há uma trava no `vite.config.ts`: se a URL apontar para o projeto de produção, o
+build de qualquer modo que não seja `production` **não nasce**, com mensagem
+explicando. Publicar um ambiente de teste sobre o banco real é o acidente que ela
+existe para impedir.
+
+### 3. Copiar a ESTRUTURA da produção — e só a estrutura
+
+Este é o passo que diferencia a homologação do teste. Ela **não** nasce das
+migrations: nasce de um retrato da produção, com o drift que a produção tem.
+
+```bash
+# 1) Retrato da estrutura de produção — sem uma linha de dado
+supabase link --project-ref <producao-project-ref>
+supabase db dump --schema-only -f /tmp/estrutura_producao.sql
+
+# 2) Restaurar na homologação
+supabase link --project-ref <homologacao-project-ref>
+psql "$HOMOLOGACAO_DB_URL" -f /tmp/estrutura_producao.sql
+```
+
+**Por que só a estrutura, e nunca os dados.** Copiar a base de produção significaria
+mover CPF, salário, atestado e resposta de questionário psicossocial de gente real
+para outro banco, sem finalidade que a justifique — e dado de saúde é sensível
+(LGPD art. 11). O que os scripts de entrega precisam encontrar aqui é a **estrutura**;
+o que depende de dado real (quantos registros violam uma regra nova, por exemplo)
+se mede na produção, por consulta somente leitura — foi assim que fizemos com as
+regras de férias.
+
+### 4. Semear dados fictícios
+
+Use os mesmos padrões do teste: `Empresa Homologação LTDA`, CPFs da faixa
+900.000.0XX com dígito verificador válido (o sistema valida DV). O volume não
+precisa ser grande — a homologação não é ambiente de carga.
+
+### 5. A partir daqui, só o gesto manual
+
+**Nunca rode `supabase db push` na homologação.** Ela deixaria de ser cópia da
+produção e viraria um segundo ambiente de teste — inútil, porque já existe um.
+
+Daqui em diante ela recebe exatamente o que a produção recebe: o script colado no
+SQL Editor. Na mesma ordem, com o mesmo conteúdo.
+
+## O fluxo de entrega com três ambientes
+
+1. **Desenvolver** → merge na `main` → a esteira aplica no **teste**.
+2. **Validar no teste**: a mudança funciona?
+3. **Colar o script na HOMOLOGAÇÃO**: ele aplica na estrutura real? A conferência
+   volta toda `ok`?
+4. Só então **colar na produção**.
+
+O passo 3 é o que muda. Ele custa dois minutos e responde à única pergunta que o
+teste não consegue responder — porque o teste tem a estrutura do repositório, e a
+produção tem a dela.
+
+Se o script abortar no passo 3, você descobriu de graça o que teria descoberto na
+produção com a operação parada.
+
+## Manter a homologação em dia
+
+A homologação envelhece igual à produção — e pelo mesmo motivo, se alguém colar um
+script só na produção e esquecer dela.
+
+- **Sempre que colar na produção, cole na homologação primeiro.** É a regra que
+  mantém as duas iguais sem nenhum trabalho extra.
+- **A cada trimestre, ou depois de qualquer trabalho manual feito direto na
+  produção**, refaça o passo 3 (novo retrato da estrutura). É rápido e zera a
+  distância.
+- **Confira quando desconfiar:** os scripts
+  `docs/script_divergencia_producao_parte*.sql` comparam qualquer ambiente com o
+  repositório. Rodando os mesmos na produção e na homologação, a diferença entre
+  os dois resultados é exatamente o quanto elas se afastaram.
+
+## Rodar a homologação localmente
+
+```bash
+npm run dev:homologacao      # sobe apontando para o banco de homologação
+npm run build:homologacao    # gera o build de homologação
+```
+
+A versão do build sai carimbada — `1.0.0-homolog.<data>` na homologação e
+`1.0.0-teste.<data>` no teste —, então um print de tela já diz de onde veio.
+
+Enquanto não houver host próprio para a homologação, ela roda local. Não é
+limitação séria: o que se valida ali é o **script**, no SQL Editor, não a tela.
 
 ## Criar o projeto Supabase de staging
 
