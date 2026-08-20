@@ -459,11 +459,11 @@ export default function Empresa() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
-          <TabsTrigger value="dados" className="text-xs">
+          <TabsTrigger value="dados" className="text-xs" data-testid="tab-dados">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Dados
           </TabsTrigger>
-          <TabsTrigger value="enquadramento" className="text-xs">
+          <TabsTrigger value="enquadramento" className="text-xs" data-testid="tab-enquadramento">
             <Shield className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Enquadramento
           </TabsTrigger>
@@ -487,7 +487,7 @@ export default function Empresa() {
             <Brain className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Contexto I.A.
           </TabsTrigger>
-          <TabsTrigger value="checklist" className="text-xs">
+          <TabsTrigger value="checklist" className="text-xs" data-testid="tab-checklist">
             <ClipboardCheck className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Checklist
           </TabsTrigger>

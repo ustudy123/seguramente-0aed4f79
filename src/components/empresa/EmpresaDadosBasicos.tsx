@@ -122,7 +122,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               ...(v === 'pf' ? { cnpj: null } : { cpf: null, cei: null, caepf: null }),
             })}
           >
-            <SelectTrigger>
+            <SelectTrigger data-testid="select-tipo-pessoa">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

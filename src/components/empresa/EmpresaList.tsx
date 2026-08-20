@@ -397,7 +397,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
             <Upload className="w-4 h-4 mr-1" />
             Importar
           </Button>
-          <Button size="sm" onClick={onNew}>
+          <Button size="sm" onClick={onNew} data-testid="btn-nova-empresa">
             <Plus className="w-4 h-4 mr-1" />
             Nova Empresa
           </Button>

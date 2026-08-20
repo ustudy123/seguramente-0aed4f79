@@ -144,7 +144,7 @@ export function EmpresaCadastroChecklist({ data, onGoToTab }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2" data-testid="checklist-pendencias">
               {pendentesObrigatorios.map((p, i) => (
                 <li key={i}>
                   <button
