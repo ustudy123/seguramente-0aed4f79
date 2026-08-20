@@ -81,6 +81,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 41 | Onda 8 (parte 5) — LGPD: trilha de acesso a dado sensível + contenção de enumeração | `docs/script_ponto_onda8_lgpd_trilha_e_enumeracao.sql` | — | ⏳ | ⬜ |
 | 42 | Onda 8 (parte 6) — Plano de Ação: alerta→ação 5W2H + eficácia + IA sugere/humano decide | `docs/script_ponto_onda8_plano_de_acao.sql` | — | ⏳ | ⬜ |
 | 43 | Onda 8 (correção) — competência fechada bloqueia até para gestão (remove a válvula) | `docs/script_ponto_onda8_competencia_fechada.sql` | **#14** (reabertura) | ⏳ | ⬜ |
+| 44 | Onda 9 — instrumento coletivo vigente na competência (vigilância de vigência) | `docs/script_ponto_onda9_cct_vigencia.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1041,6 +1042,27 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   mesmos dois em vermelho (113 rural e 386 vigência de CCT, itens de onda futura),
   regressão zero.
 
+### 44 · Onda 9 — instrumento coletivo vigente na competência (vigilância)
+- **Arquivo:** `docs/script_ponto_onda9_cct_vigencia.sql`
+- **O que faz:** a apuração de horas **já escolhia** o instrumento coletivo
+  (CCT/ACT em `ponto_cct_config`) cuja vigência cobre a **data apurada** —
+  reapurar uma competência antiga aplica a convenção da época, não a atual
+  (CF/88 art. 7º, XXVI). O que faltava era a **vigilância**: cria
+  `ponto_cct_vigiar_vigencia(tenant, empresa)`, que gera alerta quando um
+  instrumento está **a vencer** (60 dias → média, 30 dias → alta) ou **vencido**
+  (crítica), e quando **duas vigências se sobrepõem** no mesmo escopo
+  (empresa + categoria) — situação que deixaria a apuração ambígua.
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem a
+  apuração — só lê `ponto_cct_config` e escreve alertas. **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | OK` — a função de vigilância existe e a
+  apuração continua filtrando por vigência.
+- **Na bateria:** o PONTO-386 passou a **passar** (a apuração respeita a vigência
+  **e** a vigilância existe), regressão zero (112→113). Provado em transação
+  (dados fictícios): instrumento a vencer gera alerta *alta*, vencido gera
+  *crítica*, par sobreposto gera *alta* nos dois; segunda chamada não duplica.
+- **Sobra em vermelho** só o **PONTO-113** (trabalhador rural), que é evolução
+  condicional a cliente do agronegócio — fora do escopo de conformidade geral.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -1132,12 +1154,19 @@ com seu pacote. A ordem prevista:
   a bateria rodada no teste por um usuário de gestão pegou o PONTO-193 — uma
   competência fechada aceitava marcação de gestão sem reabertura (a "válvula" do
   guard de período); o pacote #43 remove a válvula e a competência fechada passa a
-  bloquear todos, até a reabertura formal (#14, PONTO-358). Restam vermelhos só o
-  113 (rural) e o 386 (vigência de CCT), itens de onda futura. *Cinco casos desta onda são de
+  bloquear todos, até a reabertura formal (#14, PONTO-358). *Cinco casos desta onda são de
   **tela** (comprovante após a batida, cerca que sinaliza sem bloquear, aviso de
   tratamento de dados, selfie como dado comum, e não restringir horário de
   marcação — 002, 005, 006, 254, 363): não têm rotina de banco e entram por
   Publicar no Lovable, fora desta esteira.*
+- **Onda 9** — instrumento coletivo vigente na competência. **Concluída no teste
+  (banco)**, em uma parte: a vigilância de vigência de CCT/ACT (#44; caso 386) —
+  a apuração já escolhia o instrumento vigente na data apurada, e agora existe o
+  alerta de vencimento (60/30 dias/vencido) e de sobreposição de vigências. Um
+  caso passou a passar (386), regressão zero (112→113). **Com isso, o único caso
+  de banco ainda em vermelho é o PONTO-113 (trabalhador rural)**, evolução
+  condicional a cliente do agronegócio — os demais pendentes são casos de **tela**
+  (Publicar no Lovable), fora desta esteira.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
