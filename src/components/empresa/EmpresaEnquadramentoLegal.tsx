@@ -160,7 +160,7 @@ export function EmpresaEnquadramentoLegal({
             <Select value={data.cipa_situacao || 'nao_constituida'} onValueChange={v => onChange({
             cipa_situacao: v as EmpresaCadastro['cipa_situacao']
           })}>
-              <SelectTrigger>
+              <SelectTrigger data-testid="select-cipa-situacao">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
