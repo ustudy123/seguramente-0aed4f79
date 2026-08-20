@@ -235,6 +235,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
         <div className="space-y-2">
           <Label>{tipoPessoa === 'pf' ? 'Nome Completo' : 'Razão Social'} *</Label>
           <Input
+            data-testid="input-razao-social"
             placeholder={tipoPessoa === 'pf' ? 'Nome completo' : 'Razão Social completa'}
             value={data.razao_social || ''}
             onChange={(e) => onChange({ razao_social: e.target.value })}
