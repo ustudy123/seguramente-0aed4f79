@@ -86,118 +86,88 @@ build de qualquer modo que não seja `production` **não nasce**, com mensagem
 explicando. Publicar um ambiente de teste sobre o banco real é o acidente que ela
 existe para impedir.
 
-### 3. Copiar a ESTRUTURA da produção — e só a estrutura
+### 3. Copiar a ESTRUTURA da produção — pela esteira, sem instalar nada
 
 Este é o passo que diferencia a homologação do teste. Ela **não** nasce das
 migrations: nasce de um retrato da produção, com o drift que a produção tem.
 
-**Por que este passo sai do SQL Editor.** O retrato da estrutura tem cerca de
-2,4 MB e 68 mil linhas. Não é algo que se cole numa tela — precisa de terminal.
-É o único passo do processo que exige isso, e é uma vez só.
+O retrato tem cerca de 2,4 MB — não cabe no SQL Editor. Mas também não precisa
+de nada instalado na sua máquina: **quem faz o trabalho é a esteira do GitHub**,
+igual ao que já acontece com o ambiente de teste. Você aperta um botão.
 
-#### Antes de começar
+> Por que não usar o CLI do Supabase na sua máquina: `supabase db dump` roda o
+> `pg_dump` dentro de um contêiner e exige Docker Desktop instalado. Instalar
+> vários GB para um comando é desproporcional — a esteira já tem tudo.
 
-Você vai precisar de:
+#### 3.1. Criar o usuário somente leitura na produção
 
-- **Node instalado** (já tem, é o que roda o projeto). Isso basta: o Supabase CLI
-  é chamado com `npx`, sem instalar nada permanente.
-- **A senha do banco de cada projeto**. No painel do Supabase:
-  **Project Settings → Database → Database password**. Se não souber, use
-  *Reset database password* — trocar a senha do banco não derruba a aplicação,
-  que usa a chave anon, não a senha.
-- **A connection string de cada projeto**: no painel, botão **Connect**, no topo.
-  Copie a que o painel oferecer; se sua internet for só IPv4, prefira a opção
-  **Session pooler** (a conexão direta do Supabase é IPv6 e falha em muitas redes
-  domésticas — se der "could not translate host name" ou "network unreachable",
-  é isso).
+Cole `docs/script_homologacao_leitor_producao.sql` no SQL Editor da **produção**,
+depois de trocar a senha na linha indicada.
 
-#### Atenção: `supabase db dump` exige Docker
+Ele cria o usuário `homologacao_leitor`, que **lê tudo e não escreve nada** —
+não por configuração, mas por construção: recebe o papel `pg_read_all_data` do
+PostgreSQL e nenhuma permissão de escrita. É o que mantém de pé a regra da casa
+de que a produção nunca é alterada por esteira. Se a credencial vazasse, ainda
+assim ninguém alteraria nada com ela.
 
-O CLI do Supabase roda o `pg_dump` **dentro de um contêiner**, então o comando
-`supabase db dump` falha com *"failed to run docker. Docker Desktop is a
-prerequisite"* em máquina sem Docker.
+A conferência do script mostra quatro linhas; todas devem vir `ok`.
 
-Instalar o Docker Desktop só para isso é desproporcional (vários GB, WSL2 no
-Windows). **O caminho leve é usar o `pg_dump` direto**, que vem nas ferramentas
-de linha de comando do PostgreSQL — cerca de 100 MB, e resolve a cópia e a
-restauração com um comando cada.
+#### 3.2. Guardar as duas conexões como secrets do GitHub
 
-No Windows: baixe o instalador oficial do PostgreSQL (enterprisedb.com/downloads),
-e na tela de componentes **desmarque tudo menos "Command Line Tools"**. Não é
-preciso instalar o servidor.
+Em **Settings → Secrets and variables → Actions → New repository secret**:
 
-Depois, feche e reabra o PowerShell para que ele enxergue os comandos novos.
+| Nome do secret | Conteúdo |
+|---|---|
+| `PRODUCAO_DB_URL_LEITURA` | conexão da **produção**, com o usuário `homologacao_leitor` |
+| `HOMOLOGACAO_DB_URL` | conexão da **homologação**, com o usuário `postgres` |
 
-#### Os comandos
-
-Dois comandos: um tira o retrato da produção, o outro o aplica na homologação.
-
-```bash
-# 1. Retrato da estrutura da PRODUÇÃO — só o schema public, sem uma linha de dado.
-#    A connection string vai SEM a senha: o pg_dump pergunta, e o que você
-#    digitar não aparece na tela (nem em print).
-pg_dump "<connection string da PRODUÇÃO, sem a senha>" \
-  --schema-only --schema=public --no-owner --no-privileges \
-  -f estrutura_producao.sql
-
-# 2. Aplicar na HOMOLOGAÇÃO (também pergunta a senha)
-psql "<connection string da HOMOLOGAÇÃO, sem a senha>" -f estrutura_producao.sql
-```
-
-**Como montar a connection string sem a senha.** No painel, botão **Connect** →
-aba **Direct / Connection string** → bloco **Session pooler** (prefira este; a
-conexão direta é IPv6 e falha em muitas redes domésticas). A string vem assim:
+Para montar cada uma: no painel do projeto, botão **Connect** → aba
+**Direct / Connection string** → bloco **Session pooler** (a conexão direta é
+IPv6 e não funciona a partir do GitHub). A string vem assim:
 
 ```
 postgresql://postgres.<ref>:[YOUR-PASSWORD]@<host>:5432/postgres
 ```
 
-Apague o trecho `:[YOUR-PASSWORD]` inteiro — os dois-pontos, os colchetes e o
-marcador. Fica:
+- Na da **produção**, troque `postgres.<ref>` por `homologacao_leitor.<ref>` e
+  `[YOUR-PASSWORD]` (com colchetes) pela senha que você definiu no passo 3.1.
+- Na da **homologação**, troque só `[YOUR-PASSWORD]` pela senha do banco dela.
 
-```
-postgresql://postgres.<ref>@<host>:5432/postgres
-```
+Secret é campo protegido: o valor não aparece mais depois de salvo, nem nos logs
+da esteira. É por isso que a senha vai aqui, e não numa linha de comando.
 
-Assim a senha nunca vai para a linha de comando: ela é pedida na hora, com o que
-você digita invisível. Isso não é firula — senha em linha de comando fica no
-histórico do terminal e aparece em qualquer print.
+#### 3.3. Apertar o botão
 
-Confira que o arquivo nasceu com tamanho de megabytes (perto de 2,4 MB):
+No GitHub: aba **Actions** → **homologacao** → **Run workflow** → digite
+`RECRIAR` no campo de confirmação → **Run workflow**.
 
-```bash
-ls -lh estrutura_producao.sql     # Mac/Linux
-dir estrutura_producao.sql        # Windows
-```
+A esteira não roda sozinha nunca — só por este botão. Não tem gatilho por push,
+de propósito: se seguisse a `main`, a homologação viraria um segundo ambiente de
+teste.
 
-#### No Windows (PowerShell)
+O que ela faz, e o que impede:
 
-Instale as **Command Line Tools** do PostgreSQL (instalador oficial em
-enterprisedb.com/downloads — na tela de componentes, desmarque tudo menos elas).
-Feche e reabra o PowerShell depois.
+1. exige a palavra `RECRIAR` digitada;
+2. **recusa rodar se o destino apontar para a produção** — o destino é apagado e
+   recriado, então esta é a trava mais importante do arquivo;
+3. lê a estrutura da produção com o usuário somente leitura;
+4. **confere que nenhuma linha de dado veio junto** e aborta se vier — prova, não
+   confiança, de que nenhum CPF, salário ou atestado saiu da produção;
+5. recria o schema `public` da homologação com essa estrutura;
+6. guarda o retrato e o log como anexo da corrida, por 7 dias.
 
-Duas diferenças do PowerShell que quebram a cópia direta dos comandos acima:
-a quebra de linha é crase `` ` `` (aqui escrevemos tudo numa linha), e strings
-vão entre **aspas simples** — em aspas duplas o PowerShell interpreta o `$`.
+#### 3.4. Conferir
 
-```powershell
-# Conferir que as ferramentas apareceram
-pg_dump --version
+O último passo da esteira imprime a contagem de tabelas, funções e políticas.
+**Compare com a produção: os números têm que bater.**
 
-# 1. Retrato da PRODUÇÃO (pergunta a senha; o que você digita não aparece)
-cd $HOME\Documents
-pg_dump 'postgresql://postgres.diayjpsrcerycycyaxst@<host-do-pooler>:5432/postgres' --schema-only --schema=public --no-owner --no-privileges -f estrutura_producao.sql
+Para uma conferência completa, rode na homologação os scripts
+`docs/script_divergencia_producao_parte1.sql` e `parte2.sql`. O resultado tem que
+ser **igual ao da produção** — as mesmas tabelas faltando, as mesmas colunas, o
+mesmo motor de QA incompleto.
 
-# Conferir o tamanho — perto de 2,4 MB
-dir estrutura_producao.sql
-
-# 2. Aplicar na HOMOLOGAÇÃO (pergunta a senha da homologação)
-psql 'postgresql://postgres.fgsblefvdabgdouipigz@<host-do-pooler>:5432/postgres' -f estrutura_producao.sql
-```
-
-> **Quando o terminal faz uma pergunta, ele não aceita comando** — só a resposta.
-> Digite a senha e Enter antes de colar qualquer outra coisa. Colar o comando
-> seguinte no meio de um prompt é o erro mais comum deste roteiro.
+Igualdade aqui não é defeito: é a prova de que a cópia é fiel. A homologação não
+deve estar "certa"; deve estar igual à produção, defeitos e tudo.
 
 ### 4. Semear dados fictícios
 
@@ -236,8 +206,9 @@ script só na produção e esquecer dela.
 - **Sempre que colar na produção, cole na homologação primeiro.** É a regra que
   mantém as duas iguais sem nenhum trabalho extra.
 - **A cada trimestre, ou depois de qualquer trabalho manual feito direto na
-  produção**, refaça o passo 3 (novo retrato da estrutura). É rápido e zera a
-  distância.
+  produção**, aperte de novo o botão da esteira `homologacao` (Actions → Run
+  workflow → `RECRIAR`). Ela refaz o retrato do zero e zera a distância. Como o
+  schema é recriado, não há resíduo de execuções anteriores.
 - **Confira quando desconfiar:** os scripts
   `docs/script_divergencia_producao_parte*.sql` comparam qualquer ambiente com o
   repositório. Rodando os mesmos na produção e na homologação, a diferença entre

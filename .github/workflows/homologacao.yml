@@ -1,0 +1,152 @@
+# =====================================================================
+# Homologação — copiar a ESTRUTURA da produção, por botão
+#
+# NÃO roda sozinha. Só quando alguém aperta "Run workflow" e digita a
+# confirmação. Não tem gatilho por push, de propósito: a homologação não
+# deve seguir a `main` — se seguisse, viraria um segundo ambiente de
+# teste, e já existe um.
+#
+# O QUE ELA FAZ
+#   1) lê a estrutura da PRODUÇÃO com um usuário SOMENTE LEITURA;
+#   2) confere que não veio nenhuma linha de dado junto;
+#   3) apaga e recria o schema public da HOMOLOGAÇÃO com essa estrutura;
+#   4) guarda o retrato como anexo da corrida, para conferência.
+#
+# A PRODUÇÃO NUNCA É ALTERADA POR AQUI, e não é promessa de configuração:
+# a credencial usada é de um usuário criado com pg_read_all_data e sem
+# permissão de escrita (docs/script_homologacao_leitor_producao.sql). Se
+# esta esteira tentasse escrever na produção, o banco recusaria.
+#
+# SECRETS NECESSÁRIOS (Settings > Secrets and variables > Actions):
+#   PRODUCAO_DB_URL_LEITURA   conexão da produção com o usuário somente leitura
+#   HOMOLOGACAO_DB_URL        conexão da homologação (usuário postgres)
+#
+# Como montar cada uma está em docs/AMBIENTES.md, seção "Criar a homologação".
+# =====================================================================
+name: homologacao
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmar:
+        description: 'Digite RECRIAR para confirmar que a homologação será sobrescrita'
+        required: true
+        default: ''
+
+jobs:
+  copiar-estrutura:
+    name: Copiar a estrutura da produção para a homologação
+    runs-on: ubuntu-latest
+    concurrency:
+      group: homologacao
+      cancel-in-progress: false
+    env:
+      PRODUCAO_REF: diayjpsrcerycycyaxst
+      HOMOLOGACAO_REF: fgsblefvdabgdouipigz
+    steps:
+      - name: Exigir a confirmação digitada
+        run: |
+          if [ "${{ github.event.inputs.confirmar }}" != "RECRIAR" ]; then
+            echo "::error::Confirmação ausente. Rode de novo digitando RECRIAR."
+            exit 1
+          fi
+
+      - name: Conferir que os secrets existem
+        env:
+          PROD_URL: ${{ secrets.PRODUCAO_DB_URL_LEITURA }}
+          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
+        run: |
+          [ -n "$PROD_URL" ]    || { echo "::error::Falta o secret PRODUCAO_DB_URL_LEITURA"; exit 1; }
+          [ -n "$HOMOLOG_URL" ] || { echo "::error::Falta o secret HOMOLOGACAO_DB_URL"; exit 1; }
+
+      - name: Conferir que o destino NÃO é a produção
+        env:
+          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
+        run: |
+          # A trava mais importante do arquivo. O destino é apagado e recriado;
+          # se alguém trocar o secret pela conexão da produção, por engano ou
+          # por copiar-colar, esta linha impede o desastre.
+          case "$HOMOLOG_URL" in
+            *"$PRODUCAO_REF"*)
+              echo "::error::O destino aponta para a PRODUÇÃO. Abortando."; exit 1 ;;
+          esac
+          case "$HOMOLOG_URL" in
+            *"$HOMOLOGACAO_REF"*) echo "Destino confere: homologação." ;;
+            *) echo "::error::O destino não é o projeto de homologação. Abortando."; exit 1 ;;
+          esac
+
+      - name: Instalar as ferramentas do PostgreSQL 17
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Ler a estrutura da produção (somente leitura, sem dados)
+        env:
+          PROD_URL: ${{ secrets.PRODUCAO_DB_URL_LEITURA }}
+        run: |
+          pg_dump "$PROD_URL" \
+            --schema-only --schema=public \
+            --no-owner --no-privileges \
+            --no-publications --no-subscriptions \
+            -f estrutura_producao.sql
+          ls -lh estrutura_producao.sql
+
+      - name: Conferir que NENHUM dado veio junto
+        run: |
+          # Prova, não confiança: --schema-only não deveria trazer linha
+          # nenhuma, e é isto que garante que nenhum CPF, salário ou atestado
+          # de gente real saiu da produção. Se aparecer dado, a corrida para
+          # antes de tocar na homologação.
+          if grep -qE '^(COPY |INSERT INTO )' estrutura_producao.sql; then
+            echo "::error::O retrato contém DADOS. Abortando antes de copiar."
+            exit 1
+          fi
+          echo "Nenhuma linha de dado no retrato — só estrutura."
+
+      - name: Recriar o schema public da homologação
+        env:
+          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
+        run: |
+          psql "$HOMOLOG_URL" -v ON_ERROR_STOP=1 -c \
+            'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;'
+
+      - name: Aplicar a estrutura na homologação
+        env:
+          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
+        run: |
+          # Sem ON_ERROR_STOP: restaurar retrato em projeto novo sempre reclama
+          # de extensão e permissão que o Supabase já criou sozinho. O que
+          # importa é o resultado final, conferido no passo seguinte.
+          psql "$HOMOLOG_URL" -f estrutura_producao.sql 2>&1 | tee restauracao.log | tail -40
+          echo "---"
+          echo "Total de avisos/erros na restauração: $(grep -c '^ERROR' restauracao.log || true)"
+
+      - name: Conferir o resultado
+        env:
+          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
+        run: |
+          psql "$HOMOLOG_URL" -A -F' | ' -c "
+            SELECT 'tabelas'  AS item, count(*)::text FROM pg_class c
+              JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname='public' AND c.relkind='r'
+            UNION ALL
+            SELECT 'funcoes', count(*)::text FROM pg_proc p
+              JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'
+            UNION ALL
+            SELECT 'politicas', count(*)::text FROM pg_policies WHERE schemaname='public';"
+          echo
+          echo "Compare com a produção: os números têm que BATER."
+          echo "Igualdade aqui é sucesso — a homologação existe para ser cópia fiel."
+
+      - name: Guardar o retrato e o log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: homologacao-estrutura
+          path: |
+            estrutura_producao.sql
+            restauracao.log
+          retention-days: 7
