@@ -75,6 +75,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 35 | Onda 7 (parte 4) — gestão do certificado digital (ICP-Brasil) | `docs/script_ponto_onda7_certificado_digital.sql` | — | ⏳ | ⬜ |
 | 36 | Onda 7 (parte 5) — dossiê de fiscalização + arquivamento no módulo Documentos | `docs/script_ponto_onda7_dossie_fiscalizacao.sql` | #33 #34 #35 | ⏳ | ⬜ |
 | 37 | Onda 8 (parte 1) — enquadramento do art. 62 (dispensa) + teletrabalho por jornada | `docs/script_ponto_onda8_enquadramento_art62.sql` | — | ⏳ | ⬜ |
+| 38 | Onda 8 (parte 2) — controle de fato descaracteriza a dispensa (art. 62) | `docs/script_ponto_onda8_descaracterizacao_art62.sql` | **#37** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -890,6 +891,26 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** os campos de enquadramento entram na ficha do
   colaborador; a regra e a coerência já estão no banco.
 
+### 38 · Onda 8 (parte 2) — controle de fato descaracteriza a dispensa (art. 62)
+- **Arquivo:** `docs/script_ponto_onda8_descaracterizacao_art62.sql`
+- **Depende da parte 1 (#37)** — usa o enquadramento (`dispensado_ponto`).
+- **O que faz:** a dispensa do art. 62 cai na Justiça quando há **controle de
+  fato** — um vínculo marcado como dispensado que, na prática, acumula marcações
+  reais. Aí a exclusão é descaracterizada e as **horas extras do período inteiro**
+  voltam. Passa a existir **`ponto_detectar_descaracterizacao_art62`**, que cruza o
+  enquadramento com as marcações reais recentes (marcações desconsideradas não
+  contam) e gera um **alerta crítico** por colaborador para RH/Jurídico revisar.
+- **Baixo risco:** só leitura das marcações + gravação de alerta; não altera o
+  motor de saldo, o espelho, o fechamento nem o enquadramento. **Aditivo e
+  idempotente** (um alerta por colaborador/dia de varredura).
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** um caso passou a passar na parte (375), regressão zero (104→105).
+  Provado em transação (dados fictícios): um dispensado com marcações reais em três
+  dias gera **um alerta crítico**; um dispensado com marcação em um só dia **não**
+  gera; rodar de novo não duplica.
+- **Tela (Publicar no Lovable):** o alerta aparece no painel do ponto; a detecção já
+  está no banco (pode ser agendada periodicamente).
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -971,9 +992,9 @@ com seu pacote. A ordem prevista:
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
   ação). **Em andamento no teste.** Parte 1 entregue: o enquadramento do art. 62 no
   vínculo, com a regra da dispensa (teletrabalho por jornada continua controlado) e
-  a coerência do `bate_ponto` (#37; casos 373, 374). A seguir, no banco: controle
-  de fato que descaracteriza a dispensa (375); obrigatoriedade do controle por
-  estabelecimento acima de 20 (370); sistema alternativo só com instrumento
+  a coerência do `bate_ponto` (#37; casos 373, 374); e o controle de fato que
+  descaracteriza a dispensa (#38; caso 375). A seguir, no banco: obrigatoriedade do
+  controle por estabelecimento acima de 20 (370); sistema alternativo só com instrumento
   coletivo (213); a trilha de auditoria de acesso a dado sensível e exportação
   (397) e a contenção de enumeração de CPF no link (362); e a integração do Plano
   de Ação (alerta vira ação com 5W2H, verificação de eficácia na conclusão, e a IA
