@@ -138,6 +138,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               <Label>CNPJ *</Label>
               <div className="flex gap-2">
                 <Input
+                  data-testid="input-cnpj"
                   placeholder="00.000.000/0000-00"
                   value={formatCnpj(data.cnpj || '')}
                   onChange={handleCnpjChange}
@@ -349,6 +350,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
         <div className="space-y-2">
           <Label>Total de Colaboradores</Label>
           <Input
+            data-testid="input-total-colaboradores"
             type="number"
             placeholder="Ex: 150"
             value={data.total_colaboradores || ''}
