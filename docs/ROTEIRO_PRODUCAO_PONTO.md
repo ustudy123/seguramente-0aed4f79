@@ -74,6 +74,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 34 | Onda 7 (parte 3) — importação de AFD que confere (CRC, cadeia, lacuna, quarentena) | `docs/script_ponto_onda7_afd_importacao.sql` | — | ⏳ | ⬜ |
 | 35 | Onda 7 (parte 4) — gestão do certificado digital (ICP-Brasil) | `docs/script_ponto_onda7_certificado_digital.sql` | — | ⏳ | ⬜ |
 | 36 | Onda 7 (parte 5) — dossiê de fiscalização + arquivamento no módulo Documentos | `docs/script_ponto_onda7_dossie_fiscalizacao.sql` | #33 #34 #35 | ⏳ | ⬜ |
+| 37 | Onda 8 (parte 1) — enquadramento do art. 62 (dispensa) + teletrabalho por jornada | `docs/script_ponto_onda8_enquadramento_art62.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -863,6 +864,32 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   lista de documentos do ponto chamam essas funções; o pacote, o índice, os hashes
   e o arquivamento já estão no banco.
 
+### 37 · Onda 8 (parte 1) — enquadramento do art. 62 (dispensa) + teletrabalho
+- **Arquivo:** `docs/script_ponto_onda8_enquadramento_art62.sql`
+- **O que faz:** o cadastro não tinha enquadramento do art. 62. Gestor, trabalhador
+  externo e teletrabalhista por produção/tarefa eram tratados como controlados — e
+  a materialização de faltas gerava **falta para quem a lei dispensa de marcar**. E
+  o teletrabalho não distinguia **jornada** de **produção** (Lei 14.442/2022): só
+  produção dispensa; teletrabalhista por jornada continua sujeito a controle.
+  Passam a existir, no vínculo (`admissoes`): `art62_inciso` (I/II/III),
+  `art62_documento`, `teletrabalho_modalidade` (jornada/produção) e
+  `dispensado_ponto` (a dispensa resolvida); a **regra** `ponto_art62_dispensa`
+  (dispensa só quando há inciso **e** a modalidade não é teletrabalho por jornada);
+  e um **gatilho** que resolve `dispensado_ponto` e, quando dispensa, **zera
+  `bate_ponto`** — assim a materialização de faltas (que já pula `bate_ponto=false`)
+  respeita a dispensa **sem tocar no motor**.
+- **Baixo risco:** não altera o cálculo de saldo, o espelho nem o fechamento; o
+  gatilho só recompõe a dispensa e a coerência de `bate_ponto`. **Aditivo e
+  idempotente.**
+- **Conferência esperada:** `t | t | t | t | t | OK`.
+- **Na bateria** dois casos passaram a passar na parte (373, 374), regressão zero
+  (102→104). Provado em transação (dados fictícios): gestor (II) e teletrabalho por
+  **produção** (III) ficam **dispensados** e sem bater ponto; teletrabalho por
+  **jornada** (III) **continua controlado** (não é dispensado); enquadrar um
+  controlado depois já zera o `bate_ponto`.
+- **Tela (Publicar no Lovable):** os campos de enquadramento entram na ficha do
+  colaborador; a regra e a coerência já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -942,7 +969,19 @@ com seu pacote. A ordem prevista:
   (392, 393). Onze casos passaram a passar na onda (380, 381, 359, 211, 382, 383,
   384, 212, 360, 392, 393), regressão zero.
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
-  ação).
+  ação). **Em andamento no teste.** Parte 1 entregue: o enquadramento do art. 62 no
+  vínculo, com a regra da dispensa (teletrabalho por jornada continua controlado) e
+  a coerência do `bate_ponto` (#37; casos 373, 374). A seguir, no banco: controle
+  de fato que descaracteriza a dispensa (375); obrigatoriedade do controle por
+  estabelecimento acima de 20 (370); sistema alternativo só com instrumento
+  coletivo (213); a trilha de auditoria de acesso a dado sensível e exportação
+  (397) e a contenção de enumeração de CPF no link (362); e a integração do Plano
+  de Ação (alerta vira ação com 5W2H, verificação de eficácia na conclusão, e a IA
+  que sugere mas nunca decide — 389, 390, 391). *Cinco casos desta onda são de
+  **tela** (comprovante após a batida, cerca que sinaliza sem bloquear, aviso de
+  tratamento de dados, selfie como dado comum, e não restringir horário de
+  marcação — 002, 005, 006, 254, 363): não têm rotina de banco e entram por
+  Publicar no Lovable, fora desta esteira.*
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
