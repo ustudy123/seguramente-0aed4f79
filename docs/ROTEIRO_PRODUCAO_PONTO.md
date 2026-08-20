@@ -79,6 +79,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 39 | Onda 8 (parte 3) — obrigatoriedade do controle por estabelecimento (>20) | `docs/script_ponto_onda8_obrigatoriedade_estabelecimento.sql` | — | ⏳ | ⬜ |
 | 40 | Onda 8 (parte 4) — sistema alternativo (REP-A) só com instrumento coletivo | `docs/script_ponto_onda8_rep_alternativo_instrumento.sql` | — | ⏳ | ⬜ |
 | 41 | Onda 8 (parte 5) — LGPD: trilha de acesso a dado sensível + contenção de enumeração | `docs/script_ponto_onda8_lgpd_trilha_e_enumeracao.sql` | — | ⏳ | ⬜ |
+| 42 | Onda 8 (parte 6) — Plano de Ação: alerta→ação 5W2H + eficácia + IA sugere/humano decide | `docs/script_ponto_onda8_plano_de_acao.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -986,6 +987,35 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   botões de exportação passam a chamar o registro; a contenção do link também. A
   trilha, a imutabilidade e a contagem já estão no banco.
 
+### 42 · Onda 8 (parte 6) — Plano de Ação (fecha a onda 8 no banco)
+- **Arquivo:** `docs/script_ponto_onda8_plano_de_acao.sql`
+- **O que faz:** três frentes que ligam o ponto ao Plano de Ação. **(389)** O
+  alerta do ponto (lacuna, HE habitual, intervalo, banco a vencer, integridade,
+  instrumento vencido, obrigatoriedade, descaracterização) passa a **virar ação
+  5W2H** no Plano de Ação, com a origem navegável (`ponto_alerta_gerar_acao`; o
+  alerta ganha `plano_acao_id`). **(390)** Concluir a ação **valida a eficácia**
+  (`ponto_acao_concluir_com_eficacia`): reavalia a ocorrência de origem e, se ela
+  persiste (recorrência), **não dá baixa cega** — gera um alerta de eficácia; senão,
+  encerra o alerta. **(391)** A **IA de análise** nasce com o limite embutido: ela
+  **sugere** causa/impacto/ação (`ponto_ia_analisar_alerta`, status *sugerido*) e só
+  avança por **decisão humana registrada** (`ponto_ia_registrar_decisao`, exige o
+  responsável humano). Nada automatizado afeta direito do trabalhador (LGPD art. 20).
+- **Nota sobre o caso 391:** o próprio caso PONTO-391 previa "reclassificar como
+  passou quando a IA existir com o controle implantado". Este pacote implanta a IA
+  de sugestão com o controle de decisão humana **e** atualiza a regra para
+  reconhecê-lo — **se houver decisão automática sobre direito, continua reprovando.**
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem as
+  marcações. **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | t | t | t | OK`.
+- **Na bateria** três casos passaram a passar na parte (389, 390, 391), regressão
+  zero (109→112). Provado em transação (dados fictícios): o alerta vira ação 5W2H
+  (ACO-… com por quê/onde/como/prazo, prioridade pela severidade) e fica vinculado;
+  concluir sem recorrência **encerra** o alerta, com recorrência **gera** alerta de
+  eficácia; a IA sugere, a decisão **sem humano é recusada** e **com humano** fica
+  registrada.
+- **Tela (Publicar no Lovable):** o botão "gerar ação do alerta", a conclusão com
+  eficácia e o "Analisar com IA" chamam essas funções; a integração já está no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -1065,16 +1095,15 @@ com seu pacote. A ordem prevista:
   (392, 393). Onze casos passaram a passar na onda (380, 381, 359, 211, 382, 383,
   384, 212, 360, 392, 393), regressão zero.
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
-  ação). **Em andamento no teste.** Parte 1 entregue: o enquadramento do art. 62 no
-  vínculo, com a regra da dispensa (teletrabalho por jornada continua controlado) e
-  a coerência do `bate_ponto` (#37; casos 373, 374); e o controle de fato que
-  descaracteriza a dispensa (#38; caso 375); e a obrigatoriedade do controle por
-  estabelecimento acima de 20 (#39; caso 370); e o sistema alternativo (REP-A) só
-  com instrumento coletivo (#40; caso 213); e a LGPD — trilha de auditoria de
-  acesso a dado sensível e exportação, e a contenção de enumeração de CPF no link
-  (#41; casos 397, 362). A seguir, no banco: a integração do Plano
-  de Ação (alerta vira ação com 5W2H, verificação de eficácia na conclusão, e a IA
-  que sugere mas nunca decide — 389, 390, 391). *Cinco casos desta onda são de
+  ação). **Concluída no teste (banco)**, em seis partes: o enquadramento do art. 62
+  no vínculo (#37; casos 373, 374); o controle de fato que descaracteriza a
+  dispensa (#38; caso 375); a obrigatoriedade do controle por estabelecimento acima
+  de 20 (#39; caso 370); o sistema alternativo (REP-A) só com instrumento coletivo
+  (#40; caso 213); a LGPD — trilha de auditoria de acesso a dado sensível e
+  exportação, e a contenção de enumeração de CPF no link (#41; casos 397, 362); e a
+  integração do Plano de Ação — alerta vira ação 5W2H, verificação de eficácia na
+  conclusão, e a IA que sugere mas nunca decide (#42; casos 389, 390, 391). Dez
+  casos passaram a passar na onda, regressão zero. *Cinco casos desta onda são de
   **tela** (comprovante após a batida, cerca que sinaliza sem bloquear, aviso de
   tratamento de dados, selfie como dado comum, e não restringir horário de
   marcação — 002, 005, 006, 254, 363): não têm rotina de banco e entram por
