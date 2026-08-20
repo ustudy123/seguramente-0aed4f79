@@ -64,6 +64,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 24 | Onda 5 (parte 4) — limite de 10h diárias no regime de compensação (CLT art. 59, §2º) | `docs/script_ponto_onda5_limite_diario_compensacao.sql` | **#21** | ⏳ | ⬜ |
 | 25 | Onda 5 (parte 5) — liquidação do saldo de banco na rescisão (CLT art. 59, §3º) | `docs/script_ponto_onda5_liquidar_banco_rescisao.sql` | **#21** | ⏳ | ⬜ |
 | 26 | Onda 5 (parte 6) — escala 12x36 por ciclo (CLT art. 59-A) | `docs/script_ponto_onda5_escala_12x36.sql` | — | ⏳ | ⬜ |
+| 27 | Onda 6 (parte 1) — geração transacional dos espelhos (tudo-ou-nada) | `docs/script_ponto_onda6_gerar_espelhos.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -580,6 +581,27 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   min) / folga (0); no saldo, o plantão de 12h dá **saldo 0** (sem HE) e a folga
   dá **saldo 0** (sem falta).
 
+### 27 · Onda 6 (parte 1) — geração transacional dos espelhos (tudo-ou-nada)
+- **Arquivo:** `docs/script_ponto_onda6_gerar_espelhos.sql`
+- **O que faz:** os espelhos nasciam **linha a linha** por um caminho de tela —
+  uma falha no meio deixava metade dos colaboradores com documento e metade sem
+  (pior que ausente, porque parece completo). Passa a existir
+  `ponto_gerar_espelhos_competencia`, uma função **única e transacional**
+  (tudo-ou-nada): para cada colaborador com ponto na competência, compõe os
+  totais (a partir da apuração canônica `ponto_espelho_resumo`) e faz UPSERT em
+  `ponto_espelhos`. **Regenerar preserva a ciência já dada** (status, confirmação,
+  assinatura, ressalva) — só atualiza os números; invalidar ciência é o fluxo de
+  reabertura (onda 2).
+- **Nota:** a rotina PONTO-194 já vinha passando **por acaso** (casava com
+  `ponto_reabrir_competencia`, que só arquiva espelhos ao reabrir). Agora há a
+  função **de verdade** — a bateria continua verde, mas legitimamente.
+- **Baixo risco:** não altera o motor de saldo; só compõe e grava o espelho. Não
+  roda por gatilho — o fechamento (parte 2) a chama. Idempotente.
+- **Conferência esperada:** `t | t | OK`.
+- **Na bateria** sem mudança de contagem (194 já estava verde); regressão zero.
+  Provado em transação: dois colaboradores → dois espelhos gerados numa chamada;
+  confirmar um e regerar → números atualizados, **status `confirmado` preservado**.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -637,8 +659,12 @@ com seu pacote. A ordem prevista:
   liquidação na rescisão (#25) e a escala 12x36 por ciclo (#26). Oito casos da
   bateria passaram a passar na onda (170, 354, 171, 355, 356, 172, 173, 150,
   151), regressão zero.
-- **Ondas 6 a 8** — fechamento e folha, arquivos legais, enquadramento e
-  prevenção.
+- **Onda 6** — fechamento e folha. **Em andamento**, em cinco partes: parte 1
+  (geração transacional dos espelhos, #27) pronta no teste; faltam a pendência
+  crítica que bloqueia o fechamento (388), o espelho sem ciência que bloqueia
+  (387), o pacote da folha com naturezas corretas (361) e a fila com estados e
+  reenvio (398).
+- **Ondas 7 e 8** — arquivos legais, enquadramento e prevenção.
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
