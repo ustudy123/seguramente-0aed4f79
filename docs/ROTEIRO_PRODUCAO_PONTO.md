@@ -72,6 +72,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 32 | Onda 7 (parte 1) — comprovante como documento (Portaria 671/REP-P) | `docs/script_ponto_onda7_comprovantes.sql` | — | ⏳ | ⬜ |
 | 33 | Onda 7 (parte 2) — AEJ (Arquivo Eletrônico de Jornada, Portaria 671) | `docs/script_ponto_onda7_aej.sql` | — | ⏳ | ⬜ |
 | 34 | Onda 7 (parte 3) — importação de AFD que confere (CRC, cadeia, lacuna, quarentena) | `docs/script_ponto_onda7_afd_importacao.sql` | — | ⏳ | ⬜ |
+| 35 | Onda 7 (parte 4) — gestão do certificado digital (ICP-Brasil) | `docs/script_ponto_onda7_certificado_digital.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -801,6 +802,33 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** a tela de importação de AFD passa a chamar o
   validador e a mostrar a quarentena e o relatório; a conferência já está no banco.
 
+### 35 · Onda 7 (parte 4) — gestão do certificado digital (ICP-Brasil)
+- **Arquivo:** `docs/script_ponto_onda7_certificado_digital.sql`
+- **O que faz:** não existia gestão de certificado digital — nem cadastro, nem
+  vigência, nem alerta. Sem isso, o AFD e o AEJ **não têm com que ser assinados**
+  (a assinatura `.p7s`/ICP-Brasil exigida pela Portaria 671 depende de um
+  certificado), e um certificado **vencido** paralisaria a emissão assinada
+  exatamente na hora da auditoria. Passam a existir:
+  - **`ponto_certificados_digitais`** — o cadastro do certificado por empresa
+    (tipo A1/A3, titular, número de série, emissor, vigência e a antecedência do
+    alerta), com trava do cercado e RLS. **A chave privada não fica no banco** —
+    só os metadados de vigência.
+  - **`ponto_certificado_vigente`** — o certificado ICP-Brasil válido **hoje** (o
+    que assina o `.p7s`); um certificado vencido não é devolvido.
+  - **`ponto_certificado_vigiar_vencimento`** — vigia o vencimento: alerta
+    **preventivo** com a antecedência parametrizada e **crítico** quando já
+    vencido.
+- **Baixo risco:** não altera o motor de saldo, o espelho, o fechamento nem a
+  emissão de AFD/AEJ. Só cadastra e vigia. **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | t | OK`.
+- **Na bateria** um caso passou a passar na parte (360), regressão zero (99→100).
+  Provado em transação (dados fictícios): o "vigente" escolhe o certificado válido
+  e ignora o vencido; a vigilância gera **alta** para o que está perto de vencer e
+  **crítica** para o vencido, e **nada** para o de validade longa; rodar de novo
+  não duplica.
+- **Tela (Publicar no Lovable):** a tela de cadastro do certificado e o painel de
+  alertas chamam essas funções; o cadastro, a vigência e o alerta já estão no banco.
+
 ## Regras gerais dos pacotes
 
 - **Um pacote por vez, na ordem.** Cole o arquivo inteiro no SQL Editor, rode, e
@@ -873,8 +901,10 @@ com seu pacote. A ordem prevista:
   da apuração fechada em registros tipados e assinado, e a extração para
   fiscalização (211); parte 3, a importação de AFD que confere (#34) — CRC-16,
   cadeia SHA-256, recusa por lacuna de NSR e quarentena, a chave natural de origem
-  na marcação e a trilha dos eventos do equipamento (382, 383, 384, 212). A
-  seguir: gestão do certificado digital e o dossiê de fiscalização.
+  na marcação e a trilha dos eventos do equipamento (382, 383, 384, 212); parte 4,
+  a gestão do certificado digital (#35) — o cadastro ICP-Brasil por empresa, o
+  certificado vigente que assina o `.p7s` e o alerta de vencimento (360). A
+  seguir: o dossiê de fiscalização.
 - **Onda 8** — enquadramento (art. 62, teletrabalho) e prevenção (LGPD, plano de
   ação).
 
