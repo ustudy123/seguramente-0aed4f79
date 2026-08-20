@@ -82,6 +82,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 42 | Onda 8 (parte 6) — Plano de Ação: alerta→ação 5W2H + eficácia + IA sugere/humano decide | `docs/script_ponto_onda8_plano_de_acao.sql` | — | ⏳ | ⬜ |
 | 43 | Onda 8 (correção) — competência fechada bloqueia até para gestão (remove a válvula) | `docs/script_ponto_onda8_competencia_fechada.sql` | **#14** (reabertura) | ⏳ | ⬜ |
 | 44 | Onda 9 — instrumento coletivo vigente na competência (vigilância de vigência) | `docs/script_ponto_onda9_cct_vigencia.sql` | — | ⏳ | ⬜ |
+| 45 | QA (metadado) — atualiza a disposição dos 6 casos de tela conforme auditoria as-built | `docs/script_qa_disposicao_ponto_telas.sql` | — | ⏳ | ⬜ (opcional) |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1062,6 +1063,32 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   *crítica*, par sobreposto gera *alta* nos dois; segunda chamada não duplica.
 - **Sobra em vermelho** só o **PONTO-113** (trabalhador rural), que é evolução
   condicional a cliente do agronegócio — fora do escopo de conformidade geral.
+
+### 45 · QA (metadado) — disposição dos 6 casos de tela conforme auditoria as-built
+- **Arquivo:** `docs/script_qa_disposicao_ponto_telas.sql`
+- **Por que existe:** a disposição desses 6 casos `e2e` (tela) foi gravada em
+  05/08/2026, **antes das ondas**, com o motivo genérico *"o motor de apuração
+  ainda não existe"* aplicado a todos os `PONTO-%` de uma vez. Hoje o motor
+  existe e o apoio de banco de vários já está pronto — o texto ficou mentindo no
+  relatório. Este pacote corrige a disposição **caso a caso**, a partir de uma
+  auditoria as-built do código React (PontoExterno, comprovante, geofence,
+  selfie):
+  - **PONTO-002** → `comportamento_correto` (não restringe horário: já atendido);
+  - **PONTO-005** → `aguardando_construcao` (banco pronto na onda 7; falta expor
+    o comprovante na tela do trabalhador);
+  - **PONTO-006** → `aguardando_construcao` (nunca bloqueia e registra: ok; falta
+    só o "sinaliza" ao trabalhador);
+  - **PONTO-195** → `aguardando_construcao` (banco tem `ressalva_texto`; falta a
+    tela de ciência/ressalva por inteiro);
+  - **PONTO-254** → `decisao_de_produto` (selfie é dado comum hoje; falta decidir
+    classificação/aviso e o gatilho de reclassificação);
+  - **PONTO-363** → `decisao_de_produto` (aviso mínimo existe; falta decidir o
+    conteúdo e construir o aviso LGPD completo).
+- **Baixo risco:** **não muda nenhuma rotina de teste nem o resultado da
+  bateria** — só o texto de disposição mostrado no relatório. **Idempotente.**
+- **Conferência esperada:** 6 linhas, uma por caso, `erro_tecnico = OK` nas 6.
+- **Opcional em produção:** o placar da bateria não muda com ou sem este pacote;
+  ele só deixa o relatório honesto. Aplique quando quiser o relatório alinhado.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
