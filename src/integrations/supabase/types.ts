@@ -1055,6 +1055,7 @@ export type Database = {
           criado_por: string | null
           data_atestado: string | null
           data_fim: string | null
+          data_fim_estabilidade: string | null
           data_inicio: string
           dias_totais: number | null
           empresa_id: string | null
@@ -1092,6 +1093,7 @@ export type Database = {
           criado_por?: string | null
           data_atestado?: string | null
           data_fim?: string | null
+          data_fim_estabilidade?: string | null
           data_inicio: string
           dias_totais?: number | null
           empresa_id?: string | null
@@ -1129,6 +1131,7 @@ export type Database = {
           criado_por?: string | null
           data_atestado?: string | null
           data_fim?: string | null
+          data_fim_estabilidade?: string | null
           data_inicio?: string
           dias_totais?: number | null
           empresa_id?: string | null
@@ -1208,6 +1211,7 @@ export type Database = {
           id: string
           justificativa_nao_aplicavel: string | null
           local_acidente: string | null
+          numero_cat: string | null
           parte_corpo: string | null
           protocolo_esocial: string | null
           status_cat: string | null
@@ -1227,6 +1231,7 @@ export type Database = {
           id?: string
           justificativa_nao_aplicavel?: string | null
           local_acidente?: string | null
+          numero_cat?: string | null
           parte_corpo?: string | null
           protocolo_esocial?: string | null
           status_cat?: string | null
@@ -1246,6 +1251,7 @@ export type Database = {
           id?: string
           justificativa_nao_aplicavel?: string | null
           local_acidente?: string | null
+          numero_cat?: string | null
           parte_corpo?: string | null
           protocolo_esocial?: string | null
           status_cat?: string | null
@@ -20348,13 +20354,16 @@ export type Database = {
           empresa_id: string | null
           fase_atual: number
           ghe_id_snapshot: string | null
+          grupo_nome: string | null
           id: string
           iniciada_em: string | null
           modalidade: string
+          participantes_previstos: number | null
           resumo_ia: Json | null
           riscos_cobertos: number
           status: string
           tenant_id: string
+          tipo_sessao: string
           token: string
           total_riscos: number
           updated_at: string
@@ -20369,13 +20378,16 @@ export type Database = {
           empresa_id?: string | null
           fase_atual?: number
           ghe_id_snapshot?: string | null
+          grupo_nome?: string | null
           id?: string
           iniciada_em?: string | null
           modalidade?: string
+          participantes_previstos?: number | null
           resumo_ia?: Json | null
           riscos_cobertos?: number
           status?: string
           tenant_id: string
+          tipo_sessao?: string
           token?: string
           total_riscos?: number
           updated_at?: string
@@ -20390,13 +20402,16 @@ export type Database = {
           empresa_id?: string | null
           fase_atual?: number
           ghe_id_snapshot?: string | null
+          grupo_nome?: string | null
           id?: string
           iniciada_em?: string | null
           modalidade?: string
+          participantes_previstos?: number | null
           resumo_ia?: Json | null
           riscos_cobertos?: number
           status?: string
           tenant_id?: string
+          tipo_sessao?: string
           token?: string
           total_riscos?: number
           updated_at?: string
@@ -24032,6 +24047,7 @@ export type Database = {
           criado_por: string | null
           data_atestado: string | null
           data_fim: string | null
+          data_fim_estabilidade: string | null
           data_inicio: string
           dias_totais: number | null
           empresa_id: string | null
@@ -24477,6 +24493,7 @@ export type Database = {
         Args: { p_tenant_id: string; p_tipo_dado: string; p_user_id: string }
         Returns: boolean
       }
+      gerar_alertas_estabilidade: { Args: never; Returns: undefined }
       gerar_estrutura_padrao_pastas: {
         Args: {
           p_empresa_id: string
@@ -26224,6 +26241,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_emp_050: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_emp_060: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -26404,7 +26431,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ferias_015: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ferias_017: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ferias_081: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
@@ -27564,6 +27611,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_383: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_396: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_porte_005: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -27920,6 +27987,10 @@ export type Database = {
           tabela: string
         }[]
       }
+      qa_col_existe: {
+        Args: { p_col_padrao: string; p_tabela: string }
+        Returns: string
+      }
       qa_coluna_existe: {
         Args: { p_coluna: string; p_tabela: string }
         Returns: boolean
@@ -27968,6 +28039,7 @@ export type Database = {
         Returns: string
       }
       qa_fixture_limpar: { Args: { p_codigo: string }; Returns: undefined }
+      qa_fns_com: { Args: { p_padrao: string }; Returns: string }
       qa_houve_vazamento: { Args: never; Returns: boolean }
       qa_instalar_cercas: {
         Args: never
@@ -28547,6 +28619,7 @@ export type Database = {
         | "mandato_sindical"
         | "determinacao_judicial_legal"
         | "outro_cct_act_politica_interna"
+        | "licenca_adocao"
       app_role: "owner" | "admin" | "manager" | "user" | "superadmin"
       aptidao_ocupacional:
         | "apto"
@@ -28576,6 +28649,7 @@ export type Database = {
         | "aposentadoria_invalidez"
         | "suspensao_contrato"
         | "outros_motivos"
+        | "adocao"
       atestado_subtipo_ocupacional:
         | "admissional"
         | "periodico"
@@ -29221,6 +29295,7 @@ export const Constants = {
         "mandato_sindical",
         "determinacao_judicial_legal",
         "outro_cct_act_politica_interna",
+        "licenca_adocao",
       ],
       app_role: ["owner", "admin", "manager", "user", "superadmin"],
       aptidao_ocupacional: [
@@ -29252,6 +29327,7 @@ export const Constants = {
         "aposentadoria_invalidez",
         "suspensao_contrato",
         "outros_motivos",
+        "adocao",
       ],
       atestado_subtipo_ocupacional: [
         "admissional",
