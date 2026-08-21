@@ -80,16 +80,13 @@ jobs:
                 return 1
               fi
               # Codifica usuário e senha; assim caractere especial não quebra nada.
-              HOST="$host" USUARIO="$usuario" SENHA="$senha" python3 - <<'PY'
-import os, urllib.parse
-u = urllib.parse.quote(os.environ["USUARIO"], safe="")
-s = urllib.parse.quote(os.environ["SENHA"], safe="")
-h = os.environ["HOST"].strip()
-porta = "5432"
-if ":" in h:
-    h, porta = h.rsplit(":", 1)
-print(f"postgresql://{u}:{s}@{h}:{porta}/postgres?sslmode=require")
-PY
+              local porta=5432 apenas_host="${host%%:*}"
+              case "$host" in *:*) porta="${host##*:}" ;; esac
+              local u s
+              u=$(USUARIO="$usuario" python3 -c 'import os,urllib.parse;print(urllib.parse.quote(os.environ["USUARIO"],safe=""))')
+              s=$(SENHA="$senha" python3 -c 'import os,urllib.parse;print(urllib.parse.quote(os.environ["SENHA"],safe=""))')
+              printf 'postgresql://%s:%s@%s:%s/postgres?sslmode=require' "$u" "$s" "$apenas_host" "$porta"
+
               return 0
             fi
             if [ -z "$url" ]; then
