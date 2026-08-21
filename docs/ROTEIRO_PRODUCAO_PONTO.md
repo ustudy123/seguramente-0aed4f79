@@ -86,6 +86,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 46 | Onda 10 (parte 1) — escala 12x36 só vale com acordo formal (art. 59-A) | `docs/script_ponto_onda10_escala_12x36_formalizacao.sql` | — | ⏳ | ⬜ |
 | 47 | Onda 10 (parte 2) — revezamento: jornada de 6h, salvo coletivo (CF art. 7º, XIV) | `docs/script_ponto_onda10_escala_revezamento.sql` | **#46** | ⏳ | ⬜ |
 | 48 | Onda 10 (parte 3) — radar de cobertura de turno (turno descoberto avisado antes) | `docs/script_ponto_onda10_cobertura_turno.sql` | — | ⏳ | ⬜ |
+| 49 | Onda 10 (parte 4) — troca de turno com aprovação e recálculo (fecha a onda 10) | `docs/script_ponto_onda10_troca_turno.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1161,6 +1162,33 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   escala com colaborador disponível → 0; segunda rodada do monitor não duplica.
 - **Tela (Publicar no Lovable):** o painel de "turnos a descoberto" e a ação de
   cobertura no Plano de Ação são de tela; o radar e o alerta já estão no banco.
+
+### 49 · Onda 10 (parte 4) — troca de turno com aprovação e recálculo (ESC-020)
+- **Arquivo:** `docs/script_ponto_onda10_troca_turno.sql` — **fecha a onda 10.**
+- **O que faz:** trocar o turno de dois colaboradores **não** é editar duas linhas:
+  precisa de **aprovação** (gestor), **registro** (quem trocou com quem, quando) e
+  **recálculo** — a interjornada de 11h (CLT art. 66) pode mudar para os dois. Cria
+  a tabela `ponto_troca_turno` (com **trava do cercado** e **RLS por tenant**) e o
+  fluxo `ponto_troca_turno_solicitar` → `aprovar`/`recusar` → `efetivar`. O
+  **solicitar** simula a interjornada dos dois **antes** de consumar (marca risco
+  quando a virada fica abaixo de 11h); o **efetivar** troca as atribuições em
+  `ponto_escala_atribuicoes` de forma transacional, **preservando o histórico de
+  vigência** (encerra as antigas, cria as cruzadas; se a troca tem fim, restaura
+  depois).
+- **Baixo risco:** não altera o motor de saldo, a apuração, o espelho nem o
+  fechamento. A efetivação só mexe nas atribuições (append, sem apagar história).
+  **Aditivo e idempotente.** `SET lock_timeout='10s'` na DDL.
+- **Conferência esperada:** `t | t | t | 4 | OK` — tabela, RLS ativa (PONTO-250),
+  política por tenant e as 4 funções do fluxo.
+- **Na bateria** só o **ESC-020** passou a passar (falhou→passou); regressão zero
+  (116→117 verdes) — PONTO-250 (RLS) e PONTO-270 (cercado) seguem verdes com a
+  tabela nova. Provado em transação (dados fictícios): solicitação de troca com
+  virada de 8h marca **risco de interjornada**; efetivar **antes** de aprovar é
+  recusado; após aprovar, a efetivação cruza as escalas dos dois a partir da data
+  e **mantém as atribuições antigas** encerradas na véspera (história preservada).
+- **Tela (Publicar no Lovable):** a solicitação, a aprovação do gestor e o aviso de
+  risco de interjornada são de tela; o fluxo, a simulação e a efetivação já estão
+  no banco.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
