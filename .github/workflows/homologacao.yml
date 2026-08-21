@@ -221,11 +221,20 @@ jobs:
         run: |
           # A senha vai por PGPASSWORD: aceita qualquer caractere literalmente,
           # e não aparece na linha de comando (que fica visível no log).
+          #
+          # As PERMISSÕES vêm junto (não há mais --no-privileges). Sem elas a
+          # homologação era um banco que ninguém conseguia ler: os GRANT para
+          # anon e authenticated são como as telas enxergam o banco, e a
+          # conferência acusava 5643 na produção contra 0 aqui. Um espelho que
+          # não se pode abrir não serve para ensaiar tela.
+          #
+          # --no-owner continua: dono de objeto é específico de cada projeto,
+          # e tentar reproduzir donos que não existem aqui só geraria erro.
           export PGPASSWORD="$(printf '%s' "$PROD_PASS" | tr -d '\r\n')"
           pg_dump \
             -h "$HOST_PRODUCAO" -p 5432 -U "$PRODUCAO_USER" -d postgres \
             --schema-only --schema=public \
-            --no-owner --no-privileges \
+            --no-owner \
             --no-publications --no-subscriptions \
             -f estrutura_producao.sql
           ls -lh estrutura_producao.sql
@@ -420,10 +429,14 @@ jobs:
           while IFS='|' read -r item valor_prod; do
             valor_homolog=$(awk -F'|' -v i="$item" '$1==i{print $2}' homologacao.txt)
             case "$item" in
-              # As permissões não são copiadas de propósito (--no-privileges), e
-              # índice inválido o pg_dump não copia. Diferença nessas duas é
-              # esperada: aparece no quadro, mas não reprova.
-              'permissoes de tela'|'indices invalidos') situacao='diferenca esperada' ;;
+              # Índice inválido o pg_dump não copia — é o único caso em que
+              # diferença é esperada, e ela se explica pela linha de cima.
+              #
+              # As permissões SAÍRAM desta lista: agora são copiadas, então
+              # passaram a ser conferidas como todo o resto. Enquanto eram
+              # "diferença esperada", um 0 aqui parecia normal — e era o que
+              # deixava a homologação ilegível sem que nada reclamasse.
+              'indices invalidos') situacao='diferenca esperada' ;;
               *) if [ "$valor_prod" = "$valor_homolog" ]; then situacao='ok'
                  else situacao='DIVERGIU'; divergiu=1; fi ;;
             esac
