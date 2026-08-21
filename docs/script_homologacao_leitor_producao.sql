@@ -21,11 +21,10 @@
 -- SEGURO DE RODAR DUAS VEZES: se o usuário já existir, a senha é atualizada e
 -- as permissões reconfirmadas.
 --
--- IMPORTANTE APÓS TROCAR A SENHA: o Session pooler do Supabase (Supavisor)
--- pode levar alguns minutos para reconhecer a nova credencial. Nesse intervalo,
--- o GitHub pode mostrar "password authentication failed" mesmo com a senha
--- correta. NÃO troque a senha de novo: aguarde a sincronização e execute a
--- esteira novamente. Trocas sucessivas reiniciam essa janela.
+-- A role termina em _v2 de propósito: a credencial da role anterior ficou
+-- retida no cache do Session pooler mesmo depois de várias trocas de senha.
+-- Uma identidade nova força o Supavisor a criar um registro de autenticação
+-- novo, sem ampliar os privilégios da esteira.
 --
 -- COMO RODAR: cole o arquivo inteiro no SQL Editor do projeto de PRODUÇÃO.
 -- ============================================================================
@@ -44,24 +43,24 @@ BEGIN
     RAISE EXCEPTION 'Defina uma senha própria (mínimo 12 caracteres) na linha indicada.';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'homologacao_leitor') THEN
-    EXECUTE format('ALTER ROLE homologacao_leitor LOGIN PASSWORD %L', v_senha);
-    RAISE NOTICE 'Usuário homologacao_leitor já existia; senha atualizada.';
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'homologacao_leitor_v2') THEN
+    EXECUTE format('ALTER ROLE homologacao_leitor_v2 LOGIN PASSWORD %L', v_senha);
+    RAISE NOTICE 'Usuário homologacao_leitor_v2 já existia; senha atualizada.';
   ELSE
-    EXECUTE format('CREATE ROLE homologacao_leitor LOGIN PASSWORD %L', v_senha);
-    RAISE NOTICE 'Usuário homologacao_leitor criado.';
+    EXECUTE format('CREATE ROLE homologacao_leitor_v2 LOGIN PASSWORD %L', v_senha);
+    RAISE NOTICE 'Usuário homologacao_leitor_v2 criado.';
   END IF;
 
   -- Somente leitura, e nada além disso.
   -- pg_read_all_data é papel de sistema do PostgreSQL: dá SELECT em tudo e
   -- NENHUMA permissão de escrita. Não há como conceder escrita por engano aqui.
-  EXECUTE 'GRANT pg_read_all_data TO homologacao_leitor';
-  EXECUTE 'GRANT USAGE ON SCHEMA public TO homologacao_leitor';
+  EXECUTE 'GRANT pg_read_all_data TO homologacao_leitor_v2';
+  EXECUTE 'GRANT USAGE ON SCHEMA public TO homologacao_leitor_v2';
 
   -- Garantia explícita: nada de criar objeto no banco.
-  EXECUTE 'REVOKE CREATE ON SCHEMA public FROM homologacao_leitor';
-  EXECUTE 'REVOKE ALL ON DATABASE postgres FROM homologacao_leitor';
-  EXECUTE 'GRANT CONNECT ON DATABASE postgres TO homologacao_leitor';
+  EXECUTE 'REVOKE CREATE ON SCHEMA public FROM homologacao_leitor_v2';
+  EXECUTE 'REVOKE ALL ON DATABASE postgres FROM homologacao_leitor_v2';
+  EXECUTE 'GRANT CONNECT ON DATABASE postgres TO homologacao_leitor_v2';
 END $cria$;
 
 -- ============================================================================
@@ -69,14 +68,14 @@ END $cria$;
 -- ============================================================================
 SELECT
   'Usuário criado' AS item,
-  CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'homologacao_leitor')
+  CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'homologacao_leitor_v2')
        THEN 'ok' ELSE 'FALTA' END AS situacao,
   'é com ele que a esteira lê a estrutura' AS observacao
 
 UNION ALL
 SELECT 'Consegue entrar (LOGIN)',
        CASE WHEN EXISTS (SELECT 1 FROM pg_roles
-                          WHERE rolname = 'homologacao_leitor' AND rolcanlogin)
+                          WHERE rolname = 'homologacao_leitor_v2' AND rolcanlogin)
             THEN 'ok' ELSE 'FALTA' END,
        'sem isto a esteira não conecta'
 
@@ -85,7 +84,7 @@ SELECT 'É somente leitura',
        CASE WHEN EXISTS (SELECT 1 FROM pg_auth_members m
                           JOIN pg_roles r ON r.oid = m.roleid
                           JOIN pg_roles u ON u.oid = m.member
-                         WHERE u.rolname = 'homologacao_leitor'
+                         WHERE u.rolname = 'homologacao_leitor_v2'
                            AND r.rolname = 'pg_read_all_data')
             THEN 'ok' ELSE 'FALTA' END,
        'o banco recusa qualquer escrita deste usuário'
@@ -93,7 +92,7 @@ SELECT 'É somente leitura',
 UNION ALL
 SELECT 'NÃO é superusuário',
        CASE WHEN NOT EXISTS (SELECT 1 FROM pg_roles
-                              WHERE rolname = 'homologacao_leitor'
+                              WHERE rolname = 'homologacao_leitor_v2'
                                 AND (rolsuper OR rolcreatedb OR rolcreaterole))
             THEN 'ok' ELSE 'PERIGO' END,
        'não cria banco, não cria usuário, não administra'

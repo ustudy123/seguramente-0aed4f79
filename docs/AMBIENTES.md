@@ -104,7 +104,7 @@ igual ao que já acontece com o ambiente de teste. Você aperta um botão.
 Cole `docs/script_homologacao_leitor_producao.sql` no SQL Editor da **produção**,
 depois de trocar a senha na linha indicada.
 
-Ele cria o usuário `homologacao_leitor`, que **lê tudo e não escreve nada** —
+Ele cria o usuário `homologacao_leitor_v2`, que **lê tudo e não escreve nada** —
 não por configuração, mas por construção: recebe o papel `pg_read_all_data` do
 PostgreSQL e nenhuma permissão de escrita. É o que mantém de pé a regra da casa
 de que a produção nunca é alterada por esteira. Se a credencial vazasse, ainda
@@ -120,7 +120,7 @@ nada de `postgresql://`, nada de usuário:
 
 | Nome do secret | Conteúdo |
 |---|---|
-| `PRODUCAO_DB_PASSWORD` | a senha definida no passo 3.1 |
+| `PRODUCAO_DB_PASSWORD` | a senha definida no passo 3.1 para `homologacao_leitor_v2` |
 | `HOMOLOGACAO_DB_PASSWORD` | a senha do banco da homologação |
 
 A senha pode ter **qualquer caractere**, inclusive `@` e dois-pontos.
