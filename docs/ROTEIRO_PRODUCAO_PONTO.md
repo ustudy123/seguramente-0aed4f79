@@ -85,6 +85,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 45 | QA (metadado) — atualiza a disposição dos 6 casos de tela conforme auditoria as-built | `docs/script_qa_disposicao_ponto_telas.sql` | — | ⏳ | ⬜ (opcional) |
 | 46 | Onda 10 (parte 1) — escala 12x36 só vale com acordo formal (art. 59-A) | `docs/script_ponto_onda10_escala_12x36_formalizacao.sql` | — | ⏳ | ⬜ |
 | 47 | Onda 10 (parte 2) — revezamento: jornada de 6h, salvo coletivo (CF art. 7º, XIV) | `docs/script_ponto_onda10_escala_revezamento.sql` | **#46** | ⏳ | ⬜ |
+| 48 | Onda 10 (parte 3) — radar de cobertura de turno (turno descoberto avisado antes) | `docs/script_ponto_onda10_cobertura_turno.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1138,6 +1139,28 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** a opção "revezamento" no cadastro da escala e o
   aviso de jornada acima de 6h sem coletivo são de tela; a tipificação, a
   verificação e a pendência já estão no banco.
+
+### 48 · Onda 10 (parte 3) — radar de cobertura de turno (ESC-021)
+- **Arquivo:** `docs/script_ponto_onda10_cobertura_turno.sql`
+- **O que faz:** operação por turnos vive de cobertura. Um turno previsto **sem
+  colaborador disponível** (quem estava atribuído entrou de férias, se afastou ou
+  foi desligado) precisa aparecer **antes do dia** — não ser descoberto com o
+  posto vazio. Cria `ponto_escala_cobertura_listar` (read-only, para a tela) e
+  `ponto_escala_cobertura_monitorar` (gera **alerta ao gestor**), que projetam os
+  próximos dias de cada escala com atribuição vigente e acusam o dia em que
+  **todos** os colaboradores atribuídos estão indisponíveis (cruzando
+  `afastamentos`, `ferias_solicitacoes` e desligamento em `admissoes`).
+- **Baixo risco:** somente leitura + alerta; não altera o motor de saldo, a
+  apuração, o espelho nem o fechamento. **Aditivo e idempotente.** Monitor
+  agendável (sem gatilho em tabela quente).
+- **Conferência esperada:** `t | t | OK` — listador e monitor presentes, falando
+  de turno/cobertura.
+- **Na bateria** só o **ESC-021** passou a passar (falhou→passou); regressão zero
+  (115→116 verdes). Provado em transação (dados fictícios): escala cujo único
+  colaborador está afastado nos próximos dias → 7 dias descobertos e 7 alertas;
+  escala com colaborador disponível → 0; segunda rodada do monitor não duplica.
+- **Tela (Publicar no Lovable):** o painel de "turnos a descoberto" e a ação de
+  cobertura no Plano de Ação são de tela; o radar e o alerta já estão no banco.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
