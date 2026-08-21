@@ -112,43 +112,60 @@ assim ninguém alteraria nada com ela.
 
 A conferência do script mostra quatro linhas; todas devem vir `ok`.
 
-#### 3.2. Guardar as duas conexões como secrets do GitHub
+#### 3.2. Guardar as duas senhas como secrets do GitHub
 
-Em **Settings → Secrets and variables → Actions → New repository secret**.
-
-**Caminho recomendado (seis campos, nada de montar endereço na mão).** É o mais
-simples e o que não erra: a senha vai crua e a esteira monta o endereço sozinha,
-codificando caractere especial (`@`, `#`, `/`) que quebraria uma URL colada.
+Em **Settings → Secrets and variables → Actions → New repository secret**, crie
+**dois** secrets. Em cada um, o conteúdo é **só a senha** — nada de endereço,
+nada de `postgresql://`, nada de usuário:
 
 | Nome do secret | Conteúdo |
 |---|---|
-| `PRODUCAO_DB_HOST` | host do **Session pooler** da produção (ex.: `aws-0-sa-east-1.pooler.supabase.com`) |
-| `PRODUCAO_DB_USER` | `homologacao_leitor.diayjpsrcerycycyaxst` |
-| `PRODUCAO_DB_PASSWORD` | a senha definida no passo 3.1, crua |
-| `HOMOLOGACAO_DB_HOST` | host do **Session pooler** da homologação |
-| `HOMOLOGACAO_DB_USER` | `postgres.fgsblefvdabgdouipigz` |
-| `HOMOLOGACAO_DB_PASSWORD` | senha do banco da homologação, crua |
+| `PRODUCAO_DB_PASSWORD` | a senha definida no passo 3.1 |
+| `HOMOLOGACAO_DB_PASSWORD` | a senha do banco da homologação |
 
-Onde achar o host e o usuário: no painel do projeto, botão **Connect** → bloco
-**Session pooler** (a conexão direta é IPv6 e não funciona a partir do GitHub).
+A senha pode ter **qualquer caractere**, inclusive `@` e dois-pontos.
 
-**Caminho alternativo (uma linha por conexão).** Continua aceito:
-`PRODUCAO_DB_URL_LEITURA` e `HOMOLOGACAO_DB_URL`, cada um com a string completa
-`postgresql://usuario:senha@host:5432/postgres`. Foi a origem do erro
-`connection to server on socket ... failed`: quando o valor não começa com
-`postgresql://`, ou ainda tem `[YOUR-PASSWORD]`, ou a senha tem caractere
-especial, o `pg_dump` entende o texto como *nome de banco* e tenta um servidor
-local, que não existe na esteira. Hoje a esteira detecta os três casos e diz
-qual é, antes de tentar conectar.
+> **Por que não há mais URL de conexão aqui.** As duas primeiras versões
+> montavam `postgresql://usuario:senha@host/banco` — uma pedindo a string
+> pronta, outra montando-a a partir de seis secrets. As duas falharam pelo
+> mesmo motivo: quem lê uma URL procura o primeiro `@` para saber onde a senha
+> termina, e a senha da produção tem um `@`. O endereço virava outra coisa, e o
+> erro que aparecia falava de *host* desconhecido — mandava procurar longe da
+> causa. A esteira não monta mais endereço nenhum: host e usuário vão em
+> parâmetros separados, e a senha vai por `PGPASSWORD`, que aceita qualquer
+> caractere literalmente.
 
 Secret é campo protegido: o valor não aparece mais depois de salvo, nem nos logs
-da esteira. É por isso que a senha vai aqui, e não numa linha de comando.
+da esteira.
 
+Se ainda existirem secrets de versões anteriores, faça a limpeza: **apague**
+`PRODUCAO_DB_URL_LEITURA`, `HOMOLOGACAO_DB_URL`, `PRODUCAO_DB_USER` e
+`HOMOLOGACAO_DB_USER` — não são mais lidos, e senha guardada sem uso é só risco
+parado. Os de host (`PRODUCAO_DB_HOST`, `HOMOLOGACAO_DB_HOST`) pode manter: se
+existirem, valem quando o campo do formulário for deixado em branco.
 
 #### 3.3. Apertar o botão
 
-No GitHub: aba **Actions** → **homologacao** → **Run workflow** → digite
-`RECRIAR` no campo de confirmação → **Run workflow**.
+No GitHub: aba **Actions** → **homologacao** → **Run workflow**. O formulário
+pede três coisas:
+
+| Campo | O que preencher |
+|---|---|
+| `confirmar` | a palavra `RECRIAR` |
+| `host_producao` | `aws-1-sa-east-1.pooler.supabase.com` (já vem preenchido) |
+| `host_homologacao` | o endereço do pooler da homologação |
+
+Onde achar o endereço: no painel do projeto, botão **Connect** → bloco **Session
+pooler**. Da string que aparece, copie **apenas o trecho entre o `@` e os
+dois-pontos da porta** — termina em `.pooler.supabase.com`. Não use o de conexão
+direta (`db.<ref>.supabase.co`): ele só atende por IPv6, e o GitHub não tem IPv6.
+
+Os endereços ficam visíveis de propósito, no formulário e no log. Erro escondido
+dentro de um valor secreto é erro que ninguém consegue conferir — foi assim que
+as duas primeiras tentativas se perderam. A esteira confere cada endereço antes
+de tentar conectar e recusa dizendo o que sobrou (um `@`, a porta, a URL
+inteira, o endereço direto), e o passo seguinte prova as duas conexões antes de
+qualquer trabalho pesado, dizendo **qual** das duas falhou.
 
 A esteira não roda sozinha nunca — só por este botão. Não tem gatilho por push,
 de propósito: se seguisse a `main`, a homologação viraria um segundo ambiente de
