@@ -186,21 +186,46 @@ jobs:
           PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
+          # O GitHub preserva CR/LF acidental no fim de um secret. O Postgres
+          # interpreta esse caractere invisível como parte da senha e responde
+          # apenas "password authentication failed". Não removemos espaços nem
+          # símbolos: eles são válidos e devem continuar literais.
+          PROD_PASS="$(printf '%s' "$PROD_PASS" | tr -d '\r\n')"
+          HOMOLOG_PASS="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
+
           # Falhar aqui é falha de credencial, não de estrutura — e a mensagem
           # diz QUAL das duas está errada, antes de qualquer trabalho pesado.
-          PGPASSWORD="$PROD_PASS" psql -h "$HOST_PRODUCAO" -p 5432 -U "$PRODUCAO_USER" -d postgres \
-            -tAc 'select current_user' \
-            || { echo "::error::Não conectou na PRODUÇÃO. Confira o secret PRODUCAO_DB_PASSWORD e o endereço informado."; exit 1; }
+          # O Supavisor pode conservar a credencial anterior por alguns minutos
+          # após ALTER ROLE; o retry absorve essa janela sem incentivar outra
+          # troca de senha, que reiniciaria a sincronização.
+          conectou_producao=0
+          for tentativa in 1 2 3 4 5; do
+            if PGPASSWORD="$PROD_PASS" psql \
+              "host=$HOST_PRODUCAO port=5432 user=$PRODUCAO_USER dbname=postgres connect_timeout=10" \
+              -tAc 'select current_user'; then
+              conectou_producao=1
+              break
+            fi
+            echo "::warning::Produção recusou a tentativa $tentativa/5; aguardando sincronização do pooler."
+            [ "$tentativa" -eq 5 ] || sleep 15
+          done
+          if [ "$conectou_producao" -ne 1 ]; then
+            echo "::error::A PRODUÇÃO recusou a autenticação após 5 tentativas."
+            echo "::error::Não altere a senha novamente. Confirme se o secret PRODUCAO_DB_PASSWORD contém exatamente a senha definida para homologacao_leitor e aguarde a sincronização do Session pooler."
+            echo "::error::Se persistir, confira Database Settings > Network Bans no Supabase e remova o IP bloqueado exibido ali."
+            exit 1
+          fi
           PGPASSWORD="$HOMOLOG_PASS" psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
             -tAc 'select current_user' \
             || { echo "::error::Não conectou na HOMOLOGAÇÃO. Confira o secret HOMOLOGACAO_DB_PASSWORD e o endereço informado."; exit 1; }
 
       - name: Ler a estrutura da produção (somente leitura, sem dados)
         env:
-          PGPASSWORD: ${{ secrets.PRODUCAO_DB_PASSWORD }}
+          PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
         run: |
           # A senha vai por PGPASSWORD: aceita qualquer caractere literalmente,
           # e não aparece na linha de comando (que fica visível no log).
+          export PGPASSWORD="$(printf '%s' "$PROD_PASS" | tr -d '\r\n')"
           pg_dump \
             -h "$HOST_PRODUCAO" -p 5432 -U "$PRODUCAO_USER" -d postgres \
             --schema-only --schema=public \
@@ -223,16 +248,18 @@ jobs:
 
       - name: Recriar o schema public da homologação
         env:
-          PGPASSWORD: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
+          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
           psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
             -v ON_ERROR_STOP=1 \
             -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;'
 
       - name: Aplicar a estrutura na homologação
         env:
-          PGPASSWORD: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
+          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
           # Sem ON_ERROR_STOP: restaurar retrato em projeto novo sempre reclama
           # de extensão e permissão que o Supabase já criou sozinho. O que
           # importa é o resultado final, conferido no passo seguinte.
@@ -243,8 +270,9 @@ jobs:
 
       - name: Conferir o resultado
         env:
-          PGPASSWORD: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
+          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
           psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
             -A -F' | ' -c "
             SELECT 'tabelas'  AS item, count(*)::text FROM pg_class c

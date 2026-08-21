@@ -21,6 +21,12 @@
 -- SEGURO DE RODAR DUAS VEZES: se o usuário já existir, a senha é atualizada e
 -- as permissões reconfirmadas.
 --
+-- IMPORTANTE APÓS TROCAR A SENHA: o Session pooler do Supabase (Supavisor)
+-- pode levar alguns minutos para reconhecer a nova credencial. Nesse intervalo,
+-- o GitHub pode mostrar "password authentication failed" mesmo com a senha
+-- correta. NÃO troque a senha de novo: aguarde a sincronização e execute a
+-- esteira novamente. Trocas sucessivas reiniciam essa janela.
+--
 -- COMO RODAR: cole o arquivo inteiro no SQL Editor do projeto de PRODUÇÃO.
 -- ============================================================================
 
