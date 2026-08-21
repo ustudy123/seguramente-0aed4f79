@@ -114,27 +114,36 @@ A conferência do script mostra quatro linhas; todas devem vir `ok`.
 
 #### 3.2. Guardar as duas conexões como secrets do GitHub
 
-Em **Settings → Secrets and variables → Actions → New repository secret**:
+Em **Settings → Secrets and variables → Actions → New repository secret**.
+
+**Caminho recomendado (seis campos, nada de montar endereço na mão).** É o mais
+simples e o que não erra: a senha vai crua e a esteira monta o endereço sozinha,
+codificando caractere especial (`@`, `#`, `/`) que quebraria uma URL colada.
 
 | Nome do secret | Conteúdo |
 |---|---|
-| `PRODUCAO_DB_URL_LEITURA` | conexão da **produção**, com o usuário `homologacao_leitor` |
-| `HOMOLOGACAO_DB_URL` | conexão da **homologação**, com o usuário `postgres` |
+| `PRODUCAO_DB_HOST` | host do **Session pooler** da produção (ex.: `aws-0-sa-east-1.pooler.supabase.com`) |
+| `PRODUCAO_DB_USER` | `homologacao_leitor.diayjpsrcerycycyaxst` |
+| `PRODUCAO_DB_PASSWORD` | a senha definida no passo 3.1, crua |
+| `HOMOLOGACAO_DB_HOST` | host do **Session pooler** da homologação |
+| `HOMOLOGACAO_DB_USER` | `postgres.fgsblefvdabgdouipigz` |
+| `HOMOLOGACAO_DB_PASSWORD` | senha do banco da homologação, crua |
 
-Para montar cada uma: no painel do projeto, botão **Connect** → aba
-**Direct / Connection string** → bloco **Session pooler** (a conexão direta é
-IPv6 e não funciona a partir do GitHub). A string vem assim:
+Onde achar o host e o usuário: no painel do projeto, botão **Connect** → bloco
+**Session pooler** (a conexão direta é IPv6 e não funciona a partir do GitHub).
 
-```
-postgresql://postgres.<ref>:[YOUR-PASSWORD]@<host>:5432/postgres
-```
-
-- Na da **produção**, troque `postgres.<ref>` por `homologacao_leitor.<ref>` e
-  `[YOUR-PASSWORD]` (com colchetes) pela senha que você definiu no passo 3.1.
-- Na da **homologação**, troque só `[YOUR-PASSWORD]` pela senha do banco dela.
+**Caminho alternativo (uma linha por conexão).** Continua aceito:
+`PRODUCAO_DB_URL_LEITURA` e `HOMOLOGACAO_DB_URL`, cada um com a string completa
+`postgresql://usuario:senha@host:5432/postgres`. Foi a origem do erro
+`connection to server on socket ... failed`: quando o valor não começa com
+`postgresql://`, ou ainda tem `[YOUR-PASSWORD]`, ou a senha tem caractere
+especial, o `pg_dump` entende o texto como *nome de banco* e tenta um servidor
+local, que não existe na esteira. Hoje a esteira detecta os três casos e diz
+qual é, antes de tentar conectar.
 
 Secret é campo protegido: o valor não aparece mais depois de salvo, nem nos logs
 da esteira. É por isso que a senha vai aqui, e não numa linha de comando.
+
 
 #### 3.3. Apertar o botão
 
