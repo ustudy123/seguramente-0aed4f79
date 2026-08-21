@@ -12,14 +12,23 @@
 -- leitura. Mesmo que a credencial vaze, ninguém altera nada da produção com
 -- ela: o banco recusa qualquer escrita, não é uma promessa de configuração.
 --
--- ANTES DE RODAR: escolha uma senha e troque no lugar indicado, na linha
--- abaixo. Mínimo de 12 caracteres; pode usar QUALQUER caractere, inclusive @ e
--- dois-pontos. (As primeiras versões da esteira montavam um endereço de
--- conexão à mão e pediam senha "sem símbolos" por causa disso; hoje a senha
--- viaja em separado, por PGPASSWORD, e a restrição deixou de existir.)
+-- ANTES DE RODAR — DOIS CAMINHOS, e o mais comum não pede senha nenhuma:
 --
--- SEGURO DE RODAR DUAS VEZES: se o usuário já existir, a senha é atualizada e
--- as permissões reconfirmadas.
+--   JÁ EXISTE o usuário e você só quer reaplicar as permissões (é o caso de
+--   quem já rodou este script antes): NÃO MEXA EM NADA. Cole o arquivo como
+--   está. A senha atual é PRESERVADA e as permissões são reconfirmadas.
+--
+--   É A PRIMEIRA VEZ, ou você quer TROCAR a senha de propósito: escolha uma
+--   e troque no lugar indicado. Mínimo de 12 caracteres; pode usar qualquer
+--   caractere, inclusive @ e dois-pontos.
+--
+-- Por que o padrão passou a ser preservar: trocar a senha aqui sem trocar o
+-- secret PRODUCAO_DB_PASSWORD no GitHub quebra a esteira — e o erro aparece
+-- só dez minutos depois, na corrida seguinte, falando de autenticação. Quem
+-- só precisa de uma permissão nova não deveria correr esse risco.
+--
+-- SEGURO DE RODAR QUANTAS VEZES QUISER: sem senha informada, nada além das
+-- permissões é tocado.
 --
 -- A role termina em _v2 de propósito: a credencial da role anterior ficou
 -- retida no cache do Session pooler mesmo depois de várias trocas de senha.
@@ -31,24 +40,43 @@
 
 DO $cria$
 DECLARE
-  -- ⬇⬇⬇  TROQUE AQUI, e só aqui  ⬇⬇⬇
+  -- ⬇⬇⬇  Só mexa aqui se for CRIAR o usuário ou TROCAR a senha de propósito.
+  --      Deixando como está, a senha atual é preservada.  ⬇⬇⬇
   v_senha text := 'TROQUE_ESTA_SENHA_POR_UMA_SUA';
+
+  v_existe  boolean;
+  v_trocar  boolean;
 BEGIN
-  -- A verificação NÃO compara com o texto do marcador de propósito: quem
+  SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'homologacao_leitor_v2')
+    INTO v_existe;
+
+  -- "Ainda tem cara de marcador" = ninguém quis trocar a senha.
+  --
+  -- A verificação NÃO compara com o texto exato do marcador de propósito: quem
   -- substitui costuma trocar todas as ocorrências de uma vez, e aí a própria
-  -- verificação passaria a comparar a senha nova com ela mesma, travando o
-  -- script de quem fez tudo certo. Confere o que importa: se ainda tem cara de
-  -- marcador, e se tem tamanho de senha.
-  IF v_senha ILIKE '%troque%' OR length(v_senha) < 12 THEN
-    RAISE EXCEPTION 'Defina uma senha própria (mínimo 12 caracteres) na linha indicada.';
+  -- verificação passaria a comparar a senha nova com ela mesma.
+  v_trocar := NOT (v_senha ILIKE '%troque%');
+
+  IF v_trocar AND length(v_senha) < 12 THEN
+    RAISE EXCEPTION 'A senha informada tem menos de 12 caracteres.';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'homologacao_leitor_v2') THEN
-    EXECUTE format('ALTER ROLE homologacao_leitor_v2 LOGIN PASSWORD %L', v_senha);
-    RAISE NOTICE 'Usuário homologacao_leitor_v2 já existia; senha atualizada.';
-  ELSE
+  IF NOT v_existe AND NOT v_trocar THEN
+    RAISE EXCEPTION 'O usuário homologacao_leitor_v2 não existe e nenhuma senha '
+                    'foi informada. Para criá-lo, defina uma senha na linha indicada.';
+  END IF;
+
+  IF NOT v_existe THEN
     EXECUTE format('CREATE ROLE homologacao_leitor_v2 LOGIN PASSWORD %L', v_senha);
     RAISE NOTICE 'Usuário homologacao_leitor_v2 criado.';
+  ELSIF v_trocar THEN
+    EXECUTE format('ALTER ROLE homologacao_leitor_v2 LOGIN PASSWORD %L', v_senha);
+    RAISE NOTICE 'Senha de homologacao_leitor_v2 TROCADA. Atualize também o '
+                 'secret PRODUCAO_DB_PASSWORD no GitHub, senão a esteira para '
+                 'de conectar.';
+  ELSE
+    RAISE NOTICE 'Usuário homologacao_leitor_v2 já existia; senha PRESERVADA, '
+                 'só as permissões foram reconfirmadas.';
   END IF;
 
   -- Somente leitura, e nada além disso.
