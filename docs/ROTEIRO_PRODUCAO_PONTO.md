@@ -88,6 +88,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 48 | Onda 10 (parte 3) — radar de cobertura de turno (turno descoberto avisado antes) | `docs/script_ponto_onda10_cobertura_turno.sql` | — | ⏳ | ⬜ |
 | 49 | Onda 10 (parte 4) — troca de turno com aprovação e recálculo (fecha a onda 10) | `docs/script_ponto_onda10_troca_turno.sql` | — | ⏳ | ⬜ |
 | 50 | Onda 11 (parte 1) — atestado acima de 15 dias encaminha ao INSS (Lei 8.213) | `docs/script_ponto_onda11_atestado_encaminha_inss.sql` | — | ⏳ | ⬜ |
+| 51 | Onda 11 (parte 2) — atestados sobrepostos detectados, não abonados em dobro | `docs/script_ponto_onda11_atestados_sobrepostos.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1213,6 +1214,30 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   DP; atestado de 10 dias → **nada** (abono da empresa, não encaminha).
 - **Tela (Publicar no Lovable):** o aviso de encaminhamento e a conferência do
   benefício aparecem no painel; a ponte já está no banco.
+
+### 51 · Onda 11 (parte 2) — atestados sobrepostos detectados, não abonados em dobro (ESC-011)
+- **Arquivo:** `docs/script_ponto_onda11_atestados_sobrepostos.sql`
+- **O que faz:** dois atestados que cobrem o **mesmo período** (documento reenviado,
+  ou dois médicos para os mesmos dias) não podem **abonar em dobro** nem confundir a
+  contagem dos 15 dias. Hoje entram como registros independentes, **sem detecção**, e
+  tudo que soma por atestado dobra (dias acumulados, a régua dos 15 dias do INSS,
+  absenteísmo). Um gatilho `BEFORE INSERT` em `atestados` passa a **detectar a
+  sobreposição** de período (mesmo CPF/tenant) na entrada e **sinalizar** — um alerta
+  ao DP (`tipo = 'atestado_sobreposto'`, severidade `media`) decidir qual vale,
+  mantendo o tratamento mais favorável e a **contagem de dias única** (cada dia doente
+  conta uma vez).
+- **Baixo risco:** **não bloqueia** o registro (pode ser dois atendimentos legítimos);
+  só detecta e alerta. O alerta é **defensivo** (`EXCEPTION → NOTICE`): nunca quebra o
+  registro do atestado. Não altera o motor de saldo, a apuração, o espelho nem o
+  fechamento. **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | OK` — a função de detecção existe e o gatilho está
+  em `atestados`.
+- **Na bateria** só o **ESC-011** passou a passar (falhou→passou); regressão zero
+  (118→119 verdes). Provado em transação (dados fictícios): dois atestados com períodos
+  sobrepostos do mesmo CPF → **1 alerta** de sobreposição; dois atestados sem
+  sobreposição → **nenhum** alerta.
+- **Tela (Publicar no Lovable):** o aviso de sobreposição aparece no painel de alertas
+  do DP; a detecção já está no banco.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
