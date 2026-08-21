@@ -75,6 +75,15 @@ Anote **Project URL**, **anon/public key** e o **project ref**.
 > Escolha a mesma região da produção. Diferença de região muda latência e, em
 > alguns casos, comportamento de fuso em função de data — e a graça da
 > homologação é justamente não ter diferença nenhuma.
+>
+> **Na prática, não foi o que aconteceu:** a produção está em `sa-east-1` (São
+> Paulo) e a homologação nasceu em `us-east-1`. Não é impeditivo e não há
+> questão de LGPD, porque dado real nunca vai para lá — a cópia é só de
+> estrutura. O custo é tempo: a corrida da esteira passou de ~2min30 para
+> ~10min, porque cada um dos ~1300 comandos de limpeza atravessa o continente.
+> A dúvida que vale conferir uma vez é o fuso: rode `SHOW TimeZone;` nos dois
+> projetos. Se der o mesmo valor nos dois (é o esperado), não há diferença de
+> comportamento a temer, só a lentidão.
 
 ### 2. Preencher `.env.homologacao`
 
@@ -184,16 +193,29 @@ O que ela faz, e o que impede:
 
 #### 3.4. Conferir
 
-O último passo da esteira imprime a contagem de tabelas, funções e políticas.
-Três números só dizem alguma coisa se houver com o que comparar.
+**A esteira já confere sozinha.** O último passo mede os dois lados com
+`docs/script_conferencia_homologacao.sql`, monta um quadro lado a lado e
+**reprova a corrida** se qualquer medida divergir:
 
-Use `docs/script_conferencia_homologacao.sql`: cole no SQL Editor da **produção**,
-guarde o resultado, cole o **mesmo arquivo** no SQL Editor da **homologação** e
-compare linha a linha. São onze medidas (tabelas, colunas, visões, funções,
-políticas, gatilhos, índices, restrições, enums, valores de enum e permissões),
-e todas devem bater — **menos uma**, explicada abaixo.
+```
+MEDIDA                     PRODUCAO  HOMOLOGACAO   SITUACAO
+tabelas                         351          351   ok
+indices                         855          855   ok
+permissoes de tela             5643            0   diferenca esperada
+```
 
-É só leitura: rodar na produção é seguro, e rodar duas vezes não muda nada.
+São doze medidas: tabelas, colunas, visões, funções, políticas, gatilhos,
+índices, índices inválidos, restrições, enums, valores de enum e permissões.
+Verde significa cópia fiel; não há o que conferir à mão depois.
+
+> Nem sempre foi assim. A esteira imprimia três números e pedia "compare com a
+> produção". A comparação achou uma diferença real de um índice — mas só
+> aconteceu porque alguém lembrou de fazer. Conferência que depende de gesto
+> humano é conferência que uma hora não acontece.
+
+Para conferir por fora mesmo assim, o mesmo arquivo roda no SQL Editor dos dois
+projetos. É só leitura: rodar na produção é seguro, e rodar duas vezes não muda
+nada.
 
 Para uma conferência ainda mais completa, rode na homologação os scripts
 `docs/script_divergencia_producao_parte1.sql` e `parte2.sql`. O resultado tem que
