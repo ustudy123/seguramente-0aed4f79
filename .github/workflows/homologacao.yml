@@ -403,6 +403,193 @@ jobs:
             sort erros_reais.log | uniq -c | sort -rn | head -30
           fi
 
+      - name: Copiar os dados com a identificação embaralhada
+        env:
+          PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+          TEMPERO_SECRET: ${{ secrets.HOMOLOGACAO_TEMPERO }}
+        run: |
+          set -o pipefail
+          PP="$(printf '%s' "$PROD_PASS"    | tr -d '\r\n')"
+          HP="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
+          prod()    { PGPASSWORD="$PP" psql -h "$HOST_PRODUCAO"    -p 5432 -U "$PRODUCAO_USER"    -d postgres "$@"; }
+          homolog() { PGPASSWORD="$HP" psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres "$@"; }
+
+          # O tempero decide o mapeamento "CPF real -> CPF falso". Precisa ser
+          # ESTÁVEL entre corridas (senão o mesmo colaborador vira uma pessoa
+          # diferente a cada cópia) e SECRETO (senão qualquer um confere se um
+          # CPF conhecido virou tal valor, e a máscara deixa de mascarar).
+          # Sem secret próprio, deriva da senha do banco: já é secreta e já é
+          # estável, e não cria mais um item para alguém esquecer de cadastrar.
+          if [ -n "$TEMPERO_SECRET" ]; then
+            TEMPERO="$TEMPERO_SECRET"
+          else
+            TEMPERO="$(printf '%s' "$HP" | sha256sum | cut -c1-32)"
+            echo "Sem o secret HOMOLOGACAO_TEMPERO; usando um derivado da senha do banco."
+          fi
+          echo "::add-mask::$TEMPERO"
+
+          echo "== Lendo a estrutura das colunas na produção (somente leitura)"
+          prod -tA -v ON_ERROR_STOP=1 -f scripts/homologacao/catalogo_colunas.sql > catalogo.tsv
+          python3 scripts/homologacao/gerar_copia_mascarada.py catalogo.tsv "$TEMPERO" > plano.tsv
+          echo "Tabelas a copiar: $(wc -l < plano.tsv)"
+
+          # ---------------------------------------------------------------
+          # Soltar as amarras ANTES de carregar.
+          #
+          # Duas coisas atrapalhariam a carga, e as duas em silêncio:
+          #
+          #  · as 627 chaves estrangeiras exigiriam ordem de dependência, e
+          #    10 tabelas referenciam a si mesmas — não existe ordem que
+          #    resolva. Derrubar e recriar depois é o caminho, e a recriação
+          #    ainda VALIDA a carga de brinde: se a máscara tivesse quebrado
+          #    alguma ligação, ela falha aqui.
+          #
+          #  · os 589 gatilhos dispararIam a cada linha inserida: os de
+          #    auditoria gravariam um histórico que nunca aconteceu, e os de
+          #    "atualizado_em" reescreveriam as datas — justamente o dado que
+          #    dá realismo ao ensaio. DISABLE TRIGGER USER basta e não exige
+          #    superusuário; os gatilhos internos de chave estrangeira ficam
+          #    de fora porque as chaves já saíram.
+          # ---------------------------------------------------------------
+          echo "== Guardando e derrubando as chaves estrangeiras"
+          homolog -tA -v ON_ERROR_STOP=1 -c "
+            SELECT format('ALTER TABLE %s ADD CONSTRAINT %I %s;',
+                          c.conrelid::regclass, c.conname, pg_get_constraintdef(c.oid))
+              FROM pg_constraint c JOIN pg_class t ON t.oid = c.conrelid
+              JOIN pg_namespace n ON n.oid = t.relnamespace
+             WHERE n.nspname='public' AND c.contype='f';" > recriar_fks.sql
+          echo "Chaves estrangeiras guardadas: $(grep -c ';' recriar_fks.sql || true)"
+
+          homolog -tA -v ON_ERROR_STOP=1 -c "
+            SELECT format('ALTER TABLE %s DROP CONSTRAINT IF EXISTS %I;',
+                          c.conrelid::regclass, c.conname)
+              FROM pg_constraint c JOIN pg_class t ON t.oid = c.conrelid
+              JOIN pg_namespace n ON n.oid = t.relnamespace
+             WHERE n.nspname='public' AND c.contype='f';" > derrubar_fks.sql
+          homolog -q -v ON_ERROR_STOP=1 -f derrubar_fks.sql
+
+          homolog -tA -v ON_ERROR_STOP=1 -c "
+            SELECT format('ALTER TABLE public.%I DISABLE TRIGGER USER;', c.relname)
+              FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname='public' AND c.relkind IN ('r','p');" > desligar_gatilhos.sql
+          homolog -q -f desligar_gatilhos.sql 2>&1 | grep -c 'ERROR:' || true
+
+          # ---------------------------------------------------------------
+          # A cópia. auth.users primeiro: 34 chaves do public apontam para lá.
+          # ---------------------------------------------------------------
+          echo "== Copiando (a máscara é aplicada no SELECT, dentro da produção)"
+          total=0; falhas=0
+          copiar_uma() {
+            tabela="$1"; selecao="$2"; colunas="$3"
+            if prod -qAt -c "COPY (SELECT $selecao FROM $tabela) TO STDOUT" \
+               | homolog -q -c "COPY $tabela ($colunas) FROM STDIN" 2>erro.txt; then
+              linhas=$(homolog -tAc "SELECT count(*) FROM $tabela")
+              total=$((total + linhas))
+              # O `|| true` não é enfeite: sem ele, a comparação falsa numa
+              # tabela VAZIA devolveria 1, e como o shell da esteira roda com
+              # `bash -e`, a corrida abortaria na primeira tabela sem linhas.
+              { [ "$linhas" -gt 0 ] && printf '  %-52s %8s linhas\n' "$tabela" "$linhas"; } || true
+            else
+              falhas=$((falhas + 1))
+              echo "  FALHOU: $tabela"
+              sed 's/^/      /' erro.txt | head -3
+            fi
+          }
+
+          grep '^auth\.' plano.tsv > plano_auth.tsv || true
+          grep -v '^auth\.' plano.tsv > plano_public.tsv || true
+          while IFS=$'\t' read -r t s c; do copiar_uma "$t" "$s" "$c"; done < plano_auth.tsv
+          while IFS=$'\t' read -r t s c; do copiar_uma "$t" "$s" "$c"; done < plano_public.tsv
+          echo "Linhas copiadas: $total | tabelas com falha: $falhas"
+
+          # ---------------------------------------------------------------
+          # Reatar as amarras. A recriação das chaves é a conferência: ela
+          # percorre os dados e recusa se alguma ligação não fechar.
+          # ---------------------------------------------------------------
+          echo "== Religando gatilhos e recriando as chaves estrangeiras"
+          homolog -tA -c "
+            SELECT format('ALTER TABLE public.%I ENABLE TRIGGER USER;', c.relname)
+              FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname='public' AND c.relkind IN ('r','p');" > religar_gatilhos.sql
+          homolog -q -f religar_gatilhos.sql 2>&1 | grep 'ERROR:' | head -5 || true
+
+          homolog -q -f recriar_fks.sql 2>&1 | tee fks.log | grep 'ERROR:' | head -10 || true
+          fk_erros=$(grep -c 'ERROR:' fks.log || true)
+          echo "Chaves estrangeiras que NÃO voltaram: $fk_erros"
+
+          # Sequências: sem isto, o próximo cadastro na homologação tentaria um
+          # id que já existe e falharia com erro de duplicidade.
+          homolog -tA -c "
+            SELECT format('SELECT setval(%L, COALESCE((SELECT max(%I) FROM public.%I), 1));',
+                          quote_ident(n.nspname)||'.'||quote_ident(s.relname), a.attname, t.relname)
+              FROM pg_class s
+              JOIN pg_namespace n ON n.oid = s.relnamespace AND n.nspname='public'
+              JOIN pg_depend d ON d.objid = s.oid AND d.deptype IN ('a','i')
+              JOIN pg_class t ON t.oid = d.refobjid
+              JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = d.refobjsubid
+             WHERE s.relkind = 'S';" > sequencias.sql
+          homolog -q -f sequencias.sql > /dev/null 2>&1 || true
+
+          if [ "$falhas" -gt 0 ] || [ "$fk_erros" -gt 0 ]; then
+            echo "::error::A cópia dos dados teve falhas. Veja acima a tabela e a mensagem."
+            exit 1
+          fi
+
+      - name: Provar que nenhum dado identificável atravessou
+        env:
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+          SENHA_USUARIOS: ${{ secrets.HOMOLOGACAO_SENHA_USUARIOS }}
+        run: |
+          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
+          homolog() { psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres "$@"; }
+
+          # Conferência POSITIVA: em vez de procurar dado real — que eu não
+          # tenho com que comparar, e cuja ausência não se prova por amostra —
+          # confere que a marca da máscara está em TODAS as linhas. Um CPF que
+          # não comece com 9 é um CPF que escapou.
+          echo "MEDIDA                                   FORA DO PADRAO"
+          fugiu=0
+          conferir() {
+            n=$(homolog -tAc "$2" 2>/dev/null || echo 0)
+            printf '%-40s %8s\n' "$1" "$n"
+            [ "${n:-0}" -gt 0 ] && fugiu=1 || true
+          }
+          conferir "CPF que nao comeca com 9" "
+            SELECT coalesce(sum(n),0) FROM (
+              SELECT count(*) n FROM public.usuarios_base
+               WHERE cpf IS NOT NULL AND left(regexp_replace(cpf,'[^0-9]','','g'),1) <> '9'
+            ) x;"
+          conferir "e-mail fora de .invalid (auth)" "
+            SELECT count(*) FROM auth.users
+             WHERE email IS NOT NULL AND email NOT LIKE '%@exemplo.invalid';"
+          conferir "metadado de usuario nao esvaziado" "
+            SELECT count(*) FROM auth.users
+             WHERE raw_user_meta_data IS NOT NULL AND raw_user_meta_data <> '{}'::jsonb;"
+
+          if [ "$fugiu" -ne 0 ]; then
+            echo "::error::Dado identificável chegou à homologação. Apagando o schema por precaução."
+            homolog -q -c 'DROP SCHEMA IF EXISTS public CASCADE;' || true
+            exit 1
+          fi
+          echo "Nenhum dado identificável na homologação."
+
+          # Senha de entrada. O hash real foi invalidado na leitura, então sem
+          # isto ninguém entra — o que é o padrão seguro, não um defeito.
+          if [ -n "$SENHA_USUARIOS" ]; then
+            # A senha vai por variável do psql (:'senha'), não colada no texto
+            # do comando: senha com apóstrofo quebraria o SQL, e senha com
+            # apóstrofo bem escolhido escreveria SQL.
+            homolog -q -v senha="$SENHA_USUARIOS" -c "
+              UPDATE auth.users
+                 SET encrypted_password = crypt(:'senha', gen_salt('bf')),
+                     email_confirmed_at = COALESCE(email_confirmed_at, now());" \
+              && echo "Senha única aplicada a todos os usuários da homologação."
+          else
+            echo "::warning::Sem o secret HOMOLOGACAO_SENHA_USUARIOS: ninguém consegue entrar na"
+            echo "::warning::homologação (as senhas reais foram invalidadas na leitura, de propósito)."
+          fi
+
       - name: Provar que a cópia é fiel
         env:
           PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
