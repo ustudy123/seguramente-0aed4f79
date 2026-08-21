@@ -109,9 +109,11 @@ jobs:
           [ -n "$HOST_PRODUCAO_DIGITADO" ]    || HOST_PRODUCAO_DIGITADO="$PROD_HOST_SECRET"
           [ -n "$HOST_HOMOLOGACAO_DIGITADO" ] || HOST_HOMOLOGACAO_DIGITADO="$HOMOLOG_HOST_SECRET"
 
-          # O endereço tem que ser SÓ o host. Se vier a URL inteira, o usuário
-          # junto ou a porta no fim, o erro seguinte seria incompreensível —
-          # melhor barrar aqui, dizendo exatamente o que está sobrando.
+          # O endereço ideal é só o host. Como o painel do Supabase também
+          # oferece valores no formato usuario@host e URLs completas, aceite
+          # esses formatos e extraia apenas o host. Usar o último "@" também
+          # tolera senhas antigas contendo esse caractere; a senha efetivamente
+          # usada continua vindo separadamente por PGPASSWORD.
           #
           # Espaço em branco é apagado antes de conferir: copiar do painel
           # costuma trazer um espaço no fim, e reprovar por isso — com uma
@@ -122,19 +124,14 @@ jobs:
           # e as mensagens seriam engolidas junto com o resultado.
           conferir_host() {
             nome="$1"; valor="$(printf '%s' "$2" | tr -d '[:space:]')"
+            valor="${valor##*@}"
+            valor="${valor#*://}"
+            valor="${valor%%/*}"
+            valor="${valor%%:*}"
             LIMPO="$valor"
             case "$valor" in
               "")
                 echo "::error::Endereço da $nome não informado. Preencha o campo no formulário (painel do Supabase > Connect > Session pooler)."
-                erro=1 ;;
-              *"@"*)
-                echo "::error::Endereço da $nome contém '@' — informe SÓ o host, sem usuário e sem senha."
-                erro=1 ;;
-              *"postgresql:"*|*"://"*)
-                echo "::error::Endereço da $nome parece a URL inteira — informe SÓ o host."
-                erro=1 ;;
-              *":"*)
-                echo "::error::Endereço da $nome contém ':' — informe SÓ o host, sem a porta."
                 erro=1 ;;
               *"db."*".supabase.co")
                 echo "::error::Endereço da $nome é o de conexão DIRETA (db.<projeto>.supabase.co)."
