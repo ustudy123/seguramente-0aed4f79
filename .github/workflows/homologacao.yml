@@ -317,6 +317,52 @@ jobs:
             exit 1
           fi
 
+      - name: Instalar na homologação as mesmas extensões da produção
+        env:
+          PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+        run: |
+          # POR QUE ESTE PASSO EXISTE
+          #
+          # O retrato é só do schema `public`, e extensão não mora lá. Mas há
+          # objeto em `public` que DEPENDE de extensão: o índice de busca por
+          # título de ocupação (idx_cbo_titulo_trgm, em cbo_ocupacoes) usa o
+          # operador `extensions.gin_trgm_ops`, do pg_trgm. Num projeto novo o
+          # pg_trgm não vem instalado, e a criação desse índice falhava com
+          #
+          #     ERROR: operator class "extensions.gin_trgm_ops" does not exist
+          #
+          # Era exatamente o índice que faltava: 855 na produção, 854 aqui.
+          # Um único objeto, e a busca de CBO deixaria de ter índice justamente
+          # no ambiente onde se testa se o script aplica.
+          #
+          # A lista não é escrita à mão: vem da produção. Assim vale para
+          # qualquer extensão que a produção venha a usar, e não só para esta.
+          # O `WITH SCHEMA` preserva onde cada uma mora — o operador é
+          # referenciado com o schema no nome, então instalar no lugar errado
+          # não resolveria nada.
+          PGPASSWORD="$(printf '%s' "$PROD_PASS" | tr -d '\r\n')" \
+          psql -h "$HOST_PRODUCAO" -p 5432 -U "$PRODUCAO_USER" -d postgres -tA \
+            -v ON_ERROR_STOP=1 -c "
+            SELECT format('CREATE SCHEMA IF NOT EXISTS %I;'
+                          || E'\nCREATE EXTENSION IF NOT EXISTS %I WITH SCHEMA %I;',
+                          n.nspname, e.extname, n.nspname)
+              FROM pg_extension e JOIN pg_namespace n ON n.oid = e.extnamespace
+             WHERE e.extname <> 'plpgsql'
+             ORDER BY e.extname;" > extensoes.sql
+
+          echo "Extensões que a produção usa:"
+          cat extensoes.sql
+
+          # Sem ON_ERROR_STOP: extensão que este projeto não pode instalar não
+          # deve derrubar a corrida aqui. Se alguma fizer falta de verdade, o
+          # objeto que depende dela falha na restauração e a conferência final
+          # reprova — com o nome do objeto na mensagem.
+          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
+          psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
+            -f extensoes.sql 2>&1 | tee extensoes.log | tail -20
+          echo "Erros ao instalar extensões: $(grep -c 'ERROR:' extensoes.log || true)"
+
       - name: Aplicar a estrutura na homologação
         env:
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
@@ -334,12 +380,18 @@ jobs:
           # índice não foi criado. Contador que só sabe dizer zero é pior que
           # contador nenhum: o zero é lido como prova.
           echo "---"
-          erros=$(grep -c 'ERROR:' restauracao.log || true)
-          echo "Erros durante a restauração: $erros"
+          # Um erro é esperado e não significa nada: o retrato traz
+          # `CREATE SCHEMA public`, e o passo anterior já criou o schema. Fica
+          # separado dos outros para não inflar a contagem — número que mistura
+          # ruído com sinal volta a não querer dizer nada, que foi o defeito
+          # anterior por outro caminho.
+          grep 'ERROR:' restauracao.log | sed 's/^psql:[^:]*:[0-9]*: //' \
+            | grep -v 'schema "public" already exists' > erros_reais.log || true
+          erros=$(wc -l < erros_reais.log)
+          echo "Erros durante a restauração (fora o 'public already exists' esperado): $erros"
           if [ "$erros" -gt 0 ]; then
             echo "Mensagens distintas (o objeto que falhou aparece na linha):"
-            grep 'ERROR:' restauracao.log | sed 's/^psql:[^:]*:[0-9]*: //' \
-              | sort | uniq -c | sort -rn | head -30
+            sort erros_reais.log | uniq -c | sort -rn | head -30
           fi
 
       - name: Provar que a cópia é fiel
