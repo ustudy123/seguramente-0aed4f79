@@ -247,9 +247,75 @@ jobs:
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
           export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
-          psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
-            -v ON_ERROR_STOP=1 \
+          CONN="-h $HOST_HOMOLOGACAO -p 5432 -U $HOMOLOGACAO_USER -d postgres"
+
+          # POR QUE NÃO É MAIS UM `DROP SCHEMA public CASCADE` E PRONTO
+          #
+          # Era, e funcionou na primeira corrida — quando o schema estava vazio.
+          # Na segunda, com as 351 tabelas dentro, o banco recusou:
+          #
+          #     ERROR: out of shared memory
+          #     HINT: You might need to increase "max_locks_per_transaction"
+          #
+          # Um DROP CASCADE é UMA transação, e uma transação segura uma trava
+          # para CADA objeto que derruba: tabela, índice, política, gatilho,
+          # restrição, tipo. São milhares de travas de uma vez, num espaço que
+          # o servidor dimensiona no boot e divide entre todas as conexões.
+          # Não é ajuste que se faça pelo pooler, e aumentar o limite seria
+          # tratar o sintoma: o defeito é pedir tudo de uma vez.
+          #
+          # Aqui cada objeto cai no seu próprio comando. Sem -1 e sem
+          # ON_ERROR_STOP, o psql roda cada um em sua própria transação: as
+          # travas são devolvidas a cada comando, e o total simultâneo nunca
+          # passa do que um objeto precisa.
+          gerar() { psql $CONN -tA -c "$1"; }
+          {
+            # Tabelas primeiro: o CASCADE de cada uma leva junto os índices,
+            # políticas, gatilhos, restrições e visões que dependiam dela.
+            gerar "SELECT format('DROP TABLE IF EXISTS public.%I CASCADE;', c.relname)
+                     FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                    WHERE n.nspname='public' AND c.relkind IN ('r','p','f')"
+            gerar "SELECT format('DROP VIEW IF EXISTS public.%I CASCADE;', c.relname)
+                     FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                    WHERE n.nspname='public' AND c.relkind='v'"
+            gerar "SELECT format('DROP MATERIALIZED VIEW IF EXISTS public.%I CASCADE;', c.relname)
+                     FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                    WHERE n.nspname='public' AND c.relkind='m'"
+            # DROP ROUTINE cobre função e procedimento; agregado tem comando próprio.
+            gerar "SELECT format('DROP %s IF EXISTS public.%I(%s) CASCADE;',
+                                 CASE p.prokind WHEN 'a' THEN 'AGGREGATE' ELSE 'ROUTINE' END,
+                                 p.proname, pg_get_function_identity_arguments(p.oid))
+                     FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                    WHERE n.nspname='public'"
+            # Tipos próprios (os enums do projeto). O NOT EXISTS descarta os
+            # tipos-linha que o PostgreSQL cria junto com cada tabela: esses
+            # já caíram com ela, e pedir para derrubá-los daria erro.
+            gerar "SELECT format('DROP TYPE IF EXISTS public.%I CASCADE;', t.typname)
+                     FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
+                    WHERE n.nspname='public' AND t.typtype IN ('e','c','d','r')
+                      AND NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.reltype=t.oid)"
+            gerar "SELECT format('DROP SEQUENCE IF EXISTS public.%I CASCADE;', c.relname)
+                     FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                    WHERE n.nspname='public' AND c.relkind='S'"
+          } > derrubar.sql
+
+          echo "Objetos a derrubar: $(grep -c ';' derrubar.sql || true)"
+          psql $CONN -q -f derrubar.sql 2>&1 | tee derrubada.log | tail -20
+          echo "Erros ao derrubar: $(grep -c 'ERROR:' derrubada.log || true)"
+
+          # Agora o schema está vazio ou quase, e o DROP final custa poucas travas.
+          psql $CONN -v ON_ERROR_STOP=1 \
             -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;'
+
+          # Prova de que ficou limpo: restaurar sobre sobras daria erro de
+          # "já existe", e o retrato entraria pela metade sem ninguém notar.
+          sobrou=$(psql $CONN -tAc "SELECT count(*) FROM pg_class c
+                     JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public'")
+          echo "Objetos restantes no schema public: $sobrou"
+          if [ "$sobrou" -ne 0 ]; then
+            echo "::error::O schema public não ficou vazio. Restaurar por cima entregaria uma cópia parcial."
+            exit 1
+          fi
 
       - name: Aplicar a estrutura na homologação
         env:
