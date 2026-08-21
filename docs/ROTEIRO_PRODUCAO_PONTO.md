@@ -83,6 +83,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 43 | Onda 8 (correção) — competência fechada bloqueia até para gestão (remove a válvula) | `docs/script_ponto_onda8_competencia_fechada.sql` | **#14** (reabertura) | ⏳ | ⬜ |
 | 44 | Onda 9 — instrumento coletivo vigente na competência (vigilância de vigência) | `docs/script_ponto_onda9_cct_vigencia.sql` | — | ⏳ | ⬜ |
 | 45 | QA (metadado) — atualiza a disposição dos 6 casos de tela conforme auditoria as-built | `docs/script_qa_disposicao_ponto_telas.sql` | — | ⏳ | ⬜ (opcional) |
+| 46 | Onda 10 (parte 1) — escala 12x36 só vale com acordo formal (art. 59-A) | `docs/script_ponto_onda10_escala_12x36_formalizacao.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1089,6 +1090,29 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Conferência esperada:** 6 linhas, uma por caso, `erro_tecnico = OK` nas 6.
 - **Opcional em produção:** o placar da bateria não muda com ou sem este pacote;
   ele só deixa o relatório honesto. Aplique quando quiser o relatório alinhado.
+
+### 46 · Onda 10 (parte 1) — escala 12x36 só vale com acordo formal (ESC-001)
+- **Arquivo:** `docs/script_ponto_onda10_escala_12x36_formalizacao.sql`
+- **Contexto:** a bateria ganhou 8 casos novos de escala/atestado (`ESC-*`, análise
+  de requisitos YE-DP-ESC-001). Esta é a parte 1 da **onda 10** (escalas).
+- **O que faz:** o art. 59-A da CLT condiciona a **12x36** a acordo individual
+  ESCRITO, ACT ou CCT. Hoje a 12x36 nasce ativa e é atribuída **sem que nada cobre
+  o acordo** — as colunas existem (`acordo_individual_url`, `cct_act_url`) e nenhuma
+  função as lê. Cria `ponto_escala_formalizacao_status` (verificador que lê o acordo
+  anexado e o coletivo vigente) e `ponto_escala_formalizacao_monitorar` (gera
+  **pendência/alerta** para toda 12x36 ativa sem acordo formal). **Não bloqueia o
+  cadastro** — sinaliza a pendência; anexado o acordo, a pendência deixa de nascer.
+- **Baixo risco:** não altera o motor de saldo, a apuração do ciclo (PONTO-150/151),
+  o espelho nem o fechamento. Só verifica e alerta. **Aditivo e idempotente.**
+- **Conferência esperada:** `t | t | OK` — verificador e monitor presentes, lendo o
+  acordo.
+- **Na bateria** só o **ESC-001** passou a passar (falhou→passou); regressão zero
+  (113→114 verdes). Provado em transação (dados fictícios): 12x36 sem acordo →
+  status `pendente` e 1 pendência; 12x36 com acordo anexado → `regular`, 0
+  pendência; segunda rodada do monitor não duplica.
+- **Tela (Publicar no Lovable):** o aviso de "escala 12x36 sem acordo" no cadastro
+  e o anexo do acordo no módulo Documentos são de tela; a verificação e a pendência
+  já estão no banco.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
