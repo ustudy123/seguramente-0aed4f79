@@ -13,9 +13,10 @@
 -- ela: o banco recusa qualquer escrita, não é uma promessa de configuração.
 --
 -- ANTES DE RODAR: escolha uma senha e troque no lugar indicado, na linha
--- abaixo. Use algo longo e sem caracteres exóticos (letras e números bastam) —
--- ela vai viajar dentro de um endereço de conexão, e símbolos como @ e : dão
--- problema ali.
+-- abaixo. Mínimo de 12 caracteres; pode usar QUALQUER caractere, inclusive @ e
+-- dois-pontos. (As primeiras versões da esteira montavam um endereço de
+-- conexão à mão e pediam senha "sem símbolos" por causa disso; hoje a senha
+-- viaja em separado, por PGPASSWORD, e a restrição deixou de existir.)
 --
 -- SEGURO DE RODAR DUAS VEZES: se o usuário já existir, a senha é atualizada e
 -- as permissões reconfirmadas.
