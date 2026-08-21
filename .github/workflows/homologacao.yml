@@ -479,17 +479,37 @@ jobs:
           # A cópia. auth.users primeiro: 34 chaves do public apontam para lá.
           # ---------------------------------------------------------------
           echo "== Copiando (a máscara é aplicada no SELECT, dentro da produção)"
-          total=0; falhas=0
+          total=0; falhas=0; incompletas=0
           copiar_uma() {
             tabela="$1"; selecao="$2"; colunas="$3"
             if prod -qAt -c "COPY (SELECT $selecao FROM $tabela) TO STDOUT" \
                | homolog -q -c "COPY $tabela ($colunas) FROM STDIN" 2>erro.txt; then
               linhas=$(homolog -tAc "SELECT count(*) FROM $tabela")
               total=$((total + linhas))
-              # O `|| true` não é enfeite: sem ele, a comparação falsa numa
-              # tabela VAZIA devolveria 1, e como o shell da esteira roda com
-              # `bash -e`, a corrida abortaria na primeira tabela sem linhas.
-              { [ "$linhas" -gt 0 ] && printf '  %-52s %8s linhas\n' "$tabela" "$linhas"; } || true
+
+              # CONTAGEM DOS DOIS LADOS, e não só do destino.
+              #
+              # A primeira corrida ensinou por que: a leitura da produção
+              # esbarrava nas políticas de segurança por linha, que o papel de
+              # leitura não isenta. Ali deu erro, e erro se vê. Mas o mesmo
+              # problema tem uma versão silenciosa — política valendo e funções
+              # liberadas devolvem SÓ as linhas visíveis para quem não tem
+              # sessão, ou seja, quase nenhuma. A cópia terminaria "bem", com
+              # um espelho vazio que ninguém perceberia estar vazio.
+              #
+              # Comparar o que saiu com o que entrou fecha essa porta,
+              # independentemente de qual permissão esteja faltando.
+              origem=$(prod -tAc "SELECT count(*) FROM $tabela" 2>/dev/null || echo '?')
+              if [ "$origem" != "$linhas" ]; then
+                incompletas=$((incompletas + 1))
+                printf '  %-46s DIVERGIU: producao %s, homologacao %s\n' \
+                       "$tabela" "$origem" "$linhas"
+              else
+                # O `|| true` não é enfeite: sem ele, a comparação falsa numa
+                # tabela VAZIA devolveria 1, e como o shell da esteira roda com
+                # `bash -e`, a corrida abortaria na primeira tabela sem linhas.
+                { [ "$linhas" -gt 0 ] && printf '  %-52s %8s linhas\n' "$tabela" "$linhas"; } || true
+              fi
             else
               falhas=$((falhas + 1))
               echo "  FALHOU: $tabela"
@@ -501,7 +521,7 @@ jobs:
           grep -v '^auth\.' plano.tsv > plano_public.tsv || true
           while IFS=$'\t' read -r t s c; do copiar_uma "$t" "$s" "$c"; done < plano_auth.tsv
           while IFS=$'\t' read -r t s c; do copiar_uma "$t" "$s" "$c"; done < plano_public.tsv
-          echo "Linhas copiadas: $total | tabelas com falha: $falhas"
+          echo "Linhas copiadas: $total | tabelas com falha: $falhas | incompletas: $incompletas"
 
           # ---------------------------------------------------------------
           # Reatar as amarras. A recriação das chaves é a conferência: ela
@@ -531,8 +551,13 @@ jobs:
              WHERE s.relkind = 'S';" > sequencias.sql
           homolog -q -f sequencias.sql > /dev/null 2>&1 || true
 
-          if [ "$falhas" -gt 0 ] || [ "$fk_erros" -gt 0 ]; then
-            echo "::error::A cópia dos dados teve falhas. Veja acima a tabela e a mensagem."
+          if [ "$falhas" -gt 0 ] || [ "$fk_erros" -gt 0 ] || [ "$incompletas" -gt 0 ]; then
+            echo "::error::A cópia dos dados não fechou. Veja acima a tabela e a mensagem."
+            if [ "$incompletas" -gt 0 ]; then
+              echo "::error::Tabelas com contagem diferente da produção: geralmente é o papel de"
+              echo "::error::leitura sem isenção de RLS. Rode de novo docs/script_homologacao_leitor_producao.sql"
+              echo "::error::na produção — a conferência dele agora tem a linha 'Isento de RLS'."
+            fi
             exit 1
           fi
 

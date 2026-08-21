@@ -57,6 +57,35 @@ BEGIN
   EXECUTE 'GRANT pg_read_all_data TO homologacao_leitor_v2';
   EXECUTE 'GRANT USAGE ON SCHEMA public TO homologacao_leitor_v2';
 
+  -- ISENÇÃO DE RLS — e por que ela é NECESSÁRIA, não conveniente.
+  --
+  -- pg_read_all_data dá SELECT em tudo, mas NÃO isenta das políticas de
+  -- segurança por linha. A própria documentação do PostgreSQL avisa disso e
+  -- recomenda BYPASSRLS para papéis que recebem pg_read_all_data.
+  --
+  -- Sem isso, a primeira cópia de dados falhou 236 vezes com
+  --
+  --     ERROR: permission denied for function get_user_tenant_id
+  --
+  -- porque ler uma tabela protegida faz o banco AVALIAR a política, que chama
+  -- essas funções auxiliares. E o risco pior não é a falha: é o sucesso
+  -- parcial. Com as funções liberadas mas a política valendo, a leitura
+  -- devolveria só as linhas visíveis para um usuário sem sessão — quase
+  -- nenhuma — e a cópia terminaria "bem", com um espelho vazio que ninguém
+  -- perceberia estar vazio.
+  --
+  -- Isenção de leitura NÃO é permissão de escrita: o papel continua sem poder
+  -- alterar coisa alguma. O que muda é que ele passa a enxergar todos os
+  -- inquilinos, que é exatamente o que um espelho da produção precisa.
+  BEGIN
+    EXECUTE 'ALTER ROLE homologacao_leitor_v2 BYPASSRLS';
+    RAISE NOTICE 'Isenção de RLS concedida.';
+  EXCEPTION WHEN insufficient_privilege OR OTHERS THEN
+    RAISE NOTICE 'Não foi possível conceder BYPASSRLS (%). A esteira vai '
+                 'reprovar na conferência de linhas se a cópia vier '
+                 'incompleta — que é o que se quer que aconteça.', SQLERRM;
+  END;
+
   -- Garantia explícita: nada de criar objeto no banco.
   EXECUTE 'REVOKE CREATE ON SCHEMA public FROM homologacao_leitor_v2';
   EXECUTE 'REVOKE ALL ON DATABASE postgres FROM homologacao_leitor_v2';
@@ -88,6 +117,13 @@ SELECT 'É somente leitura',
                            AND r.rolname = 'pg_read_all_data')
             THEN 'ok' ELSE 'FALTA' END,
        'o banco recusa qualquer escrita deste usuário'
+
+UNION ALL
+SELECT 'Isento de RLS (lê todos os inquilinos)',
+       CASE WHEN EXISTS (SELECT 1 FROM pg_roles
+                          WHERE rolname = 'homologacao_leitor_v2' AND rolbypassrls)
+            THEN 'ok' ELSE 'FALTA' END,
+       'sem isto a cópia vem vazia, e vem em silêncio'
 
 UNION ALL
 SELECT 'NÃO é superusuário',
