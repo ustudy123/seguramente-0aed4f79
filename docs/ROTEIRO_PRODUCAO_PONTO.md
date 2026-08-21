@@ -89,6 +89,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 49 | Onda 10 (parte 4) — troca de turno com aprovação e recálculo (fecha a onda 10) | `docs/script_ponto_onda10_troca_turno.sql` | — | ⏳ | ⬜ |
 | 50 | Onda 11 (parte 1) — atestado acima de 15 dias encaminha ao INSS (Lei 8.213) | `docs/script_ponto_onda11_atestado_encaminha_inss.sql` | — | ⏳ | ⬜ |
 | 51 | Onda 11 (parte 2) — atestados sobrepostos detectados, não abonados em dobro | `docs/script_ponto_onda11_atestados_sobrepostos.sql` | — | ⏳ | ⬜ |
+| 52 | Onda 11 (parte 3) — ausência do art. 473 sem documento fica pendente (não abona por fé) | `docs/script_ponto_onda11_comprovacao_art473.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1238,6 +1239,39 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   sobreposição → **nenhum** alerta.
 - **Tela (Publicar no Lovable):** o aviso de sobreposição aparece no painel de alertas
   do DP; a detecção já está no banco.
+
+### 52 · Onda 11 (parte 3) — ausência do art. 473 sem documento fica pendente (ESC-012)
+- **Arquivo:** `docs/script_ponto_onda11_comprovacao_art473.sql`
+- **Fecha a onda 11 e a fila legal do Ponto no banco.**
+- **O que faz:** o rol do art. 473 da CLT abona a falta, mas **mediante comprovação**
+  (certidão de óbito/casamento, declaração de comparecimento, comprovante de doação
+  de sangue). O catálogo `ponto_justificativas` já marcava os tipos que exigem
+  documento (`requer_anexo`) e a tela recebia a flag — mas **nada impedia** o abono
+  sem documento. Agora `processar_ajuste_ponto` olha `requer_anexo`: um abono que
+  exige documento e entra **sem anexo não se consuma** — o ajuste fica
+  `pendente_comprovacao`, com **prazo**, e um alerta avisa o colaborador e o DP.
+  Anexado o documento e reprocessado, o abono se **efetiva**. Uma nova rotina
+  `ponto_comprovacao_monitorar` varre as pendências com prazo vencido e alerta o DP
+  **antes** de o dia virar desconto.
+- **Estrutura:** nova coluna `ponto_ajustes.comprovacao_prazo` (data-limite) e o
+  `CHECK` de status ganha o valor `pendente_comprovacao`. Reproduz
+  `processar_ajuste_ponto` na íntegra e apenas acrescenta o portão do art. 473 —
+  todo o resto (segregação de funções, correção por acréscimo, marcações) é idêntico.
+- **Baixo risco:** **aditivo e idempotente**. Não altera o motor de saldo, a apuração,
+  o espelho nem o fechamento — só condiciona a **consumação do abono à prova**. Não
+  desconta às cegas: o dia fica falta pendente até a decisão. `SET lock_timeout` na DDL.
+- **Conferência esperada:** `t | t | t | t | OK` — coluna, estado no `CHECK`, o portão
+  em `processar_ajuste_ponto` e a rotina de monitoramento existem.
+- **Na bateria** só o **ESC-012** passou a passar (falhou→passou); regressão zero
+  (119→120 verdes). Provado em transação (dados fictícios): abono `requer_anexo` sem
+  documento → `pendente_comprovacao`, prazo, alerta ao colaborador+DP e o dia **fica
+  falta** (não abona); prazo vencido → alerta ao DP (idempotente); documento anexado
+  e reaprovado → **abono efetivado**.
+- **Tela (Publicar no Lovable):** o novo estado "pendente de comprovação", o prazo e
+  os avisos aparecem no fluxo de ajustes/justificativas; a regra já está no banco.
+- **Encerramento:** com este pacote, a fila legal do Ponto fica **inteira verde** —
+  restam apenas o **rural (PONTO-113)**, parado por decisão, e os **casos de tela**
+  (e2e, cobertos pelo Cypress).
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
