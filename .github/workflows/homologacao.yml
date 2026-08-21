@@ -84,6 +84,12 @@ jobs:
       HOST_PRODUCAO_DIGITADO: ${{ github.event.inputs.host_producao }}
       HOST_HOMOLOGACAO_DIGITADO: ${{ github.event.inputs.host_homologacao }}
     steps:
+      - name: Trazer o repositório
+        # Para o passo final usar docs/script_conferencia_homologacao.sql — a
+        # mesma medição que se cola no SQL Editor. Uma fonte só: se a esteira
+        # tivesse a própria cópia da consulta, as duas se afastariam.
+        uses: actions/checkout@v4
+
       - name: Exigir a confirmação digitada
         # O texto digitado chega por variável de ambiente, nunca colado dentro
         # do script: colar conteúdo de formulário direto no shell é o furo
@@ -255,27 +261,65 @@ jobs:
           # importa é o resultado final, conferido no passo seguinte.
           psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
             -f estrutura_producao.sql 2>&1 | tee restauracao.log | tail -40
-          echo "---"
-          echo "Total de erros na restauração: $(grep -c '^ERROR' restauracao.log || true)"
 
-      - name: Conferir o resultado
+          # O psql NÃO começa a linha de erro com "ERROR": ele prefixa com
+          # "psql:arquivo:linha:". A versão anterior contava com grep '^ERROR' e
+          # por isso imprimia "0 erros" SEMPRE — inclusive na corrida em que um
+          # índice não foi criado. Contador que só sabe dizer zero é pior que
+          # contador nenhum: o zero é lido como prova.
+          echo "---"
+          erros=$(grep -c 'ERROR:' restauracao.log || true)
+          echo "Erros durante a restauração: $erros"
+          if [ "$erros" -gt 0 ]; then
+            echo "Mensagens distintas (o objeto que falhou aparece na linha):"
+            grep 'ERROR:' restauracao.log | sed 's/^psql:[^:]*:[0-9]*: //' \
+              | sort | uniq -c | sort -rn | head -30
+          fi
+
+      - name: Provar que a cópia é fiel
         env:
+          PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
-          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
-          psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
-            -A -F' | ' -c "
-            SELECT 'tabelas'  AS item, count(*)::text FROM pg_class c
-              JOIN pg_namespace n ON n.oid=c.relnamespace
-             WHERE n.nspname='public' AND c.relkind='r'
-            UNION ALL
-            SELECT 'funcoes', count(*)::text FROM pg_proc p
-              JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'
-            UNION ALL
-            SELECT 'politicas', count(*)::text FROM pg_policies WHERE schemaname='public';"
+          # A esteira tem as duas credenciais na mão — então ela mesma faz a
+          # comparação, em vez de imprimir três números e pedir que alguém os
+          # confira contra a produção. Conferência que depende de gesto humano
+          # é conferência que uma hora não acontece.
+          #
+          # A medição é a MESMA de docs/script_conferencia_homologacao.sql: uma
+          # fonte só, para os dois lados não se afastarem com o tempo.
+          medir() {
+            PGPASSWORD="$(printf '%s' "$2" | tr -d '\r\n')" \
+            psql -h "$3" -p 5432 -U "$4" -d postgres -tA -F'|' \
+                 -v ON_ERROR_STOP=1 -f docs/script_conferencia_homologacao.sql \
+              | cut -d'|' -f1,2 > "$1"
+          }
+          medir producao.txt    "$PROD_PASS"    "$HOST_PRODUCAO"    "$PRODUCAO_USER"
+          medir homologacao.txt "$HOMOLOG_PASS" "$HOST_HOMOLOGACAO" "$HOMOLOGACAO_USER"
+
+          printf '%-22s %12s %12s   %s\n' MEDIDA PRODUCAO HOMOLOGACAO SITUACAO
+          divergiu=0
+          while IFS='|' read -r item valor_prod; do
+            valor_homolog=$(awk -F'|' -v i="$item" '$1==i{print $2}' homologacao.txt)
+            case "$item" in
+              # As permissões não são copiadas de propósito (--no-privileges), e
+              # índice inválido o pg_dump não copia. Diferença nessas duas é
+              # esperada: aparece no quadro, mas não reprova.
+              'permissoes de tela'|'indices invalidos') situacao='diferenca esperada' ;;
+              *) if [ "$valor_prod" = "$valor_homolog" ]; then situacao='ok'
+                 else situacao='DIVERGIU'; divergiu=1; fi ;;
+            esac
+            printf '%-22s %12s %12s   %s\n' "$item" "$valor_prod" "${valor_homolog:-?}" "$situacao"
+          done < producao.txt
+
           echo
-          echo "Compare com a produção: os números têm que BATER."
-          echo "Igualdade aqui é sucesso — a homologação existe para ser cópia fiel."
+          if [ "$divergiu" -eq 1 ]; then
+            echo "::error::A homologação NÃO é cópia fiel da produção. Veja acima qual medida divergiu"
+            echo "::error::e as mensagens de erro do passo anterior — é lá que está o objeto que faltou."
+            exit 1
+          fi
+          echo "A homologação é cópia fiel da produção."
+          echo "Igualdade aqui é sucesso — ela existe para ser espelho, defeitos e tudo."
 
       - name: Guardar o retrato e o log
         if: always()
