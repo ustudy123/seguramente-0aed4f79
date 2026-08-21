@@ -72,6 +72,25 @@ jobs:
           #
           # A forma B é a recomendada: nada de montar endereço na mão, a senha
           # vai crua e a esteira a codifica sozinha.
+          # Higiene do valor colado: quebra de linha, espaço nas pontas e aspas
+          # sobrando são a causa que sobra depois da codificação de URL.
+          higienizar() {
+            local rotulo="$1" campo="$2" valor="$3"
+            case "$valor" in
+              *$'\n'*|*$'\r'*|*$'\t'*)
+                echo "::error::$rotulo / $campo: o valor tem quebra de linha ou tabulação. Recadastre o secret em uma única linha, sem Enter no final." >&2
+                return 1 ;;
+            esac
+            local limpo="${valor#"${valor%%[![:space:]]*}"}"
+            limpo="${limpo%"${limpo##*[![:space:]]}"}"
+            case "$limpo" in
+              \"*\"|\'*\')
+                echo "::error::$rotulo / $campo: o valor está entre aspas. Cadastre sem aspas." >&2
+                return 1 ;;
+            esac
+            printf '%s' "$limpo"
+          }
+
           montar() {
             local rotulo="$1" url="$2" host="$3" usuario="$4" senha="$5"
             if [ -n "$host" ] || [ -n "$usuario" ] || [ -n "$senha" ]; then
@@ -79,9 +98,28 @@ jobs:
                 echo "::error::$rotulo: informe os TRÊS campos (HOST, USER, PASSWORD) ou nenhum." >&2
                 return 1
               fi
+              host=$(higienizar "$rotulo" HOST "$host") || return 1
+              usuario=$(higienizar "$rotulo" USER "$usuario") || return 1
+              senha=$(higienizar "$rotulo" PASSWORD "$senha") || return 1
+              # O host é a única parte que NÃO pode ser codificada; então tem de
+              # vir puro: só nome de servidor e, opcionalmente, :porta.
+              case "$host" in
+                *://*)  echo "::error::$rotulo / HOST: informe só o servidor (ex.: aws-0-sa-east-1.pooler.supabase.com), sem postgresql://." >&2; return 1 ;;
+                *@*)    echo "::error::$rotulo / HOST: informe só o servidor, sem usuário@ na frente." >&2; return 1 ;;
+                */*)    echo "::error::$rotulo / HOST: informe só o servidor, sem /postgres no final." >&2; return 1 ;;
+                *\ *)   echo "::error::$rotulo / HOST: o valor tem espaço no meio." >&2; return 1 ;;
+                *"["*|*"]"*) echo "::error::$rotulo / HOST: o valor ainda tem colchetes do modelo do painel." >&2; return 1 ;;
+              esac
+              case "$senha" in
+                *"[YOUR-PASSWORD]"*|*"[SENHA]"*)
+                  echo "::error::$rotulo / PASSWORD: a senha não foi trocada — o valor ainda é o modelo do painel." >&2; return 1 ;;
+              esac
               # Codifica usuário e senha; assim caractere especial não quebra nada.
               local porta=5432 apenas_host="${host%%:*}"
               case "$host" in *:*) porta="${host##*:}" ;; esac
+              case "$porta" in
+                ''|*[!0-9]*) echo "::error::$rotulo / HOST: a porta depois dos dois-pontos não é um número." >&2; return 1 ;;
+              esac
               local u s
               u=$(USUARIO="$usuario" python3 -c 'import os,urllib.parse;print(urllib.parse.quote(os.environ["USUARIO"],safe=""))')
               s=$(SENHA="$senha" python3 -c 'import os,urllib.parse;print(urllib.parse.quote(os.environ["SENHA"],safe=""))')
@@ -89,11 +127,14 @@ jobs:
 
               return 0
             fi
+
             if [ -z "$url" ]; then
               echo "::error::$rotulo: nenhuma conexão informada. Cadastre os secrets (HOST/USER/PASSWORD é o caminho mais simples)." >&2
               return 1
             fi
+            url=$(higienizar "$rotulo" URL "$url") || return 1
             case "$url" in
+
               postgresql://*|postgres://*) : ;;
               *) echo "::error::$rotulo: o valor não começa com postgresql:// — foi colado incompleto. Use os secrets HOST/USER/PASSWORD." >&2; return 1 ;;
             esac
