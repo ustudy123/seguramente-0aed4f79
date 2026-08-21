@@ -51,29 +51,79 @@ jobs:
             exit 1
           fi
 
-      - name: Conferir que os secrets existem
+      - name: Montar e conferir as duas conexões
         env:
           PROD_URL: ${{ secrets.PRODUCAO_DB_URL_LEITURA }}
+          PROD_HOST: ${{ secrets.PRODUCAO_DB_HOST }}
+          PROD_USER: ${{ secrets.PRODUCAO_DB_USER }}
+          PROD_PASSWORD: ${{ secrets.PRODUCAO_DB_PASSWORD }}
           HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
+          HOMOLOG_HOST: ${{ secrets.HOMOLOGACAO_DB_HOST }}
+          HOMOLOG_USER: ${{ secrets.HOMOLOGACAO_DB_USER }}
+          HOMOLOG_PASSWORD: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
-          [ -n "$PROD_URL" ]    || { echo "::error::Falta o secret PRODUCAO_DB_URL_LEITURA"; exit 1; }
-          [ -n "$HOMOLOG_URL" ] || { echo "::error::Falta o secret HOMOLOGACAO_DB_URL"; exit 1; }
+          # Duas formas de informar cada conexão. A segunda existe porque a
+          # primeira é a origem do erro mais comum: URI colada errada, com os
+          # colchetes de [YOUR-PASSWORD], sem o prefixo postgresql://, ou com
+          # senha contendo @ / # / barra, que quebra o endereço.
+          #
+          #   FORMA A (uma linha):   PRODUCAO_DB_URL_LEITURA / HOMOLOGACAO_DB_URL
+          #   FORMA B (três campos): ..._DB_HOST, ..._DB_USER, ..._DB_PASSWORD
+          #
+          # A forma B é a recomendada: nada de montar endereço na mão, a senha
+          # vai crua e a esteira a codifica sozinha.
+          montar() {
+            local rotulo="$1" url="$2" host="$3" usuario="$4" senha="$5"
+            if [ -n "$host" ] || [ -n "$usuario" ] || [ -n "$senha" ]; then
+              if [ -z "$host" ] || [ -z "$usuario" ] || [ -z "$senha" ]; then
+                echo "::error::$rotulo: informe os TRÊS campos (HOST, USER, PASSWORD) ou nenhum." >&2
+                return 1
+              fi
+              # Codifica usuário e senha; assim caractere especial não quebra nada.
+              local porta=5432 apenas_host="${host%%:*}"
+              case "$host" in *:*) porta="${host##*:}" ;; esac
+              local u s
+              u=$(USUARIO="$usuario" python3 -c 'import os,urllib.parse;print(urllib.parse.quote(os.environ["USUARIO"],safe=""))')
+              s=$(SENHA="$senha" python3 -c 'import os,urllib.parse;print(urllib.parse.quote(os.environ["SENHA"],safe=""))')
+              printf 'postgresql://%s:%s@%s:%s/postgres?sslmode=require' "$u" "$s" "$apenas_host" "$porta"
 
-      - name: Conferir que o destino NÃO é a produção
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
-        run: |
+              return 0
+            fi
+            if [ -z "$url" ]; then
+              echo "::error::$rotulo: nenhuma conexão informada. Cadastre os secrets (HOST/USER/PASSWORD é o caminho mais simples)." >&2
+              return 1
+            fi
+            case "$url" in
+              postgresql://*|postgres://*) : ;;
+              *) echo "::error::$rotulo: o valor não começa com postgresql:// — foi colado incompleto. Use os secrets HOST/USER/PASSWORD." >&2; return 1 ;;
+            esac
+            case "$url" in
+              *"[YOUR-PASSWORD]"*|*"[SENHA]"*)
+                echo "::error::$rotulo: a senha não foi trocada — o valor ainda tem [YOUR-PASSWORD]." >&2; return 1 ;;
+            esac
+            printf '%s' "$url"
+          }
+
+          PROD_CONN="$(montar 'Produção (leitura)' "$PROD_URL" "$PROD_HOST" "$PROD_USER" "$PROD_PASSWORD")" || exit 1
+          HOMOLOG_CONN="$(montar 'Homologação' "$HOMOLOG_URL" "$HOMOLOG_HOST" "$HOMOLOG_USER" "$HOMOLOG_PASSWORD")" || exit 1
+
           # A trava mais importante do arquivo. O destino é apagado e recriado;
-          # se alguém trocar o secret pela conexão da produção, por engano ou
-          # por copiar-colar, esta linha impede o desastre.
-          case "$HOMOLOG_URL" in
-            *"$PRODUCAO_REF"*)
-              echo "::error::O destino aponta para a PRODUÇÃO. Abortando."; exit 1 ;;
+          # se alguém apontar o destino para a produção, por engano ou por
+          # copiar-colar, estas linhas impedem o desastre.
+          case "$HOMOLOG_CONN" in
+            *"$PRODUCAO_REF"*) echo "::error::O destino aponta para a PRODUÇÃO. Abortando."; exit 1 ;;
           esac
-          case "$HOMOLOG_URL" in
+          case "$HOMOLOG_CONN" in
             *"$HOMOLOGACAO_REF"*) echo "Destino confere: homologação." ;;
             *) echo "::error::O destino não é o projeto de homologação. Abortando."; exit 1 ;;
           esac
+
+          # Guarda as duas conexões para os passos seguintes. Ficam mascaradas
+          # nos logs: o valor entra como secret da própria corrida.
+          echo "::add-mask::$PROD_CONN"
+          echo "::add-mask::$HOMOLOG_CONN"
+          echo "PROD_CONN=$PROD_CONN"       >> "$GITHUB_ENV"
+          echo "HOMOLOG_CONN=$HOMOLOG_CONN" >> "$GITHUB_ENV"
 
       - name: Instalar as ferramentas do PostgreSQL 17
         run: |
@@ -83,16 +133,24 @@ jobs:
           sudo apt-get install -y -qq postgresql-client-17
           pg_dump --version
 
-      - name: Ler a estrutura da produção (somente leitura, sem dados)
-        env:
-          PROD_URL: ${{ secrets.PRODUCAO_DB_URL_LEITURA }}
+      - name: Provar que as duas conexões respondem
         run: |
-          pg_dump "$PROD_URL" \
+          # Falha aqui é falha de credencial, não de estrutura — e a mensagem
+          # diz qual das duas conexões está errada, em vez de um erro de socket.
+          psql "$PROD_CONN"    -tAc 'select current_user' \
+            || { echo "::error::Não conectou na PRODUÇÃO (leitura). Confira usuário/senha/host do Session pooler."; exit 1; }
+          psql "$HOMOLOG_CONN" -tAc 'select current_user' \
+            || { echo "::error::Não conectou na HOMOLOGAÇÃO. Confira usuário/senha/host do Session pooler."; exit 1; }
+
+      - name: Ler a estrutura da produção (somente leitura, sem dados)
+        run: |
+          pg_dump "$PROD_CONN" \
             --schema-only --schema=public \
             --no-owner --no-privileges \
             --no-publications --no-subscriptions \
             -f estrutura_producao.sql
           ls -lh estrutura_producao.sql
+
 
       - name: Conferir que NENHUM dado veio junto
         run: |
@@ -107,28 +165,22 @@ jobs:
           echo "Nenhuma linha de dado no retrato — só estrutura."
 
       - name: Recriar o schema public da homologação
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
         run: |
-          psql "$HOMOLOG_URL" -v ON_ERROR_STOP=1 -c \
+          psql "$HOMOLOG_CONN" -v ON_ERROR_STOP=1 -c \
             'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;'
 
       - name: Aplicar a estrutura na homologação
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
         run: |
           # Sem ON_ERROR_STOP: restaurar retrato em projeto novo sempre reclama
           # de extensão e permissão que o Supabase já criou sozinho. O que
           # importa é o resultado final, conferido no passo seguinte.
-          psql "$HOMOLOG_URL" -f estrutura_producao.sql 2>&1 | tee restauracao.log | tail -40
+          psql "$HOMOLOG_CONN" -f estrutura_producao.sql 2>&1 | tee restauracao.log | tail -40
           echo "---"
           echo "Total de avisos/erros na restauração: $(grep -c '^ERROR' restauracao.log || true)"
 
       - name: Conferir o resultado
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
         run: |
-          psql "$HOMOLOG_URL" -A -F' | ' -c "
+          psql "$HOMOLOG_CONN" -A -F' | ' -c "
             SELECT 'tabelas'  AS item, count(*)::text FROM pg_class c
               JOIN pg_namespace n ON n.oid=c.relnamespace
              WHERE n.nspname='public' AND c.relkind='r'
