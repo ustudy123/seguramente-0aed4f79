@@ -73,19 +73,36 @@ WITH numeros AS MATERIALIZED (
    WHERE n.nspname = 'public'
 
   UNION ALL
-  SELECT 8, 'restricoes', count(*),
+  -- Desta linha sai a explicação da anterior. Índice INVÁLIDO é o que sobra de
+  -- um CREATE INDEX CONCURRENTLY que falhou no meio: existe no catálogo, o
+  -- planejador não usa para consultar, e o banco continua atualizando a cada
+  -- gravação. O pg_dump não o copia (conferido: um índice marcado inválido
+  -- simplesmente não aparece no retrato), então cada um deles vira uma unidade
+  -- de diferença na linha "indices" — e a diferença é da PRODUÇÃO, não da cópia.
+  --
+  -- Se "indices" diferir, confira aqui: prod menos homologação tem que dar
+  -- exatamente este número. Se der, não há nada errado com a cópia; há um
+  -- índice morto na produção para limpar.
+  SELECT 8, 'indices invalidos', count(*),
+         'lixo de CREATE INDEX que falhou — NAO copiado; explica a linha acima'
+    FROM pg_index i JOIN pg_class c ON c.oid = i.indrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+   WHERE n.nspname = 'public' AND NOT i.indisvalid
+
+  UNION ALL
+  SELECT 9, 'restricoes', count(*),
          'CHECK, chaves primárias, estrangeiras e únicas'
     FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
    WHERE n.nspname = 'public'
 
   UNION ALL
-  SELECT 9, 'tipos_enum', count(*),
+  SELECT 10, 'tipos_enum', count(*),
          'os ENUM do projeto (admissao_status, perfil_escopo_tipo, ...)'
     FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
    WHERE n.nspname = 'public' AND t.typtype = 'e'
 
   UNION ALL
-  SELECT 10, 'valores_de_enum', count(*),
+  SELECT 11, 'valores_de_enum', count(*),
          'soma dos valores de todos os ENUM — pega valor faltando'
     FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid
     JOIN pg_namespace n ON n.oid = t.typnamespace
@@ -95,7 +112,7 @@ WITH numeros AS MATERIALIZED (
   -- Lido direto do catálogo, e não por information_schema: as visões do
   -- information_schema escondem permissões de papéis que o usuário atual não
   -- integra, e o número viria menor na produção só por causa de quem consulta.
-  SELECT 11, 'permissoes de tela', count(*),
+  SELECT 12, 'permissoes de tela', count(*),
          'GRANT para anon/authenticated — NAO copiado pela esteira, ver cabecalho'
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
