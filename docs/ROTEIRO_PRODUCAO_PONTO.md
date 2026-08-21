@@ -84,6 +84,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 44 | Onda 9 — instrumento coletivo vigente na competência (vigilância de vigência) | `docs/script_ponto_onda9_cct_vigencia.sql` | — | ⏳ | ⬜ |
 | 45 | QA (metadado) — atualiza a disposição dos 6 casos de tela conforme auditoria as-built | `docs/script_qa_disposicao_ponto_telas.sql` | — | ⏳ | ⬜ (opcional) |
 | 46 | Onda 10 (parte 1) — escala 12x36 só vale com acordo formal (art. 59-A) | `docs/script_ponto_onda10_escala_12x36_formalizacao.sql` | — | ⏳ | ⬜ |
+| 47 | Onda 10 (parte 2) — revezamento: jornada de 6h, salvo coletivo (CF art. 7º, XIV) | `docs/script_ponto_onda10_escala_revezamento.sql` | **#46** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1113,6 +1114,30 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** o aviso de "escala 12x36 sem acordo" no cadastro
   e o anexo do acordo no módulo Documentos são de tela; a verificação e a pendência
   já estão no banco.
+
+### 47 · Onda 10 (parte 2) — revezamento: jornada de 6h, salvo coletivo (ESC-031)
+- **Arquivo:** `docs/script_ponto_onda10_escala_revezamento.sql`
+- **Depende do #46** (estende as mesmas funções de formalização).
+- **O que faz:** o turno ininterrupto de **revezamento** tem jornada
+  constitucional de **6 horas** (CF art. 7º, XIV); só a negociação coletiva amplia
+  (o STF admite até 8h por CCT/ACT). Hoje o revezamento **não existe** como
+  conceito — a modalidade só conhece `fixa`/`movel` e nada valida as 6h. O pacote
+  (1) **tipifica `revezamento`** na modalidade da escala e (2) estende a
+  formalização: revezamento **acima de 6h** sem instrumento **coletivo** (CCT/ACT
+  anexado ou coletivo vigente) gera **pendência/alerta**. Revezamento de até 6h é
+  regular (piso constitucional); acordo **individual** não autoriza ampliar.
+- **Baixo risco:** não altera o motor de saldo, a apuração, o espelho nem o
+  fechamento. A troca do CHECK só **amplia** o conjunto (superset) — nenhuma linha
+  atual deixa de passar. **Aditivo e idempotente.** `SET lock_timeout='10s'` na DDL.
+- **Conferência esperada:** `t | t | t | OK` — modalidade aceita revezamento,
+  verificador o menciona, monitor presente.
+- **Na bateria** só o **ESC-031** passou a passar (falhou→passou); regressão zero
+  (114→115 verdes). Provado em transação (dados fictícios): revezamento de 8h sem
+  coletivo → `pendente` e 1 alerta; de 6h → `regular`; de 8h com CCT anexada →
+  `regular`; segunda rodada do monitor não duplica.
+- **Tela (Publicar no Lovable):** a opção "revezamento" no cadastro da escala e o
+  aviso de jornada acima de 6h sem coletivo são de tela; a tipificação, a
+  verificação e a pendência já estão no banco.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
