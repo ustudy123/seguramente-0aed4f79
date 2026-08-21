@@ -185,15 +185,35 @@ O que ela faz, e o que impede:
 #### 3.4. Conferir
 
 O último passo da esteira imprime a contagem de tabelas, funções e políticas.
-**Compare com a produção: os números têm que bater.**
+Três números só dizem alguma coisa se houver com o que comparar.
 
-Para uma conferência completa, rode na homologação os scripts
+Use `docs/script_conferencia_homologacao.sql`: cole no SQL Editor da **produção**,
+guarde o resultado, cole o **mesmo arquivo** no SQL Editor da **homologação** e
+compare linha a linha. São onze medidas (tabelas, colunas, visões, funções,
+políticas, gatilhos, índices, restrições, enums, valores de enum e permissões),
+e todas devem bater — **menos uma**, explicada abaixo.
+
+É só leitura: rodar na produção é seguro, e rodar duas vezes não muda nada.
+
+Para uma conferência ainda mais completa, rode na homologação os scripts
 `docs/script_divergencia_producao_parte1.sql` e `parte2.sql`. O resultado tem que
 ser **igual ao da produção** — as mesmas tabelas faltando, as mesmas colunas, o
 mesmo motor de QA incompleto.
 
 Igualdade aqui não é defeito: é a prova de que a cópia é fiel. A homologação não
 deve estar "certa"; deve estar igual à produção, defeitos e tudo.
+
+> **A diferença esperada: as permissões.** A esteira roda o `pg_dump` com
+> `--no-privileges`, então os `GRANT` para `anon` e `authenticated` — que é
+> como as telas leem o banco — **não** são copiados. Na produção a linha
+> "permissoes de tela" vem na casa dos milhares; na homologação vem zero.
+>
+> Isso decorre do que a homologação é hoje: um espelho de estrutura, para
+> conferir se um **script de entrega aplica** contra a estrutura real. Não é,
+> ainda, um ambiente onde se navega pelas telas — sem os `GRANT`, o
+> `npm run dev:homologacao` conecta mas não lê nada. Se um dia a homologação
+> precisar servir as telas, o caminho é copiar as permissões junto (tirar o
+> `--no-privileges` do passo de leitura) e rodar a esteira de novo.
 
 ### 4. Semear dados fictícios
 
