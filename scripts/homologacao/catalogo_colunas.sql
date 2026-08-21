@@ -57,6 +57,12 @@ SELECT quote_ident(n.nspname) || '.' || quote_ident(c.relname)
   JOIN pg_type t      ON t.oid = a.atttypid
  WHERE a.attnum > 0
    AND NOT a.attisdropped
+   -- Coluna GERADA é calculada pelo banco a partir das outras, e o COPY a
+   -- recusa: "column ... is a generated column". São duas no schema
+   -- (plano_acoes.pontuacao_gut e ordens_servico.numero_formatado), e cada
+   -- uma derrubava a tabela inteira. Ficam de fora dos dois lados — o
+   -- destino as recalcula sozinho, que é para isso que existem.
+   AND a.attgenerated = ''
    -- Só tabelas comuns e particionadas. Visão não se copia: ela se recalcula
    -- a partir das tabelas, e copiar dados para dentro de uma nem é possível.
    AND c.relkind IN ('r', 'p')
