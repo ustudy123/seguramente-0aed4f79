@@ -168,28 +168,22 @@ PY
           echo "Nenhuma linha de dado no retrato — só estrutura."
 
       - name: Recriar o schema public da homologação
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
         run: |
-          psql "$HOMOLOG_URL" -v ON_ERROR_STOP=1 -c \
+          psql "$HOMOLOG_CONN" -v ON_ERROR_STOP=1 -c \
             'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;'
 
       - name: Aplicar a estrutura na homologação
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
         run: |
           # Sem ON_ERROR_STOP: restaurar retrato em projeto novo sempre reclama
           # de extensão e permissão que o Supabase já criou sozinho. O que
           # importa é o resultado final, conferido no passo seguinte.
-          psql "$HOMOLOG_URL" -f estrutura_producao.sql 2>&1 | tee restauracao.log | tail -40
+          psql "$HOMOLOG_CONN" -f estrutura_producao.sql 2>&1 | tee restauracao.log | tail -40
           echo "---"
           echo "Total de avisos/erros na restauração: $(grep -c '^ERROR' restauracao.log || true)"
 
       - name: Conferir o resultado
-        env:
-          HOMOLOG_URL: ${{ secrets.HOMOLOGACAO_DB_URL }}
         run: |
-          psql "$HOMOLOG_URL" -A -F' | ' -c "
+          psql "$HOMOLOG_CONN" -A -F' | ' -c "
             SELECT 'tabelas'  AS item, count(*)::text FROM pg_class c
               JOIN pg_namespace n ON n.oid=c.relnamespace
              WHERE n.nspname='public' AND c.relkind='r'
