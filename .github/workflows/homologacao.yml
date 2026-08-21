@@ -32,7 +32,7 @@
 #
 # O QUE PRECISA ESTAR CONFIGURADO
 #   Secrets (Settings > Secrets and variables > Actions):
-#     PRODUCAO_DB_PASSWORD      senha do usuário homologacao_leitor
+#     PRODUCAO_DB_PASSWORD      senha do usuário homologacao_leitor_v2
 #     HOMOLOGACAO_DB_PASSWORD   senha do banco da homologação
 #   Só as senhas. Os endereços você digita no formulário ao apertar o botão
 #   — ficam visíveis de propósito: erro em valor secreto é erro que ninguém
@@ -69,7 +69,10 @@ jobs:
       HOMOLOGACAO_REF: fgsblefvdabgdouipigz
       # Usuários do pooler: o formato é sempre "usuario.projeto". Não são
       # segredo, e ficam aqui para não haver o que digitar errado.
-      PRODUCAO_USER: homologacao_leitor.diayjpsrcerycycyaxst
+      # v2 usa uma identidade nova no Supavisor. A credencial da role anterior
+      # ficou presa no cache do pooler mesmo após vários ALTER ROLE; trocar só a
+      # senha continuava consultando a entrada antiga.
+      PRODUCAO_USER: homologacao_leitor_v2.diayjpsrcerycycyaxst
       HOMOLOGACAO_USER: postgres.fgsblefvdabgdouipigz
       # Os endereços chegam CRUS, como foram digitados. O passo de conferência
       # publica as versões limpas como HOST_PRODUCAO e HOST_HOMOLOGACAO, e são
@@ -101,7 +104,7 @@ jobs:
           HOMOLOG_HOST_SECRET: ${{ secrets.HOMOLOGACAO_DB_HOST }}
         run: |
           erro=0
-          [ -n "$PROD_PASS" ]    || { echo "::error::Falta o secret PRODUCAO_DB_PASSWORD (senha do usuário homologacao_leitor)"; erro=1; }
+          [ -n "$PROD_PASS" ]    || { echo "::error::Falta o secret PRODUCAO_DB_PASSWORD (senha do usuário homologacao_leitor_v2)"; erro=1; }
           [ -n "$HOMOLOG_PASS" ] || { echo "::error::Falta o secret HOMOLOGACAO_DB_PASSWORD"; erro=1; }
 
           # Campo em branco cai no secret de host, se ele existir de versões
@@ -195,26 +198,13 @@ jobs:
 
           # Falhar aqui é falha de credencial, não de estrutura — e a mensagem
           # diz QUAL das duas está errada, antes de qualquer trabalho pesado.
-          # O Supavisor pode conservar a credencial anterior por alguns minutos
-          # após ALTER ROLE; o retry absorve essa janela sem incentivar outra
-          # troca de senha, que reiniciaria a sincronização.
-          conectou_producao=0
-          for tentativa in 1 2 3 4 5; do
-            if PGPASSWORD="$PROD_PASS" psql \
-              "host=$HOST_PRODUCAO port=5432 user=$PRODUCAO_USER dbname=postgres connect_timeout=10" \
-              -tAc 'select current_user'; then
-              conectou_producao=1
-              break
-            fi
-            echo "::warning::Produção recusou a tentativa $tentativa/5; aguardando sincronização do pooler."
-            [ "$tentativa" -eq 5 ] || sleep 15
-          done
-          if [ "$conectou_producao" -ne 1 ]; then
-            echo "::error::A PRODUÇÃO recusou a autenticação após 5 tentativas."
-            echo "::error::Não altere a senha novamente. Confirme se o secret PRODUCAO_DB_PASSWORD contém exatamente a senha definida para homologacao_leitor e aguarde a sincronização do Session pooler."
-            echo "::error::Se persistir, confira Database Settings > Network Bans no Supabase e remova o IP bloqueado exibido ali."
-            exit 1
-          fi
+          PGPASSWORD="$PROD_PASS" psql \
+            "host=$HOST_PRODUCAO port=5432 user=$PRODUCAO_USER dbname=postgres connect_timeout=10" \
+            -tAc 'select current_user' \
+            || {
+              echo "::error::A PRODUÇÃO recusou homologacao_leitor_v2. Rode a versão atual de docs/script_homologacao_leitor_producao.sql e copie para PRODUCAO_DB_PASSWORD exatamente a senha definida nele."
+              exit 1
+            }
           PGPASSWORD="$HOMOLOG_PASS" psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres \
             -tAc 'select current_user' \
             || { echo "::error::Não conectou na HOMOLOGAÇÃO. Confira o secret HOMOLOGACAO_DB_PASSWORD e o endereço informado."; exit 1; }
