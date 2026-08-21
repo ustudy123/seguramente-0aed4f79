@@ -93,8 +93,56 @@ jobs:
         run: |
           npm ci
           npm run build:staging -- --base=/seguramente-0aed4f79/
-          # SPA em host estático: rota desconhecida cai no index
-          cp dist/index.html dist/404.html
+
+      - name: Build de homologação (sob /homologacao/ do mesmo Pages)
+        run: |
+          # O Pages publica UM site por repositório, então os dois ambientes
+          # dividem o mesmo endereço em pastas diferentes. Sai mais barato que
+          # um segundo host e não precisa de conta nova:
+          #
+          #   teste       -> .../seguramente-0aed4f79/
+          #   homologação -> .../seguramente-0aed4f79/homologacao/
+          #
+          # A trava do vite.config.ts vale aqui: se o .env.homologacao
+          # apontasse para o Supabase de produção, este build não nasceria.
+          npm run build:homologacao -- \
+            --base=/seguramente-0aed4f79/homologacao/ \
+            --outDir=dist-homologacao
+          mv dist-homologacao dist/homologacao
+          cp dist/homologacao/index.html dist/homologacao/404.html
+
+      - name: Rota desconhecida cai no app CERTO
+        run: |
+          # SPA em host estático: quem pede /ferias direto recebe 404, e o
+          # 404.html é que carrega o app. Com dois ambientes no mesmo site,
+          # isso vira um risco: o 404 da raiz é o app de TESTE, então um link
+          # fundo de homologação abriria o teste — e a pessoa acharia que está
+          # olhando um ambiente enquanto olha o outro. Confundir os dois é o
+          # erro mais caro que este site pode causar.
+          #
+          # O desvio abaixo roda antes de qualquer bundle: se o caminho pedido
+          # está sob /homologacao/, manda para o app de homologação e não deixa
+          # o de teste subir. Perde-se a rota interna do link fundo (abre na
+          # entrada), o que é preferível a abrir o ambiente errado.
+          python3 - <<'PY'
+          import io
+          base = '/seguramente-0aed4f79/homologacao/'
+          guarda = (
+            '<script>(function(){var b=' + repr(base).replace("'", '"') + ';'
+            # O `!== b` evita laço: se a pasta da homologação faltar, o próprio
+            # endereço de entrada cairia no 404 e se redirecionaria para sempre.
+            'if(location.pathname.indexOf(b)===0&&location.pathname!==b)'
+            '{location.replace(b);}})();</script>'
+          )
+          html = io.open('dist/index.html', encoding='utf-8').read()
+          i = html.lower().find('<head>')
+          if i == -1:
+              raise SystemExit('index.html sem <head> — o desvio nao seria aplicado')
+          i += len('<head>')
+          io.open('dist/404.html', 'w', encoding='utf-8').write(html[:i] + guarda + html[i:])
+          print('404.html da raiz criado com o desvio para a homologacao')
+          PY
+          grep -q 'homologacao' dist/404.html || { echo "::error::O desvio nao entrou no 404.html"; exit 1; }
       - uses: actions/configure-pages@v5
         with:
           enablement: true

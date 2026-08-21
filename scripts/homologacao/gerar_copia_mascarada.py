@@ -33,6 +33,17 @@ Colunas que não são texto (data, número, booleano, uuid) passam intactas:
 não carregam nome nem documento, e são elas que dão realismo ao ensaio —
 volume, datas, valores, chaves.
 
+Com DUAS exceções, que quase escaparam justamente por não serem "texto":
+
+  · jsonb/json — 120 colunas no schema. O tipo não é texto, mas o conteúdo
+    é livre: auth.users.raw_user_meta_data guarda nome completo e e-mail
+    do usuário. Passariam inteiras.
+  · text[] — 39 colunas. Mesma história, em lista.
+
+As duas viram vazio ('{}'). Perde-se o conteúdo, preserva-se o tipo e o
+NULL. Se alguma delas fizer falta no ensaio, entra na lista de preservadas
+— de novo, o erro que se conserta é o que aparece.
+
 O QUE É PRESERVADO, E POR QUÊ
 -----------------------------
 1. Colunas com CHECK do tipo `IN (...)` / `= ANY (ARRAY[...])`. São enums
@@ -112,6 +123,11 @@ PRESERVAR_SEMPRE = {
     # deles (licença-maternidade olha sexo; admissão olha escolaridade).
     # Se a decisão for outra, basta tirar daqui.
     "sexo", "genero", "estado_civil", "escolaridade",
+
+    # Colunas do auth.users de que o login depende. `aud` e `role` valem
+    # 'authenticated' — embaralhar isso não vazaria nada e impediria
+    # qualquer pessoa de entrar, com um erro que não diria por quê.
+    "aud", "role", "email_change", "phone_change",
 }
 
 # Colunas mascaradas com formato preservado. A ordem importa: a primeira
@@ -137,20 +153,34 @@ REGRAS_FORMATO = [
 
 # Credenciais: não basta embaralhar, tem que deixar de funcionar. Token
 # copiado continua sendo token válido em algum lugar.
-PADROES_CREDENCIAL = ("token", "senha", "secret", "hash", "chave_api", "api_key")
+# "password" está aqui por causa de auth.users.encrypted_password: o hash da
+# senha REAL não pode sair da produção. Hash de senha é credencial, não é
+# "dado já protegido" — quem o tem pode atacá-lo offline, no seu tempo.
+PADROES_CREDENCIAL = ("token", "senha", "password", "secret", "hash",
+                      "chave_api", "api_key")
 
 
 def eh_texto(tipo: str) -> bool:
     return tipo in TIPOS_TEXTO
 
 
-def classificar(coluna: str, tipo: str, tem_check_enum: bool) -> str:
-    """Devolve o tipo de tratamento: 'copiar', 'cpf', 'cnpj', 'email',
-    'telefone', 'cep', 'credencial' ou 'generico'."""
+def classificar(coluna: str, tipo: str, tem_check_enum: bool,
+                coluna_e_lista_de_texto: bool = False) -> str:
+    """Devolve o tratamento: 'copiar', 'cpf', 'cnpj', 'email', 'telefone',
+    'cep', 'credencial', 'json_vazio', 'lista_vazia' ou 'generico'."""
     c = coluna.lower()
 
+    if tipo in ("jsonb", "json"):
+        # Não é texto, mas carrega texto livre — e é onde mora o nome
+        # completo do usuário, em auth.users.raw_user_meta_data.
+        return "json_vazio"
+
+    if tipo == "ARRAY" and coluna_e_lista_de_texto:
+        # text[]: mesma exposição de uma coluna de texto, em lista.
+        return "lista_vazia"
+
     if not eh_texto(tipo):
-        # Data, número, booleano, uuid, jsonb: passam intactos. São eles que
+        # Data, número, booleano, uuid, enum: passam intactos. São eles que
         # dão o volume e as datas de que o ensaio precisa.
         return "copiar"
 
@@ -263,7 +293,19 @@ def expr_generico(col: str, tempero: str) -> str:
     return f"(CASE WHEN {col} IS NULL THEN NULL ELSE 'anon-' || substr({s},1,12) END)"
 
 
+def expr_json_vazio(col: str, tempero: str) -> str:
+    """Objeto vazio, não NULL: coluna NOT NULL continua válida, e quem lê
+    encontra json legítimo em vez de quebrar no parse."""
+    return f"(CASE WHEN {col} IS NULL THEN NULL ELSE '{{}}'::jsonb END)"
+
+
+def expr_lista_vazia(col: str, tempero: str) -> str:
+    return f"(CASE WHEN {col} IS NULL THEN NULL ELSE '{{}}'::text[] END)"
+
+
 EXPRESSOES = {
+    "json_vazio": expr_json_vazio,
+    "lista_vazia": expr_lista_vazia,
     "cpf": expr_cpf,
     "cnpj": expr_cnpj,
     "email": expr_email,
@@ -296,8 +338,10 @@ def main() -> int:
     tempero_sql = "'" + tempero.replace("'", "''") + "'"
 
     tabelas: dict[str, list[str]] = {}
-    resumo = {"copiar": 0, "generico": 0, "credencial": 0,
-              "cpf": 0, "cnpj": 0, "email": 0, "telefone": 0, "cep": 0}
+    nomes: dict[str, list[str]] = {}
+    resumo = {"copiar": 0, "generico": 0, "credencial": 0, "json_vazio": 0,
+              "lista_vazia": 0, "cpf": 0, "cnpj": 0, "email": 0,
+              "telefone": 0, "cep": 0}
 
     with open(caminho, encoding="utf-8") as f:
         for linha in f:
@@ -308,21 +352,31 @@ def main() -> int:
             if len(partes) < 4:
                 continue
             tabela, coluna, tipo, check = partes[0], partes[1], partes[2], partes[3]
-            tratamento = classificar(coluna, tipo, check in ("t", "true", "1"))
+            # 5ª coluna, opcional: 't' quando é lista DE TEXTO (text[]).
+            lista_texto = len(partes) > 4 and partes[4] in ("t", "true", "1")
+            tratamento = classificar(coluna, tipo, check in ("t", "true", "1"),
+                                     lista_texto)
             resumo[tratamento] = resumo.get(tratamento, 0) + 1
             tabelas.setdefault(tabela, []).append(
                 expressao(coluna, tratamento, tempero_sql))
+            nomes.setdefault(tabela, []).append(f'"{coluna}"')
 
     for tabela, colunas in sorted(tabelas.items()):
-        # Uma linha por tabela: nome <TAB> lista de colunas já mascaradas.
-        # Quem consome monta o COPY (SELECT ...) TO STDOUT.
-        print(f"{tabela}\t{', '.join(colunas)}")
+        # Uma linha por tabela, três campos separados por TAB:
+        #   tabela | expressões já mascaradas | nomes das colunas
+        #
+        # O terceiro existe para o COPY do destino nomear as colunas em vez
+        # de confiar na ordem. Se um dia as duas estruturas divergirem em
+        # ordem, um COPY posicional carregaria a coluna errada em silêncio —
+        # data em campo de texto, e o erro apareceria longe daqui.
+        print(f"{tabela}\t{', '.join(colunas)}\t{', '.join(nomes[tabela])}")
 
     total = sum(resumo.values())
     mascaradas = total - resumo["copiar"]
     print(f"-- colunas: {total} | copiadas: {resumo['copiar']} | mascaradas: {mascaradas}",
           file=sys.stderr)
-    for k in ("cpf", "cnpj", "email", "telefone", "cep", "credencial", "generico"):
+    for k in ("cpf", "cnpj", "email", "telefone", "cep", "credencial",
+              "json_vazio", "lista_vazia", "generico"):
         if resumo.get(k):
             print(f"--   {k}: {resumo[k]}", file=sys.stderr)
     return 0
