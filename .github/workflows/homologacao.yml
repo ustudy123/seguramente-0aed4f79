@@ -132,7 +132,9 @@ jobs:
               echo "::error::$rotulo: nenhuma conexão informada. Cadastre os secrets (HOST/USER/PASSWORD é o caminho mais simples)." >&2
               return 1
             fi
+            url=$(higienizar "$rotulo" URL "$url") || return 1
             case "$url" in
+
               postgresql://*|postgres://*) : ;;
               *) echo "::error::$rotulo: o valor não começa com postgresql:// — foi colado incompleto. Use os secrets HOST/USER/PASSWORD." >&2; return 1 ;;
             esac
