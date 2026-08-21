@@ -87,6 +87,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 47 | Onda 10 (parte 2) — revezamento: jornada de 6h, salvo coletivo (CF art. 7º, XIV) | `docs/script_ponto_onda10_escala_revezamento.sql` | **#46** | ⏳ | ⬜ |
 | 48 | Onda 10 (parte 3) — radar de cobertura de turno (turno descoberto avisado antes) | `docs/script_ponto_onda10_cobertura_turno.sql` | — | ⏳ | ⬜ |
 | 49 | Onda 10 (parte 4) — troca de turno com aprovação e recálculo (fecha a onda 10) | `docs/script_ponto_onda10_troca_turno.sql` | — | ⏳ | ⬜ |
+| 50 | Onda 11 (parte 1) — atestado acima de 15 dias encaminha ao INSS (Lei 8.213) | `docs/script_ponto_onda11_atestado_encaminha_inss.sql` | — | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1189,6 +1190,29 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Tela (Publicar no Lovable):** a solicitação, a aprovação do gestor e o aviso de
   risco de interjornada são de tela; o fluxo, a simulação e a efetivação já estão
   no banco.
+
+### 50 · Onda 11 (parte 1) — atestado acima de 15 dias encaminha ao INSS (ESC-010)
+- **Arquivo:** `docs/script_ponto_onda11_atestado_encaminha_inss.sql`
+- **Abre a onda 11** (atestados/afastamentos — área de saúde, LGPD sensível).
+- **O que faz:** o atestado longo muda de natureza no **16º dia** — até 15 dias a
+  empresa abona; do 16º em diante é **benefício previdenciário do INSS** (Lei 8.213,
+  arts. 59-60). Hoje um atestado de 20 dias entra e **nenhum afastamento nasce**.
+  Um gatilho `BEFORE INSERT` em `atestados` passa a, quando o período **passa de 15
+  dias** e o atestado ainda não tem afastamento vinculado, **criar** o afastamento
+  previdenciário (status `beneficio_inss`, tipo B31, começando no 16º dia),
+  **vincular** em `atestados.afastamento_id` e **alertar o DP** — uma única vez.
+- **Baixo risco:** a criação do afastamento é **defensiva** (`EXCEPTION → NOTICE`):
+  qualquer falha na cadeia de gatilhos de `afastamentos` **não quebra** o registro
+  do atestado. Não altera o motor de saldo, a apuração, o espelho nem o fechamento.
+  **Aditivo e idempotente** (só age quando `afastamento_id` é nulo).
+- **Conferência esperada:** `t | t | OK` — a função da ponte existe e o gatilho está
+  em `atestados`.
+- **Na bateria** só o **ESC-010** passou a passar (falhou→passou); regressão zero
+  (117→118 verdes). Provado em transação (dados fictícios): atestado de 20 dias →
+  afastamento `beneficio_inss` criado a partir do 16º dia, vinculado, com alerta ao
+  DP; atestado de 10 dias → **nada** (abono da empresa, não encaminha).
+- **Tela (Publicar no Lovable):** o aviso de encaminhamento e a conferência do
+  benefício aparecem no painel; a ponte já está no banco.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
