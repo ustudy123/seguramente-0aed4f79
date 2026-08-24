@@ -580,10 +580,18 @@ jobs:
             printf '%-40s %8s\n' "$1" "$n"
             [ "${n:-0}" -gt 0 ] && fugiu=1 || true
           }
+          # CPF VAZIO NÃO É CPF ESCAPADO. A máscara só deixa passar, sem
+          # transformar, dois valores: NULL e a string vazia — e vazio não
+          # identifica ninguém. A primeira versão desta conferência contava o
+          # vazio como fuga, e UM cadastro sem CPF na produção derrubou uma
+          # corrida inteira que tinha copiado 624 mil linhas certas. Por isso
+          # o filtro exige que sobre ALGUM dígito antes de julgar o primeiro.
           conferir "CPF que nao comeca com 9" "
             SELECT coalesce(sum(n),0) FROM (
               SELECT count(*) n FROM public.usuarios_base
-               WHERE cpf IS NOT NULL AND left(regexp_replace(cpf,'[^0-9]','','g'),1) <> '9'
+               WHERE cpf IS NOT NULL
+                 AND regexp_replace(cpf,'[^0-9]','','g') <> ''
+                 AND left(regexp_replace(cpf,'[^0-9]','','g'),1) <> '9'
             ) x;"
           conferir "e-mail fora de .invalid (auth)" "
             SELECT count(*) FROM auth.users
@@ -593,8 +601,26 @@ jobs:
              WHERE raw_user_meta_data IS NOT NULL AND raw_user_meta_data <> '{}'::jsonb;"
 
           if [ "$fugiu" -ne 0 ]; then
-            echo "::error::Dado identificável chegou à homologação. Apagando o schema por precaução."
-            homolog -q -c 'DROP SCHEMA IF EXISTS public CASCADE;' || true
+            echo "::error::Dado identificável chegou à homologação. Apagando os dados por precaução."
+            # NÃO é um DROP SCHEMA CASCADE: com as 351 tabelas cheias, esse
+            # comando único estoura o limite de travas do banco ("out of
+            # shared memory") — foi exatamente o que aconteceu na primeira
+            # vez que esta limpeza de emergência disparou, e ela FALHOU no
+            # único momento em que não podia falhar. TRUNCATE tabela a
+            # tabela descarta as linhas sem derrubar objeto nenhum: barato
+            # em travas, e o que importa aqui é o DADO sumir.
+            homolog -tA -c "
+              SELECT format('TRUNCATE TABLE %s.%I CASCADE;', n.nspname, c.relname)
+                FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+               WHERE c.relkind IN ('r','p')
+                 AND (n.nspname = 'public'
+                      OR (n.nspname = 'auth' AND c.relname = 'users'));" > limpar.sql
+            homolog -q -f limpar.sql 2>&1 | grep -c 'ERROR:' || true
+            restante=$(homolog -tAc "
+              SELECT coalesce(sum(x.n),0) FROM (
+                SELECT (SELECT count(*) FROM public.usuarios_base) AS n
+                UNION ALL SELECT (SELECT count(*) FROM auth.users)) x;" || echo '?')
+            echo "Linhas restantes em usuarios_base + auth.users após a limpeza: $restante"
             exit 1
           fi
           echo "Nenhum dado identificável na homologação."
