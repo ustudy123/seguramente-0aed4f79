@@ -76,6 +76,19 @@ jobs:
     name: Site de teste (GitHub Pages)
     needs: banco
     runs-on: ubuntu-latest
+    env:
+      # O NOME DO REPOSITÓRIO VEM DO PRÓPRIO GITHUB, e não escrito à mão.
+      #
+      # O Pages de um repositório é servido em ustudy123.github.io/<nome>/, e
+      # o build precisa saber esse caminho para montar os endereços dos
+      # arquivos. Quando o repositório foi renomeado, o nome antigo continuou
+      # escrito aqui: o GitHub redirecionou o endereço velho por um tempo, o
+      # site pareceu funcionar, e quando o redirecionamento acabou a página
+      # passou a responder "There isn't a GitHub Pages site here" — um erro
+      # que não menciona renome nenhum e manda procurar no lugar errado.
+      #
+      # Derivando do próprio evento, um próximo renome se ajusta sozinho.
+      REPO: ${{ github.event.repository.name }}
     permissions:
       pages: write
       id-token: write
@@ -92,7 +105,7 @@ jobs:
       - name: Build de staging (sob o subcaminho do Pages)
         run: |
           npm ci
-          npm run build:staging -- --base=/youreyesnovo/
+          npm run build:staging -- --base="/$REPO/"
 
       - name: Build de homologação (sob /homologacao/ do mesmo Pages)
         run: |
@@ -101,12 +114,12 @@ jobs:
           # um segundo host e não precisa de conta nova:
           #
           #   teste       -> .../youreyesnovo/
-          #   homologação -> .../youreyesnovo/homologacao/
+          #   homologação -> .../<repositório>/homologacao/
           #
           # A trava do vite.config.ts vale aqui: se o .env.homologacao
           # apontasse para o Supabase de produção, este build não nasceria.
           npm run build:homologacao -- \
-            --base=/youreyesnovo/homologacao/ \
+            --base="/$REPO/homologacao/" \
             --outDir=dist-homologacao
           mv dist-homologacao dist/homologacao
           cp dist/homologacao/index.html dist/homologacao/404.html
@@ -125,8 +138,8 @@ jobs:
           # o de teste subir. Perde-se a rota interna do link fundo (abre na
           # entrada), o que é preferível a abrir o ambiente errado.
           python3 - <<'PY'
-          import io
-          base = '/youreyesnovo/homologacao/'
+          import io, os
+          base = '/' + os.environ['REPO'] + '/homologacao/'
           guarda = (
             '<script>(function(){var b=' + repr(base).replace("'", '"') + ';'
             # O `!== b` evita laço: se a pasta da homologação faltar, o próprio
