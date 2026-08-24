@@ -662,6 +662,102 @@ jobs:
           fi
           echo "Nenhum dado identificável na homologação."
 
+          # ---------------------------------------------------------------
+          # DEIXAR auth.users NO FORMATO QUE O SERVIÇO DE LOGIN ESPERA.
+          #
+          # A máscara é cega ao que cada campo significa — e foi por isso que
+          # o login passou a responder "Unexpected failure": erro do serviço
+          # de autenticação, não credencial errada, e a mensagem não diz qual
+          # campo é. Duas coisas atrapalhavam:
+          #
+          #  · raw_app_meta_data guarda COMO a pessoa entra ({"provider":
+          #    "email"}). É jsonb, então a máscara o esvaziou junto com o
+          #    resto — e ali também moram nome e e-mail, então esvaziar era
+          #    certo. Repor SÓ o provider não vaza nada: é 'email' para
+          #    todos. raw_user_meta_data, onde os dados pessoais ficam,
+          #    continua vazio.
+          #
+          #  · os campos de token são lidos como texto simples. NULO faz o
+          #    serviço quebrar; vazio é o que ele espera. A máscara preserva
+          #    o NULO de origem — correto como máscara, incompatível aqui.
+          #
+          # Roda no modo so_finalizar também, que é o barato: quem já tem a
+          # cópia carregada conserta o login em ~2 minutos.
+          # ---------------------------------------------------------------
+          homolog -q -v ON_ERROR_STOP=1 -c "
+            DO \$norm\$
+            DECLARE
+              c text;
+              colunas text[] := ARRAY['confirmation_token','recovery_token',
+                                      'email_change','email_change_token_new',
+                                      'email_change_token_current',
+                                      'reauthentication_token','phone_change',
+                                      'phone_change_token'];
+            BEGIN
+              FOREACH c IN ARRAY colunas LOOP
+                IF EXISTS (SELECT 1 FROM information_schema.columns
+                            WHERE table_schema='auth' AND table_name='users'
+                              AND column_name=c) THEN
+                  EXECUTE format('UPDATE auth.users SET %I = %L WHERE %I IS NULL',
+                                 c, '', c);
+                END IF;
+              END LOOP;
+              UPDATE auth.users
+                 SET raw_app_meta_data = jsonb_build_object(
+                       'provider','email','providers', jsonb_build_array('email'))
+               WHERE raw_app_meta_data IS NULL OR raw_app_meta_data = '{}'::jsonb;
+            END \$norm\$;" \
+            && echo "auth.users normalizado para o serviço de login."
+
+          # ---------------------------------------------------------------
+          # DEIXAR auth.users NO FORMATO QUE O SERVIÇO DE LOGIN ESPERA.
+          #
+          # A máscara é cega ao significado de cada campo — e foi por isso que
+          # o login passou a responder "Unexpected failure": erro DO SERVIÇO
+          # de autenticação, não credencial errada, e a mensagem não diz qual
+          # campo é. Duas coisas atrapalhavam:
+          #
+          #  · raw_app_meta_data guarda COMO a pessoa entra ({"provider":
+          #    "email"}). É jsonb, então a máscara o esvaziou junto com o
+          #    resto — e ali também moram nome e e-mail, então esvaziar era
+          #    certo. Repor SÓ o provider não vaza nada: é 'email' para
+          #    todos. raw_user_meta_data, onde os dados pessoais ficam,
+          #    continua vazio.
+          #
+          #  · os campos de token são lidos como texto simples. NULO faz o
+          #    serviço quebrar; vazio é o que ele espera. A máscara preserva
+          #    o NULO da origem — correto como máscara, incompatível aqui.
+          #
+          # O SQL vai para um ARQUIVO, e não para dentro de -c "...": o bloco
+          # usa $norm$ como delimitador, e escapar cifrão dentro de aspas do
+          # shell é a receita de um erro que só aparece em execução.
+          cat > normalizar_auth.sql <<'FIM_SQL'
+          DO $norm$
+          DECLARE
+            c text;
+            colunas text[] := ARRAY['confirmation_token','recovery_token',
+                                    'email_change','email_change_token_new',
+                                    'email_change_token_current',
+                                    'reauthentication_token','phone_change',
+                                    'phone_change_token'];
+          BEGIN
+            FOREACH c IN ARRAY colunas LOOP
+              IF EXISTS (SELECT 1 FROM information_schema.columns
+                          WHERE table_schema='auth' AND table_name='users'
+                            AND column_name=c) THEN
+                EXECUTE format('UPDATE auth.users SET %I = %L WHERE %I IS NULL',
+                               c, '', c);
+              END IF;
+            END LOOP;
+            UPDATE auth.users
+               SET raw_app_meta_data = jsonb_build_object(
+                     'provider','email','providers', jsonb_build_array('email'))
+             WHERE raw_app_meta_data IS NULL OR raw_app_meta_data = '{}'::jsonb;
+          END $norm$;
+          FIM_SQL
+          homolog -q -v ON_ERROR_STOP=1 -f normalizar_auth.sql \
+            && echo "auth.users normalizado para o serviço de login."
+
           # Senha de entrada. O hash real foi invalidado na leitura, então sem
           # isto ninguém entra — o que é o padrão seguro, não um defeito.
           if [ -n "$SENHA_USUARIOS" ]; then
