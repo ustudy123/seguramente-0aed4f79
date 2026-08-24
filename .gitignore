@@ -27,3 +27,9 @@ dist-ssr
 cypress/screenshots
 cypress/videos
 cypress/downloads
+
+# Subproduto da compilação do Python (o gerador da cópia mascarada em
+# scripts/homologacao). Nasce de qualquer `python -m py_compile` e não é
+# fonte de nada.
+__pycache__/
+*.pyc
