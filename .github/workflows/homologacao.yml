@@ -477,7 +477,20 @@ jobs:
 
           # ---------------------------------------------------------------
           # A cópia. auth.users primeiro: 34 chaves do public apontam para lá.
+          #
+          # E ANTES, esvaziar auth.users no destino. O passo "Recriar o
+          # schema" só recria o `public` — auth.users mora fora dele e
+          # SOBREVIVE entre corridas. Na primeira corrida em que a carga de
+          # usuários deu certo, ninguém notou; na seguinte, os mesmos
+          # usuários já estavam lá e o COPY colidiu na chave primária
+          # (users_pkey, "already exists" na linha 1). O CASCADE leva junto
+          # as tabelas do auth que apontam para users (identities, sessions):
+          # são sobras da corrida anterior apontando para usuários que vão
+          # deixar de existir.
           # ---------------------------------------------------------------
+          homolog -q -v ON_ERROR_STOP=1 -c 'TRUNCATE auth.users CASCADE;'
+          echo "auth.users esvaziado no destino (sobra da corrida anterior)."
+
           echo "== Copiando (a máscara é aplicada no SELECT, dentro da produção)"
           total=0; falhas=0; incompletas=0
           copiar_uma() {
@@ -636,6 +649,28 @@ jobs:
                  SET encrypted_password = crypt(:'senha', gen_salt('bf')),
                      email_confirmed_at = COALESCE(email_confirmed_at, now());" \
               && echo "Senha única aplicada a todos os usuários da homologação."
+
+            # O login do Supabase exige, além da linha em auth.users, uma
+            # IDENTIDADE em auth.identities (provider 'email'). A cópia traz
+            # só os usuários — as identidades da produção não vêm, e as
+            # antigas caíram no TRUNCATE ... CASCADE. Sem esta inserção, a
+            # senha se aplica mas o login recusa, com um erro que não diz
+            # nada disso. O identity_data leva o e-mail JÁ MASCARADO — é o
+            # único que existe aqui.
+            homolog -q -v ON_ERROR_STOP=1 -c "
+              INSERT INTO auth.identities
+                (id, user_id, identity_data, provider, provider_id,
+                 last_sign_in_at, created_at, updated_at)
+              SELECT gen_random_uuid(), u.id,
+                     jsonb_build_object('sub', u.id::text,
+                                        'email', u.email,
+                                        'email_verified', true),
+                     'email', u.id::text, now(), now(), now()
+                FROM auth.users u
+               WHERE u.email IS NOT NULL
+                 AND NOT EXISTS (SELECT 1 FROM auth.identities i
+                                  WHERE i.user_id = u.id AND i.provider = 'email');" \
+              && echo "Identidades de e-mail criadas para os usuários."
           else
             echo "::warning::Sem o secret HOMOLOGACAO_SENHA_USUARIOS: ninguém consegue entrar na"
             echo "::warning::homologação (as senhas reais foram invalidadas na leitura, de propósito)."
