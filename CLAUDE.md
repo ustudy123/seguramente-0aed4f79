@@ -10,7 +10,7 @@ produção são publicadas pelo Lovable.
 | | PRODUÇÃO | STAGING (testes) |
 |---|---|---|
 | Projeto Supabase | `diayjpsrcerycycyaxst` | `bmehdgthciuvdbvutsdv` |
-| Telas | seguramente.lovable.app (via Publicar no Lovable) | https://ustudy123.github.io/seguramente-0aed4f79/ |
+| Telas | seguramente.lovable.app (via Publicar no Lovable) | https://ustudy123.github.io/youreyesnovo/ |
 | Dados | reais, protegidos por LGPD | fictícios (Empresa Staging LTDA, CPFs 900000xxx) |
 
 **Fluxo obrigatório:** desenvolver → mesclar na `main` → o workflow
@@ -118,7 +118,7 @@ contrário. Consequências práticas:
 ## Como fechar uma entrega (obrigatório)
 
 Ao terminar qualquer implementação, encerre a resposta com:
-1. o link do site de teste — https://ustudy123.github.io/seguramente-0aed4f79/ ;
+1. o link do site de teste — https://ustudy123.github.io/youreyesnovo/ ;
 2. o que exatamente o usuário deve abrir/clicar lá para conferir (tela, caminho
    no menu, o que deve aparecer) e, se for banco, a conferência SQL para o
    SQL Editor do projeto de TESTE;

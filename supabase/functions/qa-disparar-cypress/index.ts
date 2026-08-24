@@ -29,7 +29,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // mais comum de "Bad credentials" na API do GitHub.
 const GITHUB_TOKEN = (Deno.env.get("GITHUB_DISPATCH_TOKEN") ?? "").trim();
 // Configuráveis por ambiente; default aponta para este repositório.
-const GITHUB_REPO = (Deno.env.get("GITHUB_REPO") ?? "ustudy123/seguramente-0aed4f79").trim();
+const GITHUB_REPO = (Deno.env.get("GITHUB_REPO") ?? "ustudy123/youreyesnovo").trim();
 const WORKFLOW_FILE = (Deno.env.get("GITHUB_CYPRESS_WORKFLOW") ?? "cypress.yml").trim();
 const WORKFLOW_REF = (Deno.env.get("GITHUB_CYPRESS_REF") ?? "main").trim();
 

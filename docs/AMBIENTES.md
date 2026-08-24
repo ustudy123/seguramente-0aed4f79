@@ -379,7 +379,7 @@ Secrets (Settings > Secrets and variables > Actions do repositório):
 |---|---|---|
 | `SUPABASE_ACCESS_TOKEN` | Token pessoal do Supabase (Account > Access Tokens) | Sim |
 | `SUPABASE_DB_PASSWORD` | Senha do banco do projeto de staging | Sim |
-O site de teste é publicado no **GitHub Pages** do próprio repositório — https://ustudy123.github.io/seguramente-0aed4f79/ — sem contas nem secrets adicionais. Ele aponta para o banco de STAGING (login com os usuários fictícios).
+O site de teste é publicado no **GitHub Pages** do próprio repositório — https://ustudy123.github.io/youreyesnovo/ — sem contas nem secrets adicionais. Ele aponta para o banco de STAGING (login com os usuários fictícios).
 
 O workflow tem trava contra apontar para a produção e pode ser disparado manualmente na aba Actions (`workflow_dispatch`).
 
@@ -423,7 +423,7 @@ INSERT INTO public.app_config (chave, valor) VALUES
 ON CONFLICT (chave) DO UPDATE SET valor = EXCLUDED.valor, atualizado_em = now();
 ```
 
-Opcionalmente, `github_dispatch_repo` (padrão `ustudy123/seguramente-0aed4f79`), `github_dispatch_workflow` (padrão `staging.yml`) e `github_dispatch_ref` (padrão `main`) sobrescrevem os alvos. **Nunca versione o token** — ele vive só no `app_config` do ambiente. O schema/funções são instalados pela migration `20260814120000_qa_agendamento_e2e_esteira.sql` (staging) e pelo script `docs/script_qa_agendamento_e2e.sql` (produção).
+Opcionalmente, `github_dispatch_repo` (padrão `ustudy123/youreyesnovo`), `github_dispatch_workflow` (padrão `staging.yml`) e `github_dispatch_ref` (padrão `main`) sobrescrevem os alvos. **Nunca versione o token** — ele vive só no `app_config` do ambiente. O schema/funções são instalados pela migration `20260814120000_qa_agendamento_e2e_esteira.sql` (staging) e pelo script `docs/script_qa_agendamento_e2e.sql` (produção).
 
 ## Checklist antes de publicar
 

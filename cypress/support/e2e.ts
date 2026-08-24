@@ -86,7 +86,7 @@ afterEach(function () {
 // =====================================================================
 // DEEP-LINK DE SPA NO GITHUB PAGES = STATUS 404
 //
-// O site de teste é uma SPA servida sob /seguramente-0aed4f79/. O Pages
+// O site de teste é uma SPA servida sob /youreyesnovo/. O Pages
 // não tem arquivo para rotas como /login ou /estrategia, então serve o
 // 404.html (que a esteira copia do index.html) — a aplicação carrega e
 // roteia normalmente, porque o BrowserRouter usa o basename certo. Só que
@@ -105,7 +105,7 @@ afterEach(function () {
 // Os specs montam a URL como `${baseUrl}/epis`. O baseUrl vem de
 // Cypress.config("baseUrl"), que a esteira passa por CYPRESS_BASE_URL COM
 // barra final (o Cypress restaura essa barra por cima da normalização do
-// cypress.config.ts). Resultado: `.../seguramente-0aed4f79//epis` — o
+// cypress.config.ts). Resultado: `.../youreyesnovo//epis` — o
 // BrowserRouter trata `//epis` como rota inexistente e renderiza o 404
 // "Page not found", dentro do layout (por isso o menu lateral aparecia e
 // dava falso-positivo em asserções amplas). Aqui colapsamos barras
@@ -138,8 +138,8 @@ Cypress.Commands.overwrite(
 // SINAL DE LOGIN CONFIÁVEL
 //
 // O jeito antigo de "confirmar que entrou" era should("not.eq","/login")
-// sobre o pathname. No site de teste o app roda sob /seguramente-0aed4f79/,
-// então o pathname é /seguramente-0aed4f79/login e NUNCA é igual a /login:
+// sobre o pathname. No site de teste o app roda sob /youreyesnovo/,
+// então o pathname é /youreyesnovo/login e NUNCA é igual a /login:
 // a asserção passava na hora, sem esperar a autenticação. Com cy.session, o
 // snapshot saía antes de o token persistir e a sessão ia vazia — e a falha
 // só aparecia lá na frente, ao abrir o módulo (foi o que a run #34 mostrou:
