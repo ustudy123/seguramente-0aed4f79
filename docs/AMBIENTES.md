@@ -189,7 +189,25 @@ O que ela faz, e o que impede:
 4. **confere que nenhuma linha de dado veio junto** e aborta se vier — prova, não
    confiança, de que nenhum CPF, salário ou atestado saiu da produção;
 5. recria o schema `public` da homologação com essa estrutura;
-6. guarda o retrato e o log como anexo da corrida, por 7 dias.
+6. copia os dados com a identificação **embaralhada na leitura** (o plano de
+   máscara é gerado por `scripts/homologacao/gerar_copia_mascarada.py` — o
+   dado real nunca sai da produção) e prova, medindo, que nada identificável
+   atravessou;
+7. guarda o retrato e o log como anexo da corrida, por 7 dias.
+
+> **O motor de QA atravessa intacto.** As tabelas `qa_modulos`,
+> `qa_casos_teste`, `qa_implementacoes`, `qa_cobertura_e2e` e afins são
+> documentação do sistema (códigos de caso, títulos, nomes de função SQL) —
+> não têm dado de pessoa e são **preservadas por inteiro**, senão a tela de
+> Testes automatizados quebra na homologação ("Cercado nao existe", módulos
+> `anon-`). Pelo mesmo motivo, os cercados de QA (`tenants.slug` em
+> `qa-sandbox`/`qa-sandbox-2` e as empresas `[QA] Alfa`/`[QA] Beta`) são as
+> únicas linhas cujo texto passa sem máscara — são sintéticos por
+> construção. O histórico de execuções (`qa_execucoes`/`qa_resultados`)
+> continua mascarado de propósito: é texto livre escrito em tempo de
+> execução e poderia ecoar valor real. Verificado em réplica local: com
+> essas exceções, a bateria completa devolve na cópia mascarada exatamente
+> o mesmo placar da base sem máscara.
 
 #### 3.4. Conferir
 

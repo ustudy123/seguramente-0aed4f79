@@ -159,6 +159,59 @@ REGRAS_FORMATO = [
 PADROES_CREDENCIAL = ("token", "senha", "password", "secret", "hash",
                       "chave_api", "api_key")
 
+# Tabelas do MOTOR DE QA preservadas POR INTEIRO. Elas são documentação do
+# sistema, não dado de pessoa: códigos de caso (PERFIL-004), títulos,
+# nomes de função SQL (qa_implementacoes.funcao_sql), caminhos de módulo,
+# nomes de tabela. Mascarar isso quebrou o QA na homologação de três jeitos
+# ao mesmo tempo: o seletor de módulos virou anon-..., os códigos dos casos
+# sumiram e nenhuma rotina poderia sequer ser chamada (o próprio NOME da
+# função estava embaralhado).
+#
+# As duas tabelas de RESULTADO (qa_execucoes, qa_resultados) ficam DE FORA
+# de propósito: `esperado`/`obtido`/`erro_tecnico` são texto livre escrito
+# em tempo de execução e poderiam ecoar um valor real da produção. O preço
+# é o histórico antigo ficar ilegível na homologação — aceitável, porque
+# toda corrida nova nasce limpa lá dentro.
+PRESERVAR_TABELAS = {
+    "public.qa_modulos",
+    "public.qa_casos_teste",
+    "public.qa_implementacoes",
+    "public.qa_cobertura_e2e",
+    "public.qa_tabelas_protegidas",
+    "public.qa_mobiliario_fixo",
+    "public.qa_agendamento",
+    "public.qa_agendamento_dias",
+    "public.qa_agendamento_e2e_dias",
+}
+
+# Exceções POR LINHA: a coluna continua mascarada para todo mundo, EXCETO
+# quando a condição vale — aí o valor passa intacto. A condição roda dentro
+# do SELECT NA PRODUÇÃO, onde o valor ainda é o real, então pode filtrar
+# pelo próprio conteúdo. `{col}` é substituído pela coluna já entre aspas.
+#
+# Uso único até agora: os CERCADOS de QA. O motor de testes localiza os
+# tenants sintéticos por slug — 'qa-sandbox' (qa_sandbox_tenant_id) e
+# 'qa-sandbox-2' (qa_sandbox2_tenant_id, usado pelos casos de isolamento
+# entre clientes) — e as empresas de mentira por nome_fantasia = '[QA] Alfa'
+# / '[QA] Beta' (qa_empresa). São literais criados por migration, sem nenhum
+# dado de pessoa — mas a máscara genérica os transformava em anon-..., o
+# lookup devolvia NULL e a bateria abortava com "Cercado nao existe" (P0001).
+# O segundo cercado embaralhado era ainda mais traiçoeiro: além dos casos
+# de isolamento caírem em erro ("2o cercado nao existe"), a trava
+# anti-escrita-global deixou de disparar — um NOT IN que inclui NULL nunca
+# é verdadeiro — e o HTPL-001 flagrou (medido no ensaio local, não teoria).
+_SLUGS_CERCADO = "('qa-sandbox', 'qa-sandbox-2')"
+_COND_EMPRESA_DO_CERCADO = ("tenant_id IN (SELECT id FROM public.tenants "
+                            f"WHERE slug IN {_SLUGS_CERCADO})")
+EXCECOES_POR_LINHA = {
+    ("public.tenants", "slug"): "{col} IN " + _SLUGS_CERCADO,
+    # O nome do tenant do cercado é só cosmético, mas vê-lo como
+    # "[QA] Cercado de Teste Automatizado" em vez de anon-... poupa sustos.
+    ("public.tenants", "nome"): "slug IN " + _SLUGS_CERCADO,
+    ("public.empresa_cadastro", "razao_social"): _COND_EMPRESA_DO_CERCADO,
+    ("public.empresa_cadastro", "nome_fantasia"): _COND_EMPRESA_DO_CERCADO,
+}
+
 
 def eh_texto(tipo: str) -> bool:
     return tipo in TIPOS_TEXTO
@@ -325,11 +378,19 @@ EXPRESSOES = {
 }
 
 
-def expressao(coluna: str, tratamento: str, tempero_sql: str) -> str:
+def expressao(coluna: str, tratamento: str, tempero_sql: str,
+              condicao_preserva: str | None = None) -> str:
     col = f'"{coluna}"'
     if tratamento == "copiar":
         return col
-    return f'{EXPRESSOES[tratamento](col, tempero_sql)} AS {col}'
+    mascara = EXPRESSOES[tratamento](col, tempero_sql)
+    if condicao_preserva:
+        # Exceção por linha: preserva o valor quando a condição vale,
+        # mascara em todos os demais casos. A condição é avaliada na
+        # produção, sobre o valor ainda real.
+        cond = condicao_preserva.format(col=col)
+        mascara = f"(CASE WHEN {cond} THEN {col} ELSE {mascara} END)"
+    return f'{mascara} AS {col}'
 
 
 # ---------------------------------------------------------------------------
@@ -350,7 +411,9 @@ def main() -> int:
     nomes: dict[str, list[str]] = {}
     resumo = {"copiar": 0, "generico": 0, "credencial": 0, "json_vazio": 0,
               "lista_vazia": 0, "cpf": 0, "cnpj": 0, "email": 0,
-              "telefone": 0, "cep": 0}
+              "telefone": 0, "cep": 0, "tabela_preservada": 0,
+              "excecao_por_linha": 0}
+    preservadas_vistas: set[str] = set()
 
     with open(caminho, encoding="utf-8") as f:
         for linha in f:
@@ -363,12 +426,30 @@ def main() -> int:
             tabela, coluna, tipo, check = partes[0], partes[1], partes[2], partes[3]
             # 5ª coluna, opcional: 't' quando é lista DE TEXTO (text[]).
             lista_texto = len(partes) > 4 and partes[4] in ("t", "true", "1")
-            tratamento = classificar(coluna, tipo, check in ("t", "true", "1"),
-                                     lista_texto)
-            resumo[tratamento] = resumo.get(tratamento, 0) + 1
+            if tabela in PRESERVAR_TABELAS:
+                # Tabela do motor de QA: tudo passa intacto, inclusive
+                # jsonb e listas — é documentação, não dado de pessoa.
+                tratamento = "copiar"
+                preservadas_vistas.add(tabela)
+                resumo["tabela_preservada"] += 1
+            else:
+                tratamento = classificar(coluna, tipo,
+                                         check in ("t", "true", "1"),
+                                         lista_texto)
+                resumo[tratamento] = resumo.get(tratamento, 0) + 1
+            condicao = EXCECOES_POR_LINHA.get((tabela, coluna))
+            if condicao and tratamento != "copiar":
+                resumo["excecao_por_linha"] += 1
             tabelas.setdefault(tabela, []).append(
-                expressao(coluna, tratamento, tempero_sql))
+                expressao(coluna, tratamento, tempero_sql, condicao))
             nomes.setdefault(tabela, []).append(f'"{coluna}"')
+
+    # Nome errado na lista de preservadas ficaria mascarando em silêncio —
+    # exatamente o tipo de erro que não dá sinal. Acusa alto.
+    ausentes = PRESERVAR_TABELAS - preservadas_vistas
+    if ausentes:
+        print(f"-- AVISO: tabelas preservadas que NAO existem no catalogo: "
+              f"{', '.join(sorted(ausentes))}", file=sys.stderr)
 
     for tabela, colunas in sorted(tabelas.items()):
         # Uma linha por tabela, três campos separados por TAB:
@@ -380,9 +461,12 @@ def main() -> int:
         # data em campo de texto, e o erro apareceria longe daqui.
         print(f"{tabela}\t{', '.join(colunas)}\t{', '.join(nomes[tabela])}")
 
-    total = sum(resumo.values())
-    mascaradas = total - resumo["copiar"]
-    print(f"-- colunas: {total} | copiadas: {resumo['copiar']} | mascaradas: {mascaradas}",
+    total = sum(resumo.values()) - resumo["excecao_por_linha"]
+    mascaradas = total - resumo["copiar"] - resumo["tabela_preservada"]
+    print(f"-- colunas: {total} | copiadas: {resumo['copiar']} "
+          f"| preservadas por tabela (QA): {resumo['tabela_preservada']} "
+          f"| mascaradas: {mascaradas} "
+          f"(com excecao por linha: {resumo['excecao_por_linha']})",
           file=sys.stderr)
     for k in ("cpf", "cnpj", "email", "telefone", "cep", "credencial",
               "json_vazio", "lista_vazia", "generico"):
