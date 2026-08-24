@@ -751,53 +751,6 @@ jobs:
           # ---------------------------------------------------------------
           # DEIXAR auth.users NO FORMATO QUE O SERVIÇO DE LOGIN ESPERA.
           #
-          # A máscara é cega ao que cada campo significa — e foi por isso que
-          # o login passou a responder "Unexpected failure": erro do serviço
-          # de autenticação, não credencial errada, e a mensagem não diz qual
-          # campo é. Duas coisas atrapalhavam:
-          #
-          #  · raw_app_meta_data guarda COMO a pessoa entra ({"provider":
-          #    "email"}). É jsonb, então a máscara o esvaziou junto com o
-          #    resto — e ali também moram nome e e-mail, então esvaziar era
-          #    certo. Repor SÓ o provider não vaza nada: é 'email' para
-          #    todos. raw_user_meta_data, onde os dados pessoais ficam,
-          #    continua vazio.
-          #
-          #  · os campos de token são lidos como texto simples. NULO faz o
-          #    serviço quebrar; vazio é o que ele espera. A máscara preserva
-          #    o NULO de origem — correto como máscara, incompatível aqui.
-          #
-          # Roda no modo so_finalizar também, que é o barato: quem já tem a
-          # cópia carregada conserta o login em ~2 minutos.
-          # ---------------------------------------------------------------
-          homolog -q -v ON_ERROR_STOP=1 -c "
-            DO \$norm\$
-            DECLARE
-              c text;
-              colunas text[] := ARRAY['confirmation_token','recovery_token',
-                                      'email_change','email_change_token_new',
-                                      'email_change_token_current',
-                                      'reauthentication_token','phone_change',
-                                      'phone_change_token'];
-            BEGIN
-              FOREACH c IN ARRAY colunas LOOP
-                IF EXISTS (SELECT 1 FROM information_schema.columns
-                            WHERE table_schema='auth' AND table_name='users'
-                              AND column_name=c) THEN
-                  EXECUTE format('UPDATE auth.users SET %I = %L WHERE %I IS NULL',
-                                 c, '', c);
-                END IF;
-              END LOOP;
-              UPDATE auth.users
-                 SET raw_app_meta_data = jsonb_build_object(
-                       'provider','email','providers', jsonb_build_array('email'))
-               WHERE raw_app_meta_data IS NULL OR raw_app_meta_data = '{}'::jsonb;
-            END \$norm\$;" \
-            && echo "auth.users normalizado para o serviço de login."
-
-          # ---------------------------------------------------------------
-          # DEIXAR auth.users NO FORMATO QUE O SERVIÇO DE LOGIN ESPERA.
-          #
           # A máscara é cega ao significado de cada campo — e foi por isso que
           # o login passou a responder "Unexpected failure": erro DO SERVIÇO
           # de autenticação, não credencial errada, e a mensagem não diz qual
@@ -846,14 +799,29 @@ jobs:
 
           # Senha de entrada. O hash real foi invalidado na leitura, então sem
           # isto ninguém entra — o que é o padrão seguro, não um defeito.
+          # A senha vai por variável do psql (:'senha'), não colada no texto
+          # do comando: senha com apóstrofo quebraria o SQL, e senha com
+          # apóstrofo bem escolhido escreveria SQL.
+          #
+          # E o SQL vai por ARQUIVO (-f), não por -c: o psql NÃO substitui
+          # variáveis em comandos passados por -c — o :'senha' chega cru ao
+          # banco e quebra com "syntax error at or near :". Foi exatamente o
+          # erro da corrida 23, engolido no meio de um passo verde: tudo
+          # funcionou menos a senha, e ninguém conseguia entrar.
+          #
+          # O arquivo é criado AQUI FORA do if de propósito: o marcador que
+          # encerra um heredoc precisa começar na coluna zero do script, e
+          # dentro do if ele ficaria indentado — o bash não o reconheceria e
+          # engoliria o resto do passo para dentro do arquivo, em silêncio.
+          cat > aplicar_senha.sql <<'FIM_SQL'
+          UPDATE auth.users
+             SET encrypted_password = crypt(:'senha', gen_salt('bf')),
+                 email_confirmed_at = COALESCE(email_confirmed_at, now());
+          FIM_SQL
+
           if [ -n "$SENHA_USUARIOS" ]; then
-            # A senha vai por variável do psql (:'senha'), não colada no texto
-            # do comando: senha com apóstrofo quebraria o SQL, e senha com
-            # apóstrofo bem escolhido escreveria SQL.
-            homolog -q -v senha="$SENHA_USUARIOS" -c "
-              UPDATE auth.users
-                 SET encrypted_password = crypt(:'senha', gen_salt('bf')),
-                     email_confirmed_at = COALESCE(email_confirmed_at, now());" \
+            homolog -q -v ON_ERROR_STOP=1 -v senha="$SENHA_USUARIOS" \
+                    -f aplicar_senha.sql \
               && echo "Senha única aplicada a todos os usuários da homologação."
 
             # O login do Supabase exige, além da linha em auth.users, uma
