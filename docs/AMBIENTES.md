@@ -379,7 +379,15 @@ Secrets (Settings > Secrets and variables > Actions do repositório):
 |---|---|---|
 | `SUPABASE_ACCESS_TOKEN` | Token pessoal do Supabase (Account > Access Tokens) | Sim |
 | `SUPABASE_DB_PASSWORD` | Senha do banco do projeto de staging | Sim |
-O site de teste é publicado no **GitHub Pages** do próprio repositório — https://ustudy123.github.io/youreyesnovo/ — sem contas nem secrets adicionais. Ele aponta para o banco de STAGING (login com os usuários fictícios).
+O site de teste é publicado no **GitHub Pages** do próprio repositório — https://ustudy123.github.io/youreyesnovo/teste/ — sem contas nem secrets adicionais. Ele aponta para o banco de STAGING (login com os usuários fictícios).
+
+O mesmo Pages hospeda os dois ambientes públicos, cada um numa pasta com nome próprio, e a raiz é só uma placa que redireciona para o teste:
+
+- `.../youreyesnovo/teste/` → ambiente de **teste** (banco de staging);
+- `.../youreyesnovo/homologacao/` → ambiente de **homologação** (cópia embaralhada da produção);
+- `.../youreyesnovo/` (raiz) → redireciona para `/teste/` (mantém vivos o link curto e links antigos).
+
+O Pages serve um único `404.html` (o da raiz) para qualquer caminho inexistente do site inteiro: ele carrega o app de teste e desvia os caminhos sob `/homologacao/` para o app de homologação, para nunca abrir um ambiente achando que é o outro.
 
 O workflow tem trava contra apontar para a produção e pode ser disparado manualmente na aba Actions (`workflow_dispatch`).
 
