@@ -12,6 +12,16 @@
 #   3) apaga e recria o schema public da HOMOLOGAÇÃO com essa estrutura;
 #   4) guarda o retrato como anexo da corrida, para conferência.
 #
+# MODO "so_finalizar": pula a leitura e a cópia (os passos caros, ~35min)
+# e roda só o final — senha, identidades e as duas conferências. Existe
+# porque retomar "do ponto do erro" de verdade seria carregar meia cópia
+# sem prova de inteireza; aqui a retomada é segura pelo caminho inverso:
+# aproveita o que estiver no destino E DEIXA AS CONFERÊNCIAS JULGAREM. A
+# máscara é determinística (mesmo dado + mesmo tempero = mesmo resultado),
+# então dado carregado numa corrida anterior é idêntico ao que uma corrida
+# nova carregaria — se as conferências fecharem, o estado vale; se não
+# fecharem, a corrida reprova e aí sim se roda o modo completo.
+#
 # A PRODUÇÃO NUNCA É ALTERADA POR AQUI, e não é promessa de configuração:
 # a credencial usada é de um usuário criado com pg_read_all_data e sem
 # permissão de escrita (docs/script_homologacao_leitor_producao.sql). Se
@@ -56,6 +66,14 @@ on:
         description: 'Endereço do Session pooler da HOMOLOGAÇÃO — só o host'
         required: false
         default: ''
+      modo:
+        description: 'completo = tudo do zero | so_finalizar = pula a cópia e roda só senha, identidades e conferências'
+        required: false
+        type: choice
+        default: 'completo'
+        options:
+          - completo
+          - so_finalizar
 
 jobs:
   copiar-estrutura:
@@ -216,6 +234,7 @@ jobs:
             || { echo "::error::Não conectou na HOMOLOGAÇÃO. Confira o secret HOMOLOGACAO_DB_PASSWORD e o endereço informado."; exit 1; }
 
       - name: Ler a estrutura da produção (somente leitura, sem dados)
+        if: ${{ github.event.inputs.modo != 'so_finalizar' }}
         env:
           PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
         run: |
@@ -240,6 +259,7 @@ jobs:
           ls -lh estrutura_producao.sql
 
       - name: Conferir que NENHUM dado veio junto
+        if: ${{ github.event.inputs.modo != 'so_finalizar' }}
         run: |
           # Prova, não confiança: --schema-only não deveria trazer linha
           # nenhuma, e é isto que garante que nenhum CPF, salário ou atestado
@@ -252,6 +272,7 @@ jobs:
           echo "Nenhuma linha de dado no retrato — só estrutura."
 
       - name: Recriar o schema public da homologação
+        if: ${{ github.event.inputs.modo != 'so_finalizar' }}
         env:
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
@@ -327,6 +348,7 @@ jobs:
           fi
 
       - name: Instalar na homologação as mesmas extensões da produção
+        if: ${{ github.event.inputs.modo != 'so_finalizar' }}
         env:
           PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
@@ -373,6 +395,7 @@ jobs:
           echo "Erros ao instalar extensões: $(grep -c 'ERROR:' extensoes.log || true)"
 
       - name: Aplicar a estrutura na homologação
+        if: ${{ github.event.inputs.modo != 'so_finalizar' }}
         env:
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
@@ -404,6 +427,7 @@ jobs:
           fi
 
       - name: Copiar os dados com a identificação embaralhada
+        if: ${{ github.event.inputs.modo != 'so_finalizar' }}
         env:
           PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
