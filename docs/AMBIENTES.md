@@ -193,7 +193,20 @@ O que ela faz, e o que impede:
    máscara é gerado por `scripts/homologacao/gerar_copia_mascarada.py` — o
    dado real nunca sai da produção) e prova, medindo, que nada identificável
    atravessou;
-7. guarda o retrato e o log como anexo da corrida, por 7 dias.
+7. grava em `app_config` a URL e a chave anon **do próprio ambiente** (lidas
+   do `.env.homologacao`, a mesma fonte do site) — as rotinas de disparo do
+   banco passam a chamar a própria homologação, nunca a produção (a cópia
+   chega com esses valores embaralhados, então sem este passo elas não
+   chamam ninguém);
+8. **publica as Edge Functions** no projeto da homologação (mesmo padrão da
+   esteira do staging: CLI fixada + link + deploy com 3 tentativas). Roda
+   também no modo `so_finalizar`, que vira o jeito barato (~min) de
+   atualizar functions sem refazer a cópia. As chaves de plataforma o
+   Supabase injeta sozinho; chaves de recurso (`OPENAI_API_KEY`,
+   `RESEND_API_KEY`, `GITHUB_DISPATCH_TOKEN`...) são segredos do projeto,
+   configurados no painel por quem decidir usar o recurso na homologação —
+   sem elas, a function correspondente recusa com mensagem clara;
+9. guarda o retrato e o log como anexo da corrida, por 7 dias.
 
 > **O motor de QA atravessa intacto.** As tabelas `qa_modulos`,
 > `qa_casos_teste`, `qa_implementacoes`, `qa_cobertura_e2e` e afins são
