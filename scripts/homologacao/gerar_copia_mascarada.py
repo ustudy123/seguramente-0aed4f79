@@ -216,6 +216,15 @@ def _semente(col: str, tempero: str) -> str:
     return f"md5({col} || {tempero})"
 
 
+# STRING VAZIA É PRESERVADA em todas as máscaras de texto, e o motivo é
+# concreto: auth.users.confirmation_token é '' para quase todos os usuários,
+# e existe um índice de UNICIDADE sobre a coluna (parcial, que ignora o
+# vazio). Como a máscara transforma o mesmo valor no mesmo texto, milhares
+# de '' viravam o MESMO token falso — e o índice recusou a carga inteira de
+# auth.users, derrubando de tabela as 16 chaves estrangeiras que apontam
+# para lá. String vazia não identifica ninguém; mascará-la só cria colisão.
+
+
 def expr_cpf(col: str, tempero: str) -> str:
     """CPF falso COM dígito verificador válido — o sistema valida o DV, então
     um CPF inválido seria rejeitado e o ensaio morreria na entrada.
@@ -235,7 +244,7 @@ def expr_cpf(col: str, tempero: str) -> str:
     # O segundo dígito considera os 9 primeiros mais o primeiro DV.
     soma2 = " + ".join(f"{d(i)}*{12-i}" for i in range(1, 10)) + f" + ({dv1})*2"
     dv2 = f"(CASE WHEN (({soma2}) % 11) < 2 THEN 0 ELSE 11 - (({soma2}) % 11) END)"
-    return (f"(CASE WHEN {col} IS NULL THEN NULL ELSE "
+    return (f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE "
             f"(SELECT b || {dv1}::text || {dv2}::text FROM (SELECT {base} AS b) _t) END)")
 
 
@@ -245,7 +254,7 @@ def expr_cnpj(col: str, tempero: str) -> str:
     reclamar, o COPY falha na cara e a gente conserta — que é o
     comportamento que se quer de um erro."""
     s = _semente(col, tempero)
-    return (f"(CASE WHEN {col} IS NULL THEN NULL ELSE "
+    return (f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE "
             f"lpad(((('x' || substr({s},1,8))::bit(32)::bigint) % 100000000)::text, 8, '0') "
             f"|| '000' || lpad(((('x' || substr({s},9,4))::bit(16)::int) % 1000)::text, 3, '0') END)")
 
@@ -255,19 +264,19 @@ def expr_email(col: str, tempero: str) -> str:
     nunca vai existir de verdade, então um disparo acidental de e-mail na
     homologação não chega a lugar nenhum."""
     s = _semente(col, tempero)
-    return (f"(CASE WHEN {col} IS NULL THEN NULL ELSE "
+    return (f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE "
             f"'pessoa' || substr({s},1,10) || '@exemplo.invalid' END)")
 
 
 def expr_telefone(col: str, tempero: str) -> str:
     s = _semente(col, tempero)
-    return (f"(CASE WHEN {col} IS NULL THEN NULL ELSE "
+    return (f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE "
             f"'46 9' || lpad(((('x' || substr({s},1,8))::bit(32)::bigint) % 100000000)::text, 8, '0') END)")
 
 
 def expr_cep(col: str, tempero: str) -> str:
     s = _semente(col, tempero)
-    return (f"(CASE WHEN {col} IS NULL THEN NULL ELSE "
+    return (f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE "
             f"lpad(((('x' || substr({s},1,8))::bit(32)::bigint) % 100000000)::text, 8, '0') END)")
 
 
@@ -275,7 +284,7 @@ def expr_credencial(col: str, tempero: str) -> str:
     """Token não se embaralha para parecer token: se parecer, alguém tenta
     usar. Vira texto que se anuncia."""
     s = _semente(col, tempero)
-    return (f"(CASE WHEN {col} IS NULL THEN NULL ELSE "
+    return (f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE "
             f"'invalidado-na-homologacao-' || substr({s},1,12) END)")
 
 
@@ -290,7 +299,7 @@ def expr_generico(col: str, tempero: str) -> str:
         nome, que este schema faz por ser denormalizado, continuam de pé.
     """
     s = _semente(col, tempero)
-    return f"(CASE WHEN {col} IS NULL THEN NULL ELSE 'anon-' || substr({s},1,12) END)"
+    return f"(CASE WHEN {col} IS NULL THEN NULL WHEN {col} = '' THEN '' ELSE 'anon-' || substr({s},1,12) END)"
 
 
 def expr_json_vazio(col: str, tempero: str) -> str:
