@@ -12,7 +12,7 @@ import { readFileSync, statSync } from "fs";
 // abaixo se for um host da lista de permitidos.
 // =====================================================================
 
-const SITE_DE_TESTE = "https://ustudy123.github.io/youreyesnovo/";
+const SITE_DE_TESTE = "https://ustudy123.github.io/youreyesnovo/teste/";
 
 // Lista de PERMITIDOS (não de proibidos): host novo só entra aqui de
 // propósito. Uma lista de proibidos deixaria passar o que esquecêssemos.

@@ -7,7 +7,9 @@
 #      por CLI) e reimplanta as Edge Functions;
 #   2) publica o SITE DE TESTE (build com .env.staging) no GitHub
 #      Pages do próprio repositório — sem contas nem secrets extras:
-#      https://ustudy123.github.io/youreyesnovo/
+#      https://ustudy123.github.io/youreyesnovo/teste/
+#      (a raiz .../youreyesnovo/ redireciona para /teste/; a homologação
+#       fica em .../youreyesnovo/homologacao/)
 #
 # Secrets necessários (Settings > Secrets and variables > Actions):
 #   SUPABASE_ACCESS_TOKEN  token pessoal (supabase.com/dashboard/account/tokens)
@@ -102,60 +104,87 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Build de staging (sob o subcaminho do Pages)
+      - name: Build dos dois ambientes (cada um sob seu subcaminho)
         run: |
           npm ci
-          npm run build:staging -- --base="/$REPO/"
-
-      - name: Build de homologação (sob /homologacao/ do mesmo Pages)
-        run: |
           # O Pages publica UM site por repositório, então os dois ambientes
           # dividem o mesmo endereço em pastas diferentes. Sai mais barato que
           # um segundo host e não precisa de conta nova:
           #
-          #   teste       -> .../youreyesnovo/
+          #   teste       -> .../<repositório>/teste/
           #   homologação -> .../<repositório>/homologacao/
           #
-          # A trava do vite.config.ts vale aqui: se o .env.homologacao
-          # apontasse para o Supabase de produção, este build não nasceria.
-          npm run build:homologacao -- \
-            --base="/$REPO/homologacao/" \
-            --outDir=dist-homologacao
-          mv dist-homologacao dist/homologacao
-          cp dist/homologacao/index.html dist/homologacao/404.html
-
-      - name: Rota desconhecida cai no app CERTO
-        run: |
-          # SPA em host estático: quem pede /ferias direto recebe 404, e o
-          # 404.html é que carrega o app. Com dois ambientes no mesmo site,
-          # isso vira um risco: o 404 da raiz é o app de TESTE, então um link
-          # fundo de homologação abriria o teste — e a pessoa acharia que está
-          # olhando um ambiente enquanto olha o outro. Confundir os dois é o
-          # erro mais caro que este site pode causar.
+          # Os dois são simétricos de propósito: cada um mora numa pasta com
+          # nome próprio, e ninguém "mora na raiz". A raiz vira só uma placa
+          # que aponta para o teste (passo seguinte).
           #
-          # O desvio abaixo roda antes de qualquer bundle: se o caminho pedido
-          # está sob /homologacao/, manda para o app de homologação e não deixa
-          # o de teste subir. Perde-se a rota interna do link fundo (abre na
-          # entrada), o que é preferível a abrir o ambiente errado.
+          # A trava do vite.config.ts vale para os dois: se um .env apontasse
+          # para o Supabase de produção, aquele build não nasceria. Cada build
+          # sai numa pasta separada para um não apagar o outro; a árvore final
+          # é montada logo abaixo.
+          npm run build:staging     -- --base="/$REPO/teste/"       --outDir=dist-teste
+          npm run build:homologacao -- --base="/$REPO/homologacao/" --outDir=dist-homologacao
+          rm -rf dist
+          mkdir dist
+          mv dist-teste       dist/teste
+          mv dist-homologacao dist/homologacao
+
+      - name: A raiz aponta para /teste/ e cada rota cai no app CERTO
+        run: |
+          # SPA em host estático: quem pede /teste/ferias direto recebe 404, e
+          # o 404.html é que carrega o app. Com dois ambientes no mesmo site,
+          # isso vira um risco: o Pages serve UM único 404.html (o da raiz) para
+          # QUALQUER caminho inexistente do site inteiro. Ele carrega o app de
+          # TESTE — assim um link fundo do teste, recarregado, abre a página
+          # certa (o roteador do app usa o próprio subcaminho /teste/). Mas um
+          # link fundo de HOMOLOGAÇÃO cairia no app de teste também, e a pessoa
+          # acharia que olha um ambiente enquanto olha o outro. Confundir os
+          # dois é o erro mais caro que este site pode causar.
+          #
+          # O desvio abaixo, injetado antes de qualquer bundle, manda os
+          # caminhos de /homologacao/ para o app de homologação. Perde-se a
+          # rota interna daquele link fundo (abre na entrada), o que é
+          # preferível a abrir o ambiente errado.
           python3 - <<'PY'
           import io, os
-          base = '/' + os.environ['REPO'] + '/homologacao/'
+          repo = os.environ['REPO']
+          raiz_teste   = '/' + repo + '/teste/'
+          base_homolog = '/' + repo + '/homologacao/'
+
+          # 1) A RAIZ do site (.../<repo>/) redireciona para o teste, para que
+          #    o endereço curto e qualquer link antigo continuem funcionando.
+          idx = (
+            '<!doctype html><html lang="pt-br"><head><meta charset="utf-8">'
+            '<meta http-equiv="refresh" content="0; url=' + raiz_teste + '">'
+            '<script>location.replace(' + repr(raiz_teste).replace("'", '"') + ');</script>'
+            '<title>YourEyes — teste</title></head>'
+            '<body>Redirecionando para o ambiente de teste…</body></html>'
+          )
+          io.open('dist/index.html', 'w', encoding='utf-8').write(idx)
+
+          # 2) O 404.html da raiz = app de TESTE + desvio para a homologacao.
+          teste_html = io.open('dist/teste/index.html', encoding='utf-8').read()
           guarda = (
-            '<script>(function(){var b=' + repr(base).replace("'", '"') + ';'
+            '<script>(function(){var b=' + repr(base_homolog).replace("'", '"') + ';'
             # O `!== b` evita laço: se a pasta da homologação faltar, o próprio
             # endereço de entrada cairia no 404 e se redirecionaria para sempre.
             'if(location.pathname.indexOf(b)===0&&location.pathname!==b)'
             '{location.replace(b);}})();</script>'
           )
-          html = io.open('dist/index.html', encoding='utf-8').read()
-          i = html.lower().find('<head>')
+          i = teste_html.lower().find('<head>')
           if i == -1:
-              raise SystemExit('index.html sem <head> — o desvio nao seria aplicado')
+              raise SystemExit('teste/index.html sem <head> — o desvio nao seria aplicado')
           i += len('<head>')
-          io.open('dist/404.html', 'w', encoding='utf-8').write(html[:i] + guarda + html[i:])
-          print('404.html da raiz criado com o desvio para a homologacao')
+          io.open('dist/404.html', 'w', encoding='utf-8').write(teste_html[:i] + guarda + teste_html[i:])
+
+          # 3) Fallbacks por pasta (defensivo; na prática o Pages usa o da raiz).
+          io.open('dist/teste/404.html', 'w', encoding='utf-8').write(teste_html)
+          homolog_html = io.open('dist/homologacao/index.html', encoding='utf-8').read()
+          io.open('dist/homologacao/404.html', 'w', encoding='utf-8').write(homolog_html)
+          print('raiz->/teste/, 404.html (teste + desvio homologacao) e fallbacks criados')
           PY
-          grep -q 'homologacao' dist/404.html || { echo "::error::O desvio nao entrou no 404.html"; exit 1; }
+          grep -q 'homologacao' dist/404.html   || { echo "::error::O desvio nao entrou no 404.html"; exit 1; }
+          grep -q '/teste/'     dist/index.html || { echo "::error::A raiz nao redireciona para /teste/"; exit 1; }
       - uses: actions/configure-pages@v5
         with:
           enablement: true
@@ -182,7 +211,7 @@ jobs:
     needs: site
     runs-on: ubuntu-latest
     env:
-      CYPRESS_BASE_URL: https://ustudy123.github.io/youreyesnovo/
+      CYPRESS_BASE_URL: https://ustudy123.github.io/youreyesnovo/teste/
       CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
       # Caminho de volta do resultado para o painel de QA. O token tem de
