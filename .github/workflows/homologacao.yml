@@ -899,6 +899,84 @@ jobs:
           echo "A homologação é cópia fiel da produção."
           echo "Igualdade aqui é sucesso — ela existe para ser espelho, defeitos e tudo."
 
+      - name: Apontar as rotinas do banco para o PRÓPRIO ambiente (app_config)
+        env:
+          HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+        run: |
+          # A cópia chega com app_config embaralhada — e isso é a proteção de
+          # ambiente funcionando: rotina de disparo sem valores não chama
+          # ninguém, muito menos a produção. Mas com as Edge Functions
+          # publicadas AQUI (passo seguinte), o ensaio fica mais fiel se as
+          # rotinas apontarem para o PRÓPRIO ambiente.
+          #
+          # Os dois valores são públicos por desenho (URL + chave anon) e vêm
+          # do .env.homologacao — a MESMA fonte que o site usa. Uma fonte só:
+          # valor copiado à mão aqui seria a próxima divergência esperando
+          # data para acontecer.
+          URL=$(grep -E '^VITE_SUPABASE_URL=' .env.homologacao | cut -d'"' -f2)
+          ANON=$(grep -E '^VITE_SUPABASE_PUBLISHABLE_KEY=' .env.homologacao | cut -d'"' -f2)
+          case "$URL" in
+            *"$PRODUCAO_REF"*)
+              echo "::error::.env.homologacao aponta para a PRODUCAO — abortando."; exit 1 ;;
+            *"$HOMOLOGACAO_REF"*) : ;;
+            *)
+              echo "::error::.env.homologacao nao aponta para a homologacao — abortando."; exit 1 ;;
+          esac
+          export PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')"
+          homolog() { psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres "$@"; }
+          # Pela entrada padrão (não -c): é onde o psql substitui :'var'.
+          homolog -q -v ON_ERROR_STOP=1 -v url="$URL" -v anon="$ANON" <<'FIM_SQL'
+          -- Só as duas chaves de ambiente. As github_dispatch_* ficam DE FORA
+          -- de propósito: agendamento disparando esteira a partir daqui é
+          -- decisão ainda não tomada — sem valores, fica "salvo mas nada é
+          -- disparado", que é o comportamento seguro.
+          INSERT INTO public.app_config (chave, valor)
+          VALUES ('supabase_url', :'url'), ('supabase_anon_key', :'anon')
+          ON CONFLICT (chave) DO UPDATE
+            SET valor = EXCLUDED.valor, atualizado_em = now();
+          FIM_SQL
+          echo "app_config: supabase_url e supabase_anon_key apontam para a homologacao."
+
+      - uses: supabase/setup-cli@v1
+        with:
+          # Versão FIXA, mesmo motivo da esteira do staging: "latest" consulta
+          # o GitHub sem autenticação a cada corrida e estoura o rate limit.
+          version: 2.113.0
+      - name: Publicar as Edge Functions na homologação
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          # A CLI lê esta variável no `link` (o config.toml traz o project_id
+          # da produção; o link + --project-ref garantem o alvo certo).
+          SUPABASE_DB_PASSWORD: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+        run: |
+          # Sem functions, a homologação era um ensaio incompleto: convite,
+          # ativação de conta, IA e o painel de QA (aba Cypress) não tinham
+          # para quem ligar. Publica as mesmas functions do repositório —
+          # as chaves de plataforma (SUPABASE_URL, SERVICE_ROLE, ANON) o
+          # próprio Supabase injeta; chaves de recurso (OPENAI_API_KEY,
+          # RESEND_API_KEY...) são segredos do projeto, configurados no
+          # painel de quem decidir usá-los aqui.
+          #
+          # Roda nos DOIS modos: o so_finalizar (~min) é também o jeito
+          # barato de atualizar functions sem refazer a cópia de ~40min.
+          if [ "$HOMOLOGACAO_REF" = "$PRODUCAO_REF" ]; then
+            echo "::error::O alvo das functions aponta para a producao — abortando."; exit 1
+          fi
+          # Mesmo padrão já provado na esteira do staging: link + deploy.
+          supabase link --project-ref "$HOMOLOGACAO_REF"
+          # O empacotamento baixa dependências de CDNs públicos que às vezes
+          # falham momentaneamente (522/timeout) — tenta até 3 vezes.
+          for i in 1 2 3; do
+            if supabase functions deploy --project-ref "$HOMOLOGACAO_REF"; then
+              echo "Functions publicadas na homologacao."
+              exit 0
+            fi
+            echo "Tentativa $i falhou; aguardando 30s antes de tentar de novo..."
+            sleep 30
+          done
+          echo "::error::Functions deploy falhou após 3 tentativas."
+          exit 1
+
       - name: Guardar o retrato e o log
         if: always()
         uses: actions/upload-artifact@v4
