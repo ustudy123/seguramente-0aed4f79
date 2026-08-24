@@ -7,7 +7,7 @@
 #      por CLI) e reimplanta as Edge Functions;
 #   2) publica o SITE DE TESTE (build com .env.staging) no GitHub
 #      Pages do próprio repositório — sem contas nem secrets extras:
-#      https://ustudy123.github.io/seguramente-0aed4f79/
+#      https://ustudy123.github.io/youreyesnovo/
 #
 # Secrets necessários (Settings > Secrets and variables > Actions):
 #   SUPABASE_ACCESS_TOKEN  token pessoal (supabase.com/dashboard/account/tokens)
@@ -92,7 +92,7 @@ jobs:
       - name: Build de staging (sob o subcaminho do Pages)
         run: |
           npm ci
-          npm run build:staging -- --base=/seguramente-0aed4f79/
+          npm run build:staging -- --base=/youreyesnovo/
 
       - name: Build de homologação (sob /homologacao/ do mesmo Pages)
         run: |
@@ -100,13 +100,13 @@ jobs:
           # dividem o mesmo endereço em pastas diferentes. Sai mais barato que
           # um segundo host e não precisa de conta nova:
           #
-          #   teste       -> .../seguramente-0aed4f79/
-          #   homologação -> .../seguramente-0aed4f79/homologacao/
+          #   teste       -> .../youreyesnovo/
+          #   homologação -> .../youreyesnovo/homologacao/
           #
           # A trava do vite.config.ts vale aqui: se o .env.homologacao
           # apontasse para o Supabase de produção, este build não nasceria.
           npm run build:homologacao -- \
-            --base=/seguramente-0aed4f79/homologacao/ \
+            --base=/youreyesnovo/homologacao/ \
             --outDir=dist-homologacao
           mv dist-homologacao dist/homologacao
           cp dist/homologacao/index.html dist/homologacao/404.html
@@ -126,7 +126,7 @@ jobs:
           # entrada), o que é preferível a abrir o ambiente errado.
           python3 - <<'PY'
           import io
-          base = '/seguramente-0aed4f79/homologacao/'
+          base = '/youreyesnovo/homologacao/'
           guarda = (
             '<script>(function(){var b=' + repr(base).replace("'", '"') + ';'
             # O `!== b` evita laço: se a pasta da homologação faltar, o próprio
@@ -169,7 +169,7 @@ jobs:
     needs: site
     runs-on: ubuntu-latest
     env:
-      CYPRESS_BASE_URL: https://ustudy123.github.io/seguramente-0aed4f79/
+      CYPRESS_BASE_URL: https://ustudy123.github.io/youreyesnovo/
       CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
       # Caminho de volta do resultado para o painel de QA. O token tem de

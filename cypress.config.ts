@@ -12,7 +12,7 @@ import { readFileSync, statSync } from "fs";
 // abaixo se for um host da lista de permitidos.
 // =====================================================================
 
-const SITE_DE_TESTE = "https://ustudy123.github.io/seguramente-0aed4f79/";
+const SITE_DE_TESTE = "https://ustudy123.github.io/youreyesnovo/";
 
 // Lista de PERMITIDOS (não de proibidos): host novo só entra aqui de
 // propósito. Uma lista de proibidos deixaria passar o que esquecêssemos.
@@ -230,7 +230,7 @@ async function enviarParaOQA(resultados: unknown): Promise<void> {
 }
 
 // Tira barra(s) final(is) do alvo. Sem isto, `${baseUrl}/login` nos specs
-// vira `.../seguramente-0aed4f79//login` — a esteira passa CYPRESS_BASE_URL
+// vira `.../youreyesnovo//login` — a esteira passa CYPRESS_BASE_URL
 // com barra final. A barra dupla ainda rotearia (o basename absorve), mas
 // URL suja em log de teste é pegadinha para o próximo que for depurar.
 const alvoNormalizado = (process.env.CYPRESS_BASE_URL || SITE_DE_TESTE).replace(/\/+$/, "");

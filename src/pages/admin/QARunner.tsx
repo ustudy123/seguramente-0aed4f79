@@ -544,7 +544,7 @@ function PainelCypress({
               {disparando ? "Disparando..." : "Rodar testes"}
             </Button>
             <a
-              href="https://github.com/ustudy123/seguramente-0aed4f79/actions/workflows/cypress.yml"
+              href="https://github.com/ustudy123/youreyesnovo/actions/workflows/cypress.yml"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
