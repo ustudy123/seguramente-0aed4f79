@@ -610,6 +610,92 @@ jobs:
           # tenho com que comparar, e cuja ausência não se prova por amostra —
           # confere que a marca da máscara está em TODAS as linhas. Um CPF que
           # não comece com 9 é um CPF que escapou.
+          # ---------------------------------------------------------------
+          # ANTES DE MEDIR: remover contas nascidas NO PRÓPRIO destino.
+          #
+          # O endereço da homologação é público e tem um botão "Cadastre sua
+          # empresa". Alguém vai clicar — alguém CLICOU — e a conta criada ali
+          # tem e-mail de verdade e metadado preenchido. A trava tratou isso
+          # como vazamento e apagou os 625 mil registros da cópia por causa
+          # de UMA conta de cadastro. Vazamento é dado da PRODUÇÃO escapando
+          # da máscara; conta digitada aqui dentro não é isso.
+          #
+          # A régua que separa os dois é de construção: todo usuário vindo da
+          # cópia tem e-mail @exemplo.invalid, sem exceção. Conta com e-mail
+          # diferente nasceu aqui — e a resposta proporcional é remover a
+          # conta, não o mundo. Removem-se primeiro as linhas que apontam
+          # para ela (as chaves vêm do catálogo, em duas passadas, para
+          # cobrir dependente de dependente), depois a conta.
+          #
+          # O CPF fora do padrão continua acionando o apaga-tudo: ali não há
+          # como separar cadastro local de falha da máscara, e falha da
+          # máscara é a emergência real.
+          # ---------------------------------------------------------------
+          cat > remover_cadastros_locais.sql <<'FIM_SQL'
+          -- Desce a árvore de dependências antes de apagar: linha que aponta
+          -- para linha que aponta para a conta (neto) travaria o DELETE — e
+          -- como tudo roda numa transação, travaria a remoção INTEIRA. A
+          -- primeira versão usava "duas passadas" e caiu exatamente nisso no
+          -- ensaio. Assume chave primária de uma coluna uuid, que é o padrão
+          -- deste schema; tabela fora do padrão é pulada (e, se travar o
+          -- DELETE, o erro aparece em vez de sumir).
+          CREATE FUNCTION pg_temp.apagar_dependentes(
+            p_tab regclass, p_ids uuid[], p_prof int DEFAULT 0)
+          RETURNS void LANGUAGE plpgsql AS $f$
+          DECLARE r record; filhos uuid[]; pkcol text;
+          BEGIN
+            IF coalesce(array_length(p_ids,1),0) = 0 OR p_prof > 6 THEN
+              RETURN;
+            END IF;
+            FOR r IN
+              SELECT c.conrelid::regclass AS tabela, a.attname AS coluna
+                FROM pg_constraint c
+                JOIN unnest(c.conkey) u(attnum) ON true
+                JOIN pg_attribute a ON a.attrelid = c.conrelid
+                                   AND a.attnum = u.attnum
+               WHERE c.contype = 'f' AND c.confrelid = p_tab
+            LOOP
+              BEGIN
+                SELECT a.attname INTO pkcol
+                  FROM pg_index i
+                  JOIN pg_attribute a ON a.attrelid = i.indrelid
+                                     AND a.attnum = ANY(i.indkey)
+                 WHERE i.indrelid = r.tabela AND i.indisprimary
+                 LIMIT 1;
+                filhos := '{}';
+                IF pkcol IS NOT NULL THEN
+                  EXECUTE format(
+                    'SELECT coalesce(array_agg(%I),''{}'') FROM %s WHERE %I = ANY($1)',
+                    pkcol, r.tabela, r.coluna) INTO filhos USING p_ids;
+                END IF;
+              EXCEPTION WHEN OTHERS THEN
+                filhos := '{}';  -- chave que não é uuid: não desce por aqui
+              END;
+              PERFORM pg_temp.apagar_dependentes(r.tabela, filhos, p_prof + 1);
+              EXECUTE format('DELETE FROM %s WHERE %I = ANY($1)',
+                             r.tabela, r.coluna) USING p_ids;
+            END LOOP;
+          END $f$;
+
+          DO $limpa$
+          DECLARE ids uuid[];
+          BEGIN
+            SELECT coalesce(array_agg(id), '{}') INTO ids
+              FROM auth.users
+             WHERE email IS NOT NULL AND email NOT LIKE '%@exemplo.invalid';
+            IF coalesce(array_length(ids,1),0) = 0 THEN
+              RAISE NOTICE 'Nenhuma conta criada no destino.';
+              RETURN;
+            END IF;
+            PERFORM pg_temp.apagar_dependentes('auth.users'::regclass, ids);
+            DELETE FROM auth.users WHERE id = ANY(ids);
+            RAISE NOTICE 'Contas criadas no destino, removidas: %',
+                         array_length(ids,1);
+          END $limpa$;
+          FIM_SQL
+          homolog -f remover_cadastros_locais.sql 2>&1 \
+            | sed 's/^psql:[^:]*:[0-9]*: //' | grep -E 'NOTICE|ERROR' || true
+
           echo "MEDIDA                                   FORA DO PADRAO"
           fugiu=0
           conferir() {
