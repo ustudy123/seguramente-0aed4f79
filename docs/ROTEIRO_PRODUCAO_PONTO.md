@@ -27,6 +27,39 @@ que é entregue no ambiente de teste.
 
 ---
 
+## Antes da produção: o ensaio na homologação
+
+A fila abaixo **não vai direto para a produção**. Ela passa antes por um ensaio
+na **homologação** — a cópia fiel da estrutura da produção (com o drift real).
+A homologação responde à pergunta que o teste não responde: *"o script aplica na
+estrutura real?"*. Já aconteceu duas vezes de um script passar no teste e abortar
+na produção (uma coluna que só existia no teste; funções auxiliares que nunca
+chegaram lá) — o ensaio existe para isso não se repetir.
+
+O ensaio usa **os mesmos scripts, na mesma ordem** desta fila; muda só onde se
+cola e um passo de preparo antes. Três gestos:
+
+1. **Recriar a homologação** a partir da produção: GitHub → Actions →
+   `homologacao` → **Run workflow** → digitar `RECRIAR`. A esteira copia a
+   estrutura da produção com um usuário **somente leitura** (a produção nunca é
+   tocada) e recria o schema da homologação com ela. Começar a colar só depois de
+   a corrida fechar verde. (Requer, uma vez, os secrets `PRODUCAO_DB_PASSWORD` e
+   `HOMOLOGACAO_DB_PASSWORD` e o usuário leitor —
+   `docs/script_homologacao_leitor_producao.sql`.)
+2. **Colar os pacotes em ordem** no SQL Editor da **HOMOLOGAÇÃO** (não da
+   produção), lote a lote, lendo a conferência de cada um.
+3. **Ensaio aprovado** quando todos os pacotes rodam **sem erro** contra a
+   estrutura real, cada conferência dando `OK`. Depois de colados, a homologação
+   passa a diferir da produção — de propósito, pelos pacotes desta fila. Só então
+   os mesmos scripts, na mesma ordem, vão para o SQL Editor da **produção**.
+
+> Detalhe operacional do ensaio (lotes e checklist): artefato **"Ensaio na
+> Homologação — Ponto"**. A conferência da fidelidade da cópia (produção ×
+> homologação) é `docs/script_conferencia_homologacao.sql`, e roda **antes** de
+> colar os pacotes (o próprio botão já a executa ao final da corrida).
+
+---
+
 ## Estado atual
 
 **Nenhum pacote foi aplicado em produção ainda.** Todos estão validados (ou em
