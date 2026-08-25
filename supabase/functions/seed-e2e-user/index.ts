@@ -15,14 +15,18 @@
 //      qa-registrar-e2e; segredos de Edge Function são por projeto). Sem
 //      ele, recusa. Um endpoint aberto de criação de usuário seria um
 //      problema permanente.
-//   2) TRAVA DE AMBIENTE — só roda se o projeto for o de TESTE
-//      (SUPABASE_URL contém o ref do staging). Se o deploy um dia levar
-//      esta função para a produção, ela se recusa a rodar lá: nunca cria
-//      conta fictícia em cima de dado real de cliente.
+//   2) TRAVA DE AMBIENTE — só roda no TESTE (staging) ou na HOMOLOGAÇÃO,
+//      os dois ambientes sem dado real (fictício no teste, mascarado na
+//      homologação). Se o deploy um dia levar esta função para a produção,
+//      ela se recusa: nunca cria conta fictícia em cima de dado real.
 //
 // A conta e o vínculo espelham o que docs/PROMPT_INICIAL_DEV.md (seção 5)
 // e supabase/seeds/staging.sql já faziam à mão: profile + papel + vínculo
-// em usuarios_base, no tenant fixo da Empresa Staging.
+// em usuarios_base, no tenant fixo da Empresa Staging. Além da conta, esta
+// função planta as FIXTURES PROFUNDAS da ilha (departamentos, cargos e 20
+// colaboradores) — o staging as tem do seed manual e persiste; a homologação
+// é recriada a cada RECRIAR e chegaria sem elas, e sem colaborador o spec de
+// Desligamento não acha ninguém para desligar.
 // =====================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
@@ -34,8 +38,17 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // causa mais comum de "Token invalido". Mesma blindagem da qa-registrar-e2e.
 const QA_E2E_TOKEN = (Deno.env.get("QA_E2E_TOKEN") ?? "").trim();
 
-// Ref do projeto de TESTE. A função só age se estiver falando com ele.
-const STAGING_REF = "bmehdgthciuvdbvutsdv";
+// Refs onde é seguro semear conta e dados fictícios: o TESTE (staging) e a
+// HOMOLOGAÇÃO. Os dois só têm dado fictício (teste) ou mascarado (homologação),
+// nunca dado real de cliente. É uma ALLOWLIST, não uma denylist: ambiente novo
+// só entra aqui de propósito — o que esquecêssemos de listar é recusado, não
+// liberado. A produção NÃO está na lista, e ainda é barrada explicitamente
+// pela constante abaixo (duas provas para o pior caso: semear sobre dado real).
+const REFS_PERMITIDOS = [
+  "bmehdgthciuvdbvutsdv", // teste (staging)
+  "fgsblefvdabgdouipigz", // homologação
+];
+const REF_PRODUCAO = "diayjpsrcerycycyaxst";
 
 // Fixtures da Empresa Staging — os mesmos IDs de supabase/seeds/staging.sql,
 // para a conta cair no tenant que o resto do ambiente de teste já usa.
@@ -51,6 +64,125 @@ const SENHA_PADRAO = "7654321";
 // dos exemplos de docs/PROMPT_INICIAL_DEV.md, para não colidir com contas
 // criadas à mão).
 const CPF_ROBO = "90000010642";
+
+// Fixtures profundas da ilha (os MESMOS dados de supabase/seeds/staging.sql,
+// seções 3–6). Um departamento -> um cargo; 20 colaboradores com CPF fictício
+// de DV válido. Ficam aqui para o TESTE e a HOMOLOGAÇÃO terem a mesma ilha.
+const DEPARTAMENTOS = [
+  { nome: "Administrativo", descricao: "Gestão administrativa e financeira" },
+  { nome: "Recursos Humanos", descricao: "Departamento pessoal e SST" },
+  { nome: "Operações", descricao: "Operações e produção" },
+  { nome: "Tecnologia", descricao: "Desenvolvimento e infraestrutura" },
+];
+// Mapa departamento -> cargo, na MESMA ordem do CASE de staging.sql (n % 4:
+// 0 Financeiro, 1 RH, 2 Produção, 3 Full Stack).
+const CARGOS = [
+  "Analista Financeiro",
+  "Analista de RH",
+  "Operador de Produção",
+  "Desenvolvedor Full Stack",
+];
+const DEPTOS = ["Administrativo", "Recursos Humanos", "Operações", "Tecnologia"];
+const CPFS_COLAB = [
+  "90000000175", "90000000256", "90000000337", "90000000418", "90000000507",
+  "90000000680", "90000000760", "90000000841", "90000000922", "90000001066",
+  "90000001147", "90000001228", "90000001309", "90000001490", "90000001570",
+  "90000001651", "90000001732", "90000001813", "90000001902", "90000002038",
+];
+const AI_CONTEXT =
+  "Empresa de tecnologia e serviços de SST. Processos: financeiros, DP, " +
+  "operação de produção e desenvolvimento de software. Atividades esperadas: " +
+  "contas a pagar/receber, folha de pagamento, admissão/demissão, controle de " +
+  "EPIs, desenvolvimento de funcionalidades, suporte a clientes internos.";
+
+// Cliente admin tipado sem importar o tipo (evita mais um import de esm.sh).
+type Admin = ReturnType<typeof createClient>;
+
+// Planta departamentos, cargos e 20 colaboradores no tenant fixo da ilha.
+// Idempotente (só insere onde ainda não há nada) e chamada de forma NÃO-FATAL:
+// o login já funciona sem isto, então nada aqui pode derrubar o seed.
+async function semearFixturesProfundas(admin: Admin, userId: string) {
+  // Departamentos — só se o tenant ainda não tiver nenhum.
+  const { data: deptExist } = await admin
+    .from("departamentos").select("id").eq("tenant_id", TENANT_ID).limit(1);
+  if (!deptExist || deptExist.length === 0) {
+    const { error } = await admin.from("departamentos").insert(
+      DEPARTAMENTOS.map((d) => ({
+        tenant_id: TENANT_ID, empresa_id: EMPRESA_ID,
+        nome: d.nome, descricao: d.descricao, ativo: true,
+      })),
+    );
+    if (error) console.error("departamentos:", error.message);
+  }
+
+  // Relê para pegar os ids (recém-criados ou já existentes) e ligar os cargos.
+  const { data: depts } = await admin
+    .from("departamentos").select("id, nome").eq("tenant_id", TENANT_ID);
+
+  // Cargos — um por departamento, só se ainda não houver cargos.
+  const { data: cargoExist } = await admin
+    .from("cargos").select("id").eq("tenant_id", TENANT_ID).limit(1);
+  if ((!cargoExist || cargoExist.length === 0) && depts && depts.length > 0) {
+    const linhas = depts
+      .map((d) => {
+        const i = DEPTOS.indexOf(d.nome as string);
+        if (i < 0) return null;
+        return {
+          tenant_id: TENANT_ID, empresa_id: EMPRESA_ID,
+          nome: CARGOS[i],
+          descricao: "Cargo de testes para ambiente de teste",
+          departamento_id: d.id, ativo: true,
+          objetivo_funcao: "Objetivo genérico da função",
+          escopo_geral: "Escopo genérico da função",
+          responsabilidade: "Responsabilidade genérica",
+          nivel: "pleno",
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+    if (linhas.length > 0) {
+      const { error } = await admin.from("cargos").insert(linhas);
+      if (error) console.error("cargos:", error.message);
+    }
+  }
+
+  // Colaboradores (admissões concluídas) — só se o tenant ainda não tiver
+  // nenhuma admissão, para não duplicar a cada corrida.
+  const { data: admExist } = await admin
+    .from("admissoes").select("id").eq("tenant_id", TENANT_ID).limit(1);
+  if (!admExist || admExist.length === 0) {
+    const linhas = CPFS_COLAB.map((cpf, idx) => {
+      const n = idx + 1;
+      return {
+        tenant_id: TENANT_ID, empresa_id: EMPRESA_ID,
+        status: "concluido",
+        nome_completo: "Colaborador " + n,
+        cpf,
+        data_nascimento: "1990-01-01",
+        estado_civil: "solteiro",
+        genero: "masculino",
+        email: "colaborador" + n + "@youreyes.local",
+        telefone: "(11) 99999-" + String(n).padStart(4, "0"),
+        cidade: "São Paulo", estado: "SP",
+        cargo: CARGOS[n % 4], departamento: DEPTOS[n % 4],
+        data_admissao: "2024-01-01",
+        tipo_contrato: "CLT", jornada_trabalho: "8h diárias",
+        salario: 5000,
+        gestor_imediato: "Gestor Staging",
+        // criado_por aponta para o próprio robô (existe em auth.users). O
+        // staging.sql usava um uuid-zero de placeholder, que só não quebra
+        // porque a coluna não tem FK; usar o robô é o valor correto e seguro.
+        criado_por: userId,
+      };
+    });
+    const { error } = await admin.from("admissoes").insert(linhas);
+    if (error) console.error("admissoes (colaboradores):", error.message);
+  }
+
+  // Contexto de IA da empresa (specs de geração de função leem isto).
+  const { error: aiErr } = await admin
+    .from("empresa_cadastro").update({ ai_context: AI_CONTEXT }).eq("id", EMPRESA_ID);
+  if (aiErr) console.error("ai_context:", aiErr.message);
+}
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -89,12 +221,20 @@ serve(async (req) => {
   }
 
   // ── Portão 2: trava de ambiente (nunca semear produção) ──
-  if (!SUPABASE_URL.includes(STAGING_REF)) {
+  // Primeiro a recusa explícita da produção: mesmo que alguém um dia inclua o
+  // ref dela em REFS_PERMITIDOS por engano, esta linha barra antes.
+  if (SUPABASE_URL.includes(REF_PRODUCAO)) {
+    return json(
+      { error: "Recusado: esta funcao NUNCA semeia conta ficticia na PRODUCAO." },
+      403,
+    );
+  }
+  if (!REFS_PERMITIDOS.some((ref) => SUPABASE_URL.includes(ref))) {
     return json(
       {
         error:
-          "Recusado: esta funcao so semeia conta ficticia no ambiente de " +
-          "TESTE (" + STAGING_REF + "). O projeto atual nao e o de teste.",
+          "Recusado: esta funcao so semeia no TESTE ou na HOMOLOGACAO. " +
+          "O projeto atual nao e nenhum dos dois.",
       },
       403,
     );
@@ -288,6 +428,16 @@ serve(async (req) => {
       // CPF já em uso por outra conta de teste não deve derrubar o seed: o
       // login já funciona com profile + papel. Só registra e segue.
       if (ubErr) console.error("usuarios_base(insert):", ubErr.message);
+    }
+
+    // 7) Fixtures profundas da ilha (departamentos, cargos, colaboradores).
+    //    NÃO-FATAL: envolto em try/catch para nunca impedir a conta-robô de
+    //    existir. Em staging as fixtures já existem (idempotente = pula); na
+    //    homologação recém-recriada, é aqui que os colaboradores nascem.
+    try {
+      await semearFixturesProfundas(admin, userId);
+    } catch (e) {
+      console.error("Fixtures profundas (nao-fatal):", (e as Error).message);
     }
 
     return json({

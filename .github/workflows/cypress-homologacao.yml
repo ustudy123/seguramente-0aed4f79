@@ -1,0 +1,138 @@
+# =====================================================================
+# Testes de TELA (Cypress) contra a HOMOLOGAÇÃO — por botão
+#
+# Gêmeo do job `telas` da esteira de staging (staging.yml), só que apontado
+# para o ambiente de HOMOLOGAÇÃO. NÃO roda sozinho: só por "Run workflow".
+# A homologação não segue a `main` (é recriada por RECRIAR, sob demanda), e
+# a mesma suíte roda contra o MESMO código de tela dos dois ambientes — então
+# aqui ela é um gesto manual, para quando se quiser exercitar as telas contra
+# o banco cópia-da-produção (volume real, estrutura real).
+#
+# O QUE ELE FAZ, na ordem:
+#   1) guarda de cobertura (reprova it() de tela sem caso documentado);
+#   2) espera o site de homologação responder;
+#   3) semeia a conta-robô + a ilha de fixtures (a homologação é apagada a
+#      cada RECRIAR, então a ilha precisa ser replantada aqui);
+#   4) roda a suíte contra o site de homologação;
+#   5) devolve o resultado para o painel de QA da homologação.
+#
+# TRAVAS DE AMBIENTE (produção é inalcançável, de propósito):
+#   · cypress.config.ts só aceita host da lista (ustudy123.github.io) e aborta
+#     em tempo de execução se a app falar com o ref da produção;
+#   · a Edge Function seed-e2e-user recusa qualquer ref que não seja o do
+#     teste ou o da homologação — nunca semeia produção.
+#
+# SEGREDOS NECESSÁRIOS (Settings > Secrets and variables > Actions):
+#   QA_E2E_TOKEN_HOMOLOGACAO   o MESMO valor do segredo QA_E2E_TOKEN
+#                              configurado nas Edge Functions do projeto
+#                              Supabase de HOMOLOGAÇÃO (fgsblefvdabgdouipigz).
+#   CYPRESS_EMAIL / CYPRESS_PASSWORD  opcionais; sem eles a suíte usa a conta
+#                              padrão (teste@lucas.com / 7654321), que é a
+#                              mesma que o seed cria na homologação.
+#
+# PRÉ-REQUISITO: as Edge Functions atualizadas (seed-e2e-user com a homologação
+# na allowlist, qa-registrar-e2e, qa-cobertura-e2e) precisam estar publicadas
+# na homologação. Elas sobem no passo "Publicar as Edge Functions" do workflow
+# `homologacao` — rode-o uma vez no modo `so_finalizar` (~2 min) depois de
+# mesclar esta mudança, para o projeto de homologação ficar com a versão nova.
+# =====================================================================
+name: cypress-homologacao
+
+on:
+  workflow_dispatch:
+
+# A homologação é um recurso compartilhado: duas corridas de tela ao mesmo
+# tempo semeariam/ligariam a mesma conta-robô em paralelo. Serializa.
+concurrency:
+  group: cypress-homologacao
+  cancel-in-progress: false
+
+jobs:
+  telas:
+    name: Testes de tela (Cypress) na homologação
+    runs-on: ubuntu-latest
+    env:
+      HOMOLOGACAO_REF: fgsblefvdabgdouipigz
+      CYPRESS_BASE_URL: https://ustudy123.github.io/youreyesnovo/homologacao/
+      CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
+      CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+      # Caminho de volta para o painel de QA da HOMOLOGAÇÃO. O token tem de ser
+      # o mesmo dos dois lados: este secret aqui e o segredo QA_E2E_TOKEN na
+      # Edge Function do projeto de homologação. Faltando qualquer um, a suíte
+      # roda igual e só não reporta — nunca quebra por causa disso.
+      QA_E2E_URL: https://fgsblefvdabgdouipigz.supabase.co/functions/v1/qa-registrar-e2e
+      QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN_HOMOLOGACAO }}
+      QA_E2E_ORIGEM: botao homologacao
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Cache do binário do Cypress
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Instalar dependências
+        run: npm ci
+      - name: Guarda — teste de tela só existe se documentado (nível e2e)
+        # Reprova a corrida se houver it() no Cypress sem caso documentado.
+        # Sem QA_E2E_TOKEN, a guarda se pula sozinha (não bloqueia).
+        env:
+          QA_COBERTURA_URL: https://fgsblefvdabgdouipigz.supabase.co/functions/v1/qa-cobertura-e2e
+          QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN_HOMOLOGACAO }}
+        run: npm run qa:cobertura-e2e
+      - name: Esperar o site de homologação responder
+        # O deploy do Pages retorna antes de o CDN servir a versão nova.
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS -o /dev/null "$CYPRESS_BASE_URL"; then
+              echo "Site de homologação no ar."; exit 0
+            fi
+            echo "Ainda não respondeu (tentativa $i); aguardando 15s..."
+            sleep 15
+          done
+          echo "::error::Site de homologação não respondeu a tempo."
+          exit 1
+      - name: Semear a conta-robô e a ilha na homologação
+        # A suíte loga com uma conta fixa (padrão em cypress.config.ts). A
+        # homologação é recriada a cada RECRIAR e chega sem ela — este passo
+        # garante a conta E as fixtures (departamentos, cargos, colaboradores)
+        # antes de rodar. A função seed-e2e-user já sobe no deploy de functions
+        # do workflow `homologacao`, e sua trava aceita o ref da homologação.
+        env:
+          SEED_URL: https://fgsblefvdabgdouipigz.supabase.co/functions/v1/seed-e2e-user
+          QA_E2E_TOKEN: ${{ secrets.QA_E2E_TOKEN_HOMOLOGACAO }}
+        run: |
+          if [ -z "$QA_E2E_TOKEN" ]; then
+            echo "::error::QA_E2E_TOKEN_HOMOLOGACAO ausente — conta-robô não semeada."
+            echo "::error::Configure o secret com o MESMO valor do QA_E2E_TOKEN das"
+            echo "::error::Edge Functions do projeto Supabase de homologação."
+            exit 1
+          fi
+          EMAIL="${CYPRESS_EMAIL:-teste@lucas.com}"
+          SENHA="${CYPRESS_PASSWORD:-7654321}"
+          E="$EMAIL" S="$SENHA" python3 -c 'import json,os;open("/tmp/seed.json","w").write(json.dumps({"email":os.environ["E"],"senha":os.environ["S"]}))'
+          echo "Corpo do seed: $(cat /tmp/seed.json)"
+          CODE=$(curl -sS -o /tmp/seed.out -w "%{http_code}" -X POST "$SEED_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-qa-token: $QA_E2E_TOKEN" \
+            --data-binary @/tmp/seed.json)
+          echo "Resposta do seed (HTTP $CODE): $(cat /tmp/seed.out)"
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
+            echo "::error::Falha ao semear a conta-robô (HTTP $CODE) — a suíte iria falhar no login."
+            exit 1
+          fi
+      - name: Rodar a suíte
+        run: npm run test:e2e
+      - name: Guardar prints e vídeos da corrida
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-evidencias-homologacao
+          path: |
+            cypress/screenshots
+            cypress/videos
+          if-no-files-found: ignore
+          retention-days: 7

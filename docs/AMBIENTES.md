@@ -313,6 +313,42 @@ script só na produção e esquecer dela.
   repositório. Rodando os mesmos na produção e na homologação, a diferença entre
   os dois resultados é exatamente o quanto elas se afastaram.
 
+## Testes de tela (Cypress) na homologação
+
+Por padrão a suíte Cypress roda só no **teste** (é lá que a tela nasce, e as duas
+telas — teste e homologação — são o mesmo código publicado em duas pastas). A
+raia de tela na homologação foi montada **por decisão explícita da equipe**, para
+quando se quiser exercitar as telas contra o banco cópia-da-produção (volume e
+estrutura reais). Ela **não roda sozinha**: é um botão.
+
+**Como rodar:** Actions → `cypress-homologacao` → **Run workflow**. O workflow
+semeia a conta-robô e a ilha de fixtures na homologação, roda a suíte contra
+`https://ustudy123.github.io/youreyesnovo/homologacao/` e devolve o resultado
+ao painel de QA **da homologação**.
+
+**Pré-requisito (uma vez, depois de mesclar):** as Edge Functions precisam estar
+publicadas na homologação com a versão nova (a `seed-e2e-user` passou a aceitar o
+ref da homologação). Rode o workflow `homologacao` no modo **`so_finalizar`**
+(~2 min) — ele republica as functions sem refazer a cópia.
+
+**Segredos (Settings → Secrets and variables → Actions):**
+
+| Secret | Valor |
+|---|---|
+| `QA_E2E_TOKEN_HOMOLOGACAO` | o **mesmo** valor do segredo `QA_E2E_TOKEN` das Edge Functions do projeto Supabase de homologação (`fgsblefvdabgdouipigz`). Sem ele, o seed e o relatório não funcionam. |
+| `CYPRESS_EMAIL` / `CYPRESS_PASSWORD` | opcionais; sem eles usa a conta padrão `teste@lucas.com` / `7654321`, que é a que o seed cria. |
+
+**Travas de ambiente (produção inalcançável):** o `cypress.config.ts` só aceita
+host da lista (`ustudy123.github.io`) e aborta se a app falar com o ref da
+produção; a `seed-e2e-user` recusa qualquer ref fora do teste e da homologação.
+
+**Sobre a ilha e a fidelidade:** a suíte roda numa ilha isolada (tenant fixo
+`Empresa Staging LTDA`), invisível às contas mascaradas da produção porque a RLS
+separa por tenant. Ela é replantada a cada corrida e some no próximo `RECRIAR`.
+A conferência de fidelidade do `RECRIAR` roda **antes** de qualquer seed, então a
+ilha não a afeta; um `SELECT` de contagem rodado à mão depois de uma corrida de
+tela mostrará essas linhas a mais — é esperado.
+
 ## Rodar a homologação localmente
 
 ```bash
@@ -421,6 +457,12 @@ O mesmo Pages hospeda os dois ambientes públicos, cada um numa pasta com nome p
 O Pages serve um único `404.html` (o da raiz) para qualquer caminho inexistente do site inteiro: ele carrega o app de teste e desvia os caminhos sob `/homologacao/` para o app de homologação, para nunca abrir um ambiente achando que é o outro.
 
 O workflow tem trava contra apontar para a produção e pode ser disparado manualmente na aba Actions (`workflow_dispatch`).
+
+Outros workflows do repositório:
+
+- `homologacao.yml` — recria a homologação a partir da estrutura da produção (por botão, digitando `RECRIAR`). Ver **Manter a homologação em dia**.
+- `cypress.yml` — dispara a suíte de tela contra o **teste**, sob demanda (é o que o botão "Rodar testes" da tela de QA aciona).
+- `cypress-homologacao.yml` — dispara a suíte de tela contra a **homologação**, por botão. Ver **Testes de tela (Cypress) na homologação**.
 
 ## Verificação de ambiente
 
