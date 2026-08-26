@@ -162,29 +162,65 @@ jobs:
           )
           io.open('dist/index.html', 'w', encoding='utf-8').write(idx)
 
+          def injetar_no_head(html, script, nome):
+              k = html.lower().find('<head>')
+              if k == -1:
+                  raise SystemExit(nome + ' sem <head> — script nao aplicado')
+              k += len('<head>')
+              return html[:k] + script + html[k:]
+
           # 2) O 404.html da raiz = app de TESTE + desvio para a homologacao.
+          #
+          # O desvio PRESERVA a rota (padrão spa-github-pages). Antes ele mandava
+          # /homologacao/<rota> para a entrada /homologacao/ e a rota se perdia —
+          # um deep-link de homologação (inclusive o /login que a suíte Cypress
+          # visita) abria sempre na página inicial de marketing, sem formulário.
+          # Agora ele reescreve /homologacao/<rota> para /homologacao/?/<rota>: a
+          # rota viaja no query, e o decodificador do index.html da homologação
+          # (passo 3) a restaura ANTES de o app montar. Assim o deep-link de
+          # homologação passa a funcionar como o do teste (que já funciona porque
+          # o 404.html da raiz É o app de teste).
           teste_html = io.open('dist/teste/index.html', encoding='utf-8').read()
           guarda = (
             '<script>(function(){var b=' + repr(base_homolog).replace("'", '"') + ';'
+            'var l=location,p=l.pathname;'
             # O `!== b` evita laço: se a pasta da homologação faltar, o próprio
             # endereço de entrada cairia no 404 e se redirecionaria para sempre.
-            'if(location.pathname.indexOf(b)===0&&location.pathname!==b)'
-            '{location.replace(b);}})();</script>'
+            'if(p.indexOf(b)===0&&p!==b){'
+            'l.replace(b+"?/"+p.slice(b.length).replace(/&/g,"~and~")'
+            '+(l.search?"&"+l.search.slice(1).replace(/&/g,"~and~"):"")+l.hash);'
+            '}})();</script>'
           )
-          i = teste_html.lower().find('<head>')
-          if i == -1:
-              raise SystemExit('teste/index.html sem <head> — o desvio nao seria aplicado')
-          i += len('<head>')
-          io.open('dist/404.html', 'w', encoding='utf-8').write(teste_html[:i] + guarda + teste_html[i:])
+          io.open('dist/404.html', 'w', encoding='utf-8').write(
+            injetar_no_head(teste_html, guarda, 'teste/index.html'))
 
-          # 3) Fallbacks por pasta (defensivo; na prática o Pages usa o da raiz).
-          io.open('dist/teste/404.html', 'w', encoding='utf-8').write(teste_html)
+          # 3) Decodificador da rota preservada, no index.html da HOMOLOGAÇÃO.
+          #    Converte /homologacao/?/<rota> de volta para /homologacao/<rota>
+          #    via replaceState, antes de qualquer bundle — o BrowserRouter da
+          #    homologação (basename /<repo>/homologacao/) então enxerga a rota
+          #    certa. Sem rota preservada (entrada normal), é no-op.
+          decodificador = (
+            '<script>(function(){var l=location;'
+            'if(l.search&&l.search.charAt(1)==="/"){'
+            'var q=l.search.slice(2).split("&");'
+            'var rota=q[0].replace(/~and~/g,"&");'
+            'var resto=q.slice(1).join("&").replace(/~and~/g,"&");'
+            'history.replaceState(null,"",l.pathname+rota+(resto?"?"+resto:"")+l.hash);'
+            '}})();</script>'
+          )
           homolog_html = io.open('dist/homologacao/index.html', encoding='utf-8').read()
+          homolog_html = injetar_no_head(homolog_html, decodificador, 'homologacao/index.html')
+          io.open('dist/homologacao/index.html', 'w', encoding='utf-8').write(homolog_html)
+
+          # 4) Fallbacks por pasta (defensivo; na prática o Pages usa o da raiz).
+          io.open('dist/teste/404.html', 'w', encoding='utf-8').write(teste_html)
           io.open('dist/homologacao/404.html', 'w', encoding='utf-8').write(homolog_html)
-          print('raiz->/teste/, 404.html (teste + desvio homologacao) e fallbacks criados')
+          print('raiz->/teste/, 404.html (teste + desvio que preserva rota) e decodificador da homologacao criados')
           PY
           grep -q 'homologacao' dist/404.html   || { echo "::error::O desvio nao entrou no 404.html"; exit 1; }
           grep -q '/teste/'     dist/index.html || { echo "::error::A raiz nao redireciona para /teste/"; exit 1; }
+          grep -q 'replaceState' dist/homologacao/index.html || { echo "::error::O decodificador de rota nao entrou no index.html da homologacao"; exit 1; }
+          grep -q '?/' dist/404.html            || { echo "::error::O desvio da homologacao nao preserva a rota (falta o ?/ no 404.html)"; exit 1; }
       - uses: actions/configure-pages@v5
         with:
           enablement: true
