@@ -30,6 +30,22 @@
 
 
 -- ===================================================================
+-- PRÉ-REQUISITO: o valor 'e2e' no enum qa_disparo
+-- (fonte: supabase/migrations/20260811130000_qa_disparo_e2e.sql)
+--
+-- A gravação de uma corrida faz INSERT INTO qa_execucoes (disparo) com
+-- 'e2e'. O enum base é ('manual','agendado'); sem este valor, a gravação
+-- quebra com "invalid input value for enum qa_disparo: e2e".
+--
+-- Adicionar um valor de enum e USÁ-LO na MESMA transação não é permitido.
+-- Aqui é seguro: este script só DEFINE a função que usa 'e2e' (o corpo não
+-- executa agora) — a execução acontece depois, quando a Edge Function a
+-- chama, já em outra transação. Verificado em PostgreSQL 16.
+-- ===================================================================
+ALTER TYPE public.qa_disparo ADD VALUE IF NOT EXISTS 'e2e';
+
+
+-- ===================================================================
 -- FONTE: supabase/migrations/20260811131000_qa_ponte_cypress.sql
 -- ===================================================================
 -- =====================================================================
@@ -1038,4 +1054,6 @@ SELECT
   EXISTS (SELECT 1 FROM information_schema.columns
           WHERE table_schema='public' AND table_name='qa_resultados'
             AND column_name='evidencia_png')                       AS coluna_print_ok,
+  EXISTS (SELECT 1 FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid
+          WHERE t.typname='qa_disparo' AND e.enumlabel='e2e')      AS disparo_e2e_ok,
   (SELECT count(*) FROM public.qa_cobertura_e2e)                   AS linhas_ponte;
