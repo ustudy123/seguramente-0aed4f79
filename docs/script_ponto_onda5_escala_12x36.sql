@@ -1,8 +1,15 @@
 -- ============================================================================
 -- ENTREGA — ONDA 5 (parte 6): escala 12x36 por ciclo
 -- Alvos: ponto_apurar_ciclo_plantao_do_dia (nova); injecoes guardadas em
---        ponto_jornada_do_dia, ponto_saldo_dias_competencia_bruto e
+--        ponto_jornada_do_dia, ponto_saldo_dias_competencia (monolito) e
 --        ponto_feriados_trabalhados.
+--
+-- ALVO DO MOTOR DE SALDO (drift do ensaio): no repositorio a apuracao foi
+--   refatorada em casca + ponto_saldo_dias_competencia_bruto, mas ESSA
+--   REFATORACAO NUNCA CHEGOU A PRODUCAO — la (e na homologacao, copia fiel) a
+--   apuracao segue num unico corpo monolitico ponto_saldo_dias_competencia.
+--   A ancora da injecao e identica nos dois; muda so o nome. Aqui o alvo e o
+--   monolito. Verificado contra o corpo real de producao: a ancora casa e e unica.
 -- PONTO-150 / PONTO-151
 --
 -- Os campos de ciclo existem na escala (tipo '12x36', ciclo_horas_trabalho/
@@ -121,7 +128,7 @@ BEGIN
   EXECUTE v_def;
 END $inj$;
 
--- (3) ponto_saldo_dias_competencia_bruto: folga do ciclo nao gera falta -------
+-- (3) ponto_saldo_dias_competencia (monolito): folga do ciclo nao gera falta --
 DO $inj$
 DECLARE
   v_def text;
@@ -129,13 +136,13 @@ DECLARE
   v_add text;
 BEGIN
   SELECT pg_get_functiondef(oid) INTO v_def FROM pg_proc
-   WHERE proname = 'ponto_saldo_dias_competencia_bruto' AND pronamespace = 'public'::regnamespace LIMIT 1;
+   WHERE proname = 'ponto_saldo_dias_competencia' AND pronamespace = 'public'::regnamespace LIMIT 1;
   IF v_def IS NULL THEN RETURN; END IF;
 
   IF position('ponto_apurar_ciclo_plantao_do_dia' IN v_def) > 0 THEN
     RETURN;
   ELSIF position(v_anchor IN v_def) = 0 THEN
-    RAISE NOTICE 'ponto_saldo_dias_competencia_bruto: ancora do ciclo nao encontrada — NADA alterado (corpo divergente; envie o pg_get_functiondef para reconciliar).';
+    RAISE NOTICE 'ponto_saldo_dias_competencia: ancora do ciclo nao encontrada — NADA alterado (corpo divergente; envie o pg_get_functiondef para reconciliar).';
     RETURN;
   END IF;
 
@@ -187,19 +194,19 @@ END $inj$;
 --   jornada_ciclo : t  (ponto_jornada_do_dia le o ciclo)
 --   saldo_ciclo   : t  (o motor de saldo le o ciclo — se f, o corpo de producao
 --                       divergiu: me envie pg_get_functiondef(ponto_saldo_dias_
---                       competencia_bruto) para reconciliar)
+--                       competencia) para reconciliar)
 --   feriado_ciclo : t  (a apuracao de feriado distingue a 12x36)
 -- ---------------------------------------------------------------------------
 SELECT
   (to_regprocedure('public.ponto_apurar_ciclo_plantao_do_dia(uuid,text,text,date)') IS NOT NULL) AS helper_existe,
   (EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_jornada_do_dia'
      AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%'))                                    AS jornada_ciclo,
-  (EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_saldo_dias_competencia_bruto'
+  (EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_saldo_dias_competencia'
      AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%'))                                    AS saldo_ciclo,
   (EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_feriados_trabalhados'
      AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%'))                                    AS feriado_ciclo,
   CASE WHEN to_regprocedure('public.ponto_apurar_ciclo_plantao_do_dia(uuid,text,text,date)') IS NOT NULL
         AND EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_jornada_do_dia' AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%')
-        AND EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_saldo_dias_competencia_bruto' AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%')
+        AND EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_saldo_dias_competencia' AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%')
         AND EXISTS (SELECT 1 FROM pg_proc WHERE proname='ponto_feriados_trabalhados' AND prosrc ILIKE '%ponto_apurar_ciclo_plantao_do_dia%')
        THEN 'OK' ELSE 'CONFERIR (corpo divergente — ver aviso)' END AS erro_tecnico;
