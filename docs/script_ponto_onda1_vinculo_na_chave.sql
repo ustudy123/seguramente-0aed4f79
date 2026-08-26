@@ -213,6 +213,15 @@ BEGIN
 END;
 $function$;
 
+-- ---- Remove a sobrecarga ORFA de 7 args de _ponto_grava_abono ----
+-- Drift de producao: uma versao de 7 argumentos (…, p_tipo_dia text) foi criada
+-- direto na producao no passado, superada depois pela versao de 6 args (os
+-- chamadores migraram) e nunca removida. Ela NAO esta no repositorio, NADA no
+-- codigo atual a chama, e ainda usava o arbiter antigo de 3 colunas — quebraria
+-- em execucao agora que este pacote troca o indice de ponto_diario. IF EXISTS:
+-- no-op onde ela nao existe (teste/homologacao ja limpa); remove onde existe.
+DROP FUNCTION IF EXISTS public._ponto_grava_abono(uuid, uuid, text, text, date, text, text);
+
 -- ---- justificar_ponto_por_atestado: arbiter da chave atualizado (unica mudanca) ----
 CREATE OR REPLACE FUNCTION public.justificar_ponto_por_atestado()
  RETURNS trigger
