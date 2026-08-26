@@ -1,6 +1,7 @@
 -- ============================================================================
 -- ENTREGA — ONDA 3 (parte 1): tolerância cumulativa dos dois tetos legais
--- Alvo: função de apuração public.ponto_saldo_dias_competencia_bruto
+-- Alvo (produção/homologação): função monolítica
+--   public.ponto_saldo_dias_competencia(uuid, text, text)
 -- PONTO-041 / PONTO-042 / PONTO-352 (mantém PONTO-353, PONTO-040)
 --
 -- O QUE FAZ
@@ -16,18 +17,27 @@
 --         marcação passa a ser computado por inteiro, e a fronteira do teto
 --         diário na sobra (10→0, 11→11) segue idêntica.
 --
--- POR QUE ESTE SCRIPT É CIRÚRGICO (e não cola o corpo inteiro)
---   O corpo desta função, em produção, foi corrigido por remendo ao longo do
---   tempo e NÃO corresponde a nenhum arquivo do repositório (ver o comentário
---   em 20260805120000_um_dia_por_data_na_apuracao.sql). Colar um corpo inteiro
---   apagaria esses remendos. Este script, então, LÊ o corpo que estiver vivo
---   em produção e troca APENAS os trechos de tolerância. Se o corpo não casar
---   exatamente com o padrão esperado nessas linhas (por ter sido remendado
---   também ali), o script NÃO altera nada e avisa — para reconciliarmos à mão
---   antes, sem risco de mexer no cálculo errado.
+-- POR QUE O ALVO É O MONÓLITO (drift descoberto no ensaio da homologação)
+--   No repositório, a apuração foi refatorada em duas funções (uma casca
+--   `ponto_saldo_dias_competencia` que delega para o miolo
+--   `ponto_saldo_dias_competencia_bruto`). ESSA REFATORAÇÃO NUNCA CHEGOU À
+--   PRODUÇÃO: lá (e na homologação, cópia fiel) a apuração continua num único
+--   corpo monolítico chamado `ponto_saldo_dias_competencia`, corrigido por
+--   remendo ao longo do tempo. Portanto, aqui o alvo é o monólito.
 --
---   Idempotente: rodar duas vezes não quebra nem duplica (reconhece o marcador
---   [onda3-tol] já aplicado).
+-- POR QUE ESTE SCRIPT É CIRÚRGICO (e não cola o corpo inteiro)
+--   O corpo vivo em produção tem remendos que não correspondem a nenhum
+--   arquivo do repositório. Colar um corpo inteiro apagaria esses remendos.
+--   Este script LÊ o corpo que estiver vivo e troca APENAS os trechos de
+--   tolerância. Se o corpo não casar exatamente com o padrão esperado nessas
+--   linhas, o script NÃO altera nada e avisa (PENDENTE) — para reconciliarmos
+--   à mão antes, sem risco de mexer no cálculo errado.
+--
+--   Validado contra o corpo REAL de produção: os padrões abaixo casam
+--   exatamente com o monólito, o marcador de equalização NÃO é tocado, e o
+--   caso de tolerância PONTO-041 sai de "falhou" (sem patch) para "passou"
+--   (com patch). Idempotente: rodar duas vezes não quebra nem duplica
+--   (reconhece o marcador [onda3-tol] já aplicado).
 -- ============================================================================
 
 DO $entrega$
@@ -38,12 +48,12 @@ BEGIN
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
-    AND p.proname = 'ponto_saldo_dias_competencia_bruto'
+    AND p.proname = 'ponto_saldo_dias_competencia'
     AND pg_get_function_identity_arguments(p.oid) = 'p_tenant_id uuid, p_colaborador_cpf text, p_competencia text'
   LIMIT 1;
 
   IF v_def IS NULL THEN
-    RAISE NOTICE 'ponto_saldo_dias_competencia_bruto nao encontrada — nada a fazer.';
+    RAISE NOTICE 'ponto_saldo_dias_competencia nao encontrada — nada a fazer.';
     RETURN;
   END IF;
 
@@ -88,20 +98,21 @@ BEGIN
   IF position('[onda3-tol]' in v_def) = 0
      OR position('COALESCE(v_tol_bat, 5)' in v_def) = 0
      OR position('COALESCE(e.tolerancia_batida_min, 10)' in v_def) > 0 THEN
-    RAISE NOTICE 'ATENCAO: corpo divergente nas linhas de tolerancia (provavel remendo proprio de producao). NADA foi alterado. Envie pg_get_functiondef(ponto_saldo_dias_competencia_bruto) para reconciliarmos a mao antes de aplicar.';
+    RAISE NOTICE 'ATENCAO: corpo divergente nas linhas de tolerancia (provavel remendo proprio de producao). NADA foi alterado. Envie pg_get_functiondef(ponto_saldo_dias_competencia) para reconciliarmos a mao antes de aplicar.';
     RETURN;
   END IF;
 
   EXECUTE v_def;
-  RAISE NOTICE 'Tolerancia cumulativa aplicada em ponto_saldo_dias_competencia_bruto.';
+  RAISE NOTICE 'Tolerancia cumulativa aplicada em ponto_saldo_dias_competencia.';
 END $entrega$;
 
 -- ---------------------------------------------------------------------------
 -- CONFERÊNCIA — o SQL Editor mostra apenas o último resultado.
--- Esperado depois de aplicar:  t | t | t | OK
+-- Esperado depois de aplicar:  t | t | t | t | OK
 --   marcador_aplicado : t  (o marcador [onda3-tol] está no corpo)
 --   por_marcacao_5    : t  (o padrão 10 por marcação foi trocado por 5)
 --   sem_padrao_antigo : t  (não sobrou COALESCE(e.tolerancia_batida_min, 10))
+--   equalizacao_intacta: t (a linha do sábado de equalização NÃO foi mexida)
 -- Se vier 'PENDENTE', o corpo em produção divergiu e nada foi alterado:
 --   me envie o pg_get_functiondef que eu reconcilio.
 -- ---------------------------------------------------------------------------
@@ -110,7 +121,7 @@ WITH def AS (
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
-    AND p.proname = 'ponto_saldo_dias_competencia_bruto'
+    AND p.proname = 'ponto_saldo_dias_competencia'
     AND pg_get_function_identity_arguments(p.oid) = 'p_tenant_id uuid, p_colaborador_cpf text, p_competencia text'
   LIMIT 1
 )
@@ -118,6 +129,7 @@ SELECT
   (position('[onda3-tol]' in src) > 0)                                AS marcador_aplicado,
   (position('COALESCE(v_tol_bat, 5)' in src) > 0)                     AS por_marcacao_5,
   (position('COALESCE(e.tolerancia_batida_min, 10)' in src) = 0)      AS sem_padrao_antigo,
+  (position('IF abs(v_diff) <= 10 THEN v_diff := 0; END IF;' in src) > 0) AS equalizacao_intacta,
   CASE
     WHEN position('[onda3-tol]' in src) > 0
      AND position('COALESCE(v_tol_bat, 5)' in src) > 0
