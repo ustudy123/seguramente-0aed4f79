@@ -54,10 +54,13 @@ BEGIN
     END;
   END IF;
 
+  -- Instante fixado em UTC: `created_at` e timestamptz e o seu ::text depende do
+  -- FUSO DA SESSAO. Sob UTC esta forma e byte-identica ao ::text solto (logo
+  -- reproduz os hashes ja gravados), e sob qualquer outro fuso continua igual.
   NEW.hash_marcacao := encode(
     sha256(
       (NEW.colaborador_cpf || NEW.data_marcacao::text || NEW.hora_marcacao::text
-       || NEW.tipo_marcacao || NEW.created_at::text
+       || NEW.tipo_marcacao || ((NEW.created_at AT TIME ZONE 'UTC')::text || '+00')
        || COALESCE(NEW.hash_anterior, ''))::bytea
     ),
     'hex'
@@ -110,7 +113,7 @@ AS $$
   SELECT tenant_id, empresa_id, nsr, id AS marcacao_id,
          CASE
            WHEN encode(sha256((colaborador_cpf || data_marcacao::text || hora_marcacao::text
-                    || tipo_marcacao || created_at::text || COALESCE(hash_anterior,''))::bytea),'hex')
+                    || tipo_marcacao || ((created_at AT TIME ZONE 'UTC')::text || '+00') || COALESCE(hash_anterior,''))::bytea),'hex')
                 <> hash_marcacao
              THEN 'hash_adulterado'
            WHEN hash_anterior IS NOT NULL AND prev_hash IS NOT NULL AND hash_anterior <> prev_hash
@@ -120,7 +123,7 @@ AS $$
          END AS tipo_quebra,
          CASE
            WHEN encode(sha256((colaborador_cpf || data_marcacao::text || hora_marcacao::text
-                    || tipo_marcacao || created_at::text || COALESCE(hash_anterior,''))::bytea),'hex')
+                    || tipo_marcacao || ((created_at AT TIME ZONE 'UTC')::text || '+00') || COALESCE(hash_anterior,''))::bytea),'hex')
                 <> hash_marcacao
              THEN 'Hash gravado nao confere com o recomputado do conteudo (marcacao alterada).'
            WHEN hash_anterior IS NOT NULL AND prev_hash IS NOT NULL AND hash_anterior <> prev_hash
@@ -130,7 +133,7 @@ AS $$
          END AS detalhe
   FROM marcs
   WHERE encode(sha256((colaborador_cpf || data_marcacao::text || hora_marcacao::text
-             || tipo_marcacao || created_at::text || COALESCE(hash_anterior,''))::bytea),'hex')
+             || tipo_marcacao || ((created_at AT TIME ZONE 'UTC')::text || '+00') || COALESCE(hash_anterior,''))::bytea),'hex')
              <> hash_marcacao
      OR (hash_anterior IS NOT NULL AND prev_hash IS NOT NULL AND hash_anterior <> prev_hash)
      OR (prev_nsr IS NOT NULL AND nsr <> prev_nsr + 1)
