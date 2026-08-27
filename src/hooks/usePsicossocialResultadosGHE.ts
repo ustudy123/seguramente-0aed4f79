@@ -402,6 +402,8 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     const grupos = new Map<string, {
       nome: string;
       count: number;
+      /** Quantas das linhas do grupo vieram de entrevistas guiadas. */
+      entrevistas: number;
       radarAcc: Map<string, { soma: number; n: number }>;
       ipsList: number[];
       campanhas: Set<string>;
@@ -412,12 +414,13 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
     const addToGrupo = (key: string, nome: string, r: RespostaRow) => {
       if (!grupos.has(key)) {
         grupos.set(key, {
-          nome, count: 0, radarAcc: new Map(), ipsList: [], campanhas: new Set(),
+          nome, count: 0, entrevistas: 0, radarAcc: new Map(), ipsList: [], campanhas: new Set(),
           setoresAcc: new Map(), cargosAcc: new Map(),
         });
       }
       const g = grupos.get(key)!;
       g.count += 1;
+      if (r.origem_entrevista) g.entrevistas += 1;
       g.campanhas.add(r.campanha_id);
       const radar = (r.indicadores?.radar ?? []) as RadarDimensao[];
       for (const d of radar) {
