@@ -10,7 +10,8 @@
 --     correta (encadeada), mas o caso reprovava. Causa: a sonda procura uma
 --     funcao cujo CORPO contenha "hash_marcacao" e "verific". No projeto a
 --     palavra aparece num comentario DENTRO do corpo; no script de entrega da
---     Onda 2 o mesmo comentario ficou FORA do corpo (antes do AS $function$),
+--     Onda 2 o mesmo comentario ficou FORA do corpo (antes da abertura do
+--     corpo),
 --     e comentario fora do corpo nao chega ao prosrc. Script de entrega e
 --     migration divergiram — a producao recebeu uma versao diferente da que o
 --     projeto tem.
