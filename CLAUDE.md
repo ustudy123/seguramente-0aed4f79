@@ -42,6 +42,14 @@ Regras dos scripts de entrega (aprendidas a caro preço):
 - Nunca `RAISE EXCEPTION` solto (aborta tudo): blocos `DO` com
   `EXCEPTION WHEN OTHERS THEN RAISE NOTICE` por item.
 - Idempotente sempre (rodar duas vezes não pode quebrar nem duplicar).
+- **Nunca escreva uma marca de aspas-dólar (`$function$`, `$$`, `$nome$`) dentro
+  de um comentário.** O SQL Editor divide os comandos no navegador e conta essas
+  marcas no texto cru: uma marca solta num comentário desbalanceia a contagem, o
+  divisor passa a ler o corpo da função como SQL solto e o erro sai longe da
+  causa (já aconteceu: `relation "v_apuracao_preenche" does not exist`, onde
+  aquilo era uma variável PL/pgSQL). No `psql` passa — o servidor ignora
+  comentário —, então a réplica local NÃO pega isso. Confira que cada marca
+  aparece em número PAR no arquivo inteiro, comentários incluídos.
 - Termina com UMA conferência `SELECT` — o editor só mostra o último
   resultado. Inclua colunas de erro (ex.: `erro_tecnico`) quando houver.
 - Existe statement timeout: updates linha a linha com função por registro

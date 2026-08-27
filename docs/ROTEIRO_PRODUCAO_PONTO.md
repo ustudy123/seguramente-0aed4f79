@@ -1470,6 +1470,107 @@ O plano completo, com o detalhe de cada onda, está no documento de planejamento
 
 ---
 
+## Pacote 53 — RN23: adicional de feriado (achado da bancada)
+
+`docs/script_ponto_rn23_feriado_adicional.sql` — **entra no fim desta fila**, depois
+do 52.
+
+Não veio do planejamento: veio da **bancada de QA rodando na homologação** em
+27/08/2026. Quatro casos (PONTO-131, 320, 321, 322) reprovaram com a mesma causa
+— `function public.ponto_feriado_adicional_competencia(uuid, uuid, text) does not
+exist`. A RN23 inteira (Lei 605/1949 art. 9º; Súmula 146 do TST) nasceu em duas
+migrations e **nenhum script de entrega**, então nunca existiu na produção.
+
+Efeito prático na produção hoje: feriado trabalhado sem folga compensatória é
+tratado como jornada comum, **sem a dobra, em silêncio** — nenhum erro aparece, a
+apuração apenas não encontra a função e o dia segue normal.
+
+O pacote traz a tabela da folga compensatória, a tabela de exceção de feriado, a
+coluna `ponto_escalas.comportamento_feriado` e a cadeia de apuração completa.
+
+**Detalhe que a conferência salvou:** a primeira montagem copiava as duas
+migrations na ordem cronológica, e a de 13/08 carrega uma versão de
+`ponto_feriados_trabalhados` **anterior** à que a Onda 5 (12x36) instalou depois —
+teria regredido o 12x36 que já está na produção. A prova em réplica pegou (o caso
+PONTO-151 caiu). Por isso o pacote leva o **estado atual do projeto**, não o texto
+das migrations.
+
+Conferência esperada: `t | t | t | t | t | t | t | OK`. Depois dele, a bateria do
+Ponto na homologação vai de 112 para **120 de 128** — sobrando apenas o PONTO-113
+(regime rural), que é evolução de produto e falha no projeto também.
+
+---
+
+## Pacote 54 — link de marcação com prazo obrigatório (achado da bancada)
+
+`docs/script_ponto_links_prazo_obrigatorio.sql` — entra depois do 53.
+
+Segundo achado da bancada na homologação: **"De 248 link(s): data_expiracao
+aceita NULO no schema"** (PONTO-251).
+
+O link de marcação é uma credencial distribuída por mensagem — o colaborador
+recebe a URL e bate ponto por ela. Sem prazo obrigatório na estrutura, um link
+pode nascer sem validade e virar **acesso permanente ao ponto daquela pessoa**,
+inclusive depois do desligamento. Proteção não pode depender de a consulta
+lembrar de filtrar por data.
+
+Os 248 links da produção estão todos preenchidos hoje — a auditoria não achou
+nenhum ativo sem prazo, nenhum vencido ainda ativo, nenhum token curto e nenhuma
+colisão. **Falta só a trava.**
+
+O pacote preenche defensivamente quem estiver sem prazo, torna `data_expiracao`
+obrigatória (DEFAULT 180 dias + NOT NULL), e traz quatro peças que só existiam
+no ambiente de teste: o gatilho `trg_ponto_links_validade`, que preenche o prazo
+na gravação, e as rotinas `ponto_links_desativar_vencidos`,
+`ponto_links_revogar_desligados` e `ponto_link_renovar`. Sem elas o vencimento é
+só um campo — ninguém age sobre ele.
+
+Não revoga nem desativa nenhum link existente: fecha a porta para os próximos e
+entrega as ferramentas de manutenção.
+
+Conferência esperada: `t | t | 0 | 0 | t | t | OK`. (`vencidos_ativos` é
+informativo — se vier maior que zero, é a fila de trabalho da rotina nova, não
+reprovação.)
+
+---
+
+## Pacote 55 — as duas últimas da bateria (PONTO-191 e PONTO-354)
+
+`docs/script_ponto_correcoes_bateria_homologacao.sql` — entra depois do 54.
+
+Nenhum dos dois era defeito de comportamento. Os dois eram defeito de **entrega**
+e de **ferramenta**, e só apareceram porque a bancada passou a rodar contra a
+estrutura real, com dado de cliente por perto.
+
+**PONTO-191.** A verificação da cadeia de hash existe na produção e está correta
+(encadeada) — mas o caso reprovava. A sonda procura uma função cujo *corpo*
+contenha "hash_marcacao" e "verific". A produção ficou com uma versão antiga da
+função, cujo corpo não tem a segunda palavra. O pacote instala a versão atual do
+projeto. É só a função de verificação, que apenas lê: não toca hash gravado, não
+altera marcação, não mexe no gatilho de gravação.
+
+**PONTO-354.** O caso quebrava com *"QA BLOQUEADO: ... tentou tocar o tenant
+83f1b040-..."*. A trava do cercado funcionou — o problema é do teste: ele chama
+`converter_banco_horas_vencido()`, que é global e varre todos os tenants. Numa
+base sem dado de cliente isso nunca aparece; numa base com dado de cliente o
+teste tenta tocar linha de terceiro e a trava aborta, como deve. O caso era
+**inexecutável justamente onde a bancada mais precisa rodar**. A rotina ganha um
+tenant opcional: sem argumento o comportamento é idêntico ao de hoje, com
+argumento só aquele — e o caso escopa a conversão no cercado.
+
+Provado em réplica: a conversão escopada converteu a linha do cercado e deixou a
+do tenant real **intacta**; sem argumento continua varrendo todos.
+
+**Observação de produto, fora deste pacote:** `converter_banco_horas_vencido` não
+está agendada em lugar nenhum — nem cron, nem tela, nem outra função. Na prática,
+saldo de banco de horas vencido **não está sendo convertido sozinho** na produção.
+
+Conferência esperada: `t | t | t | t | OK`. Depois dele o Ponto fica em **119 de
+128** — restando o PONTO-113 (regime rural, evolução de produto) e o PONTO-301
+(refatoramento `_bruto`, decisão pendente).
+
+---
+
 ## Depois desta fila: a bancada de QA
 
 Esta fila leva **o comportamento corrigido** para a produção — mas não leva **a
