@@ -13,6 +13,8 @@ interface RespostaRow {
   setor_snapshot: string | null;
   cargo_snapshot: string | null;
   indicadores: { radar?: RadarDimensao[]; IPS?: number } | null;
+  /** Marca as linhas derivadas de entrevistas guiadas (não anônimas). */
+  origem_entrevista?: boolean;
 }
 
 interface CampanhaGheRow {
