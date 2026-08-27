@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -21278,6 +21278,30 @@ export type Database = {
           },
         ]
       }
+      qa_cobertura_e2e: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          criado_em: string
+          spec: string
+          teste: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          criado_em?: string
+          spec: string
+          teste: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          criado_em?: string
+          spec?: string
+          teste?: string
+        }
+        Relationships: []
+      }
       qa_execucoes: {
         Row: {
           disparada_por: string | null
@@ -21432,6 +21456,7 @@ export type Database = {
           duracao_ms: number | null
           erro_tecnico: string | null
           esperado: string | null
+          evidencia_png: string | null
           execucao_id: string
           id: string
           obtido: string | null
@@ -21447,6 +21472,7 @@ export type Database = {
           duracao_ms?: number | null
           erro_tecnico?: string | null
           esperado?: string | null
+          evidencia_png?: string | null
           execucao_id: string
           id?: string
           obtido?: string | null
@@ -21462,6 +21488,7 @@ export type Database = {
           duracao_ms?: number | null
           erro_tecnico?: string | null
           esperado?: string | null
+          evidencia_png?: string | null
           execucao_id?: string
           id?: string
           obtido?: string | null
@@ -23942,6 +23969,7 @@ export type Database = {
           funcao_sql: string | null
           nivel: string | null
           prioridade: Database["public"]["Enums"]["qa_prioridade"] | null
+          spec_cypress: string | null
           titulo: string | null
         }
         Relationships: []
@@ -25162,6 +25190,15 @@ export type Database = {
           p_minuto: number
         }
         Returns: string
+      }
+      qa_anexar_print_e2e: {
+        Args: {
+          p_evidencia_png: string
+          p_execucao_id: string
+          p_spec: string
+          p_teste: string
+        }
+        Returns: boolean
       }
       qa_assert_sandbox: { Args: { p_tenant_id: string }; Returns: undefined }
       qa_caso_acao_001: {
@@ -28191,6 +28228,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      qa_registrar_bateria_e2e: { Args: { p_payload: Json }; Returns: string }
       qa_relatorio_falhas: {
         Args: { p_modulo?: string }
         Returns: {
@@ -28208,10 +28246,17 @@ export type Database = {
           duracao_ms: number
           erro_tecnico: string
           esperado: string
+          evidencia_png: string
+          objetivo: string
+          observacoes: string
           obtido: string
           passo_acao: string
           passo_ordem: number
+          passos: Json
+          pre_condicoes: string
+          resultado_esperado: string
           situacao: string
+          titulo: string
         }[]
       }
       qa_rodar_agendada: { Args: never; Returns: undefined }
@@ -28955,7 +29000,7 @@ export type Database = {
         | "cancelada"
       qa_caso_status: "rascunho" | "aprovado" | "obsoleto"
       qa_caso_tipo: "feliz" | "alternativo" | "negativo" | "excecao"
-      qa_disparo: "manual" | "agendado"
+      qa_disparo: "manual" | "agendado" | "e2e"
       qa_prioridade: "critica" | "alta" | "media" | "baixa"
       qa_situacao: "passou" | "falhou" | "nao_implementado" | "erro"
       qa_status_doc:
@@ -29668,7 +29713,7 @@ export const Constants = {
       ],
       qa_caso_status: ["rascunho", "aprovado", "obsoleto"],
       qa_caso_tipo: ["feliz", "alternativo", "negativo", "excecao"],
-      qa_disparo: ["manual", "agendado"],
+      qa_disparo: ["manual", "agendado", "e2e"],
       qa_prioridade: ["critica", "alta", "media", "baixa"],
       qa_situacao: ["passou", "falhou", "nao_implementado", "erro"],
       qa_status_doc: [
