@@ -245,6 +245,44 @@ O que ela faz, e o que impede:
 > **idêntica à produção** — nome, CPF, e-mail e atestado reais de **todos**
 > os clientes. Existe, mas o `um_cliente` cobre o mesmo caso de uso com uma
 > fração da exposição.
+
+### Sincronizar um cliente sem refazer a cópia
+
+O botão RECRIAR resolve trazendo tudo de novo: apaga a homologação inteira e
+reconstrói em ~40 minutos. Quem tem ensaio em andamento ou cadastro de teste
+lá dentro perde tudo.
+
+O workflow **`homologacao-sincronizar-cliente`** é o reparo no lugar da
+demolição: lê da produção só as linhas de UM cliente, sem máscara, e
+**atualiza só essas linhas** na homologação. Poucos minutos, e o resto do
+ambiente fica exatamente como estava.
+
+Formulário: `confirmar` = `SINCRONIZAR`, `cliente_real` = o `tenant_id`, e os
+dois hosts de pooler. Exige o secret `HOMOLOGACAO_TESTADORES`, pelo mesmo
+motivo do modo `um_cliente`.
+
+**O que torna isso possível:** as chaves nunca são embaralhadas (a máscara só
+toca texto, json e listas), então cada linha da homologação sabe qual linha
+da produção é a dela. Medido: 353 das 354 tabelas têm chave primária de uma
+coluna — a única sem chave (`ponto_entrega_conferencia`) fica de fora, e o
+passo diz isso em voz alta.
+
+**O que ela NÃO faz, de propósito: não insere linhas novas.** Registro criado
+na produção depois da última cópia não existe na homologação, e criá-lo
+exigiria respeitar a ordem das 627 chaves estrangeiras — o problema que a
+cópia completa resolve derrubando todas elas. Em vez de inserir em silêncio,
+a esteira **conta** quantas linhas não acharam par e avisa. Número relevante
+= hora de rodar o RECRIAR completo com `mascarar=um_cliente`.
+
+Dois cuidados que o desenho embute: os gatilhos são desligados durante a
+sincronia (senão a auditoria grava um histórico que nunca houve e o
+`atualizado_em` reescreve as datas), e `auth.users` é tratado à parte — mexer
+no e-mail sem acertar a identidade junto deixa o login aceitando a senha e
+devolvendo para a tela de entrada, sem erro claro.
+
+Ao final, a esteira **prova que não passou do recorte**: conta as empresas de
+outros clientes cujo nome não começa com `anon-` e reprova a corrida se
+achar alguma.
 >
 > Isso muda a natureza do ambiente: ele passa a conter **dado pessoal e dado
 > de saúde** (LGPD art. 11), num endereço que é página pública e num projeto
