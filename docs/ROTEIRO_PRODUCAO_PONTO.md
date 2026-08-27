@@ -1501,6 +1501,39 @@ Ponto na homologação vai de 112 para **120 de 128** — sobrando apenas o PONT
 
 ---
 
+## Pacote 54 — link de marcação com prazo obrigatório (achado da bancada)
+
+`docs/script_ponto_links_prazo_obrigatorio.sql` — entra depois do 53.
+
+Segundo achado da bancada na homologação: **"De 248 link(s): data_expiracao
+aceita NULO no schema"** (PONTO-251).
+
+O link de marcação é uma credencial distribuída por mensagem — o colaborador
+recebe a URL e bate ponto por ela. Sem prazo obrigatório na estrutura, um link
+pode nascer sem validade e virar **acesso permanente ao ponto daquela pessoa**,
+inclusive depois do desligamento. Proteção não pode depender de a consulta
+lembrar de filtrar por data.
+
+Os 248 links da produção estão todos preenchidos hoje — a auditoria não achou
+nenhum ativo sem prazo, nenhum vencido ainda ativo, nenhum token curto e nenhuma
+colisão. **Falta só a trava.**
+
+O pacote preenche defensivamente quem estiver sem prazo, torna `data_expiracao`
+obrigatória (DEFAULT 180 dias + NOT NULL), e traz quatro peças que só existiam
+no ambiente de teste: o gatilho `trg_ponto_links_validade`, que preenche o prazo
+na gravação, e as rotinas `ponto_links_desativar_vencidos`,
+`ponto_links_revogar_desligados` e `ponto_link_renovar`. Sem elas o vencimento é
+só um campo — ninguém age sobre ele.
+
+Não revoga nem desativa nenhum link existente: fecha a porta para os próximos e
+entrega as ferramentas de manutenção.
+
+Conferência esperada: `t | t | 0 | 0 | t | t | OK`. (`vencidos_ativos` é
+informativo — se vier maior que zero, é a fila de trabalho da rotina nova, não
+reprovação.)
+
+---
+
 ## Depois desta fila: a bancada de QA
 
 Esta fila leva **o comportamento corrigido** para a produção — mas não leva **a
