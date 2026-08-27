@@ -51,6 +51,7 @@ import { PontoFechamentoTab } from "@/components/ponto/PontoFechamentoTab";
 import { PontoAlertasTab } from "@/components/ponto/PontoAlertasTab";
 import { PontoRelatoriosTab } from "@/components/ponto/PontoRelatoriosTab";
 import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
+import { PontoPreAssinalacaoTab } from "@/components/ponto/PontoPreAssinalacaoTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoAjustesTab } from "@/components/ponto/PontoAjustesTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
@@ -1265,15 +1266,17 @@ const Ponto = () => {
         {/* Configurações */}
         <TabsContent value="configuracoes">
           <Tabs value={configTab} onValueChange={setConfigTab} className="w-full">
-            <TabsList className="grid w-full max-w-xl grid-cols-4 mb-4">
+            <TabsList className="grid w-full max-w-2xl grid-cols-5 mb-4">
               <TabsTrigger value="config" className="text-xs"><Settings className="h-3.5 w-3.5 mr-1" />Geral</TabsTrigger>
               <TabsTrigger value="links" className="text-xs"><Link2 className="h-3.5 w-3.5 mr-1" />Links</TabsTrigger>
               <TabsTrigger value="repc" className="text-xs"><HardDrive className="h-3.5 w-3.5 mr-1" />REP-C</TabsTrigger>
               <TabsTrigger value="feriados" className="text-xs"><CalendarDays className="h-3.5 w-3.5 mr-1" />Feriados</TabsTrigger>
+              <TabsTrigger value="pre_assinalacao" className="text-xs"><Coffee className="h-3.5 w-3.5 mr-1" />Intervalo pré-assinalado</TabsTrigger>
             </TabsList>
             <TabsContent value="config"><PontoConfigTab /></TabsContent>
             <TabsContent value="links"><PontoLinksTab /></TabsContent>
             <TabsContent value="repc"><PontoRepCTab /></TabsContent>
+            <TabsContent value="pre_assinalacao"><PontoPreAssinalacaoTab /></TabsContent>
             <TabsContent value="feriados">
               <Tabs defaultValue="lista" className="w-full">
                 <TabsList className="mb-4">
