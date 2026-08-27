@@ -1470,6 +1470,37 @@ O plano completo, com o detalhe de cada onda, está no documento de planejamento
 
 ---
 
+## Pacote 53 — RN23: adicional de feriado (achado da bancada)
+
+`docs/script_ponto_rn23_feriado_adicional.sql` — **entra no fim desta fila**, depois
+do 52.
+
+Não veio do planejamento: veio da **bancada de QA rodando na homologação** em
+27/08/2026. Quatro casos (PONTO-131, 320, 321, 322) reprovaram com a mesma causa
+— `function public.ponto_feriado_adicional_competencia(uuid, uuid, text) does not
+exist`. A RN23 inteira (Lei 605/1949 art. 9º; Súmula 146 do TST) nasceu em duas
+migrations e **nenhum script de entrega**, então nunca existiu na produção.
+
+Efeito prático na produção hoje: feriado trabalhado sem folga compensatória é
+tratado como jornada comum, **sem a dobra, em silêncio** — nenhum erro aparece, a
+apuração apenas não encontra a função e o dia segue normal.
+
+O pacote traz a tabela da folga compensatória, a tabela de exceção de feriado, a
+coluna `ponto_escalas.comportamento_feriado` e a cadeia de apuração completa.
+
+**Detalhe que a conferência salvou:** a primeira montagem copiava as duas
+migrations na ordem cronológica, e a de 13/08 carrega uma versão de
+`ponto_feriados_trabalhados` **anterior** à que a Onda 5 (12x36) instalou depois —
+teria regredido o 12x36 que já está na produção. A prova em réplica pegou (o caso
+PONTO-151 caiu). Por isso o pacote leva o **estado atual do projeto**, não o texto
+das migrations.
+
+Conferência esperada: `t | t | t | t | t | t | t | OK`. Depois dele, a bateria do
+Ponto na homologação vai de 112 para **120 de 128** — sobrando apenas o PONTO-113
+(regime rural), que é evolução de produto e falha no projeto também.
+
+---
+
 ## Depois desta fila: a bancada de QA
 
 Esta fila leva **o comportamento corrigido** para a produção — mas não leva **a
