@@ -116,6 +116,7 @@ function entrevistasParaRespostas(rows: EntrevistaRow[]): RespostaRow[] {
       indicadores: radar.length > 0
         ? { radar, IPS: Math.round(100 - riscoMedio) }
         : null,
+      origem_entrevista: true,
     };
   });
 }
