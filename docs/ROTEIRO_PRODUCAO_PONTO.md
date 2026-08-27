@@ -1534,6 +1534,43 @@ reprovação.)
 
 ---
 
+## Pacote 55 — as duas últimas da bateria (PONTO-191 e PONTO-354)
+
+`docs/script_ponto_correcoes_bateria_homologacao.sql` — entra depois do 54.
+
+Nenhum dos dois era defeito de comportamento. Os dois eram defeito de **entrega**
+e de **ferramenta**, e só apareceram porque a bancada passou a rodar contra a
+estrutura real, com dado de cliente por perto.
+
+**PONTO-191.** A verificação da cadeia de hash existe na produção e está correta
+(encadeada) — mas o caso reprovava. A sonda procura uma função cujo *corpo*
+contenha "hash_marcacao" e "verific". A produção ficou com uma versão antiga da
+função, cujo corpo não tem a segunda palavra. O pacote instala a versão atual do
+projeto. É só a função de verificação, que apenas lê: não toca hash gravado, não
+altera marcação, não mexe no gatilho de gravação.
+
+**PONTO-354.** O caso quebrava com *"QA BLOQUEADO: ... tentou tocar o tenant
+83f1b040-..."*. A trava do cercado funcionou — o problema é do teste: ele chama
+`converter_banco_horas_vencido()`, que é global e varre todos os tenants. Numa
+base sem dado de cliente isso nunca aparece; numa base com dado de cliente o
+teste tenta tocar linha de terceiro e a trava aborta, como deve. O caso era
+**inexecutável justamente onde a bancada mais precisa rodar**. A rotina ganha um
+tenant opcional: sem argumento o comportamento é idêntico ao de hoje, com
+argumento só aquele — e o caso escopa a conversão no cercado.
+
+Provado em réplica: a conversão escopada converteu a linha do cercado e deixou a
+do tenant real **intacta**; sem argumento continua varrendo todos.
+
+**Observação de produto, fora deste pacote:** `converter_banco_horas_vencido` não
+está agendada em lugar nenhum — nem cron, nem tela, nem outra função. Na prática,
+saldo de banco de horas vencido **não está sendo convertido sozinho** na produção.
+
+Conferência esperada: `t | t | t | t | OK`. Depois dele o Ponto fica em **119 de
+128** — restando o PONTO-113 (regime rural, evolução de produto) e o PONTO-301
+(refatoramento `_bruto`, decisão pendente).
+
+---
+
 ## Depois desta fila: a bancada de QA
 
 Esta fila leva **o comportamento corrigido** para a produção — mas não leva **a
