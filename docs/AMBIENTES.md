@@ -321,22 +321,40 @@ raia de tela na homologação foi montada **por decisão explícita da equipe**,
 quando se quiser exercitar as telas contra o banco cópia-da-produção (volume e
 estrutura reais). Ela **não roda sozinha**: é um botão.
 
-**Como rodar:** Actions → `cypress-homologacao` → **Run workflow**. O workflow
-semeia a conta-robô e a ilha de fixtures na homologação, roda a suíte contra
-`https://ustudy123.github.io/youreyesnovo/homologacao/` e devolve o resultado
-ao painel de QA **da homologação**.
+**Como rodar (dois caminhos, mesmo resultado):**
+
+1. **Pelo app:** homologação → **Testes automatizados → Cypress → "Rodar testes"**.
+   O botão pede à Edge Function `qa-disparar-cypress`, que detecta o ambiente e
+   dispara a esteira **da homologação** (`cypress-homologacao.yml`). Exige o
+   secret `GITHUB_DISPATCH_TOKEN` no projeto Supabase da homologação (ver abaixo).
+2. **Pela esteira:** Actions → `cypress-homologacao` → **Run workflow**.
+
+Nos dois, o workflow semeia a conta-robô e a ilha de fixtures na homologação,
+roda a suíte contra `https://ustudy123.github.io/youreyesnovo/homologacao/` e
+devolve o resultado ao painel de QA **da homologação** (aba Cypress → "Corridas").
+
+**O resultado no painel do app:** funciona porque a camada de QA e2e (tabela
+`qa_cobertura_e2e`, coluna `qa_resultados.evidencia_png`, as funções de registro
+e o valor `'e2e'` no enum `qa_disparo`) foi entregue à **produção**
+(`docs/script_qa_e2e_camada.sql`). Como a homologação copia a estrutura da
+produção, toda cópia futura já nasce com a camada — o painel sobrevive ao
+`RECRIAR`, e a fidelidade continua batendo (as duas têm a camada). A
+`qa_cobertura_e2e` está na lista de tabelas preservadas da máscara, então a
+ponte caso↔teste atravessa a cópia intacta.
 
 **Pré-requisito (uma vez, depois de mesclar):** as Edge Functions precisam estar
-publicadas na homologação com a versão nova (a `seed-e2e-user` passou a aceitar o
-ref da homologação). Rode o workflow `homologacao` no modo **`so_finalizar`**
-(~2 min) — ele republica as functions sem refazer a cópia.
+publicadas na homologação com a versão nova (a `seed-e2e-user` aceita o ref da
+homologação; a `qa-disparar-cypress` detecta o ambiente). Rode o workflow
+`homologacao` no modo **`so_finalizar`** (~2 min) — ele republica as functions
+sem refazer a cópia.
 
-**Segredos (Settings → Secrets and variables → Actions):**
+**Segredos:**
 
-| Secret | Valor |
-|---|---|
-| `QA_E2E_TOKEN_HOMOLOGACAO` | o **mesmo** valor do segredo `QA_E2E_TOKEN` das Edge Functions do projeto Supabase de homologação (`fgsblefvdabgdouipigz`). Sem ele, o seed e o relatório não funcionam. |
-| `CYPRESS_EMAIL` / `CYPRESS_PASSWORD` | opcionais; sem eles usa a conta padrão `teste@lucas.com` / `7654321`, que é a que o seed cria. |
+| Onde | Secret | Valor |
+|---|---|---|
+| GitHub (Actions) | `QA_E2E_TOKEN_HOMOLOGACAO` | o **mesmo** valor do `QA_E2E_TOKEN` das Edge Functions do projeto Supabase de homologação (`fgsblefvdabgdouipigz`). Sem ele, o seed e o relatório não funcionam. |
+| GitHub (Actions) | `CYPRESS_EMAIL` / `CYPRESS_PASSWORD` | opcionais; sem eles usa `teste@lucas.com` / `7654321`, a conta que o seed cria. |
+| Supabase homologação | `GITHUB_DISPATCH_TOKEN` | token do GitHub com permissão **Actions: write** no repositório. Só é preciso para o **botão** do app; a aba Actions não depende dele. |
 
 **Travas de ambiente (produção inalcançável):** o `cypress.config.ts` só aceita
 host da lista (`ustudy123.github.io`) e aborta se a app falar com o ref da
@@ -344,10 +362,8 @@ produção; a `seed-e2e-user` recusa qualquer ref fora do teste e da homologaç�
 
 **Sobre a ilha e a fidelidade:** a suíte roda numa ilha isolada (tenant fixo
 `Empresa Staging LTDA`), invisível às contas mascaradas da produção porque a RLS
-separa por tenant. Ela é replantada a cada corrida e some no próximo `RECRIAR`.
-A conferência de fidelidade do `RECRIAR` roda **antes** de qualquer seed, então a
-ilha não a afeta; um `SELECT` de contagem rodado à mão depois de uma corrida de
-tela mostrará essas linhas a mais — é esperado.
+separa por tenant. Ela é replantada a cada corrida e some no próximo `RECRIAR`
+(o próprio workflow a replanta antes de rodar, então não precisa sobreviver).
 
 ## Rodar a homologação localmente
 
@@ -461,8 +477,10 @@ O workflow tem trava contra apontar para a produção e pode ser disparado manua
 Outros workflows do repositório:
 
 - `homologacao.yml` — recria a homologação a partir da estrutura da produção (por botão, digitando `RECRIAR`). Ver **Manter a homologação em dia**.
-- `cypress.yml` — dispara a suíte de tela contra o **teste**, sob demanda (é o que o botão "Rodar testes" da tela de QA aciona).
-- `cypress-homologacao.yml` — dispara a suíte de tela contra a **homologação**, por botão. Ver **Testes de tela (Cypress) na homologação**.
+- `cypress.yml` — dispara a suíte de tela contra o **teste**, sob demanda.
+- `cypress-homologacao.yml` — dispara a suíte de tela contra a **homologação**. Ver **Testes de tela (Cypress) na homologação**.
+
+O botão **"Rodar testes"** (tela de QA de cada ambiente) aciona a `qa-disparar-cypress`, que **detecta o ambiente pelo projeto Supabase** e dispara a esteira certa: `cypress.yml` no teste, `cypress-homologacao.yml` na homologação. Precisa do secret `GITHUB_DISPATCH_TOKEN` no projeto Supabase daquele ambiente.
 
 ## Verificação de ambiente
 
