@@ -208,11 +208,43 @@ O que ela faz, e o que impede:
    sem elas, a function correspondente recusa com mensagem clara;
 9. guarda o retrato e o log como anexo da corrida, por 7 dias.
 
-> **Modo `mascarar = nao` (cópia crua).** O formulário do botão tem um campo
-> `mascarar`, que vem `sim` por padrão. Em `nao`, a cópia sai **idêntica à
-> produção** — nome, CPF, e-mail e atestado reais. Foi decisão do dono do
-> produto (08/2026), tomada com o risco explicitado: os nomes embaralhados
-> inviabilizavam os testes de tela.
+> **Modo `mascarar = um_cliente` (o recomendado quando o embaralhamento
+> atrapalha).** O formulário tem os campos `mascarar` e `cliente_real`. Em
+> `um_cliente` + o `tenant_id` de um cliente, **só aquele cliente vem com
+> dados reais**; os outros continuam embaralhados como sempre. Foi a escolha
+> do dono do produto (08/2026) para o cliente SUDOMED ITAPEJARA
+> (`83f1b040-c857-45a4-b71d-506e2a32d527`, 4 empresas), que é a própria
+> operação da casa — não dado de terceiro.
+>
+> O recorte é por **cliente (tenant)**, e não por empresa, porque é o que o
+> schema permite: `usuarios_base` — onde moram nome e CPF — tem `tenant_id` e
+> **não** tem `empresa_id`. As pessoas pertencem ao cliente; a ligação com a
+> empresa só existe via `admissoes`. Medido: 311 das 354 tabelas têm
+> `tenant_id`, 86 têm `empresa_id`, e as 39 sem vínculo nenhum são catálogos
+> públicos, motor de QA e configuração de plataforma — seguem 100%
+> mascaradas.
+>
+> Três detalhes que o modo exige, e que só apareceram ao construir:
+>
+> - a trava de vazamento **exclui as linhas do cliente escolhido** da
+>   medição. Sem isso ela leria os CPFs reais dele como fuga e apagaria a
+>   cópia inteira — o oposto do pedido. Para todos os outros clientes o rigor
+>   continua igual: máscara que falhar em qualquer um deles dispara o
+>   apaga-tudo;
+> - **superadmins ficam sem a senha compartilhada**, mesmo tendo e-mail
+>   mascarado. Superadmin enxerga todos os clientes, então uma conta dessas
+>   com `123456` seria a porta dos fundos para o dado real, anulando a
+>   proteção;
+> - colunas do tipo `json` (não `jsonb`) precisaram de tratamento separado:
+>   com o embrulho condicional, os dois ramos do `CASE` têm que ter o mesmo
+>   tipo, e a máscara devolvia `jsonb` (`CASE/WHEN could not convert type
+>   json to jsonb`). Enquanto a máscara era a expressão inteira, isso passava
+>   despercebido.
+>
+> **Modo `mascarar = nao` (cópia crua total).** Em `nao`, a cópia sai
+> **idêntica à produção** — nome, CPF, e-mail e atestado reais de **todos**
+> os clientes. Existe, mas o `um_cliente` cobre o mesmo caso de uso com uma
+> fração da exposição.
 >
 > Isso muda a natureza do ambiente: ele passa a conter **dado pessoal e dado
 > de saúde** (LGPD art. 11), num endereço que é página pública e num projeto

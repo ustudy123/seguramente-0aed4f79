@@ -28,14 +28,17 @@ em PDFs de devolutiva ou em documentos que circulam. Dados de saúde são
 sensíveis (LGPD art. 11). CPFs fictícios da casa: faixa 900.000.0XX com
 dígito verificador válido (o sistema valida DV).
 
-**Exceção única, e só na homologação:** o botão RECRIAR tem o campo
-`mascarar`. Em `nao`, a cópia sai crua, com dado real — decisão do dono do
-produto (08/2026), porque os nomes embaralhados inviabilizavam os testes de
-tela. A esteira recusa esse modo sem o secret `HOMOLOGACAO_TESTADORES` e com
-a senha compartilhada `123456`; as senhas passam a ser individuais e
-sorteadas. Detalhes em `docs/AMBIENTES.md`. **Isso não afrouxa nada fora
-dali**: staging, seeds, PDFs e qualquer documento que circule seguem sem dado
-real, sem exceção.
+**Exceção única, e só na homologação:** o botão RECRIAR tem os campos
+`mascarar` e `cliente_real`. Em `um_cliente`, só o cliente informado vem com
+dado real e todos os outros seguem embaralhados (decisão do dono do produto,
+08/2026, para a própria operação da casa — SUDOMED ITAPEJARA); em `nao`, a
+cópia inteira sai crua. Prefira sempre `um_cliente`: cobre o mesmo caso de
+uso com uma fração da exposição. A esteira recusa os dois modos sem o secret
+`HOMOLOGACAO_TESTADORES`, e no modo cru também recusa a senha compartilhada
+`123456`; superadmins nunca ficam com senha compartilhada quando há dado real
+na base. Detalhes em `docs/AMBIENTES.md`. **Isso não afrouxa nada fora dali**:
+staging, seeds, PDFs e qualquer documento que circule seguem sem dado real,
+sem exceção.
 
 ## Mudanças de banco: migration + script de entrega
 
