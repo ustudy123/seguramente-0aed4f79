@@ -492,11 +492,17 @@ export function usePsicossocialResultadosGHE(campanhaIds: string[] | undefined) 
         ghe_nome: g.nome,
         ghe_codigo: realGheId ? gheCodigoMap.get(realGheId) ?? null : null,
         // Respondentes = questionários (via cpf_hash) + entrevistas guiadas
-        // individuais vinculadas ao GHE. Sem somar as entrevistas, campanhas
-        // 100% por entrevista ficavam com count 0 e o GHE era bloqueado.
+        // do grupo. As entrevistas são contadas pelo agrupamento efetivo (que
+        // já resolve o GHE por snapshot OU pelo GHE único da campanha), e não
+        // apenas pelo `ghe_id_snapshot`: entrevistas concluídas antes do
+        // vínculo do GHE ficam com snapshot nulo e o GHE aparecia com 0
+        // respondentes, bloqueando o plano de ação.
         count: realGheId
           ? (respondentesReais.has(realGheId)
-              ? respondentesReais.get(realGheId)! + (entrevistasPorGhe.get(realGheId) ?? 0)
+              ? Math.max(
+                  respondentesReais.get(realGheId)! + Math.max(g.entrevistas, entrevistasPorGhe.get(realGheId) ?? 0),
+                  g.count,
+                )
               : Math.max(g.count, entrevistasPorGhe.get(realGheId) ?? 0))
           : g.count,
         elegiveis: realGheId ? (elegiveisPorGhe.get(realGheId) ?? 0) : 0,
