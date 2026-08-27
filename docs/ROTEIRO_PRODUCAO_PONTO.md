@@ -1467,3 +1467,22 @@ com seu pacote. A ordem prevista:
 
 O plano completo, com o detalhe de cada onda, está no documento de planejamento
 (artefato "Ponto Redondo").
+
+---
+
+## Depois desta fila: a bancada de QA
+
+Esta fila leva **o comportamento corrigido** para a produção — mas não leva **a
+bancada que comprova o comportamento**. Dos 51 scripts de entrega do Ponto, só 4
+criam alguma rotina de teste e nenhum registra a ponte caso→rotina; as 114
+rotinas do Ponto nasceram em migrations, que nunca alcançam a produção. Medido na
+homologação: o projeto tem 121 casos do Ponto com rotina ligada, a produção tem
+**15**.
+
+Por isso existe uma segunda trilha, em `ROTEIRO_PRODUCAO_BANCADA_QA.md`, com 15
+pacotes que levam catálogo, rotinas e pontes de todos os módulos.
+
+**Ela vem depois desta.** Se a bancada do Ponto entrar antes dos 52, a bateria na
+produção acende vermelho em dezenas de casos — corretamente, porque o
+comportamento ainda não foi corrigido lá. Comportamento primeiro, bancada depois:
+aí a bateria nasce verde e vale como prova do que foi entregue.
