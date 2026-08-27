@@ -28,6 +28,15 @@ em PDFs de devolutiva ou em documentos que circulam. Dados de saúde são
 sensíveis (LGPD art. 11). CPFs fictícios da casa: faixa 900.000.0XX com
 dígito verificador válido (o sistema valida DV).
 
+**Exceção única, e só na homologação:** o botão RECRIAR tem o campo
+`mascarar`. Em `nao`, a cópia sai crua, com dado real — decisão do dono do
+produto (08/2026), porque os nomes embaralhados inviabilizavam os testes de
+tela. A esteira recusa esse modo sem o secret `HOMOLOGACAO_TESTADORES` e com
+a senha compartilhada `123456`; as senhas passam a ser individuais e
+sorteadas. Detalhes em `docs/AMBIENTES.md`. **Isso não afrouxa nada fora
+dali**: staging, seeds, PDFs e qualquer documento que circule seguem sem dado
+real, sem exceção.
+
 ## Mudanças de banco: migration + script de entrega
 
 Toda mudança de banco vira DUAS entregas:

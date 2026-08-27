@@ -208,6 +208,39 @@ O que ela faz, e o que impede:
    sem elas, a function correspondente recusa com mensagem clara;
 9. guarda o retrato e o log como anexo da corrida, por 7 dias.
 
+> **Modo `mascarar = nao` (cópia crua).** O formulário do botão tem um campo
+> `mascarar`, que vem `sim` por padrão. Em `nao`, a cópia sai **idêntica à
+> produção** — nome, CPF, e-mail e atestado reais. Foi decisão do dono do
+> produto (08/2026), tomada com o risco explicitado: os nomes embaralhados
+> inviabilizavam os testes de tela.
+>
+> Isso muda a natureza do ambiente: ele passa a conter **dado pessoal e dado
+> de saúde** (LGPD art. 11), num endereço que é página pública e num projeto
+> fora do Brasil (`us-east-1`). Por isso a esteira **recusa** rodar sem
+> máscara enquanto o ambiente não estiver fechado, e "fechado" tem
+> significado verificável:
+>
+> - o secret **`HOMOLOGACAO_TESTADORES`** (e-mails reais de quem vai testar,
+>   separados por vírgula) é **obrigatório** — sem ele a corrida aborta;
+> - o secret `HOMOLOGACAO_SENHA_USUARIOS` **não pode valer `123456`** — com
+>   e-mail real no banco, senha compartilhada conhecida transformaria a base
+>   de clientes em base de credenciais. A corrida aborta se ele ainda existir
+>   com esse valor;
+> - **toda** conta recebe primeiro uma senha aleatória de 32 bytes que
+>   ninguém vê; só depois os e-mails da lista recebem uma senha utilizável,
+>   também sorteada, impressa **uma vez** no log da corrida e apagada do
+>   banco em seguida.
+>
+> As conferências de máscara (CPF começando com 9, e-mail `.invalid`) são
+> puladas nesse modo — elas provam que a máscara agiu, e não há máscara;
+> mantidas, disparariam o apaga-tudo justamente porque o dado real chegou.
+> No lugar delas o log registra quantas contas com e-mail real existem.
+>
+> **Decisões que continuam com o dono do produto**, e que a esteira não pode
+> tomar: desligar o envio de e-mail do Auth no projeto de homologação (com
+> e-mails reais na base, um "esqueci minha senha" ali alcançaria o cliente de
+> verdade) e decidir sobre a região fora do Brasil.
+
 > **O motor de QA atravessa intacto.** As tabelas `qa_modulos`,
 > `qa_casos_teste`, `qa_implementacoes`, `qa_cobertura_e2e` e afins são
 > documentação do sistema (códigos de caso, títulos, nomes de função SQL) —

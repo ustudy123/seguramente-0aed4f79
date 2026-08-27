@@ -399,9 +399,23 @@ def expressao(coluna: str, tratamento: str, tempero_sql: str,
 
 def main() -> int:
     if len(sys.argv) < 3:
-        print("uso: gerar_copia_mascarada.py <catalogo.tsv> <tempero>", file=sys.stderr)
+        print("uso: gerar_copia_mascarada.py <catalogo.tsv> <tempero> [--sem-mascara]",
+              file=sys.stderr)
         print("  catalogo.tsv: tabela|coluna|tipo|tem_check_enum, vindo do psql", file=sys.stderr)
+        print("  --sem-mascara: copia TUDO cru, sem embaralhar nada. Ver aviso abaixo.",
+              file=sys.stderr)
         return 2
+
+    # --sem-mascara: a cópia sai IDÊNTICA à produção — nome, CPF, e-mail,
+    # atestado. Decisão do dono do produto (08/2026), tomada com o risco
+    # explicitado: a homologação passa a conter dado pessoal e dado de saúde
+    # (LGPD art. 11), e por isso SÓ pode ser usada com o ambiente fechado —
+    # senha individual forte por pessoa, nunca a senha compartilhada.
+    #
+    # A esteira não confia neste script para essa trava: ela mesma recusa
+    # rodar sem máscara se a lista de testadores estiver vazia. Aqui o flag
+    # só monta o SELECT.
+    sem_mascara = "--sem-mascara" in sys.argv[3:]
 
     caminho, tempero = sys.argv[1], sys.argv[2]
     # O tempero entra no SQL como literal entre aspas simples; escapa aspa.
@@ -426,6 +440,13 @@ def main() -> int:
             tabela, coluna, tipo, check = partes[0], partes[1], partes[2], partes[3]
             # 5ª coluna, opcional: 't' quando é lista DE TEXTO (text[]).
             lista_texto = len(partes) > 4 and partes[4] in ("t", "true", "1")
+            if sem_mascara:
+                # Cópia crua: toda coluna passa como está.
+                tratamento = "copiar"
+                resumo["copiar"] += 1
+                tabelas.setdefault(tabela, []).append(f'"{coluna}"')
+                nomes.setdefault(tabela, []).append(f'"{coluna}"')
+                continue
             if tabela in PRESERVAR_TABELAS:
                 # Tabela do motor de QA: tudo passa intacto, inclusive
                 # jsonb e listas — é documentação, não dado de pessoa.
@@ -443,6 +464,16 @@ def main() -> int:
             tabelas.setdefault(tabela, []).append(
                 expressao(coluna, tratamento, tempero_sql, condicao))
             nomes.setdefault(tabela, []).append(f'"{coluna}"')
+
+    if sem_mascara:
+        print("-- ATENCAO: plano gerado SEM MASCARA. A copia sai identica a "
+              "producao,\n--   com nome, CPF, e-mail e atestado reais. So use "
+              "com o ambiente fechado.", file=sys.stderr)
+        for tabela, colunas in sorted(tabelas.items()):
+            print(f"{tabela}\t{', '.join(colunas)}\t{', '.join(nomes[tabela])}")
+        print(f"-- colunas: {resumo['copiar']} | todas copiadas cruas",
+              file=sys.stderr)
+        return 0
 
     # Nome errado na lista de preservadas ficaria mascarando em silêncio —
     # exatamente o tipo de erro que não dá sinal. Acusa alto.
