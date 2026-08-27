@@ -54,6 +54,18 @@ Regras dos scripts de entrega (aprendidas a caro preço):
   resultado. Inclua colunas de erro (ex.: `erro_tecnico`) quando houver.
 - Existe statement timeout: updates linha a linha com função por registro
   estouram tempo em tabelas grandes — prefira UPDATE com JOIN/CTE.
+- **Script que ALTERA ou APAGA dado existente guarda as linhas antes.** A
+  produção NÃO tem Point-in-Time Recovery (conferido no painel em 08/2026: o
+  PITR aparece como add-on não contratado); o único resgate é o backup diário,
+  e restaurá-lo custa o dia inteiro de todos os clientes. Como o SQL Editor
+  roda em UMA transação, script que dá erro se desfaz sozinho — o risco real é
+  o script que roda com SUCESSO e faz a coisa errada. Então, antes do
+  `UPDATE`/`DELETE`, copie o que será tocado:
+  `CREATE TABLE IF NOT EXISTS backup_<assunto>_<aaaammdd> AS SELECT * FROM <tabela> WHERE <mesmo filtro do update>;`
+  e deixe no comentário final o `UPDATE ... FROM backup_...` que desfaz. Isso
+  é mais cirúrgico que PITR (devolve só as linhas afetadas, sem descartar o
+  trabalho legítimo dos outros clientes no período) e não depende de add-on.
+  Não vale para script que só CRIA coisa nova (tabela, função, política).
 - DDL em tabela movimentada: `SET lock_timeout = '10s'`; nunca crie triggers
   em DUAS tabelas movimentadas na mesma transação (deadlock real já ocorrido)
   — divida em scripts parte1/parte2.
