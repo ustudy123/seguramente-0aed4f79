@@ -1258,8 +1258,17 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   virada de 8h marca **risco de interjornada**; efetivar **antes** de aprovar é
   recusado; após aprovar, a efetivação cruza as escalas dos dois a partir da data
   e **mantém as atribuições antigas** encerradas na véspera (história preservada).
-- **Tela (Publicar no Lovable):** a solicitação, a aprovação do gestor e o aviso de
-  risco de interjornada são de tela; o fluxo, a simulação e a efetivação já estão
+- **Tela — FEITO (28/08/2026):** nova sub-aba **Ponto › Escalas › Troca de turno**
+  com o fluxo inteiro: solicitar (escolhendo as duas atribuições vigentes, período
+  e motivo), aprovar/recusar e efetivar. O aviso de interjornada aparece por linha
+  ("abaixo de 11h", com o detalhe da simulação) e aprovar uma troca com risco pede
+  confirmação por palavra-chave — o gestor pode assumir, mas não sem ver. Só
+  aparece "Efetivar" depois de aprovada, e a efetivação avisa que o histórico
+  anterior é preservado. Provado em réplica: escala 15–23 trocando com 07–15
+  acusa "interjornada de 8.0h"; efetivar sem aprovar é recusado pelo banco; após
+  efetivar, cada colaborador fica com a atribuição antiga encerrada na véspera e a
+  nova a partir do dia da troca. Entra em produção por Publicar no Lovable.
+- **Restante (Publicar no Lovable):** o fluxo, a simulação e a efetivação já estão
   no banco.
 
 ### 50 · Onda 11 (parte 1) — atestado acima de 15 dias encaminha ao INSS (ESC-010)
