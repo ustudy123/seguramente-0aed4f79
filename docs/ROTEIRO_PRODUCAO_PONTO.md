@@ -1185,9 +1185,11 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   (113→114 verdes). Provado em transação (dados fictícios): 12x36 sem acordo →
   status `pendente` e 1 pendência; 12x36 com acordo anexado → `regular`, 0
   pendência; segunda rodada do monitor não duplica.
-- **Tela (Publicar no Lovable):** o aviso de "escala 12x36 sem acordo" no cadastro
-  e o anexo do acordo no módulo Documentos são de tela; a verificação e a pendência
-  já estão no banco.
+- **Tela — FEITO (28/08/2026):** a lista de escalas ganhou a coluna
+  **Formalização** ("Falta acordo" / "Em ordem"), lida de
+  `ponto_escala_formalizacao_status`, e um cartão de aviso no topo reúne as
+  escalas pendentes com a explicação legal e o caminho para regularizar. Entra em
+  produção por Publicar no Lovable.
 
 ### 47 · Onda 10 (parte 2) — revezamento: jornada de 6h, salvo coletivo (ESC-031)
 - **Arquivo:** `docs/script_ponto_onda10_escala_revezamento.sql`
@@ -1209,8 +1211,14 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   (114→115 verdes). Provado em transação (dados fictícios): revezamento de 8h sem
   coletivo → `pendente` e 1 alerta; de 6h → `regular`; de 8h com CCT anexada →
   `regular`; segunda rodada do monitor não duplica.
-- **Tela (Publicar no Lovable):** a opção "revezamento" no cadastro da escala e o
-  aviso de jornada acima de 6h sem coletivo são de tela; a tipificação, a
+- **Tela — FEITO (28/08/2026):** o cadastro da escala ganhou a modalidade
+  **"Turno ininterrupto de revezamento"** (que usa o formulário de dias da semana,
+  não o de ciclo móvel) e um aviso explicando que acima de 6h só com instrumento
+  coletivo. A pendência aparece na coluna Formalização. Provado em réplica:
+  revezamento de 8h fica "pendente", **continua pendente com acordo individual**
+  (só o coletivo autoriza) e vira "regular" com CCT anexada; revezamento de 6h já
+  nasce regular. Entra em produção por Publicar no Lovable.
+- **Restante (Publicar no Lovable):** a tipificação, a
   verificação e a pendência já estão no banco.
 
 ### 48 · Onda 10 (parte 3) — radar de cobertura de turno (ESC-021)
@@ -1232,8 +1240,10 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   (115→116 verdes). Provado em transação (dados fictícios): escala cujo único
   colaborador está afastado nos próximos dias → 7 dias descobertos e 7 alertas;
   escala com colaborador disponível → 0; segunda rodada do monitor não duplica.
-- **Tela (Publicar no Lovable):** o painel de "turnos a descoberto" e a ação de
-  cobertura no Plano de Ação são de tela; o radar e o alerta já estão no banco.
+- **Tela — FEITO (28/08/2026):** cartão **"Turnos a descoberto nos próximos 14
+  dias"** no topo da aba Escalas, lendo `ponto_escala_cobertura_listar` (escala,
+  dia e o porquê). Só aparece quando há algo a mostrar. A ação de cobertura no
+  Plano de Ação segue pendente. Entra em produção por Publicar no Lovable.
 
 ### 49 · Onda 10 (parte 4) — troca de turno com aprovação e recálculo (ESC-020)
 - **Arquivo:** `docs/script_ponto_onda10_troca_turno.sql` — **fecha a onda 10.**
