@@ -854,8 +854,16 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   guarda os eventos do equipamento; **lacuna** de NSR (falta o 101 entre 100 e
   102) manda o arquivo **inteiro** para a quarentena e **nenhum evento** entra;
   registro com CRC errado também vai para a quarentena, com o rejeitado contado.
-- **Tela (Publicar no Lovable):** a tela de importação de AFD passa a chamar o
-  validador e a mostrar a quarentena e o relatório; a conferência já está no banco.
+- **Tela — FEITO (28/08/2026):** a importação de AFD passa por
+  `ponto_afd_validar_importacao` ANTES de gravar qualquer marcação. A tela lê o
+  arquivo (leiaute 671 ou 1510, detectado pelo cabeçalho) em registros tipados
+  com a linha crua, calcula o hash da remessa (trava de reimportação), chama o
+  validador e só grava se o arquivo for aprovado — com `nsr_origem` e
+  `equipamento`, que impedem entrada em dobro. Reprovado, aparece o painel de
+  quarentena explicando o que falhou (CRC, assinatura, lacuna de NSR,
+  reimportação) e nada entra. O histórico ganhou a coluna "Conferência".
+  Leitura coberta por `src/test/afdImportacao.test.ts`. Entra em produção por
+  Publicar no Lovable.
 
 ### 35 · Onda 7 (parte 4) — gestão do certificado digital (ICP-Brasil)
 - **Arquivo:** `docs/script_ponto_onda7_certificado_digital.sql`
