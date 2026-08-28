@@ -403,14 +403,46 @@ jobs:
 
           # A prova de que o resto ficou intocado: fora deste cliente, todo
           # nome de empresa preenchido tem de continuar começando com anon-.
+          #
+          # DUAS EXCEÇÕES LEGÍTIMAS, e a primeira versão desta conferência não
+          # conhecia nenhuma delas — reprovou a corrida #2 acusando "3
+          # empresas sem máscara" que eram exatamente o que deviam ser:
+          #
+          #  · os CERCADOS de QA ('[QA] Empresa Alfa/Beta'), preservados de
+          #    propósito pela máscara, senão o motor de testes não acha o
+          #    cercado e a bateria aborta;
+          #  · empresas CADASTRADAS na própria homologação durante os testes:
+          #    nasceram aqui, nunca passaram por máscara nenhuma, e não têm
+          #    como "estar mascaradas".
+          #
+          # Contar sem listar foi o erro de fundo: um número sozinho não deixa
+          # ninguém julgar se é vazamento ou é o esperado. Agora lista.
+          echo "== Empresas fora do cliente cujo nome não está mascarado"
+          homolog -c "
+            SELECT t.nome AS cliente, ec.razao_social, ec.created_at::date AS criada_em,
+                   CASE WHEN t.slug IN ('qa-sandbox','qa-sandbox-2')
+                          THEN 'cercado de QA (esperado)'
+                        ELSE 'INVESTIGAR' END AS veredito
+              FROM public.empresa_cadastro ec
+              JOIN public.tenants t ON t.id = ec.tenant_id
+             WHERE ec.tenant_id <> '$CLIENTE'::uuid
+               AND ec.razao_social IS NOT NULL AND ec.razao_social <> ''
+               AND ec.razao_social NOT LIKE 'anon-%'
+             ORDER BY 4 DESC, 1;"
+
           vazou=$(homolog -tAc "
-            SELECT count(*) FROM public.empresa_cadastro
-             WHERE tenant_id <> '$CLIENTE'::uuid
-               AND razao_social IS NOT NULL AND razao_social <> ''
-               AND razao_social NOT LIKE 'anon-%';")
-          echo "Empresas de OUTROS clientes sem máscara (tem de ser 0): $vazou"
+            SELECT count(*) FROM public.empresa_cadastro ec
+              JOIN public.tenants t ON t.id = ec.tenant_id
+             WHERE ec.tenant_id <> '$CLIENTE'::uuid
+               AND t.slug NOT IN ('qa-sandbox','qa-sandbox-2')
+               AND ec.razao_social IS NOT NULL AND ec.razao_social <> ''
+               AND ec.razao_social NOT LIKE 'anon-%';")
+          echo "Fora do cliente e fora dos cercados de QA (tem de ser 0): $vazou"
           if [ "${vazou:-1}" -ne 0 ]; then
-            echo "::error::A sincronia tocou em cliente que não devia. Investigue antes de usar."
+            echo "::error::Há empresa sem máscara fora do cliente sincronizado e fora dos"
+            echo "::error::cercados de QA. Veja a lista acima, coluna 'veredito=INVESTIGAR'."
+            echo "::error::Se foram cadastradas AQUI durante os testes (olhe 'criada_em'),"
+            echo "::error::não é vazamento — apague-as ou refaça a cópia para limpar o ruído."
             exit 1
           fi
 
