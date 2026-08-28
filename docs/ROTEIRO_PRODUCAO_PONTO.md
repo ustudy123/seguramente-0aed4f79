@@ -124,6 +124,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 51 | Onda 11 (parte 2) — atestados sobrepostos detectados, não abonados em dobro | `docs/script_ponto_onda11_atestados_sobrepostos.sql` | — | ⏳ | ⬜ |
 | 52 | Onda 11 (parte 3) — ausência do art. 473 sem documento fica pendente (não abona por fé) | `docs/script_ponto_onda11_comprovacao_art473.sql` | — | ⏳ | ⬜ |
 | 53 | Vigilâncias do ponto — rotina diária que faz as monitorias rodarem | `docs/script_ponto_vigilancias_diarias.sql` | **#23 #38 #39 #44 #46 #47 #48** | ⏳ | ⬜ |
+| 54 | Comprovantes — extração restrita ao dono do CPF (correção de segurança) | `docs/script_ponto_comprovantes_extrair_dono.sql` | **#32** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -783,9 +784,16 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   comprovante (não duplica); a vigilância gera 1 alerta crítico numa marcação
   vencida e 0 na 2ª rodada (idempotente); a extração devolve 1 para o próprio CPF
   (mesmo com máscara) e 0 para outro CPF.
-- **Tela (Publicar no Lovable):** a emissão do comprovante ao registrar o ponto e
-  o "extrair meus comprovantes" do trabalhador chamam essas funções; o documento,
-  o hash e a extração já estão no banco.
+- **Tela — FEITO (28/08/2026):** registrar ponto passou a chamar
+  `ponto_gerar_comprovante` logo após gravar a marcação (falha ali não desfaz a
+  batida — a vigilância de 48h cobra o comprovante que faltar), e o cartão "Meus
+  comprovantes de ponto" no Meu Perfil extrai por período pelo
+  `ponto_comprovantes_extrair`, com download. Entra em produção por Publicar no
+  Lovable.
+- **Correção de segurança junto (item 54):** `ponto_comprovantes_extrair` é
+  SECURITY DEFINER e recebia o CPF por parâmetro sem conferir quem chamava —
+  qualquer usuário autenticado lia os comprovantes de um colega (LGPD arts. 6º,
+  46 e 47). Ver o item 54: sem ele, **não publique a tela**.
 
 ### 33 · Onda 7 (parte 2) — AEJ (Arquivo Eletrônico de Jornada, Portaria 671)
 - **Arquivo:** `docs/script_ponto_onda7_aej.sql`
@@ -1344,6 +1352,30 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   conferência avisa que nada foi agendado, em vez de falhar.
 - **Tela (Publicar no Lovable):** nenhuma. Os alertas aparecem no painel de
   Alertas CLT que já existe, porque ele lista a tabela inteira.
+
+### 54 · Comprovantes — extração restrita ao dono do CPF (correção de segurança)
+- **Arquivo:** `docs/script_ponto_comprovantes_extrair_dono.sql`
+- **Depende de:** #32 (comprovante como documento).
+- **O que corrige:** `ponto_comprovantes_extrair()` é `SECURITY DEFINER` e recebe
+  o CPF por parâmetro. O comentário dizia "restrita ao proprio CPF", mas a
+  restrição **não estava escrita**: qualquer usuário autenticado podia chamar a
+  função com o CPF de um colega e receber os comprovantes dele — data, hora e NSR
+  de cada batida. O RLS não protege: `SECURITY DEFINER` passa por cima. Dado
+  pessoal de terceiro (LGPD arts. 6º, 46 e 47).
+- **O que passa a valer:** mesma assinatura e mesmo retorno; antes de devolver
+  qualquer linha, confere quem chama — o **dono** do CPF
+  (`usuarios_base.auth_user_id = auth.uid()`), quem tem **papel de gestão**
+  (`has_minimum_role >= manager`) ou execução **sem sessão** (rotina/SQL Editor).
+  Fora disso devolve **vazio**, sem erro, para não virar oráculo de "este CPF
+  existe".
+- **Não altera dado:** função de leitura, `CREATE OR REPLACE`, idempotente. Sem
+  cópia de segurança a fazer.
+- **Conferência esperada:** `t | t | t | OK`.
+- **Provado em réplica local:** com a versão antiga, um colaborador lia os
+  comprovantes de outro (**1 linha**); com esta, lê **0**. O dono continua lendo
+  os seus, o gestor continua lendo os de terceiros, e a execução sem sessão segue
+  funcionando. Script rodado duas vezes seguidas: `OK` nas duas.
+- **Ordem:** este item entra **antes** de publicar a tela "Meus comprovantes".
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
