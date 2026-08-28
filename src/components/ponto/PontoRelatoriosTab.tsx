@@ -12,13 +12,13 @@ import { usePontoBancoHoras } from "@/hooks/usePontoBancoHoras";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { format } from "date-fns";
-import { FileDown, FileText, Download } from "lucide-react";
+import { FileDown, FileText, Download, Archive } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { formatarHoraMinuto } from "@/lib/ponto/formatoHoras";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import {
@@ -59,6 +59,7 @@ export function PontoRelatoriosTab() {
   const endDate = new Date(year, month, 0);
 
   const { tenantId } = useAuth();
+  const qc = useQueryClient();
   const { empresaAtivaId } = useEmpresaAtiva();
 
   // Nome das empresas: o relatório de Banco de Horas mistura filiais e o RH
@@ -578,6 +579,30 @@ export function PontoRelatoriosTab() {
       dataFinal: fim,
     });
 
+    // Portaria MTP 671/2021 — além do arquivo entregue, o AEJ TRATADO é
+    // arquivado e assinado (hash) no banco: é a prova de que a jornada
+    // apurada não mudou depois da geração. O download abaixo continua sendo
+    // o arquivo no leiaute oficial; a cópia arquivada guarda o conteúdo
+    // tratado com a assinatura, e aparece no cartão "AEJ arquivado".
+    let assinatura: string | null = null;
+    try {
+      await (supabase.rpc as any)("ponto_gerar_aej", {
+        p_tenant_id: tenantId,
+        p_empresa_id: empresaAtivaId || null,
+        p_competencia: competencia,
+      });
+      qc.invalidateQueries({ queryKey: ["ponto-aej-arquivado"] });
+      const { data: arq } = await (supabase.rpc as any)("ponto_aej_extrair", {
+        p_tenant_id: tenantId,
+        p_empresa_id: empresaAtivaId || null,
+        p_competencia: competencia,
+      });
+      assinatura = (arq || [])[0]?.hash_arquivo || null;
+    } catch (e: any) {
+      // O arquivo oficial continua saindo; só o arquivamento falhou.
+      toast.warning("AEJ gerado, mas não foi possível arquivar a cópia assinada: " + (e?.message || ""));
+    }
+
     const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -586,8 +611,37 @@ export function PontoRelatoriosTab() {
     a.click();
     URL.revokeObjectURL(url);
     toast.success(
-      `AEJ gerado: ${totais.marcacoes} marcações (${totais.ajustes} ajustes aprovados), ${totais.ocorrencias} ocorrências, ${totais.empregados} empregados.`,
+      `AEJ gerado: ${totais.marcacoes} marcações (${totais.ajustes} ajustes aprovados), ${totais.ocorrencias} ocorrências, ${totais.empregados} empregados.`
+      + (assinatura ? ` Cópia arquivada e assinada (${assinatura.slice(0, 12)}...).` : ""),
     );
+  };
+
+  // Cópia tratada e assinada da competência (Portaria 671). Só leitura: mostra
+  // o que já foi arquivado, sem gerar nada.
+  const { data: aejArquivado } = useQuery({
+    queryKey: ["ponto-aej-arquivado", tenantId, empresaAtivaId, competencia],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      const { data, error } = await (supabase.rpc as any)("ponto_aej_extrair", {
+        p_tenant_id: tenantId,
+        p_empresa_id: empresaAtivaId || null,
+        p_competencia: competencia,
+      });
+      if (error) throw error;
+      return ((data || []) as any[])[0] || null;
+    },
+    enabled: !!tenantId && !!competencia && tipoRelatorio === "aej",
+  });
+
+  const baixarAejArquivado = () => {
+    if (!aejArquivado?.conteudo) return;
+    const blob = new Blob([aejArquivado.conteudo], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AEJ_TRATADO_${competencia.replace("-", "")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
 
@@ -983,6 +1037,55 @@ export function PontoRelatoriosTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AEJ tratado e assinado, já arquivado (Portaria MTP 671/2021) */}
+      {tipoRelatorio === "aej" && aejArquivado && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Archive className="w-4 h-4 text-primary" />
+              Cópia arquivada e assinada desta competência
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0 space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Gerada em</p>
+                <p className="font-medium">
+                  {aejArquivado.gerado_em
+                    ? format(new Date(aejArquivado.gerado_em), "dd/MM/yyyy 'às' HH:mm")
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Trabalhadores</p>
+                <p className="font-medium">{aejArquivado.total_trabalhadores ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Marcações</p>
+                <p className="font-medium">{aejArquivado.total_marcacoes ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Registros</p>
+                <p className="font-medium">{aejArquivado.total_registros ?? "—"}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Assinatura (hash) do conteúdo tratado</p>
+              <p className="font-mono text-[11px] break-all">{aejArquivado.hash_arquivo || "—"}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={baixarAejArquivado}>
+                <Download className="w-4 h-4 mr-2" /> Baixar cópia tratada
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Guarda a jornada tratada como estava na geração. O arquivo entregue à
+                fiscalização é o do botão de gerar, no leiaute oficial.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <IncluirBancoHorasDialog
         open={perguntandoBanco}

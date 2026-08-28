@@ -814,8 +814,12 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   o registro de apuração da competência e o trailer com as contagens; assina com
   hash sha256; regerar **não duplica** (um arquivo por competência); a extração
   devolve o arquivo assinado.
-- **Tela (Publicar no Lovable):** o botão "gerar/baixar AEJ" da competência chama
-  essas funções; o arquivo, a assinatura e a extração já estão no banco.
+- **Tela — FEITO (28/08/2026):** o botão "gerar AEJ" passou a chamar
+  `ponto_gerar_aej` (arquiva e assina a versão tratada) antes de baixar o arquivo
+  no leiaute oficial, e a aba mostra o cartão "Cópia arquivada e assinada desta
+  competência" (data, contagens, hash e download da cópia tratada), lendo
+  `ponto_aej_extrair`. Se o arquivamento falhar, o arquivo oficial sai mesmo
+  assim e a tela avisa. Entra em produção por Publicar no Lovable.
 
 ### 34 · Onda 7 (parte 3) — importação de AFD que confere
 - **Arquivo:** `docs/script_ponto_onda7_afd_importacao.sql`
