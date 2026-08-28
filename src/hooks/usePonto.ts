@@ -408,6 +408,21 @@ export function usePonto() {
         }
         throw error;
       }
+
+      // Portaria MTP 671/2021: a marcação gera um COMPROVANTE — recibo do
+      // trabalhador com empregador, data/hora, NSR e hash, arquivado e
+      // disponibilizado (prazo de 48h). Falha aqui não desfaz a batida: a
+      // marcação já está registrada e a vigilância de 48h cobra o comprovante
+      // que faltar.
+      try {
+        await (supabase.rpc as any)("ponto_gerar_comprovante", {
+          p_tenant_id: tenantId,
+          p_marcacao_id: (data as any)?.id,
+        });
+      } catch {
+        // silencioso de propósito — ver comentário acima
+      }
+
       return data as PontoMarcacao;
     },
     onSuccess: (data, variables) => {
