@@ -1123,8 +1123,22 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   concluir sem recorrência **encerra** o alerta, com recorrência **gera** alerta de
   eficácia; a IA sugere, a decisão **sem humano é recusada** e **com humano** fica
   registrada.
-- **Tela (Publicar no Lovable):** o botão "gerar ação do alerta", a conclusão com
-  eficácia e o "Analisar com IA" chamam essas funções; a integração já está no banco.
+- **Tela — FEITO (28/08/2026):** no painel de Alertas CLT, cada alerta ganhou
+  **"Gerar ação"** (chama `ponto_alerta_gerar_acao`, que cria a 5W2H com a origem
+  e deixa o alerta vinculado — alerta já convertido mostra o selo "Ação criada")
+  e **"Analisar com IA"**, que abre a sugestão (causa provável, impacto, ação) com
+  os botões *Aceitar e criar ação* / *Recusar sugestão*: a decisão humana fica
+  registrada por `ponto_ia_registrar_decisao` nos dois casos, e só o aceite gera a
+  ação. O diálogo diz na abertura que a análise **sugere** e quem decide é a
+  pessoa (LGPD art. 20).
+  Concluir uma ação de origem `ponto` passa por `ponto_acao_concluir_com_eficacia`:
+  se a ocorrência persiste, a tela avisa que um alerta de eficácia foi aberto em
+  vez de dar baixa cega. A falha na reavaliação não impede a conclusão.
+  Provado em réplica: gerar ação vincula o alerta e cria a ação com
+  `origem_modulo = ponto`; a análise nasce `sugerido` e só vira `decidido_aceito`
+  depois da decisão humana, com o nome de quem decidiu e a observação. Entra em
+  produção por Publicar no Lovable.
+- **Onda 8 fechada nas telas (28/08/2026):** partes 1 a 6 com ponto de acesso.
 
 ### 43 · Onda 8 (correção) — competência fechada bloqueia até para gestão
 - **Arquivo:** `docs/script_ponto_onda8_competencia_fechada.sql`
