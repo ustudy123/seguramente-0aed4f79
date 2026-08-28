@@ -1021,7 +1021,13 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   Provado em transação (dados fictícios): um estabelecimento com 21 trabalhadores
   ativos vira **obrigado** e, por não usar controle, recebe um alerta; um com 5
   trabalhadores **não**; rodar de novo não duplica.
-- **Tela (Publicar no Lovable):** a sinalização e o alerta aparecem no cadastro do
+- **Tela — FEITO (28/08/2026):** a lista de empresas mostra o selo **"ponto
+  obrigatório"** ao lado da contagem de colaboradores quando
+  `controle_ponto_obrigatorio` está marcado, com a explicação legal no título.
+  Quem marca é a rotina do banco (que agora roda sozinha, item 53). Provado em
+  réplica: 26 vínculos ativos → contagem 26, monitor gera 1 alerta e a empresa
+  fica sinalizada. Entra em produção por Publicar no Lovable.
+- **Restante (Publicar no Lovable):** o alerta aparece no cadastro do
   estabelecimento; a contagem e a regra já estão no banco.
 
 ### 40 · Onda 8 (parte 4) — sistema alternativo (REP-A) só com instrumento coletivo
@@ -1045,8 +1051,14 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   recusado; **com** o documento anexado é aceito; **com** um acordo coletivo
   vigente é aceito; um acordo **individual** é recusado (exige coletivo); e o modo
   `interno` passa normalmente.
-- **Tela (Publicar no Lovable):** a tela de configuração passa a pedir o
-  instrumento coletivo ao ativar o modo por link; a trava já está no banco.
+- **Tela — FEITO (28/08/2026):** ao escolher "link externo" (ou "ambos") em
+  Ponto › Configurações › Geral, aparece o campo **"Instrumento que autoriza o
+  registro por link (REP-A)"**, com a explicação legal — junto da escolha, não
+  escondido em outra tela. Se o banco recusar, a mensagem técnica vira uma frase
+  que o RH resolve ("informe o instrumento ou cadastre um acordo vigente em
+  Compliance › Acordos"). Provado em réplica: ativar `link_externo` sem
+  instrumento é recusado pelo gatilho; com o instrumento informado, grava.
+  Entra em produção por Publicar no Lovable.
 
 ### 41 · Onda 8 (parte 5) — LGPD: trilha de acesso a dado sensível + enumeração
 - **Arquivo:** `docs/script_ponto_onda8_lgpd_trilha_e_enumeracao.sql`
