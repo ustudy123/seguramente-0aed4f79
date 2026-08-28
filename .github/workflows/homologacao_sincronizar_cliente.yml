@@ -208,7 +208,24 @@ jobs:
                  WHERE d.$chave = p.$chave RETURNING 1)
               SELECT count(*) FROM atualizadas;" 2>erro.txt) || {
               falhas=$((falhas+1)); echo "  FALHOU (update): $tabela"
-              sed 's/^/      /' erro.txt | head -2; continue; }
+              sed 's/^/      /' erro.txt | head -3
+              # Colisão de chave única é o caso comum, e o erro sozinho não
+              # diz o que fazer. Mostrar a linha JÁ EXISTENTE que está no
+              # caminho transforma "duplicate key" em uma instrução: é esta
+              # linha aqui que precisa sair.
+              # Colisão de chave única é o caso comum aqui, e o erro sozinho
+              # não diz o que fazer. Em vez de tentar montar e RODAR uma
+              # consulta a partir do texto do erro — que exigiria adivinhar
+              # aspas e tipos de cada valor —, imprime a consulta pronta para
+              # a pessoa colar. Menos esperto, e não erra.
+              if grep -q 'duplicate key' erro.txt; then
+                echo "      -> Uma linha da homologação já ocupa essa chave."
+                echo "         Provável cadastro feito durante os testes. Para achar e"
+                echo "         decidir, cole no SQL Editor da HOMOLOGAÇÃO:"
+                echo "           SELECT * FROM $tabela WHERE <a chave do DETAIL acima>;"
+                echo "         Apagada a linha conflitante, rode esta esteira de novo."
+              fi
+              continue; }
 
             # 4) quantas vieram da produção e não acharam par aqui
             sem_par=$(homolog -tAc "
@@ -240,12 +257,28 @@ jobs:
             echo "FALHAS=$falhas"
           } >> "$GITHUB_ENV"
 
+          # NÃO aborta aqui, e isso foi aprendido a caro preço na corrida #1:
+          # uma tabela falhou (colisão de chave única em ponto_fechamentos),
+          # o passo saiu com erro, e os passos seguintes foram PULADOS — entre
+          # eles o que troca as senhas. O ambiente ficou com o dado real
+          # dentro e a senha compartilhada ainda valendo, que é exatamente o
+          # buraco que este workflow existe para fechar.
+          #
+          # Falhar tarde é melhor que falhar cedo quando o "cedo" deixa a
+          # porta aberta. A corrida ainda vai ficar VERMELHA — mas só depois
+          # de o ambiente estar num estado seguro.
           if [ "$falhas" -gt 0 ]; then
-            echo "::error::$falhas tabela(s) falharam na sincronia. Veja acima."
-            exit 1
+            echo "::warning::$falhas tabela(s) falharam na sincronia (veja acima)."
+            echo "::warning::A corrida vai reprovar no fim — mas antes disso as senhas"
+            echo "::warning::serão ajustadas, para o ambiente não ficar aberto com dado real."
           fi
 
       - name: Ajustar as contas de login do cliente
+        # always(): este passo é a TRAVA DE SEGURANÇA do ambiente — é ele que
+        # tira a senha compartilhada das contas que agora têm dado real. Se
+        # ele for pulado porque algo antes falhou, o resultado é o pior dos
+        # mundos: dado real dentro e porta aberta. Aconteceu na corrida #1.
+        if: always()
         env:
           PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
@@ -354,6 +387,7 @@ jobs:
                          DROP TABLE IF EXISTS sinc_emails;"
 
       - name: Conferir o resultado
+        if: always()
         env:
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
         run: |
@@ -387,3 +421,17 @@ jobs:
             echo "::warning::RECRIAR no modo completo com mascarar=um_cliente."
           fi
           echo "Sincronia concluída. O restante da homologação não foi tocado."
+
+          # A reprovação vem AQUI, no fim, e não no passo da cópia: assim as
+          # senhas já foram ajustadas e o ambiente está fechado antes de a
+          # corrida ficar vermelha. Vermelho continua sendo vermelho — só
+          # deixou de custar uma porta aberta.
+          if [ "${FALHAS:-0}" -gt 0 ]; then
+            echo "::error::$FALHAS tabela(s) não sincronizaram — veja o passo da cópia."
+            echo "::error::As senhas JÁ foram ajustadas: o ambiente está fechado."
+            echo "::error::Causa mais comum: colisão de chave única, quando a homologação"
+            echo "::error::já tem uma linha com o valor real que a produção está devolvendo"
+            echo "::error::(um registro criado aí dentro durante os testes). Apague a linha"
+            echo "::error::conflitante na homologação e rode de novo, ou use o RECRIAR completo."
+            exit 1
+          fi
