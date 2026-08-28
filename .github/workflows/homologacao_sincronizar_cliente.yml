@@ -298,15 +298,39 @@ jobs:
             psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres "$@"
           }
 
-          echo "== Trazendo os e-mails reais das contas deste cliente"
+          echo "== Trazendo os e-mails reais das contas deste cliente e dos testadores"
           homolog -q -v ON_ERROR_STOP=1 -c \
             'DROP TABLE IF EXISTS sinc_emails;
              CREATE TABLE sinc_emails (id uuid PRIMARY KEY, email text);'
-          prod -qAt -c "
-            COPY (SELECT u.id, u.email FROM auth.users u
-                   WHERE u.id IN (SELECT user_id FROM public.profiles
-                                   WHERE tenant_id = '$CLIENTE'::uuid))
-            TO STDOUT" \
+
+          # DOIS conjuntos, e o segundo faltava:
+          #
+          #  1. as contas do cliente sincronizado — para o ensaio ter as
+          #     pessoas certas;
+          #  2. as contas de QUEM VAI TESTAR, mesmo que pertençam a outro
+          #     cliente ou não tenham vínculo nenhum (superadmin costuma não
+          #     ter). Sem isso o e-mail do testador continua embaralhado, e
+          #     não se pode entrar com um e-mail que não existe: a corrida #2
+          #     avisou "Testadores sem conta na base" para três dos quatro
+          #     nomes da lista, e eram justamente os que precisavam entrar.
+          #
+          # Restaurar o e-mail de um testador não amplia a exposição: é o
+          # e-mail da própria pessoa, colocada na lista de propósito, e ela
+          # recebe senha individual sorteada. Nenhum dado de OUTRO cliente
+          # deixa de ser mascarado por causa disso — só o endereço de login.
+          cat > buscar_emails.sql <<'FIM_SQL'
+          COPY (
+            SELECT u.id, u.email
+              FROM auth.users u
+             WHERE u.id IN (SELECT user_id FROM public.profiles
+                             WHERE tenant_id = :'cliente'::uuid)
+                OR lower(u.email) IN (
+                     SELECT lower(btrim(e))
+                       FROM unnest(string_to_array(:'lista', ',')) e
+                      WHERE btrim(e) <> '')
+          ) TO STDOUT
+          FIM_SQL
+          prod -qAt -v cliente="$CLIENTE" -v lista="$TESTADORES" -f buscar_emails.sql \
             | homolog -q -c "COPY sinc_emails (id, email) FROM STDIN"
 
           n=$(homolog -tAc "
@@ -380,8 +404,22 @@ jobs:
           homolog -q -v ON_ERROR_STOP=1 -v lista="$TESTADORES" -f liberar_testadores.sql
 
           echo "── SENHAS DOS TESTADORES (copie agora; só aparecem aqui) ──"
-          homolog -tA -F ' | ' -c "SELECT email, senha_provisoria
-                                     FROM homologacao_testadores_senhas ORDER BY email;"
+          # O alcance vai junto da senha, e não é detalhe: uma conta de
+          # superadmin enxerga TODOS os clientes, não só o sincronizado.
+          # Entregar a senha sem dizer isso deixaria a pessoa achando que
+          # está num recorte quando está no todo.
+          homolog -tA -F ' | ' -c "
+            SELECT s.email, s.senha_provisoria,
+                   CASE WHEN EXISTS (SELECT 1 FROM public.superadmins sa
+                                      JOIN auth.users u ON u.id = sa.user_id
+                                     WHERE lower(u.email) = s.email AND sa.ativo)
+                          OR EXISTS (SELECT 1 FROM public.user_roles r
+                                      JOIN auth.users u ON u.id = r.user_id
+                                     WHERE lower(u.email) = s.email
+                                       AND r.role::text = 'superadmin')
+                        THEN 'SUPERADMIN - enxerga todos os clientes'
+                        ELSE 'acesso normal' END
+              FROM homologacao_testadores_senhas s ORDER BY s.email;"
           echo "───────────────────────────────────────────────────────────"
           homolog -q -c "DROP TABLE IF EXISTS homologacao_testadores_senhas;
                          DROP TABLE IF EXISTS sinc_emails;"
