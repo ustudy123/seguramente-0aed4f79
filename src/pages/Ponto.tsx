@@ -11,7 +11,7 @@ import {
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
   MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon, CalendarDays,
-  AlertTriangle, ShieldAlert, ShieldCheck, FolderArchive,
+  AlertTriangle, ShieldAlert, ShieldCheck, FolderArchive, ArrowLeftRight,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -54,6 +54,7 @@ import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoPreAssinalacaoTab } from "@/components/ponto/PontoPreAssinalacaoTab";
 import { PontoCertificadoTab } from "@/components/ponto/PontoCertificadoTab";
 import { PontoDossieTab } from "@/components/ponto/PontoDossieTab";
+import { PontoTrocaTurnoTab } from "@/components/ponto/PontoTrocaTurnoTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoAjustesTab } from "@/components/ponto/PontoAjustesTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
@@ -1251,7 +1252,20 @@ const Ponto = () => {
 
 
         {/* Escalas */}
-        <TabsContent value="escalas"><PontoEscalasTab /></TabsContent>
+        <TabsContent value="escalas">
+          <Tabs defaultValue="escalas_lista" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+              <TabsTrigger value="escalas_lista" className="text-xs">
+                <CalendarDays className="h-3.5 w-3.5 mr-1" />Escalas
+              </TabsTrigger>
+              <TabsTrigger value="troca_turno" className="text-xs">
+                <ArrowLeftRight className="h-3.5 w-3.5 mr-1" />Troca de turno
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="escalas_lista"><PontoEscalasTab /></TabsContent>
+            <TabsContent value="troca_turno"><PontoTrocaTurnoTab /></TabsContent>
+          </Tabs>
+        </TabsContent>
 
         {/* Apuração */}
         <TabsContent value="apuracao">
