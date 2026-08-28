@@ -971,8 +971,16 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   **produção** (III) ficam **dispensados** e sem bater ponto; teletrabalho por
   **jornada** (III) **continua controlado** (não é dispensado); enquadrar um
   controlado depois já zera o `bate_ponto`.
-- **Tela (Publicar no Lovable):** os campos de enquadramento entram na ficha do
-  colaborador; a regra e a coerência já estão no banco.
+- **Tela — FEITO (28/08/2026):** a ficha do colaborador ganhou o bloco **"Dispensa
+  de controle de jornada (art. 62 da CLT)"**: enquadramento (não se enquadra / I
+  externa / II gestão / III teletrabalho por produção), modalidade de teletrabalho
+  e o documento que sustenta o enquadramento. Quando alguém marca um inciso com
+  teletrabalho **por jornada**, a tela avisa que a dispensa não se aplica — a
+  regra do banco mantém o colaborador marcando ponto. A lista de colaboradores
+  passou a carregar esses campos para a edição. Provado em réplica: gestor
+  (inciso II) grava `dispensado_ponto = true` e `bate_ponto = false`;
+  teletrabalhista por jornada com inciso III fica `dispensado_ponto = false` e
+  segue batendo ponto. Entra em produção por Publicar no Lovable.
 
 ### 38 · Onda 8 (parte 2) — controle de fato descaracteriza a dispensa (art. 62)
 - **Arquivo:** `docs/script_ponto_onda8_descaracterizacao_art62.sql`
