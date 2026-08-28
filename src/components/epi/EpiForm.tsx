@@ -228,6 +228,11 @@ export function EpiForm({
         marca: data.marca,
         fabricante: data.fabricante,
         ca_numero: data.ca,
+        // Faltava enviar a validade: a assinatura de onCreateTipo já a
+        // declarava, mas handleSubmit nunca a mandava, então
+        // epi_tipos.ca_validade ficava sempre NULL — e os alertas de CA
+        // vencido/vencendo nunca disparavam para item nenhum.
+        ca_validade: data.data_validade,
         estoque_minimo: data.quantidade_minima,
         estoque_inicial: data.quantidade_estoque,
         controla_tamanho: controlaTamanho,

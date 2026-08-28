@@ -38,7 +38,6 @@ export interface CartaoDia {
 export interface CartaoEmpregador {
   razaoSocial: string;
   cnpj?: string | null;
-  atividade?: string | null;
   endereco?: string | null;
   cidade?: string | null;
   uf?: string | null;
@@ -233,15 +232,25 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
     });
   };
 
+  // A TERCEIRA COLUNA É DO EMPREGADO, não da empresa.
+  //
+  // "Atividade" (o CNAE da empresa) era o único item de empresa nessa coluna,
+  // enquanto cargo e departamento — que quem lê o cartão procura primeiro —
+  // ficavam numa linha cinza de 6,4pt FORA da caixa. Agora a coluna 3 é
+  // uniforme: Cargo / Departamento / Admissão.
+  //
+  // A geometria não muda (mesma altura, três linhas, mesmo fio separador),
+  // então o cálculo de compressão da tabela mais abaixo não é afetado e o
+  // cartão não corre risco de virar duas páginas.
   linha(topo + 4, [
     ["Empregador", er.razaoSocial],
     ["CNPJ", er.cnpj],
-    ["Atividade", er.atividade],
+    ["Cargo", eo.cargo],
   ]);
   linha(topo + 12, [
     ["Endereço", er.endereco],
     ["Cidade / UF", [er.cidade, er.uf].filter(Boolean).join(" - ") || null],
-    ["Categoria", eo.categoria || "Mensalista"],
+    ["Departamento", eo.setor],
   ]);
 
   doc.setDrawColor(226, 232, 240);
@@ -257,9 +266,11 @@ function blocoIdentificacao(doc: jsPDF, input: CartaoPontoInput) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(6.4);
   doc.setTextColor(...MARCA.cinza);
+  // Cargo e Setor saíram daqui: subiram para a caixa. Categoria desceu para
+  // cá, no lugar deles — continua sendo informação útil, só não é a primeira
+  // que se procura.
   const rodapeIdent = [
-    eo.cargo ? `Cargo: ${eo.cargo}` : null,
-    eo.setor ? `Setor: ${eo.setor}` : null,
+    eo.categoria ? `Categoria: ${eo.categoria}` : null,
     eo.matricula ? `Matrícula: ${eo.matricula}` : null,
     eo.horarios ? `Horários: ${eo.horarios}` : null,
   ].filter(Boolean).join("   ·   ");

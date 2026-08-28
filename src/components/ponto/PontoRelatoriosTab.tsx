@@ -68,7 +68,7 @@ export function PontoRelatoriosTab() {
     enabled: !!tenantId,
     queryFn: async () => {
       const { data, error } = await fromTable("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj, endereco, numero, bairro, cidade, estado, cnae_descricao")
+        .select("id, razao_social, nome_fantasia, cnpj, endereco, numero, bairro, cidade, estado")
         .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
@@ -609,7 +609,6 @@ export function PontoRelatoriosTab() {
           empregador: {
             razaoSocial: empresaDoRelatorio || "—",
             cnpj: cnpjDoRelatorio,
-            atividade: emp.cnae_descricao || null,
             endereco: enderecoCompleto,
             cidade: emp.cidade || null,
             uf: emp.estado || null,
