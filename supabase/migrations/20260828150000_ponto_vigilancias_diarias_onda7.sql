@@ -1,45 +1,30 @@
 -- ============================================================================
--- ENTREGA — Vigilancias do ponto: rotina diaria que faz as monitorias RODAREM
+-- Vigilâncias do ponto — acrescenta as duas rotinas da onda 7
 --
--- Colar INTEIRO no SQL Editor do projeto de PRODUCAO e executar uma vez.
+-- A rotina diária (20260828120000) cobria seis vigilâncias. Duas ficaram de
+-- fora porque só apareceram ao ligar as telas da onda 7, e estavam no mesmo
+-- estado das outras — funções sem gatilho e sem agendamento, que ninguém
+-- chamava:
+--   · ponto_certificado_vigiar_vencimento — certificado ICP-Brasil vencido
+--     paralisa a emissão assinada do AFD/AEJ bem na hora da fiscalização;
+--   · ponto_comprovante_vigiar_48h — marcação sem comprovante dentro do prazo
+--     de 48h da Portaria 671.
 --
--- CONTEXTO
---   As ondas 5, 7, 8, 9 e 10 criaram rotinas de vigilancia que geram alerta no
---   painel de Alertas CLT (vencimento e teto do banco de horas, controle de
---   fato que descaracteriza o art. 62, obrigatoriedade do controle por
---   estabelecimento, vigencia de instrumento coletivo, formalizacao de escala
---   12x36/revezamento e cobertura de turno). Nenhuma tem gatilho nem
---   agendamento: sao funcoes que alguem precisa chamar. Como nenhuma tela
---   chama, essas familias de alerta nunca foram emitidas.
+-- O QUE FAZ: CREATE OR REPLACE da mesma função, agora com oito rotinas, e
+-- reafirma o agendamento (mesmo nome de job e mesmo horário — reagendar o
+-- mesmo nome não duplica).
 --
--- O QUE ESTE SCRIPT FAZ
---   (1) Cria a rotina public.ponto_vigilancias_diarias(), que percorre os
---       tenants ativos e executa cada uma das OITO monitorias isolando erro
---       por tenant/rotina (uma falha nao impede as demais): banco de horas,
---       art. 62, obrigatoriedade por estabelecimento, vigencia de CCT,
---       formalizacao de escala, cobertura de turno, vencimento do certificado
---       digital e prazo de 48h do comprovante.
---   (2) Agenda essa rotina no pg_cron para rodar 1x por dia, as 03:37 UTC.
---
--- SEGURANCA DO DADO
---   Este script SO CRIA coisa nova (uma funcao e um agendamento). Nao altera
---   nem apaga nenhuma linha existente, entao nao ha copia de seguranca a
---   fazer. As rotinas chamadas apenas INSEREM alerta e todas ja se protegem
---   contra duplicidade, entao rodar todo dia nao repete alerta. Nenhuma delas
---   altera marcacao, apuracao, saldo ou espelho.
---
--- IDEMPOTENTE: rodar duas vezes nao quebra nem duplica (CREATE OR REPLACE e
--- reagendamento do mesmo job).
+-- GARANTIAS: as duas rotinas novas só INSEREM alerta, com a mesma proteção
+-- contra duplicidade das demais; erro em uma não impede as outras. Não altera
+-- marcação, apuração, saldo nem espelho. Aditivo e idempotente.
 -- ============================================================================
-
-SET lock_timeout = '10s';
 
 CREATE OR REPLACE FUNCTION public.ponto_vigilancias_diarias()
 RETURNS TABLE(rotina text, alertas integer, tenants_com_erro integer)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO 'public'
-AS $vig$
+AS $$
 DECLARE
   t          RECORD;
   v_n        integer;
@@ -135,7 +120,7 @@ BEGIN
     ('comprovante_prazo_48h',         v_compr,  v_e_compr)
   ) AS x(rotina, alertas, tenants_com_erro);
 END;
-$vig$;
+$$;
 
 COMMENT ON FUNCTION public.ponto_vigilancias_diarias() IS
   'Executa as vigilancias do ponto (banco de horas, art. 62, obrigatoriedade por estabelecimento, vigencia de CCT, formalizacao de escala, cobertura de turno, vencimento do certificado digital e prazo de 48h do comprovante) em todos os tenants ativos, isolando erro por tenant/rotina. Somente insere alerta; nao altera marcacao, apuracao nem espelho. Agendada diariamente.';
@@ -156,28 +141,3 @@ BEGIN
     RAISE NOTICE 'pg_cron ausente — chame public.ponto_vigilancias_diarias() pela aplicacao.';
   END IF;
 END $cron$;
--- ============================================================================
--- CONFERENCIA (o editor mostra so o ultimo resultado)
--- ============================================================================
-SELECT
-  (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public' AND p.proname = 'ponto_vigilancias_diarias') = 1
-    AS rotina_criada,
-  EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')
-    AS pg_cron_presente,
-  (SELECT count(*) FROM cron.job WHERE jobname = 'ponto-vigilancias-diarias') = 1
-    AS agendamento_ativo,
-  (SELECT schedule FROM cron.job WHERE jobname = 'ponto-vigilancias-diarias')
-    AS horario_utc,
-  (SELECT count(*) FROM public.tenants WHERE COALESCE(ativo, true) = true)
-    AS tenants_que_serao_varridos,
-  CASE
-    WHEN (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-           WHERE n.nspname = 'public' AND p.proname = 'ponto_vigilancias_diarias') <> 1
-      THEN 'FALHOU — a rotina nao foi criada; veja as mensagens acima'
-    WHEN NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')
-      THEN 'ATENCAO — rotina criada, mas o pg_cron nao esta neste banco: nada sera agendado'
-    WHEN (SELECT count(*) FROM cron.job WHERE jobname = 'ponto-vigilancias-diarias') = 1
-      THEN 'OK'
-    ELSE 'FALHOU — a rotina existe mas o agendamento nao foi criado'
-  END AS erro_tecnico;

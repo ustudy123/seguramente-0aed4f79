@@ -11,7 +11,7 @@ import {
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
   MapPin, Loader2, Link2, HelpCircle, Search, Paperclip, Eye, Image as ImageIcon, CalendarDays,
-  AlertTriangle, ShieldAlert,
+  AlertTriangle, ShieldAlert, ShieldCheck,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -52,6 +52,7 @@ import { PontoAlertasTab } from "@/components/ponto/PontoAlertasTab";
 import { PontoRelatoriosTab } from "@/components/ponto/PontoRelatoriosTab";
 import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoPreAssinalacaoTab } from "@/components/ponto/PontoPreAssinalacaoTab";
+import { PontoCertificadoTab } from "@/components/ponto/PontoCertificadoTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoAjustesTab } from "@/components/ponto/PontoAjustesTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
@@ -1288,17 +1289,19 @@ const Ponto = () => {
         {/* Configurações */}
         <TabsContent value="configuracoes">
           <Tabs value={configTab} onValueChange={setConfigTab} className="w-full">
-            <TabsList className="grid w-full max-w-2xl grid-cols-5 mb-4">
+            <TabsList className="grid w-full max-w-3xl grid-cols-6 mb-4">
               <TabsTrigger value="config" className="text-xs"><Settings className="h-3.5 w-3.5 mr-1" />Geral</TabsTrigger>
               <TabsTrigger value="links" className="text-xs"><Link2 className="h-3.5 w-3.5 mr-1" />Links</TabsTrigger>
               <TabsTrigger value="repc" className="text-xs"><HardDrive className="h-3.5 w-3.5 mr-1" />REP-C</TabsTrigger>
               <TabsTrigger value="feriados" className="text-xs"><CalendarDays className="h-3.5 w-3.5 mr-1" />Feriados</TabsTrigger>
               <TabsTrigger value="pre_assinalacao" className="text-xs"><Coffee className="h-3.5 w-3.5 mr-1" />Intervalo pré-assinalado</TabsTrigger>
+              <TabsTrigger value="certificado" className="text-xs"><ShieldCheck className="h-3.5 w-3.5 mr-1" />Certificado digital</TabsTrigger>
             </TabsList>
             <TabsContent value="config"><PontoConfigTab /></TabsContent>
             <TabsContent value="links"><PontoLinksTab /></TabsContent>
             <TabsContent value="repc"><PontoRepCTab /></TabsContent>
             <TabsContent value="pre_assinalacao"><PontoPreAssinalacaoTab /></TabsContent>
+            <TabsContent value="certificado"><PontoCertificadoTab /></TabsContent>
             <TabsContent value="feriados">
               <Tabs defaultValue="lista" className="w-full">
                 <TabsList className="mb-4">

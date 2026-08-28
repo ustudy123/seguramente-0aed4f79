@@ -897,8 +897,14 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   e ignora o vencido; a vigilância gera **alta** para o que está perto de vencer e
   **crítica** para o vencido, e **nada** para o de validade longa; rodar de novo
   não duplica.
-- **Tela (Publicar no Lovable):** a tela de cadastro do certificado e o painel de
-  alertas chamam essas funções; o cadastro, a vigência e o alerta já estão no banco.
+- **Tela — FEITO (28/08/2026):** nova aba **Ponto › Configurações › Certificado
+  digital**: cadastro (tipo A1/A3, ICP-Brasil, titular, emissor, nº de série,
+  vigência e antecedência do aviso), cartão "Certificado em uso hoje" — que
+  avisa quando NÃO há vigente, porque sem ele o AFD/AEJ não têm com que ser
+  assinados — e situação por linha (Vigente / Vence em N dias / VENCIDO). A tela
+  guarda só metadados: **a chave privada não entra no sistema**. O alerta de
+  vencimento passou a rodar sozinho (item 53, agora com oito rotinas). Entra em
+  produção por Publicar no Lovable.
 
 ### 36 · Onda 7 (parte 5) — dossiê de fiscalização + arquivamento (fecha a onda 7)
 - **Arquivo:** `docs/script_ponto_onda7_dossie_fiscalizacao.sql`
@@ -1331,10 +1337,13 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Arquivo:** `docs/script_ponto_vigilancias_diarias.sql`
 - **Depende de:** #23 (alertas do banco), #38 (art. 62), #39 (estabelecimento),
   #44 (CCT), #46/#47 (formalização de escala), #48 (cobertura de turno).
-- **O que faz:** as ondas 5, 8, 9 e 10 criaram rotinas de vigilância que geram
+- **O que faz:** as ondas 5, 7, 8, 9 e 10 criaram rotinas de vigilância que geram
   alerta no painel de Alertas CLT. **Nenhuma tem gatilho nem agendamento** — são
-  funções que alguém precisa chamar, e nenhuma tela chama. Na prática, seis
-  famílias de alerta nunca foram emitidas. Este pacote cria
+  funções que alguém precisa chamar, e nenhuma tela chama. Na prática, **oito**
+  famílias de alerta nunca foram emitidas (as seis primeiras mais, desde
+  28/08, o **vencimento do certificado digital** e o **prazo de 48h do
+  comprovante**, encontrados ao ligar as telas da onda 7; a migration
+  `20260828150000` acrescentou as duas, e o script de entrega já sai completo). Este pacote cria
   `ponto_vigilancias_diarias()`, que percorre os tenants ativos e executa cada
   monitoria **isolando erro por tenant/rotina** (uma falha não impede as demais),
   e a agenda no `pg_cron` para rodar 1x/dia às **03:37 UTC** (minuto livre entre
@@ -1347,7 +1356,9 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Conferência esperada:** `t | t | t | 37 3 * * * | <n> | OK`.
 - **Provado em réplica local** (868 migrations aplicadas): com uma CCT vencendo em
   10 dias, a 1ª execução gera **1 alerta** (`cct_vigencia_vencimento`, severidade
-  alta) e a 2ª execução gera **0** — idempotente. O reagendamento rodado duas
+  alta) e a 2ª execução gera **0** — idempotente. Mesmo resultado com um
+  certificado digital vencendo em 10 dias (`certificado_digital_vencimento`,
+  alta): 1 na primeira execução, 0 na segunda. O reagendamento rodado duas
   vezes deixa **um único** job. Sem `pg_cron` (réplica), a função é criada e a
   conferência avisa que nada foi agendado, em vez de falhar.
 - **Tela (Publicar no Lovable):** nenhuma. Os alertas aparecem no painel de
