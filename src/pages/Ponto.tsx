@@ -1164,6 +1164,8 @@ const Ponto = () => {
                                             tipo={m.tipo}
                                             distanciaMetros={m.distanciaMetros ?? null}
                                             dentroCerca={m.dentroCerca ?? null}
+                                            tenantId={tenantIdAtivo}
+                                            colaboradorCpf={ponto.colaborador_cpf}
                                           />
 
                                         );
