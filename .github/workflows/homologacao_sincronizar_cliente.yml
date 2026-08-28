@@ -428,11 +428,27 @@ jobs:
         if: always()
         env:
           HOMOLOG_PASS: ${{ secrets.HOMOLOGACAO_DB_PASSWORD }}
+          PROD_PASS: ${{ secrets.PRODUCAO_DB_PASSWORD }}
         run: |
           homolog() {
             PGPASSWORD="$(printf '%s' "$HOMOLOG_PASS" | tr -d '\r\n')" \
             psql -h "$HOST_HOMOLOGACAO" -p 5432 -U "$HOMOLOGACAO_USER" -d postgres "$@"
           }
+          prod() {
+            PGPASSWORD="$(printf '%s' "$PROD_PASS" | tr -d '\r\n')" \
+            psql -h "$HOST_PRODUCAO" -p 5432 -U "$PRODUCAO_USER" -d postgres "$@"
+          }
+          # Heredoc no nível EXTERNO, nunca dentro do if que o usa. O
+          # marcador de fim precisa começar na coluna zero depois que o YAML
+          # tira a indentação comum; dentro do if ele sai indentado, o bash
+          # não o reconhece e engole o resto do passo para dentro do arquivo,
+          # em silêncio. Já aconteceu no #314, e voltou a acontecer aqui —
+          # o bash -n pegou antes de subir.
+          cat > existe_na_producao.sql <<'FIM_SQL'
+          SELECT count(*) FROM public.empresa_cadastro
+           WHERE id = ANY (string_to_array(:'ids', ',')::uuid[]);
+          FIM_SQL
+
           echo "== Empresas do cliente sincronizado"
           homolog -c "SELECT razao_social, cnpj, cidade, estado
                         FROM public.empresa_cadastro
@@ -468,20 +484,44 @@ jobs:
                AND ec.razao_social NOT LIKE 'anon-%'
              ORDER BY 4 DESC, 1;"
 
-          vazou=$(homolog -tAc "
-            SELECT count(*) FROM public.empresa_cadastro ec
+          # DECIDIR EM VEZ DE PEDIR PARA ALGUÉM DECIDIR.
+          #
+          # A versão anterior listava as suspeitas e mandava a pessoa julgar
+          # pela data e pelo nome. Funcionava, mas reprovava a corrida toda
+          # vez que alguém tivesse cadastrado uma empresa de teste na
+          # homologação — e "vermelho que quase sempre é falso" é vermelho
+          # que ninguém olha mais.
+          #
+          # Existe uma pergunta que separa os dois casos sem chute: ESTA
+          # LINHA EXISTE NA PRODUÇÃO? O id nunca é embaralhado, então:
+          #   · existe lá  -> veio da cópia e devia estar mascarada = VAZOU;
+          #   · não existe -> nasceu aqui dentro = cadastro de teste.
+          homolog -tAc "
+            SELECT ec.id FROM public.empresa_cadastro ec
               JOIN public.tenants t ON t.id = ec.tenant_id
              WHERE ec.tenant_id <> '$CLIENTE'::uuid
                AND t.slug NOT IN ('qa-sandbox','qa-sandbox-2')
                AND ec.razao_social IS NOT NULL AND ec.razao_social <> ''
-               AND ec.razao_social NOT LIKE 'anon-%';")
-          echo "Fora do cliente e fora dos cercados de QA (tem de ser 0): $vazou"
-          if [ "${vazou:-1}" -ne 0 ]; then
-            echo "::error::Há empresa sem máscara fora do cliente sincronizado e fora dos"
-            echo "::error::cercados de QA. Veja a lista acima, coluna 'veredito=INVESTIGAR'."
-            echo "::error::Se foram cadastradas AQUI durante os testes (olhe 'criada_em'),"
-            echo "::error::não é vazamento — apague-as ou refaça a cópia para limpar o ruído."
-            exit 1
+               AND ec.razao_social NOT LIKE 'anon-%';" > suspeitas.txt
+
+          suspeitas=$(grep -c . suspeitas.txt || true)
+          if [ "${suspeitas:-0}" -eq 0 ]; then
+            echo "Nenhuma empresa sem máscara fora do cliente e dos cercados de QA."
+          else
+            echo "Suspeitas a esclarecer com a produção: $suspeitas"
+            ids=$(paste -sd, suspeitas.txt)
+            vazou=$(prod -tAq -v ids="$ids" -f existe_na_producao.sql | tr -d '[:space:]')
+            nascidas_aqui=$((suspeitas - ${vazou:-0}))
+            echo "  nasceram na homologação (cadastro de teste): $nascidas_aqui"
+            echo "  vieram da produção sem máscara (VAZAMENTO):   ${vazou:-?}"
+            if [ "${vazou:-1}" -ne 0 ]; then
+              echo "::error::$vazou empresa(s) vieram da produção e NÃO estão mascaradas."
+              echo "::error::Isso é vazamento de verdade: a máscara falhou para um cliente"
+              echo "::error::que não era o alvo. NÃO use este ambiente — refaça a cópia"
+              echo "::error::completa (botão RECRIAR) e me avise."
+              exit 1
+            fi
+            echo "Nenhuma delas existe na produção: são cadastros feitos aqui, não vazamento."
           fi
 
           if [ "${TOTAL_SEM_PAR:-0}" -gt 0 ]; then
