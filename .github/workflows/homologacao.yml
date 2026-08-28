@@ -1,6 +1,16 @@
 # =====================================================================
 # Homologação — copiar a ESTRUTURA da produção, por botão
 #
+# *** PARADA POR DECISÃO INTERNA (28/08/2026) ***
+# A homologação NÃO É MAIS RECRIADA. Ela passou a guardar dados que não
+# se recuperam por cópia — os CASOS DE TESTE cadastrados lá — e esta
+# esteira APAGA E RECRIA o schema public inteiro (passo 3). Rodar isto
+# hoje significa perder esses casos.
+# A confirmação digitada mudou de RECRIAR para APAGAR-CASOS-DE-TESTE:
+# quem for rodar precisa dizer, com todas as letras, o que vai perder.
+# Antes de rodar, exporte os casos (docs/AMBIENTES.md, seção "A
+# homologação não é mais recriada").
+#
 # NÃO roda sozinha. Só quando alguém aperta "Run workflow" e digita a
 # confirmação. Não tem gatilho por push, de propósito: a homologação não
 # deve seguir a `main` — se seguisse, viraria um segundo ambiente de
@@ -55,7 +65,7 @@ on:
   workflow_dispatch:
     inputs:
       confirmar:
-        description: 'Digite RECRIAR para confirmar que a homologação será sobrescrita'
+        description: 'PARADA POR DECISÃO INTERNA — recriar APAGA os casos de teste da homologação. Digite APAGAR-CASOS-DE-TESTE para confirmar mesmo assim'
         required: true
         default: ''
       host_producao:
@@ -128,8 +138,9 @@ jobs:
         env:
           CONFIRMAR: ${{ github.event.inputs.confirmar }}
         run: |
-          if [ "$CONFIRMAR" != "RECRIAR" ]; then
-            echo "::error::Confirmação ausente. Rode de novo digitando RECRIAR."
+          if [ "$CONFIRMAR" != "APAGAR-CASOS-DE-TESTE" ]; then
+            echo "::error::A homologacao nao e mais recriada (decisao interna de 28/08/2026): esta esteira apaga o schema public inteiro, e com ele os casos de teste cadastrados la."
+            echo "::error::Se a recriacao for mesmo o que voce quer, exporte os casos antes (docs/AMBIENTES.md) e rode de novo digitando APAGAR-CASOS-DE-TESTE."
             exit 1
           fi
 

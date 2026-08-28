@@ -28,7 +28,17 @@ em PDFs de devolutiva ou em documentos que circulam. Dados de saúde são
 sensíveis (LGPD art. 11). CPFs fictícios da casa: faixa 900.000.0XX com
 dígito verificador válido (o sistema valida DV).
 
-**Exceção única, e só na homologação:** o botão RECRIAR tem os campos
+**A homologação não é mais recriada (decisão interna, 28/08/2026).** Ela guarda os
+casos de teste cadastrados nela, e a esteira de recriação apaga o schema inteiro —
+então ela segue com os dados que tem, mantida por acumulação: todo script de entrega
+é colado **primeiro na homologação, depois na produção**. Script que vai direto para
+a produção abre uma diferença invisível entre as duas, que é justamente o que a
+homologação existe para evitar. A trava da esteira mudou de `RECRIAR` para
+`APAGAR-CASOS-DE-TESTE`. Detalhes e o retrato a exportar antes de qualquer recriação
+futura: `docs/AMBIENTES.md`.
+
+**Exceção de dado real, e só na homologação** (aplicável se a recriação um dia
+voltar): o botão RECRIAR tem os campos
 `mascarar` e `cliente_real`. Em `um_cliente`, só o cliente informado vem com
 dado real e todos os outros seguem embaralhados (decisão do dono do produto,
 08/2026, para a própria operação da casa — SUDOMED ITAPEJARA); em `nao`, a

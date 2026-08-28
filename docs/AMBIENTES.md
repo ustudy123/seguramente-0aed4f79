@@ -7,8 +7,8 @@ são injetadas no build pelo Vite conforme o `--mode`.
 | | TESTE (staging) | HOMOLOGAÇÃO | PRODUÇÃO |
 |---|---|---|---|
 | Como recebe mudança | esteira automática, a cada merge | **o mesmo script colado à mão** | script colado à mão |
-| Estrutura | a do repositório | **cópia fiel da produção**, drift incluído | a real |
-| Dados | fictícios | fictícios | reais |
+| Estrutura | a do repositório | a que **acumulou** desde a última cópia (28/08/2026) | a real |
+| Dados | fictícios | fictícios, **permanentes** | reais |
 | Responde a | "a mudança funciona?" | **"o script aplica na estrutura real?"** | — |
 
 A homologação existe por causa de uma diferença que custou caro duas vezes: o teste
@@ -17,6 +17,48 @@ afastam. Um script de entrega já abortou na produção por uma coluna que exist
 teste, e uma rotina de QA quebrou por funções auxiliares que nunca chegaram lá. A
 homologação é onde o script encontra a estrutura real **antes** de a produção
 encontrá-lo.
+
+## A homologação não é mais recriada
+
+**Decisão interna de 28/08/2026.** A homologação passou a guardar os **casos de teste**
+cadastrados nela — trabalho que não se recupera copiando a produção de novo, porque
+não vem de lá. A esteira `homologacao.yml` apaga e recria o schema `public` inteiro;
+rodá-la hoje apagaria esse acervo junto. Então ela **não roda mais**, e a homologação
+segue com os dados que tem.
+
+O que muda na prática:
+
+- **A homologação passa a ser mantida por acumulação, não por cópia.** O alinhamento
+  com a produção deixa de vir de um retrato novo e passa a vir de uma disciplina: todo
+  script de entrega é colado **primeiro na homologação, depois na produção** — que já
+  era a regra, e agora é a única coisa que segura as duas juntas.
+- **O valor da homologação se degrada se essa disciplina falhar.** Ela responde
+  "o script aplica na estrutura real?" só enquanto a estrutura dela for a mesma da
+  produção. Script colado na produção sem passar pela homologação abre uma diferença
+  que ninguém vê — e é exatamente o problema que a homologação foi criada para evitar.
+  Se isso acontecer, a diferença precisa ser reconciliada à mão, com o script que
+  faltou.
+- **Mudança feita direto na produção** (pelo Lovable ou no SQL Editor) também precisa
+  ser trazida para a homologação, pelo mesmo caminho de sempre: `IF NOT EXISTS` numa
+  migration e o script de entrega correspondente.
+
+A esteira `homologacao.yml` continua no repositório, parada de propósito e com trava:
+a confirmação digitada deixou de ser `RECRIAR` e passou a ser
+`APAGAR-CASOS-DE-TESTE`, para que ninguém a rode sem dizer, com todas as letras, o que
+está perdendo.
+
+### Se um dia a recriação for mesmo necessária
+
+Exporte os casos de teste antes. No SQL Editor da homologação:
+
+```sql
+-- Guarde o resultado (Download CSV) ANTES de recriar.
+SELECT * FROM public.qa_casos_teste ORDER BY codigo;
+SELECT * FROM public.qa_cobertura_e2e ORDER BY codigo;
+```
+
+Sem esse retrato, os casos não voltam: a cópia traz a estrutura da produção, e os
+casos cadastrados só na homologação não estão lá.
 
 ## Arquivos de ambiente
 
