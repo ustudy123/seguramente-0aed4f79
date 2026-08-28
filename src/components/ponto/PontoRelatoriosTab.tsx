@@ -60,6 +60,34 @@ export function PontoRelatoriosTab() {
 
   const { tenantId } = useAuth();
   const qc = useQueryClient();
+
+  /**
+   * LGPD arts. 11 e 46 (PONTO-397): exportar ponto tira dado pessoal de dentro
+   * do sistema — e era a única operação sensível que não deixava rastro algum.
+   * Cada exportação registra quem exportou, o quê e com que escopo. Falha no
+   * registro não impede a exportação: o arquivo é o trabalho do RH; o log é
+   * garantia, não obstáculo.
+   */
+  const registrarExportacao = async (
+    acao: "exportou_afd" | "exportou_aej" | "exportou_relatorio",
+    descricao: string,
+  ) => {
+    if (!tenantId) return;
+    try {
+      await (supabase.rpc as any)("ponto_log_exportacao", {
+        p_tenant_id: tenantId,
+        p_acao: acao,
+        p_escopo: {
+          competencia,
+          empresa_id: empresaAtivaId || null,
+          tipo_relatorio: tipoRelatorio,
+        },
+        p_descricao: descricao,
+      });
+    } catch {
+      // ver comentário acima
+    }
+  };
   const { empresaAtivaId } = useEmpresaAtiva();
 
   // Nome das empresas: o relatório de Banco de Horas mistura filiais e o RH
@@ -416,6 +444,7 @@ export function PontoRelatoriosTab() {
     a.download = `AFD_${soDigitos(empresa?.cnpj) || "EMPRESA"}_${competencia.replace("-", "")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    await registrarExportacao("exportou_afd", `AFD da competência ${competencia}: ${totais.marcacoes} marcações, ${totais.empregados} empregados.`);
     toast.success(
       `AFD gerado: ${totais.marcacoes} marcações, ${totais.empregados} empregados (${totais.registros} registros).`,
     );
@@ -610,6 +639,7 @@ export function PontoRelatoriosTab() {
     a.download = `AEJ_${soDigitos(empresa?.cnpj) || "EMPRESA"}_${competencia.replace("-", "")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    await registrarExportacao("exportou_aej", `AEJ da competência ${competencia}: ${totais.marcacoes} marcações, ${totais.empregados} empregados.`);
     toast.success(
       `AEJ gerado: ${totais.marcacoes} marcações (${totais.ajustes} ajustes aprovados), ${totais.ocorrencias} ocorrências, ${totais.empregados} empregados.`
       + (assinatura ? ` Cópia arquivada e assinada (${assinatura.slice(0, 12)}...).` : ""),
@@ -642,6 +672,7 @@ export function PontoRelatoriosTab() {
     a.download = `AEJ_TRATADO_${competencia.replace("-", "")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    void registrarExportacao("exportou_aej", `Cópia arquivada e assinada do AEJ da competência ${competencia}.`);
   };
 
 
@@ -730,6 +761,7 @@ export function PontoRelatoriosTab() {
 
       const nomeArq = tipoRelatorio === "espelho" ? "espelho-ponto" : "cartao-ponto";
       doc.save(`${nomeArq}-${competencia}.pdf`);
+      void registrarExportacao("exportou_relatorio", `PDF: ${nomeArq} da competência ${competencia}.`);
       toast.success(tipoRelatorio === "espelho" ? "Espelho de ponto gerado!" : "Cartão ponto gerado!");
       return;
     }
@@ -867,6 +899,7 @@ export function PontoRelatoriosTab() {
     }
 
     doc.save(`${titulo.replace(/\s/g, "_")}_${competencia}.pdf`);
+    void registrarExportacao("exportou_relatorio", `PDF: ${titulo} da competência ${competencia}.`);
     toast.success("PDF gerado!");
   };
 
@@ -914,6 +947,7 @@ export function PontoRelatoriosTab() {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumoFinal), "Resumo");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diario), "Dia a dia");
       XLSX.writeFile(wb, `Espelho_de_Ponto_${competencia}.xlsx`);
+      void registrarExportacao("exportou_relatorio", `Planilha: espelho de ponto da competência ${competencia}.`);
       toast.success("Excel gerado!");
       return;
     }
@@ -949,6 +983,7 @@ export function PontoRelatoriosTab() {
     const ws = XLSX.utils.json_to_sheet(dados);
     XLSX.utils.book_append_sheet(wb, ws, titulo);
     XLSX.writeFile(wb, `${titulo.replace(/\s/g, "_")}_${competencia}.xlsx`);
+    void registrarExportacao("exportou_relatorio", `Planilha: ${titulo} da competência ${competencia}.`);
     toast.success("Excel gerado!");
   };
 

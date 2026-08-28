@@ -1062,9 +1062,20 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   exportação de AFD gravam no log; o log **recusa** UPDATE e DELETE (imutável); no
   link, cinco tentativas frustradas **bloqueiam** o link e geram um evento de
   enumeração na trilha, e um acesso bem-sucedido **zera** o contador.
-- **Tela (Publicar no Lovable):** a tela que serve a selfie/geolocalização e os
-  botões de exportação passam a chamar o registro; a contenção do link também. A
-  trilha, a imutabilidade e a contagem já estão no banco.
+- **Tela — FEITO (28/08/2026):** três frentes.
+  (1) **Selfie**: deixou de ser servida a quem apenas abre o espelho — vem coberta
+  por um botão de câmera, e revelar chama `ponto_log_acesso_sensivel`
+  (`visualizou_selfie`, com a marcação e o CPF). O gesto deliberado é o que a
+  trilha registra.
+  (2) **Exportações**: AFD, AEJ (inclusive a cópia arquivada), PDFs e planilhas do
+  módulo passam a chamar `ponto_log_exportacao` com competência, empresa e tipo de
+  relatório no escopo. Falha no registro **não** impede a exportação.
+  (3) **Link compartilhado**: cada identificação por CPF chama
+  `ponto_link_registrar_tentativa`; ao estourar o limite o link fica bloqueado por
+  alguns minutos, com mensagem em português e o evento na trilha. Acerto zera o
+  contador. Provado em réplica: 5 tentativas frustradas → `bloqueado: true` e uma
+  linha `enumeracao_cpf_link` na trilha; acerto seguinte zera `tentativas_frustradas`
+  e libera o link. Entra em produção por Publicar no Lovable.
 
 ### 42 · Onda 8 (parte 6) — Plano de Ação (fecha a onda 8 no banco)
 - **Arquivo:** `docs/script_ponto_onda8_plano_de_acao.sql`
