@@ -13,11 +13,12 @@
 --
 -- SEGURANÇA: só INSERE documentação nas tabelas de QA (qa_casos_teste).
 -- Nenhuma tabela de negócio é tocada; nenhum dado de cliente é lido.
+-- Só DADO (nenhuma tabela/coluna/função nova): não altera a fidelidade.
 -- Idempotente: rodar duas vezes não duplica (ON CONFLICT DO NOTHING).
 -- Cada família está num bloco protegido: se um módulo faltar no
--- catálogo, o bloco avisa por NOTICE e os demais seguem.
--- Termina com UMA conferência (o SQL Editor só mostra o último
--- resultado).
+-- catálogo, o bloco avisa por NOTICE e pula SÓ aquele — os demais
+-- seguem. Termina com UMA conferência (o SQL Editor só mostra o
+-- último resultado).
 -- =====================================================================
 
 
@@ -58,7 +59,7 @@ DO $doc$
 DECLARE v_mod uuid; v_antes int; v_depois int;
 BEGIN
   SELECT id INTO v_mod FROM public.qa_modulos WHERE path = 'saude-seguranca/ergonomia';
-  IF v_mod IS NULL THEN RAISE NOTICE 'Módulo saude-seguranca/ergonomia não encontrado — família pulada.'; END IF; RETURN;
+  IF v_mod IS NULL THEN RAISE NOTICE 'Módulo saude-seguranca/ergonomia não encontrado.'; RETURN; END IF;
   SELECT count(*) INTO v_antes FROM public.qa_casos_teste WHERE modulo_id = v_mod;
 
   INSERT INTO public.qa_casos_teste
@@ -443,7 +444,7 @@ DO $doc$
 DECLARE v_mod uuid; v_antes int; v_depois int;
 BEGIN
   SELECT id INTO v_mod FROM public.qa_modulos WHERE path = 'pessoas-cultura/ouvidoria';
-  IF v_mod IS NULL THEN RAISE NOTICE 'Módulo pessoas-cultura/ouvidoria não encontrado — família pulada.'; END IF; RETURN;
+  IF v_mod IS NULL THEN RAISE NOTICE 'Módulo pessoas-cultura/ouvidoria não encontrado.'; RETURN; END IF;
   SELECT count(*) INTO v_antes FROM public.qa_casos_teste WHERE modulo_id = v_mod;
 
   INSERT INTO public.qa_casos_teste
@@ -681,7 +682,7 @@ DO $doc$
 DECLARE v_mod uuid; v_antes int; v_depois int;
 BEGIN
   SELECT id INTO v_mod FROM public.qa_modulos WHERE path = 'desenvolvimento-performance/pdi';
-  IF v_mod IS NULL THEN RAISE NOTICE 'Módulo desenvolvimento-performance/pdi não encontrado — família pulada.'; END IF; RETURN;
+  IF v_mod IS NULL THEN RAISE NOTICE 'Módulo desenvolvimento-performance/pdi não encontrado.'; RETURN; END IF;
   SELECT count(*) INTO v_antes FROM public.qa_casos_teste WHERE modulo_id = v_mod;
 
   INSERT INTO public.qa_casos_teste
