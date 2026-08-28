@@ -33,6 +33,14 @@ export interface CartaoDia {
   equalizacao: boolean;
   excedente_retido_min: number;
   marcacoes: CartaoMarcacao[];
+  /**
+   * Súmula 338, III do TST / Portaria MTP 671/2021: quando o intervalo do dia
+   * não foi batido e existe pré-assinalação vigente, o espelho precisa dizer
+   * isso — é o que sustenta a validade da jornada de duas batidas. Opcional:
+   * dia sem declaração não traz nada.
+   */
+  intervalo_origem?: "marcado" | "pre_assinalado" | null;
+  intervalo_pre_assinalado_min?: number | null;
 }
 
 export interface CartaoEmpregador {
@@ -96,12 +104,22 @@ const hm = (min: number) => {
  * o dia tem 5+ batidas — assim cada dia ocupa uma única linha da tabela e o
  * cartão inteiro cabe em uma página.
  */
-const marcacoesTexto = (marcacoes: CartaoMarcacao[]) => {
+const marcacoesTexto = (marcacoes: CartaoMarcacao[], d?: CartaoDia) => {
   const tokens = marcacoes.map((m) => `${m.hora}-${m.origem === "A" ? "I" : "O"}`);
-  if (tokens.length <= 4) return tokens.join(" ");
   const linhas: string[] = [];
-  for (let i = 0; i < tokens.length; i += 4) {
-    linhas.push(tokens.slice(i, i + 4).join(" "));
+  if (tokens.length <= 4) {
+    linhas.push(tokens.join(" "));
+  } else {
+    for (let i = 0; i < tokens.length; i += 4) {
+      linhas.push(tokens.slice(i, i + 4).join(" "));
+    }
+  }
+  // Pré-assinalação: o intervalo não foi batido, foi declarado. Sai como uma
+  // linha própria da célula, para o espelho declarar o intervalo previsto
+  // (Súmula 338, III do TST).
+  if (d?.intervalo_origem === "pre_assinalado") {
+    const min = d.intervalo_pre_assinalado_min || 0;
+    linhas.push(`Interv. pré-assinalado${min ? ` ${hm(min)}` : ""} (P)`);
   }
   return linhas.join("\n");
 };
@@ -303,7 +321,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
     return [
       dataCurta(d.dia),
       diaSemana(d.dia),
-      marcacoesTexto(d.marcacoes),
+      marcacoesTexto(d.marcacoes, d),
       k.ocorrencia,
       hm(d.trabalhado_min),
       hm(d.jornada_min),
@@ -320,9 +338,10 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   // Espaço reservado abaixo da tabela para que o cartão de cada colaborador
   // caiba em UMA única página: painel de horas (30,4) + faixa de banco (17)
-  // + legenda (14) + declaração e assinaturas (30) + rodapé institucional
-  // (14). A tabela se comprime para caber no que sobra — nunca o contrário.
-  const RESERVA_RODAPE = 108;
+  // + legenda (17 — três linhas, com a do intervalo pré-assinalado) +
+  // declaração e assinaturas (30) + rodapé institucional (14). A tabela se
+  // comprime para caber no que sobra — nunca o contrário.
+  const RESERVA_RODAPE = 111;
   const espacoTabela = pageH - 14 - inicio - RESERVA_RODAPE;
 
 
@@ -515,6 +534,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
   [
     "H.D. = Total de horas do dia   H.N. = Hora normal (prevista)   H.E. = Hora extra   A.N. = Adicional noturno   H.C. = Hora compensada",
     "H.A. = Hora de ausência   F.N. = Falta não justificada   F.J. = Falta justificada   O = Marcação original   I = Marcação incluída pelo RH",
+    "(P) = Intervalo pré-assinalado: intervalo declarado formalmente, não batido (Súmula 338, III do TST; Portaria MTP 671/2021)",
   ].forEach((linha, i) => doc.text(linha, 12, y + 3.2 + i * 2.8));
 
   y += 11;

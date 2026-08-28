@@ -899,6 +899,19 @@ const Ponto = () => {
                     const tooltip = `Atestado${label ? ` (${label})` : ""}: ${di}${df && df !== di ? ` a ${df}` : ""}`;
                     return { label, tooltip };
                   })() : null;
+                  // Súmula 338/TST — o intervalo do dia veio de declaração formal
+                  // (pré-assinalação), não de batida. Precisa aparecer no espelho:
+                  // é o que sustenta a validade da jornada de duas batidas.
+                  const preAssinalado = ponto.intervalo_origem === "pre_assinalado"
+                    ? {
+                        minutos: ponto.intervalo_pre_assinalado_minutos || 0,
+                        tooltip:
+                          "Intervalo declarado em pré-assinalação (Súmula 338, III do TST; " +
+                          "Portaria MTP 671/2021) — não foi batido, e conta como gozado. " +
+                          "Cadastro em Configurações › Intervalo pré-assinalado.",
+                      }
+                    : null;
+
                   // Calcula total a partir dos pares (entrada → saída), independente do label
                   let totalMin = 0;
                   let pendingEntry: string | null = null;
@@ -1047,6 +1060,15 @@ const Ponto = () => {
                                   title={atestadoInfo.tooltip}
                                 >
                                   <FileText className="w-3 h-3" /> ATESTADO{atestadoInfo.label ? ` · ${atestadoInfo.label}` : ""}
+                                </span>
+                              )}
+                              {preAssinalado && (
+                                <span
+                                  className="inline-flex items-center gap-1 self-start rounded-md bg-cyan-100 text-cyan-900 px-2 py-0.5 text-[11px] font-semibold"
+                                  title={preAssinalado.tooltip}
+                                >
+                                  <Coffee className="w-3 h-3" /> INTERVALO PRÉ-ASSINALADO
+                                  {preAssinalado.minutos ? ` · ${formatarMinutosCurto(preAssinalado.minutos)}` : ""}
                                 </span>
                               )}
                               {excedeLimiteDiario && (

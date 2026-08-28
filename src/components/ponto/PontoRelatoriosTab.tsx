@@ -145,6 +145,9 @@ export function PontoRelatoriosTab() {
     equalizacao: boolean;
     excedente_retido_min: number;
     marcacoes: MarcacaoDia[];
+    // Súmula 338/TST: intervalo declarado (pré-assinalado) em vez de batido.
+    intervalo_origem?: "marcado" | "pre_assinalado" | null;
+    intervalo_pre_assinalado_min?: number | null;
   };
 
   const DIAS_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
@@ -216,6 +219,26 @@ export function PontoRelatoriosTab() {
     }
 
 
+    // Súmula 338/TST — origem do intervalo de cada dia (batido x declarado em
+    // pré-assinalação). Vive em ponto_diario, não no resumo de saldo; sem isso
+    // o cartão não consegue declarar o intervalo previsto.
+    const intervaloPorCpfDia = new Map<string, { origem: string | null; minutos: number | null }>();
+    {
+      const { data: diarios, error: errDia } = await fromTable("ponto_diario")
+        .select("colaborador_cpf, data, intervalo_origem, intervalo_pre_assinalado_minutos")
+        .eq("tenant_id", tenantId)
+        .eq("intervalo_origem", "pre_assinalado")
+        .gte("data", `${competencia}-01`)
+        .lte("data", `${competencia}-${String(ultimoDia).padStart(2, "0")}`) as { data: any[] | null; error: any };
+      if (errDia) throw errDia;
+      (diarios || []).forEach((d: any) => {
+        intervaloPorCpfDia.set(`${soDigitos(d.colaborador_cpf)}|${d.data}`, {
+          origem: d.intervalo_origem ?? null,
+          minutos: d.intervalo_pre_assinalado_minutos ?? null,
+        });
+      });
+    }
+
     const porCpfDia = new Map<string, MarcacaoDia[]>();
     (marcacoesMes || []).forEach((m: any) => {
       const chave = `${soDigitos(m.colaborador_cpf)}|${m.data_marcacao}`;
@@ -256,6 +279,10 @@ export function PontoRelatoriosTab() {
         marcacoes: (porCpfDia.get(`${c.cpf}|${String(d.dia)}`) || [])
           .slice()
           .sort((a, b) => a.hora.localeCompare(b.hora)),
+        intervalo_origem: (intervaloPorCpfDia.get(`${c.cpf}|${String(d.dia)}`)?.origem ?? null) as
+          | "marcado" | "pre_assinalado" | null,
+        intervalo_pre_assinalado_min:
+          intervaloPorCpfDia.get(`${c.cpf}|${String(d.dia)}`)?.minutos ?? null,
       })).sort((a, b) => a.dia.localeCompare(b.dia));
 
       resultado.push({
@@ -815,6 +842,9 @@ export function PontoRelatoriosTab() {
         Data: dataBr(d.dia),
         "Dia da semana": diaDaSemana(d.dia),
         "Marcações (O=original, A=ajuste)": marcacoesTexto(d),
+        // Súmula 338/TST: intervalo declarado, não batido.
+        "Intervalo pré-assinalado (min)":
+          d.intervalo_origem === "pre_assinalado" ? (d.intervalo_pre_assinalado_min ?? "") : "",
         Entrada: d.entrada || "",
         Saída: d.saida || "",
         "Trabalhado (min)": d.trabalhado_min,

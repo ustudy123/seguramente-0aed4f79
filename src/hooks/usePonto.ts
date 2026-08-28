@@ -47,6 +47,11 @@ export interface PontoDiario {
   status: "pendente" | "regular" | "atraso" | "falta" | "incompleto" | "ajuste_pendente" | "justificado";
   observacao: string | null;
   tipo_dia: "normal" | "feriado" | "ferias" | "atestado" | "afastamento" | null;
+  // Súmula 338/TST: de onde veio o intervalo do dia — batido ("marcado") ou
+  // declarado em pré-assinalação ("pre_assinalado"). Metadado de exibição:
+  // o motor de saldo não lê.
+  intervalo_origem: "marcado" | "pre_assinalado" | null;
+  intervalo_pre_assinalado_minutos: number | null;
   feriado_nome: string | null;
   feriado_trabalhado: boolean | null;
   created_at: string;
