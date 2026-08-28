@@ -5105,18 +5105,21 @@ export type Database = {
       epi_categorias: {
         Row: {
           created_at: string
+          exige_ca: boolean
           id: string
           nome: string
           tenant_id: string
         }
         Insert: {
           created_at?: string
+          exige_ca?: boolean
           id?: string
           nome: string
           tenant_id: string
         }
         Update: {
           created_at?: string
+          exige_ca?: boolean
           id?: string
           nome?: string
           tenant_id?: string

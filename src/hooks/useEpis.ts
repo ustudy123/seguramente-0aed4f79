@@ -37,7 +37,7 @@ export function useEpis() {
         .eq("tenant_id", tenantId)
         .order("nome");
       if (error) throw error;
-      return data as { id: string; nome: string; tenant_id: string }[];
+      return data as { id: string; nome: string; tenant_id: string; exige_ca: boolean }[];
     },
     enabled: !!tenantId,
   });
@@ -170,6 +170,36 @@ export function useEpis() {
     },
     onError: (error) => {
       toast.error("Erro ao criar categoria: " + error.message);
+    },
+  });
+
+  // Marca (ou desmarca) a exigência de CA de uma categoria.
+  //
+  // Usa upsert porque a lista de categorias oferecida no cadastro é maior que
+  // a tabela: ela junta as categorias padrão do sistema com as que aparecem
+  // nos tipos já cadastrados. Marcar uma dessas pela primeira vez precisa
+  // criar a linha; da segunda vez em diante, atualizar a que existe.
+  const definirExigeCaMutation = useMutation({
+    mutationFn: async ({ nome, exige_ca }: { nome: string; exige_ca: boolean }) => {
+      if (!tenantId) throw new Error("Tenant não identificado");
+      const { data, error } = await supabase
+        .from("epi_categorias")
+        .upsert({ nome, tenant_id: tenantId, exige_ca }, { onConflict: "tenant_id,nome" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["epi-categorias"] });
+      toast.success(
+        vars.exige_ca
+          ? `"${vars.nome}" passa a exigir CA no cadastro.`
+          : `"${vars.nome}" não exige mais CA no cadastro.`
+      );
+    },
+    onError: (error) => {
+      toast.error("Erro ao salvar a categoria: " + error.message);
     },
   });
 
@@ -668,6 +698,8 @@ export function useEpis() {
     tipos: tiposQuery.data || [],
     tiposLoading: tiposQuery.isLoading,
     customCategorias: (categoriasQuery.data || []).map(c => c.nome),
+    categorias: categoriasQuery.data || [],
+    categoriasLoading: categoriasQuery.isLoading,
     epis: episQuery.data || [],
     episLoading: episQuery.isLoading,
     entregas: entregasQuery.data || [],
@@ -681,6 +713,8 @@ export function useEpis() {
     // Mutations - Categorias
     criarCategoria: criarCategoriaMutation.mutateAsync,
     criandoCategoria: criarCategoriaMutation.isPending,
+    definirExigeCa: definirExigeCaMutation.mutateAsync,
+    definindoExigeCa: definirExigeCaMutation.isPending,
 
     // Mutations - Tipos
     criarTipo: criarTipoMutation.mutateAsync,
