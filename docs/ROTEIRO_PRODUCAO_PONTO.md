@@ -935,9 +935,18 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
   hash por tipo e o hash do pacote, e **arquiva** o dossiê no módulo Documentos
   (tipo, classificação, vínculo à empresa, "Ponto (automático)"); regerar **não
   duplica** nem o dossiê nem o documento.
-- **Tela (Publicar no Lovable):** o botão "gerar dossiê / modo fiscalização" e a
-  lista de documentos do ponto chamam essas funções; o pacote, o índice, os hashes
-  e o arquivamento já estão no banco.
+- **Tela — FEITO (28/08/2026):** nova aba **Ponto › Compliance › Dossiê fiscal**:
+  escolhe a competência, monta o dossiê (`ponto_gerar_dossie_fiscalizacao`), mostra
+  o índice peça a peça (AEJ, comprovantes, espelhos, AFD importado) com contagem e
+  hash, a assinatura do pacote, e permite baixar o índice para conferência. Peça
+  com quantidade zero fica visível de propósito — é o que falta reunir antes da
+  fiscalização. Remontar a mesma competência não duplica o dossiê (provado em
+  réplica: 3 comprovantes → `comprovantes: 3`; segunda montagem mantém 1 dossiê).
+  Entra em produção por Publicar no Lovable.
+- **Onda 7 fechada nas telas (28/08/2026):** partes 1 a 5 agora têm ponto de
+  acesso — comprovante, AEJ, importação de AFD conferida, certificado digital e
+  dossiê. Em produção, o item 54 (correção de segurança dos comprovantes) entra
+  ANTES do Publicar no Lovable.
 
 ### 37 · Onda 8 (parte 1) — enquadramento do art. 62 (dispensa) + teletrabalho
 - **Arquivo:** `docs/script_ponto_onda8_enquadramento_art62.sql`
