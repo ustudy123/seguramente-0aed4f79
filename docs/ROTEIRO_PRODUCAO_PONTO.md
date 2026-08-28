@@ -123,6 +123,7 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 | 50 | Onda 11 (parte 1) — atestado acima de 15 dias encaminha ao INSS (Lei 8.213) | `docs/script_ponto_onda11_atestado_encaminha_inss.sql` | — | ⏳ | ⬜ |
 | 51 | Onda 11 (parte 2) — atestados sobrepostos detectados, não abonados em dobro | `docs/script_ponto_onda11_atestados_sobrepostos.sql` | — | ⏳ | ⬜ |
 | 52 | Onda 11 (parte 3) — ausência do art. 473 sem documento fica pendente (não abona por fé) | `docs/script_ponto_onda11_comprovacao_art473.sql` | — | ⏳ | ⬜ |
+| 53 | Vigilâncias do ponto — rotina diária que faz as monitorias rodarem | `docs/script_ponto_vigilancias_diarias.sql` | **#23 #38 #39 #44 #46 #47 #48** | ⏳ | ⬜ |
 
 > Quando eu validar cada onda com você no teste e você aprovar, marque a coluna
 > **Teste** como ✅. A coluna **Produção** só vira ✅ depois que você colar o
@@ -1305,6 +1306,32 @@ Legenda de status: ⬜ a fazer · ✅ feito · ⏳ aguardando validação no tes
 - **Encerramento:** com este pacote, a fila legal do Ponto fica **inteira verde** —
   restam apenas o **rural (PONTO-113)**, parado por decisão, e os **casos de tela**
   (e2e, cobertos pelo Cypress).
+
+### 53 · Vigilâncias do ponto — rotina diária que faz as monitorias rodarem
+- **Arquivo:** `docs/script_ponto_vigilancias_diarias.sql`
+- **Depende de:** #23 (alertas do banco), #38 (art. 62), #39 (estabelecimento),
+  #44 (CCT), #46/#47 (formalização de escala), #48 (cobertura de turno).
+- **O que faz:** as ondas 5, 8, 9 e 10 criaram rotinas de vigilância que geram
+  alerta no painel de Alertas CLT. **Nenhuma tem gatilho nem agendamento** — são
+  funções que alguém precisa chamar, e nenhuma tela chama. Na prática, seis
+  famílias de alerta nunca foram emitidas. Este pacote cria
+  `ponto_vigilancias_diarias()`, que percorre os tenants ativos e executa cada
+  monitoria **isolando erro por tenant/rotina** (uma falha não impede as demais),
+  e a agenda no `pg_cron` para rodar 1x/dia às **03:37 UTC** (minuto livre entre
+  as rotinas já existentes do módulo: 03:17 links, 04:41 expurgo, 05:23 faltas).
+- **Não altera dado existente:** só cria a função e o agendamento. As rotinas
+  chamadas apenas INSEREM alerta e todas já se protegem contra duplicidade
+  (`NOT EXISTS` por tipo/escopo/data) — rodar todo dia não repete alerta. Nenhuma
+  toca marcação, apuração, saldo ou espelho. Por isso **não há cópia de segurança
+  a fazer**.
+- **Conferência esperada:** `t | t | t | 37 3 * * * | <n> | OK`.
+- **Provado em réplica local** (868 migrations aplicadas): com uma CCT vencendo em
+  10 dias, a 1ª execução gera **1 alerta** (`cct_vigencia_vencimento`, severidade
+  alta) e a 2ª execução gera **0** — idempotente. O reagendamento rodado duas
+  vezes deixa **um único** job. Sem `pg_cron` (réplica), a função é criada e a
+  conferência avisa que nada foi agendado, em vez de falhar.
+- **Tela (Publicar no Lovable):** nenhuma. Os alertas aparecem no painel de
+  Alertas CLT que já existe, porque ele lista a tabela inteira.
 
 ### Item condicional — trabalhador rural (PONTO-113), parado por decisão
 
