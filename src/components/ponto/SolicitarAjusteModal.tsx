@@ -216,8 +216,26 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
     });
   };
 
-  // Remove a última marcação da sequência
+  // Remove uma marcação ACRESCENTADA agora. Nunca uma batida já registrada.
+  //
+  // Sem esta guarda o app tinha um beco sem saída silencioso: tirar um horário
+  // real marcava a linha como alterada (a justificativa até abria), mas o
+  // envio só monta item para horário ADICIONADO — então o contador ficava em
+  // zero, o botão continuava apagado e nenhuma mensagem aparecia. O
+  // funcionário mexia na folha, escolhia o motivo, e nada acontecia.
+  //
+  // Excluir batida também não existe no resto do sistema: ponto_ajustes.tipo_ajuste
+  // só aceita inclusao/correcao/justificativa/abono. Ou seja, a tela oferecia um
+  // gesto que o banco não sabe representar. A correção é impedir o gesto e
+  // dizer o que fazer no lugar — igual à folha interna, que já resolveu isso.
   const removerMarcacao = (data: string, idx: number) => {
+    const original = marcsPorDia[data] || [];
+    if (idx < original.length) {
+      toast.error(
+        "Não é possível excluir um horário já registrado. Para corrigi-lo, altere a hora; para anular o dia, escolha uma justificativa."
+      );
+      return;
+    }
     setEdits((prev) => {
       const cur = prev[data] || editDia(data);
       const base = cur.marcacoes !== undefined ? [...cur.marcacoes] : [...(marcsPorDia[data] || [])];
@@ -438,12 +456,16 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
                     : ""
                   }`}
                 />
-                {ehUltima && (
+                {/* Só a marcação ACRESCENTADA agora ganha o X — antes era a
+                    última da lista, fosse ela real ou não, o que punha um
+                    botão de excluir em cima de uma batida do relógio. Mesmo
+                    critério da folha interna (`novaMarc`). */}
+                {novaMarc && ehUltima && (
                   <button
                     type="button"
                     onClick={() => removerMarcacao(data, i)}
                     className="text-muted-foreground hover:text-destructive shrink-0 p-1"
-                    title="Remover marcação"
+                    title="Remover marcação adicionada"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -677,7 +699,13 @@ export function SolicitarAjusteModal({ open, onOpenChange, token, cpf }: Props) 
               </div>
               <div className="grid grid-cols-2 gap-2 mt-auto">
                 <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button className="w-full" onClick={handleSubmit} disabled={enviando || totalAlteracoes === 0}>
+                {/* O botão NÃO fica mais desabilitado por falta de alteração. Usar o
+                    `disabled` como validação impedia handleSubmit de rodar — e
+                    com ele validar(), que tem a mensagem pronta explicando o
+                    que falta. O resultado era um botão morto sem explicação
+                    nenhuma. Agora ele clica, valida e DIZ o motivo. Só
+                    `enviando` continua bloqueando, para não enviar duas vezes. */}
+                <Button className="w-full" onClick={handleSubmit} disabled={enviando}>
                   {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : `Enviar Ajustes (${totalAlteracoes || 0})`}
                 </Button>
               </div>
