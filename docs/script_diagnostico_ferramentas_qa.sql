@@ -15,6 +15,21 @@
 -- correspondente sozinho — o erro aparece na mensagem, sem o aviso se perder
 -- no meio da corrida inteira.
 --
+-- AUSENCIAS ESPERADAS FORA DO AMBIENTE DE TESTE
+-- Duas ferramentas so existem onde roda a suite de tela (Cypress), porque
+-- leem a grade de horarios do agendamento dela (tabela
+-- qa_agendamento_e2e_dias, criada pela mudanca 20260814120000, que a
+-- producao e a homologacao nao receberam):
+--
+--   qa_agendamento_e2e_ler_dias
+--   qa_agendamento_e2e_proxima
+--
+-- Se a lista trouxer SO esses dois nomes, esta certo: elas nao participam de
+-- nenhuma bateria do motor e a bancada funciona inteira sem elas. Ter a grade
+-- fora do ambiente de teste seria pior — outro ambiente poderia disparar a
+-- suite de tela do teste. A conferencia da parte 1 fecha em 77 de 79 nesse
+-- caso, e isso e o esperado.
+--
 -- Somente leitura: nao cria, nao altera e nao apaga nada.
 -- ============================================================================
 
