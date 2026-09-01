@@ -44,6 +44,18 @@ CREATE TABLE IF NOT EXISTS public.ponto_entrega_volume (
 ALTER TABLE public.ponto_entrega_volume ADD COLUMN IF NOT EXISTS marca_antes  text;
 ALTER TABLE public.ponto_entrega_volume ADD COLUMN IF NOT EXISTS marca_depois text;
 
+-- Tabela nova em public fica exposta pela API do Supabase. Esta nao tem dado
+-- pessoal, mas tambem nao e da conta de ninguem: RLS ligada e sem politica.
+ALTER TABLE public.ponto_entrega_volume ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.ponto_entrega_volume FROM PUBLIC;
+
+DO $fechadura$
+BEGIN
+  EXECUTE 'REVOKE ALL ON public.ponto_entrega_volume FROM anon, authenticated';
+EXCEPTION WHEN undefined_object THEN
+  RAISE NOTICE 'Papeis anon/authenticated nao existem nesta base.';
+END $fechadura$;
+
 DO $volume$
 DECLARE
   t text;
