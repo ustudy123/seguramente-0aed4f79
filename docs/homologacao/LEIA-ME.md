@@ -4,7 +4,7 @@ Estas 16 partes reúnem, em ordem, as correções do módulo do Ponto que já es
 prontas e testadas no projeto e ainda não chegaram ao ambiente de homologação
 (que é cópia da estrutura de produção). São os mesmos scripts de entrega que
 vivem em `docs/script_ponto_onda*.sql`, agrupados por assunto para reduzir o
-número de colagens de ~50 para 14.
+número de colagens de ~55 para 16.
 
 ## Como rodar
 
@@ -48,7 +48,7 @@ A única falha é **PONTO-113** (regime rural — trabalho novo, ainda no backlo
 
 ## Como isto foi conferido
 
-As 14 partes foram aplicadas, em ordem e duas vezes seguidas, a duas réplicas
+As partes foram aplicadas, em ordem e duas vezes seguidas, a duas réplicas
 locais: uma montada pelas migrations do projeto e outra com a chave antiga da
 apuração diária (a mesma situação estrutural da homologação). Nenhum erro, e a
 segunda passada não quebrou nem duplicou nada. Na réplica de chave antiga, a
