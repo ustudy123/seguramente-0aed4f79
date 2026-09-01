@@ -4,9 +4,19 @@
 -- ESTE ARQUIVO REESCREVE ponto_diario. Leia antes de colar.
 --
 -- SO RODE DEPOIS DE:
---   1. rodar o script_ponto_quanto_mudaria_reconsolidar.sql e obter VEREDITO
---      OK (nenhum dia perderia tempo);
+--   1. rodar o script_ponto_quanto_mudaria_reconsolidar.sql, e conferir cada
+--      dia divergente com o script_ponto_detalhe_dos_dias_divergentes.sql;
 --   2. reabrir a competencia, se ela estiver fechada (ver o fim deste arquivo).
+--
+-- A TRAVA QUE DISPENSA O VEREDITO PERFEITO
+-- Este arquivo NAO reescreve dia que PERDERIA tempo. Antes de tocar em cada
+-- dia, ele pergunta a conta quanto daria; se o resultado for MENOR que o
+-- gravado, o dia fica exatamente como esta e sai listado na conferencia.
+-- Isso e o oposto de uma reconsolidacao cega: o objetivo e recuperar o minuto
+-- descartado, nunca apagar hora que ja esta registrada. Na medicao da
+-- producao de 01/09/2026, um unico dia derrubava o ganho da competencia
+-- inteira de +762 min para -8 min — com esta trava, esse dia e simplesmente
+-- deixado de lado, e os +762 min chegam a quem tem direito.
 --
 -- O QUE FAZ
 -- Manda a consolidacao diaria recalcular, dia a dia, os colaboradores que
@@ -48,11 +58,21 @@ SET statement_timeout = '600s';
 DO $reconsolida$
 DECLARE
   v_comp   text := '2026-08';   -- AJUSTE AQUI: competencia
+  -- AJUSTE AQUI: CNPJs a deixar de fora (empresa que ainda vai configurar
+  -- pre-assinalacao, por exemplo). Deixe ARRAY[]::text[] para nao excluir
+  -- ninguem.
+  v_fora   text[] := ARRAY[]::text[];
   v_nome   text := 'backup_ponto_diario_reconsolidacao_' || to_char(CURRENT_DATE, 'YYYYMMDD');
   v_n      bigint;
   c        RECORD;
   v_dias   int := 0;
+  v_pulou  int := 0;
+  v_calc   RECORD;
+  v_fora_n text[];
 BEGIN
+  -- CNPJ so com digitos, uma vez, para comparar com o cadastro.
+  SELECT COALESCE(array_agg(regexp_replace(x, '[^0-9]', '', 'g')), ARRAY[]::text[])
+    INTO v_fora_n FROM unnest(v_fora) x;
   -- 1) COPIA DE SEGURANCA da linha inteira de cada dia que sera tocado.
   IF to_regclass('public.' || v_nome) IS NOT NULL THEN
     EXECUTE format('SELECT count(*) FROM public.%I', v_nome) INTO v_n;
@@ -65,23 +85,26 @@ BEGIN
       JOIN public.empresa_cadastro e ON e.id = d.empresa_id
       WHERE COALESCE(e.usa_controle_ponto, false) = true
         AND to_char(d.data, 'YYYY-MM') = %L
+        AND NOT (regexp_replace(COALESCE(e.cnpj, ''), '[^0-9]', '', 'g') = ANY (%L::text[]))
         AND EXISTS (
           SELECT 1 FROM public.ponto_marcacoes m
           WHERE m.tenant_id = d.tenant_id
             AND m.colaborador_cpf = d.colaborador_cpf
             AND m.data_marcacao = d.data)
-    $sql$, v_nome, v_comp);
+    $sql$, v_nome, v_comp, v_fora_n);
     EXECUTE format('SELECT count(*) FROM public.%I', v_nome) INTO v_n;
     RAISE NOTICE 'Copia de seguranca criada: % com % linha(s).', v_nome, v_n;
   END IF;
 
   -- 2) A reconsolidacao, dia a dia, colaborador a colaborador.
   FOR c IN
-    SELECT DISTINCT d.tenant_id, d.colaborador_cpf, d.data
+    SELECT DISTINCT d.tenant_id, d.colaborador_cpf, d.colaborador_id, d.data,
+           COALESCE(floor(EXTRACT(EPOCH FROM d.horas_trabalhadas) / 60)::int, 0) AS min_gravado
     FROM public.ponto_diario d
     JOIN public.empresa_cadastro e ON e.id = d.empresa_id
     WHERE COALESCE(e.usa_controle_ponto, false) = true
       AND to_char(d.data, 'YYYY-MM') = v_comp
+      AND NOT (regexp_replace(COALESCE(e.cnpj, ''), '[^0-9]', '', 'g') = ANY (v_fora_n))
       AND EXISTS (
         SELECT 1 FROM public.ponto_marcacoes m
         WHERE m.tenant_id = d.tenant_id
@@ -90,6 +113,19 @@ BEGIN
     ORDER BY d.data
   LOOP
     BEGIN
+      -- A TRAVA: pergunta a conta quanto daria ANTES de gravar. Dia que
+      -- perderia tempo fica exatamente como esta.
+      SELECT * INTO v_calc
+      FROM public._ponto_calc_dia(c.tenant_id, c.colaborador_cpf, c.data, c.colaborador_id::uuid);
+
+      IF COALESCE(EXTRACT(EPOCH FROM v_calc.o_horas) / 60, 0)::int < c.min_gravado THEN
+        v_pulou := v_pulou + 1;
+        RAISE NOTICE 'PULADO — dia % do CPF ...%: gravado % min, a conta daria % min. Nao reescrevo dia que perde tempo.',
+          c.data, right(c.colaborador_cpf, 3), c.min_gravado,
+          COALESCE(EXTRACT(EPOCH FROM v_calc.o_horas) / 60, 0)::int;
+        CONTINUE;
+      END IF;
+
       PERFORM public.consolidar_ponto_diario_manual(c.tenant_id, c.colaborador_cpf, c.data);
       v_dias := v_dias + 1;
     EXCEPTION WHEN OTHERS THEN
@@ -98,7 +134,8 @@ BEGIN
     END;
   END LOOP;
 
-  RAISE NOTICE '% dia(s) reconsolidado(s) na competencia %.', v_dias, v_comp;
+  RAISE NOTICE '% dia(s) reconsolidado(s) e % dia(s) preservado(s) por perderiam tempo, na competencia %.',
+    v_dias, v_pulou, v_comp;
 END $reconsolida$;
 
 -- ============================================================================
