@@ -245,7 +245,12 @@ END $function$
 
 -- ---------------------------------------------------------------------------
 -- CONFERENCIA — o SQL Editor mostra apenas o ultimo resultado.
--- Esperado: t | t | t | t | OK
+--
+-- Esperado onde HA a coluna nsr:      t | t | t | t | OK
+-- Esperado onde NAO HA a coluna nsr:  f | f | t | t | OK
+--   (a parte 191 e pulada de proposito: sem NSR nao ha cadeia a verificar)
+--
+--   tem_nsr         : o ambiente tem ponto_marcacoes.nsr
 --   p191_sonda_acha : a sonda do PONTO-191 encontra a funcao de verificacao
 --   p191_encadeado  : a verificacao continua conferindo o hash anterior
 --   p354_escopo     : converter_banco_horas_vencido(uuid) existe
@@ -253,6 +258,9 @@ END $function$
 -- ---------------------------------------------------------------------------
 WITH x AS MATERIALIZED (
   SELECT
+    EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'ponto_marcacoes'
+               AND column_name = 'nsr') AS tem_nsr,
     EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
              WHERE n.nspname = 'public' AND p.proname NOT LIKE 'qa\_%'
                AND p.prosrc ILIKE '%hash_marcacao%' AND p.prosrc ILIKE '%verific%') AS p191_sonda_acha,
@@ -265,6 +273,13 @@ WITH x AS MATERIALIZED (
                AND p.prosrc ILIKE '%converter_banco_horas_vencido(public.qa_sandbox_tenant_id())%') AS p354_caso_escopa
 )
 SELECT p191_sonda_acha, p191_encadeado, p354_escopo, p354_caso_escopa,
-       CASE WHEN p191_sonda_acha AND p191_encadeado AND p354_escopo AND p354_caso_escopa
-            THEN 'OK' ELSE 'CONFERIR' END AS erro_tecnico
+       CASE
+         -- Sem NSR, a parte 191 nao se aplica: o arquivo esta correto se a
+         -- correcao do 354 entrou. O PONTO-191 seguira reprovando na bateria,
+         -- e com razao: sem NSR nao ha numeracao sequencial a encadear.
+         WHEN NOT tem_nsr AND p354_escopo AND p354_caso_escopa THEN 'OK'
+         WHEN tem_nsr AND p191_sonda_acha AND p191_encadeado
+              AND p354_escopo AND p354_caso_escopa THEN 'OK'
+         ELSE 'CONFERIR'
+       END AS erro_tecnico
 FROM x;
