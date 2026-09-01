@@ -24,6 +24,7 @@
 --   * Avana Engenharia
 --   * Sudoclin
 --   * Clinica Medica Ambulatorial Magalhaes Lopes
+--   * Voe Midia  (acrescentada em 01/09/2026, na conferencia do resultado)
 --
 -- REDE DE SEGURANCA JA EXISTENTE
 -- A apuracao tambem alcanca, independentemente desta chave, qualquer CPF com
@@ -72,7 +73,9 @@ UPDATE public.empresa_cadastro e
      e.razao_social ILIKE '%NUERNBERG%BARROS%' OR
      e.razao_social ILIKE '%AVANA%ENGENHARIA%' OR
      e.razao_social ILIKE '%SUDOCLIN%'          OR
-     e.razao_social ILIKE '%MAGALHAES%LOPES%'
+     e.razao_social ILIKE '%MAGALHAES%LOPES%'   OR
+     e.razao_social ILIKE '%VOE%MIDIA%'         OR
+     e.razao_social ILIKE '%VOE%MÍDIA%'
    );
 
 -- ---------------------------------------------------------------------
@@ -86,7 +89,9 @@ UPDATE public.empresa_cadastro e
      e.razao_social ILIKE '%NUERNBERG%BARROS%' OR
      e.razao_social ILIKE '%AVANA%ENGENHARIA%' OR
      e.razao_social ILIKE '%SUDOCLIN%'          OR
-     e.razao_social ILIKE '%MAGALHAES%LOPES%'
+     e.razao_social ILIKE '%MAGALHAES%LOPES%'   OR
+     e.razao_social ILIKE '%VOE%MIDIA%'         OR
+     e.razao_social ILIKE '%VOE%MÍDIA%'
    );
 
 -- ============================================================================
