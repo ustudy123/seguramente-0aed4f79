@@ -253,7 +253,16 @@ SELECT
        WHEN (SELECT src FROM def) LIKE '%floor(EXTRACT(EPOCH FROM v_marc.hora_marcacao) / 60)%'
          THEN 'conta pelo minuto de CADA marcacao'
        ELSE 'ainda trunca a DIFERENCA entre marcacoes' END          AS conta_do_dia,
-  COALESCE((SELECT (situacao)::text FROM public.qa_caso_ponto_470()), 'bancada ausente') AS caso_470,
+  -- NAO se roda a sonda aqui. Rodar um caso de teste FORA do cercado grava a
+  -- massa dele (CPF ficticio, 550 minutos) na base, e a conferencia seguinte
+  -- acusa isso como "passado reescrito" — foi o que aconteceu na entrega de
+  -- 01/09/2026. Aqui se confere o REGISTRO do caso, que e leitura pura.
+  CASE WHEN to_regprocedure('public.qa_caso_ponto_470()') IS NULL
+       THEN 'bancada ausente'
+       WHEN EXISTS (SELECT 1 FROM public.qa_implementacoes
+                     WHERE codigo = 'PONTO-470' AND ativo)
+       THEN 'registrado — rode a bateria do modulo para executa-lo'
+       ELSE 'rotina existe, mas nao registrada no motor' END          AS caso_470,
   CASE
     WHEN (SELECT src FROM def) IS NULL THEN 'CONFERIR — a apuracao do dia nao existe aqui'
     WHEN (SELECT src FROM def) NOT LIKE '%floor(EXTRACT(EPOCH FROM v_marc.hora_marcacao) / 60)%'
