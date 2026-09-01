@@ -216,6 +216,13 @@ export function PontoRelatoriosTab() {
     // Súmula 338/TST: intervalo declarado (pré-assinalado) em vez de batido.
     intervalo_origem?: "marcado" | "pre_assinalado" | null;
     intervalo_pre_assinalado_min?: number | null;
+    /**
+     * Dia com marcação sem par (ou com ajuste em aberto). A apuração não
+     * gera débito nesses dias — a falha de registro é do empregador (CLT
+     * art. 74, §2º; Súmula 338) —, então o documento precisa dizer que o dia
+     * está pendente, em vez de imprimir um zero silencioso.
+     */
+    pendencia?: boolean;
   };
 
   const DIAS_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
@@ -232,6 +239,7 @@ export function PontoRelatoriosTab() {
 
   /** RN25 — rótulo de ocorrência do dia. */
   const situacaoDia = (d: DiaEspelho) => {
+    if (d.pendencia) return "Pendência — marcação incompleta";
     if (d.equalizacao) return "Equalização";
     if (d.excedente_retido_min > 0) return "Excede limite diário";
     if (d.protegido) return d.trabalhado_min > 0 ? "Justificado (com trabalho)" : "Justificado";
@@ -291,19 +299,29 @@ export function PontoRelatoriosTab() {
     // pré-assinalação). Vive em ponto_diario, não no resumo de saldo; sem isso
     // o cartão não consegue declarar o intervalo previsto.
     const intervaloPorCpfDia = new Map<string, { origem: string | null; minutos: number | null }>();
+    // Dias em que a marcação ficou sem par (ou têm ajuste em aberto): a
+    // apuração não debita esses dias, e o documento tem de mostrar a
+    // pendência em vez de um zero sem explicação.
+    const pendenciaPorCpfDia = new Set<string>();
     {
       const { data: diarios, error: errDia } = await fromTable("ponto_diario")
-        .select("colaborador_cpf, data, intervalo_origem, intervalo_pre_assinalado_minutos")
+        .select("colaborador_cpf, data, status, intervalo_origem, intervalo_pre_assinalado_minutos")
         .eq("tenant_id", tenantId)
-        .eq("intervalo_origem", "pre_assinalado")
+        .or("intervalo_origem.eq.pre_assinalado,status.in.(incompleto,ajuste_pendente)")
         .gte("data", `${competencia}-01`)
         .lte("data", `${competencia}-${String(ultimoDia).padStart(2, "0")}`) as { data: any[] | null; error: any };
       if (errDia) throw errDia;
       (diarios || []).forEach((d: any) => {
-        intervaloPorCpfDia.set(`${soDigitos(d.colaborador_cpf)}|${d.data}`, {
-          origem: d.intervalo_origem ?? null,
-          minutos: d.intervalo_pre_assinalado_minutos ?? null,
-        });
+        const chave = `${soDigitos(d.colaborador_cpf)}|${d.data}`;
+        if (d.intervalo_origem === "pre_assinalado") {
+          intervaloPorCpfDia.set(chave, {
+            origem: d.intervalo_origem ?? null,
+            minutos: d.intervalo_pre_assinalado_minutos ?? null,
+          });
+        }
+        if (d.status === "incompleto" || d.status === "ajuste_pendente") {
+          pendenciaPorCpfDia.add(chave);
+        }
       });
     }
 
@@ -351,6 +369,7 @@ export function PontoRelatoriosTab() {
           | "marcado" | "pre_assinalado" | null,
         intervalo_pre_assinalado_min:
           intervaloPorCpfDia.get(`${c.cpf}|${String(d.dia)}`)?.minutos ?? null,
+        pendencia: pendenciaPorCpfDia.has(`${c.cpf}|${String(d.dia)}`),
       })).sort((a, b) => a.dia.localeCompare(b.dia));
 
       resultado.push({

@@ -41,6 +41,13 @@ export interface CartaoDia {
    */
   intervalo_origem?: "marcado" | "pre_assinalado" | null;
   intervalo_pre_assinalado_min?: number | null;
+  /**
+   * Dia com marcação sem par (ou com ajuste em aberto). A apuração não gera
+   * débito nesses dias — a falha de registro é responsabilidade do empregador
+   * (CLT art. 74, §2º; Súmula 338 do TST) —, então o cartão precisa dizer que
+   * o dia está pendente em vez de imprimir um zero sem explicação.
+   */
+  pendencia?: boolean;
 }
 
 export interface CartaoEmpregador {
@@ -138,7 +145,12 @@ function classificarDia(d: CartaoDia) {
   let fj = 0;
   let he = 0;
 
-  if (d.equalizacao) {
+  if (d.pendencia) {
+    // Nem crédito nem débito: o dia não fecha enquanto a marcação não for
+    // completada. Imprimir horas aqui daria ares de conta fechada a um
+    // registro que o próprio sistema sabe estar pela metade.
+    ocorrencia = "Pendência — marcação incompleta";
+  } else if (d.equalizacao) {
     ocorrencia = "Compensado";
     hc = d.trabalhado_min;
   } else if (d.protegido && semTrabalho) {
@@ -408,6 +420,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
       const texto = String(dados.row.raw?.[3] ?? "");
       if (texto === "DSR" || texto === "Feriado") dados.cell.styles.fillColor = [237, 242, 249];
       if (texto === "Falta") dados.cell.styles.textColor = MARCA.vermelho;
+      if (texto.startsWith("Pendência")) dados.cell.styles.textColor = [180, 83, 9];
       if (texto.startsWith("Soma")) dados.cell.styles.textColor = [22, 101, 52];
     },
     margin: { left: 12, right: 12, top: ALTURA_FAIXA + 5 },
