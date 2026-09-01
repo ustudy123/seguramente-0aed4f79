@@ -682,6 +682,8 @@ export type Database = {
       admissoes: {
         Row: {
           agencia: string | null
+          art62_documento: string | null
+          art62_inciso: string | null
           aviso_previo_cumprido: boolean | null
           bairro: string | null
           banco: string | null
@@ -713,6 +715,7 @@ export type Database = {
           desligado_por_nome: string | null
           desligamento_protocolo: string | null
           dias_aviso_previo: number | null
+          dispensado_ponto: boolean
           email: string | null
           empresa_id: string | null
           endereco: string | null
@@ -755,6 +758,7 @@ export type Database = {
           sindicato_homologacao: string | null
           status: Database["public"]["Enums"]["admissao_status"]
           telefone: string | null
+          teletrabalho_modalidade: string | null
           tenant_id: string
           tipo_aviso_previo: string | null
           tipo_conta: string | null
@@ -764,6 +768,8 @@ export type Database = {
         }
         Insert: {
           agencia?: string | null
+          art62_documento?: string | null
+          art62_inciso?: string | null
           aviso_previo_cumprido?: boolean | null
           bairro?: string | null
           banco?: string | null
@@ -795,6 +801,7 @@ export type Database = {
           desligado_por_nome?: string | null
           desligamento_protocolo?: string | null
           dias_aviso_previo?: number | null
+          dispensado_ponto?: boolean
           email?: string | null
           empresa_id?: string | null
           endereco?: string | null
@@ -837,6 +844,7 @@ export type Database = {
           sindicato_homologacao?: string | null
           status?: Database["public"]["Enums"]["admissao_status"]
           telefone?: string | null
+          teletrabalho_modalidade?: string | null
           tenant_id: string
           tipo_aviso_previo?: string | null
           tipo_conta?: string | null
@@ -846,6 +854,8 @@ export type Database = {
         }
         Update: {
           agencia?: string | null
+          art62_documento?: string | null
+          art62_inciso?: string | null
           aviso_previo_cumprido?: boolean | null
           bairro?: string | null
           banco?: string | null
@@ -877,6 +887,7 @@ export type Database = {
           desligado_por_nome?: string | null
           desligamento_protocolo?: string | null
           dias_aviso_previo?: number | null
+          dispensado_ponto?: boolean
           email?: string | null
           empresa_id?: string | null
           endereco?: string | null
@@ -919,6 +930,7 @@ export type Database = {
           sindicato_homologacao?: string | null
           status?: Database["public"]["Enums"]["admissao_status"]
           telefone?: string | null
+          teletrabalho_modalidade?: string | null
           tenant_id?: string
           tipo_aviso_previo?: string | null
           tipo_conta?: string | null
@@ -2440,6 +2452,123 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      backup_dossies_duplicados_20260901: {
+        Row: {
+          competencia: string | null
+          created_at: string | null
+          documento_id: string | null
+          empresa_id: string | null
+          gerado_em: string | null
+          hash_pacote: string | null
+          id: string | null
+          indice: Json | null
+          periodo_fim: string | null
+          periodo_ini: string | null
+          tenant_id: string | null
+          total_pecas: number | null
+        }
+        Insert: {
+          competencia?: string | null
+          created_at?: string | null
+          documento_id?: string | null
+          empresa_id?: string | null
+          gerado_em?: string | null
+          hash_pacote?: string | null
+          id?: string | null
+          indice?: Json | null
+          periodo_fim?: string | null
+          periodo_ini?: string | null
+          tenant_id?: string | null
+          total_pecas?: number | null
+        }
+        Update: {
+          competencia?: string | null
+          created_at?: string | null
+          documento_id?: string | null
+          empresa_id?: string | null
+          gerado_em?: string | null
+          hash_pacote?: string | null
+          id?: string | null
+          indice?: Json | null
+          periodo_fim?: string | null
+          periodo_ini?: string | null
+          tenant_id?: string | null
+          total_pecas?: number | null
+        }
+        Relationships: []
+      }
+      backup_links_sem_prazo_20260901: {
+        Row: {
+          ativo: boolean | null
+          bloqueado_ate: string | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string | null
+          data_expiracao: string | null
+          id: string | null
+          tenant_id: string | null
+          tentativas_frustradas: number | null
+          tipo: string | null
+          token: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          bloqueado_ate?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data_expiracao?: string | null
+          id?: string | null
+          tenant_id?: string | null
+          tentativas_frustradas?: number | null
+          tipo?: string | null
+          token?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          bloqueado_ate?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data_expiracao?: string | null
+          id?: string | null
+          tenant_id?: string | null
+          tentativas_frustradas?: number | null
+          tipo?: string | null
+          token?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_usa_controle_ponto_20260901: {
+        Row: {
+          cnpj: string | null
+          id: string | null
+          razao_social: string | null
+          tenant_id: string | null
+          usa_controle_ponto: boolean | null
+        }
+        Insert: {
+          cnpj?: string | null
+          id?: string | null
+          razao_social?: string | null
+          tenant_id?: string | null
+          usa_controle_ponto?: boolean | null
+        }
+        Update: {
+          cnpj?: string | null
+          id?: string | null
+          razao_social?: string | null
+          tenant_id?: string | null
+          usa_controle_ponto?: boolean | null
+        }
+        Relationships: []
       }
       bem_estar_config: {
         Row: {
@@ -4662,6 +4791,7 @@ export type Database = {
           cnpj: string | null
           complemento: string | null
           condicoes_especiais_detalhes: Json | null
+          controle_ponto_obrigatorio: boolean
           cpf: string | null
           created_at: string
           email: string | null
@@ -4737,6 +4867,7 @@ export type Database = {
           cnpj?: string | null
           complemento?: string | null
           condicoes_especiais_detalhes?: Json | null
+          controle_ponto_obrigatorio?: boolean
           cpf?: string | null
           created_at?: string
           email?: string | null
@@ -4812,6 +4943,7 @@ export type Database = {
           cnpj?: string | null
           complemento?: string | null
           condicoes_especiais_detalhes?: Json | null
+          controle_ponto_obrigatorio?: boolean
           cpf?: string | null
           created_at?: string
           email?: string | null
@@ -7611,6 +7743,45 @@ export type Database = {
           id?: string
           observacao?: string | null
           tenant_id?: string
+        }
+        Relationships: []
+      }
+      feriado_folga_compensatoria: {
+        Row: {
+          colaborador_cpf: string
+          colaborador_id: string
+          created_at: string
+          data_feriado: string
+          data_folga: string
+          id: string
+          observacao: string | null
+          registrado_por: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_cpf: string
+          colaborador_id: string
+          created_at?: string
+          data_feriado: string
+          data_folga: string
+          id?: string
+          observacao?: string | null
+          registrado_por?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_cpf?: string
+          colaborador_id?: string
+          created_at?: string
+          data_feriado?: string
+          data_folga?: string
+          id?: string
+          observacao?: string | null
+          registrado_por?: string | null
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -17626,6 +17797,54 @@ export type Database = {
           },
         ]
       }
+      ponto_acesso_sensivel_log: {
+        Row: {
+          acao: string
+          colaborador_cpf: string | null
+          created_at: string
+          descricao: string | null
+          destinatario: string | null
+          escopo: Json | null
+          id: string
+          ip: string | null
+          recurso: string | null
+          recurso_id: string | null
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          colaborador_cpf?: string | null
+          created_at?: string
+          descricao?: string | null
+          destinatario?: string | null
+          escopo?: Json | null
+          id?: string
+          ip?: string | null
+          recurso?: string | null
+          recurso_id?: string | null
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          colaborador_cpf?: string | null
+          created_at?: string
+          descricao?: string | null
+          destinatario?: string | null
+          escopo?: Json | null
+          id?: string
+          ip?: string | null
+          recurso?: string | null
+          recurso_id?: string | null
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: []
+      }
       ponto_acordos: {
         Row: {
           ativo: boolean
@@ -17671,6 +17890,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ponto_afd_eventos_equipamento: {
+        Row: {
+          ajuste_relogio_de: string | null
+          ajuste_relogio_para: string | null
+          created_at: string
+          data_hora: string | null
+          empresa_id: string | null
+          equipamento: string | null
+          evento_sensivel_descricao: string | null
+          evento_sensivel_tipo: string | null
+          id: string
+          importacao_id: string | null
+          nsr_origem: number | null
+          tenant_id: string
+          tipo_registro: string | null
+        }
+        Insert: {
+          ajuste_relogio_de?: string | null
+          ajuste_relogio_para?: string | null
+          created_at?: string
+          data_hora?: string | null
+          empresa_id?: string | null
+          equipamento?: string | null
+          evento_sensivel_descricao?: string | null
+          evento_sensivel_tipo?: string | null
+          id?: string
+          importacao_id?: string | null
+          nsr_origem?: number | null
+          tenant_id: string
+          tipo_registro?: string | null
+        }
+        Update: {
+          ajuste_relogio_de?: string | null
+          ajuste_relogio_para?: string | null
+          created_at?: string
+          data_hora?: string | null
+          empresa_id?: string | null
+          equipamento?: string | null
+          evento_sensivel_descricao?: string | null
+          evento_sensivel_tipo?: string | null
+          id?: string
+          importacao_id?: string | null
+          nsr_origem?: number | null
+          tenant_id?: string
+          tipo_registro?: string | null
+        }
+        Relationships: []
+      }
       ponto_ajustes: {
         Row: {
           abonar_se_aprovado: boolean
@@ -17681,6 +17948,7 @@ export type Database = {
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
+          comprovacao_prazo: string | null
           created_at: string
           created_by: string | null
           created_by_nome: string | null
@@ -17711,6 +17979,7 @@ export type Database = {
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
+          comprovacao_prazo?: string | null
           created_at?: string
           created_by?: string | null
           created_by_nome?: string | null
@@ -17741,6 +18010,7 @@ export type Database = {
           colaborador_cpf?: string
           colaborador_id?: string
           colaborador_nome?: string
+          comprovacao_prazo?: string | null
           created_at?: string
           created_by?: string | null
           created_by_nome?: string | null
@@ -17803,6 +18073,7 @@ export type Database = {
           descricao: string | null
           empresa_id: string | null
           id: string
+          plano_acao_id: string | null
           resolvido: boolean | null
           resolvido_em: string | null
           resolvido_por: string | null
@@ -17820,6 +18091,7 @@ export type Database = {
           descricao?: string | null
           empresa_id?: string | null
           id?: string
+          plano_acao_id?: string | null
           resolvido?: boolean | null
           resolvido_em?: string | null
           resolvido_por?: string | null
@@ -17837,6 +18109,7 @@ export type Database = {
           descricao?: string | null
           empresa_id?: string | null
           id?: string
+          plano_acao_id?: string | null
           resolvido?: boolean | null
           resolvido_em?: string | null
           resolvido_por?: string | null
@@ -17854,6 +18127,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ponto_alertas_plano_acao_fk"
+            columns: ["plano_acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ponto_alertas_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -17861,6 +18141,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_arquivos_aej: {
+        Row: {
+          arquivo_url: string | null
+          competencia: string
+          conteudo: string | null
+          conteudo_estruturado: Json | null
+          created_at: string
+          empregador_cnpj: string | null
+          empregador_nome: string | null
+          empresa_id: string | null
+          gerado_em: string
+          hash_arquivo: string | null
+          id: string
+          periodo_fim: string | null
+          periodo_ini: string | null
+          tenant_id: string
+          total_marcacoes: number
+          total_registros: number
+          total_trabalhadores: number
+        }
+        Insert: {
+          arquivo_url?: string | null
+          competencia: string
+          conteudo?: string | null
+          conteudo_estruturado?: Json | null
+          created_at?: string
+          empregador_cnpj?: string | null
+          empregador_nome?: string | null
+          empresa_id?: string | null
+          gerado_em?: string
+          hash_arquivo?: string | null
+          id?: string
+          periodo_fim?: string | null
+          periodo_ini?: string | null
+          tenant_id: string
+          total_marcacoes?: number
+          total_registros?: number
+          total_trabalhadores?: number
+        }
+        Update: {
+          arquivo_url?: string | null
+          competencia?: string
+          conteudo?: string | null
+          conteudo_estruturado?: Json | null
+          created_at?: string
+          empregador_cnpj?: string | null
+          empregador_nome?: string | null
+          empresa_id?: string | null
+          gerado_em?: string
+          hash_arquivo?: string | null
+          id?: string
+          periodo_fim?: string | null
+          periodo_ini?: string | null
+          tenant_id?: string
+          total_marcacoes?: number
+          total_registros?: number
+          total_trabalhadores?: number
+        }
+        Relationships: []
       }
       ponto_audit_log: {
         Row: {
@@ -18239,6 +18579,120 @@ export type Database = {
           },
         ]
       }
+      ponto_certificados_digitais: {
+        Row: {
+          alerta_antecedencia_dias: number
+          arquivo_url: string | null
+          ativo: boolean
+          certificado_digital_tipo: string
+          created_at: string
+          emissor: string | null
+          empresa_id: string | null
+          fingerprint: string | null
+          icp_brasil: boolean
+          id: string
+          numero_serie: string | null
+          tenant_id: string
+          titular_documento: string | null
+          titular_nome: string | null
+          updated_at: string
+          valido_ate: string | null
+          valido_de: string | null
+        }
+        Insert: {
+          alerta_antecedencia_dias?: number
+          arquivo_url?: string | null
+          ativo?: boolean
+          certificado_digital_tipo?: string
+          created_at?: string
+          emissor?: string | null
+          empresa_id?: string | null
+          fingerprint?: string | null
+          icp_brasil?: boolean
+          id?: string
+          numero_serie?: string | null
+          tenant_id: string
+          titular_documento?: string | null
+          titular_nome?: string | null
+          updated_at?: string
+          valido_ate?: string | null
+          valido_de?: string | null
+        }
+        Update: {
+          alerta_antecedencia_dias?: number
+          arquivo_url?: string | null
+          ativo?: boolean
+          certificado_digital_tipo?: string
+          created_at?: string
+          emissor?: string | null
+          empresa_id?: string | null
+          fingerprint?: string | null
+          icp_brasil?: boolean
+          id?: string
+          numero_serie?: string | null
+          tenant_id?: string
+          titular_documento?: string | null
+          titular_nome?: string | null
+          updated_at?: string
+          valido_ate?: string | null
+          valido_de?: string | null
+        }
+        Relationships: []
+      }
+      ponto_comprovantes: {
+        Row: {
+          arquivo_url: string | null
+          colaborador_cpf: string
+          colaborador_nome: string | null
+          conteudo: Json
+          created_at: string
+          data_hora_marcacao: string | null
+          disponibilizado_em: string | null
+          empregador_cnpj: string | null
+          empregador_nome: string | null
+          empresa_id: string | null
+          hash_comprovante: string | null
+          id: string
+          marcacao_id: string | null
+          nsr: number | null
+          tenant_id: string
+        }
+        Insert: {
+          arquivo_url?: string | null
+          colaborador_cpf: string
+          colaborador_nome?: string | null
+          conteudo: Json
+          created_at?: string
+          data_hora_marcacao?: string | null
+          disponibilizado_em?: string | null
+          empregador_cnpj?: string | null
+          empregador_nome?: string | null
+          empresa_id?: string | null
+          hash_comprovante?: string | null
+          id?: string
+          marcacao_id?: string | null
+          nsr?: number | null
+          tenant_id: string
+        }
+        Update: {
+          arquivo_url?: string | null
+          colaborador_cpf?: string
+          colaborador_nome?: string | null
+          conteudo?: Json
+          created_at?: string
+          data_hora_marcacao?: string | null
+          disponibilizado_em?: string | null
+          empregador_cnpj?: string | null
+          empregador_nome?: string | null
+          empresa_id?: string | null
+          hash_comprovante?: string | null
+          id?: string
+          marcacao_id?: string | null
+          nsr?: number | null
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       ponto_configuracao: {
         Row: {
           bloquear_dispositivo_nao_autorizado: boolean
@@ -18256,6 +18710,7 @@ export type Database = {
           interjornada_min_minutos: number | null
           jornada_diaria_max_minutos: number | null
           jornada_semanal_max_minutos: number | null
+          link_externo_acordo_url: string | null
           modo_apuracao: string | null
           modo_registro: string
           permitir_registro_fora_horario: boolean
@@ -18281,6 +18736,7 @@ export type Database = {
           interjornada_min_minutos?: number | null
           jornada_diaria_max_minutos?: number | null
           jornada_semanal_max_minutos?: number | null
+          link_externo_acordo_url?: string | null
           modo_apuracao?: string | null
           modo_registro?: string
           permitir_registro_fora_horario?: boolean
@@ -18306,6 +18762,7 @@ export type Database = {
           interjornada_min_minutos?: number | null
           jornada_diaria_max_minutos?: number | null
           jornada_semanal_max_minutos?: number | null
+          link_externo_acordo_url?: string | null
           modo_apuracao?: string | null
           modo_registro?: string
           permitir_registro_fora_horario?: boolean
@@ -18448,6 +18905,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_dossies_fiscalizacao: {
+        Row: {
+          competencia: string
+          created_at: string
+          documento_id: string | null
+          empresa_id: string | null
+          gerado_em: string
+          hash_pacote: string | null
+          id: string
+          indice: Json | null
+          periodo_fim: string | null
+          periodo_ini: string | null
+          tenant_id: string
+          total_pecas: number
+        }
+        Insert: {
+          competencia: string
+          created_at?: string
+          documento_id?: string | null
+          empresa_id?: string | null
+          gerado_em?: string
+          hash_pacote?: string | null
+          id?: string
+          indice?: Json | null
+          periodo_fim?: string | null
+          periodo_ini?: string | null
+          tenant_id: string
+          total_pecas?: number
+        }
+        Update: {
+          competencia?: string
+          created_at?: string
+          documento_id?: string | null
+          empresa_id?: string | null
+          gerado_em?: string
+          hash_pacote?: string | null
+          id?: string
+          indice?: Json | null
+          periodo_fim?: string | null
+          periodo_ini?: string | null
+          tenant_id?: string
+          total_pecas?: number
+        }
+        Relationships: []
       }
       ponto_entrega_conferencia: {
         Row: {
@@ -19464,6 +19966,57 @@ export type Database = {
           },
         ]
       }
+      ponto_ia_analises: {
+        Row: {
+          acao_sugerida: string | null
+          alerta_id: string | null
+          causa_provavel: string | null
+          confianca: number | null
+          created_at: string
+          decidido_em: string | null
+          decidido_por: string | null
+          decidido_por_nome: string | null
+          decisao_observacao: string | null
+          empresa_id: string | null
+          id: string
+          impacto: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          acao_sugerida?: string | null
+          alerta_id?: string | null
+          causa_provavel?: string | null
+          confianca?: number | null
+          created_at?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          decidido_por_nome?: string | null
+          decisao_observacao?: string | null
+          empresa_id?: string | null
+          id?: string
+          impacto?: string | null
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          acao_sugerida?: string | null
+          alerta_id?: string | null
+          causa_provavel?: string | null
+          confianca?: number | null
+          created_at?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          decidido_por_nome?: string | null
+          decisao_observacao?: string | null
+          empresa_id?: string | null
+          id?: string
+          impacto?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       ponto_justificativas: {
         Row: {
           ativo: boolean
@@ -19521,39 +20074,45 @@ export type Database = {
       ponto_links: {
         Row: {
           ativo: boolean
+          bloqueado_ate: string | null
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
           created_at: string
-          data_expiracao: string | null
+          data_expiracao: string
           id: string
           tenant_id: string
+          tentativas_frustradas: number
           tipo: string
           token: string
           updated_at: string
         }
         Insert: {
           ativo?: boolean
+          bloqueado_ate?: string | null
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
           created_at?: string
-          data_expiracao?: string | null
+          data_expiracao?: string
           id?: string
           tenant_id: string
+          tentativas_frustradas?: number
           tipo?: string
           token: string
           updated_at?: string
         }
         Update: {
           ativo?: boolean
+          bloqueado_ate?: string | null
           colaborador_cpf?: string
           colaborador_id?: string
           colaborador_nome?: string
           created_at?: string
-          data_expiracao?: string | null
+          data_expiracao?: string
           id?: string
           tenant_id?: string
+          tentativas_frustradas?: number
           tipo?: string
           token?: string
           updated_at?: string
@@ -19638,6 +20197,7 @@ export type Database = {
           distancia_metros: number | null
           empresa_id: string | null
           endereco_geolocalizacao: string | null
+          equipamento: string | null
           geofence_ref: string | null
           hash_anterior: string | null
           hash_marcacao: string
@@ -19648,6 +20208,7 @@ export type Database = {
           longitude: number | null
           marcacao_original: boolean
           nsr: number | null
+          nsr_origem: number | null
           origem_marcacao: string
           origem_offline: boolean
           selfie_nome: string | null
@@ -19675,6 +20236,7 @@ export type Database = {
           distancia_metros?: number | null
           empresa_id?: string | null
           endereco_geolocalizacao?: string | null
+          equipamento?: string | null
           geofence_ref?: string | null
           hash_anterior?: string | null
           hash_marcacao: string
@@ -19685,6 +20247,7 @@ export type Database = {
           longitude?: number | null
           marcacao_original?: boolean
           nsr?: number | null
+          nsr_origem?: number | null
           origem_marcacao?: string
           origem_offline?: boolean
           selfie_nome?: string | null
@@ -19712,6 +20275,7 @@ export type Database = {
           distancia_metros?: number | null
           empresa_id?: string | null
           endereco_geolocalizacao?: string | null
+          equipamento?: string | null
           geofence_ref?: string | null
           hash_anterior?: string | null
           hash_marcacao?: string
@@ -19722,6 +20286,7 @@ export type Database = {
           longitude?: number | null
           marcacao_original?: boolean
           nsr?: number | null
+          nsr_origem?: number | null
           origem_marcacao?: string
           origem_offline?: boolean
           selfie_nome?: string | null
@@ -19897,8 +20462,12 @@ export type Database = {
       }
       ponto_repc_importacoes: {
         Row: {
+          arquivo_hash: string | null
           arquivo_nome: string
           arquivo_url: string | null
+          assinatura_valida: boolean | null
+          cadeia_valida: boolean | null
+          crc_valido: boolean | null
           created_at: string | null
           empresa_id: string | null
           erros: Json | null
@@ -19908,8 +20477,10 @@ export type Database = {
           importado_por_id: string | null
           modelo: string | null
           numero_serie: string | null
+          quarentena: boolean
           registros_importados: number | null
           registros_rejeitados: number | null
+          relatorio: Json | null
           status: string | null
           tenant_id: string
           tipo_equipamento: string | null
@@ -19917,8 +20488,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          arquivo_hash?: string | null
           arquivo_nome: string
           arquivo_url?: string | null
+          assinatura_valida?: boolean | null
+          cadeia_valida?: boolean | null
+          crc_valido?: boolean | null
           created_at?: string | null
           empresa_id?: string | null
           erros?: Json | null
@@ -19928,8 +20503,10 @@ export type Database = {
           importado_por_id?: string | null
           modelo?: string | null
           numero_serie?: string | null
+          quarentena?: boolean
           registros_importados?: number | null
           registros_rejeitados?: number | null
+          relatorio?: Json | null
           status?: string | null
           tenant_id: string
           tipo_equipamento?: string | null
@@ -19937,8 +20514,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          arquivo_hash?: string | null
           arquivo_nome?: string
           arquivo_url?: string | null
+          assinatura_valida?: boolean | null
+          cadeia_valida?: boolean | null
+          crc_valido?: boolean | null
           created_at?: string | null
           empresa_id?: string | null
           erros?: Json | null
@@ -19948,8 +20529,10 @@ export type Database = {
           importado_por_id?: string | null
           modelo?: string | null
           numero_serie?: string | null
+          quarentena?: boolean
           registros_importados?: number | null
           registros_rejeitados?: number | null
+          relatorio?: Json | null
           status?: string | null
           tenant_id?: string
           tipo_equipamento?: string | null
@@ -20175,6 +20758,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_troca_turno: {
+        Row: {
+          aprovador_id: string | null
+          aprovador_nome: string | null
+          atribuicao_a_id: string
+          atribuicao_b_id: string
+          colaborador_a_cpf: string | null
+          colaborador_a_id: string | null
+          colaborador_a_nome: string | null
+          colaborador_b_cpf: string | null
+          colaborador_b_id: string | null
+          colaborador_b_nome: string | null
+          created_at: string
+          data_fim_troca: string | null
+          data_troca: string
+          decidida_em: string | null
+          efetivada_em: string | null
+          empresa_id: string | null
+          id: string
+          motivo: string | null
+          motivo_recusa: string | null
+          risco_detalhe: string | null
+          risco_interjornada: boolean
+          solicitada_em: string
+          solicitante_id: string | null
+          solicitante_nome: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          aprovador_id?: string | null
+          aprovador_nome?: string | null
+          atribuicao_a_id: string
+          atribuicao_b_id: string
+          colaborador_a_cpf?: string | null
+          colaborador_a_id?: string | null
+          colaborador_a_nome?: string | null
+          colaborador_b_cpf?: string | null
+          colaborador_b_id?: string | null
+          colaborador_b_nome?: string | null
+          created_at?: string
+          data_fim_troca?: string | null
+          data_troca: string
+          decidida_em?: string | null
+          efetivada_em?: string | null
+          empresa_id?: string | null
+          id?: string
+          motivo?: string | null
+          motivo_recusa?: string | null
+          risco_detalhe?: string | null
+          risco_interjornada?: boolean
+          solicitada_em?: string
+          solicitante_id?: string | null
+          solicitante_nome?: string | null
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          aprovador_id?: string | null
+          aprovador_nome?: string | null
+          atribuicao_a_id?: string
+          atribuicao_b_id?: string
+          colaborador_a_cpf?: string | null
+          colaborador_a_id?: string | null
+          colaborador_a_nome?: string | null
+          colaborador_b_cpf?: string | null
+          colaborador_b_id?: string | null
+          colaborador_b_nome?: string | null
+          created_at?: string
+          data_fim_troca?: string | null
+          data_troca?: string
+          decidida_em?: string | null
+          efetivada_em?: string | null
+          empresa_id?: string | null
+          id?: string
+          motivo?: string | null
+          motivo_recusa?: string | null
+          risco_detalhe?: string | null
+          risco_interjornada?: boolean
+          solicitada_em?: string
+          solicitante_id?: string | null
+          solicitante_nome?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -24913,6 +25583,19 @@ export type Database = {
         Args: { p_ano: number; p_nome?: string; p_tabela_id: string }
         Returns: string
       }
+      feriados_da_empresa: {
+        Args: {
+          p_empresa_id: string
+          p_fim: string
+          p_ini: string
+          p_tenant_id: string
+        }
+        Returns: {
+          data: string
+          nome: string
+          origem: string
+        }[]
+      }
       ferias_dias_por_faltas_clt: {
         Args: { p_faltas: number }
         Returns: number
@@ -24961,6 +25644,8 @@ export type Database = {
         Args: { _token: string }
         Returns: {
           agencia: string | null
+          art62_documento: string | null
+          art62_inciso: string | null
           aviso_previo_cumprido: boolean | null
           bairro: string | null
           banco: string | null
@@ -24992,6 +25677,7 @@ export type Database = {
           desligado_por_nome: string | null
           desligamento_protocolo: string | null
           dias_aviso_previo: number | null
+          dispensado_ponto: boolean
           email: string | null
           empresa_id: string | null
           endereco: string | null
@@ -25034,6 +25720,7 @@ export type Database = {
           sindicato_homologacao: string | null
           status: Database["public"]["Enums"]["admissao_status"]
           telefone: string | null
+          teletrabalho_modalidade: string | null
           tenant_id: string
           tipo_aviso_previo: string | null
           tipo_conta: string | null
@@ -25160,6 +25847,51 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: boolean
       }
+      ponto_acao_concluir_com_eficacia: {
+        Args: { p_acao_id: string; p_evidencia?: string; p_tenant_id: string }
+        Returns: Json
+      }
+      ponto_aej_extrair: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: {
+          competencia: string
+          conteudo: string
+          empregador_nome: string
+          gerado_em: string
+          hash_arquivo: string
+          periodo_fim: string
+          periodo_ini: string
+          total_marcacoes: number
+          total_registros: number
+          total_trabalhadores: number
+        }[]
+      }
+      ponto_afd_crc16: { Args: { p_texto: string }; Returns: number }
+      ponto_afd_validar_importacao: {
+        Args: {
+          p_arquivo_hash: string
+          p_assinatura_valida?: boolean
+          p_empresa_id: string
+          p_importacao_id: string
+          p_registros: Json
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      ponto_alerta_gerar_acao: {
+        Args: {
+          p_alerta_id: string
+          p_prazo_dias?: number
+          p_responsavel_id?: string
+          p_responsavel_nome?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
       ponto_apurar_ciclo_plantao_do_dia: {
         Args: {
           p_colaborador_id: string
@@ -25172,6 +25904,25 @@ export type Database = {
           eh_plantao: boolean
           jornada_min: number
         }[]
+      }
+      ponto_arquivar_documento: {
+        Args: {
+          p_classificacao?: string
+          p_colaborador_cpf: string
+          p_colaborador_id: string
+          p_colaborador_nome: string
+          p_empresa_id: string
+          p_nome: string
+          p_pasta_id?: string
+          p_storage_path: string
+          p_tenant_id: string
+          p_tipo: string
+        }
+        Returns: string
+      }
+      ponto_art62_dispensa: {
+        Args: { p_inciso: string; p_modalidade: string }
+        Returns: boolean
       }
       ponto_banco_alertas_monitorar: {
         Args: { p_dias_aviso?: number }
@@ -25224,7 +25975,47 @@ export type Database = {
         }
       }
       ponto_cadeia_hash_monitorar: { Args: never; Returns: number }
+      ponto_cct_vigiar_vigencia: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: number
+      }
+      ponto_certificado_vigente: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: {
+          alerta_antecedencia_dias: number
+          arquivo_url: string | null
+          ativo: boolean
+          certificado_digital_tipo: string
+          created_at: string
+          emissor: string | null
+          empresa_id: string | null
+          fingerprint: string | null
+          icp_brasil: boolean
+          id: string
+          numero_serie: string | null
+          tenant_id: string
+          titular_documento: string | null
+          titular_nome: string | null
+          updated_at: string
+          valido_ate: string | null
+          valido_de: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ponto_certificados_digitais"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ponto_certificado_vigiar_vencimento: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: number
+      }
       ponto_classifica_tipo: { Args: { p_tipo: string }; Returns: string }
+      ponto_colaborador_id_por_cpf: {
+        Args: { p_colaborador_cpf: string; p_tenant_id: string }
+        Returns: string
+      }
       ponto_colaboradores_sem_empresa: {
         Args: { p_competencia: string; p_tenant_id: string }
         Returns: {
@@ -25232,6 +26023,37 @@ export type Database = {
           colaborador_nome: string
           dias_no_periodo: number
           tem_admissao: boolean
+        }[]
+      }
+      ponto_compor_pacote_folha: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      ponto_comprovacao_monitorar: {
+        Args: { p_empresa?: string; p_tenant: string }
+        Returns: number
+      }
+      ponto_comprovante_vigiar_48h: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: number
+      }
+      ponto_comprovantes_extrair: {
+        Args: {
+          p_colaborador_cpf: string
+          p_fim: string
+          p_ini: string
+          p_tenant_id: string
+        }
+        Returns: {
+          conteudo: Json
+          data_hora: string
+          empregador: string
+          hash_comprovante: string
+          nsr: number
         }[]
       }
       ponto_corrigir_horas_arredondadas: {
@@ -25266,6 +26088,15 @@ export type Database = {
         }
         Returns: number
       }
+      ponto_detectar_descaracterizacao_art62: {
+        Args: {
+          p_dias?: number
+          p_empresa_id?: string
+          p_min_dias_marcados?: number
+          p_tenant_id: string
+        }
+        Returns: number
+      }
       ponto_dias_nao_materializados: {
         Args: { p_competencia: string; p_tenant_id: string }
         Returns: {
@@ -25274,6 +26105,17 @@ export type Database = {
           dias_sem_linha: number
           primeiro: string
           ultimo: string
+        }[]
+      }
+      ponto_dias_repetidos_na_apuracao: {
+        Args: { p_competencia: string; p_tenant_id: string }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          dia: string
+          linhas: number
+          saldo_apos_juncao_min: number
+          saldo_somado_min: number
         }[]
       }
       ponto_dsr_competencia: {
@@ -25383,6 +26225,28 @@ export type Database = {
         }
         Returns: undefined
       }
+      ponto_escala_cobertura_listar: {
+        Args: {
+          p_dias_a_frente?: number
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: {
+          data_descoberta: string
+          empresa_id: string
+          escala_id: string
+          escala_nome: string
+          motivo: string
+        }[]
+      }
+      ponto_escala_cobertura_monitorar: {
+        Args: {
+          p_dias_a_frente?: number
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
       ponto_escala_com_versao: {
         Args: {
           esc: Database["public"]["Tables"]["ponto_escalas"]["Row"]
@@ -25471,6 +26335,14 @@ export type Database = {
               tolerancia_min: number
             }[]
           }
+      ponto_escala_formalizacao_monitorar: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: number
+      }
+      ponto_escala_formalizacao_status: {
+        Args: { p_escala_id: string }
+        Returns: string
+      }
       ponto_escalas_corrigir_tenant: {
         Args: { p_aplicar?: boolean; p_tenant_id?: string }
         Returns: Json
@@ -25538,6 +26410,14 @@ export type Database = {
           total_trabalhado_min: number
         }[]
       }
+      ponto_estabelecimento_obrigatoriedade_monitorar: {
+        Args: { p_empresa_id?: string; p_tenant_id: string }
+        Returns: number
+      }
+      ponto_estabelecimento_trabalhadores: {
+        Args: { p_empresa_id: string; p_tenant_id: string }
+        Returns: number
+      }
       ponto_excedente_decidir: {
         Args: {
           p_colaborador_cpf: string
@@ -25573,6 +26453,19 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_fechamento_pendencias_criticas: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: {
+          colaborador_cpf: string
+          data_referencia: string
+          descricao: string
+          tipo: string
+        }[]
+      }
       ponto_fechar_competencia_banco: {
         Args: {
           p_competencia: string
@@ -25580,6 +26473,42 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: number
+      }
+      ponto_fechar_competencia_verificar: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
+      ponto_feriado_adicional_competencia: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          dias_compensados: number
+          minutos_adicional_100: number
+          minutos_trabalhados: number
+          qtd_feriados_trabalhados: number
+        }[]
+      }
+      ponto_feriados_colaborador: {
+        Args: {
+          p_colaborador_id: string
+          p_fim: string
+          p_ini: string
+          p_tenant_id: string
+        }
+        Returns: {
+          data: string
+          nome: string
+          origem: string
+        }[]
       }
       ponto_feriados_competencia: {
         Args: {
@@ -25613,6 +26542,72 @@ export type Database = {
           trabalhado_min: number
         }[]
       }
+      ponto_folha_marcar_status: {
+        Args: { p_detalhe?: string; p_export_id: string; p_novo_status: string }
+        Returns: undefined
+      }
+      ponto_folha_reenviar: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
+      ponto_gerar_aej: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      ponto_gerar_comprovante: {
+        Args: { p_marcacao_id: string; p_tenant_id: string }
+        Returns: string
+      }
+      ponto_gerar_dossie_fiscalizacao: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      ponto_gerar_espelhos_competencia: {
+        Args: {
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
+      ponto_grava_feriado_neutro: {
+        Args: {
+          p_colaborador_cpf: string
+          p_colaborador_id: string
+          p_colaborador_nome: string
+          p_data: string
+          p_empresa_id: string
+          p_nome_feriado: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
+      ponto_ia_analisar_alerta: {
+        Args: { p_alerta_id: string; p_tenant_id: string }
+        Returns: string
+      }
+      ponto_ia_registrar_decisao: {
+        Args: {
+          p_analise_id: string
+          p_decidido_por: string
+          p_decidido_por_nome?: string
+          p_decisao: string
+          p_observacao?: string
+        }
+        Returns: undefined
+      }
       ponto_intervalo_janela_do_dia: {
         Args: {
           p_colaborador_id: string
@@ -25641,11 +26636,46 @@ export type Database = {
           tol_min: number
         }[]
       }
+      ponto_link_registrar_tentativa: {
+        Args: {
+          p_bloqueio_min?: number
+          p_cpf_tentado: string
+          p_ip?: string
+          p_limite?: number
+          p_sucesso: boolean
+          p_token: string
+        }
+        Returns: Json
+      }
       ponto_link_renovar: {
         Args: { p_dias?: number; p_link_id: string }
         Returns: string
       }
+      ponto_links_desativar_vencidos: { Args: never; Returns: number }
       ponto_links_revogar_desligados: { Args: never; Returns: number }
+      ponto_log_acesso_sensivel: {
+        Args: {
+          p_acao: string
+          p_colaborador_cpf?: string
+          p_descricao?: string
+          p_ip?: string
+          p_recurso?: string
+          p_recurso_id?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      ponto_log_exportacao: {
+        Args: {
+          p_acao: string
+          p_descricao?: string
+          p_destinatario?: string
+          p_escopo?: Json
+          p_ip?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
       ponto_lotacao_do_dia: {
         Args: { p_cpf: string; p_data: string; p_tenant_id: string }
         Returns: string
@@ -25696,6 +26726,15 @@ export type Database = {
           p_motivo: string
           p_por?: string
           p_por_nome?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      ponto_registrar_folga_compensatoria: {
+        Args: {
+          p_colaborador_cpf: string
+          p_data: string
+          p_observacao?: string
           p_tenant_id: string
         }
         Returns: Json
@@ -25767,6 +26806,24 @@ export type Database = {
           trabalhado_min: number
         }[]
       }
+      ponto_saldo_dias_competencia_bruto: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_tenant_id: string
+        }
+        Returns: {
+          dia: string
+          entrada: string
+          equalizacao: boolean
+          excedente_retido_min: number
+          jornada_min: number
+          protegido: boolean
+          saida: string
+          saldo_min: number
+          trabalhado_min: number
+        }[]
+      }
       ponto_supressao_intervalo: {
         Args: { p_gozado_min: number; p_jornada_min: number }
         Returns: Json
@@ -25777,6 +26834,40 @@ export type Database = {
           p_data_inicio: string
           p_empresa_destino: string
           p_observacao?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      ponto_troca_turno_aprovar: {
+        Args: {
+          p_aprovador_id?: string
+          p_aprovador_nome?: string
+          p_troca_id: string
+        }
+        Returns: string
+      }
+      ponto_troca_turno_efetivar: {
+        Args: { p_troca_id: string }
+        Returns: string
+      }
+      ponto_troca_turno_recusar: {
+        Args: {
+          p_aprovador_id?: string
+          p_aprovador_nome?: string
+          p_motivo_recusa?: string
+          p_troca_id: string
+        }
+        Returns: string
+      }
+      ponto_troca_turno_solicitar: {
+        Args: {
+          p_atribuicao_a_id: string
+          p_atribuicao_b_id: string
+          p_data_fim_troca?: string
+          p_data_troca: string
+          p_motivo?: string
+          p_solicitante_id?: string
+          p_solicitante_nome?: string
           p_tenant_id: string
         }
         Returns: string
@@ -25807,6 +26898,14 @@ export type Database = {
           dias: number
           tenant_id: string
           uniforme: boolean
+        }[]
+      }
+      ponto_vigilancias_diarias: {
+        Args: never
+        Returns: {
+          alertas: number
+          rotina: string
+          tenants_com_erro: number
         }[]
       }
       preencher_ghe_snapshot_entrevistas: {
@@ -28169,6 +29268,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_004: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ponto_023: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -28359,6 +29468,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_391: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ponto_395: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -28370,6 +29489,66 @@ export type Database = {
         }
       }
       qa_caso_ponto_396: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_401: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_402: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_410: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_421: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_431_corpo: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_451: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
