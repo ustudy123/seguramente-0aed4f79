@@ -1,0 +1,63 @@
+# Fila de entrega do Ponto para a HOMOLOGAÇÃO
+
+Estas 14 partes reúnem, em ordem, as correções do módulo do Ponto que já estão
+prontas e testadas no projeto e ainda não chegaram ao ambiente de homologação
+(que é cópia da estrutura de produção). São os mesmos scripts de entrega que
+vivem em `docs/script_ponto_onda*.sql`, agrupados por assunto para reduzir o
+número de colagens de ~50 para 14.
+
+## Como rodar
+
+Cole cada arquivo **inteiro** no SQL Editor do projeto de homologação e execute.
+**A ordem importa** — vá da parte 01 para a 14, conferindo o resultado de cada
+uma antes de passar para a seguinte. Todas são idempotentes: rodar de novo não
+quebra nem duplica.
+
+Cada parte termina em uma conferência única, que lista o que deveria ter chegado
+e diz o que faltou. O resultado esperado é a última linha com `OK`.
+
+## As partes
+
+| # | Arquivo | O que entrega |
+|---|---|---|
+| 01 | `parte_01_travas_legais.sql` | Marcação futura recusada; tolerância acima do teto legal, intervalo de CCT abaixo de 30 min e registro por exceção sem acordo passam a ser recusados no cadastro |
+| 02 | `parte_02_vinculo_na_chave.sql` | **Destravador.** A empresa entra na chave da apuração diária (PONTO-394) — sem isto, dois vínculos colidem e várias partes seguintes nem conseguem gravar o dia |
+| 03 | `parte_03_nsr_e_lotacao.sql` | NSR nas marcações (base do AFD) e histórico de lotação com vigência |
+| 04 | `parte_04_versionamento_e_memoria.sql` | Parâmetro de escala com vigência (mudar hoje não reescreve o mês passado) e memória de cálculo |
+| 05 | `parte_05_integridade_do_registro.sql` | Cadeia de hash conferível, desconsideração por acréscimo, marcações uniformes, Hora Legal Brasileira, reabertura formal de competência |
+| 06 | `parte_06_calculo_da_jornada.sql` | Turno da virada, tolerância de 5 min por marcação, HE contra a jornada real da escala, adicional noturno prorrogado |
+| 07 | `parte_07_intervalo_e_repouso.sql` | Faixas do art. 71, indenização da supressão parcial, pré-assinalação, DSR, domingo/feriado em dobro |
+| 08 | `parte_08_banco_de_horas.sql` | Crédito só com instrumento vigente, prazo de compensação, alertas de vencimento e de teto, limite de 10h, ciclo 12x36, liquidação na rescisão |
+| 09 | `parte_09_fechamento_e_folha.sql` | Espelhos gerados em uma transação, fechamento que confere ciência e pendências, pacote e fila da folha |
+| 10 | `parte_10_conformidade_portaria_671.sql` | AEJ, validação e quarentena de AFD, comprovante como documento, certificado digital, dossiê de fiscalização |
+| 11 | `parte_11_art62_lgpd_plano_acao.sql` | Enquadramento e descaracterização do art. 62, obrigatoriedade por estabelecimento, REP alternativo, trilha de acesso a dado sensível, ponte alerta → ação 5W2H |
+| 12 | `parte_12_instrumentos_e_escalas.sql` | Vigilância de CCT, formalização da 12x36, turno de revezamento, troca de turno, radar de cobertura |
+| 13 | `parte_13_atestados_e_ausencias.sql` | Atestados sobrepostos, ponte automática para o afastamento do INSS no 16º dia, comprovação do art. 473 |
+| 14 | `parte_14_correcoes_da_bateria.sql` | Correções achadas pela própria bateria, inclusive o aviso repetido de atestado que derrubava o afastamento do INSS |
+
+## O que esperar no fim
+
+Depois da parte 14, rodando a bateria do módulo do Ponto na homologação, o
+resultado esperado é o mesmo do projeto:
+
+**133 passou · 1 falhou · 0 erro · 8 sem rotina**
+
+A única falha é **PONTO-113** (regime rural — trabalho novo, ainda no backlog).
+
+## Como isto foi conferido
+
+As 14 partes foram aplicadas, em ordem e duas vezes seguidas, a duas réplicas
+locais: uma montada pelas migrations do projeto e outra com a chave antiga da
+apuração diária (a mesma situação estrutural da homologação). Nenhum erro, e a
+segunda passada não quebrou nem duplicou nada. Na réplica de chave antiga, a
+bateria saiu de **109 passou / 7 falhou / 18 erro** para **133 passou / 1 falhou
+/ 0 erro**.
+
+Nenhuma réplica reproduz a produção linha a linha; o que estas partes garantem é
+que rodam limpas nas duas formas de estrutura conhecidas e que a conferência de
+cada uma diz, no próprio ambiente, o que chegou e o que faltou.
+
+## Produção
+
+Nada aqui é para a produção. A produção só muda por gesto manual do usuário,
+depois de conferido na homologação.
