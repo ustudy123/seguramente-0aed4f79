@@ -183,18 +183,21 @@ copia AS MATERIALIZED (
   FROM nome n
 ),
 agora AS MATERIALIZED (
-  SELECT count(*) AS linhas,
-         COALESCE(SUM(EXTRACT(EPOCH FROM d.horas_trabalhadas) / 60), 0) AS minutos
-  FROM public.ponto_diario d
-  JOIN public.empresa_cadastro e ON e.id = d.empresa_id
-  CROSS JOIN nome n
-  WHERE COALESCE(e.usa_controle_ponto, false) = true
-    AND to_char(d.data, 'YYYY-MM') = n.competencia
-    AND EXISTS (
-      SELECT 1 FROM public.ponto_marcacoes m
-      WHERE m.tenant_id = d.tenant_id
-        AND m.colaborador_cpf = d.colaborador_cpf
-        AND m.data_marcacao = d.data)
+  -- O estado ATUAL das MESMAS linhas que a copia guardou (join por id). Antes
+  -- esta contagem varria TODOS os dias com marcacao, incluindo os de atestado
+  -- e abono que a reconsolidacao nao toca — e a diferenca (esses dias a mais)
+  -- disparava um "CONFERIR" falso. Comparando linha a linha as mesmas linhas,
+  -- a contagem bate e o "so somou tempo" passa a ser uma verdade sobre o que
+  -- foi de fato reescrito.
+  SELECT (xpath('/row/c/text()',
+           query_to_xml('SELECT count(*) AS c, COALESCE(SUM(EXTRACT(EPOCH FROM d.horas_trabalhadas)/60), 0) AS m'
+                        || ' FROM public.ponto_diario d WHERE d.id IN (SELECT b.id FROM public.'
+                        || quote_ident(n.t) || ' b)', false, true, '')))[1]::text::bigint AS linhas,
+         (xpath('/row/m/text()',
+           query_to_xml('SELECT count(*) AS c, COALESCE(SUM(EXTRACT(EPOCH FROM d.horas_trabalhadas)/60), 0) AS m'
+                        || ' FROM public.ponto_diario d WHERE d.id IN (SELECT b.id FROM public.'
+                        || quote_ident(n.t) || ' b)', false, true, '')))[1]::text::numeric AS minutos
+  FROM nome n
 )
 SELECT 'dias na copia'::text                                        AS o_que,
        (SELECT linhas::text FROM copia)                             AS antes,
