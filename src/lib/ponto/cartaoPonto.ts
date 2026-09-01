@@ -75,6 +75,14 @@ export interface CartaoBanco {
   debitos: number;
   compensados: number;
   saldoAtual: number;
+  /**
+   * Existe instrumento de compensação vigente? Com ele, a sobra do dia vai
+   * para o banco e vale 1 por 1 (CLT art. 59, §2º). Sem ele não há banco: as
+   * horas são devidas em dinheiro, com adicional (§1º). É o que decide o
+   * rótulo impresso em cada dia. Ausente = trata como banco, que é o
+   * comportamento de quem usa o módulo.
+   */
+  temRegime?: boolean;
 }
 
 export interface CartaoPontoInput {
@@ -132,8 +140,13 @@ const marcacoesTexto = (marcacoes: CartaoMarcacao[], d?: CartaoDia) => {
 };
 
 
-/** Colunas H.C./H.A./F.N./F.J. e o rótulo da ocorrência, na lógica do modelo. */
-function classificarDia(d: CartaoDia) {
+/**
+ * Colunas H.C./H.A./F.N./F.J. e o rótulo da ocorrência, na lógica do modelo.
+ * `temRegimeBanco` diz se existe instrumento de compensação vigente: com ele a
+ * sobra vai para o banco (1:1); sem ele não há banco, e as horas são devidas
+ * em dinheiro, com adicional.
+ */
+function classificarDia(d: CartaoDia, temRegimeBanco: boolean) {
   const domingo = diaSemana(d.dia) === "DOM";
   const semJornada = d.jornada_min === 0;
   const semTrabalho = d.trabalhado_min === 0;
@@ -165,7 +178,14 @@ function classificarDia(d: CartaoDia) {
     ocorrencia = semJornada ? "Sem jornada" : "";
   } else if (d.saldo_min > 0) {
     he = d.saldo_min;
-    ocorrencia = `Soma Banco Horas ${domingo || semJornada ? "100%" : "50%"}`;
+    // CLT art. 59: a hora COMPENSADA no banco é trocada na exata medida, uma
+    // por uma (§2º); o adicional de no mínimo 50% pertence à hora PAGA (§1º),
+    // e 100% em domingo e feriado (Súmula 146 do TST). Escrever um percentual
+    // ao lado de um crédito de 1 por 1 promete no documento o que a conta não
+    // faz — e é o documento que o trabalhador assina.
+    ocorrencia = temRegimeBanco
+      ? "Soma Banco Horas (1:1)"
+      : `Hora extra ${domingo || semJornada ? "100%" : "50%"}`;
   } else if (d.saldo_min < 0) {
     ha = -d.saldo_min;
     ocorrencia = "Diminui Banco Horas";
@@ -322,7 +342,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
 
   const totais = { hd: 0, hn: 0, he: 0, hc: 0, ha: 0, fn: 0, fj: 0 };
   const corpo = input.dias.map((d) => {
-    const k = classificarDia(d);
+    const k = classificarDia(d, input.banco?.temRegime !== false);
     totais.hd += d.trabalhado_min;
     totais.hn += d.jornada_min;
     totais.he += k.he;
@@ -476,7 +496,12 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
   const fim1 = painel("Resumo de horas do mês", [
     ["Horas normais", hm(totais.hn) || "00:00"],
     ["Horas trabalhadas", hm(totais.hd) || "00:00"],
-    ["Horas extras", hm(totais.he) || "00:00"],
+    [
+      // O mesmo cuidado do rótulo do dia: com banco vigente estas horas vão
+      // para o banco, uma por uma; sem banco elas serão pagas, com adicional.
+      input.banco?.temRegime !== false ? "Horas p/ o banco (1:1)" : "Horas extras (a pagar)",
+      hm(totais.he) || "00:00",
+    ],
     ["Horas compensadas", hm(totais.hc) || "00:00"],
     ["Horas de ausência", hm(totais.ha) || "00:00"],
     ["Adicional noturno", "n/a"],
