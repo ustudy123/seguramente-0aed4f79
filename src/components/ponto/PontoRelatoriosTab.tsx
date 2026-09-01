@@ -247,7 +247,7 @@ export function PontoRelatoriosTab() {
     if (d.trabalhado_min === 0) return ehDomingo(d.dia) ? "DSR" : ehSabado(d.dia) ? "Sábado" : "Sem jornada";
     if (d.jornada_min === 0) return ehDomingo(d.dia) ? "DSR trabalhado" : "Trabalho fora da escala";
     if (d.saldo_min < 0) return "Atraso / débito";
-    if (d.saldo_min > 0) return "Trabalhando (crédito)";
+    if (d.saldo_min > 0) return "Trabalhando (crédito 1:1)";
     return "Trabalhando";
   };
 
@@ -813,6 +813,7 @@ export function PontoRelatoriosTab() {
                 debitos: of.debitos_min,
                 compensados: of.compensados_min,
                 saldoAtual: of.saldo_atual_min,
+                temRegime: of.tem_regime !== false,
               };
             }
             return {
