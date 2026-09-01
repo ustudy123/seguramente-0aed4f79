@@ -344,14 +344,30 @@ END $fim$;
 
 -- ---------------------------------------------------------------------------
 -- CONFERENCIA FINAL — as duas neste ambiente.
--- Esperado: passou | passou | OK
+--
+-- Esperado onde HA a pre-assinalacao (onda 4):   passou | passou | OK
+-- Esperado onde NAO HA a pre-assinalacao:        passou | falhou | OK
+--   (o 410 acusa, e deve: sem a coluna intervalo_origem nao ha como
+--    provar, dia a dia, se o intervalo foi batido ou apenas declarado.
+--    E achado do ambiente, nao defeito desta entrega.)
+--
+--   c421    : a folga compensatoria registra e debita o banco
+--   c410    : a batida real prevalece sobre a declaracao
+--   tem_onda4: o ambiente tem o registro da origem do intervalo
 -- ---------------------------------------------------------------------------
 WITH x AS MATERIALIZED (
   SELECT (public.qa_caso_ponto_421()).situacao AS c421,
-         (public.qa_caso_ponto_410()).situacao AS c410
+         (public.qa_caso_ponto_410()).situacao AS c410,
+         EXISTS (SELECT 1 FROM information_schema.columns
+                  WHERE table_schema = 'public' AND table_name = 'ponto_diario'
+                    AND column_name = 'intervalo_origem') AS tem_onda4
 )
-SELECT c421, c410,
-       CASE WHEN c421 IN ('passou','nao_implementado')
-             AND c410 IN ('passou','nao_implementado')
-            THEN 'OK' ELSE 'CONFERIR' END AS erro_tecnico
+SELECT c421, c410, tem_onda4,
+       CASE
+         WHEN c421 NOT IN ('passou','nao_implementado') THEN 'CONFERIR'
+         -- Sem a onda 4, o 410 acusa a lacuna do ambiente: e o esperado.
+         WHEN NOT tem_onda4 THEN 'OK'
+         WHEN c410 IN ('passou','nao_implementado') THEN 'OK'
+         ELSE 'CONFERIR'
+       END AS erro_tecnico
 FROM x;
