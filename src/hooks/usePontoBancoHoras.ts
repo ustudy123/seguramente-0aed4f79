@@ -25,6 +25,28 @@ export interface BancoHoras {
   created_at: string;
 }
 
+/**
+ * Número OFICIAL do banco de horas de uma competência (RN — fonte única).
+ * Competência fechada devolve a fotografia gravada (Súmula 338); competência
+ * aberta devolve a apuração de agora somada aos lançamentos manuais e
+ * compensações. `divergencia_min` diz o quanto a fotografia da tabela
+ * envelheceu — é o que permite avisar em vez de imprimir dois papéis
+ * discordantes.
+ */
+export interface BancoHorasOficial {
+  colaborador_cpf: string | null;
+  colaborador_nome: string | null;
+  empresa_id: string | null;
+  saldo_anterior_min: number;
+  creditos_min: number;
+  debitos_min: number;
+  compensados_min: number;
+  saldo_atual_min: number;
+  fonte: "aberta" | "fechada";
+  divergencia_min: number;
+  apurado_em: string | null;
+}
+
 export interface BancoHorasMovimentacao {
   id: string;
   tenant_id: string;
@@ -58,6 +80,29 @@ export function usePontoBancoHoras() {
         return data || [];
       },
       enabled: !!tenantId,
+    });
+  };
+
+  /**
+   * A fonte única do banco de horas. Todo documento oficial da competência
+   * (espelho, cartão ponto, relatório de banco de horas) tem de sair daqui:
+   * antes, o espelho recalculava na hora e o relatório lia a tabela, e os
+   * dois podiam imprimir números diferentes para o mesmo colaborador.
+   */
+  const useBancoHorasOficial = (competencia: string) => {
+    return useQuery({
+      queryKey: ["ponto-banco-horas-oficial", tenantId, competencia, empresaAtivaId],
+      queryFn: async (): Promise<BancoHorasOficial[]> => {
+        if (!tenantId) return [];
+        const { data, error } = await (supabase.rpc as any)("ponto_banco_horas_oficial", {
+          p_tenant_id: tenantId,
+          p_competencia: competencia,
+          p_empresa_id: empresaAtivaId || null,
+        });
+        if (error) throw error;
+        return (data || []) as BancoHorasOficial[];
+      },
+      enabled: !!tenantId && !!competencia,
     });
   };
 
@@ -331,6 +376,7 @@ export function usePontoBancoHoras() {
   return {
 
     useBancoHorasPorCompetencia,
+    useBancoHorasOficial,
     useMovimentacoes,
     adicionarMovimentacao: adicionarMovimentacaoMutation.mutateAsync,
     adicionandoMovimentacao: adicionarMovimentacaoMutation.isPending,
