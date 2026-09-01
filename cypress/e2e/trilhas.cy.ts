@@ -5,7 +5,9 @@
 //
 // Cada it() corresponde a um caso documentado (qa_casos_teste, nível e2e)
 // ligado pela ponte qa_cobertura_e2e.
-// Casos cobertos: TRILHA-001, TRILHA-002, TRILHA-040.
+// Casos cobertos: TRILHA-001, TRILHA-002, TRILHA-040 (estrutura) +
+//   TRILHA-010 (criar uma trilha na Gestão).
+// Atribuir/gerar por IA/quiz seguem documentados e sem spec por ora.
 // =====================================================================
 
 import { credenciaisDeTeste } from "../support/credenciais";
@@ -17,17 +19,9 @@ describe("Módulo Trilhas", () => {
   function login() {
     cy.visit(`${baseUrl}/login`);
     cy.get('input[type="email"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(email);
+      .should("exist").scrollIntoView().should("be.visible").clear().type(email);
     cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(password, { log: false });
+      .should("exist").scrollIntoView().should("be.visible").clear().type(password, { log: false });
     cy.contains("button", /^Entrar$/).click();
     cy.aguardarSessaoSupabase();
     cy.wait(1500);
@@ -56,12 +50,22 @@ describe("Módulo Trilhas", () => {
 
   it("mostra as trilhas atribuídas em Minhas Trilhas", () => {
     abrirAba("Minhas Trilhas");
-    // Com ou sem trilhas atribuídas, a aba monta sem quebrar.
     cy.contains("Algo deu errado").should("not.exist");
   });
 
   it("abre a aba de Gamificação", () => {
     abrirAba("Gamificação");
     cy.contains("Algo deu errado").should("not.exist");
+  });
+
+  it("cria uma trilha na Gestão", () => {
+    // O botão "Nova Trilha" do cabeçalho está sempre presente (abre um diálogo).
+    cy.contains("button", "Nova Trilha", { timeout: 20000 }).first().click();
+    cy.get('[role="dialog"]', { timeout: 15000 }).contains("Nova Trilha").should("exist");
+    const nome = `Trilha automatizada ${Date.now()}`;
+    // Só o Nome é obrigatório; os demais campos têm padrão.
+    cy.get('[role="dialog"]').find('input[placeholder="Ex: Gestão de Prioridades"]').type(nome);
+    cy.get('[role="dialog"]').contains("button", "Criar Trilha").should("not.be.disabled").click();
+    cy.contains("Trilha criada!", { timeout: 20000 }).should("exist");
   });
 });

@@ -7,9 +7,11 @@
 // (nível e2e) e está ligado a ele pela ponte qa_cobertura_e2e. Regra da
 // casa: documentação vem antes do teste; não inventar it() sem caso.
 //
-// Casos cobertos: AVAL-001, AVAL-002, AVAL-050, AVAL-051.
-// Os demais casos do módulo (criar ciclo, responder avaliação, etc.)
-// seguem documentados e ainda sem spec — a guarda só avisa, não reprova.
+// Casos cobertos: AVAL-001, AVAL-002, AVAL-050, AVAL-051, AVAL-060.
+// Os demais casos (criar ciclo, responder avaliação) seguem documentados
+// sem spec — dependem de template/ciclo semeado, que a homologação não tem.
+// AVAL-011 (bloquear período invertido) NÃO tem spec de propósito: a tela
+// hoje não valida fim < início — é um achado registrado, não um teste.
 // =====================================================================
 
 import { credenciaisDeTeste } from "../support/credenciais";
@@ -75,5 +77,14 @@ describe("Módulo Avaliações de Desempenho", () => {
   it("abre a matriz 9-Box", () => {
     abrirAba("#tab-aval-9box");
     cy.contains("Algo deu errado").should("not.exist");
+  });
+
+  it("mostra as abas administrativas para o gestor/admin", () => {
+    // A conta-robô é owner/administrador (manager+ e admin+), então as abas
+    // administrativas — restritas a colaborador comum — renderizam.
+    cy.get("#tab-aval-config", { timeout: 20000 }).should("exist");
+    cy.get("#tab-aval-templates").should("exist");
+    cy.get("#tab-aval-resultados").should("exist");
+    cy.get("#tab-aval-9box").should("exist");
   });
 });
