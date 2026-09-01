@@ -48,6 +48,13 @@ export interface CartaoDia {
    * o dia está pendente em vez de imprimir um zero sem explicação.
    */
   pendencia?: boolean;
+  /**
+   * Dia declarado como folga compensatória. O débito vem da compensação
+   * registrada no banco, não de uma ausência inferida — e o cartão precisa
+   * dizer isso: é o que distingue, para quem assina, folga acordada de falta
+   * (Súmula 338 do TST).
+   */
+  folga_compensatoria?: boolean;
 }
 
 export interface CartaoEmpregador {
@@ -158,7 +165,13 @@ function classificarDia(d: CartaoDia, temRegimeBanco: boolean) {
   let fj = 0;
   let he = 0;
 
-  if (d.pendencia) {
+  if (d.folga_compensatoria) {
+    // A folga já debitou o banco pela compensação registrada; contar de novo
+    // aqui debitaria a mesma tarde duas vezes.
+    ocorrencia = d.trabalhado_min > 0
+      ? "Folga compensatória (meio período)"
+      : "Folga compensatória";
+  } else if (d.pendencia) {
     // Nem crédito nem débito: o dia não fecha enquanto a marcação não for
     // completada. Imprimir horas aqui daria ares de conta fechada a um
     // registro que o próprio sistema sabe estar pela metade.
@@ -441,6 +454,7 @@ export function desenharCartaoPonto(doc: jsPDF, input: CartaoPontoInput) {
       if (texto === "DSR" || texto === "Feriado") dados.cell.styles.fillColor = [237, 242, 249];
       if (texto === "Falta") dados.cell.styles.textColor = MARCA.vermelho;
       if (texto.startsWith("Pendência")) dados.cell.styles.textColor = [180, 83, 9];
+      if (texto.startsWith("Folga")) dados.cell.styles.textColor = [29, 78, 216];
       if (texto.startsWith("Soma")) dados.cell.styles.textColor = [22, 101, 52];
     },
     margin: { left: 12, right: 12, top: ALTURA_FAIXA + 5 },
