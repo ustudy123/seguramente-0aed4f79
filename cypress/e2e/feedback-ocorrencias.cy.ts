@@ -5,7 +5,11 @@
 //
 // Cada it() corresponde a um caso documentado (qa_casos_teste, nível e2e)
 // ligado pela ponte qa_cobertura_e2e.
-// Casos cobertos: FBK-001, FBK-011, FBK-020, FBK-040.
+// Casos cobertos: FBK-001, FBK-011, FBK-020, FBK-040 (estrutura) +
+//   FBK-010 (registrar feedback), FBK-013 (switch e-mail),
+//   FBK-030 (registrar ocorrência), FBK-050 (stats do gestor).
+// A conta-robô é owner/administrador (manager+), então o painel de stats
+// aparece. Colaboradores semeados: "Colaborador 1".."Colaborador 20".
 // =====================================================================
 
 import { credenciaisDeTeste } from "../support/credenciais";
@@ -17,17 +21,9 @@ describe("Módulo Feedback & Ocorrências", () => {
   function login() {
     cy.visit(`${baseUrl}/login`);
     cy.get('input[type="email"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(email);
+      .should("exist").scrollIntoView().should("be.visible").clear().type(email);
     cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(password, { log: false });
+      .should("exist").scrollIntoView().should("be.visible").clear().type(password, { log: false });
     cy.contains("button", /^Entrar$/).click();
     cy.aguardarSessaoSupabase();
     cy.wait(1500);
@@ -38,9 +34,18 @@ describe("Módulo Feedback & Ocorrências", () => {
     cy.contains("h1", "Feedback & Ocorrências", { timeout: 20000 }).should("be.visible");
   }
 
-  function abrirAba(label: string) {
+  function abrirAba(label: string | RegExp) {
     cy.contains('[role="tab"]', label).scrollIntoView().click({ force: true });
     cy.contains('[role="tab"]', label).should("have.attr", "aria-selected", "true");
+  }
+
+  // O seletor de colaborador é um Popover (não um <select>): botão combobox →
+  // busca → opção com o nome.
+  function escolherColaborador(nome: string) {
+    cy.contains("button", "Selecione o colaborador", { timeout: 20000 }).click();
+    cy.get('input[placeholder="Buscar por nome, cargo ou departamento..."]', { timeout: 20000 })
+      .should("be.visible").clear().type(nome);
+    cy.contains("button", nome, { timeout: 20000 }).click({ force: true });
   }
 
   beforeEach(() => {
@@ -56,10 +61,7 @@ describe("Módulo Feedback & Ocorrências", () => {
   });
 
   it("mantém o registro de feedback desabilitado sem os campos obrigatórios", () => {
-    // Aba Novo Feedback é a inicial. Sem colaborador/categoria/descrição, o
-    // botão Registrar Feedback fica desabilitado (guarda não-destrutiva).
-    cy.contains("button", "Registrar Feedback", { timeout: 20000 })
-      .should("be.disabled");
+    cy.contains("button", "Registrar Feedback", { timeout: 20000 }).should("be.disabled");
   });
 
   it("abre o histórico de Feedbacks", () => {
@@ -70,5 +72,34 @@ describe("Módulo Feedback & Ocorrências", () => {
   it("abre o histórico de Ocorrências", () => {
     abrirAba("Ocorrências");
     cy.contains("Histórico de Ocorrências").should("be.visible");
+  });
+
+  it("registra um feedback estruturado", () => {
+    escolherColaborador("Colaborador 5");
+    cy.contains("button", "Reconhecimento").click();
+    cy.get('textarea[placeholder="Descreva brevemente o fato ou situação observada..."]')
+      .type("Feedback automatizado de teste.");
+    cy.contains("button", "Registrar Feedback").should("not.be.disabled").click();
+    cy.contains("Feedback registrado com sucesso!", { timeout: 20000 }).should("exist");
+  });
+
+  it("permite alternar o envio por e-mail ao colaborador", () => {
+    cy.get('[role="switch"]', { timeout: 20000 }).first().as("switchEmail");
+    cy.get("@switchEmail").click();
+    cy.get("@switchEmail").should("have.attr", "aria-checked", "true");
+  });
+
+  it("registra uma ocorrência", () => {
+    abrirAba(/Ocorrência$/); // aba "Nova Ocorrência"
+    escolherColaborador("Colaborador 6");
+    cy.contains("button", "Positiva").click();
+    cy.get('textarea[placeholder="Descreva de forma objetiva o fato ocorrido..."]')
+      .type("Ocorrência automatizada de teste.");
+    cy.contains("button", "Registrar Ocorrência").should("not.be.disabled").click();
+    cy.contains("Ocorrência registrada com sucesso!", { timeout: 20000 }).should("exist");
+  });
+
+  it("exibe as estatísticas para o gestor", () => {
+    cy.contains("Advertências", { timeout: 20000 }).should("be.visible");
   });
 });

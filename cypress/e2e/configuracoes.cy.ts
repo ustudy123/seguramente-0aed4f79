@@ -7,7 +7,9 @@
 // owner/administrador, então as abas administrativas renderizam.
 // Cada it() corresponde a um caso documentado (qa_casos_teste, nível e2e)
 // ligado pela ponte qa_cobertura_e2e.
-// Casos cobertos: CFG-001, CFG-010, CFG-011, CFG-020, CFG-030, CFG-040.
+// Casos cobertos: CFG-001, CFG-010, CFG-011, CFG-020, CFG-030, CFG-040
+//   (estrutura) + CFG-051 (sem banner de pendência), CFG-060 (troca de
+//   abas estável), CFG-070 (criar usuário exige campos essenciais).
 // =====================================================================
 
 import { credenciaisDeTeste } from "../support/credenciais";
@@ -81,5 +83,28 @@ describe("Módulo Configurações", () => {
   it("abre a aba de Logo", () => {
     abrirAba("Logo");
     cy.contains("Algo deu errado").should("not.exist");
+  });
+
+  it("não mostra o aviso de configuração pendente quando já configurado", () => {
+    // O tenant da conta-robô já tem cadastro de empresa, então o banner de
+    // onboarding não aparece.
+    cy.contains("Configuração inicial pendente").should("not.exist");
+  });
+
+  it("percorre as abas administrativas sem erro", () => {
+    ["Usuários", "Perfis", "eSocial", "Auditoria", "Logo"].forEach((aba) => {
+      cy.contains('[role="tab"]', aba).scrollIntoView().click({ force: true });
+      cy.contains("Algo deu errado").should("not.exist");
+    });
+  });
+
+  it("exige os campos essenciais ao criar um usuário", () => {
+    abrirAba("Usuários");
+    cy.contains("button", "Novo Usuário", { timeout: 20000 }).click();
+    cy.get('[role="dialog"]', { timeout: 15000 }).contains("Dados Básicos").should("exist");
+    // Sem nome e e-mail, "Próximo" não avança para a etapa de vínculo.
+    cy.get('[role="dialog"]').contains("button", "Próximo").click({ force: true });
+    cy.get('[role="dialog"]').contains("Vínculo & Revisão").should("not.exist");
+    cy.get('[role="dialog"]').contains("Dados Básicos").should("exist");
   });
 });
