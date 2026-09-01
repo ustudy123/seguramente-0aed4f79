@@ -31,8 +31,13 @@
 --     por isso o alvo exige marcacao no dia;
 --   * NAO usa consolidar_ponto_dia_todos, que varre o quadro inteiro pelo
 --     cadastro de admissoes e traria de volta o mesmo problema;
---   * NAO mexe em dia com situacao "justificado" nem em abono de afastamento:
---     a propria consolidacao preserva os dois;
+--   * NAO mexe em dia JA TRATADO por uma pessoa — justificado, incompleto,
+--     com ajuste pendente, ou coberto por atestado. A consolidacao preserva o
+--     ROTULO do dia justificado, mas sobrescreveria as HORAS; num dia de
+--     atestado com marcacoes (a pessoa trabalhou parte e tem abono do resto)
+--     isso recontaria o tempo. Por isso esses dias sao excluidos na origem,
+--     e nao so protegidos pela trava — a trava so pega o dia que PERDE tempo,
+--     e o dia de atestado aparece como GANHO;
 --   * NAO apaga marcacao nenhuma. Ajuste aprovado vira marcacao no ato da
 --     aprovacao, entao ele sobrevive a reconsolidacao.
 --
@@ -86,6 +91,19 @@ BEGIN
       WHERE COALESCE(e.usa_controle_ponto, false) = true
         AND to_char(d.data, 'YYYY-MM') = %L
         AND NOT (regexp_replace(COALESCE(e.cnpj, ''), '[^0-9]', '', 'g') = ANY (%L::text[]))
+        -- [ja-tratado] dia justificado, incompleto, com ajuste ou coberto por
+        -- atestado NAO entra: ele ja foi resolvido por uma pessoa, e a
+        -- reconsolidacao (que so recupera o minuto do dia trabalhado)
+        -- sobrescreveria as horas de um dia de abono, com risco de recontar.
+        AND COALESCE(d.status, '') NOT IN ('justificado', 'incompleto', 'ajuste_pendente')
+        AND NOT EXISTS (
+          SELECT 1 FROM public.atestados a
+          WHERE a.tenant_id = d.tenant_id
+            AND regexp_replace(COALESCE(a.colaborador_cpf, ''), '[^0-9]', '', 'g')
+              = regexp_replace(COALESCE(d.colaborador_cpf, ''), '[^0-9]', '', 'g')
+            AND a.data_inicio_afastamento IS NOT NULL
+            AND a.data_inicio_afastamento <= d.data
+            AND COALESCE(a.data_fim_afastamento, a.data_inicio_afastamento) >= d.data)
         AND EXISTS (
           SELECT 1 FROM public.ponto_marcacoes m
           WHERE m.tenant_id = d.tenant_id
@@ -105,6 +123,16 @@ BEGIN
     WHERE COALESCE(e.usa_controle_ponto, false) = true
       AND to_char(d.data, 'YYYY-MM') = v_comp
       AND NOT (regexp_replace(COALESCE(e.cnpj, ''), '[^0-9]', '', 'g') = ANY (v_fora_n))
+      -- [ja-tratado] mesmo filtro do backup: dia de abono nao se reconsolida.
+      AND COALESCE(d.status, '') NOT IN ('justificado', 'incompleto', 'ajuste_pendente')
+      AND NOT EXISTS (
+        SELECT 1 FROM public.atestados a
+        WHERE a.tenant_id = d.tenant_id
+          AND regexp_replace(COALESCE(a.colaborador_cpf, ''), '[^0-9]', '', 'g')
+            = regexp_replace(COALESCE(d.colaborador_cpf, ''), '[^0-9]', '', 'g')
+          AND a.data_inicio_afastamento IS NOT NULL
+          AND a.data_inicio_afastamento <= d.data
+          AND COALESCE(a.data_fim_afastamento, a.data_inicio_afastamento) >= d.data)
       AND EXISTS (
         SELECT 1 FROM public.ponto_marcacoes m
         WHERE m.tenant_id = d.tenant_id

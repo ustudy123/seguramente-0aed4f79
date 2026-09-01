@@ -86,6 +86,15 @@ SELECT
     || COALESCE(': ' || batidas, '')                                  AS registro,
   COALESCE(status, '-') || ' -> ' || COALESCE(status_recalculado, '-') AS situacao,
   CASE
+    WHEN status = 'justificado'
+      OR EXISTS (SELECT 1 FROM public.atestados a
+                  WHERE a.tenant_id = recalc.tenant_id
+                    AND regexp_replace(COALESCE(a.colaborador_cpf, ''), '[^0-9]', '', 'g')
+                      = regexp_replace(COALESCE(recalc.colaborador_cpf, ''), '[^0-9]', '', 'g')
+                    AND a.data_inicio_afastamento IS NOT NULL
+                    AND a.data_inicio_afastamento <= recalc.data
+                    AND COALESCE(a.data_fim_afastamento, a.data_inicio_afastamento) >= recalc.data)
+      THEN 'JA TRATADO: dia de abono/atestado, com marcacao da parte trabalhada. Correto como esta — a reconsolidacao NAO toca (recontaria o tempo). Nao e ganho do minuto.'
     WHEN descartadas > 0
       THEN 'Ha marcacao DESCONSIDERADA no dia: o valor gravado vem de um registro que hoje nao conta mais.'
     WHEN marcacoes < 4 AND intervalo_origem IS DISTINCT FROM 'pre_assinalado'
