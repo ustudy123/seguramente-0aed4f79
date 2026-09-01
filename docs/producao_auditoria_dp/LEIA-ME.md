@@ -32,6 +32,16 @@ clara se algum saldo tiver piorado.
 Vale avisar o DP da **Clínica Magalhães Lopes** antes: foi a competência
 08/2026 dela que originou a auditoria, e é a que mais deve mudar.
 
+### Uma lição da primeira execução em produção (01/09/2026)
+
+A conferência do passo 02 **executava a sonda do PONTO-470** para provar a
+correção. Rodar um caso de teste fora do cercado **grava a massa dele** — CPF
+fictício, 550 minutos — e o passo 09 corretamente acusou isso como "passado
+reescrito". Nenhum dado de cliente foi tocado: a linha era do inquilino de
+testes. A conferência do passo 02 foi corrigida para apenas **ler** o registro
+do caso, nunca executá-lo. Para rodar os casos de verdade, use a bateria do
+módulo no ambiente de teste.
+
 ### Duas ressalvas descobertas no ensaio desta fila
 
 **1. A correção do minuto (item 1) não mexe em dia que já está gravado.**
@@ -68,6 +78,13 @@ quer que eu trate, e em que ordem.
 | 07 | `passo_07_saldo_calculado_DEPOIS.sql` | **o mesmo arquivo do passo 01**, rodado de novo | só em tabela de apoio |
 | 08 | `passo_08_efeito_das_correcoes.sql` | compara 01 e 07: quanto mudou e para que lado | nada |
 | 09 | `passo_09_o_passado_nao_foi_reescrito.sql` | confere que competência já apurada não mudou | nada |
+| 10 | `passo_10_reparo_caso_353.sql` | registra o caso PONTO-353 na Documentação de testes | só tabelas `qa_*` |
+
+O passo **10 só é necessário** se a conferência do passo 03 tiver acusado
+`1 de 2 documentados`. Ele não mexe em cálculo nenhum: o PONTO-353 nasceu numa
+migration que ficou de fora das 16 partes entregues em 08/2026, e o passo 03
+tenta *atualizar* um caso que pode não existir — um UPDATE em zero linhas não
+dá erro, só não faz nada.
 
 Os passos 01 e 07 são **o mesmo arquivo**. Ele sabe sozinho se está gravando a
 fotografia "antes" ou a "depois", e diz qual gravou.
@@ -96,6 +113,10 @@ pode ser conferido na ordem que estiver.
 * **09** — a seção 1 (passado intacto) **sem nenhuma linha**. Estes cinco
   scripts não escrevem em `ponto_diario`, então competência já apurada não pode
   mudar; se mudar, é sinal de parar.
+  A seção 2 (mês aberto) **vai ter linhas**, e é esperado: são os dias em que a
+  reapuração passa a contar 1 ou 2 minutos a mais. É exatamente a correção do
+  minuto aparecendo — confira com o DP, não é motivo para parar.
+* **10** — `2 de 2 documentados; 2 com rotina ativa; OK`.
 
 ---
 
