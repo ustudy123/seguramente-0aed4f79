@@ -57,40 +57,64 @@ WITH retrato AS MATERIALIZED (
 -- ---------------------------------------------------------------------
 -- 1) O PASSADO NAO FOI REESCRITO
 -- ---------------------------------------------------------------------
+-- O retrato guarda uma linha por EMPRESA; a comparacao e por colaborador e
+-- competencia. Somar antes de comparar e o que evita acusar diferenca onde ha
+-- apenas dois vinculos do mesmo trabalhador — o caso do PONTO-394.
+retrato_agr AS MATERIALIZED (
+  SELECT r.tenant_id, r.competencia, r.colaborador_cpf,
+         sum(r.dias)::bigint            AS dias,
+         sum(r.trabalhadas_min)::bigint AS trabalhadas_min,
+         sum(r.espelhos)::bigint        AS espelhos
+  FROM retrato r
+  GROUP BY 1, 2, 3
+),
 agora AS MATERIALIZED (
   SELECT d.tenant_id,
-         to_char(d.data, 'YYYY-MM')                                   AS competencia,
+         to_char(d.data, 'YYYY-MM')                                          AS competencia,
          d.colaborador_cpf,
-         count(*)                                                     AS dias,
+         count(*)::bigint                                                    AS dias,
          sum(COALESCE(EXTRACT(EPOCH FROM d.horas_trabalhadas)/60, 0))::bigint AS trabalhadas_min
   FROM public.ponto_diario d
   WHERE d.data >= (date_trunc('month', CURRENT_DATE) - INTERVAL '12 months')::date
   GROUP BY 1, 2, 3
 ),
+espelhos_agora AS MATERIALIZED (
+  SELECT e.tenant_id, e.competencia, e.colaborador_cpf, count(*)::bigint AS espelhos
+  FROM public.ponto_espelhos e
+  GROUP BY 1, 2, 3
+),
 passado AS MATERIALIZED (
-  SELECT COALESCE(r.competencia, a.competencia)                        AS competencia,
-         COALESCE(r.colaborador_cpf, a.colaborador_cpf)                AS cpf,
-         COALESCE(r.dias, 0)                                           AS dias_antes,
-         COALESCE(a.dias, 0)                                           AS dias_agora,
-         COALESCE(r.trabalhadas_min, 0)                                AS min_antes,
-         COALESCE(a.trabalhadas_min, 0)                                AS min_agora
-  FROM retrato r
+  SELECT COALESCE(r.competencia, a.competencia)      AS competencia,
+         COALESCE(r.colaborador_cpf, a.colaborador_cpf) AS cpf,
+         COALESCE(r.dias, 0)                         AS dias_antes,
+         COALESCE(a.dias, 0)                         AS dias_agora,
+         COALESCE(r.trabalhadas_min, 0)              AS min_antes,
+         COALESCE(a.trabalhadas_min, 0)              AS min_agora,
+         COALESCE(r.espelhos, 0)                     AS esp_antes,
+         COALESCE(e.espelhos, 0)                     AS esp_agora
+  FROM retrato_agr r
   FULL JOIN agora a
     ON a.tenant_id = r.tenant_id
    AND a.competencia = r.competencia
    AND a.colaborador_cpf = r.colaborador_cpf
+  LEFT JOIN espelhos_agora e
+    ON e.tenant_id      = COALESCE(r.tenant_id, a.tenant_id)
+   AND e.competencia    = COALESCE(r.competencia, a.competencia)
+   AND e.colaborador_cpf = COALESCE(r.colaborador_cpf, a.colaborador_cpf)
   WHERE COALESCE(r.competencia, a.competencia) < to_char(CURRENT_DATE, 'YYYY-MM')
 ),
 secao1 AS MATERIALIZED (
   SELECT '1. PASSADO REESCRITO'::text                                  AS secao,
          competencia                                                   AS referencia,
          'CPF ...' || right(regexp_replace(cpf, '\D', '', 'g'), 3)                                    AS quem,
-         format('antes %s dias / %s min — agora %s dias / %s min',
-                dias_antes, min_antes, dias_agora, min_agora)          AS detalhe,
+         format('antes %s dias / %s min / %s espelho(s) — agora %s dias / %s min / %s espelho(s)',
+                dias_antes, min_antes, esp_antes,
+                dias_agora, min_agora, esp_agora)                      AS detalhe,
          'PARE: competencia ja apurada mudou. Espelho entregue e dado que virou folha nao podem mudar por baixo dos panos.'::text AS o_que_fazer
   FROM passado
   WHERE dias_antes IS DISTINCT FROM dias_agora
      OR min_antes  IS DISTINCT FROM min_agora
+     OR esp_antes  IS DISTINCT FROM esp_agora
   LIMIT 50
 ),
 

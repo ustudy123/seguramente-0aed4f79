@@ -148,6 +148,28 @@ UPDATE public.ponto_retrato_pre r
    AND r.colaborador_cpf = x.colaborador_cpf
    AND r.competencia = x.competencia;
 
+-- Horas extras: na apuracao diaria elas costumam vir vazias (o excedente e
+-- calculado na competencia, nao gravado no dia). Onde o espelho ja foi emitido,
+-- ele e a fonte melhor — e a que o colaborador viu.
+DO $extras$
+BEGIN
+  UPDATE public.ponto_retrato_pre r
+     SET extras_min = GREATEST(COALESCE(r.extras_min, 0), x.extras)
+    FROM (
+      SELECT e.tenant_id, e.colaborador_cpf, e.competencia,
+             sum(COALESCE(e.total_horas_extras_50_minutos, 0)
+               + COALESCE(e.total_horas_extras_100_minutos, 0))::bigint AS extras
+      FROM public.ponto_espelhos e
+      GROUP BY 1,2,3
+    ) x
+   WHERE r.tirado_em = CURRENT_DATE
+     AND r.tenant_id = x.tenant_id
+     AND r.colaborador_cpf = x.colaborador_cpf
+     AND r.competencia = x.competencia;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Nao foi possivel ler as horas extras do espelho (%). O resto do retrato esta completo.', SQLERRM;
+END $extras$;
+
 -- Saldo do banco de horas por colaborador e competencia.
 DO $banco$
 BEGIN
