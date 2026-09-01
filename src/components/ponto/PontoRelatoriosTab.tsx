@@ -223,6 +223,13 @@ export function PontoRelatoriosTab() {
      * está pendente, em vez de imprimir um zero silencioso.
      */
     pendencia?: boolean;
+    /**
+     * Dia declarado como folga compensatória. O débito dele vem da
+     * compensação registrada no banco, não de uma ausência inferida — e o
+     * documento precisa dizer isso: é o que distingue, para quem assina,
+     * folga acordada de falta (Súmula 338 do TST).
+     */
+    folga_compensatoria?: boolean;
   };
 
   const DIAS_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
@@ -239,6 +246,9 @@ export function PontoRelatoriosTab() {
 
   /** RN25 — rótulo de ocorrência do dia. */
   const situacaoDia = (d: DiaEspelho) => {
+    if (d.folga_compensatoria) return d.trabalhado_min > 0
+      ? "Folga compensatória (meio período)"
+      : "Folga compensatória";
     if (d.pendencia) return "Pendência — marcação incompleta";
     if (d.equalizacao) return "Equalização";
     if (d.excedente_retido_min > 0) return "Excede limite diário";
@@ -303,11 +313,12 @@ export function PontoRelatoriosTab() {
     // apuração não debita esses dias, e o documento tem de mostrar a
     // pendência em vez de um zero sem explicação.
     const pendenciaPorCpfDia = new Set<string>();
+    const folgaPorCpfDia = new Set<string>();
     {
       const { data: diarios, error: errDia } = await fromTable("ponto_diario")
-        .select("colaborador_cpf, data, status, intervalo_origem, intervalo_pre_assinalado_minutos")
+        .select("colaborador_cpf, data, status, tipo_dia, intervalo_origem, intervalo_pre_assinalado_minutos")
         .eq("tenant_id", tenantId)
-        .or("intervalo_origem.eq.pre_assinalado,status.in.(incompleto,ajuste_pendente)")
+        .or("intervalo_origem.eq.pre_assinalado,status.in.(incompleto,ajuste_pendente),tipo_dia.eq.folga_compensatoria")
         .gte("data", `${competencia}-01`)
         .lte("data", `${competencia}-${String(ultimoDia).padStart(2, "0")}`) as { data: any[] | null; error: any };
       if (errDia) throw errDia;
@@ -321,6 +332,9 @@ export function PontoRelatoriosTab() {
         }
         if (d.status === "incompleto" || d.status === "ajuste_pendente") {
           pendenciaPorCpfDia.add(chave);
+        }
+        if (d.tipo_dia === "folga_compensatoria") {
+          folgaPorCpfDia.add(chave);
         }
       });
     }
@@ -370,6 +384,7 @@ export function PontoRelatoriosTab() {
         intervalo_pre_assinalado_min:
           intervaloPorCpfDia.get(`${c.cpf}|${String(d.dia)}`)?.minutos ?? null,
         pendencia: pendenciaPorCpfDia.has(`${c.cpf}|${String(d.dia)}`),
+        folga_compensatoria: folgaPorCpfDia.has(`${c.cpf}|${String(d.dia)}`),
       })).sort((a, b) => a.dia.localeCompare(b.dia));
 
       resultado.push({
