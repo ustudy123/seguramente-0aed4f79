@@ -51,7 +51,7 @@ export function PontoRelatoriosTab() {
 
   const { usePontoDiario } = usePonto();
   const { useEspelhos } = usePontoFechamento();
-  const { useBancoHorasPorCompetencia } = usePontoBancoHoras();
+  const { useBancoHorasPorCompetencia, useBancoHorasOficial } = usePontoBancoHoras();
 
   const year = parseInt(competencia.split("-")[0]);
   const month = parseInt(competencia.split("-")[1]);
@@ -129,7 +129,46 @@ export function PontoRelatoriosTab() {
 
   const { data: espelhos = [] } = useEspelhos(competencia);
   const { data: bancosHorasTodos = [] } = useBancoHorasPorCompetencia(competencia);
+  // Fonte única do banco de horas: é dela que saem os números impressos, para
+  // o espelho e o relatório de banco de horas não discordarem entre si.
+  const { data: bancoOficial = [] } = useBancoHorasOficial(competencia);
   const { colaboradores } = useColaboradores();
+
+  const oficialPorCpf = useMemo(() => {
+    const m = new Map<string, any>();
+    (bancoOficial as any[]).forEach((o) => {
+      const cpf = soDigitos(o.colaborador_cpf);
+      if (cpf) m.set(cpf, o);
+    });
+    return m;
+  }, [bancoOficial]);
+
+  /**
+   * A linha de banco de horas de um colaborador com os números oficiais.
+   * Quando a fotografia da tabela está atrasada em relação à apuração, é o
+   * número oficial que vale — a fotografia é que envelheceu.
+   */
+  const linhaOficial = (b: any) => {
+    const o = oficialPorCpf.get(soDigitos(b.colaborador_cpf));
+    if (!o) return b;
+    return {
+      ...b,
+      saldo_anterior_minutos: o.saldo_anterior_min,
+      creditos_minutos: o.creditos_min,
+      debitos_minutos: o.debitos_min,
+      compensados_minutos: o.compensados_min,
+      saldo_atual_minutos: o.saldo_atual_min,
+    };
+  };
+
+  // Quantos colaboradores têm a fotografia desatualizada. Serve para avisar
+  // o RH de que a apuração precisa ser rodada de novo — o documento sai com
+  // o número certo de qualquer jeito, mas a tela do banco de horas ainda
+  // mostra o antigo até a próxima apuração.
+  const desatualizados = useMemo(
+    () => (bancoOficial as any[]).filter((o) => (o.divergencia_min ?? 0) !== 0).length,
+    [bancoOficial],
+  );
 
   // Demitido não entra no relatório de Banco de Horas: o saldo dele é
   // quitado na rescisão, não na conferência mensal do RH.
@@ -740,20 +779,34 @@ export function PontoRelatoriosTab() {
           periodo,
           emissao: geradoEm,
           dias: c.dias,
-          // Crédito/débito do período vêm SEMPRE da apuração (mesma fonte da
-          // tabela dia a dia). A linha de ponto_banco_horas é zerada no
-          // fechamento, o que fazia o espelho mostrar crédito 0 e saldo
-          // divergente do resumo diário.
-          banco: {
-            saldoAnterior: banco?.saldo_anterior_minutos ?? 0,
-            creditos: c.creditos,
-            debitos: c.debitos,
-            compensados: banco?.compensados_minutos ?? 0,
-            saldoAtual:
-              (banco?.saldo_anterior_minutos ?? 0) +
-              c.saldo -
-              (banco?.compensados_minutos ?? 0),
-          },
+          // Crédito/débito/saldo vêm da FONTE ÚNICA do banco de horas, a
+          // mesma que o relatório de Banco de Horas imprime: competência
+          // fechada devolve a apuração congelada (Súmula 338), competência
+          // aberta devolve a apuração de agora somada aos lançamentos
+          // manuais e compensações. Antes cada documento fazia a própria
+          // conta e os dois podiam discordar no mesmo dia.
+          banco: (() => {
+            const of = oficialPorCpf.get(c.cpf);
+            if (of) {
+              return {
+                saldoAnterior: of.saldo_anterior_min,
+                creditos: of.creditos_min,
+                debitos: of.debitos_min,
+                compensados: of.compensados_min,
+                saldoAtual: of.saldo_atual_min,
+              };
+            }
+            return {
+              saldoAnterior: banco?.saldo_anterior_minutos ?? 0,
+              creditos: c.creditos,
+              debitos: c.debitos,
+              compensados: banco?.compensados_minutos ?? 0,
+              saldoAtual:
+                (banco?.saldo_anterior_minutos ?? 0) +
+                c.saldo -
+                (banco?.compensados_minutos ?? 0),
+            };
+          })(),
 
           logoDataUrl: logo,
         });
@@ -828,7 +881,8 @@ export function PontoRelatoriosTab() {
       bancosHoras.forEach(b => {
         const chave = nomeEmpresa((b as any).empresa_id);
         if (!porEmpresa.has(chave)) porEmpresa.set(chave, []);
-        porEmpresa.get(chave)!.push(b);
+        // Números da fonte única: o mesmo que o espelho imprime.
+        porEmpresa.get(chave)!.push(linhaOficial(b));
       });
 
       const body: any[] = [];
@@ -955,7 +1009,7 @@ export function PontoRelatoriosTab() {
     let dados: any[] = [];
 
     if (tipoRelatorio === "banco_horas") {
-      dados = bancosHoras.map(b => ({
+      dados = bancosHoras.map(linhaOficial).map(b => ({
         Empresa: nomeEmpresa((b as any).empresa_id),
         Colaborador: b.colaborador_nome,
         CPF: b.colaborador_cpf,
@@ -996,6 +1050,18 @@ export function PontoRelatoriosTab() {
         </h3>
         <p className="text-sm text-muted-foreground">Gere relatórios legais e gerenciais</p>
       </div>
+
+      {desatualizados > 0 && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <span className="font-medium">
+            {desatualizados} colaborador(es) com apuração de banco de horas desatualizada nesta
+            competência.
+          </span>{" "}
+          Algo mudou depois da última apuração — um ajuste aprovado, um atestado ou uma marcação
+          que chegou depois. Os relatórios já saem com o número correto; para a tela de Banco de
+          Horas mostrar o mesmo, rode a apuração da competência.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
