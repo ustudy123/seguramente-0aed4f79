@@ -1272,31 +1272,10 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN
   r.situacao := 'erro'; r.obtido := 'A rotina quebrou'; r.erro_tecnico := SQLERRM; RETURN r;
 END $function$;
+-- (conferencia da bancada de QA removida nesta versao de producao:
+--  ela chama rotinas de teste que nao existem aqui, e so a conferencia
+--  do fim do arquivo e exibida pelo editor)
 
--- ---------------------------------------------------------------------------
--- CONFERENCIA — o SQL Editor mostra apenas o ultimo resultado.
--- Esperado: t | t | t | t | t | OK
---   ponte_389   : t (ponto_alertas.plano_acao_id + ponto_alerta_gerar_acao)
---   eficacia_390: t (ponto_acao_concluir_com_eficacia)
---   ia_sugere   : t (ponto_ia_analisar_alerta + ponto_ia_analises)
---   ia_decide   : t (ponto_ia_registrar_decisao)
---   regua_391   : t (qa_caso_ponto_391 agora reconhece o controle -> passou)
--- ---------------------------------------------------------------------------
-SELECT
-  (public.qa_col_existe('ponto_alertas','%plano%') IS NOT NULL
-     AND to_regprocedure('public.ponto_alerta_gerar_acao(uuid,uuid,uuid,text,integer)') IS NOT NULL) AS ponte_389,
-  (to_regprocedure('public.ponto_acao_concluir_com_eficacia(uuid,uuid,text)') IS NOT NULL)          AS eficacia_390,
-  (to_regprocedure('public.ponto_ia_analisar_alerta(uuid,uuid)') IS NOT NULL
-     AND to_regclass('public.ponto_ia_analises') IS NOT NULL)                                        AS ia_sugere,
-  (to_regprocedure('public.ponto_ia_registrar_decisao(uuid,text,uuid,text,text)') IS NOT NULL)      AS ia_decide,
-  ((public.qa_caso_ponto_391()).situacao = 'passou')                                                AS regua_391,
-  CASE WHEN public.qa_col_existe('ponto_alertas','%plano%') IS NOT NULL
-        AND to_regprocedure('public.ponto_alerta_gerar_acao(uuid,uuid,uuid,text,integer)') IS NOT NULL
-        AND to_regprocedure('public.ponto_acao_concluir_com_eficacia(uuid,uuid,text)') IS NOT NULL
-        AND to_regprocedure('public.ponto_ia_analisar_alerta(uuid,uuid)') IS NOT NULL
-        AND to_regprocedure('public.ponto_ia_registrar_decisao(uuid,text,uuid,text,text)') IS NOT NULL
-        AND (public.qa_caso_ponto_391()).situacao = 'passou'
-       THEN 'OK' ELSE 'CONFERIR' END AS erro_tecnico;
 
 
 -- ============================================================================

@@ -234,6 +234,73 @@ ORDER BY 1 DESC, 2;
 """
 
 
+
+def statements(txt):
+    """Divide o arquivo em comandos de topo.
+
+    Respeita marca de dollar-quote, texto entre aspas simples (onde um ponto e
+    virgula NAO termina comando) e comentario de linha. Foi uma divisao ingenua
+    demais que cortou um texto ao meio na primeira tentativa.
+    """
+    out = []; buf = []; i = 0; tag = None
+    pat = re.compile(r'\$[A-Za-z_0-9]*\$')
+    n = len(txt)
+    while i < n:
+        if tag is not None:
+            if txt.startswith(tag, i):
+                buf.append(tag); i += len(tag); tag = None
+            else:
+                buf.append(txt[i]); i += 1
+            continue
+        m = pat.match(txt, i)
+        if m:
+            tag = m.group(0); buf.append(tag); i = m.end(); continue
+        c = txt[i]
+        if c == "'":                      # texto entre aspas simples
+            buf.append(c); i += 1
+            while i < n:
+                if txt[i] == "'" and i + 1 < n and txt[i + 1] == "'":
+                    buf.append("''"); i += 2; continue
+                if txt[i] == "'":
+                    buf.append("'"); i += 1; break
+                buf.append(txt[i]); i += 1
+            continue
+        if c == '-' and txt.startswith('--', i):   # comentario de linha
+            j = txt.find('\n', i)
+            j = n if j == -1 else j + 1
+            buf.append(txt[i:j]); i = j; continue
+        if c == ';':
+            buf.append(';'); out.append(''.join(buf)); buf = []; i += 1; continue
+        buf.append(c); i += 1
+    if buf:
+        out.append(''.join(buf))
+    return out
+
+
+def sem_conferencia_de_bancada(txt):
+    """Neutraliza as conferencias herdadas que CHAMAM rotinas da bancada de QA.
+
+    Elas vinham dos scripts de origem, que eram colados um a um num ambiente
+    com a bancada instalada. Aqui as partes sao concatenadas e so a ultima
+    conferencia aparece, entao essas chamadas nao servem para nada — e, na
+    producao, onde a bancada nao esta completa, derrubam o arquivo inteiro
+    (foi o que aconteceu com a parte 14: qa_caso_ponto_430 nao existe la).
+    """
+    saida = []
+    for st in statements(txt):
+        nu = re.sub(r'--[^\n]*', '', st)
+        chama_sonda = re.search(r'\bqa_caso_[a-z0-9_]+\s*\(\s*\)', nu, re.I)
+        e_criacao = re.match(r'\s*(CREATE|DO|ALTER|COMMENT|DROP|GRANT|REVOKE|SET)\b', nu, re.I)
+        if chama_sonda and not e_criacao:
+            saida.append(
+                '\n-- (conferencia da bancada de QA removida nesta versao de producao:\n'
+                '--  ela chama rotinas de teste que nao existem aqui, e so a conferencia\n'
+                '--  do fim do arquivo e exibida pelo editor)\n')
+            continue
+        saida.append(st)
+    return ''.join(saida)
+
+
 def valores_da_parte(txt):
     """Reaproveita a lista de pecas ja montada na parte da homologacao."""
     i = txt.index('VALUES\n')
@@ -267,7 +334,7 @@ for caminho in partes:
     saida.append(PRE_VOLUME.format(n=n, lista=', '.join("'%s'" % t for t in TABELAS)))
     if b:
         saida.append(BACKUP_SQL.format(n=n, **b))
-    saida.append(corpo)
+    saida.append(sem_conferencia_de_bancada(corpo))
     saida.append(CONF.format(n=n, valores=valores,
                              tolera_volume=('true' if b else 'false'),
                              tabela_alterada=("'%s'" % b['tabela'] if b else "''")))

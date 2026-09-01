@@ -478,22 +478,10 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN
   r.situacao := 'erro'; r.obtido := 'A rotina quebrou'; r.erro_tecnico := SQLERRM; RETURN r;
 END $$;
+-- (conferencia da bancada de QA removida nesta versao de producao:
+--  ela chama rotinas de teste que nao existem aqui, e so a conferencia
+--  do fim do arquivo e exibida pelo editor)
 
--- ---------------------------------------------------------------------------
--- CONFERENCIA FINAL — as tres correcoes neste ambiente.
--- Esperado: passou | passou | passou | OK
--- ---------------------------------------------------------------------------
-WITH x AS MATERIALIZED (
-  SELECT (public.qa_caso_ponto_402()).situacao AS c402,
-         (public.qa_caso_ponto_430()).situacao AS c430,
-         (public.qa_caso_ponto_431()).situacao AS c431
-)
-SELECT c402, c430, c431,
-       CASE WHEN c402 IN ('passou','nao_implementado')
-             AND c430 = 'passou'
-             AND c431 IN ('passou','falhou')  -- 'falhou' so se a tabela nao existir no ambiente
-            THEN 'OK' ELSE 'CONFERIR' END AS erro_tecnico
-FROM x;
 
 
 
@@ -844,36 +832,10 @@ DO $fim$
 BEGIN
   RAISE NOTICE 'PONTO 421 (folga compensatoria) e 410 (sonda comportamental do intervalo) aplicados.';
 END $fim$;
+-- (conferencia da bancada de QA removida nesta versao de producao:
+--  ela chama rotinas de teste que nao existem aqui, e so a conferencia
+--  do fim do arquivo e exibida pelo editor)
 
--- ---------------------------------------------------------------------------
--- CONFERENCIA FINAL — as duas neste ambiente.
---
--- Esperado onde HA a pre-assinalacao (onda 4):   passou | passou | OK
--- Esperado onde NAO HA a pre-assinalacao:        passou | falhou | OK
---   (o 410 acusa, e deve: sem a coluna intervalo_origem nao ha como
---    provar, dia a dia, se o intervalo foi batido ou apenas declarado.
---    E achado do ambiente, nao defeito desta entrega.)
---
---   c421    : a folga compensatoria registra e debita o banco
---   c410    : a batida real prevalece sobre a declaracao
---   tem_onda4: o ambiente tem o registro da origem do intervalo
--- ---------------------------------------------------------------------------
-WITH x AS MATERIALIZED (
-  SELECT (public.qa_caso_ponto_421()).situacao AS c421,
-         (public.qa_caso_ponto_410()).situacao AS c410,
-         EXISTS (SELECT 1 FROM information_schema.columns
-                  WHERE table_schema = 'public' AND table_name = 'ponto_diario'
-                    AND column_name = 'intervalo_origem') AS tem_onda4
-)
-SELECT c421, c410, tem_onda4,
-       CASE
-         WHEN c421 NOT IN ('passou','nao_implementado') THEN 'CONFERIR'
-         -- Sem a onda 4, o 410 acusa a lacuna do ambiente: e o esperado.
-         WHEN NOT tem_onda4 THEN 'OK'
-         WHEN c410 IN ('passou','nao_implementado') THEN 'OK'
-         ELSE 'CONFERIR'
-       END AS erro_tecnico
-FROM x;
 
 
 
@@ -1287,30 +1249,10 @@ DO $fim$
 BEGIN
   RAISE NOTICE 'PONTO-401: sonda comportamental de arredondamento do excedente.';
 END $fim$;
+-- (conferencia da bancada de QA removida nesta versao de producao:
+--  ela chama rotinas de teste que nao existem aqui, e so a conferencia
+--  do fim do arquivo e exibida pelo editor)
 
--- ============================================================================
--- CONFERENCIA
--- ============================================================================
-WITH amb AS MATERIALIZED (
-  SELECT to_regclass('public.ponto_alertas') IS NOT NULL AS tem_alertas,
-         to_regclass('public.atestados')     IS NOT NULL AS tem_atestados,
-         COALESCE((SELECT indexdef ILIKE '%empresa_id%' FROM pg_indexes
-                    WHERE schemaname = 'public' AND tablename = 'ponto_diario'
-                      AND indexname = 'unique_ponto_diario'), true) AS chave_nova
-), res AS MATERIALIZED (
-  SELECT (SELECT situacao FROM public.qa_caso_ponto_451()) AS c451,
-         (SELECT situacao FROM public.qa_caso_ponto_401()) AS c401
-)
-SELECT a.tem_alertas, a.tem_atestados, a.chave_nova, r.c451, r.c401,
-       CASE
-         WHEN NOT (a.tem_alertas AND a.tem_atestados) THEN
-           'CORRECOES GRAVADAS. Este ambiente ainda nao tem a fila de alertas ou a tabela de atestados — elas passam a valer quando a estrutura chegar.'
-         WHEN NOT a.chave_nova THEN
-           'CORRECOES GRAVADAS. Os dois casos nao podem ser exercitados aqui porque a chave da apuracao diaria ainda nao inclui a empresa (o achado do PONTO-394); eles voltam a rodar quando essa correcao chegar.'
-         WHEN r.c451 = 'passou' AND r.c401 = 'passou' THEN 'OK'
-         ELSE 'CONFERIR'
-       END AS resultado
-FROM amb a, res r;
 
 
 -- ============================================================================
