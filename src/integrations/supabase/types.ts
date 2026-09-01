@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -18347,6 +18347,8 @@ export type Database = {
           horas_trabalhadas: string | null
           id: string
           intervalo_intrajornada_minutos: number | null
+          intervalo_origem: string | null
+          intervalo_pre_assinalado_minutos: number | null
           observacao: string | null
           retorno_almoco: string | null
           saida: string | null
@@ -18378,6 +18380,8 @@ export type Database = {
           horas_trabalhadas?: string | null
           id?: string
           intervalo_intrajornada_minutos?: number | null
+          intervalo_origem?: string | null
+          intervalo_pre_assinalado_minutos?: number | null
           observacao?: string | null
           retorno_almoco?: string | null
           saida?: string | null
@@ -18409,6 +18413,8 @@ export type Database = {
           horas_trabalhadas?: string | null
           id?: string
           intervalo_intrajornada_minutos?: number | null
+          intervalo_origem?: string | null
+          intervalo_pre_assinalado_minutos?: number | null
           observacao?: string | null
           retorno_almoco?: string | null
           saida?: string | null
@@ -18476,6 +18482,36 @@ export type Database = {
           observacao?: string | null
           registrado_em?: string
           tenant_id?: string | null
+        }
+        Relationships: []
+      }
+      ponto_entrega_volume: {
+        Row: {
+          linhas_antes: number
+          linhas_depois: number | null
+          marca_antes: string | null
+          marca_depois: string | null
+          medido_em: string
+          parte: number
+          tabela: string
+        }
+        Insert: {
+          linhas_antes: number
+          linhas_depois?: number | null
+          marca_antes?: string | null
+          marca_depois?: string | null
+          medido_em?: string
+          parte: number
+          tabela: string
+        }
+        Update: {
+          linhas_antes?: number
+          linhas_depois?: number | null
+          marca_antes?: string | null
+          marca_depois?: string | null
+          medido_em?: string
+          parte?: number
+          tabela?: string
         }
         Relationships: []
       }
@@ -18740,6 +18776,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_escala_param_versoes: {
+        Row: {
+          arquivada_em: string
+          dias_config: Json | null
+          escala_id: string
+          hora_entrada_padrao: string | null
+          hora_saida_padrao: string | null
+          id: string
+          intervalo_intrajornada_minutos: number | null
+          jornada_diaria_minutos: number | null
+          tenant_id: string | null
+          tolerancia_diaria_minutos: number | null
+          tolerancia_minutos: number | null
+          vigencia_fim: string
+          vigencia_inicio: string
+        }
+        Insert: {
+          arquivada_em?: string
+          dias_config?: Json | null
+          escala_id: string
+          hora_entrada_padrao?: string | null
+          hora_saida_padrao?: string | null
+          id?: string
+          intervalo_intrajornada_minutos?: number | null
+          jornada_diaria_minutos?: number | null
+          tenant_id?: string | null
+          tolerancia_diaria_minutos?: number | null
+          tolerancia_minutos?: number | null
+          vigencia_fim: string
+          vigencia_inicio: string
+        }
+        Update: {
+          arquivada_em?: string
+          dias_config?: Json | null
+          escala_id?: string
+          hora_entrada_padrao?: string | null
+          hora_saida_padrao?: string | null
+          id?: string
+          intervalo_intrajornada_minutos?: number | null
+          jornada_diaria_minutos?: number | null
+          tenant_id?: string | null
+          tolerancia_diaria_minutos?: number | null
+          tolerancia_minutos?: number | null
+          vigencia_fim?: string
+          vigencia_inicio?: string
+        }
+        Relationships: []
       }
       ponto_escala_periodos: {
         Row: {
@@ -19126,6 +19210,51 @@ export type Database = {
           },
         ]
       }
+      ponto_espelhos_historico: {
+        Row: {
+          arquivado_em: string
+          colaborador_cpf: string | null
+          colaborador_nome: string | null
+          competencia: string
+          empresa_id: string | null
+          espelho_snapshot: Json
+          id: string
+          motivo_reabertura: string | null
+          reaberto_por: string | null
+          reaberto_por_nome: string | null
+          tenant_id: string
+          versao: number
+        }
+        Insert: {
+          arquivado_em?: string
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          competencia: string
+          empresa_id?: string | null
+          espelho_snapshot: Json
+          id?: string
+          motivo_reabertura?: string | null
+          reaberto_por?: string | null
+          reaberto_por_nome?: string | null
+          tenant_id: string
+          versao: number
+        }
+        Update: {
+          arquivado_em?: string
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          competencia?: string
+          empresa_id?: string | null
+          espelho_snapshot?: Json
+          id?: string
+          motivo_reabertura?: string | null
+          reaberto_por?: string | null
+          reaberto_por_nome?: string | null
+          tenant_id?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       ponto_excedente_decisao: {
         Row: {
           colaborador_cpf: string
@@ -19257,7 +19386,11 @@ export type Database = {
           fechado_por: string | null
           fechado_por_nome: string | null
           id: string
+          motivo_reabertura: string | null
           observacoes: string | null
+          reaberto_em: string | null
+          reaberto_por: string | null
+          reaberto_por_nome: string | null
           status: string
           tenant_id: string
           total_adicional_noturno_minutos: number | null
@@ -19276,7 +19409,11 @@ export type Database = {
           fechado_por?: string | null
           fechado_por_nome?: string | null
           id?: string
+          motivo_reabertura?: string | null
           observacoes?: string | null
+          reaberto_em?: string | null
+          reaberto_por?: string | null
+          reaberto_por_nome?: string | null
           status?: string
           tenant_id: string
           total_adicional_noturno_minutos?: number | null
@@ -19295,7 +19432,11 @@ export type Database = {
           fechado_por?: string | null
           fechado_por_nome?: string | null
           id?: string
+          motivo_reabertura?: string | null
           observacoes?: string | null
+          reaberto_em?: string | null
+          reaberto_por?: string | null
+          reaberto_por_nome?: string | null
           status?: string
           tenant_id?: string
           total_adicional_noturno_minutos?: number | null
@@ -19427,6 +19568,57 @@ export type Database = {
           },
         ]
       }
+      ponto_lotacao_historico: {
+        Row: {
+          colaborador_cpf: string
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string
+          empresa_id: string
+          id: string
+          motivo: string
+          observacao: string | null
+          tenant_id: string
+          transferencia_de_empresa_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          colaborador_cpf: string
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          empresa_id: string
+          id?: string
+          motivo?: string
+          observacao?: string | null
+          tenant_id: string
+          transferencia_de_empresa_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          colaborador_cpf?: string
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          empresa_id?: string
+          id?: string
+          motivo?: string
+          observacao?: string | null
+          tenant_id?: string
+          transferencia_de_empresa_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ponto_marcacoes: {
         Row: {
           classificacao_clt: string | null
@@ -19438,11 +19630,16 @@ export type Database = {
           created_by: string | null
           data_marcacao: string
           dentro_cerca: boolean | null
+          desconsiderada: boolean
+          desconsiderada_em: string | null
+          desconsiderada_motivo: string | null
+          desconsiderada_por: string | null
           dispositivo: string | null
           distancia_metros: number | null
           empresa_id: string | null
           endereco_geolocalizacao: string | null
           geofence_ref: string | null
+          hash_anterior: string | null
           hash_marcacao: string
           hora_marcacao: string
           id: string
@@ -19450,9 +19647,12 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           marcacao_original: boolean
+          nsr: number | null
           origem_marcacao: string
+          origem_offline: boolean
           selfie_nome: string | null
           selfie_url: string | null
+          sincronizado_em: string | null
           tenant_id: string
           tipo_marcacao: string
           user_agent: string | null
@@ -19467,11 +19667,16 @@ export type Database = {
           created_by?: string | null
           data_marcacao?: string
           dentro_cerca?: boolean | null
+          desconsiderada?: boolean
+          desconsiderada_em?: string | null
+          desconsiderada_motivo?: string | null
+          desconsiderada_por?: string | null
           dispositivo?: string | null
           distancia_metros?: number | null
           empresa_id?: string | null
           endereco_geolocalizacao?: string | null
           geofence_ref?: string | null
+          hash_anterior?: string | null
           hash_marcacao: string
           hora_marcacao?: string
           id?: string
@@ -19479,9 +19684,12 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           marcacao_original?: boolean
+          nsr?: number | null
           origem_marcacao?: string
+          origem_offline?: boolean
           selfie_nome?: string | null
           selfie_url?: string | null
+          sincronizado_em?: string | null
           tenant_id: string
           tipo_marcacao: string
           user_agent?: string | null
@@ -19496,11 +19704,16 @@ export type Database = {
           created_by?: string | null
           data_marcacao?: string
           dentro_cerca?: boolean | null
+          desconsiderada?: boolean
+          desconsiderada_em?: string | null
+          desconsiderada_motivo?: string | null
+          desconsiderada_por?: string | null
           dispositivo?: string | null
           distancia_metros?: number | null
           empresa_id?: string | null
           endereco_geolocalizacao?: string | null
           geofence_ref?: string | null
+          hash_anterior?: string | null
           hash_marcacao?: string
           hora_marcacao?: string
           id?: string
@@ -19508,9 +19721,12 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           marcacao_original?: boolean
+          nsr?: number | null
           origem_marcacao?: string
+          origem_offline?: boolean
           selfie_nome?: string | null
           selfie_url?: string | null
+          sincronizado_em?: string | null
           tenant_id?: string
           tipo_marcacao?: string
           user_agent?: string | null
@@ -19531,6 +19747,153 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_memoria_calculo: {
+        Row: {
+          colaborador_cpf: string
+          competencia: string
+          empresa_id: string | null
+          fonte_hash: string | null
+          fonte_marcacoes: number | null
+          gerada_em: string
+          id: string
+          parametros: Json | null
+          resultado: Json | null
+          tenant_id: string
+        }
+        Insert: {
+          colaborador_cpf: string
+          competencia: string
+          empresa_id?: string | null
+          fonte_hash?: string | null
+          fonte_marcacoes?: number | null
+          gerada_em?: string
+          id?: string
+          parametros?: Json | null
+          resultado?: Json | null
+          tenant_id: string
+        }
+        Update: {
+          colaborador_cpf?: string
+          competencia?: string
+          empresa_id?: string | null
+          fonte_hash?: string | null
+          fonte_marcacoes?: number | null
+          gerada_em?: string
+          id?: string
+          parametros?: Json | null
+          resultado?: Json | null
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      ponto_nsr_controle: {
+        Row: {
+          empresa_id: string
+          tenant_id: string
+          ultimo_nsr: number
+          updated_at: string
+        }
+        Insert: {
+          empresa_id: string
+          tenant_id: string
+          ultimo_nsr?: number
+          updated_at?: string
+        }
+        Update: {
+          empresa_id?: string
+          tenant_id?: string
+          ultimo_nsr?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ponto_pre_assinalacao: {
+        Row: {
+          ativa: boolean
+          colaborador_cpf: string | null
+          created_at: string
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string
+          empresa_id: string | null
+          escala_id: string | null
+          id: string
+          intervalo_fim: string | null
+          intervalo_inicio: string | null
+          intervalo_minutos: number
+          lastro: string
+          observacao: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          colaborador_cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          empresa_id?: string | null
+          escala_id?: string | null
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+          intervalo_minutos: number
+          lastro: string
+          observacao?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          colaborador_cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          empresa_id?: string | null
+          escala_id?: string | null
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+          intervalo_minutos?: number
+          lastro?: string
+          observacao?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ponto_relogio_checagens: {
+        Row: {
+          dentro_tolerancia: boolean | null
+          desvio_seg: number | null
+          hora_legal: string | null
+          hora_servidor: string
+          id: string
+          tolerancia_seg: number | null
+          verificado_em: string
+        }
+        Insert: {
+          dentro_tolerancia?: boolean | null
+          desvio_seg?: number | null
+          hora_legal?: string | null
+          hora_servidor: string
+          id?: string
+          tolerancia_seg?: number | null
+          verificado_em?: string
+        }
+        Update: {
+          dentro_tolerancia?: boolean | null
+          desvio_seg?: number | null
+          hora_legal?: string | null
+          hora_servidor?: string
+          id?: string
+          tolerancia_seg?: number | null
+          verificado_em?: string
+        }
+        Relationships: []
       }
       ponto_repc_importacoes: {
         Row: {
@@ -19649,6 +20012,66 @@ export type Database = {
           tenant_id?: string
           ultimo_expurgo_em?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ponto_retrato_pre: {
+        Row: {
+          colaborador_cpf: string
+          competencia: string
+          dias: number | null
+          dias_falta: number | null
+          dias_feriado: number | null
+          dias_justificado: number | null
+          empresa_id: string | null
+          espelhos: number | null
+          extras_min: number | null
+          faltantes_min: number | null
+          id: string
+          marcacoes: number | null
+          saldo_banco_min: number | null
+          tenant_id: string
+          tirado_as: string
+          tirado_em: string
+          trabalhadas_min: number | null
+        }
+        Insert: {
+          colaborador_cpf: string
+          competencia: string
+          dias?: number | null
+          dias_falta?: number | null
+          dias_feriado?: number | null
+          dias_justificado?: number | null
+          empresa_id?: string | null
+          espelhos?: number | null
+          extras_min?: number | null
+          faltantes_min?: number | null
+          id?: string
+          marcacoes?: number | null
+          saldo_banco_min?: number | null
+          tenant_id: string
+          tirado_as?: string
+          tirado_em?: string
+          trabalhadas_min?: number | null
+        }
+        Update: {
+          colaborador_cpf?: string
+          competencia?: string
+          dias?: number | null
+          dias_falta?: number | null
+          dias_feriado?: number | null
+          dias_justificado?: number | null
+          empresa_id?: string | null
+          espelhos?: number | null
+          extras_min?: number | null
+          faltantes_min?: number | null
+          id?: string
+          marcacoes?: number | null
+          saldo_banco_min?: number | null
+          tenant_id?: string
+          tirado_as?: string
+          tirado_em?: string
+          trabalhadas_min?: number | null
         }
         Relationships: []
       }
@@ -24003,6 +24426,10 @@ export type Database = {
         }
         Returns: Record<string, unknown>
       }
+      _ponto_competencia_fechada: {
+        Args: { p_data: string; p_empresa_id: string; p_tenant_id: string }
+        Returns: boolean
+      }
       _ponto_gera_batidas_dia_inteiro: {
         Args: {
           p_ajuste_id: string
@@ -24015,30 +24442,17 @@ export type Database = {
         }
         Returns: undefined
       }
-      _ponto_grava_abono:
-        | {
-            Args: {
-              p_colaborador_cpf: string
-              p_colaborador_id: string
-              p_colaborador_nome: string
-              p_data: string
-              p_observacao: string
-              p_tenant_id: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_colaborador_cpf: string
-              p_colaborador_id: string
-              p_colaborador_nome: string
-              p_data: string
-              p_observacao: string
-              p_tenant_id: string
-              p_tipo_dia: string
-            }
-            Returns: undefined
-          }
+      _ponto_grava_abono: {
+        Args: {
+          p_colaborador_cpf: string
+          p_colaborador_id: string
+          p_colaborador_nome: string
+          p_data: string
+          p_observacao: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       _ponto_resolver_colaborador_cpf: {
         Args: { p_cpf: string; p_tenant_id: string }
         Returns: {
@@ -24435,6 +24849,10 @@ export type Database = {
       cpf_valido: { Args: { p_cpf: string }; Returns: boolean }
       current_user_tenant_id: { Args: never; Returns: string }
       delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
+      desconsiderar_marcacao_ponto: {
+        Args: { p_marcacao_id: string; p_motivo?: string }
+        Returns: Json
+      }
       empresa_existe_por_documento: {
         Args: { p_doc: string; p_tipo: string }
         Returns: string
@@ -24742,6 +25160,70 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: boolean
       }
+      ponto_apurar_ciclo_plantao_do_dia: {
+        Args: {
+          p_colaborador_id: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: {
+          eh_ciclo: boolean
+          eh_plantao: boolean
+          jornada_min: number
+        }[]
+      }
+      ponto_banco_alertas_monitorar: {
+        Args: { p_dias_aviso?: number }
+        Returns: number
+      }
+      ponto_banco_limite_diario_monitorar: {
+        Args: { p_competencia: string }
+        Returns: number
+      }
+      ponto_banco_liquidar_rescisao: {
+        Args: {
+          p_colaborador_cpf: string
+          p_data_rescisao?: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
+      ponto_banco_regime_vigente: {
+        Args: {
+          p_colaborador_cpf: string
+          p_colaborador_id: string
+          p_ref_data: string
+          p_tenant_id: string
+        }
+        Returns: {
+          acordo_id: string | null
+          ativo: boolean | null
+          created_at: string
+          data_inicio: string | null
+          empresa_id: string | null
+          escala_id: string | null
+          exige_acordo_individual: boolean | null
+          exige_cct_act: boolean | null
+          forma_compensacao: string | null
+          forma_pagamento_vencer: string | null
+          id: string
+          limite_acumulo_horas: number | null
+          permite_saldo_negativo: boolean | null
+          permite_saldo_positivo: boolean | null
+          prazo_compensacao_dias: number | null
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ponto_banco_horas_config"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ponto_cadeia_hash_monitorar: { Args: never; Returns: number }
       ponto_classifica_tipo: { Args: { p_tipo: string }; Returns: string }
       ponto_colaboradores_sem_empresa: {
         Args: { p_competencia: string; p_tenant_id: string }
@@ -24755,6 +25237,10 @@ export type Database = {
       ponto_corrigir_horas_arredondadas: {
         Args: { p_desde?: string; p_tenant_id?: string }
         Returns: Json
+      }
+      ponto_corte_virada: {
+        Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
+        Returns: string
       }
       ponto_cpfs_em_mais_de_uma_empresa: {
         Args: { p_tenant_id: string }
@@ -24788,6 +25274,22 @@ export type Database = {
           dias_sem_linha: number
           primeiro: string
           ultimo: string
+        }[]
+      }
+      ponto_dsr_competencia: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_tenant_id: string
+        }
+        Returns: {
+          dias_uteis_trabalhados: number
+          dsr_perdido: boolean
+          he_semana_min: number
+          reflexo_he_dsr_min: number
+          semana_fim: string
+          semana_inicio: string
+          teve_falta_injustificada: boolean
         }[]
       }
       ponto_empresa_atribuida_errada: {
@@ -24880,6 +25382,64 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: undefined
+      }
+      ponto_escala_com_versao: {
+        Args: {
+          esc: Database["public"]["Tables"]["ponto_escalas"]["Row"]
+          p_data: string
+        }
+        Returns: {
+          acordo_individual_url: string | null
+          adicional_noturno_fim: string | null
+          adicional_noturno_inicio: string | null
+          ativa: boolean | null
+          carga_semanal_contratada_min: number
+          cct_act_url: string | null
+          ciclo_horas_descanso: number | null
+          ciclo_horas_trabalho: number | null
+          ciclo_inicio_data: string | null
+          ciclo_inicio_hora: string | null
+          compensacoes_mensais: Json | null
+          comportamento_feriado: string
+          created_at: string | null
+          descricao_contratual: string | null
+          descricao_original: string | null
+          dias_config: Json | null
+          dias_semana: Json | null
+          domingo_util: boolean | null
+          empresa_id: string | null
+          equalizacao_mensal_ativa: boolean
+          hora_entrada_padrao: string | null
+          hora_saida_padrao: string | null
+          id: string
+          intervalo_intrajornada_minutos: number
+          janela_flexivel: Json | null
+          jornada_diaria_minutos: number
+          jornada_mensal_minutos: number | null
+          jornada_semanal_minutos: number
+          modalidade: string
+          nivel_confianca: string | null
+          nome: string
+          observacoes: string | null
+          origem_input: string | null
+          percentual_adicional_noturno: number | null
+          percentual_hora_extra_100: number | null
+          percentual_hora_extra_50: number | null
+          regras_extras: Json | null
+          sabado_util: boolean | null
+          tenant_id: string
+          tipo: string
+          tolerancia_diaria_minutos: number
+          tolerancia_minutos: number
+          updated_at: string | null
+          usa_hora_ficta_noturna: boolean | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ponto_escalas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       ponto_escala_do_dia:
         | {
@@ -25065,6 +25625,10 @@ export type Database = {
           inicio: string
         }[]
       }
+      ponto_intervalo_minimo_faixa: {
+        Args: { p_jornada_min: number }
+        Returns: number
+      }
       ponto_jornada_do_dia: {
         Args: {
           p_colaborador_id: string
@@ -25082,6 +25646,14 @@ export type Database = {
         Returns: string
       }
       ponto_links_revogar_desligados: { Args: never; Returns: number }
+      ponto_lotacao_do_dia: {
+        Args: { p_cpf: string; p_data: string; p_tenant_id: string }
+        Returns: string
+      }
+      ponto_marcacoes_uniformes_monitorar: {
+        Args: { p_competencia?: string }
+        Returns: number
+      }
       ponto_materializar_faltas: {
         Args: { p_fim?: string; p_ini: string; p_tenant_id?: string }
         Returns: Json
@@ -25090,9 +25662,73 @@ export type Database = {
         Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
         Returns: number
       }
+      ponto_monitorar_hora_legal: {
+        Args: {
+          p_hora_legal: string
+          p_tenant_id?: string
+          p_tolerancia_seg?: number
+        }
+        Returns: Json
+      }
+      ponto_pre_assinalacao_do_dia: {
+        Args: {
+          p_colaborador_id: string
+          p_cpf: string
+          p_data: string
+          p_tenant_id: string
+        }
+        Returns: {
+          aplica: boolean
+          intervalo_fim: string
+          intervalo_inicio: string
+          intervalo_minutos: number
+          lastro: string
+        }[]
+      }
+      ponto_proximo_nsr: {
+        Args: { p_empresa_id: string; p_tenant_id: string }
+        Returns: number
+      }
+      ponto_reabrir_competencia: {
+        Args: {
+          p_competencia: string
+          p_empresa_id: string
+          p_motivo: string
+          p_por?: string
+          p_por_nome?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      ponto_registrar_memoria_calculo: {
+        Args: {
+          p_colaborador_cpf: string
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
       ponto_reordena_tipos_dia: {
         Args: { p_colaborador_cpf: string; p_data: string; p_tenant_id: string }
         Returns: boolean
+      }
+      ponto_repouso_semanal_monitorar: {
+        Args: { p_competencia: string }
+        Returns: number
+      }
+      ponto_repouso_semanal_verificar: {
+        Args: {
+          p_colaborador_cpf: string
+          p_fim: string
+          p_ini: string
+          p_tenant_id: string
+        }
+        Returns: {
+          dias_consecutivos: number
+          sequencia_fim: string
+          sequencia_inicio: string
+        }[]
       }
       ponto_retificar_marcacao: {
         Args: { p_marcacao_id: string; p_motivo: string; p_nova_hora: string }
@@ -25129,6 +25765,48 @@ export type Database = {
           saida: string
           saldo_min: number
           trabalhado_min: number
+        }[]
+      }
+      ponto_supressao_intervalo: {
+        Args: { p_gozado_min: number; p_jornada_min: number }
+        Returns: Json
+      }
+      ponto_transferir_lotacao: {
+        Args: {
+          p_cpf: string
+          p_data_inicio: string
+          p_empresa_destino: string
+          p_observacao?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      ponto_verificar_cadeia_hash: {
+        Args: { p_empresa_id?: string; p_tenant_id?: string }
+        Returns: {
+          detalhe: string
+          empresa_id: string
+          marcacao_id: string
+          nsr: number
+          tenant_id: string
+          tipo_quebra: string
+        }[]
+      }
+      ponto_verificar_marcacoes_uniformes: {
+        Args: {
+          p_competencia?: string
+          p_limiar_desvio_seg?: number
+          p_min_dias?: number
+          p_tenant_id?: string
+        }
+        Returns: {
+          colaborador_cpf: string
+          colaborador_nome: string
+          desvio_entrada_seg: number
+          desvio_saida_seg: number
+          dias: number
+          tenant_id: string
+          uniforme: boolean
         }[]
       }
       preencher_ghe_snapshot_entrevistas: {
@@ -27501,6 +28179,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_210: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ponto_250: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -27651,7 +28339,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_380: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ponto_383: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_395: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
