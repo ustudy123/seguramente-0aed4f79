@@ -112,43 +112,23 @@ export function gerarPDF(bateria: QaBateria, resultados: QaResultado[]) {
   const placar = `${bateria.passou} passou · ${bateria.falhou} falhou · ${bateria.erro} erro · ${bateria.nao_implementado} sem rotina  (total ${bateria.total})`;
   doc.text(placar, M, 45);
 
-  // Tabela panorama — a coluna "Resultado" já mostra o começo do erro real.
   const ordenados = ordenar(resultados);
-  autoTable(doc, {
-    startY: 50,
-    head: [["Caso", "Situação", "Resultado / início do erro"]],
-    body: ordenados.map((r) => [r.codigo, SIT_LABEL[r.situacao] || r.situacao, resumoResultado(r)]),
-    styles: { fontSize: 8, cellPadding: 2, overflow: "linebreak" },
-    headStyles: { fillColor: [30, 41, 59] },
-    columnStyles: { 0: { cellWidth: 26 }, 1: { cellWidth: 22 }, 2: { cellWidth: "auto" } },
-    didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 1) {
-        const s = ordenados[data.row.index]?.situacao;
-        if (s === "falhou") data.cell.styles.textColor = [185, 28, 28];
-        else if (s === "erro") data.cell.styles.textColor = [194, 65, 12];
-        else if (s === "passou") data.cell.styles.textColor = [21, 128, 61];
-        else data.cell.styles.textColor = [100, 116, 139];
-      }
-    },
-  });
-
-  // ── Detalhe das falhas/erros — o que o setor responsável precisa ──
   const problemas = ordenados.filter(eProblema);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  y = (doc as any).lastAutoTable.finalY + 10;
 
+  // ── Falhas PRIMEIRO — é o que o setor responsável precisa ver, sem ter de
+  //    rolar a lista inteira. O panorama de todos os casos vem depois. ──
+  y = 52;
   if (problemas.length === 0) {
-    escrever("Nenhuma falha nesta corrida. 🎉", { size: 11, bold: true, color: [21, 128, 61] });
-    doc.save(nomeArquivo(bateria, "pdf"));
-    return;
+    escrever("Nenhuma falha nesta corrida. 🎉", { size: 12, bold: true, color: [21, 128, 61] });
+    y += 4;
+  } else {
+    escrever(`Falhas para correção (${problemas.length})`, { size: 13, bold: true });
+    escrever(
+      "Cada bloco é auto-suficiente: arquivo do teste, o erro exato reportado pelo Cypress, o print da tela no momento da falha e o passo a passo para reproduzir.",
+      { size: 8, color: [90, 90, 90] },
+    );
+    y += 3;
   }
-
-  escrever(`Falhas para correção (${problemas.length})`, { size: 13, bold: true });
-  escrever(
-    "Cada bloco abaixo é auto-suficiente: arquivo do teste, o erro exato reportado pelo Cypress, o print da tela no momento da falha e o passo a passo para reproduzir.",
-    { size: 8, color: [90, 90, 90] },
-  );
-  y += 3;
 
   problemas.forEach((r, idx) => {
     garantir(24);
@@ -223,6 +203,29 @@ export function gerarPDF(bateria: QaBateria, resultados: QaResultado[]) {
       escrever(`Duração: ${r.duracao_ms} ms`, { x: 16, size: 7.5, color: [120, 120, 120] });
     }
     y += 5;
+  });
+
+  // ── Panorama de TODOS os casos (depois das falhas) ──
+  garantir(20);
+  y += 4;
+  escrever("Todos os casos", { size: 12, bold: true });
+  y += 2;
+  autoTable(doc, {
+    startY: y,
+    head: [["Caso", "Situação", "Resultado / início do erro"]],
+    body: ordenados.map((r) => [r.codigo, SIT_LABEL[r.situacao] || r.situacao, resumoResultado(r)]),
+    styles: { fontSize: 8, cellPadding: 2, overflow: "linebreak" },
+    headStyles: { fillColor: [30, 41, 59] },
+    columnStyles: { 0: { cellWidth: 26 }, 1: { cellWidth: 22 }, 2: { cellWidth: "auto" } },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 1) {
+        const s = ordenados[data.row.index]?.situacao;
+        if (s === "falhou") data.cell.styles.textColor = [185, 28, 28];
+        else if (s === "erro") data.cell.styles.textColor = [194, 65, 12];
+        else if (s === "passou") data.cell.styles.textColor = [21, 128, 61];
+        else data.cell.styles.textColor = [100, 116, 139];
+      }
+    },
   });
 
   doc.save(nomeArquivo(bateria, "pdf"));
@@ -326,9 +329,12 @@ export function abrirImprimivel(bateria: QaBateria, resultados: QaResultado[]) {
       <strong style="color:#c2410c">${bateria.erro}</strong> erro ·
       <strong style="color:#64748b">${bateria.nao_implementado}</strong> sem rotina
       (total ${bateria.total})</div>
+    ${problemas.length
+      ? `<h2>Falhas para correção (${problemas.length})</h2>${detalhes}`
+      : `<div class="obj" style="font-size:14px;color:#15803d;font-weight:600">Nenhuma falha nesta corrida. 🎉</div>`}
+    <h2>Todos os casos</h2>
     <table><thead><tr><th>Caso</th><th>Situação</th><th>Resultado / início do erro</th></tr></thead>
     <tbody>${linhas}</tbody></table>
-    ${problemas.length ? `<h2>Falhas para correção (${problemas.length})</h2>${detalhes}` : ""}
     </body></html>`;
 
   const w = window.open("", "_blank");
