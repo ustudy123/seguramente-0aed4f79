@@ -1,5 +1,5 @@
 -- ============================================================================
--- HOMOLOGACAO — PONTO, PARTE 11 de 14: Art. 62, LGPD e ponte com o Plano de Acao
+-- HOMOLOGACAO — PONTO, PARTE 11 de 16: Art. 62, LGPD e ponte com o Plano de Acao
 --
 -- Enquadramento do art. 62 (e deteccao de controle de fato que o
 -- descaracteriza), obrigatoriedade por estabelecimento (20 trabalhadores),
@@ -13,7 +13,7 @@
 --
 -- COMO USAR
 -- Cole o arquivo INTEIRO e execute uma vez. Pode rodar de novo sem risco
--- (idempotente). As partes tem ordem: rode da 01 para a 14, conferindo o
+-- (idempotente). As partes tem ordem: rode da 01 para a 16, conferindo o
 -- resultado de cada uma antes de passar para a seguinte.
 --
 -- O QUE ESTE ARQUIVO REUNE

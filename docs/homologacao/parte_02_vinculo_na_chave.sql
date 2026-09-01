@@ -1,5 +1,5 @@
 -- ============================================================================
--- HOMOLOGACAO — PONTO, PARTE 02 de 14: A empresa entra na chave da apuracao diaria
+-- HOMOLOGACAO — PONTO, PARTE 02 de 16: A empresa entra na chave da apuracao diaria
 --
 -- DESTRAVADOR: enquanto a chave for (tenant, CPF, data), dois vinculos do
 -- mesmo trabalhador colidem e varias das partes seguintes nao conseguem
@@ -11,7 +11,7 @@
 --
 -- COMO USAR
 -- Cole o arquivo INTEIRO e execute uma vez. Pode rodar de novo sem risco
--- (idempotente). As partes tem ordem: rode da 01 para a 14, conferindo o
+-- (idempotente). As partes tem ordem: rode da 01 para a 16, conferindo o
 -- resultado de cada uma antes de passar para a seguinte.
 --
 -- O QUE ESTE ARQUIVO REUNE
