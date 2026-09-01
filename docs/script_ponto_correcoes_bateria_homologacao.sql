@@ -47,6 +47,19 @@ SET lock_timeout = '10s';
 -- ---------------------------------------------------------------------------
 -- (A) PONTO-191 — versao atual da verificacao da cadeia (somente leitura)
 -- ---------------------------------------------------------------------------
+DO $guarda191$
+BEGIN
+  -- A verificacao da cadeia le a coluna nsr das marcacoes. Onde a NSR ainda
+  -- nao existe (ambiente que nao recebeu a onda do AFD), a criacao falharia
+  -- na validacao e — por rodar tudo em UMA transacao — derrubaria tambem a
+  -- correcao (B). Entao ela so entra quando a coluna existe; do contrario o
+  -- arquivo segue e avisa. Sem NSR nao ha o que encadear, mesmo.
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'ponto_marcacoes'
+       AND column_name = 'nsr'
+  ) THEN
+    EXECUTE $def191$
 CREATE OR REPLACE FUNCTION public.ponto_verificar_cadeia_hash(p_tenant_id uuid DEFAULT NULL::uuid, p_empresa_id uuid DEFAULT NULL::uuid)
  RETURNS TABLE(tenant_id uuid, empresa_id uuid, nsr bigint, marcacao_id uuid, tipo_quebra text, detalhe text)
  LANGUAGE sql
@@ -101,7 +114,12 @@ AS $function$
      OR (prev_nsr IS NOT NULL AND nsr <> prev_nsr + 1)
   ORDER BY tenant_id, empresa_id NULLS FIRST, nsr;
 $function$
-;
+$def191$;
+    RAISE NOTICE 'PONTO-191: verificacao da cadeia de hash atualizada.';
+  ELSE
+    RAISE NOTICE 'PONTO-191 PULADO: este ambiente nao tem a coluna nsr em ponto_marcacoes — sem NSR nao ha cadeia a verificar. A correcao (B), do PONTO-354, foi aplicada normalmente.';
+  END IF;
+END $guarda191$;
 
 -- ---------------------------------------------------------------------------
 -- (B) PONTO-354 — conversao de saldo vencido com escopo opcional de tenant
