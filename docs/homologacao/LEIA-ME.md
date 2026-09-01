@@ -70,3 +70,18 @@ cada uma diz, no próprio ambiente, o que chegou e o que faltou.
 
 Nada aqui é para a produção. A produção só muda por gesto manual do usuário,
 depois de conferido na homologação.
+
+## Para a produção, depois
+
+Dois scripts somente leitura acompanham a fila quando ela for para a produção:
+
+- `docs/script_ponto_retrato_antes.sql` — tira a fotografia da apuração **antes**
+  da primeira parte. Sem ela, nenhuma conferência posterior significa nada.
+- `docs/script_ponto_conferencia_efeito.sql` — depois das partes, responde em
+  três seções: o passado não foi reescrito, o que muda no mês aberto (e por
+  quê), e se as travas estão ativas. Termina num veredito único.
+
+Os dois foram ensaiados numa réplica degradada ao formato da produção: antes das
+partes o veredito saiu `CONFERIR` com 5 travas ausentes; depois, `OK COM LISTA`
+com o passado intacto. Adulterando o retrato de propósito, o veredito virou
+`PARE` — a detecção funciona nos dois sentidos.
