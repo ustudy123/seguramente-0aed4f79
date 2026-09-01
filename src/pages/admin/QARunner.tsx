@@ -464,6 +464,30 @@ function ListaExecucoes({
   );
 }
 
+// Marcador local da corrida disparada: guarda o baseline (a corrida e2e mais
+// recente NO MOMENTO do disparo) e a hora do disparo. Assim dá para saber que
+// há uma corrida "em andamento" até chegar uma corrida mais nova que o baseline
+// — comparação de carimbos do servidor, imune ao relógio do navegador.
+type CorridaEmAndamento = { baseline: string; at: string };
+const CHAVE_CORRIDA = "qa_cypress_run";
+
+function lerCorrida(): CorridaEmAndamento | null {
+  try {
+    const raw = localStorage.getItem(CHAVE_CORRIDA);
+    return raw ? (JSON.parse(raw) as CorridaEmAndamento) : null;
+  } catch {
+    return null;
+  }
+}
+function gravarCorrida(c: CorridaEmAndamento | null) {
+  try {
+    if (c) localStorage.setItem(CHAVE_CORRIDA, JSON.stringify(c));
+    else localStorage.removeItem(CHAVE_CORRIDA);
+  } catch {
+    /* localStorage indisponível — o aviso só não persiste, sem quebrar */
+  }
+}
+
 // ── painel do Cypress (testes de tela) ──────────────────
 function PainelCypress({
   baterias, modulos, carregando,
@@ -473,6 +497,37 @@ function PainelCypress({
   carregando: boolean;
 }) {
   const [disparando, setDisparando] = useState(false);
+  const [corrida, setCorrida] = useState<CorridaEmAndamento | null>(() => lerCorrida());
+
+  // Carimbo da corrida e2e mais recente que a lista já conhece.
+  const ultimaIniciada = baterias.reduce<string>(
+    (max, b) => (b.iniciada_em > max ? b.iniciada_em : max),
+    "",
+  );
+  const JANELA_MS = 20 * 60 * 1000;
+  const chegouResultado = !!corrida && !!ultimaIniciada && ultimaIniciada > corrida.baseline;
+  const dentroDaJanela = !!corrida && Date.now() - new Date(corrida.at).getTime() < JANELA_MS;
+  const emAndamento = !!corrida && dentroDaJanela && !chegouResultado;
+
+  // Quando chega uma corrida mais nova que o baseline, terminou: limpa o
+  // marcador e avisa. (A lista já mostra o resultado — o refetch é automático.)
+  useEffect(() => {
+    if (chegouResultado) {
+      gravarCorrida(null);
+      setCorrida(null);
+      toast.success("Corrida concluída", {
+        description: "O resultado apareceu abaixo em Corridas.",
+      });
+    }
+  }, [chegouResultado]);
+
+  // Re-render periódico enquanto em andamento, para a janela de 20 min expirar
+  // sozinha (e o aviso sumir) mesmo sem novos dados chegando.
+  useEffect(() => {
+    if (!emAndamento) return;
+    const id = setInterval(() => setCorrida((c) => (c ? { ...c } : c)), 15000);
+    return () => clearInterval(id);
+  }, [emAndamento]);
 
   // Pede à esteira para rodar a suíte Cypress agora. O navegador não roda
   // Cypress; a Edge Function qa-disparar-cypress aciona o workflow no GitHub
@@ -502,6 +557,11 @@ function PainelCypress({
           (data as { mensagem?: string })?.mensagem ??
           "Ela aparece na esteira em instantes; o resultado volta para esta aba.",
       });
+      // Marca a corrida como "em andamento": baseline = corrida e2e mais
+      // recente agora; qualquer corrida mais nova encerra o aviso.
+      const marcador = { baseline: ultimaIniciada, at: new Date().toISOString() };
+      gravarCorrida(marcador);
+      setCorrida(marcador);
     } catch (e) {
       toast.error("Não deu para disparar os testes", {
         description: (e as Error).message,
@@ -560,6 +620,28 @@ function PainelCypress({
           </p>
         </CardContent>
       </Card>
+
+      {/* aviso de corrida em andamento — some sozinho quando o resultado chega */}
+      {emAndamento && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-6 flex items-start gap-3 text-sm">
+            <Loader2 className="h-4 w-4 mt-0.5 shrink-0 animate-spin text-primary" />
+            <div className="space-y-1">
+              <p className="font-medium">Corrida em andamento…</p>
+              <p className="text-muted-foreground">
+                Disparada às{" "}
+                {new Date(corrida!.at).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                . A suíte roda na esteira e leva ~10 min. Esta página se atualiza
+                sozinha — o resultado aparece abaixo em “Corridas” assim que
+                terminar. Pode fechar e voltar depois.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* agendamento — pede à esteira que rode a suíte no horário marcado */}
       <CardAgendamentoE2E />
