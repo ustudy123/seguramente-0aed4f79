@@ -127,6 +127,23 @@ PARTES = [
   ['script_ponto_correcoes_402_430_431.sql',
    'script_ponto_correcoes_421_410.sql',
    'script_ponto_correcao_451_401.sql']),
+
+ (15, 'pecas_sem_script_de_entrega', 'Pecas que so existiam em migration',
+  'A bateria na homologacao mostrou que estas pecas nunca tiveram script de entrega — '
+  'existem no projeto desde sempre e nunca chegaram a producao: um dia por data na apuracao, '
+  'o adicional de feriado da RN23 com a folga compensatoria, o motor agendado de vigilancias, '
+  'a trava de imutabilidade da marcacao e o prazo obrigatorio do link de marcacao.',
+  ['script_um_dia_por_data.sql',
+   'script_ponto_rn23_feriado_adicional.sql',
+   'script_ponto_vigilancias_diarias.sql',
+   'script_ponto004_imutabilidade.sql',
+   'script_ponto_links_prazo_obrigatorio.sql']),
+
+ (16, 'massa_da_bancada', 'A massa da bancada passa a ser reaproveitada',
+  'Ajuste so da bancada de testes: as ferramentas que montam empresa e admissao de mentira '
+  'procuram antes de criar, para que uma sonda interrompida no meio nao deixe a proxima '
+  'execucao presa em ERRO por massa pela metade.',
+  ['script_qa_massa_reaproveitavel.sql']),
 ]
 
 # --------------------------------------------------------------------------

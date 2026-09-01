@@ -1,5 +1,5 @@
 -- ============================================================================
--- HOMOLOGACAO — PONTO, PARTE 05 de 14: Integridade e imutabilidade do registro
+-- HOMOLOGACAO — PONTO, PARTE 05 de 16: Integridade e imutabilidade do registro
 --
 -- Cadeia de hash encadeada e conferivel, desconsideracao de marcacao por
 -- acrescimo (nunca apagando), deteccao de marcacoes uniformes, monitoramento
@@ -12,7 +12,7 @@
 --
 -- COMO USAR
 -- Cole o arquivo INTEIRO e execute uma vez. Pode rodar de novo sem risco
--- (idempotente). As partes tem ordem: rode da 01 para a 14, conferindo o
+-- (idempotente). As partes tem ordem: rode da 01 para a 16, conferindo o
 -- resultado de cada uma antes de passar para a seguinte.
 --
 -- O QUE ESTE ARQUIVO REUNE

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HOMOLOGACAO — PONTO, PARTE 14 de 14: Correcoes achadas pela propria bateria
+-- HOMOLOGACAO — PONTO, PARTE 14 de 16: Correcoes achadas pela propria bateria
 --
 -- Feriado sem marcacao nao vira falta, motivo de ajuste com conteudo, dossie
 -- unico por competencia, folga compensatoria registrada e — o mais serio — o
@@ -11,7 +11,7 @@
 --
 -- COMO USAR
 -- Cole o arquivo INTEIRO e execute uma vez. Pode rodar de novo sem risco
--- (idempotente). As partes tem ordem: rode da 01 para a 14, conferindo o
+-- (idempotente). As partes tem ordem: rode da 01 para a 16, conferindo o
 -- resultado de cada uma antes de passar para a seguinte.
 --
 -- O QUE ESTE ARQUIVO REUNE

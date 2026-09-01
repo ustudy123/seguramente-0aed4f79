@@ -1,5 +1,5 @@
 -- ============================================================================
--- HOMOLOGACAO — PONTO, PARTE 07 de 14: Intervalo, repouso semanal e domingo
+-- HOMOLOGACAO — PONTO, PARTE 07 de 16: Intervalo, repouso semanal e domingo
 --
 -- Faixas de intervalo do art. 71, indenizacao da supressao parcial (so os
 -- minutos suprimidos), pre-assinalacao formal, DSR (desconto por falta e
@@ -12,7 +12,7 @@
 --
 -- COMO USAR
 -- Cole o arquivo INTEIRO e execute uma vez. Pode rodar de novo sem risco
--- (idempotente). As partes tem ordem: rode da 01 para a 14, conferindo o
+-- (idempotente). As partes tem ordem: rode da 01 para a 16, conferindo o
 -- resultado de cada uma antes de passar para a seguinte.
 --
 -- O QUE ESTE ARQUIVO REUNE

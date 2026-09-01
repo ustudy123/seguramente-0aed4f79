@@ -1,5 +1,5 @@
 -- ============================================================================
--- HOMOLOGACAO — PONTO, PARTE 10 de 14: Conformidade com a Portaria MTP 671/2021
+-- HOMOLOGACAO — PONTO, PARTE 10 de 16: Conformidade com a Portaria MTP 671/2021
 --
 -- AEJ (saida obrigatoria do programa de tratamento), validacao e quarentena
 -- na importacao de AFD, comprovante como documento de verdade, gestao do
@@ -11,7 +11,7 @@
 --
 -- COMO USAR
 -- Cole o arquivo INTEIRO e execute uma vez. Pode rodar de novo sem risco
--- (idempotente). As partes tem ordem: rode da 01 para a 14, conferindo o
+-- (idempotente). As partes tem ordem: rode da 01 para a 16, conferindo o
 -- resultado de cada uma antes de passar para a seguinte.
 --
 -- O QUE ESTE ARQUIVO REUNE
