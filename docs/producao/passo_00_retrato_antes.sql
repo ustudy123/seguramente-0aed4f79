@@ -54,6 +54,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_ponto_retrato_pre_grao
      (tirado_em, tenant_id, COALESCE(empresa_id, '00000000-0000-0000-0000-000000000000'::uuid),
       competencia, colaborador_cpf);
 
+-- ---------------------------------------------------------------------
+-- FECHADURA — a tabela guarda CPF e horas por colaborador. No Supabase,
+-- tabela nova em public fica exposta pela API: sem isto, qualquer usuario
+-- autenticado leria o retrato inteiro, de todos os clientes (LGPD art. 46).
+-- Com RLS ligada e NENHUMA politica, ninguem le pela API. Sem FORCE de
+-- proposito: o dono da tabela — que e quem o SQL Editor usa — continua lendo,
+-- para a conferencia de efeito conseguir comparar com o retrato.
+-- ---------------------------------------------------------------------
+ALTER TABLE public.ponto_retrato_pre ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.ponto_retrato_pre FROM PUBLIC;
+
+DO $fechadura$
+BEGIN
+  EXECUTE 'REVOKE ALL ON public.ponto_retrato_pre FROM anon, authenticated';
+EXCEPTION WHEN undefined_object THEN
+  RAISE NOTICE 'Papeis anon/authenticated nao existem nesta base — nada a revogar.';
+END $fechadura$;
+
 COMMENT ON TABLE public.ponto_retrato_pre IS
   'Fotografia da apuracao do Ponto tirada antes de uma entrega, por empresa, competencia e colaborador. Serve de referencia para provar que a entrega nao reescreveu competencia ja apurada. Somente leitura para o sistema: nenhuma rotina do produto le esta tabela.';
 
