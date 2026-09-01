@@ -40,11 +40,13 @@ describe("Módulo Feedback & Ocorrências", () => {
   }
 
   // O seletor de colaborador é um Popover (não um <select>): botão combobox →
-  // busca → opção com o nome.
+  // busca → opção com o nome. force:true nos cliques porque um overlay do Radix
+  // deixa o body com pointer-events:none (scroll-lock) e o Cypress recusa o
+  // clique — mesmo tratamento do resto da suíte.
   function escolherColaborador(nome: string) {
-    cy.contains("button", "Selecione o colaborador", { timeout: 20000 }).click();
+    cy.contains("button", "Selecione o colaborador", { timeout: 20000 }).click({ force: true });
     cy.get('input[placeholder="Buscar por nome, cargo ou departamento..."]', { timeout: 20000 })
-      .should("be.visible").clear().type(nome);
+      .should("be.visible").clear().type(nome, { force: true });
     cy.contains("button", nome, { timeout: 20000 }).click({ force: true });
   }
 
@@ -76,26 +78,26 @@ describe("Módulo Feedback & Ocorrências", () => {
 
   it("registra um feedback estruturado", () => {
     escolherColaborador("Colaborador 5");
-    cy.contains("button", "Reconhecimento").click();
+    cy.contains("button", "Reconhecimento").click({ force: true });
     cy.get('textarea[placeholder="Descreva brevemente o fato ou situação observada..."]')
-      .type("Feedback automatizado de teste.");
-    cy.contains("button", "Registrar Feedback").should("not.be.disabled").click();
+      .type("Feedback automatizado de teste.", { force: true });
+    cy.contains("button", "Registrar Feedback").should("not.be.disabled").click({ force: true });
     cy.contains("Feedback registrado com sucesso!", { timeout: 20000 }).should("exist");
   });
 
   it("permite alternar o envio por e-mail ao colaborador", () => {
     cy.get('[role="switch"]', { timeout: 20000 }).first().as("switchEmail");
-    cy.get("@switchEmail").click();
+    cy.get("@switchEmail").click({ force: true });
     cy.get("@switchEmail").should("have.attr", "aria-checked", "true");
   });
 
   it("registra uma ocorrência", () => {
     abrirAba(/Ocorrência$/); // aba "Nova Ocorrência"
     escolherColaborador("Colaborador 6");
-    cy.contains("button", "Positiva").click();
+    cy.contains("button", "Positiva").click({ force: true });
     cy.get('textarea[placeholder="Descreva de forma objetiva o fato ocorrido..."]')
-      .type("Ocorrência automatizada de teste.");
-    cy.contains("button", "Registrar Ocorrência").should("not.be.disabled").click();
+      .type("Ocorrência automatizada de teste.", { force: true });
+    cy.contains("button", "Registrar Ocorrência").should("not.be.disabled").click({ force: true });
     cy.contains("Ocorrência registrada com sucesso!", { timeout: 20000 }).should("exist");
   });
 

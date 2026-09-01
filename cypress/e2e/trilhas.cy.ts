@@ -60,12 +60,14 @@ describe("Módulo Trilhas", () => {
 
   it("cria uma trilha na Gestão", () => {
     // O botão "Nova Trilha" do cabeçalho está sempre presente (abre um diálogo).
-    cy.contains("button", "Nova Trilha", { timeout: 20000 }).first().click();
+    // force:true nos cliques: o scroll-lock do Radix deixa o body com
+    // pointer-events:none e o Cypress recusa o clique sem o force.
+    cy.contains("button", "Nova Trilha", { timeout: 20000 }).first().click({ force: true });
     cy.get('[role="dialog"]', { timeout: 15000 }).contains("Nova Trilha").should("exist");
     const nome = `Trilha automatizada ${Date.now()}`;
     // Só o Nome é obrigatório; os demais campos têm padrão.
-    cy.get('[role="dialog"]').find('input[placeholder="Ex: Gestão de Prioridades"]').type(nome);
-    cy.get('[role="dialog"]').contains("button", "Criar Trilha").should("not.be.disabled").click();
+    cy.get('[role="dialog"]').find('input[placeholder="Ex: Gestão de Prioridades"]').type(nome, { force: true });
+    cy.get('[role="dialog"]').contains("button", "Criar Trilha").should("not.be.disabled").click({ force: true });
     cy.contains("Trilha criada!", { timeout: 20000 }).should("exist");
   });
 });

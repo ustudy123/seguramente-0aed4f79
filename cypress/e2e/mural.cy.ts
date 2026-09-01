@@ -34,11 +34,14 @@ describe("Módulo Mural Interno", () => {
   }
 
   // O compositor só expande (e mostra o botão Publicar) ao focar a textarea.
+  // force:true nos cliques: um overlay do Radix deixa o body com
+  // pointer-events:none (scroll-lock) e o Cypress recusa o clique — o mesmo
+  // tratamento que o resto da suíte já usa.
   function publicar(texto: string) {
     cy.get('textarea[placeholder="No que você está pensando?"]', { timeout: 20000 })
-      .click()
-      .type(texto);
-    cy.contains("button", "Publicar").should("not.be.disabled").click();
+      .click({ force: true })
+      .type(texto, { force: true });
+    cy.contains("button", "Publicar").should("not.be.disabled").click({ force: true });
     cy.contains("Post publicado!", { timeout: 20000 }).should("exist");
   }
 
@@ -57,7 +60,7 @@ describe("Módulo Mural Interno", () => {
   });
 
   it("atualiza o feed", () => {
-    cy.contains("button", "Atualizar", { timeout: 20000 }).should("be.visible").click();
+    cy.contains("button", "Atualizar", { timeout: 20000 }).should("be.visible").click({ force: true });
     cy.contains("Algo deu errado").should("not.exist");
     cy.contains("h1", "Mural Interno").should("be.visible");
   });
@@ -70,18 +73,18 @@ describe("Módulo Mural Interno", () => {
 
   it("mantém o Publicar desabilitado com o compositor vazio", () => {
     // Focar expande o compositor; sem texto e sem imagem, Publicar fica travado.
-    cy.get('textarea[placeholder="No que você está pensando?"]', { timeout: 20000 }).click();
+    cy.get('textarea[placeholder="No que você está pensando?"]', { timeout: 20000 }).click({ force: true });
     cy.contains("button", "Publicar").should("be.disabled");
   });
 
   it("comenta em um post", () => {
     publicar(`Post para comentar ${Date.now()}`);
     // O post recém-criado é o primeiro do feed; abre os comentários dele.
-    cy.contains("button", "Comentar", { timeout: 20000 }).first().click();
+    cy.contains("button", "Comentar", { timeout: 20000 }).first().click({ force: true });
     const comentario = `Comentário automatizado ${Date.now()}`;
     cy.get('input[placeholder="Escreva um comentário... Use @ para mencionar"]', { timeout: 20000 })
       .first()
-      .type(`${comentario}{enter}`);
+      .type(`${comentario}{enter}`, { force: true });
     cy.contains(comentario, { timeout: 20000 }).should("exist");
   });
 

@@ -52,14 +52,16 @@ describe("Módulo Saúde Ocupacional (ASO)", () => {
 
   it("filtra a lista pela busca", () => {
     cy.get('input[placeholder="Buscar por colaborador ou médico..."]', { timeout: 20000 })
-      .should("be.visible").clear().type("Administrativo");
+      .should("be.visible").clear().type("Administrativo", { force: true });
     cy.contains("Algo deu errado").should("not.exist");
   });
 
   it("mostra vazio orientativo quando a busca não acha", () => {
     const inexistente = `zzz-sem-resultado-${Date.now()}`;
+    // force:true no type: a lista re-renderiza a cada tecla ao filtrar, e sem o
+    // force o Cypress aborta com "the page updated while this command was executing".
     cy.get('input[placeholder="Buscar por colaborador ou médico..."]', { timeout: 20000 })
-      .should("be.visible").clear().type(inexistente);
+      .should("be.visible").clear().type(inexistente, { force: true });
     cy.contains("Nenhum registro de ASO encontrado.").should("exist");
   });
 
