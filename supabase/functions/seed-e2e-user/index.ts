@@ -96,7 +96,9 @@ const AI_CONTEXT =
   "EPIs, desenvolvimento de funcionalidades, suporte a clientes internos.";
 
 // Cliente admin tipado sem importar o tipo (evita mais um import de esm.sh).
-type Admin = ReturnType<typeof createClient>;
+// Cliente admin sem tipos gerados: o schema do projeto não é conhecido aqui.
+// deno-lint-ignore-next-line no-explicit-any
+type Admin = ReturnType<typeof createClient<any, "public", any>>;
 
 // Planta departamentos, cargos e 20 colaboradores no tenant fixo da ilha.
 // Idempotente (só insere onde ainda não há nada) e chamada de forma NÃO-FATAL:
