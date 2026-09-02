@@ -220,12 +220,21 @@ export function useFolhaCalculo() {
       const prazoLegal = new Date(dados.data_inicio_gozo);
       prazoLegal.setDate(prazoLegal.getDate() - 2);
 
+      // Campos que servem ao cálculo mas não são colunas da tabela ficam de
+      // fora do insert; a memória da média entra dentro de memoria_calculo,
+      // para o valor se reproduzir depois (art. 142 / RNF-008).
+      const { dependentes_irrf, media_memoria, ...colunas } = dados;
+
       const { data, error } = await fromTable("folha_ferias_calculo")
         .insert({
-          ...dados,
+          ...colunas,
           ...resultado,
           prazo_legal: prazoLegal.toISOString().split("T")[0],
-          memoria_calculo: resultado,
+          memoria_calculo: {
+            ...resultado,
+            dependentes_irrf: dependentes_irrf || 0,
+            media_variaveis: media_memoria || null,
+          },
           tenant_id: tenantId,
         } as any)
         .select()
