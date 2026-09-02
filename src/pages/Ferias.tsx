@@ -12,6 +12,7 @@ import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
 import { FeriasGovernanca } from "@/components/ferias/FeriasGovernanca";
 import { FeriasAlertas } from "@/components/ferias/FeriasAlertas";
+import { FeriasColetivas } from "@/components/ferias/FeriasColetivas";
 import { useINR } from "@/hooks/useINR";
 import { useFerias, type FeriasSolicitacao } from "@/hooks/useFerias";
 import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
@@ -745,6 +746,7 @@ const Ferias = () => {
               )}
             </TabsTrigger>
             <TabsTrigger value="vencimentos"><CalendarClock className="w-3.5 h-3.5 mr-1" /> Vencimentos</TabsTrigger>
+            <TabsTrigger value="coletivas"><CalendarRange className="w-3.5 h-3.5 mr-1" /> Coletivas</TabsTrigger>
             <TabsTrigger value="cultura"><Heart className="w-3.5 h-3.5 mr-1" /> Cultura</TabsTrigger>
             <TabsTrigger value="relatorios"><BarChart3 className="w-3.5 h-3.5 mr-1" /> Relatórios</TabsTrigger>
             <TabsTrigger value="governanca"><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Governança</TabsTrigger>
@@ -816,6 +818,10 @@ const Ferias = () => {
 
         <TabsContent value="vencimentos" className="space-y-4">
           <FeriasAlertas />
+        </TabsContent>
+
+        <TabsContent value="coletivas" className="space-y-4">
+          <FeriasColetivas />
         </TabsContent>
 
         <TabsContent value="inteligencia" className="space-y-4">
