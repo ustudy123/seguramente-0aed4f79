@@ -191,7 +191,7 @@ export default function SuperAdminDashboard() {
                         <TableRow key={tenant.id}>
                           <TableCell className="font-medium">{tenant.nome}</TableCell>
                           <TableCell><code className="text-xs bg-muted px-2 py-1 rounded">{tenant.cnpj || "—"}</code></TableCell>
-                          <TableCell><Badge variant="outline" className="capitalize">{tenant.plano}</Badge></TableCell>
+                          <TableCell><Badge variant="outline" className="capitalize">{tenant.plano_atual ?? tenant.plano}</Badge></TableCell>
                           <TableCell className="text-center">{tenant.total_usuarios}</TableCell>
                           <TableCell className="text-center">{tenant.total_colaboradores}</TableCell>
                           <TableCell className="text-xs">{format(new Date(tenant.created_at), 'dd/MM/yy', { locale: ptBR })}</TableCell>
@@ -297,7 +297,6 @@ export default function SuperAdminDashboard() {
               initialData={{
                 nome: selectedTenant.nome,
                 slug: selectedTenant.slug,
-                plano: selectedTenant.plano,
                 email: selectedTenant.email,
                 telefone: selectedTenant.telefone,
                 cnpj: selectedTenant.cnpj,
@@ -308,7 +307,6 @@ export default function SuperAdminDashboard() {
                     id: selectedTenant.id,
                     nome: data.nome,
                     slug: data.slug,
-                    plano: data.plano,
                     email: data.email,
                     telefone: data.telefone,
                     cnpj: data.cnpj,

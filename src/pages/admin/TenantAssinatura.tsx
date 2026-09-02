@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { usePlanosCatalogo } from "@/hooks/usePlanosCatalogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CreditCard, CalendarClock, Info, Building2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, CreditCard, CalendarClock, Info, Building2, Layers, Loader2 } from "lucide-react";
 
 const TRIAL_PADRAO_DIAS = 7;
 
@@ -20,15 +29,22 @@ function formatarData(d: Date) {
 export default function TenantAssinatura() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { tenants } = useSuperAdmin();
+  const { tenants, setTenantPlano, isSettingPlano } = useSuperAdmin();
+  const { planos } = usePlanosCatalogo();
 
   const tenant = tenants.find((t) => t.id === id);
+  const planoAtual = tenant?.plano_atual ?? null;
 
-  // Estado local apenas — esta tela ainda não persiste nada.
+  // Plano é a única parte desta tela que persiste de verdade (no motor).
+  const [planoSel, setPlanoSel] = useState<string>("");
+  useEffect(() => {
+    if (planoAtual) setPlanoSel(planoAtual);
+  }, [planoAtual]);
+
+  // Trial / pagamento seguem apenas como prévia — estado local, não grava.
   const [trialDias, setTrialDias] = useState<number>(TRIAL_PADRAO_DIAS);
   const [pago, setPago] = useState(false);
 
-  // O trial conta a partir da criação da empresa.
   const inicio = tenant?.created_at ? new Date(tenant.created_at) : null;
   const vencimento = inicio ? new Date(inicio.getTime() + trialDias * 86400000) : null;
 
@@ -45,6 +61,19 @@ export default function TenantAssinatura() {
     : { label: `Em trial · ${diasRestantes} dia${diasRestantes === 1 ? "" : "s"} restante${diasRestantes === 1 ? "" : "s"}`,
         cor: "bg-amber-100 text-amber-800 border-amber-200" };
 
+  const nomePlano = (code: string | null) =>
+    planos.find((p) => p.code === code)?.name || code || "—";
+
+  const handleSalvarPlano = async () => {
+    if (!id || !planoSel) return;
+    try {
+      await setTenantPlano({ tenantId: id, planoCode: planoSel });
+      toast.success(`Plano atualizado para ${nomePlano(planoSel)}.`);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao salvar o plano");
+    }
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
@@ -59,16 +88,62 @@ export default function TenantAssinatura() {
         </div>
       </div>
 
-      {/* Esta tela ainda não faz nada. Dizer isso é mais honesto do que
-          deixar o superadmin achar que configurou. */}
+      {/* Plano: esta parte grava de verdade no motor de entitlements. */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Layers className="w-4 h-4" /> Plano
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Plano atual</p>
+              <p className="text-xs text-muted-foreground">
+                Define o que a empresa pode acessar. O bloqueio por plano ainda está desligado —
+                por enquanto a escolha fica registrada.
+              </p>
+            </div>
+            <Badge variant="outline" className="capitalize">{nomePlano(planoAtual)}</Badge>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="plano">Alterar plano</Label>
+              <Select value={planoSel} onValueChange={setPlanoSel}>
+                <SelectTrigger id="plano">
+                  <SelectValue placeholder="Selecione o plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {planos.map((p) => (
+                    <SelectItem key={p.code} value={p.code}>
+                      {p.name}{!p.is_public ? " (interno)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={handleSalvarPlano}
+              disabled={isSettingPlano || !planoSel || planoSel === planoAtual}
+            >
+              {isSettingPlano && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salvar plano
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Trial e pagamento seguem como prévia — honestidade com o superadmin. */}
       <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm">
         <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
         <div>
-          <p className="font-medium text-blue-900">Prévia visual — nada é salvo ainda.</p>
+          <p className="font-medium text-blue-900">Período de teste e pagamento — prévia visual.</p>
           <p className="text-blue-800 text-xs mt-0.5">
-            Os controles abaixo mostram como a configuração vai funcionar. Eles não gravam,
-            não bloqueiam o acesso da empresa e não cobram nada. A plataforma de pagamento
-            ainda será definida.
+            Os controles de trial e pagamento abaixo ainda não gravam nem cobram nada —
+            a plataforma de pagamento será definida depois. Só o plano, acima, é salvo.
           </p>
         </div>
       </div>
@@ -153,7 +228,7 @@ export default function TenantAssinatura() {
         <CardContent className="text-sm space-y-1.5">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Plano</span>
-            <span className="capitalize">{tenant?.plano || "—"}</span>
+            <span className="capitalize">{nomePlano(planoAtual)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Criada em</span>
@@ -168,9 +243,6 @@ export default function TenantAssinatura() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => navigate("/admin")}>Voltar</Button>
-        <Button disabled title="Ainda não implementado — a tela é apenas visual">
-          Salvar
-        </Button>
       </div>
     </div>
   );
