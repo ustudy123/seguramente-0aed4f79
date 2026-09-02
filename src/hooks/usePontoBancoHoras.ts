@@ -239,7 +239,22 @@ export function usePontoBancoHoras() {
         .insert({ ...dados, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
         .select()
         .single();
-      if (error) throw error;
+      if (error) {
+        // Chave unica (tenant, colaborador, competencia): o colaborador ja tem
+        // um banco nesta competencia. "Erro inesperado" nao dizia isso —
+        // a pessoa que so quer ATIVAR o banco de horas do colaborador acaba
+        // aqui achando que travou. O banco por competencia ja existe; para
+        // MOVIMENTAR use "Movimentar", e para definir o REGIME de compensacao
+        // (o instrumento que faz o banco valer) use a aba Config BH.
+        if ((error as any)?.code === "23505") {
+          throw new Error(
+            "Este colaborador já tem banco de horas nesta competência. " +
+            "Para lançar crédito ou débito use o botão Movimentar; para definir " +
+            "o regime de compensação (individual ou coletivo) use a aba Config BH.",
+          );
+        }
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
