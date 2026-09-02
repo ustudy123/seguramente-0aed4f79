@@ -43,6 +43,7 @@ import {
   LifeBuoy,
   Info,
   Lock,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePlanLock } from "@/hooks/useTenantFeatures";
@@ -256,6 +257,7 @@ const menuSections: MenuSection[] = [
     color: "text-slate-400",
     sectionIcon: Settings,
     items: [
+      { title: "Meu Plano", icon: Layers, path: "/meu-plano" },
       { title: "Suporte", icon: LifeBuoy, path: "/suporte" },
       { title: "Configurações", icon: Settings, path: "/configuracoes" },
       { title: "Sobre o Sistema", icon: Info, path: "/sobre-sistema" },

@@ -119,6 +119,7 @@ export const ALWAYS_ALLOWED_PATHS = new Set<string>([
   "/marketplace", // Rede de Parceiros: módulo global no header
 
   "/meu-perfil",
+  "/meu-plano", // autosserviço: cada empresa vê o próprio plano/consumo
   "/suporte",
   "/pendencias",
   "/configuracoes", // a página em si filtra por role; necessário p/ auto-serviço
