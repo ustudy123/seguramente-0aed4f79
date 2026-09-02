@@ -42,7 +42,10 @@ import {
   BarChart3,
   LifeBuoy,
   Info,
+  Lock,
 } from "lucide-react";
+import { toast } from "sonner";
+import { usePlanLock } from "@/hooks/useTenantFeatures";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 
@@ -262,6 +265,7 @@ const menuSections: MenuSection[] = [
 
 const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: boolean }) => {
   const location = useLocation();
+  const { isLocked, planNameForPath } = usePlanLock();
   const hasActiveChild = item.children?.some((c) =>
     checkIsActive(c.path, location.pathname, location.search)
   ) ?? false;
@@ -302,6 +306,26 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
             <div className="ml-7 mt-1 space-y-0.5 border-l-2 border-white/[0.08] pl-3">
               {item.children?.map((child) => {
                 const isActive = checkIsActive(child.path, location.pathname, location.search);
+                if (isLocked(child.path)) {
+                  const plano = planNameForPath(child.path) ?? "superior";
+                  return (
+                    <button
+                      key={child.path}
+                      type="button"
+                      title={`Disponível no plano ${plano}`}
+                      onClick={() =>
+                        toast.info(`"${child.title}" faz parte do plano ${plano}.`, {
+                          description: "Fale com o suporte para liberar este módulo.",
+                        })
+                      }
+                      className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all duration-200 text-sidebar-foreground/35 hover:bg-white/[0.04]"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-sidebar-foreground/25" />
+                      <span className="flex-1">{child.title}</span>
+                      <Lock className="w-3 h-3 flex-shrink-0 opacity-60" strokeWidth={2} />
+                    </button>
+                  );
+                }
                 return (
                   <NavLink
                     key={child.path}
@@ -333,7 +357,29 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
 
 const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolean; onNavigate?: () => void }) => {
   const location = useLocation();
+  const { isLocked, planNameForPath } = usePlanLock();
   const isActive = checkIsActive(item.path || "/", location.pathname, location.search);
+  const locked = isLocked(item.path);
+
+  if (locked) {
+    const plano = planNameForPath(item.path || "") ?? "superior";
+    return (
+      <button
+        type="button"
+        title={`Disponível no plano ${plano}`}
+        onClick={() =>
+          toast.info(`"${item.title}" faz parte do plano ${plano}.`, {
+            description: "Fale com o suporte para liberar este módulo.",
+          })
+        }
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left text-sidebar-foreground/40 hover:bg-white/[0.04]"
+      >
+        <item.icon className="w-[18px] h-[18px] flex-shrink-0 opacity-60" strokeWidth={1.75} />
+        <span className="text-[13px] flex-1">{item.title}</span>
+        <Lock className="w-3.5 h-3.5 flex-shrink-0 opacity-60" strokeWidth={2} />
+      </button>
+    );
+  }
 
   return (
     <NavLink
@@ -371,6 +417,7 @@ const CollapsibleSection = ({
   onNavigate?: () => void;
 }) => {
   const location = useLocation();
+  const { isLocked, planNameForPath } = usePlanLock();
 
   const hasActiveChild = section.items.some(
     (item) =>
@@ -389,6 +436,25 @@ const CollapsibleSection = ({
         </div>
         {section.items.map((item) => {
           const isActive = checkIsActive(item.path || "/", location.pathname, location.search);
+          if (!item.children && isLocked(item.path)) {
+            const plano = planNameForPath(item.path || "") ?? "superior";
+            return (
+              <button
+                key={item.title}
+                type="button"
+                title={`${item.title} — disponível no plano ${plano}`}
+                onClick={() =>
+                  toast.info(`"${item.title}" faz parte do plano ${plano}.`, {
+                    description: "Fale com o suporte para liberar este módulo.",
+                  })
+                }
+                className="relative w-full flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5 text-sidebar-foreground/40 hover:bg-white/[0.04]"
+              >
+                <item.icon className="w-[18px] h-[18px] opacity-60" strokeWidth={1.75} />
+                <Lock className="absolute right-1.5 bottom-1.5 w-2.5 h-2.5 opacity-70" strokeWidth={2.5} />
+              </button>
+            );
+          }
           return item.children ? (
             <SidebarSubItem key={item.title} item={item} isCollapsed={isCollapsed} />
           ) : (
