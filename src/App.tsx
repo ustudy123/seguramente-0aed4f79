@@ -54,6 +54,7 @@ import SobreSistema from "./pages/SobreSistema";
 import Usuarios from "./pages/Usuarios";
 import PerfisAcesso from "./pages/PerfisAcesso";
 import MeuPerfil from "./pages/MeuPerfil";
+import MeuPlano from "./pages/MeuPlano";
 import Pendencias from "./pages/Pendencias";
 import Departamentos from "./pages/cadastros/Departamentos";
 import Cargos from "./pages/cadastros/Cargos";
@@ -263,6 +264,7 @@ const App = () => (
                 <Route path="/suporte" element={<Suporte />} />
                 <Route path="/sobre-sistema" element={<SobreSistema />} />
                 <Route path="/meu-perfil" element={<MeuPerfil />} />
+                <Route path="/meu-plano" element={<MeuPlano />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
