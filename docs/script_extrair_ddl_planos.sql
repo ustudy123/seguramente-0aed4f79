@@ -25,7 +25,7 @@ enums AS (
 ),
 enums_ddl AS (
   SELECT 0 AS ordem, 'enum'::text AS categoria, e.typname AS objeto,
-         'CREATE TYPE public.' || quote_ident(e.typname) || ' AS ENUM ('
+         'CREATE TYPE ' || quote_ident(e.typname) || ' AS ENUM ('
          || (SELECT string_agg(quote_literal(en.enumlabel), ', ' ORDER BY en.enumsortorder)
              FROM pg_enum en WHERE en.enumtypid = e.oid)
          || ')' AS ddl
@@ -33,7 +33,7 @@ enums_ddl AS (
 ),
 tabelas_ddl AS (
   SELECT 1 AS ordem, 'tabela'::text AS categoria, tab.relname AS objeto,
-         'CREATE TABLE IF NOT EXISTS public.' || quote_ident(tab.relname) || ' (' || chr(10)
+         'CREATE TABLE IF NOT EXISTS ' || quote_ident(tab.relname) || ' (' || chr(10)
          || string_agg(
               '  ' || quote_ident(a.attname) || ' ' || format_type(a.atttypid, a.atttypmod)
               || CASE a.attidentity
@@ -58,8 +58,8 @@ constraints_ddl AS (
          'constraint:' || CASE con.contype WHEN 'p' THEN 'pk' WHEN 'f' THEN 'fk'
                                             WHEN 'u' THEN 'unique' WHEN 'c' THEN 'check'
                                             ELSE con.contype::text END AS categoria,
-         tab.relname || '.' || con.conname AS objeto,
-         'ALTER TABLE public.' || quote_ident(tab.relname)
+         tab.relname || chr(46) ||con.conname AS objeto,
+         'ALTER TABLE ' || quote_ident(tab.relname)
          || ' ADD CONSTRAINT ' || quote_ident(con.conname) || ' '
          || pg_get_constraintdef(con.oid) AS ddl
   FROM pg_constraint con
@@ -75,17 +75,17 @@ indices_ddl AS (
 ),
 rls_ddl AS (
   SELECT 4 AS ordem, 'rls'::text AS categoria, tab.relname AS objeto,
-         'ALTER TABLE public.' || quote_ident(tab.relname) || ' ENABLE ROW LEVEL SECURITY' AS ddl
+         'ALTER TABLE ' || quote_ident(tab.relname) || ' ENABLE ROW LEVEL SECURITY' AS ddl
   FROM tab WHERE tab.relrowsecurity
   UNION ALL
   SELECT 4, 'rls-force'::text, tab.relname,
-         'ALTER TABLE public.' || quote_ident(tab.relname) || ' FORCE ROW LEVEL SECURITY'
+         'ALTER TABLE ' || quote_ident(tab.relname) || ' FORCE ROW LEVEL SECURITY'
   FROM tab WHERE tab.relforcerowsecurity
 ),
 politicas_ddl AS (
   SELECT 5 AS ordem, 'politica'::text AS categoria,
-         p.tablename || '.' || p.policyname AS objeto,
-         'CREATE POLICY ' || quote_ident(p.policyname) || ' ON public.' || quote_ident(p.tablename)
+         p.tablename || chr(46) ||p.policyname AS objeto,
+         'CREATE POLICY ' || quote_ident(p.policyname) || ' ON ' || quote_ident(p.tablename)
          || ' AS ' || p.permissive
          || ' FOR ' || p.cmd
          || ' TO ' || array_to_string(p.roles, ', ')
@@ -106,7 +106,7 @@ funcoes_ddl AS (
 ),
 gatilhos_ddl AS (
   SELECT 7 AS ordem, 'gatilho'::text AS categoria,
-         tab.relname || '.' || tg.tgname AS objeto,
+         tab.relname || chr(46) ||tg.tgname AS objeto,
          pg_get_triggerdef(tg.oid) AS ddl
   FROM pg_trigger tg
   JOIN tab ON tab.oid = tg.tgrelid
