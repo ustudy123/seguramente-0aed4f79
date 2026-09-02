@@ -67,10 +67,24 @@ BEGIN
   LIMIT 1;
 
   IF v_ja IS NOT NULL THEN
-    RAISE NOTICE 'Ja existe regime ativo para esta empresa (todas as escalas) — nada a criar.';
+    -- Ja existe. CORRIGE a data de inicio se ela estiver tarde demais: um
+    -- regime que so comeca HOJE nao cobre uma competencia PASSADA (a apuracao
+    -- de agosto usa como referencia 31/08). Como a tela Config BH nao define
+    -- data de inicio (fica nula = vigente sempre), o regime tem de valer para
+    -- o saldo acumulado tambem — data_inicio NULA.
+    UPDATE public.ponto_banco_horas_config
+       SET data_inicio = NULL, updated_at = now()
+     WHERE id = v_ja AND data_inicio IS NOT NULL;
+    IF FOUND THEN
+      RAISE NOTICE 'Regime ja existia, mas com data de inicio tarde demais — recuada para VIGENTE SEMPRE (cobre as competencias passadas).';
+    ELSE
+      RAISE NOTICE 'Ja existe regime ativo, vigente sempre — nada a fazer.';
+    END IF;
     RETURN;
   END IF;
 
+  -- data_inicio NULA = vigente sempre, igual ao que a tela Config BH cria.
+  -- Assim o regime cobre agosto e o saldo acumulado, nao so daqui pra frente.
   INSERT INTO public.ponto_banco_horas_config
     (tenant_id, empresa_id, escala_id, tipo, prazo_compensacao_dias,
      permite_saldo_positivo, permite_saldo_negativo, limite_acumulo_horas,
@@ -80,9 +94,9 @@ BEGIN
     (v_tenant, v_empresa, NULL, v_tipo, v_prazo,
      true, true, v_limite,
      'folga', 'horas_extras',
-     false, false, NULL, CURRENT_DATE, true);
+     false, false, NULL, NULL, true);
 
-  RAISE NOTICE 'Regime de banco de horas (%s) criado para a empresa.', v_tipo;
+  RAISE NOTICE 'Regime de banco de horas (%s) criado para a empresa, vigente sempre.', v_tipo;
 END $regime$;
 
 -- ============================================================================
@@ -118,13 +132,16 @@ SELECT 1 AS ordem, 'regime cadastrado'::text AS o_que,
               THEN 'ATENCAO: exige acordo mas nenhum vinculado — o regime NAO vale ate anexar'
             ELSE 'OK — regime ativo' END AS erro_tecnico
 UNION ALL
-SELECT 2, 'cobre a colaboradora Edina (CPF ...978)',
-       CASE WHEN (SELECT (public.ponto_banco_regime_vigente(a.tenant_id, '03452132978', NULL, CURRENT_DATE)).id
+-- IMPORTANTE: testa a referencia da competencia de AGOSTO (31/08), nao "hoje".
+-- Um regime que comeca hoje daria OK para hoje mas NAO cobriria agosto — foi o
+-- erro que fez a apuracao de agosto sair 0/0 mesmo com o regime cadastrado.
+SELECT 2, 'cobre a Edina (CPF ...978) na competencia de AGOSTO',
+       CASE WHEN (SELECT (public.ponto_banco_regime_vigente(a.tenant_id, '03452132978', NULL, DATE '2026-08-31')).id
+                    IS NOT NULL FROM alvo a)   -- AJUSTE AQUI: ultimo dia da competencia alvo
+            THEN 'sim — cobre agosto' ELSE 'nao — nao cobre agosto' END,
+       'depois disto, "Apurar agora" em Agosto/2026 move o banco',
+       CASE WHEN (SELECT (public.ponto_banco_regime_vigente(a.tenant_id, '03452132978', NULL, DATE '2026-08-31')).id
                     IS NOT NULL FROM alvo a)
-            THEN 'sim — tem_regime verdadeiro' ELSE 'nao' END,
-       'depois disto, rode "Apurar agora" na competencia',
-       CASE WHEN (SELECT (public.ponto_banco_regime_vigente(a.tenant_id, '03452132978', NULL, CURRENT_DATE)).id
-                    IS NOT NULL FROM alvo a)
-            THEN 'OK — o banco dela passa a se mover'
-            ELSE 'CONFERIR: o vinculo da colaboradora nao resolve a empresa. Me envie este resultado.' END
+            THEN 'OK — o banco dela passa a se mover em agosto'
+            ELSE 'CONFERIR: o regime nao cobre agosto (data de inicio tarde demais, ou vinculo da colaboradora nao resolve). Me envie este resultado.' END
 ORDER BY ordem;
