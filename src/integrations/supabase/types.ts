@@ -2498,6 +2498,108 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_faltas_fantasma_20260901: {
+        Row: {
+          adicional_noturno_minutos: number | null
+          atraso_minutos: number | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string | null
+          data: string | null
+          empresa_id: string | null
+          entrada: string | null
+          escala_id: string | null
+          feriado_nome: string | null
+          feriado_trabalhado: boolean | null
+          he_intervalo_suprimido_minutos: number | null
+          horas_extras: string | null
+          horas_extras_100_minutos: number | null
+          horas_extras_50_minutos: number | null
+          horas_faltantes: string | null
+          horas_trabalhadas: string | null
+          id: string | null
+          intervalo_intrajornada_minutos: number | null
+          intervalo_origem: string | null
+          intervalo_pre_assinalado_minutos: number | null
+          observacao: string | null
+          retorno_almoco: string | null
+          saida: string | null
+          saida_almoco: string | null
+          status: string | null
+          tenant_id: string | null
+          tipo_dia: string | null
+          tolerancia_aplicada: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          adicional_noturno_minutos?: number | null
+          atraso_minutos?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data?: string | null
+          empresa_id?: string | null
+          entrada?: string | null
+          escala_id?: string | null
+          feriado_nome?: string | null
+          feriado_trabalhado?: boolean | null
+          he_intervalo_suprimido_minutos?: number | null
+          horas_extras?: string | null
+          horas_extras_100_minutos?: number | null
+          horas_extras_50_minutos?: number | null
+          horas_faltantes?: string | null
+          horas_trabalhadas?: string | null
+          id?: string | null
+          intervalo_intrajornada_minutos?: number | null
+          intervalo_origem?: string | null
+          intervalo_pre_assinalado_minutos?: number | null
+          observacao?: string | null
+          retorno_almoco?: string | null
+          saida?: string | null
+          saida_almoco?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          tipo_dia?: string | null
+          tolerancia_aplicada?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          adicional_noturno_minutos?: number | null
+          atraso_minutos?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data?: string | null
+          empresa_id?: string | null
+          entrada?: string | null
+          escala_id?: string | null
+          feriado_nome?: string | null
+          feriado_trabalhado?: boolean | null
+          he_intervalo_suprimido_minutos?: number | null
+          horas_extras?: string | null
+          horas_extras_100_minutos?: number | null
+          horas_extras_50_minutos?: number | null
+          horas_faltantes?: string | null
+          horas_trabalhadas?: string | null
+          id?: string | null
+          intervalo_intrajornada_minutos?: number | null
+          intervalo_origem?: string | null
+          intervalo_pre_assinalado_minutos?: number | null
+          observacao?: string | null
+          retorno_almoco?: string | null
+          saida?: string | null
+          saida_almoco?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          tipo_dia?: string | null
+          tolerancia_aplicada?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       backup_links_sem_prazo_20260901: {
         Row: {
           ativo: boolean | null
@@ -2542,6 +2644,108 @@ export type Database = {
           tentativas_frustradas?: number | null
           tipo?: string | null
           token?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_ponto_diario_reconsolidacao_20260901: {
+        Row: {
+          adicional_noturno_minutos: number | null
+          atraso_minutos: number | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string | null
+          data: string | null
+          empresa_id: string | null
+          entrada: string | null
+          escala_id: string | null
+          feriado_nome: string | null
+          feriado_trabalhado: boolean | null
+          he_intervalo_suprimido_minutos: number | null
+          horas_extras: string | null
+          horas_extras_100_minutos: number | null
+          horas_extras_50_minutos: number | null
+          horas_faltantes: string | null
+          horas_trabalhadas: string | null
+          id: string | null
+          intervalo_intrajornada_minutos: number | null
+          intervalo_origem: string | null
+          intervalo_pre_assinalado_minutos: number | null
+          observacao: string | null
+          retorno_almoco: string | null
+          saida: string | null
+          saida_almoco: string | null
+          status: string | null
+          tenant_id: string | null
+          tipo_dia: string | null
+          tolerancia_aplicada: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          adicional_noturno_minutos?: number | null
+          atraso_minutos?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data?: string | null
+          empresa_id?: string | null
+          entrada?: string | null
+          escala_id?: string | null
+          feriado_nome?: string | null
+          feriado_trabalhado?: boolean | null
+          he_intervalo_suprimido_minutos?: number | null
+          horas_extras?: string | null
+          horas_extras_100_minutos?: number | null
+          horas_extras_50_minutos?: number | null
+          horas_faltantes?: string | null
+          horas_trabalhadas?: string | null
+          id?: string | null
+          intervalo_intrajornada_minutos?: number | null
+          intervalo_origem?: string | null
+          intervalo_pre_assinalado_minutos?: number | null
+          observacao?: string | null
+          retorno_almoco?: string | null
+          saida?: string | null
+          saida_almoco?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          tipo_dia?: string | null
+          tolerancia_aplicada?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          adicional_noturno_minutos?: number | null
+          atraso_minutos?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data?: string | null
+          empresa_id?: string | null
+          entrada?: string | null
+          escala_id?: string | null
+          feriado_nome?: string | null
+          feriado_trabalhado?: boolean | null
+          he_intervalo_suprimido_minutos?: number | null
+          horas_extras?: string | null
+          horas_extras_100_minutos?: number | null
+          horas_extras_50_minutos?: number | null
+          horas_faltantes?: string | null
+          horas_trabalhadas?: string | null
+          id?: string | null
+          intervalo_intrajornada_minutos?: number | null
+          intervalo_origem?: string | null
+          intervalo_pre_assinalado_minutos?: number | null
+          observacao?: string | null
+          retorno_almoco?: string | null
+          saida?: string | null
+          saida_almoco?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          tipo_dia?: string | null
+          tolerancia_aplicada?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -18951,6 +19155,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ponto_efeito_apuracao: {
+        Row: {
+          colaborador_cpf: string
+          competencia: string
+          creditos_min: number | null
+          debitos_min: number | null
+          dias: number | null
+          empresa_id: string | null
+          empresa_nome: string | null
+          id: string
+          momento: string
+          saldo_min: number | null
+          tenant_id: string
+          tirado_as: string
+          trabalhado_min: number | null
+        }
+        Insert: {
+          colaborador_cpf: string
+          competencia: string
+          creditos_min?: number | null
+          debitos_min?: number | null
+          dias?: number | null
+          empresa_id?: string | null
+          empresa_nome?: string | null
+          id?: string
+          momento: string
+          saldo_min?: number | null
+          tenant_id: string
+          tirado_as?: string
+          trabalhado_min?: number | null
+        }
+        Update: {
+          colaborador_cpf?: string
+          competencia?: string
+          creditos_min?: number | null
+          debitos_min?: number | null
+          dias?: number | null
+          empresa_id?: string | null
+          empresa_nome?: string | null
+          id?: string
+          momento?: string
+          saldo_min?: number | null
+          tenant_id?: string
+          tirado_as?: string
+          trabalhado_min?: number | null
+        }
+        Relationships: []
+      }
       ponto_entrega_conferencia: {
         Row: {
           colaboradores_sem_linha: number | null
@@ -25928,6 +26180,28 @@ export type Database = {
         Args: { p_dias_aviso?: number }
         Returns: number
       }
+      ponto_banco_horas_oficial: {
+        Args: {
+          p_colaborador_cpf?: string
+          p_competencia: string
+          p_empresa_id?: string
+          p_tenant_id: string
+        }
+        Returns: {
+          apurado_em: string
+          colaborador_cpf: string
+          colaborador_nome: string
+          compensados_min: number
+          creditos_min: number
+          debitos_min: number
+          divergencia_min: number
+          empresa_id: string
+          fonte: string
+          saldo_anterior_min: number
+          saldo_atual_min: number
+          tem_regime: boolean
+        }[]
+      }
       ponto_banco_limite_diario_monitorar: {
         Args: { p_competencia: string }
         Returns: number
@@ -29448,6 +29722,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      qa_caso_ponto_353: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       qa_caso_ponto_380: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
@@ -29549,6 +29833,66 @@ export type Database = {
         }
       }
       qa_caso_ponto_451: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_470: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_471: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_472: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_473: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_474: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
+        SetofOptions: {
+          from: "*"
+          to: "qa_retorno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      qa_caso_ponto_475: {
         Args: never
         Returns: Database["public"]["CompositeTypes"]["qa_retorno"]
         SetofOptions: {
