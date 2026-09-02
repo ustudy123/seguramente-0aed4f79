@@ -7,16 +7,42 @@ são injetadas no build pelo Vite conforme o `--mode`.
 | | TESTE (staging) | HOMOLOGAÇÃO | PRODUÇÃO |
 |---|---|---|---|
 | Como recebe mudança | esteira automática, a cada merge | **o mesmo script colado à mão** | script colado à mão |
-| Estrutura | a do repositório | **cópia fiel da produção**, drift incluído | a real |
+| Estrutura | a do repositório | forward-only (ver decisão 09/2026 abaixo) | a real |
 | Dados | fictícios | fictícios | reais |
-| Responde a | "a mudança funciona?" | **"o script aplica na estrutura real?"** | — |
+| Responde a | "a mudança funciona?" | "o script aplica sem quebrar?" | — |
 
-A homologação existe por causa de uma diferença que custou caro duas vezes: o teste
+> **Decisão 09/2026 — a homologação deixou de ser recriada.** O fluxo passou a ser
+> `desenvolvimento → homologação → produção`, forward-only: todo script de entrega
+> é aplicado primeiro na homologação e depois, o MESMO, na produção. A homologação
+> **não é mais recriada a partir da produção** (o RECRIAR abaixo está **suspenso**,
+> não apagado). Motivo: recriar apagava a estrutura de testes já montada na tela do
+> SuperAdmin — casos documentados, cobertura e mobiliário de QA (`qa_casos_teste`,
+> `qa_cobertura_e2e`, `qa_implementacoes`, `qa_modulos`, agendamentos).
+>
+> **O que se perde com isso, e o que fica.** A homologação deixa de ser espelho
+> fiel da produção e passa a divergir dela — some a garantia original de "o script
+> aplica na estrutura REAL da produção?". O colchão que resta é a disciplina do
+> próprio script de entrega (idempotente, `IF NOT EXISTS`, blocos `DO` com
+> `EXCEPTION` por item). Nem tudo se perde num eventual recriar: **Cypress** vive no
+> repositório (`cypress/e2e/*.cy.ts`, fora do banco) e o **motor de QA** vem das
+> migrations; só os **casos documentados** (dados nas tabelas acima) seriam
+> sobrescritos, porque hoje o `PRESERVAR_TABELAS` do gerador copia esses dados **da
+> produção**, não mantém os da homologação.
+>
+> **Para voltar a poder recriar sem perder testes** (anotado, não implementado):
+> **(A)** mudar o recriar para PRESERVAR as linhas dessas tabelas que já estão na
+> homologação (dump antes de dropar o schema, restaura depois), em vez de copiá-las
+> da produção; e/ou **(B)** tornar os casos parte do repositório — um helper que
+> exporta `qa_casos_teste`/cobertura para uma migration-seed, fazendo do repo a
+> fonte da verdade (aí recriar volta a ser seguro de graça). A casa já faz a B em
+> parte, nas migrations `qa_*_casos_tela.sql`.
+
+A homologação nasceu por causa de uma diferença que custou caro duas vezes: o teste
 recebe tudo automaticamente e a produção só recebe o que é colado, então os dois se
 afastam. Um script de entrega já abortou na produção por uma coluna que existia no
-teste, e uma rotina de QA quebrou por funções auxiliares que nunca chegaram lá. A
-homologação é onde o script encontra a estrutura real **antes** de a produção
-encontrá-lo.
+teste, e uma rotina de QA quebrou por funções auxiliares que nunca chegaram lá. Com
+a decisão 09/2026 a homologação não é mais espelho da produção; a proteção contra
+esse tipo de erro passa a depender da disciplina do script de entrega.
 
 ## Arquivos de ambiente
 
@@ -63,6 +89,13 @@ npm run build:production
 > Os scripts usam apenas `--mode`: nenhum deles sobrescreve o `.env`.
 
 ## Criar a homologação
+
+> ⚠️ **SUSPENSO desde 09/2026 (ver "Decisão 09/2026" no topo).** Recriar a
+> homologação a partir da produção APAGA a estrutura de testes já montada nela.
+> O fluxo atual é forward-only (`desenvolvimento → homologação → produção`), e a
+> homologação não é mais recriada. O roteiro abaixo fica registrado para o caso de
+> um dia se implementar a preservação dos casos (opções A/B no topo); até lá, não
+> use o RECRIAR numa homologação que já tenha testes montados.
 
 Roteiro completo, na ordem. Só o passo 1 depende do painel do Supabase; o resto é
 linha de comando e cópia de arquivo.
@@ -405,12 +438,15 @@ produção com a operação parada.
 A homologação envelhece igual à produção — e pelo mesmo motivo, se alguém colar um
 script só na produção e esquecer dela.
 
-- **Sempre que colar na produção, cole na homologação primeiro.** É a regra que
-  mantém as duas iguais sem nenhum trabalho extra.
-- **A cada trimestre, ou depois de qualquer trabalho manual feito direto na
-  produção**, aperte de novo o botão da esteira `homologacao` (Actions → Run
-  workflow → `RECRIAR`). Ela refaz o retrato do zero e zera a distância. Como o
-  schema é recriado, não há resíduo de execuções anteriores.
+- **Todo script de entrega passa pela homologação ANTES da produção.** É a ordem
+  do fluxo forward-only (`desenvolvimento → homologação → produção`) e a regra que
+  mantém a homologação à frente da produção sem nenhum trabalho extra. Nunca cole
+  algo só na produção.
+- ~~**A cada trimestre, aperte de novo o botão `RECRIAR`.**~~ **SUSPENSO desde
+  09/2026** (ver "Decisão 09/2026" no topo): recriar apagaria a estrutura de testes
+  da homologação. Enquanto a preservação dos casos (opções A/B) não estiver
+  implementada, a homologação **não** é recriada — ela só anda para frente, pelos
+  próprios scripts de entrega.
 - **Confira quando desconfiar:** os scripts
   `docs/script_divergencia_producao_parte*.sql` comparam qualquer ambiente com o
   repositório. Rodando os mesmos na produção e na homologação, a diferença entre
