@@ -270,6 +270,36 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
     checkIsActive(c.path, location.pathname, location.search)
   ) ?? false;
   const [isOpen, setIsOpen] = useState(hasActiveChild);
+  const parentLocked = isLocked(item.path);
+
+  // Grupo inteiro fora do plano: cadeia o próprio cabeçalho (com o aviso de
+  // upgrade), sem precisar expandir para ver os subitens cadeados.
+  if (parentLocked) {
+    const plano = planNameForPath(item.path || "") ?? "superior";
+    return (
+      <button
+        type="button"
+        title={`Disponível no plano ${plano}`}
+        onClick={() =>
+          toast.info(`"${item.title}" faz parte do plano ${plano}.`, {
+            description: "Fale com o suporte para liberar este módulo.",
+          })
+        }
+        className={cn(
+          "w-full flex items-center gap-3 rounded-lg transition-all duration-200 text-sidebar-foreground/40 hover:bg-white/[0.04]",
+          isCollapsed ? "justify-center py-2.5 relative" : "px-3 py-2.5 text-left"
+        )}
+      >
+        <item.icon className="w-[18px] h-[18px] flex-shrink-0 opacity-60" strokeWidth={1.75} />
+        {!isCollapsed && <span className="flex-1 text-left text-[13px] font-medium">{item.title}</span>}
+        {isCollapsed ? (
+          <Lock className="absolute right-1.5 bottom-1.5 w-2.5 h-2.5 opacity-70" strokeWidth={2.5} />
+        ) : (
+          <Lock className="w-3.5 h-3.5 flex-shrink-0 opacity-60" strokeWidth={2} />
+        )}
+      </button>
+    );
+  }
 
   return (
     <div>
