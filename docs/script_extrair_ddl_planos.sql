@@ -1,30 +1,3 @@
--- ============================================================================
--- EXTRATOR DE DDL — subsistema de PLANOS / ASSINATURAS / ENTITLEMENTS
---
--- SOMENTE LEITURA. So le o catalogo do banco (pg_catalog / information_schema).
--- Nao cria, nao altera e nao apaga NADA. Pode rodar quantas vezes quiser.
---
--- IMPORTANTE (correcao): este arquivo NAO tem NENHUM ponto-e-virgula. O SQL
--- Editor do Supabase divide os comandos no navegador quebrando no ponto-e-virgula
--- do texto cru — e a versao anterior tinha ponto-e-virgula DENTRO do texto gerado
--- (o DDL de cada objeto terminava em ponto-e-virgula), o que fazia o divisor
--- picar a consulta e rodar um pedaco solto (erro "relation public does not exist").
--- Aqui o DDL sai SEM o ponto-e-virgula final e a consulta inteira e um unico
--- comando sem terminador. Eu recoloco o ponto-e-virgula ao montar a migration.
---
--- ONDE COLAR
--- No SQL Editor da PRODUCAO (diayjpsrcerycycyaxst). E o unico lugar onde esses
--- objetos existem hoje: foram criados fora das migrations (provavelmente pelo
--- Lovable) e nunca entraram no repositorio, entao a homologacao/desenvolvimento
--- nao os tem. Este extrator LE a estrutura deles para eu reconstruir uma migration
--- de captura (CREATE ... IF NOT EXISTS) e faze-los descer para desenvolvimento e
--- homologacao pela esteira normal. A producao NAO e tocada — e leitura pura.
---
--- O QUE FAZER COM A SAIDA
--- Copie a grade inteira (a coluna "ddl") e me cole aqui. Vem uma linha por objeto,
--- na ordem em que precisam ser recriados (0=enum ate 7=gatilho).
--- ============================================================================
-
 WITH
 alvo_tabelas(t) AS (
   VALUES ('plans'), ('plan_prices'), ('plan_entitlements'),
@@ -43,7 +16,6 @@ tab AS MATERIALIZED (
   JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = 'public'
   WHERE c.relkind = 'r' AND c.relname IN (SELECT t FROM alvo_tabelas)
 ),
--- 0) ENUMS usados por colunas das tabelas alvo
 enums AS (
   SELECT DISTINCT ty.oid, ty.typname
   FROM tab
@@ -59,7 +31,6 @@ enums_ddl AS (
          || ')' AS ddl
   FROM enums e
 ),
--- 1) TABELAS (colunas, com NOT NULL / DEFAULT / IDENTITY / GENERATED)
 tabelas_ddl AS (
   SELECT 1 AS ordem, 'tabela'::text AS categoria, tab.relname AS objeto,
          'CREATE TABLE IF NOT EXISTS public.' || quote_ident(tab.relname) || ' (' || chr(10)
@@ -82,7 +53,6 @@ tabelas_ddl AS (
   LEFT JOIN pg_attrdef ad ON ad.adrelid = tab.oid AND ad.adnum = a.attnum
   GROUP BY tab.relname
 ),
--- 2) CONSTRAINTS (PK, FK, UNIQUE, CHECK) via pg_get_constraintdef
 constraints_ddl AS (
   SELECT 2 AS ordem,
          'constraint:' || CASE con.contype WHEN 'p' THEN 'pk' WHEN 'f' THEN 'fk'
@@ -95,7 +65,6 @@ constraints_ddl AS (
   FROM pg_constraint con
   JOIN tab ON tab.oid = con.conrelid
 ),
--- 3) INDICES que NAO sao backing de constraint (esses ja vem no passo 2)
 indices_ddl AS (
   SELECT 3 AS ordem, 'indice'::text AS categoria, ic.relname AS objeto,
          pg_get_indexdef(i.indexrelid) AS ddl
@@ -104,7 +73,6 @@ indices_ddl AS (
   JOIN pg_class ic ON ic.oid = i.indexrelid
   WHERE NOT EXISTS (SELECT 1 FROM pg_constraint con WHERE con.conindid = i.indexrelid)
 ),
--- 4) LIGAR RLS (uma linha para ENABLE, outra para FORCE quando for o caso)
 rls_ddl AS (
   SELECT 4 AS ordem, 'rls'::text AS categoria, tab.relname AS objeto,
          'ALTER TABLE public.' || quote_ident(tab.relname) || ' ENABLE ROW LEVEL SECURITY' AS ddl
@@ -114,7 +82,6 @@ rls_ddl AS (
          'ALTER TABLE public.' || quote_ident(tab.relname) || ' FORCE ROW LEVEL SECURITY'
   FROM tab WHERE tab.relforcerowsecurity
 ),
--- 5) POLITICAS RLS
 politicas_ddl AS (
   SELECT 5 AS ordem, 'politica'::text AS categoria,
          p.tablename || '.' || p.policyname AS objeto,
@@ -127,7 +94,6 @@ politicas_ddl AS (
   FROM pg_policies p
   WHERE p.schemaname = 'public' AND p.tablename IN (SELECT t FROM alvo_tabelas)
 ),
--- 6) FUNCOES (corpo completo)
 funcoes_ddl AS (
   SELECT 6 AS ordem, 'funcao'::text AS categoria,
          p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' AS objeto,
@@ -138,7 +104,6 @@ funcoes_ddl AS (
     AND ( p.proname IN (SELECT f FROM alvo_funcoes)
           OR p.proname LIKE 'entitlement%' )
 ),
--- 7) GATILHOS nas tabelas alvo
 gatilhos_ddl AS (
   SELECT 7 AS ordem, 'gatilho'::text AS categoria,
          tab.relname || '.' || tg.tgname AS objeto,
