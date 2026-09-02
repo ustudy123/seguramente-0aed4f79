@@ -474,6 +474,7 @@ const Ponto = () => {
           status: "pendente",
           observacao: null,
           tipo_dia: null, feriado_nome: null, feriado_trabalhado: null,
+          intervalo_origem: null, intervalo_pre_assinalado_minutos: null,
           created_at: "", updated_at: "",
           __virtual: true,
         });
