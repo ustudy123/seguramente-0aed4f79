@@ -11,13 +11,14 @@ import { useFeriasFinanceiro } from "@/hooks/useFeriasFinanceiro";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
 import { FeriasGovernanca } from "@/components/ferias/FeriasGovernanca";
+import { FeriasAlertas } from "@/components/ferias/FeriasAlertas";
 import { useINR } from "@/hooks/useINR";
 import { useFerias, type FeriasSolicitacao } from "@/hooks/useFerias";
 import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
 import {
   Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
   ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
-  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck, Wallet, CalendarRange,
+  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck, Wallet, CalendarRange, CalendarClock,
   Loader2, MessageSquare, PenLine,
 } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
@@ -743,6 +744,7 @@ const Ferias = () => {
                 </span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="vencimentos"><CalendarClock className="w-3.5 h-3.5 mr-1" /> Vencimentos</TabsTrigger>
             <TabsTrigger value="cultura"><Heart className="w-3.5 h-3.5 mr-1" /> Cultura</TabsTrigger>
             <TabsTrigger value="relatorios"><BarChart3 className="w-3.5 h-3.5 mr-1" /> Relatórios</TabsTrigger>
             <TabsTrigger value="governanca"><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Governança</TabsTrigger>
@@ -810,6 +812,10 @@ const Ferias = () => {
 
         <TabsContent value="financeiro">
           <FeriasFinanceiro />
+        </TabsContent>
+
+        <TabsContent value="vencimentos" className="space-y-4">
+          <FeriasAlertas />
         </TabsContent>
 
         <TabsContent value="inteligencia" className="space-y-4">
