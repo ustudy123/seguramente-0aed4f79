@@ -16,7 +16,7 @@ export function usePrecosAddons() {
   const queryClient = useQueryClient();
   const { isSuperAdmin } = useAuthContext();
 
-  const { data: itens = [], isLoading } = useQuery({
+  const { data: itens = [], isLoading, isError } = useQuery({
     queryKey: ['addon-precos'],
     enabled: isSuperAdmin,
     queryFn: async (): Promise<AddonPreco[]> => {
@@ -40,6 +40,7 @@ export function usePrecosAddons() {
   return {
     itens,
     isLoading,
+    isError,
     setPreco: setPrecoMutation.mutateAsync,
     isSaving: setPrecoMutation.isPending,
   };

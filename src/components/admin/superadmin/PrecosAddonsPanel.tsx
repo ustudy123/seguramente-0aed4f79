@@ -19,7 +19,7 @@ function reaisToCents(str: string): number {
 }
 
 export function PrecosAddonsPanel() {
-  const { itens, isLoading, setPreco, isSaving } = usePrecosAddons();
+  const { itens, isLoading, isError, setPreco, isSaving } = usePrecosAddons();
   const [values, setValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -91,6 +91,14 @@ export function PrecosAddonsPanel() {
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
+      ) : isError || itens.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            <Info className="w-5 h-5 mx-auto mb-2 opacity-60" />
+            Não foi possível carregar os itens neste ambiente. Confirme que o script de banco dos
+            add-ons (<code>script_addon_prices.sql</code>) foi aplicado aqui.
+          </CardContent>
+        </Card>
       ) : (
         <>
           {/* Vida extra */}
