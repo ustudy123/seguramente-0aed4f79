@@ -265,7 +265,8 @@ serve(async (req) => {
   const email = (body.email || EMAIL_PADRAO).trim();
   const senha = body.senha || SENHA_PADRAO;
 
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  // deno-lint-ignore-next-line no-explicit-any
+  const admin = createClient<any, "public", any>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
