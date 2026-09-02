@@ -69,7 +69,7 @@ export default function TenantDetalhe() {
               <Shield className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold capitalize">{tenant?.plano || '...'}</div>
+              <div className="text-2xl font-bold capitalize">{tenant?.plano_atual ?? tenant?.plano ?? '...'}</div>
               <p className="text-xs text-muted-foreground mt-1">Tenant ID: {id}</p>
             </CardContent>
           </Card>
