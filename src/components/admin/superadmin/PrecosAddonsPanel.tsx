@@ -18,6 +18,32 @@ function reaisToCents(str: string): number {
   return Number.isFinite(n) ? Math.max(Math.round(n * 100), 0) : 0;
 }
 
+// Definido fora do componente pai: se ficar aninhado, o React recria o campo
+// a cada tecla, ele perde o foco e só aceita um dígito.
+function PrecoInput({
+  value,
+  onChange,
+  sufixo,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  sufixo: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-sm text-muted-foreground">R$</span>
+      <Input
+        inputMode="decimal"
+        className="w-28 text-right"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="0,00"
+      />
+      <span className="text-xs text-muted-foreground whitespace-nowrap">{sufixo}</span>
+    </div>
+  );
+}
+
 export function PrecosAddonsPanel() {
   const { itens, isLoading, isError, setPreco, isSaving } = usePrecosAddons();
   const [values, setValues] = useState<Record<string, string>>({});
@@ -49,19 +75,7 @@ export function PrecosAddonsPanel() {
     }
   };
 
-  const PrecoInput = ({ item, sufixo }: { item: AddonPreco; sufixo: string }) => (
-    <div className="flex items-center gap-1.5">
-      <span className="text-sm text-muted-foreground">R$</span>
-      <Input
-        inputMode="decimal"
-        className="w-28 text-right"
-        value={values[item.key] ?? ""}
-        onChange={(e) => setValues((v) => ({ ...v, [item.key]: e.target.value }))}
-        placeholder="0,00"
-      />
-      <span className="text-xs text-muted-foreground whitespace-nowrap">{sufixo}</span>
-    </div>
-  );
+  const setValor = (key: string, v: string) => setValues((prev) => ({ ...prev, [key]: v }));
 
   return (
     <div className="space-y-4 max-w-3xl">
@@ -113,7 +127,11 @@ export function PrecosAddonsPanel() {
                 <p className="text-sm text-muted-foreground">
                   Preço por colaborador acima do teto do plano.
                 </p>
-                <PrecoInput item={vida} sufixo="/ vida / mês" />
+                <PrecoInput
+                  value={values[vida.key] ?? ""}
+                  onChange={(v) => setValor(vida.key, v)}
+                  sufixo="/ vida / mês"
+                />
               </CardContent>
             </Card>
           )}
@@ -138,7 +156,11 @@ export function PrecosAddonsPanel() {
                         </Badge>
                       )}
                     </div>
-                    <PrecoInput item={m} sufixo="/ mês" />
+                    <PrecoInput
+                      value={values[m.key] ?? ""}
+                      onChange={(v) => setValor(m.key, v)}
+                      sufixo="/ mês"
+                    />
                   </div>
                 </div>
               ))}
