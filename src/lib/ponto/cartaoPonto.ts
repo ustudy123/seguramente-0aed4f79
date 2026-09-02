@@ -201,7 +201,15 @@ function classificarDia(d: CartaoDia, temRegimeBanco: boolean) {
       : `Hora extra ${domingo || semJornada ? "100%" : "50%"}`;
   } else if (d.saldo_min < 0) {
     ha = -d.saldo_min;
-    ocorrencia = "Diminui Banco Horas";
+    // A mesma moeda do lado positivo: com regime de banco vigente, o déficit
+    // diminui o banco; SEM regime não há banco a diminuir — é atraso ou saída
+    // antecipada a descontar (ou a compensar num acordo). Dizer "Diminui Banco
+    // Horas" quando o resumo do banco mostra débito 0:00 afirma no documento um
+    // movimento que não aconteceu, e o documento é o que o trabalhador assina
+    // (Súmula 338 do TST: o controle tem de sustentar o que declara).
+    ocorrencia = temRegimeBanco
+      ? "Diminui Banco Horas"
+      : "Atraso / saída antecipada";
   } else {
     ocorrencia = "Trabalhando";
   }
