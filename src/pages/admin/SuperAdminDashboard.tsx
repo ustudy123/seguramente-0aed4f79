@@ -32,6 +32,7 @@ import { LeadsCRMKanban } from '@/components/admin/superadmin/LeadsCRMKanban';
 import { TenantsStatusPanel, UsuariosGlobalPanel } from '@/components/admin/superadmin/PanelTenantsUsuarios';
 import { EmpresasPromociveisPanel } from '@/components/admin/superadmin/EmpresasPromociveisPanel';
 import { PsicossocialSuperAdminPanel } from '@/components/admin/superadmin/PsicossocialSuperAdminPanel';
+import { PrecosAddonsPanel } from '@/components/admin/superadmin/PrecosAddonsPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -142,7 +143,7 @@ export default function SuperAdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full">
+          <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full">
             <TabsTrigger value="overview"><LayoutDashboard className="w-4 h-4 mr-2" />Visão Geral</TabsTrigger>
             <TabsTrigger value="tenants"><Building2 className="w-4 h-4 mr-2" />Empresas</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
@@ -150,6 +151,7 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="landing"><TrendingUp className="w-4 h-4 mr-2" />Landing</TabsTrigger>
             <TabsTrigger value="psicossocial"><Brain className="w-4 h-4 mr-2" />Psicossocial</TabsTrigger>
             <TabsTrigger value="situacao"><Activity className="w-4 h-4 mr-2" />Situação</TabsTrigger>
+            <TabsTrigger value="precos"><CreditCard className="w-4 h-4 mr-2" />Preços</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><SuperAdminOverview /></TabsContent>
@@ -259,6 +261,8 @@ export default function SuperAdminDashboard() {
           <TabsContent value="psicossocial"><PsicossocialSuperAdminPanel /></TabsContent>
 
           <TabsContent value="situacao"><TenantsStatusPanel /></TabsContent>
+
+          <TabsContent value="precos"><PrecosAddonsPanel /></TabsContent>
         </Tabs>
       </div>
 
