@@ -28,7 +28,19 @@ em PDFs de devolutiva ou em documentos que circulam. Dados de saúde são
 sensíveis (LGPD art. 11). CPFs fictícios da casa: faixa 900.000.0XX com
 dígito verificador válido (o sistema valida DV).
 
-**Exceção única, e só na homologação:** o botão RECRIAR tem os campos
+**Decisão 09/2026 — a homologação deixou de ser recriada.** O fluxo passou a ser
+`desenvolvimento → homologação → produção`, forward-only: tudo entra por script
+de entrega (o MESMO em homologação e depois em produção), nunca mais por cópia da
+produção para baixo. Motivo: recriar apagava a estrutura de testes já montada na
+tela do SuperAdmin (casos documentados, cobertura, mobiliário de QA). Consequência
+a ter em mente: a homologação **deixa de ser espelho fiel da produção** e passa a
+divergir dela — some a garantia que ela dava de "o script aplica na estrutura REAL
+da produção?". O que protege a produção do drift vira a disciplina do próprio
+script (idempotente, `IF NOT EXISTS`, blocos `DO` com `EXCEPTION` por item). O
+RECRIAR abaixo NÃO foi apagado, mas está **suspenso**: só voltar a usar depois de
+resolver a preservação dos casos (opções anotadas em `docs/AMBIENTES.md`).
+
+**Exceção única, e só na homologação (quando o RECRIAR estava em uso):** o botão RECRIAR tem os campos
 `mascarar` e `cliente_real`. Em `um_cliente`, só o cliente informado vem com
 dado real e todos os outros seguem embaralhados (decisão do dono do produto,
 08/2026, para a própria operação da casa — SUDOMED ITAPEJARA); em `nao`, a
