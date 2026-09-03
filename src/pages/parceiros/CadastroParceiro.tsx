@@ -52,8 +52,10 @@ export default function CadastroParceiro() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any).rpc("parceiro_cadastrar", { _dados: { ...f, aceite_termos: true, user_agent: navigator.userAgent } });
         if (error) throw error;
-        toast.success(data?.status === "ativo" ? "Cadastro concluído. Bem-vindo!" : "Cadastro enviado para aprovação.");
-        window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/parceiro`);
+        toast.success(data?.status === "ativo" ? "Cadastro concluído. Agora assine o contrato." : "Cadastro enviado para aprovação. Agora assine o contrato.");
+        // O aceite do cadastro só manifesta a intenção; a assinatura eletrônica (selfie, IP, localização) vem agora.
+        const token: string | undefined = data?.contrato?.token;
+        window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/, "")}${token ? `/assinar-contrato/${token}` : "/parceiro"}`);
         return;
       }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) return toast.error("E-mail inválido");
@@ -67,6 +69,8 @@ export default function CadastroParceiro() {
       toast.success(data?.status === "ativo" ? "Cadastro concluído. Entrando…" : "Cadastro enviado para aprovação. Entrando…");
       const { error: loginErr } = await signIn(f.email, f.senha);
       if (loginErr) { navigate("/parceiros/entrar"); return; }
+      // Direto para a assinatura eletrônica do contrato gerado com os dados dele
+      if (data?.contrato_token) { navigate(`/assinar-contrato/${data.contrato_token}`, { replace: true }); return; }
       navigate("/parceiro", { replace: true });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível concluir o cadastro");

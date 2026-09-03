@@ -63,8 +63,8 @@ export default function PortalParceiro() {
         <div className="space-y-6" data-testid="portal-parceiro">
           {dados.contrato?.pendente && (
             <div className="rounded-xl border border-[#60ABEF]/40 bg-[#60ABEF]/10 p-4 text-sm text-slate-100 flex flex-wrap items-center justify-between gap-3" data-testid="portal-contrato-pendente">
-              <span>Há uma versão do <b>Contrato de Parceria</b> aguardando o seu aceite{dados.contrato.titulo_vigente ? ` (${dados.contrato.titulo_vigente})` : ""}.</span>
-              <Button asChild size="sm" className="bg-[#FF8A00] hover:bg-[#e67a00] text-white"><Link to="/parceiros/contrato">Ler e aceitar</Link></Button>
+              <span>Há uma versão do <b>Contrato de Parceria</b> aguardando a sua assinatura eletrônica{dados.contrato.titulo_vigente ? ` (${dados.contrato.titulo_vigente})` : ""}.</span>
+              <Button asChild size="sm" className="bg-[#FF8A00] hover:bg-[#e67a00] text-white"><Link to="/parceiros/contrato">Ler e assinar</Link></Button>
             </div>
           )}
           {dados.parceiro.status !== "ativo" && (
