@@ -349,7 +349,11 @@ teste de tela porque a conta-robô não é superadmin e não deve virar; precisa
 um robô-superadmin próprio. (b) A data de go-live usa `profiles.updated_at` do
 onboarding concluído como aproximação; a Onda 3 passa a gravar a data no
 snapshot mensal. (c) Cliques no link e gráfico de 12 meses só nascem nas Ondas
-3 e 4 (o portal já reserva o lugar).
+3 e 4 (o portal já reserva o lugar). (d) **Bloqueio de ambiente**: o secret
+`QA_E2E_TOKEN` não está cadastrado no repositório; sem ele a esteira pula a
+semeadura das contas-robô e não envia o resultado do Cypress ao painel de QA.
+O spec do portal pula (pendente, com aviso) enquanto o robô-parceiro não
+existir. Cadastrar o secret é gesto do dono do repositório.
 
 ### Onda 0 — Documentação de testes (antes de qualquer código)
 - `qa_modulos`: novo módulo `parceiros` (SuperAdmin) e `portal-parceiro`.
