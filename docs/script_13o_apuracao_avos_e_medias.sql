@@ -300,6 +300,7 @@ DECLARE
     v_rubricas_mkd INT := 0;
     v_competencias JSONB := '[]'::jsonb;
     v_rubricas     JSONB := '[]'::jsonb;
+    v_protegidas   TEXT;
     v_avisos       TEXT[] := ARRAY[]::TEXT[];
 BEGIN
     IF p_tenant IS NULL OR v_cpf = '' OR p_ano IS NULL THEN
@@ -402,6 +403,27 @@ BEGIN
     IF v_total = 0 AND v_rubricas_mkd > 0 THEN
         v_avisos := array_append(v_avisos,
             'Nenhum lançamento de rubrica variável encontrado no ano-base — confira se a folha do período foi importada.');
+    END IF;
+
+    -- A média é das VARIÁVEIS. Rubrica protegida (o Salário Base é uma
+    -- delas) integra o 13º pelo lado do salário, que já entra como
+    -- remuneração base — se ela também for lançada na folha, o valor
+    -- entra duas vezes e o 13º sai dobrado. Não decidimos por conta
+    -- própria excluir: avisamos, nomeando a rubrica, para o DP conferir.
+    SELECT string_agg(DISTINCT r.descricao, ', ' ORDER BY r.descricao)
+      INTO v_protegidas
+      FROM public.folha_lancamentos l
+      JOIN public.folha_periodos pe ON pe.id = l.periodo_id
+      JOIN public.folha_rubricas  r ON r.id = l.rubrica_id
+     WHERE l.tenant_id = p_tenant
+       AND regexp_replace(coalesce(l.colaborador_cpf, ''), '\D', '', 'g') = v_cpf
+       AND pe.competencia BETWEEN v_ini AND v_fim
+       AND r.incide_13 AND r.ativa AND r.tipo = 'PROVENTO'
+       AND r.protegida;
+
+    IF v_protegidas IS NOT NULL THEN
+        v_avisos := array_append(v_avisos,
+            format('Atenção: %s entrou na média por estar marcada como integrante do 13º. A média é das variáveis (hora extra, comissão, adicionais) e o salário fixo já entra como remuneração base — confira se o valor não está sendo contado duas vezes.', v_protegidas));
     END IF;
 
     RETURN jsonb_build_object(
