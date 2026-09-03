@@ -221,3 +221,76 @@ export function descreverLote(r: ResultadoLote): string {
   if (r.erros.length > 0) partes.push(`${r.erros.length} com erro`);
   return partes.join(" · ");
 }
+
+/* ── Configuração do 13º por empresa ──────────────────────────────────
+ * Onde as duas leituras legítimas do adiantamento (Lei 4.749/1965) e o
+ * método da média das horas extras (Súmula 347 do TST) ficam à escolha
+ * da empresa, em vez de decididos por quem escreveu o código.
+ */
+export interface Config13 {
+  media_divisor: string;
+  media_inclui_protegidas: boolean;
+  media_horas_extras: string;
+  divisor_horas_mes: number;
+  afastamento_regra: string;
+  afastamento_dias_empregador: number;
+  adiantamento_base: string;
+  parametros_vigencia_inicio: string;
+}
+
+export const CONFIG13_PADRAO: Config13 = {
+  media_divisor: "avos_apurados",
+  media_inclui_protegidas: false,
+  media_horas_extras: "fisica",
+  divisor_horas_mes: 220,
+  afastamento_regra: "previdenciario_suspende",
+  afastamento_dias_empregador: 15,
+  adiantamento_base: "proporcional_apurado",
+  parametros_vigencia_inicio: "2026-01-01",
+};
+
+export function useDecimoTerceiroConfig() {
+  const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const [salvando, setSalvando] = useState(false);
+
+  const carregar = useCallback(async (): Promise<Config13> => {
+    if (!tenantId) return CONFIG13_PADRAO;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const from = (supabase as any).from.bind(supabase);
+    const { data } = await from("decimo_terceiro_config")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("empresa_id", { nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) return CONFIG13_PADRAO;
+    return { ...CONFIG13_PADRAO, ...(data as Partial<Config13>) };
+  }, [tenantId]);
+
+  const salvar = useCallback(
+    async (c: Config13) => {
+      if (!tenantId) throw new Error("Empresa não identificada");
+      setSalvando(true);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const from = (supabase as any).from.bind(supabase);
+        const { data: existente } = await from("decimo_terceiro_config")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .limit(1)
+          .maybeSingle();
+        const linha = { ...c, tenant_id: tenantId, empresa_id: empresaAtivaId || null };
+        const { error } = existente
+          ? await from("decimo_terceiro_config").update(linha).eq("id", existente.id)
+          : await from("decimo_terceiro_config").insert(linha);
+        if (error) throw error;
+      } finally {
+        setSalvando(false);
+      }
+    },
+    [tenantId, empresaAtivaId],
+  );
+
+  return { carregar, salvar, salvando };
+}

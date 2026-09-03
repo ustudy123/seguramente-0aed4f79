@@ -11,13 +11,14 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock } from "lucide-react";
+import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock, Settings2 } from "lucide-react";
 import { useFolhaCalculo } from "@/hooks/useFolhaCalculo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import {
-  useDecimoTerceiro, useDecimoTerceiroLote, descreverAvos, descreverMedia13,
-  descreverLote, nomeMes,
-  type Apuracao13,
+  useDecimoTerceiro, useDecimoTerceiroLote, useDecimoTerceiroConfig,
+  descreverAvos, descreverMedia13, descreverLote, nomeMes,
+  CONFIG13_PADRAO,
+  type Apuracao13, type Config13,
 } from "@/hooks/useDecimoTerceiro";
 import { toast } from "sonner";
 
@@ -32,6 +33,24 @@ export function DecimoTerceiroTab() {
   const [showDetalhe, setShowDetalhe] = useState<any>(null);
   const { apurar, apurando } = useDecimoTerceiro();
   const { processar, processando } = useDecimoTerceiroLote();
+  const { carregar: carregarConfig, salvar: salvarConfig, salvando: salvandoConfig } = useDecimoTerceiroConfig();
+  const [showConfig, setShowConfig] = useState(false);
+  const [config, setConfig] = useState<Config13>(CONFIG13_PADRAO);
+
+  const abrirConfig = async () => {
+    try { setConfig(await carregarConfig()); } catch { /* usa o padrão */ }
+    setShowConfig(true);
+  };
+
+  const gravarConfig = async () => {
+    try {
+      await salvarConfig(config);
+      toast.success("Política do 13º salva. Os próximos cálculos já seguem estas regras.");
+      setShowConfig(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível salvar a configuração");
+    }
+  };
   // Memória da apuração. Fica ao lado dos valores para o DP conferir de
   // onde saíram antes de fechar o cálculo (Lei 4.090 / RNF-001).
   const [apuracao, setApuracao] = useState<Apuracao13 | null>(null);
@@ -134,6 +153,9 @@ export function DecimoTerceiroTab() {
         </div>
         <div className="flex gap-2">
           <Input type="number" className="w-24" value={ano} onChange={e => setAno(Number(e.target.value))} />
+          <Button variant="outline" size="icon" onClick={abrirConfig} title="Política do 13º">
+            <Settings2 className="w-4 h-4" />
+          </Button>
           <Button variant="outline" onClick={() => handleLote(1)} disabled={processando}>
             <Users className="w-4 h-4 mr-2" />
             {processando ? "Processando..." : "Lote 1ª parcela"}
@@ -158,7 +180,7 @@ export function DecimoTerceiroTab() {
                 <TableHead className="text-center">Avos</TableHead>
                 <TableHead className="text-center">Situação</TableHead>
                 <TableHead className="text-center">Prazo legal</TableHead>
-                <TableHead className="text-right">Bruto</TableHead>
+                <TableHead className="text-right">13º integral</TableHead>
                 <TableHead className="text-right">INSS</TableHead>
                 <TableHead className="text-right">IRRF</TableHead>
                 <TableHead className="text-right">Líquido</TableHead>
@@ -205,6 +227,110 @@ export function DecimoTerceiroTab() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Política do 13º — as escolhas que a lei permite ficam com a empresa */}
+      <Dialog open={showConfig} onOpenChange={setShowConfig}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Política do 13º salário</DialogTitle>
+            <DialogDescription>
+              Onde a legislação admite mais de uma leitura, a escolha é da empresa.
+              Vale para os próximos cálculos; o que já foi apurado guarda a regra da época.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label>Adiantamento (1ª parcela)</Label>
+              <Select
+                value={config.adiantamento_base}
+                onValueChange={v => setConfig(c => ({ ...c, adiantamento_base: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="proporcional_apurado">Metade do 13º proporcional apurado</SelectItem>
+                  <SelectItem value="remuneracao_mes_anterior">Metade da remuneração do mês anterior</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                A segunda é a letra do art. 2º da Lei 4.749/1965. A primeira é a prática de
+                mercado e evita adiantar mais do que o 13º devido a quem tem menos de 12 avos.
+                O 13º total é o mesmo nas duas — muda quanto entra em novembro.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Média das horas extras</Label>
+              <Select
+                value={config.media_horas_extras}
+                onValueChange={v => setConfig(c => ({ ...c, media_horas_extras: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fisica">Média física — horas do ponto × valor da hora atual</SelectItem>
+                  <SelectItem value="valores">Média dos valores pagos no ano</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                A média física é o entendimento da Súmula 347 do TST e protege a empresa quando
+                houve aumento salarial no ano — a média por valores históricos pagaria a menos.
+                Sem registro de ponto no ano, o sistema usa os valores e avisa.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Divisor de horas no mês</Label>
+                <Input
+                  type="number" step="1"
+                  value={config.divisor_horas_mes}
+                  onChange={e => setConfig(c => ({ ...c, divisor_horas_mes: Number(e.target.value) }))}
+                />
+                <p className="text-xs text-muted-foreground">220 para jornada de 44h semanais.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Dias de afastamento por conta da empresa</Label>
+                <Input
+                  type="number" step="1"
+                  value={config.afastamento_dias_empregador}
+                  onChange={e => setConfig(c => ({ ...c, afastamento_dias_empregador: Number(e.target.value) }))}
+                />
+                <p className="text-xs text-muted-foreground">15 dias antes do benefício do INSS.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Divisor da média das variáveis</Label>
+              <Select
+                value={config.media_divisor}
+                onValueChange={v => setConfig(c => ({ ...c, media_divisor: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="avos_apurados">Pelos avos apurados</SelectItem>
+                  <SelectItem value="meses_com_valor">Só pelos meses com valor</SelectItem>
+                  <SelectItem value="doze_avos">Sempre por 12</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-500" />
+              <p className="text-xs text-muted-foreground">
+                Estas escolhas mudam valores pagos. Confirme com a contabilidade antes de
+                alterar, e refaça os cálculos ainda não aprovados para a nova regra valer neles.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfig(false)}>Cancelar</Button>
+            <Button onClick={gravarConfig} disabled={salvandoConfig}>
+              {salvandoConfig ? "Salvando..." : "Salvar política"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal Calcular */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
