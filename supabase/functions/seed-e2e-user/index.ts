@@ -193,6 +193,46 @@ const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Conta do parceiro de teste. Mesma senha do robô principal (a suíte só
+// conhece uma), e-mail fixo fictício. Sem profile: ela deve cair na Área do
+// Parceiro, nunca no sistema — é exatamente o que PGP-030 confere.
+const EMAIL_PARCEIRO_ROBO = "parceiro.robo@youreyes.local";
+// deno-lint-ignore no-explicit-any
+async function semearRoboParceiro(admin: any, senha: string) {
+  const { data: lista } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  // deno-lint-ignore no-explicit-any
+  const existente = lista?.users?.find((u: any) => (u.email ?? "").toLowerCase() === EMAIL_PARCEIRO_ROBO);
+  let uid: string;
+  if (existente) {
+    uid = existente.id;
+    await admin.auth.admin.updateUserById(uid, { password: senha, email_confirm: true });
+  } else {
+    const { data: novo, error } = await admin.auth.admin.createUser({
+      email: EMAIL_PARCEIRO_ROBO, password: senha, email_confirm: true,
+      user_metadata: { nome_completo: "Robô Parceiro (Cypress)" },
+    });
+    if (error) throw new Error("createUser parceiro: " + error.message);
+    uid = novo.user!.id;
+  }
+  // Garante o parceiro fictício e o vínculo. Se a Onda 1 ainda não semeou
+  // a Clínica Staging (banco sem Empresa Staging), cria aqui.
+  let { data: parc } = await admin.from("parceiros").select("id").eq("codigo", "CLINICASTAGING").maybeSingle();
+  if (!parc) {
+    const { data: criado, error } = await admin.from("parceiros").insert({
+      codigo: "CLINICASTAGING", nome: "Clínica Staging SST", tipo_pessoa: "pj", tipo_parceiro: "clinica",
+      email: "clinica.staging@exemplo.test", cidade: "Pato Branco", uf: "PR", status: "ativo",
+    }).select("id").single();
+    if (error) throw new Error("parceiros: " + error.message);
+    parc = criado;
+  }
+  const { error: vErr } = await admin.from("parceiro_usuarios")
+    .upsert({ parceiro_id: parc.id, user_id: uid, papel: "dono" }, { onConflict: "user_id" });
+  if (vErr) throw new Error("parceiro_usuarios: " + vErr.message);
+  // A carteira precisa ter ao menos a Empresa Staging como cliente originado.
+  await admin.from("tenants").update({ parceiro_id: parc.id, originado_em: new Date().toISOString() })
+    .eq("id", TENANT_ID).is("parceiro_id", null);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -441,6 +481,15 @@ serve(async (req) => {
       await semearFixturesProfundas(admin, userId);
     } catch (e) {
       console.error("Fixtures profundas (nao-fatal):", (e as Error).message);
+    }
+
+    // 6) Robô-PARCEIRO: conta sem perfil de tenant, vinculada ao parceiro
+    //    fictício "Clínica Staging SST" (semeado pela migration da Onda 1).
+    //    É com ela que o spec portal-parceiro.cy.ts entra em /parceiros/entrar.
+    try {
+      await semearRoboParceiro(admin, senha);
+    } catch (e) {
+      console.error("Robô-parceiro (nao-fatal):", (e as Error).message);
     }
 
     return json({

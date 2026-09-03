@@ -11,6 +11,8 @@ interface AuthState {
   roles: AppRole[];
   tenantId: string | null;
   isSuperAdmin: boolean;
+  // Programa de Parceiros: id do parceiro ao qual o usuário está vinculado (ou null)
+  parceiroId: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -23,6 +25,7 @@ export function useAuth() {
     roles: [],
     tenantId: null,
     isSuperAdmin: false,
+    parceiroId: null,
     loading: true,
     error: null,
   });
@@ -30,7 +33,7 @@ export function useAuth() {
   const fetchUserData = useCallback(async (userId: string) => {
     try {
       // Fetch profile, roles, and superadmin status in parallel
-      const [profileResult, rolesResult, superadminResult] = await Promise.all([
+      const [profileResult, rolesResult, superadminResult, parceiroResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('*')
@@ -45,7 +48,10 @@ export function useAuth() {
           .select('id')
           .eq('user_id', userId)
           .eq('ativo', true)
-          .maybeSingle()
+          .maybeSingle(),
+        // Vínculo com o Programa de Parceiros (tabela nova; ausência = null, nunca erro)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any).from('parceiro_usuarios').select('parceiro_id').eq('user_id', userId).maybeSingle()
       ]);
 
       if (profileResult.error) throw profileResult.error;
@@ -61,6 +67,7 @@ export function useAuth() {
         roles,
         tenantId: profileResult.data?.tenant_id || null,
         isSuperAdmin,
+        parceiroId: (parceiroResult?.data as { parceiro_id?: string } | null)?.parceiro_id ?? null,
         loading: false,
         error: null,
       }));
@@ -93,6 +100,7 @@ export function useAuth() {
             profile: null,
             roles: [],
             tenantId: null,
+            parceiroId: null,
             loading: false,
           }));
         }
@@ -230,6 +238,7 @@ export function useAuth() {
       roles: [],
       tenantId: null,
       isSuperAdmin: false,
+      parceiroId: null,
       loading: false,
       error: null,
     });

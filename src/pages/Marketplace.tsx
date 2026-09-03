@@ -16,7 +16,6 @@ import { ServicoFormModal } from "@/components/marketplace/ServicoFormModal";
 import { ConfirmacaoExecucaoModal } from "@/components/marketplace/ConfirmacaoExecucaoModal";
 import { AvaliacaoModal } from "@/components/marketplace/AvaliacaoModal";
 import { ValidacaoProfissionais } from "@/components/marketplace/ValidacaoProfissionais";
-import { AfiliadosDashboard } from "@/components/marketplace/AfiliadosDashboard";
 import { DenunciasList } from "@/components/marketplace/DenunciasList";
 import { DenunciaForm } from "@/components/marketplace/DenunciaForm";
 import { PacotesServicos } from "@/components/marketplace/PacotesServicos";
@@ -189,9 +188,6 @@ export default function Marketplace() {
           <TabsTrigger value="validacao" className="gap-1.5">
             <Shield className="h-4 w-4" /> Validação
           </TabsTrigger>
-          <TabsTrigger value="afiliados" className="gap-1.5">
-            <Link2 className="h-4 w-4" /> Afiliados
-          </TabsTrigger>
           <TabsTrigger value="denuncias" className="gap-1.5">
             <ShieldAlert className="h-4 w-4" /> Denúncias
           </TabsTrigger>
@@ -265,9 +261,8 @@ export default function Marketplace() {
         </TabsContent>
 
         {/* Afiliados */}
-        <TabsContent value="afiliados" className="mt-4">
-          <AfiliadosDashboard />
-        </TabsContent>
+        {/* O programa de afiliados saiu daqui: virou o Programa de Parceiros,
+            com área própria fora do sistema (/parceiros). */}
 
         {/* Pacotes */}
         <TabsContent value="pacotes" className="mt-4">
@@ -284,6 +279,17 @@ export default function Marketplace() {
           <PerformanceDashboard />
         </TabsContent>
       </Tabs>
+        <div className="mt-6 rounded-xl border border-dashed p-4 flex flex-wrap items-center justify-between gap-3" data-testid="marketplace-convite-parceiro">
+          <div className="flex items-center gap-3">
+            <Link2 className="h-5 w-5 text-primary" />
+            <div>
+              <div className="font-semibold">Já é profissional? Vire parceiro YourEyes</div>
+              <div className="text-sm text-muted-foreground">Indique empresas da sua região, receba comissão recorrente e acompanhe sua carteira na Área do Parceiro.</div>
+            </div>
+          </div>
+          <Button asChild variant="outline"><a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/parceiros`}>Conhecer o programa</a></Button>
+        </div>
+
 
       {/* Modal de contratação */}
       <ContratacaoModal

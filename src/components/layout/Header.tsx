@@ -45,7 +45,7 @@ interface HeaderProps {
 
 
 export const Header = ({ onMenuToggle, isMobile, isSidebarCollapsed, onSidebarToggle }: HeaderProps) => {
-  const { profile, signOut, isSuperAdmin, user, roles } = useAuthContext();
+  const { profile, signOut, isSuperAdmin, user, roles, parceiroId } = useAuthContext();
   const { tenant } = useTenant();
   const { humorHoje } = useHumorDiario();
   const navigate = useNavigate();
@@ -192,6 +192,12 @@ export const Header = ({ onMenuToggle, isMobile, isSidebarCollapsed, onSidebarTo
               <User className="w-4 h-4 mr-2" />
               Perfil
             </DropdownMenuItem>
+            {parceiroId && (
+              <DropdownMenuItem onClick={() => navigate("/parceiro")}>
+                <Store className="w-4 h-4 mr-2" />
+                Área do Parceiro
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="w-4 h-4 mr-2" />
