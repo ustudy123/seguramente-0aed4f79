@@ -82,6 +82,8 @@ export interface Lead {
   parceiro_link_id?: string | null;
   atribuicao?: 'link' | 'casa' | null;
   implantador_parceiro_id?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
   created_at: string;
   updated_at: string;
 }

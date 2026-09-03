@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  useParceiros, useParceiroDetalhe, linkDoParceiro,
+  useParceiros, useParceiroDetalhe, useParceiroComissoes, linkDoParceiro,
   PARCEIRO_TIPO_LABEL, PARCEIRO_STATUS_LABEL,
   type Parceiro, type ParceiroTipo, type ParceiroStatus, type ParceiroNivel, type ParceiroEventoRemuneracao,
 } from "@/hooks/useParceiros";
@@ -23,8 +23,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Handshake, Plus, Search, CheckCircle, PauseCircle, XCircle, Link2, Copy, Users, Building2,
-  Target, Settings2, Save, Loader2, MapPin, RotateCcw,
+  Target, Settings2, Save, Loader2, MapPin, RotateCcw, Wallet, Play, Lock,
 } from "lucide-react";
+import { Textarea as TextareaUi } from "@/components/ui/textarea";
+import type { ParceiroComissao } from "@/hooks/useParceiros";
 
 const STATUS_VARIANT: Record<ParceiroStatus, "default" | "secondary" | "destructive" | "outline"> = {
   ativo: "default", pendente: "secondary", suspenso: "outline", encerrado: "destructive",
@@ -75,6 +77,7 @@ export function ParceirosPanel() {
           <TabsTrigger value="lista"><Handshake className="w-4 h-4 mr-2" />Parceiros{pendentes > 0 && <Badge variant="secondary" className="ml-2">{pendentes} pendente{pendentes > 1 ? "s" : ""}</Badge>}</TabsTrigger>
           <TabsTrigger value="empresas"><Building2 className="w-4 h-4 mr-2" />Origem das empresas</TabsTrigger>
           <TabsTrigger value="config"><Settings2 className="w-4 h-4 mr-2" />Níveis e remuneração</TabsTrigger>
+          <TabsTrigger value="comissoes" data-testid="tab-comissoes"><Wallet className="w-4 h-4 mr-2" />Comissões</TabsTrigger>
         </TabsList>
 
         <TabsContent value="lista" className="mt-4">
@@ -157,6 +160,7 @@ export function ParceirosPanel() {
 
         <TabsContent value="empresas" className="mt-4"><OrigemEmpresas /></TabsContent>
         <TabsContent value="config" className="mt-4"><ConfiguracaoPrograma /></TabsContent>
+        <TabsContent value="comissoes" className="mt-4"><ComissoesPainel /></TabsContent>
       </Tabs>
 
       <ParceiroFormDialog open={editando !== undefined} parceiro={editando ?? null} onClose={() => setEditando(undefined)} />
@@ -493,6 +497,128 @@ function NovoEvento({ existentes, onAdd }: { existentes: ParceiroEventoRemunerac
         <Select value={evento} onValueChange={(v) => setEvento(v as ParceiroEventoRemuneracao["evento"])}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent><SelectItem value="setup_concluido">Setup concluído</SelectItem><SelectItem value="go_live">Go-live</SelectItem><SelectItem value="renovacao">Renovação</SelectItem></SelectContent></Select></div>
       <Button variant="outline" disabled={existe} onClick={() => onAdd({ trilha: existentes[0]?.trilha || "operador", tipo_parceiro: tipo, evento, valor_fixo_cents: 0, percentual_primeira_mensalidade: 0, ativo: true })}><Plus className="w-4 h-4 mr-1" />Adicionar</Button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+const COMISSAO_STATUS_LABEL: Record<ParceiroComissao["status"], string> = { previsto: "Previsto", fechado: "Fechado", pago: "Pago", retido: "Retido" };
+const COMISSAO_TIPO_LABEL: Record<ParceiroComissao["tipo"], string> = { recorrente: "Recorrente", bonus_renovacao: "Bônus renovação", evento: "Evento", ajuste: "Ajuste" };
+function competenciaAtual() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
+function competenciasRecentes(n = 12) {
+  const out: string[] = []; const d = new Date(); d.setDate(1);
+  for (let i = 0; i < n; i++) { out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`); d.setMonth(d.getMonth() - 1); }
+  return out;
+}
+
+function ComissoesPainel() {
+  const [competencia, setCompetencia] = useState<string>(competenciaAtual());
+  const { data: itens = [], isLoading } = useParceiroComissoes(competencia);
+  const { fecharCompetencia, comissaoStatus, comissaoAjuste, parceiros } = useParceiros();
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [ajuste, setAjuste] = useState({ parceiroId: "", valor: "", obs: "" });
+  const total = (st?: ParceiroComissao["status"]) => itens.filter((i) => !st || i.status === st).reduce((a, i) => a + Number(i.valor_cents || 0), 0);
+  const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const porParceiro = useMemo(() => {
+    const m = new Map<string, { nome: string; pix: string | null; total: number; pago: number }>();
+    for (const i of itens) {
+      const e = m.get(i.parceiro_id) ?? { nome: i.parceiro_nome, pix: i.pix_chave, total: 0, pago: 0 };
+      if (i.status !== "retido") e.total += Number(i.valor_cents || 0);
+      if (i.status === "pago") e.pago += Number(i.valor_cents || 0);
+      m.set(i.parceiro_id, e);
+    }
+    return Array.from(m.entries());
+  }, [itens]);
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <CardTitle>Comissões</CardTitle>
+              <CardDescription>Fecha dia 25 (automático) e paga até dia 10. Aqui você faz uma prévia, fecha manualmente, marca pagamentos e lança ajustes.</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Select value={competencia} onValueChange={setCompetencia}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>{competenciasRecentes().map((c) => <SelectItem key={c} value={c}>{c.split("-").reverse().join("/")}</SelectItem>)}</SelectContent>
+              </Select>
+              <Button variant="outline" disabled={fecharCompetencia.isPending} onClick={() => fecharCompetencia.mutate({ competencia: `${competencia}-01`, fechar: false })}><Play className="w-4 h-4 mr-1" />Prévia</Button>
+              <Button disabled={fecharCompetencia.isPending} onClick={async () => { if (await confirm({ title: `Fechar ${competencia.split("-").reverse().join("/")}?`, description: "Os valores previstos passam a fechados e deixam de ser recalculados. Pagamentos e ajustes continuam possíveis." })) fecharCompetencia.mutate({ competencia: `${competencia}-01`, fechar: true }); }} data-testid="comissoes-fechar"><Lock className="w-4 h-4 mr-1" />Fechar competência</Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(["previsto", "fechado", "pago", "retido"] as const).map((st) => (
+              <div key={st} className="rounded-lg border p-3"><div className="text-xs text-muted-foreground">{COMISSAO_STATUS_LABEL[st]}</div><div className="text-lg font-bold tabular-nums">R$ {centsToReais(total(st))}</div></div>
+            ))}
+          </div>
+
+          {porParceiro.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold mb-2">Resumo por parceiro (para o PIX)</h3>
+              <Table>
+                <TableHeader><TableRow><TableHead>Parceiro</TableHead><TableHead>Chave PIX</TableHead><TableHead className="text-right">A pagar (exclui retido)</TableHead><TableHead className="text-right">Já pago</TableHead></TableRow></TableHeader>
+                <TableBody>{porParceiro.map(([id, p]) => <TableRow key={id}><TableCell className="font-medium">{p.nome}</TableCell><TableCell className="font-mono text-xs">{p.pix ?? <span className="text-amber-600">sem PIX cadastrado</span>}</TableCell><TableCell className="text-right font-mono">R$ {centsToReais(p.total)}</TableCell><TableCell className="text-right font-mono">R$ {centsToReais(p.pago)}</TableCell></TableRow>)}</TableBody>
+              </Table>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">{sel.size} selecionada(s):</span>
+            <Button size="sm" variant="outline" disabled={!sel.size || comissaoStatus.isPending} onClick={() => { comissaoStatus.mutate({ ids: Array.from(sel), status: "pago" }); setSel(new Set()); }}>Marcar pago</Button>
+            <Button size="sm" variant="outline" disabled={!sel.size || comissaoStatus.isPending} onClick={() => { comissaoStatus.mutate({ ids: Array.from(sel), status: "retido", observacao: "Retido pelo SuperAdmin" }); setSel(new Set()); }}>Reter</Button>
+            <Button size="sm" variant="ghost" disabled={!sel.size || comissaoStatus.isPending} onClick={() => { comissaoStatus.mutate({ ids: Array.from(sel), status: "fechado" }); setSel(new Set()); }}>Voltar a fechado</Button>
+          </div>
+
+          {isLoading ? <Skeleton className="h-24 w-full" /> : itens.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma comissão nesta competência. Rode a prévia para calcular.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead></TableHead><TableHead>Parceiro</TableHead><TableHead>Cliente</TableHead><TableHead>Tipo</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">%</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead>Obs.</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {itens.map((c) => (
+                    <TableRow key={c.id} data-testid="comissao-linha">
+                      <TableCell><input type="checkbox" checked={sel.has(c.id)} onChange={() => toggle(c.id)} aria-label="Selecionar" /></TableCell>
+                      <TableCell className="font-medium">{c.parceiro_nome}</TableCell>
+                      <TableCell>{c.tenant_nome ?? "—"}</TableCell>
+                      <TableCell className="text-xs">{COMISSAO_TIPO_LABEL[c.tipo]}{c.evento && c.tipo !== "ajuste" ? ` · ${c.evento}` : ""}</TableCell>
+                      <TableCell className="text-right font-mono">{c.base_cents ? `R$ ${centsToReais(c.base_cents)}` : "—"}</TableCell>
+                      <TableCell className="text-right font-mono">{c.percentual ?? "—"}</TableCell>
+                      <TableCell className="text-right font-mono">R$ {centsToReais(c.valor_cents)}</TableCell>
+                      <TableCell><Badge variant={c.status === "pago" ? "default" : c.status === "retido" ? "destructive" : c.status === "fechado" ? "secondary" : "outline"}>{COMISSAO_STATUS_LABEL[c.status]}</Badge></TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate" title={c.observacao ?? ""}>{c.observacao ?? ""}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Lançar ajuste</CardTitle><CardDescription>Crédito (positivo) ou débito (negativo) fora do cálculo automático, já como fechado.</CardDescription></CardHeader>
+        <CardContent className="grid md:grid-cols-4 gap-3 items-end">
+          <div><Label>Parceiro</Label>
+            <Select value={ajuste.parceiroId} onValueChange={(v) => setAjuste((a) => ({ ...a, parceiroId: v }))}>
+              <SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger>
+              <SelectContent>{parceiros.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div><Label>Valor (R$, negativo = débito)</Label><Input value={ajuste.valor} onChange={(e) => setAjuste((a) => ({ ...a, valor: e.target.value }))} placeholder="150,00" /></div>
+          <div className="md:col-span-2"><Label>Motivo</Label><TextareaUi rows={1} value={ajuste.obs} onChange={(e) => setAjuste((a) => ({ ...a, obs: e.target.value }))} /></div>
+          <div className="md:col-span-4 flex justify-end">
+            <Button variant="outline" disabled={!ajuste.parceiroId || !ajuste.obs.trim() || comissaoAjuste.isPending}
+              onClick={() => { const neg = ajuste.valor.trim().startsWith("-"); const cents = reaisToCents(ajuste.valor.replace("-", "")) * (neg ? -1 : 1); comissaoAjuste.mutate({ parceiroId: ajuste.parceiroId, competencia: `${competencia}-01`, valorCents: cents, observacao: ajuste.obs }); setAjuste({ parceiroId: "", valor: "", obs: "" }); }}>
+              Lançar em {competencia.split("-").reverse().join("/")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

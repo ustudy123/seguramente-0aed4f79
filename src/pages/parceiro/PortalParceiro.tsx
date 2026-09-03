@@ -143,6 +143,15 @@ export default function PortalParceiro() {
             </Card>
           </div>
 
+          {/* Evolução 12 meses (snapshots do fechamento) */}
+          <Card>
+            <div className="flex items-end justify-between gap-3 flex-wrap">
+              <div><h2 className="font-semibold text-white">Sua evolução com a YourEyes</h2><p className="text-xs text-slate-400">MRR sob atendimento registrado em cada fechamento mensal · últimos 12 meses.</p></div>
+              {dados.proximo_nivel && <span className="text-[11px] text-[#60ABEF]">linha tracejada: meta {dados.proximo_nivel.nome} ({formatarReais(dados.proximo_nivel.mrr_minimo_cents)})</span>}
+            </div>
+            <GraficoEvolucao pontos={dados.historico ?? []} meta={dados.proximo_nivel?.mrr_minimo_cents ?? null} atual={dados.kpis.mrr_cents} />
+          </Card>
+
           {/* Carteira */}
           <div>
             <div className="flex items-end justify-between mb-2">
@@ -222,6 +231,45 @@ function Kpi({ icone, rotulo, valor, detalhe }: { icone: React.ReactNode; rotulo
       <div className="text-[11.5px] text-slate-400 flex items-center gap-1.5">{icone}{rotulo}</div>
       <div className="text-2xl font-extrabold text-white mt-1.5 tabular-nums">{valor}</div>
       <div className="text-[11px] text-slate-500 mt-0.5">{detalhe}</div>
+    </div>
+  );
+}
+
+// Gráfico de uma série (MRR mensal). Uma série: sem legenda, o título nomeia.
+// Linha 2px, marcadores >= 8px com anel da superfície, grade recessiva, eixo
+// único, tooltip por ponto (title nativo + realce). Sem biblioteca externa.
+function GraficoEvolucao({ pontos, meta, atual }: { pontos: { competencia: string; mrr_cents: number }[]; meta: number | null; atual: number }) {
+  const [ativo, setAtivo] = useState<number | null>(null);
+  const serie = pontos.length ? pontos : [{ competencia: new Date().toISOString().slice(0, 7), mrr_cents: atual }];
+  const W = 900, H = 240, L = 70, R = 24, T = 20, B = 40;
+  const maxV = Math.max(1, ...serie.map((p) => p.mrr_cents), meta ?? 0) * 1.1;
+  const x = (i: number) => (serie.length === 1 ? (L + W - R) / 2 : L + (i * (W - L - R)) / (serie.length - 1));
+  const y = (v: number) => T + (H - T - B) * (1 - v / maxV);
+  const path = serie.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.mrr_cents).toFixed(1)}`).join(" ");
+  const area = `${path} L${x(serie.length - 1).toFixed(1)},${(H - B).toFixed(1)} L${x(0).toFixed(1)},${(H - B).toFixed(1)} Z`;
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * maxV);
+  const mes = (c: string) => ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][Number(c.split("-")[1]) - 1] + "/" + c.slice(2, 4);
+  return (
+    <div className="overflow-x-auto mt-3">
+      {pontos.length === 0 && <p className="text-xs text-slate-500 mb-1">Ainda sem fechamentos registrados: o gráfico começa no dia 25. Ponto atual = MRR de hoje.</p>}
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[520px] h-auto" role="img" aria-label={`Evolução do MRR sob atendimento em ${serie.length} mês(es)`}>
+        <defs><linearGradient id="grad-mrr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FF8A00" stopOpacity="0.28" /><stop offset="1" stopColor="#FF8A00" stopOpacity="0.02" /></linearGradient></defs>
+        {ticks.map((t) => (
+          <g key={t}><line x1={L} x2={W - R} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.08)" /><text x={L - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#8A909C" fontFamily="ui-monospace, monospace">{t >= 1000 ? `${Math.round(t / 100000)}k` : Math.round(t / 100)}</text></g>
+        ))}
+        {meta != null && meta <= maxV && <g><line x1={L} x2={W - R} y1={y(meta)} y2={y(meta)} stroke="#60ABEF" strokeDasharray="4 4" strokeWidth="1.5" /><text x={W - R} y={y(meta) - 6} textAnchor="end" fontSize="10" fill="#60ABEF" fontFamily="ui-monospace, monospace">meta</text></g>}
+        <path d={area} fill="url(#grad-mrr)" />
+        <path d={path} fill="none" stroke="#FF8A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {serie.map((p, i) => (
+          <g key={p.competencia} onMouseEnter={() => setAtivo(i)} onMouseLeave={() => setAtivo(null)} style={{ cursor: "default" }}>
+            <rect x={x(i) - 16} y={T} width={32} height={H - T - B} fill="transparent" />
+            <circle cx={x(i)} cy={y(p.mrr_cents)} r={ativo === i ? 6 : 4.5} fill="#FF8A00" stroke="#0B1D34" strokeWidth="2" />
+            <title>{`${mes(p.competencia)}: ${formatarReais(p.mrr_cents)}`}</title>
+            {(ativo === i || i === serie.length - 1) && <text x={x(i)} y={y(p.mrr_cents) - 12} textAnchor="middle" fontSize="12" fontWeight="600" fill="#ECEEF2" fontFamily="ui-monospace, monospace">{formatarReais(p.mrr_cents)}</text>}
+            {(serie.length <= 6 || i % 2 === 0 || i === serie.length - 1) && <text x={x(i)} y={H - B + 18} textAnchor="middle" fontSize="10" fill="#8A909C" fontFamily="ui-monospace, monospace">{mes(p.competencia)}</text>}
+          </g>
+        ))}
+      </svg>
     </div>
   );
 }

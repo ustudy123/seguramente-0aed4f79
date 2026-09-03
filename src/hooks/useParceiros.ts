@@ -100,6 +100,18 @@ export interface ParceiroEventoRemuneracao {
   ativo: boolean;
 }
 
+export interface ParceiroComissao {
+  id: string; parceiro_id: string; parceiro_nome: string; pix_chave: string | null; tenant_nome: string | null;
+  competencia: string; tipo: "recorrente" | "bonus_renovacao" | "evento" | "ajuste"; evento: string | null;
+  base_cents: number; percentual: number | null; valor_cents: number;
+  status: "previsto" | "fechado" | "pago" | "retido"; fechado_em: string | null; pago_em: string | null; observacao: string | null;
+}
+
+export interface SugestaoParceiro {
+  id: string; nome: string; tipo_parceiro: ParceiroTipo; cidade: string | null; uf: string | null;
+  nivel: string | null; clientes: number; motivo: string;
+}
+
 const KEY = ["superadmin", "parceiros"];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
@@ -237,7 +249,36 @@ export function useParceiros() {
     onError: erro,
   });
 
+  const fecharCompetencia = useMutation({
+    mutationFn: async ({ competencia, fechar }: { competencia: string; fechar: boolean }) => {
+      const { data, error } = await sb.rpc("parceiro_fechar_competencia", { p_competencia: competencia, p_fechar: fechar });
+      if (error) throw error;
+      return data as { competencia: string; parceiros: number; recorrentes: number; eventos: number; bonus: number; promocoes: number; fechado: boolean };
+    },
+    onSuccess: (r) => { qc.invalidateQueries({ queryKey: KEY }); toast.success(`${r.competencia}: ${r.recorrentes} recorrente(s), ${r.eventos} evento(s), ${r.bonus} bônus, ${r.promocoes} promoção(ões)${r.fechado ? " · fechado" : " · prévia"}`); },
+    onError: erro,
+  });
+
+  const comissaoStatus = useMutation({
+    mutationFn: async ({ ids, status, observacao }: { ids: string[]; status: ParceiroComissao["status"]; observacao?: string }) => {
+      const { error } = await sb.rpc("superadmin_parceiro_comissao_status", { _ids: ids, _status: status, _observacao: observacao ?? null });
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEY }); toast.success("Comissões atualizadas"); },
+    onError: erro,
+  });
+
+  const comissaoAjuste = useMutation({
+    mutationFn: async ({ parceiroId, competencia, valorCents, observacao }: { parceiroId: string; competencia: string; valorCents: number; observacao: string }) => {
+      const { error } = await sb.rpc("superadmin_parceiro_comissao_ajuste", { _parceiro_id: parceiroId, _competencia: competencia, _valor_cents: valorCents, _observacao: observacao });
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEY }); toast.success("Ajuste lançado"); },
+    onError: erro,
+  });
+
   return {
+    fecharCompetencia, comissaoStatus, comissaoAjuste,
     parceiros: lista.data ?? [],
     isLoading: lista.isLoading,
     isError: lista.isError,
@@ -247,6 +288,37 @@ export function useParceiros() {
     salvar, mudarStatus, vincularUsuario, desvincularUsuario, vincularTenant,
     criarLink, alternarLink, salvarNiveis, salvarEventos,
   };
+}
+
+export function useParceiroComissoes(competencia: string | null) {
+  const { isSuperAdmin } = useAuthContext();
+  return useQuery({
+    queryKey: [...KEY, "comissoes", competencia],
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<ParceiroComissao[]> => {
+      const { data, error } = await sb.rpc("superadmin_parceiro_comissoes_list", { _competencia: competencia ? `${competencia}-01` : null });
+      if (error) throw error;
+      return (data as ParceiroComissao[]) ?? [];
+    },
+  });
+}
+
+export function useSugestaoParceiros(leadId: string | null) {
+  const { isSuperAdmin } = useAuthContext();
+  return useQuery({
+    queryKey: [...KEY, "sugestao", leadId],
+    enabled: isSuperAdmin && !!leadId,
+    queryFn: async (): Promise<SugestaoParceiro[]> => {
+      const { data, error } = await sb.rpc("parceiros_sugerir_para_lead", { _lead_id: leadId });
+      if (error) throw error;
+      return (data as SugestaoParceiro[]) ?? [];
+    },
+  });
+}
+
+export async function encaminharLeadAoParceiro(leadId: string, parceiroId: string | null) {
+  const { error } = await sb.rpc("superadmin_lead_encaminhar", { _lead_id: leadId, _parceiro_id: parceiroId });
+  if (error) throw error;
 }
 
 export function useParceiroDetalhe(parceiroId: string | null) {
