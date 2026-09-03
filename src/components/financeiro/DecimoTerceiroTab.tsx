@@ -11,11 +11,12 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Gift, Eye, Calculator, AlertTriangle } from "lucide-react";
+import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock } from "lucide-react";
 import { useFolhaCalculo } from "@/hooks/useFolhaCalculo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import {
-  useDecimoTerceiro, descreverAvos, descreverMedia13, nomeMes,
+  useDecimoTerceiro, useDecimoTerceiroLote, descreverAvos, descreverMedia13,
+  descreverLote, nomeMes,
   type Apuracao13,
 } from "@/hooks/useDecimoTerceiro";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ export function DecimoTerceiroTab() {
   const [showModal, setShowModal] = useState(false);
   const [showDetalhe, setShowDetalhe] = useState<any>(null);
   const { apurar, apurando } = useDecimoTerceiro();
+  const { processar, processando } = useDecimoTerceiroLote();
   // Memória da apuração. Fica ao lado dos valores para o DP conferir de
   // onde saíram antes de fechar o cálculo (Lei 4.090 / RNF-001).
   const [apuracao, setApuracao] = useState<Apuracao13 | null>(null);
@@ -48,6 +50,20 @@ export function DecimoTerceiroTab() {
     valor_primeira_parcela: 0,
     dependentes_irrf: 0,
   });
+
+  // Folha inteira de uma vez: o cálculo roda no banco (RNF-008), não
+  // colaborador a colaborador num modal.
+  const handleLote = async (parcela: 1 | 2) => {
+    try {
+      const r = await processar(ano, parcela);
+      if (!r) return;
+      if (r.erros.length > 0) toast.warning(`${parcela}ª parcela — ${descreverLote(r)}. Primeiro erro: ${r.erros[0].colaborador}: ${r.erros[0].erro}`);
+      else if (r.criados === 0) toast.info(`${parcela}ª parcela — nada a gerar: ${descreverLote(r)}.`);
+      else toast.success(`${parcela}ª parcela — ${descreverLote(r)}. Prazo legal: ${r.prazo_legal.split("-").reverse().join("/")}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível processar o lote");
+    }
+  };
 
   const limparApuracao = () => { setApuracao(null); setAvosEditado(false); setMediaEditada(false); };
 
@@ -118,6 +134,14 @@ export function DecimoTerceiroTab() {
         </div>
         <div className="flex gap-2">
           <Input type="number" className="w-24" value={ano} onChange={e => setAno(Number(e.target.value))} />
+          <Button variant="outline" onClick={() => handleLote(1)} disabled={processando}>
+            <Users className="w-4 h-4 mr-2" />
+            {processando ? "Processando..." : "Lote 1ª parcela"}
+          </Button>
+          <Button variant="outline" onClick={() => handleLote(2)} disabled={processando}>
+            <Users className="w-4 h-4 mr-2" />
+            {processando ? "Processando..." : "Lote 2ª parcela"}
+          </Button>
           <Button onClick={() => setShowModal(true)}>
             <Plus className="w-4 h-4 mr-2" /> Calcular 13º
           </Button>
@@ -131,7 +155,9 @@ export function DecimoTerceiroTab() {
               <TableRow>
                 <TableHead>Colaborador</TableHead>
                 <TableHead className="text-center">Parcela</TableHead>
-                <TableHead className="text-center">Meses</TableHead>
+                <TableHead className="text-center">Avos</TableHead>
+                <TableHead className="text-center">Situação</TableHead>
+                <TableHead className="text-center">Prazo legal</TableHead>
                 <TableHead className="text-right">Bruto</TableHead>
                 <TableHead className="text-right">INSS</TableHead>
                 <TableHead className="text-right">IRRF</TableHead>
@@ -141,14 +167,29 @@ export function DecimoTerceiroTab() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
               ) : calculos.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cálculo de 13º para {ano}.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhum cálculo de 13º para {ano}.</TableCell></TableRow>
               ) : calculos.map((c: any) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.colaborador_nome}</TableCell>
                   <TableCell className="text-center"><Badge variant="outline">{c.parcela}ª</Badge></TableCell>
                   <TableCell className="text-center">{c.meses_trabalhados}/12</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={
+                      c.status === "pago" ? "default"
+                        : c.status === "aprovado" ? "secondary"
+                          : c.status === "cancelado" ? "destructive" : "outline"
+                    }>{c.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center text-xs text-muted-foreground">
+                    {c.data_prevista
+                      ? <span className="inline-flex items-center gap-1">
+                          <CalendarClock className="w-3 h-3" />
+                          {String(c.data_prevista).split("-").reverse().join("/")}
+                        </span>
+                      : "—"}
+                  </TableCell>
                   <TableCell className="text-right">R$ {fmtMoeda(c.valor_bruto)}</TableCell>
                   <TableCell className="text-right text-destructive">R$ {fmtMoeda(c.valor_inss)}</TableCell>
                   <TableCell className="text-right text-destructive">R$ {fmtMoeda(c.valor_irrf)}</TableCell>

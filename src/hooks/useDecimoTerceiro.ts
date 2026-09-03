@@ -152,3 +152,72 @@ export function descreverMedia13(a: Apuracao13): string {
         : `${m.meses_divisor} avo(s) apurado(s)`;
   return `Soma de R$ ${total} nas competências ${m.janela_inicio} a ${m.janela_fim}, dividida por ${divisor}.`;
 }
+
+
+/* ── Processamento em lote (Entrega 2) ────────────────────────────────
+ * A folha de dezembro de uma empresa inteira não cabe num modal aberto
+ * colaborador a colaborador (RNF-008). O lote roda no banco: apura,
+ * calcula os encargos e grava, pulando quem já tem cálculo vivo.
+ */
+export interface ResultadoLote {
+  lote_id: string;
+  ano: number;
+  parcela: number;
+  prazo_legal: string;
+  criados: number;
+  ja_existiam: number;
+  sem_avo: number;
+  total_liquido: number;
+  erros: { colaborador: string; erro: string }[];
+}
+
+export function useDecimoTerceiroLote() {
+  const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const [processando, setProcessando] = useState(false);
+
+  const processar = useCallback(
+    async (ano: number, parcela: 1 | 2): Promise<ResultadoLote | null> => {
+      if (!tenantId) return null;
+      setProcessando(true);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rpc = (supabase as any).rpc.bind(supabase);
+        const { data, error } = await rpc("decimo_terceiro_lote", {
+          p_tenant: tenantId,
+          p_ano: ano,
+          p_parcela: parcela,
+          p_empresa: empresaAtivaId || null,
+        });
+        if (error) throw error;
+        const b = (data || {}) as Record<string, unknown>;
+        if (b.erro) throw new Error(String(b.erro));
+        return {
+          lote_id: String(b.lote_id ?? ""),
+          ano: Number(b.ano ?? ano),
+          parcela: Number(b.parcela ?? parcela),
+          prazo_legal: String(b.prazo_legal ?? ""),
+          criados: Number(b.criados ?? 0),
+          ja_existiam: Number(b.ja_existiam ?? 0),
+          sem_avo: Number(b.sem_avo ?? 0),
+          total_liquido: Number(b.total_liquido ?? 0),
+          erros: (b.erros as { colaborador: string; erro: string }[]) ?? [],
+        };
+      } finally {
+        setProcessando(false);
+      }
+    },
+    [tenantId, empresaAtivaId],
+  );
+
+  return { processar, processando };
+}
+
+/** Frase de resultado do lote, para o toast e para a tela. */
+export function descreverLote(r: ResultadoLote): string {
+  const partes = [`${r.criados} cálculo(s) gerado(s)`];
+  if (r.ja_existiam > 0) partes.push(`${r.ja_existiam} já existia(m)`);
+  if (r.sem_avo > 0) partes.push(`${r.sem_avo} sem avo no ano`);
+  if (r.erros.length > 0) partes.push(`${r.erros.length} com erro`);
+  return partes.join(" · ");
+}
