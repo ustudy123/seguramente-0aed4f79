@@ -275,6 +275,7 @@ function ParceiroDetalheSheet({ parceiro, onClose }: { parceiro: Parceiro | null
               <SheetDescription>
                 {PARCEIRO_TIPO_LABEL[parceiro.tipo_parceiro]} · trilha {parceiro.trilha} · nível {parceiro.nivel_nome || "—"} · parceiro desde {dataBr(parceiro.parceiro_desde)}
                 {parceiro.cidade && <span className="inline-flex items-center gap-1 ml-2"><MapPin className="w-3 h-3" />{parceiro.cidade}/{parceiro.uf} · {parceiro.raio_atuacao_km} km</span>}
+                <span className="block mt-1">Contrato de Parceria: {parceiro.contrato?.pendente ? <Badge variant="outline" className="text-amber-600 border-amber-400">aceite pendente (v{parceiro.contrato?.versao_vigente ?? "?"})</Badge> : <Badge variant="secondary">v{parceiro.contrato?.versao_aceita ?? "?"} aceito em {dataBr(parceiro.contrato?.aceito_em)}</Badge>}</span>
               </SheetDescription>
             </SheetHeader>
 

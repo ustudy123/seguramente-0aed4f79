@@ -56,6 +56,7 @@ export interface Parceiro {
   total_leads: number;
   total_links: number;
   usuarios: string | null;
+  contrato?: { versao_vigente: number | null; versao_aceita: number | null; aceito_em: string | null; pendente: boolean } | null;
 }
 
 export interface ParceiroDetalhe {
