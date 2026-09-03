@@ -1,83 +1,22 @@
 -- =========================================================
--- SCRIPT DE ENTREGA — 13º Salário: apuração de avos e médias
--- (Entrega 1 do módulo 13º Salário — requisitos YE-DP-13-001)
+-- 13º Salário — o aviso de chamada incompleta passa a dizer o que faltou
 --
--- O QUE ESTE SCRIPT FAZ:
---   * cria a tabela de parâmetros do 13º por empresa (decimo_terceiro_config);
---   * cria três funções de LEITURA que apuram os avos da Lei 4.090/1962,
---     a média das variáveis do ano e a base do 13º, com memória;
---   * acrescenta em folha_13_calculo as colunas que registram se os
---     números foram apurados ou digitados;
---   * passa a recusar avos impossíveis (o ano tem 12 meses).
+-- PROBLEMA (visto na conferência do ambiente de teste, 03/09/2026): quem
+-- chama a apuração com o CPF errado — ou com um texto no lugar do CPF —
+-- recebia "Informe colaborador e ano-base para apurar os avos" e avos
+-- zero. A mensagem não dizia QUAL dos dois faltava, e o resultado zerado
+-- parecia defeito do cálculo quando era só a consulta mal montada.
 --
--- O QUE ESTE SCRIPT NAO FAZ: não altera nem apaga NENHUM cálculo de 13º
--- já gravado. Só cria coisa nova e acrescenta coluna com valor padrão —
--- por isso não há tabela de backup neste script.
+-- ENTREGA: as duas funções de apuração passam a nomear o que faltou
+-- (empresa, CPF ou ano-base) e, no caso do CPF, ecoam o que receberam.
+-- Nenhuma regra de cálculo muda: só o texto do aviso da guarda de
+-- entrada. As funções seguem somente leitura.
 --
--- Idempotente: rodar duas vezes não quebra nem duplica.
--- Rodar no SQL Editor do projeto de PRODUÇÃO, de uma vez só.
+-- Requisitos YE-DP-13-001: RNF-001 (memória que explica o resultado).
 -- =========================================================
 
-CREATE TABLE IF NOT EXISTS public.decimo_terceiro_config (
-    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id  UUID NOT NULL,
-    empresa_id UUID,
+SET lock_timeout = '10s';
 
-    -- Divisor da média das variáveis do ano.
-    media_divisor TEXT NOT NULL DEFAULT 'avos_apurados'
-        CHECK (media_divisor IN ('avos_apurados', 'meses_com_valor', 'doze_avos')),
-
-    -- Efeito do afastamento sobre os avos.
-    afastamento_regra TEXT NOT NULL DEFAULT 'previdenciario_suspende'
-        CHECK (afastamento_regra IN ('previdenciario_suspende', 'tudo_conta')),
-
-    -- Dia do afastamento previdenciário a partir do qual o empregador
-    -- deixa de contar (16 = os 15 primeiros são dele, Lei 8.213 art. 60).
-    afastamento_dias_empregador INT NOT NULL DEFAULT 15
-        CHECK (afastamento_dias_empregador BETWEEN 0 AND 90),
-
-    -- Base do adiantamento da 1ª parcela.
-    adiantamento_base TEXT NOT NULL DEFAULT 'proporcional_apurado'
-        CHECK (adiantamento_base IN ('proporcional_apurado', 'remuneracao_mes_anterior')),
-
-    parametros_vigencia_inicio DATE NOT NULL DEFAULT '2026-01-01',
-
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    -- Uma config por empresa (e uma "geral" do tenant quando empresa_id é null).
-    CONSTRAINT decimo_terceiro_config_empresa_unica UNIQUE (tenant_id, empresa_id)
-);
-
-ALTER TABLE public.decimo_terceiro_config ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "decimo_terceiro_config por tenant" ON public.decimo_terceiro_config;
-CREATE POLICY "decimo_terceiro_config por tenant"
-ON public.decimo_terceiro_config FOR ALL TO authenticated
-USING (tenant_id = public.get_user_tenant_id())
-WITH CHECK (tenant_id = public.get_user_tenant_id());
-
-DROP TRIGGER IF EXISTS touch_decimo_terceiro_config ON public.decimo_terceiro_config;
-CREATE TRIGGER touch_decimo_terceiro_config
-BEFORE UPDATE ON public.decimo_terceiro_config
-FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-COMMENT ON TABLE public.decimo_terceiro_config IS
-    'Parametros do calculo do 13o por empresa (divisor da media, efeito do afastamento nos avos, base do adiantamento), com vigencia.';
-COMMENT ON COLUMN public.decimo_terceiro_config.media_divisor IS
-    'avos_apurados: divide pelos meses que geraram avo. meses_com_valor: so pelos meses com variavel. doze_avos: sempre por 12.';
-COMMENT ON COLUMN public.decimo_terceiro_config.afastamento_regra IS
-    'previdenciario_suspende: afastamento com beneficio do INSS deixa de contar apos os dias do empregador. tudo_conta: nenhum afastamento derruba avo.';
-COMMENT ON COLUMN public.decimo_terceiro_config.adiantamento_base IS
-    'proporcional_apurado: 1a parcela = 50% do 13o proporcional. remuneracao_mes_anterior: 50% da remuneracao do mes anterior ao pagamento.';
-
-
--- ── 2. Avos da Lei 4.090/1962 ─────────────────────────────────────────────
--- 1/12 por mês; o mês conta quando restam 15 dias ou mais de trabalho,
--- descontadas as faltas injustificadas e o afastamento previdenciário.
--- Devolve o número de avos E a memória mês a mês — é ela que torna o
--- valor reproduzível depois (RNF-001/007).
--- SECURITY INVOKER de propósito: quem chama só enxerga o que a RLS do seu
--- tenant já permitiria enxergar.
 CREATE OR REPLACE FUNCTION public.decimo_terceiro_avos(
     p_tenant  UUID,
     p_cpf     TEXT,
@@ -266,14 +205,7 @@ BEGIN
     );
 END $fn$;
 
-COMMENT ON FUNCTION public.decimo_terceiro_avos(UUID, TEXT, INT, UUID) IS
-    'Avos do 13o (Lei 4.090/1962): 1/12 por mes com fracao >= 15 dias, descontadas faltas do ponto e afastamento previdenciario, com memoria mes a mes. Somente leitura.';
 
-GRANT EXECUTE ON FUNCTION public.decimo_terceiro_avos(UUID, TEXT, INT, UUID) TO authenticated;
-
-
--- ── 3. Média das variáveis do ano-base ────────────────────────────────────
--- Só as rubricas marcadas com incide_13 no cadastro de rubricas.
 CREATE OR REPLACE FUNCTION public.decimo_terceiro_media_variaveis(
     p_tenant  UUID,
     p_cpf     TEXT,
@@ -422,14 +354,6 @@ BEGIN
     );
 END $fn$;
 
-COMMENT ON FUNCTION public.decimo_terceiro_media_variaveis(UUID, TEXT, INT, INT, UUID) IS
-    'Media das variaveis do 13o (Decreto 57.155/1965) apurada dos lancamentos da folha do ano-base, so rubricas com incide_13, com memoria competencia a competencia. Somente leitura.';
-
-GRANT EXECUTE ON FUNCTION public.decimo_terceiro_media_variaveis(UUID, TEXT, INT, INT, UUID) TO authenticated;
-
-
--- ── 4. Apuração completa (avos + média + base) ────────────────────────────
--- É o que a tela chama: uma ida ao banco devolve tudo com a memória junta.
 CREATE OR REPLACE FUNCTION public.decimo_terceiro_apurar(
     p_tenant     UUID,
     p_cpf        TEXT,
@@ -503,87 +427,15 @@ BEGIN
     );
 END $fn$;
 
+COMMENT ON FUNCTION public.decimo_terceiro_avos(UUID, TEXT, INT, UUID) IS
+    'Avos do 13o (Lei 4.090/1962): 1/12 por mes com fracao >= 15 dias, descontadas faltas do ponto e afastamento previdenciario, com memoria mes a mes. Somente leitura.';
+COMMENT ON FUNCTION public.decimo_terceiro_media_variaveis(UUID, TEXT, INT, INT, UUID) IS
+    'Media das variaveis do 13o (Decreto 57.155/1965) apurada dos lancamentos da folha do ano-base, so rubricas com incide_13, com memoria competencia a competencia. Somente leitura.';
+
+GRANT EXECUTE ON FUNCTION public.decimo_terceiro_avos(UUID, TEXT, INT, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.decimo_terceiro_media_variaveis(UUID, TEXT, INT, INT, UUID) TO authenticated;
+
 COMMENT ON FUNCTION public.decimo_terceiro_apurar(UUID, TEXT, INT, NUMERIC, UUID) IS
     'Apuracao completa do 13o de um vinculo no ano-base: avos, media das variaveis e base, com as duas memorias. Somente leitura.';
 
 GRANT EXECUTE ON FUNCTION public.decimo_terceiro_apurar(UUID, TEXT, INT, NUMERIC, UUID) TO authenticated;
-
-
--- ── 5. Origem do valor e integridade no cálculo gravado ───────────────────
-ALTER TABLE public.folha_13_calculo
-    ADD COLUMN IF NOT EXISTS avos_origem  TEXT NOT NULL DEFAULT 'manual',
-    ADD COLUMN IF NOT EXISTS media_origem TEXT NOT NULL DEFAULT 'manual';
-
-DO $ck$
-BEGIN
-    ALTER TABLE public.folha_13_calculo
-        ADD CONSTRAINT folha_13_calculo_avos_origem_ck
-        CHECK (avos_origem IN ('apurado', 'manual', 'apurado_ajustado'));
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $ck$;
-
-DO $ck$
-BEGIN
-    ALTER TABLE public.folha_13_calculo
-        ADD CONSTRAINT folha_13_calculo_media_origem_ck
-        CHECK (media_origem IN ('apurado', 'manual', 'apurado_ajustado'));
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $ck$;
-
-COMMENT ON COLUMN public.folha_13_calculo.avos_origem IS
-    'De onde vieram os avos: apurado (decimo_terceiro_avos), apurado_ajustado (apurado e depois editado com justificativa) ou manual.';
-COMMENT ON COLUMN public.folha_13_calculo.media_origem IS
-    'De onde veio a media das variaveis: apurado (decimo_terceiro_media_variaveis), apurado_ajustado ou manual.';
-
--- O ano tem 12 meses: 15 avos era aceito (DEC13-001). NOT VALID de
--- proposito — barra o que entra de agora em diante sem varrer o historico
--- de producao, que pode ter linha antiga fora da regra.
-DO $ck$
-BEGIN
-    ALTER TABLE public.folha_13_calculo
-        ADD CONSTRAINT folha_13_calculo_meses_ck
-        CHECK (meses_trabalhados BETWEEN 0 AND 12) NOT VALID;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $ck$;
-
-DO $ck$
-BEGIN
-    ALTER TABLE public.folha_13_calculo
-        ADD CONSTRAINT folha_13_calculo_parcela_ck
-        CHECK (parcela IN (1, 2)) NOT VALID;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $ck$;
-
--- ── Conferência final (o editor só mostra o último resultado) ─────────────
-WITH objetos AS MATERIALIZED (
-    SELECT 'tabela decimo_terceiro_config' AS item,
-           (to_regclass('public.decimo_terceiro_config') IS NOT NULL) AS ok
-    UNION ALL SELECT 'funcao decimo_terceiro_avos',
-           EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-                    WHERE n.nspname = 'public' AND p.proname = 'decimo_terceiro_avos')
-    UNION ALL SELECT 'funcao decimo_terceiro_media_variaveis',
-           EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-                    WHERE n.nspname = 'public' AND p.proname = 'decimo_terceiro_media_variaveis')
-    UNION ALL SELECT 'funcao decimo_terceiro_apurar',
-           EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-                    WHERE n.nspname = 'public' AND p.proname = 'decimo_terceiro_apurar')
-    UNION ALL SELECT 'coluna folha_13_calculo.avos_origem',
-           EXISTS (SELECT 1 FROM information_schema.columns
-                    WHERE table_schema = 'public' AND table_name = 'folha_13_calculo'
-                      AND column_name = 'avos_origem')
-    UNION ALL SELECT 'coluna folha_13_calculo.media_origem',
-           EXISTS (SELECT 1 FROM information_schema.columns
-                    WHERE table_schema = 'public' AND table_name = 'folha_13_calculo'
-                      AND column_name = 'media_origem')
-    UNION ALL SELECT 'trava de avos impossiveis (0 a 12)',
-           EXISTS (SELECT 1 FROM pg_constraint
-                    WHERE conname = 'folha_13_calculo_meses_ck')
-    UNION ALL SELECT 'trava de parcela (1 ou 2)',
-           EXISTS (SELECT 1 FROM pg_constraint
-                    WHERE conname = 'folha_13_calculo_parcela_ck')
-)
-SELECT item,
-       CASE WHEN ok THEN 'OK' ELSE 'FALTOU' END AS situacao,
-       CASE WHEN ok THEN NULL ELSE 'Objeto nao encontrado apos a execucao' END AS erro_tecnico
-  FROM objetos
- ORDER BY situacao DESC, item;
