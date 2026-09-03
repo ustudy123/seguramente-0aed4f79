@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
       ciclo,
       email,
       origin,
+      ref_codigo,
     } = body as {
       plano_id: string;
       plano_nome: string;
@@ -44,6 +45,7 @@ Deno.serve(async (req) => {
       ciclo: string;
       email?: string;
       origin?: string;
+      ref_codigo?: string;
     };
 
     if (!plano_id || !plano_nome || !preco_mensal || !ciclo) {
@@ -84,7 +86,7 @@ Deno.serve(async (req) => {
       statement_descriptor: "YOUREYES",
       external_reference: externalReference,
       notification_url: webhookUrl,
-      metadata: { plano_id, plano_nome, ciclo, preco_mensal, meses },
+      metadata: { plano_id, plano_nome, ciclo, preco_mensal, meses, ref_codigo: ref_codigo ?? null },
     };
 
     const idempotencyKey = crypto.randomUUID();
@@ -124,6 +126,7 @@ Deno.serve(async (req) => {
         payer_email: email ?? null,
         preference_id: mpJson.id,
         external_reference: externalReference,
+        ref_codigo: ref_codigo ?? null,
       });
     } catch (e) {
       console.error("Erro ao registrar assinatura pendente:", e);

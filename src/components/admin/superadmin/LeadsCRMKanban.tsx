@@ -209,6 +209,7 @@ function LeadFormDialog({ open, lead, onClose, onSubmit }: {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="landing_page">Landing Page</SelectItem>
+                <SelectItem value="meta_ads">Meta Ads (tráfego pago)</SelectItem>
                 <SelectItem value="indicacao">Indicação</SelectItem>
                 <SelectItem value="prospect_manual">Prospect Manual</SelectItem>
                 <SelectItem value="linkedin">LinkedIn</SelectItem>

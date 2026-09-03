@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ParceirosLayout } from "@/components/parceiro/ParceirosLayout";
-import { PARCEIRO_TIPO_LABEL, type ParceiroTipo } from "@/hooks/useParceiros";
+import { PARCEIRO_TIPO_LABEL, PARCEIRO_TRILHA_LABEL, TRILHA_PADRAO, type ParceiroTipo, type ParceiroTrilha } from "@/hooks/useParceiros";
+
+const TRILHA_RESUMO: Record<ParceiroTrilha, { d: string; pct: string; aprov: string }> = {
+  indicador: { d: "Você apresenta o contato. A YourEyes vende e implanta.", pct: "6% a 10% da mensalidade + 20% a 30% da implantação", aprov: "entra ativo na hora" },
+  representante: { d: "Você apresenta e fecha. A YourEyes implanta.", pct: "12% a 18% da mensalidade + 60% a 80% da implantação", aprov: "aprovação da equipe" },
+  operador: { d: "Você vende, implanta e atende o cliente.", pct: "20% a 30% da mensalidade + 100% da implantação (faturada por você)", aprov: "aprovação da equipe e certificação" },
+};
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
@@ -20,7 +26,9 @@ const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","P
 export default function CadastroParceiro() {
   const navigate = useNavigate();
   const { user, parceiroId, signIn, loading: authLoading } = useAuthContext();
-  const [f, setF] = useState({ nome: "", email: user?.email ?? "", senha: "", tipo_parceiro: "indicador" as ParceiroTipo, tipo_pessoa: "pj", documento: "", telefone: "", cidade: "", uf: "", cep: "", aceite: false });
+  const [params] = useSearchParams();
+  const trilhaInicial = (["indicador","representante","operador"].includes(params.get("trilha") || "") ? params.get("trilha") : "indicador") as ParceiroTrilha;
+  const [f, setF] = useState({ nome: "", email: user?.email ?? "", senha: "", trilha: trilhaInicial, tipo_parceiro: (trilhaInicial === "operador" ? "clinica" : trilhaInicial) as ParceiroTipo, tipo_pessoa: "pj", documento: "", telefone: "", cidade: "", uf: "", cep: "", aceite: false });
   const [enviando, setEnviando] = useState(false);
   const set = (k: keyof typeof f, v: string | boolean) => setF((x) => ({ ...x, [k]: v }));
 
@@ -75,12 +83,26 @@ export default function CadastroParceiro() {
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-5 grid grid-cols-2 gap-4">
           <div className="col-span-2"><Label className="text-slate-300">Nome ou razão social*</Label><Input data-testid="cad-nome" className="bg-black/20 border-white/15 text-white" value={f.nome} onChange={(e) => set("nome", e.target.value)} /></div>
-          <div><Label className="text-slate-300">Tipo de parceiro</Label>
+          <div className="col-span-2">
+            <Label className="text-slate-300">Como você quer participar (trilha)</Label>
+            <div className="grid sm:grid-cols-3 gap-2 mt-1" data-testid="cad-trilha">
+              {(Object.keys(PARCEIRO_TRILHA_LABEL) as ParceiroTrilha[]).map((t) => (
+                <button key={t} type="button" onClick={() => setF((x) => ({ ...x, trilha: t, tipo_parceiro: (t === "operador" ? (["clinica","contabilidade","implantador"].includes(x.tipo_parceiro) ? x.tipo_parceiro : "clinica") : t) as ParceiroTipo }))}
+                  className={`text-left rounded-xl border p-3 transition ${f.trilha === t ? "border-[#FF8A00] bg-[#FF8A00]/10" : "border-white/15 hover:border-white/30"}`}>
+                  <div className="font-semibold text-white">{PARCEIRO_TRILHA_LABEL[t]}</div>
+                  <div className="text-xs text-slate-300 mt-1">{TRILHA_RESUMO[t].d}</div>
+                  <div className="text-[11px] text-[#60ABEF] mt-2">{TRILHA_RESUMO[t].pct}</div>
+                  <div className="text-[11px] text-slate-500">{TRILHA_RESUMO[t].aprov}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div><Label className="text-slate-300">Seu perfil</Label>
             <Select value={f.tipo_parceiro} onValueChange={(v) => set("tipo_parceiro", v)}>
               <SelectTrigger className="bg-black/20 border-white/15 text-white"><SelectValue /></SelectTrigger>
-              <SelectContent>{(Object.keys(PARCEIRO_TIPO_LABEL) as ParceiroTipo[]).map((t) => <SelectItem key={t} value={t}>{PARCEIRO_TIPO_LABEL[t]}</SelectItem>)}</SelectContent>
+              <SelectContent>{(Object.keys(PARCEIRO_TIPO_LABEL) as ParceiroTipo[]).filter((t) => TRILHA_PADRAO[t] === f.trilha || f.trilha === "operador").map((t) => <SelectItem key={t} value={t}>{PARCEIRO_TIPO_LABEL[t]}</SelectItem>)}</SelectContent>
             </Select>
-            <p className="text-[11px] text-slate-500 mt-1">{f.tipo_parceiro === "indicador" ? "Indicador entra ativo na hora." : "Este tipo passa por aprovação da equipe YourEyes."}</p>
+            <p className="text-[11px] text-slate-500 mt-1">{f.trilha === "indicador" && f.tipo_parceiro === "indicador" ? "Indicador entra ativo na hora." : "Passa por aprovação da equipe YourEyes."}</p>
           </div>
           <div><Label className="text-slate-300">Pessoa</Label>
             <Select value={f.tipo_pessoa} onValueChange={(v) => set("tipo_pessoa", v)}>

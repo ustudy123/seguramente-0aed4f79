@@ -18,12 +18,88 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, CreditCard, CalendarClock, Info, Building2, Layers, Loader2 } from "lucide-react";
+import { ArrowLeft, CreditCard, CalendarClock, Info, Building2, Layers, Loader2, Handshake } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const TRIAL_PADRAO_DIAS = 7;
 
 function formatarData(d: Date) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+
+// Programa de Parceiros — marcos do cliente que o motor de comissões lê:
+// setup pago pelo cliente, 1ª/3ª mensalidade compensadas, go-live homologado
+// (nasce o ciclo de 24 meses), contrato, cancelamento e desconto concedido.
+function ProgramaParceirosCard({ tenantId }: { tenantId: string }) {
+  const qc = useQueryClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
+  const { data, isLoading } = useQuery({
+    queryKey: ["superadmin", "tenant-programa", tenantId],
+    queryFn: async () => { const { data, error } = await sb.rpc("superadmin_tenant_programa", { _tenant_id: tenantId }); if (error) throw error; return data as Record<string, string | number | boolean | null> | null; },
+  });
+  const [f, setF] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!data) return;
+    setF({
+      setup_valor: ((Number(data.setup_valor_cents ?? 0)) / 100).toFixed(2).replace(".", ","),
+      desconto_pct: String(data.desconto_pct ?? 0),
+      contrato_assinado_em: String(data.contrato_assinado_em ?? ""),
+      primeira_mensalidade_compensada_em: String(data.primeira_mensalidade_compensada_em ?? ""),
+      go_live_homologado_em: String(data.go_live_homologado_em ?? ""),
+      terceira_mensalidade_compensada_em: String(data.terceira_mensalidade_compensada_em ?? ""),
+      cancelado_em: String(data.cancelado_em ?? ""),
+    });
+  }, [data]);
+  const salvar = useMutation({
+    mutationFn: async () => {
+      const cents = Math.round(parseFloat((f.setup_valor || "0").replace(/\./g, "").replace(",", ".")) * 100) || 0;
+      const { error } = await sb.rpc("superadmin_tenant_programa_salvar", { _tenant_id: tenantId, _dados: {
+        setup_valor_cents: cents, desconto_pct: Number(f.desconto_pct || 0),
+        contrato_assinado_em: f.contrato_assinado_em || null, primeira_mensalidade_compensada_em: f.primeira_mensalidade_compensada_em || null,
+        go_live_homologado_em: f.go_live_homologado_em || null, terceira_mensalidade_compensada_em: f.terceira_mensalidade_compensada_em || null,
+        cancelado_em: f.cancelado_em || null,
+      } });
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["superadmin", "tenant-programa", tenantId] }); toast.success("Marcos do cliente salvos"); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não foi possível salvar"),
+  });
+  const campo = (k: string, label: string, hint?: string) => (
+    <div><Label className="text-xs">{label}</Label><Input type="date" value={f[k] ?? ""} onChange={(e) => setF((x) => ({ ...x, [k]: e.target.value }))} />{hint && <p className="text-[11px] text-muted-foreground mt-0.5">{hint}</p>}</div>
+  );
+  return (
+    <Card data-testid="tenant-programa-parceiros">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2"><Handshake className="w-4 h-4" /> Programa de Parceiros — marcos do cliente</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? <Skeleton className="h-24 w-full" /> : (
+          <>
+            {data && (
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="outline">estágio: {String(data.estagio ?? "—")}</Badge>
+                <Badge variant="outline">base de comissão: R$ {((Number(data.base_cents ?? 0)) / 100).toFixed(2).replace(".", ",")}</Badge>
+                {data.ciclo_inicio && <Badge variant="outline">ciclo: {String(data.ciclo_inicio)} → {String(data.ciclo_fim)}</Badge>}
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><Label className="text-xs">Setup cobrado do cliente (R$)</Label><Input value={f.setup_valor ?? ""} onChange={(e) => setF((x) => ({ ...x, setup_valor: e.target.value }))} placeholder="1.200,00" /><p className="text-[11px] text-muted-foreground mt-0.5">Base das parcelas 30/40/30 e do bônus de retenção.</p></div>
+              <div><Label className="text-xs">Desconto concedido na mensalidade (%)</Label><Input type="number" step="0.5" value={f.desconto_pct ?? "0"} onChange={(e) => setF((x) => ({ ...x, desconto_pct: e.target.value }))} /><p className="text-[11px] text-muted-foreground mt-0.5">Reduz a base de comissão do parceiro.</p></div>
+              {campo("contrato_assinado_em", "Contrato assinado em", "Referência do bônus de velocidade.")}
+              {campo("primeira_mensalidade_compensada_em", "1ª mensalidade compensada em", "Libera a 1ª parcela do setup.")}
+              {campo("go_live_homologado_em", "Go-live homologado em", "Nasce o ciclo de 24 meses; libera a 2ª parcela.")}
+              {campo("terceira_mensalidade_compensada_em", "3ª mensalidade compensada em", "Libera a 3ª parcela e a retenção do Operador.")}
+              {campo("cancelado_em", "Cancelado em", "Entre o 4º e o 12º mês gera clawback.")}
+            </div>
+            <div className="flex justify-end"><Button onClick={() => salvar.mutate()} disabled={salvar.isPending}>{salvar.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Salvar marcos</Button></div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function TenantAssinatura() {
@@ -244,6 +320,7 @@ export default function TenantAssinatura() {
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => navigate("/admin")}>Voltar</Button>
       </div>
+      {id && <ProgramaParceirosCard tenantId={id} />}
     </div>
   );
 }

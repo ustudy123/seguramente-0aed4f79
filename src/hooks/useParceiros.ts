@@ -8,6 +8,9 @@ import { toast } from "sonner";
 // staging), por isso as chamadas passam por `as any`, como em useSuperAdmin.
 
 export type ParceiroTipo = "indicador" | "representante" | "implantador" | "clinica" | "contabilidade";
+export type ParceiroTrilha = "indicador" | "representante" | "operador";
+export const PARCEIRO_TRILHA_LABEL: Record<ParceiroTrilha, string> = { indicador: "Indicador", representante: "Representante", operador: "Operador" };
+export const TRILHA_PADRAO: Record<ParceiroTipo, ParceiroTrilha> = { indicador: "indicador", representante: "representante", implantador: "operador", clinica: "operador", contabilidade: "operador" };
 export type ParceiroStatus = "pendente" | "ativo" | "suspenso" | "encerrado";
 
 export const PARCEIRO_TIPO_LABEL: Record<ParceiroTipo, string> = {
@@ -38,7 +41,7 @@ export interface Parceiro {
   uf: string | null;
   cep: string | null;
   raio_atuacao_km: number;
-  trilha: string;
+  trilha: ParceiroTrilha;
   nivel_id: string | null;
   nivel_nome: string | null;
   percentual_comissao: number | null;
@@ -87,16 +90,25 @@ export interface ParceiroNivel {
   percentual_link: number;
   percentual_casa: number;
   bonus_renovacao_multiplicador: number;
+  setup_participacao_pct?: number;
+  mrr_maximo_cents?: number | null;
+  beneficios?: string | null;
   ativo: boolean;
+}
+
+export interface ParceiroConfigItem {
+  chave: string; valor: string; tipo: "numero" | "percentual" | "centavos" | "dias" | "meses" | "texto" | "booleano";
+  grupo: string; rotulo: string; descricao: string | null; ordem: number;
 }
 
 export interface ParceiroEventoRemuneracao {
   id?: string;
   trilha: string;
   tipo_parceiro: ParceiroTipo;
-  evento: "setup_concluido" | "go_live" | "renovacao";
+  evento: "setup_concluido" | "go_live" | "renovacao" | "bonus_retencao_90d" | "fast_start" | "bonus_volume" | "bonus_velocidade" | "decimo_terceiro";
   valor_fixo_cents: number;
   percentual_primeira_mensalidade: number;
+  percentual_setup?: number;
   ativo: boolean;
 }
 
@@ -148,6 +160,16 @@ export function useParceiros() {
       const { data, error } = await sb.from("parceiro_niveis").select("*").order("trilha").order("ordem");
       if (error) throw error;
       return (data as ParceiroNivel[]) ?? [];
+    },
+  });
+
+  const config = useQuery({
+    queryKey: [...KEY, "config"],
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<ParceiroConfigItem[]> => {
+      const { data, error } = await sb.from("parceiro_programa_config").select("*").order("grupo").order("ordem");
+      if (error) throw error;
+      return (data as ParceiroConfigItem[]) ?? [];
     },
   });
 
@@ -240,6 +262,15 @@ export function useParceiros() {
     onError: erro,
   });
 
+  const salvarConfig = useMutation({
+    mutationFn: async (itens: { chave: string; valor: string }[]) => {
+      const { error } = await sb.rpc("superadmin_parceiro_config_salvar", { _itens: itens });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidar(); toast.success("Parâmetros do programa salvos"); },
+    onError: erro,
+  });
+
   const salvarEventos = useMutation({
     mutationFn: async (itens: ParceiroEventoRemuneracao[]) => {
       const { error } = await sb.rpc("superadmin_parceiro_eventos_salvar", { _itens: itens });
@@ -285,6 +316,8 @@ export function useParceiros() {
     tenants: tenants.data ?? [],
     niveis: niveis.data ?? [],
     eventos: eventos.data ?? [],
+    config: config.data ?? [],
+    salvarConfig,
     salvar, mudarStatus, vincularUsuario, desvincularUsuario, vincularTenant,
     criarLink, alternarLink, salvarNiveis, salvarEventos,
   };

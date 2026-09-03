@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ParceirosLayout } from "@/components/parceiro/ParceirosLayout";
 import { useParceiroPortal, formatarReais, linkPublico, ESTAGIO_LABEL, type CarteiraItem, type Estagio } from "@/hooks/useParceiroPortal";
-import { PARCEIRO_TIPO_LABEL } from "@/hooks/useParceiros";
+import { PARCEIRO_TIPO_LABEL, PARCEIRO_TRILHA_LABEL, type ParceiroTrilha } from "@/hooks/useParceiros";
 
 const ESTAGIO_CLASSE: Record<Estagio, string> = {
   lead: "bg-slate-500/20 text-slate-300", proposta: "bg-sky-500/20 text-sky-300", contrato: "bg-indigo-500/20 text-indigo-300",
@@ -79,7 +79,7 @@ export default function PortalParceiro() {
             <div>
               <h1 className="text-2xl font-bold text-white" data-testid="portal-parceiro-nome">Olá, {dados.parceiro.nome} 👋</h1>
               <div className="flex flex-wrap gap-2 mt-2">
-                <Badge className="bg-[#FF8A00]/20 text-[#FF8A00] hover:bg-[#FF8A00]/20">Trilha {dados.parceiro.trilha}</Badge>
+                <Badge className="bg-[#FF8A00]/20 text-[#FF8A00] hover:bg-[#FF8A00]/20">Trilha {PARCEIRO_TRILHA_LABEL[dados.parceiro.trilha as ParceiroTrilha] ?? dados.parceiro.trilha}</Badge>
                 {dados.nivel.nome && <Badge className="bg-[#60ABEF]/20 text-[#60ABEF] hover:bg-[#60ABEF]/20">Nível {dados.nivel.nome}</Badge>}
                 <Badge variant="outline" className="border-white/20 text-slate-300">{PARCEIRO_TIPO_LABEL[dados.parceiro.tipo_parceiro]}</Badge>
                 <span className="text-xs text-slate-400 self-center">{[dados.parceiro.cidade, dados.parceiro.uf].filter(Boolean).join("/")} · parceiro desde {dataBr(dados.parceiro.parceiro_desde)}</span>

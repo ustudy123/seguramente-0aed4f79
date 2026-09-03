@@ -344,6 +344,41 @@ Sem essas respostas, a Onda 1 entra com valores parametrizados em
 
 ---
 
+## 4.1 Política v2 (03/09/2026) — o que os anexos mudaram
+
+Os documentos "Programa de Parceiros YourEyes" (jul/2026) e a apresentação aos
+parceiros substituem várias decisões provisórias das Ondas 1-3:
+
+- **Trilhas** Indicador / Representante / Operador; o "tipo" (clínica,
+  contabilidade, consultoria…) vira perfil e sugere a trilha. Matriz de níveis
+  Foco (até R$ 4 mil) / Visão (R$ 4-12 mil) / Diamante (> R$ 12 mil):
+  6/8/10 %, 12/15/18 %, 20/25/30 %; participação no setup 20/25/30, 60/70/80,
+  100 % (Operador fatura direto). Tudo em `parceiro_niveis`, pré-preenchido.
+- **Base** = mensalidade efetivamente recebida (assinatura paga), líquida de
+  impostos (parâmetro) e do desconto concedido (`subscriptions.desconto_pct`).
+- **Ciclos de 24 meses** contados do go-live homologado, renovação automática
+  com bônus 2×; compromisso da casa limitado ao ciclo em curso (o fechamento
+  devolve `compromisso_ciclo_cents`).
+- **Setup** pago pelo cliente e repassado em 3 parcelas (30/40/30) contra 1ª
+  mensalidade, go-live homologado e 3ª mensalidade; bônus de retenção 90 dias
+  (+15 %); Fast Start, volume e velocidade; retenção de qualidade do Operador
+  (20 % por 3 meses); clawback 50 % entre o 4º e o 12º mês; inadimplência
+  retém. Marcos registrados pelo SuperAdmin em Empresas › Assinatura.
+- **43 parâmetros** em `parceiro_programa_config` (editáveis em Parceiros ›
+  Níveis e remuneração); o motor e o contrato leem de lá.
+- **Titularidade**: cláusula 2 do contrato v2 — a carteira é da YourEyes; o
+  parceiro tem o registro de originação e a garantia de não abordagem direta.
+  Não aliciamento e não concorrência por **24 meses**, confidencialidade 5 anos,
+  cessão em mudança de controle, Prêmio de Liquidez (múltiplo até 6×, teto a
+  fixar: sem teto, a cláusula não gera direito exigível), aviso de rescisão 90
+  dias, mediação + foro, nota sobre a Lei 4.886/1965.
+- **Contrato gerado por parceiro**: no aceite, o texto v2 é preenchido com os
+  dados do parceiro e da matriz, e vira um registro **assinado** na tela
+  SuperAdmin › Contratos (modelo categoria "parceria" + `contratos_assinaturas`
+  com `parceiro_id`, hash, IP, navegador e `html_assinado`).
+- Ainda sem automação (lançar por ajuste): 13º da carteira, Master Regional
+  (override calculado, mas elegibilidade manual), certificações.
+
 ## 5. Ondas de entrega (cada uma: migration + script de entrega + QA + teste no site de teste)
 
 **Estado (03/09/2026):** Ondas 0 e 1 implementadas e registradas no projeto,
@@ -389,6 +424,17 @@ histórico de 12 meses no portal. Rotinas PGP-010/012/013/014 passam na réplica
 fechar, resumo por parceiro com PIX, marcar pago/reter, ajuste), botão "Sugerir
 parceiro por localidade" no Kanban de leads, gráfico "Sua evolução" no portal.
 Script: `docs/script_parceiros_onda3.sql`.
+**Política v2 + Onda 4 (03/09/2026):** `20260904160000_parceiros_politica_v2.sql`
+(matriz, config, marcos do cliente, motor v2, contrato v2 na tela de Contratos),
+`20260904170000_parceiros_captura_ref.sql` (resolver ref, clique, trigger da
+landing, origem no tenant via webhook/onboarding, PGP-015),
+`20260904180000_leads_meta_ads_standby.sql` + Edge Function
+`meta-leads-webhook` (porta para leads de tráfego pago da Meta, desligada até
+preencher `meta_*` em `app_config`). Telas: cards por trilha com exemplos e
+"o que não precisa fazer", cadastro por trilha + perfil, SuperAdmin com matriz
+por trilha, parâmetros e bônus, cartão de marcos em Empresas › Assinatura,
+origem Meta Ads no Kanban, captura do `?ref=` no site e na landing. Scripts:
+`docs/script_parceiros_politica_v2.sql`, `docs/script_parceiros_onda4.sql`.
 Pendências anotadas: (a) PGP-020/021 (aba Parceiros do SuperAdmin) seguem sem
 teste de tela porque a conta-robô não é superadmin e não deve virar; precisa de
 um robô-superadmin próprio. (b) A data de go-live usa `profiles.updated_at` do

@@ -60,7 +60,7 @@ export function useSuperAdminUsuarios(search: string) {
 
 // ============ LEADS CRM ============
 export type LeadStatus = "novo" | "contatado" | "qualificado" | "proposta" | "negociacao" | "convertido" | "perdido";
-export type LeadOrigem = "landing_page" | "indicacao" | "prospect_manual" | "linkedin" | "whatsapp" | "evento" | "outro";
+export type LeadOrigem = "landing_page" | "indicacao" | "prospect_manual" | "linkedin" | "whatsapp" | "evento" | "meta_ads" | "outro";
 
 export interface Lead {
   id: string;
