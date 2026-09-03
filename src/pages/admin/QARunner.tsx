@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -505,6 +506,10 @@ function PainelCypress({
     "",
   );
   const JANELA_MS = 20 * 60 * 1000;
+  // Estimativa de duração da suíte, só para a barra de progresso: a corrida real
+  // varia, então a barra avança pelo tempo decorrido e para perto do fim (95%)
+  // até o resultado de verdade chegar — nunca finge 100% antes da hora.
+  const ESTIMATIVA_MS = 10 * 60 * 1000;
   const chegouResultado = !!corrida && !!ultimaIniciada && ultimaIniciada > corrida.baseline;
   const dentroDaJanela = !!corrida && Date.now() - new Date(corrida.at).getTime() < JANELA_MS;
   const emAndamento = !!corrida && dentroDaJanela && !chegouResultado;
@@ -521,11 +526,11 @@ function PainelCypress({
     }
   }, [chegouResultado]);
 
-  // Re-render periódico enquanto em andamento, para a janela de 20 min expirar
-  // sozinha (e o aviso sumir) mesmo sem novos dados chegando.
+  // Re-render de 1 em 1s enquanto em andamento: move a barra de progresso e
+  // deixa a janela de 20 min expirar sozinha (o aviso some) mesmo sem dados novos.
   useEffect(() => {
     if (!emAndamento) return;
-    const id = setInterval(() => setCorrida((c) => (c ? { ...c } : c)), 15000);
+    const id = setInterval(() => setCorrida((c) => (c ? { ...c } : c)), 1000);
     return () => clearInterval(id);
   }, [emAndamento]);
 
@@ -570,6 +575,17 @@ function PainelCypress({
       setDisparando(false);
     }
   };
+
+  // Progresso da corrida em andamento, estimado pelo tempo decorrido. Começa
+  // visível (3%) e para em 95% — a barra some junto com o aviso quando o
+  // resultado chega, então nunca precisa fingir 100%.
+  const decorridoMs = corrida ? Date.now() - new Date(corrida.at).getTime() : 0;
+  const pctCorrida = Math.min(95, Math.max(3, (decorridoMs / ESTIMATIVA_MS) * 100));
+  const restanteMs = ESTIMATIVA_MS - decorridoMs;
+  const restanteLabel =
+    restanteMs > 0
+      ? `~${Math.max(1, Math.ceil(restanteMs / 60000))} min restantes`
+      : "concluindo…";
 
   return (
     <div className="space-y-6">
@@ -626,17 +642,26 @@ function PainelCypress({
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="pt-6 flex items-start gap-3 text-sm">
             <Loader2 className="h-4 w-4 mt-0.5 shrink-0 animate-spin text-primary" />
-            <div className="space-y-1">
+            <div className="flex-1 space-y-2">
               <p className="font-medium">Corrida em andamento…</p>
+              <div className="space-y-1">
+                <Progress value={pctCorrida} className="h-2" />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    Disparada às{" "}
+                    {new Date(corrida!.at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span>{restanteLabel}</span>
+                </div>
+              </div>
               <p className="text-muted-foreground">
-                Disparada às{" "}
-                {new Date(corrida!.at).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-                . A suíte roda na esteira e leva ~10 min. Esta página se atualiza
+                A suíte roda na esteira (~10 min). Esta página se atualiza
                 sozinha — o resultado aparece abaixo em “Corridas” assim que
-                terminar. Pode fechar e voltar depois.
+                terminar. Pode fechar e voltar depois. A barra é uma estimativa
+                pelo tempo; ela para perto do fim até o resultado real chegar.
               </p>
             </div>
           </CardContent>
