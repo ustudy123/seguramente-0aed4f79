@@ -280,6 +280,29 @@ Objetivo: fomentar o parceiro na região dele. Quando um lead entra **sem**
 
 ---
 
+### 3.2 Contrato de Parceria — onde se amarra
+
+Decisão (03/09/2026): o contrato se amarra **no cadastro**. Ninguém vira
+parceiro sem aceitar a versão vigente do Contrato de Parceria Comercial
+(clickwrap), e o aceite fica registrado com versão, hash do texto, data,
+usuário, IP e navegador (`parceiro_contratos_aceites`). O texto vive em
+`parceiro_contratos_versoes` (só o SuperAdmin publica, via
+`superadmin_parceiro_contrato_publicar`), é público em `/parceiros/contrato`
+e consolida a Política de Parceiros: modalidades e aprovação, atribuição
+(link 90 dias / casa), remuneração (níveis, base de tabela, fechamento 25 e
+pagamento 10, bônus, setup), obrigações, **confidencialidade e segredos
+comerciais** (5 anos; segredos enquanto durarem), **não concorrência e não
+aliciamento** (12 meses após o fim, limitado ao uso de informações e
+relacionamentos da parceria), marca, LGPD, vigência e rescisão. Versão nova
+pede aceite de novo: o portal mostra o aviso, o SuperAdmin vê a pendência e,
+após 60 dias, a parceria pode ser suspensa. Os Termos de Uso ganharam as
+cláusulas 5.1 (confidencialidade e segredos) e 5.2 (Programa de Parceiros).
+**Revisão jurídica recomendada** antes de aplicar em produção; o texto muda
+sem nova publicação de tela, só publicando outra versão na tabela.
+Alternativa deixada para depois: assinatura eletrônica com token por e-mail
+(reaproveitando o fluxo do `programa_validador_contratos`) para
+representante/implantador, se o jurídico exigir mais que o clickwrap.
+
 ## 4. Decisões que precisam do dono do produto antes da Onda 1
 
 1. **Trilhas e níveis**: quais trilhas existem (o mockup cita "Operador"), quais
@@ -344,6 +367,13 @@ robô-parceiro semeado por `seed-e2e-user`, seção pública `/parceiros`,
 atalho no menu do usuário, link "Parceiros" no site, aba Afiliados removida do
 Marketplace (entra o convite). Cypress `portal-parceiro.cy.ts` cobre PGP-030 a
 032. Script: `docs/script_parceiros_onda2.sql`.
+Retoques (03/09/2026, após revisão do dono): menu do site mais espaçado e
+sem o botão Diagnóstico na barra; logo local (o asset do Lovable não carrega
+fora do domínio dele); cards de tipo de parceiro abrem detalhe (para quem é, o
+que faz, como ganha, aprovação, requisitos); Fale conosco (WhatsApp e e-mail)
+na seção pública; Termos de Uso com confidencialidade/segredos e programa de
+parceiros; Contrato de Parceria com aceite eletrônico (seção 3.2),
+`docs/script_parceiros_contrato.sql`.
 Pendências anotadas: (a) PGP-020/021 (aba Parceiros do SuperAdmin) seguem sem
 teste de tela porque a conta-robô não é superadmin e não deve virar; precisa de
 um robô-superadmin próprio. (b) A data de go-live usa `profiles.updated_at` do

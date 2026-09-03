@@ -61,6 +61,12 @@ export default function PortalParceiro() {
       {isError && <Card><p className="text-red-300">Não foi possível carregar o seu painel. Tente novamente em instantes.</p></Card>}
       {dados && (
         <div className="space-y-6" data-testid="portal-parceiro">
+          {dados.contrato?.pendente && (
+            <div className="rounded-xl border border-[#60ABEF]/40 bg-[#60ABEF]/10 p-4 text-sm text-slate-100 flex flex-wrap items-center justify-between gap-3" data-testid="portal-contrato-pendente">
+              <span>Há uma versão do <b>Contrato de Parceria</b> aguardando o seu aceite{dados.contrato.titulo_vigente ? ` (${dados.contrato.titulo_vigente})` : ""}.</span>
+              <Button asChild size="sm" className="bg-[#FF8A00] hover:bg-[#e67a00] text-white"><Link to="/parceiros/contrato">Ler e aceitar</Link></Button>
+            </div>
+          )}
           {dados.parceiro.status !== "ativo" && (
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200 flex gap-2">
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />

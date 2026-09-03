@@ -22,7 +22,7 @@ const TIPOS = ["indicador", "representante", "implantador", "clinica", "contabil
 type Payload = {
   nome?: string; email?: string; senha?: string; tipo_parceiro?: string; tipo_pessoa?: string;
   documento?: string; telefone?: string; cidade?: string; uf?: string; cep?: string;
-  raio_atuacao_km?: number; aceite_termos?: boolean;
+  raio_atuacao_km?: number; aceite_termos?: boolean; user_agent?: string;
 };
 
 serve(async (req) => {
@@ -80,6 +80,16 @@ serve(async (req) => {
 
   const { error: vErr } = await admin.from("parceiro_usuarios").insert({ parceiro_id: parceiro.id, user_id: userId, papel: "dono" });
   if (vErr) return json({ error: "Conta criada, mas o vínculo falhou: " + vErr.message }, 500);
+
+  // Aceite eletrônico do Contrato de Parceria (versão vigente), com origem.
+  const { data: versao } = await admin.from("parceiro_contratos_versoes").select("versao, hash_texto").eq("vigente", true).maybeSingle();
+  if (versao) {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || null;
+    await admin.from("parceiro_contratos_aceites").insert({
+      parceiro_id: parceiro.id, versao: versao.versao, user_id: userId, ip,
+      user_agent: (p.user_agent ?? req.headers.get("user-agent") ?? "").slice(0, 300), hash_texto: versao.hash_texto,
+    });
+  }
 
   return json({ ok: true, parceiro_id: parceiro.id, codigo: parceiro.codigo, status: parceiro.status });
 });

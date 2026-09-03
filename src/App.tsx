@@ -15,6 +15,7 @@ const ParceirosPublico = lazy(() => import("./pages/parceiros/ParceirosPublico")
 const CadastroParceiro = lazy(() => import("./pages/parceiros/CadastroParceiro"));
 const PortalParceiro = lazy(() => import("./pages/parceiro/PortalParceiro"));
 const PerfilParceiro = lazy(() => import("./pages/parceiro/PerfilParceiro"));
+const ContratoParceria = lazy(() => import("./pages/parceiros/ContratoParceria"));
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 import { Loader2 } from "lucide-react";
@@ -184,6 +185,7 @@ const App = () => (
               {/* Programa de Parceiros — seção pública do site e Área do Parceiro (fora do sistema) */}
               <Route path="/parceiros" element={<ParceirosPublico />} />
               <Route path="/parceiros/cadastro" element={<CadastroParceiro />} />
+              <Route path="/parceiros/contrato" element={<ContratoParceria />} />
               <Route path="/parceiro" element={<ParceiroRoute><PortalParceiro /></ParceiroRoute>} />
               <Route path="/parceiro/perfil" element={<ParceiroRoute><PerfilParceiro /></ParceiroRoute>} />
 

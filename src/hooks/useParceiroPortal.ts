@@ -47,6 +47,7 @@ export interface PortalParceiroDados {
   carteira: CarteiraItem[];
   extrato: { competencia: string; base_cents: number; percentual: number | null; valor_cents: number; status: string; tipo: string; pago_em: string | null }[];
   renovacoes: { nome: string; ciclo_fim: string; bonus_cents: number }[];
+  contrato?: { versao_vigente: number | null; titulo_vigente: string | null; versao_aceita: number | null; aceito_em: string | null; pendente: boolean };
 }
 
 const KEY = ["parceiro", "portal"];
@@ -59,7 +60,7 @@ export function useParceiroPortal() {
     queryKey: [...KEY, user?.id],
     enabled: !!user && !!parceiroId,
     queryFn: async (): Promise<PortalParceiroDados | null> => {
-      const { data, error } = await sb.rpc("parceiro_meu_portal");
+      const { data, error } = await sb.rpc("parceiro_meu_portal_com_contrato");
       if (error) throw error;
       return (data as PortalParceiroDados) ?? null;
     },

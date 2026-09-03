@@ -42,7 +42,7 @@ export default function CadastroParceiro() {
     try {
       if (user) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any).rpc("parceiro_cadastrar", { _dados: { ...f, aceite_termos: true } });
+        const { data, error } = await (supabase as any).rpc("parceiro_cadastrar", { _dados: { ...f, aceite_termos: true, user_agent: navigator.userAgent } });
         if (error) throw error;
         toast.success(data?.status === "ativo" ? "Cadastro concluído. Bem-vindo!" : "Cadastro enviado para aprovação.");
         window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/parceiro`);
@@ -50,7 +50,7 @@ export default function CadastroParceiro() {
       }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) return toast.error("E-mail inválido");
       if (f.senha.length < 6) return toast.error("A senha precisa ter ao menos 6 caracteres");
-      const { data, error } = await supabase.functions.invoke("parceiro-cadastro", { body: { ...f, aceite_termos: true } });
+      const { data, error } = await supabase.functions.invoke("parceiro-cadastro", { body: { ...f, aceite_termos: true, user_agent: navigator.userAgent } });
       const erro = error ? (await extrairErro(error)) : data?.error;
       if (erro) {
         if (/Já existe uma conta/i.test(erro)) { toast.warning(erro); navigate("/parceiros/entrar"); return; }
@@ -108,7 +108,7 @@ export default function CadastroParceiro() {
           )}
           <div className="col-span-2 flex items-start gap-2 text-sm text-slate-300">
             <Checkbox id="aceite" checked={f.aceite} onCheckedChange={(v) => set("aceite", v === true)} className="mt-0.5 border-white/40" />
-            <label htmlFor="aceite">Li e aceito os <Link to="/termos-de-uso" className="text-[#60ABEF] hover:underline" target="_blank">termos de uso</Link> e as regras do Programa de Parceiros (comissão sobre a mensalidade de tabela dos clientes ativos originados; fechamento dia 25 e pagamento até dia 10).</label>
+            <label htmlFor="aceite">Li e aceito o <Link to="/parceiros/contrato" className="text-[#60ABEF] hover:underline" target="_blank">Contrato de Parceria Comercial</Link> (remuneração, atribuição, confidencialidade, não concorrência) e os <Link to="/termos-de-uso" className="text-[#60ABEF] hover:underline" target="_blank">Termos de Uso</Link>. O aceite fica registrado com data, versão e origem.</label>
           </div>
           <div className="col-span-2 flex justify-end">
             <Button className="bg-[#FF8A00] hover:bg-[#e67a00] text-white" disabled={enviando} onClick={enviar} data-testid="cad-enviar">{enviando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Concluir cadastro</Button>
