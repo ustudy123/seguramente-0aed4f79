@@ -47,6 +47,7 @@ export interface PortalParceiroDados {
   carteira: CarteiraItem[];
   extrato: { competencia: string; base_cents: number; percentual: number | null; valor_cents: number; status: string; tipo: string; pago_em: string | null }[];
   renovacoes: { nome: string; ciclo_fim: string; bonus_cents: number }[];
+  historico?: { competencia: string; mrr_cents: number }[];
   contrato?: { versao_vigente: number | null; titulo_vigente: string | null; versao_aceita: number | null; aceito_em: string | null; pendente: boolean };
 }
 

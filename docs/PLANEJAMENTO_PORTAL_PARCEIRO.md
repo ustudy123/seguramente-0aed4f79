@@ -374,6 +374,21 @@ que faz, como ganha, aprovação, requisitos); Fale conosco (WhatsApp e e-mail)
 na seção pública; Termos de Uso com confidencialidade/segredos e programa de
 parceiros; Contrato de Parceria com aceite eletrônico (seção 3.2),
 `docs/script_parceiros_contrato.sql`.
+**Onda 3 (03/09/2026):** implementada. `20260904150000_parceiros_motor_comissoes.sql`:
+`parceiro_fechar_competencia` (snapshot de MRR por parceiro/cliente, comissão
+recorrente pela tabela de níveis e atribuição link/casa, retenção automática em
+inadimplência, comissão zero com rastro em plano interno, evento de setup do
+implantador lido de `parceiro_eventos_remuneracao`, bônus de renovação pelo
+multiplicador do nível, promoção de nível sem rebaixamento), agendamento pg_cron
+`parceiros-fechamento-mensal` (dia 25, 06:30), funções do SuperAdmin (listar
+por competência, marcar pago/retido/fechado, ajuste), sugestão por localidade
+`parceiros_sugerir_para_lead` (mesma cidade › mesmo estado › distância; sem
+extensão nova) e `superadmin_lead_encaminhar` (atribuição casa), `leads.cidade/uf`,
+histórico de 12 meses no portal. Rotinas PGP-010/012/013/014 passam na réplica
+(escrevem só no cercado qa-sandbox). Telas: sub-aba **Comissões** (prévia,
+fechar, resumo por parceiro com PIX, marcar pago/reter, ajuste), botão "Sugerir
+parceiro por localidade" no Kanban de leads, gráfico "Sua evolução" no portal.
+Script: `docs/script_parceiros_onda3.sql`.
 Pendências anotadas: (a) PGP-020/021 (aba Parceiros do SuperAdmin) seguem sem
 teste de tela porque a conta-robô não é superadmin e não deve virar; precisa de
 um robô-superadmin próprio. (b) A data de go-live usa `profiles.updated_at` do
