@@ -323,6 +323,17 @@ Sem essas respostas, a Onda 1 entra com valores parametrizados em
 
 ## 5. Ondas de entrega (cada uma: migration + script de entrega + QA + teste no site de teste)
 
+**Estado (03/09/2026):** Ondas 0 e 1 implementadas e registradas no projeto,
+aguardando conferência no ambiente de teste. Entregáveis:
+`supabase/migrations/20260904100000_parceiros_qa_casos.sql` (17 casos PGP),
+`20260904110000_parceiros_fundacao.sql` (tabelas, RLS, 13 funções, sementes),
+`20260904120000_parceiros_qa_rotinas.sql` (6 rotinas, todas passando na
+réplica local), `docs/script_parceiros_onda1.sql` (script de entrega, rodado
+duas vezes na réplica sem erro), aba **Parceiros** no SuperAdmin
+(`ParceirosPanel.tsx`, `useParceiros.ts`), cartão "Parceiro de origem e
+implantação" em `TenantDetalhe`, campo Parceiro no Kanban de leads. Prefixo dos
+casos: **PGP** (PARC já pertence ao Marketplace).
+
 ### Onda 0 — Documentação de testes (antes de qualquer código)
 - `qa_modulos`: novo módulo `parceiros` (SuperAdmin) e `portal-parceiro`.
 - `qa_casos_teste` `PARC-001…`: casos `api` (RLS: parceiro A não vê carteira do
