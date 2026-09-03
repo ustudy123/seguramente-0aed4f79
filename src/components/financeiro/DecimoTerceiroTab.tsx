@@ -11,9 +11,13 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Gift, Eye } from "lucide-react";
+import { Plus, Gift, Eye, Calculator, AlertTriangle } from "lucide-react";
 import { useFolhaCalculo } from "@/hooks/useFolhaCalculo";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import {
+  useDecimoTerceiro, descreverAvos, descreverMedia13, nomeMes,
+  type Apuracao13,
+} from "@/hooks/useDecimoTerceiro";
 import { toast } from "sonner";
 
 const fmtMoeda = (v: number) => (v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
@@ -25,6 +29,12 @@ export function DecimoTerceiroTab() {
   const { colaboradores } = useColaboradores();
   const [showModal, setShowModal] = useState(false);
   const [showDetalhe, setShowDetalhe] = useState<any>(null);
+  const { apurar, apurando } = useDecimoTerceiro();
+  // Memória da apuração. Fica ao lado dos valores para o DP conferir de
+  // onde saíram antes de fechar o cálculo (Lei 4.090 / RNF-001).
+  const [apuracao, setApuracao] = useState<Apuracao13 | null>(null);
+  const [avosEditado, setAvosEditado] = useState(false);
+  const [mediaEditada, setMediaEditada] = useState(false);
 
   const [form, setForm] = useState({
     ano: new Date().getFullYear(),
@@ -39,15 +49,45 @@ export function DecimoTerceiroTab() {
     dependentes_irrf: 0,
   });
 
+  const limparApuracao = () => { setApuracao(null); setAvosEditado(false); setMediaEditada(false); };
+
+  const handleApurar = async () => {
+    if (!form.colaborador_cpf) return toast.error("Selecione o colaborador");
+    try {
+      const r = await apurar({
+        cpf: form.colaborador_cpf,
+        ano: form.ano,
+        salario: form.remuneracao_base || undefined,
+      });
+      if (!r) return;
+      setApuracao(r);
+      setAvosEditado(false);
+      setMediaEditada(false);
+      setForm(p => ({
+        ...p,
+        meses_trabalhados: r.avos,
+        media_variaveis: r.media_variaveis,
+        remuneracao_base: r.remuneracao_base || p.remuneracao_base,
+      }));
+      if (r.avisos.length > 0) toast.warning(r.avisos[0]);
+      else toast.success(`Apurado: ${r.avos}/12 avos`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível apurar o 13º");
+    }
+  };
+
   const handleColabSelect = (id: string) => {
     const c = colaboradores.find((c: any) => c.id === id) as any;
     if (c) {
+      limparApuracao();
       setForm(p => ({
         ...p,
         colaborador_id: c.id,
         colaborador_nome: c.nome_completo,
         colaborador_cpf: c.cpf,
         remuneracao_base: c.salario || 0,
+        meses_trabalhados: 12,
+        media_variaveis: 0,
       }));
     }
   };
@@ -57,8 +97,14 @@ export function DecimoTerceiroTab() {
     await criar13Calculo({
       ...form,
       remuneracao_base: form.remuneracao_base,
+      // Origem dos valores + memória da apuração, para o 13º se reproduzir
+      // depois (Lei 4.090 / Decreto 57.155 / RNF-001 e RNF-007).
+      avos_origem: !apuracao ? "manual" : avosEditado ? "apurado_ajustado" : "apurado",
+      media_origem: !apuracao ? "manual" : mediaEditada ? "apurado_ajustado" : "apurado",
+      apuracao_memoria: apuracao,
     });
     setShowModal(false);
+    limparApuracao();
   };
 
   return (
@@ -150,13 +196,112 @@ export function DecimoTerceiroTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Meses Trabalhados</Label>
-                <Input type="number" min="1" max="12" value={form.meses_trabalhados} onChange={e => setForm(p => ({ ...p, meses_trabalhados: Number(e.target.value) }))} />
+                <Label>Ano-base</Label>
+                <Input
+                  type="number"
+                  value={form.ano}
+                  onChange={e => { limparApuracao(); setForm(p => ({ ...p, ano: Number(e.target.value) })); }}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Remuneração Base</Label>
                 <Input type="number" step="0.01" value={form.remuneracao_base} onChange={e => setForm(p => ({ ...p, remuneracao_base: Number(e.target.value) }))} />
               </div>
+            </div>
+
+            {/* Apuração: avos da Lei 4.090 e média das variáveis do ano */}
+            <div className="rounded-md border p-3 space-y-3">
+              <div className="flex items-end gap-2">
+                <div className="space-y-2 flex-1">
+                  <Label>Avos (meses trabalhados)</Label>
+                  <Input
+                    type="number" min="0" max="12"
+                    value={form.meses_trabalhados}
+                    onChange={e => {
+                      if (apuracao) setAvosEditado(true);
+                      setForm(p => ({ ...p, meses_trabalhados: Number(e.target.value) }));
+                    }}
+                  />
+                </div>
+                <div className="space-y-2 flex-1">
+                  <Label>Média das variáveis</Label>
+                  <Input
+                    type="number" step="0.01"
+                    value={form.media_variaveis}
+                    onChange={e => {
+                      if (apuracao) setMediaEditada(true);
+                      setForm(p => ({ ...p, media_variaveis: Number(e.target.value) }));
+                    }}
+                  />
+                </div>
+                <Button type="button" variant="outline" onClick={handleApurar} disabled={apurando}>
+                  <Calculator className="w-4 h-4 mr-2" />
+                  {apurando ? "Apurando..." : "Apurar"}
+                </Button>
+              </div>
+
+              {!apuracao && (
+                <p className="text-xs text-muted-foreground">
+                  Apure para o sistema contar os avos a partir da admissão, das faltas e dos
+                  afastamentos (1/12 por mês, fração de 15 dias) e somar a média das variáveis
+                  do ano — ou digite, se a apuração for feita fora.
+                </p>
+              )}
+
+              {apuracao && (
+                <div className="space-y-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={avosEditado ? "outline" : "secondary"}>
+                      {avosEditado ? "Avos apurados e ajustados à mão" : "Avos apurados"}
+                    </Badge>
+                    <span className="text-muted-foreground">{descreverAvos(apuracao)}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={mediaEditada ? "outline" : "secondary"}>
+                      {mediaEditada ? "Média apurada e ajustada à mão" : "Média apurada"}
+                    </Badge>
+                    <span className="text-muted-foreground">{descreverMedia13(apuracao)}</span>
+                  </div>
+
+                  {apuracao.avisos.map((a, i) => (
+                    <p key={i} className="flex items-start gap-1.5 text-amber-600 dark:text-amber-500">
+                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" /> {a}
+                    </p>
+                  ))}
+
+                  <details>
+                    <summary className="cursor-pointer text-muted-foreground">Memória mês a mês</summary>
+                    <div className="mt-1 space-y-0.5">
+                      {apuracao.memoria_avos.meses?.map(m => (
+                        <div key={m.mes} className="flex justify-between">
+                          <span className={m.conta ? "" : "text-muted-foreground line-through"}>
+                            {nomeMes(m.mes)}
+                          </span>
+                          <span className="tabular-nums text-muted-foreground">
+                            {m.dias_computados} dia(s)
+                            {m.faltas > 0 ? ` · ${m.faltas} falta(s)` : ""}
+                            {m.dias_inss > 0 ? ` · ${m.dias_inss} dia(s) INSS` : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+
+                  {apuracao.memoria_media.rubricas?.length > 0 && (
+                    <details>
+                      <summary className="cursor-pointer text-muted-foreground">Rubricas somadas na média</summary>
+                      <div className="mt-1 space-y-0.5">
+                        {apuracao.memoria_media.rubricas.map((r, i) => (
+                          <div key={i} className="flex justify-between">
+                            <span>{r.descricao}</span>
+                            <span className="tabular-nums">R$ {fmtMoeda(r.valor)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
             </div>
             {form.parcela === 2 && (
               <div className="space-y-2">
@@ -184,8 +329,27 @@ export function DecimoTerceiroTab() {
             <div className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-2">
                 <div><span className="text-muted-foreground">Parcela:</span> {showDetalhe.parcela}ª</div>
-                <div><span className="text-muted-foreground">Meses:</span> {showDetalhe.meses_trabalhados}/12</div>
+                <div><span className="text-muted-foreground">Avos:</span> {showDetalhe.meses_trabalhados}/12</div>
               </div>
+              {/* De onde vieram os números — é o que torna o cálculo auditável. */}
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={showDetalhe.avos_origem === "apurado" ? "secondary" : "outline"}>
+                  Avos: {showDetalhe.avos_origem === "apurado" ? "apurados do sistema"
+                    : showDetalhe.avos_origem === "apurado_ajustado" ? "apurados e ajustados"
+                      : "digitados"}
+                </Badge>
+                <Badge variant={showDetalhe.media_origem === "apurado" ? "secondary" : "outline"}>
+                  Média: {showDetalhe.media_origem === "apurado" ? "apurada da folha"
+                    : showDetalhe.media_origem === "apurado_ajustado" ? "apurada e ajustada"
+                      : "digitada"}
+                </Badge>
+              </div>
+              {showDetalhe.memoria_calculo?.apuracao && (
+                <p className="text-xs text-muted-foreground">
+                  {descreverAvos(showDetalhe.memoria_calculo.apuracao)}{" "}
+                  {descreverMedia13(showDetalhe.memoria_calculo.apuracao)}
+                </p>
+              )}
               <Card>
                 <CardContent className="space-y-2 pt-4">
                   <div className="flex justify-between"><span>13º Bruto</span><span className="font-medium">R$ {fmtMoeda(showDetalhe.valor_bruto)}</span></div>
