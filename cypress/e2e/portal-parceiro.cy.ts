@@ -38,6 +38,7 @@ describe("Área do Parceiro", () => {
     cy.window({ timeout: 20000 }).should((win) => {
       const temSessao = Object.keys(win.localStorage).some((k) => k.startsWith("sb-") && k.endsWith("-auth-token"));
       const falhou = /Não foi possível entrar/i.test(win.document.body.innerText || "");
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(temSessao || falhou, "login respondeu (sessão ou erro)").to.be.true;
     });
     cy.get("body").then(($b) => {
