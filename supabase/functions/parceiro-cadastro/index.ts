@@ -83,15 +83,18 @@ serve(async (req) => {
   const { error: vErr } = await admin.from("parceiro_usuarios").insert({ parceiro_id: parceiro.id, user_id: userId, papel: "dono" });
   if (vErr) return json({ error: "Conta criada, mas o vínculo falhou: " + vErr.message }, 500);
 
-  // Aceite eletrônico do Contrato de Parceria (versão vigente), com origem.
-  const { data: versao } = await admin.from("parceiro_contratos_versoes").select("versao, hash_texto").eq("vigente", true).maybeSingle();
-  if (versao) {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || null;
-    await admin.from("parceiro_contratos_aceites").insert({
-      parceiro_id: parceiro.id, versao: versao.versao, user_id: userId, ip,
-      user_agent: (p.user_agent ?? req.headers.get("user-agent") ?? "").slice(0, 300), hash_texto: versao.hash_texto,
-    });
+  // O aceite marcado no formulário só manifesta a intenção (aceite_termos_em).
+  // O contrato de verdade é gerado com os dados das duas partes e fica PENDENTE
+  // até a assinatura eletrônica (assinatura, selfie, IP, dispositivo, localização,
+  // hash) em /assinar-contrato/:token — o mesmo fluxo dos contratos do SuperAdmin.
+  let contratoToken: string | null = null;
+  try {
+    const { data: ini, error: iniErr } = await admin.rpc("parceiro_contrato_iniciar_assinatura_para", { p_parceiro_id: parceiro.id });
+    if (iniErr) console.error("contrato pendente (nao-fatal):", iniErr.message);
+    contratoToken = (ini as { token?: string } | null)?.token ?? null;
+  } catch (e) {
+    console.error("contrato pendente (nao-fatal):", (e as Error).message);
   }
 
-  return json({ ok: true, parceiro_id: parceiro.id, codigo: parceiro.codigo, status: parceiro.status });
+  return json({ ok: true, parceiro_id: parceiro.id, codigo: parceiro.codigo, status: parceiro.status, contrato_token: contratoToken });
 });

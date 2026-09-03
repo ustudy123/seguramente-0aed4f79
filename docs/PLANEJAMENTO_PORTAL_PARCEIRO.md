@@ -299,9 +299,25 @@ após 60 dias, a parceria pode ser suspensa. Os Termos de Uso ganharam as
 cláusulas 5.1 (confidencialidade e segredos) e 5.2 (Programa de Parceiros).
 **Revisão jurídica recomendada** antes de aplicar em produção; o texto muda
 sem nova publicação de tela, só publicando outra versão na tabela.
-Alternativa deixada para depois: assinatura eletrônica com token por e-mail
-(reaproveitando o fluxo do `programa_validador_contratos`) para
-representante/implantador, se o jurídico exigir mais que o clickwrap.
+
+**Atualização (03/09/2026, pedido do dono do produto): o clickwrap deixou de
+bastar.** O aceite marcado no cadastro só manifesta a intenção
+(`parceiros.aceite_termos_em`). O contrato é **gerado por parceiro**
+(`parceiro_contrato_render_abnt`): qualificação das duas partes (YourEyes de
+`youreyes_empresa`, parceiro do cadastro), corpo v2 com a matriz vigente, fecho
+e campos de assinatura, tudo no **padrão ABNT** (fonte serifada 12 pt,
+entrelinha 1,5, justificado, recuo de parágrafo, margens 3 cm/2 cm em A4,
+títulos numerados). Esse HTML fica em `contratos_assinaturas.html_assinado`
+como registro **pendente** (token, 30 dias) do modelo categoria "parceria" da
+tela SuperAdmin › Contratos, que agora exige CPF, telefone, endereço, selfie e
+geolocalização. O parceiro assina em `/assinar-contrato/:token` — o MESMO fluxo
+dos contratos existentes: assinatura manuscrita em tela, selfie ao vivo, IP,
+navegador, coordenadas, data/hora e hash SHA-256 (Lei 14.063/2020, art. 4º, II;
+MP 2.200-2/2001, art. 10, § 2º). Só quando `registrar_assinatura_contrato`
+conclui é que `parceiro_contratos_aceites` ganha a versão e a pendência sai do
+portal (`parceiro_contrato_situacao` devolve `assinatura_token` enquanto
+pendente e `assinatura_id` depois). O cadastro (Edge Function e RPC) devolve o
+token e a tela leva direto à assinatura. Caso QA: PGP-016 (api).
 
 ## 4. Decisões que precisam do dono do produto antes da Onda 1
 
@@ -372,10 +388,11 @@ parceiros substituem várias decisões provisórias das Ondas 1-3:
   cessão em mudança de controle, Prêmio de Liquidez (múltiplo até 6×, teto a
   fixar: sem teto, a cláusula não gera direito exigível), aviso de rescisão 90
   dias, mediação + foro, nota sobre a Lei 4.886/1965.
-- **Contrato gerado por parceiro**: no aceite, o texto v2 é preenchido com os
-  dados do parceiro e da matriz, e vira um registro **assinado** na tela
+- **Contrato gerado por parceiro**: o texto v2 é preenchido com os dados das
+  duas partes e da matriz (padrão ABNT) e vira um registro **pendente** na tela
   SuperAdmin › Contratos (modelo categoria "parceria" + `contratos_assinaturas`
-  com `parceiro_id`, hash, IP, navegador e `html_assinado`).
+  com `parceiro_id` e `html_assinado`); passa a **assinado** só pela assinatura
+  eletrônica completa (selfie, IP, dispositivo, localização, hash) — seção 3.2.
 - Ainda sem automação (lançar por ajuste): 13º da carteira, Master Regional
   (override calculado, mas elegibilidade manual), certificações.
 

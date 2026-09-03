@@ -12,6 +12,7 @@ import { buscarCnpj, formatCnpj, cleanCnpj } from "@/lib/brasilapi";
 import SignatureCanvas from "react-signature-canvas";
 import { toast } from "sonner";
 import logoImage from "@/assets/logo-youreyes.svg";
+import { Link } from "react-router-dom";
 
 interface ContratoInfo {
   id: string;
@@ -59,6 +60,8 @@ export default function AssinarContrato() {
   const [razaoSocial, setRazaoSocial] = useState("");
   const [representante, setRepresentante] = useState("");
   const [sucesso, setSucesso] = useState(false);
+  // Contrato de Parceria: leva o parceiro de volta à Área do Parceiro depois de assinar
+  const [parceiro, setParceiro] = useState(false);
 
   // Signature
   const sigRef = useRef<SignatureCanvas>(null);
@@ -80,6 +83,7 @@ export default function AssinarContrato() {
       if (error) { setErro("Erro ao carregar contrato"); return; }
       const result = data as any;
       if (result?.erro) {
+        if (result.parceiro_id) setParceiro(true);
         const map: Record<string, string> = {
           token_invalido: "Link inválido ou expirado.",
           ja_assinado: "Este contrato já foi assinado.",
@@ -92,7 +96,12 @@ export default function AssinarContrato() {
         return;
       }
       setContrato(result.contrato);
+      setParceiro(!!result.assinatura?.parceiro_id);
       setSignatarioEmail(result.assinatura?.signatario_email || "");
+      if (result.assinatura?.signatario_cpf) setCpf(result.assinatura.signatario_cpf);
+      if (result.assinatura?.signatario_telefone) setTelefone(result.assinatura.signatario_telefone);
+      if (result.assinatura?.signatario_cnpj) setCnpj(result.assinatura.signatario_cnpj);
+      if (result.assinatura?.signatario_razao_social) setRazaoSocial(result.assinatura.signatario_razao_social);
       if (result.assinatura?.signatario_email) setEmail(result.assinatura.signatario_email);
       if (result.assinatura?.signatario_nome) setNome(result.assinatura.signatario_nome);
     })();
@@ -281,6 +290,7 @@ export default function AssinarContrato() {
             <AlertCircle className="w-16 h-16 mx-auto text-destructive" />
             <h1 className="text-xl font-semibold">Não foi possível abrir o contrato</h1>
             <p className="text-muted-foreground">{erro}</p>
+            {parceiro && <Button asChild variant="outline"><Link to="/parceiro">Ir para a Área do Parceiro</Link></Button>}
           </CardContent>
         </Card>
       </div>
@@ -298,7 +308,14 @@ export default function AssinarContrato() {
             <p className="text-muted-foreground">
               Sua assinatura foi registrada com sucesso e tem validade jurídica conforme Lei 14.063/2020.
             </p>
-            <p className="text-xs text-muted-foreground">Você pode fechar esta janela.</p>
+            {parceiro ? (
+              <>
+                <p className="text-sm text-muted-foreground">Seu Contrato de Parceria está assinado e guardado pela YourEyes. Bem-vindo(a) ao programa!</p>
+                <Button asChild className="w-full" data-testid="assinatura-voltar-portal"><Link to="/parceiro">Ir para a Área do Parceiro</Link></Button>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">Você pode fechar esta janela.</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -323,8 +340,11 @@ export default function AssinarContrato() {
             <CardTitle className="text-base">Termos do contrato</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Contrato gerado (ex.: parceria) já traz o próprio CSS ABNT: sem a tipografia "prose" por cima */}
             <div
-              className="prose prose-sm max-w-none max-h-[50vh] overflow-y-auto border rounded-md p-4 bg-card"
+              className={contrato.corpo_html.includes("contrato-abnt")
+                ? "max-h-[60vh] overflow-y-auto border rounded-md bg-white"
+                : "prose prose-sm max-w-none max-h-[50vh] overflow-y-auto border rounded-md p-4 bg-card"}
               dangerouslySetInnerHTML={{ __html: contrato.corpo_html }}
             />
           </CardContent>
