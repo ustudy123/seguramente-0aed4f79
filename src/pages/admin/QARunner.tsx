@@ -505,11 +505,14 @@ function PainelCypress({
     (max, b) => (b.iniciada_em > max ? b.iniciada_em : max),
     "",
   );
-  const JANELA_MS = 20 * 60 * 1000;
+  // Janela de segurança: o aviso/barra some sozinho depois disto se o resultado
+  // não chegar. A suíte hoje leva ~33 min, então 50 min dá folga sem prender o
+  // aviso por muito tempo num raro caso de a corrida não reportar de volta.
+  const JANELA_MS = 50 * 60 * 1000;
   // Estimativa de duração da suíte, só para a barra de progresso: a corrida real
-  // varia, então a barra avança pelo tempo decorrido e para perto do fim (95%)
-  // até o resultado de verdade chegar — nunca finge 100% antes da hora.
-  const ESTIMATIVA_MS = 10 * 60 * 1000;
+  // varia (hoje ~33 min), então a barra avança pelo tempo decorrido e para perto
+  // do fim (95%) até o resultado de verdade chegar — nunca finge 100% antes da hora.
+  const ESTIMATIVA_MS = 35 * 60 * 1000;
   const chegouResultado = !!corrida && !!ultimaIniciada && ultimaIniciada > corrida.baseline;
   const dentroDaJanela = !!corrida && Date.now() - new Date(corrida.at).getTime() < JANELA_MS;
   const emAndamento = !!corrida && dentroDaJanela && !chegouResultado;
@@ -630,7 +633,7 @@ function PainelCypress({
             </a>
           </div>
           <p className="text-xs text-muted-foreground">
-            A corrida leva ~10 min e testa o site de teste como está publicado
+            A corrida leva ~35 min e testa o site de teste como está publicado
             agora; para checar mudanças novas, publique antes. O resultado
             aparece aqui em “Corridas” quando terminar.
           </p>
@@ -658,7 +661,7 @@ function PainelCypress({
                 </div>
               </div>
               <p className="text-muted-foreground">
-                A suíte roda na esteira (~10 min). Esta página se atualiza
+                A suíte roda na esteira (~35 min). Esta página se atualiza
                 sozinha — o resultado aparece abaixo em “Corridas” assim que
                 terminar. Pode fechar e voltar depois. A barra é uma estimativa
                 pelo tempo; ela para perto do fim até o resultado real chegar.
