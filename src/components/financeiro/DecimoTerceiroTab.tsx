@@ -11,11 +11,12 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock, Settings2 } from "lucide-react";
+import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock, Settings2, Sun } from "lucide-react";
 import { useFolhaCalculo } from "@/hooks/useFolhaCalculo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import {
   useDecimoTerceiro, useDecimoTerceiroLote, useDecimoTerceiroConfig,
+  useDecimoTerceiroContabil,
   descreverAvos, descreverMedia13, descreverLote, nomeMes,
   CONFIG13_PADRAO,
   type Apuracao13, type Config13,
@@ -34,6 +35,25 @@ export function DecimoTerceiroTab() {
   const { apurar, apurando } = useDecimoTerceiro();
   const { processar, processando } = useDecimoTerceiroLote();
   const { carregar: carregarConfig, salvar: salvarConfig, salvando: salvandoConfig } = useDecimoTerceiroConfig();
+  const { adiantarNasFerias, ocupado: ocupadoContabil } = useDecimoTerceiroContabil();
+
+  // O "adiantar 13º" da programação de férias era um botão órfão: ninguém
+  // consumia a marcação (Lei 4.749/1965, art. 2º, § 2º).
+  const handleAdiantamentoFerias = async () => {
+    try {
+      const r = await adiantarNasFerias(ano);
+      if (!r) return;
+      if (r.adiantamentos_gerados === 0 && r.ja_existiam === 0) {
+        toast.info("Ninguém pediu o adiantamento do 13º junto às férias neste ano.");
+        return;
+      }
+      const extra = r.pedidos_fora_de_janeiro > 0
+        ? ` · ${r.pedidos_fora_de_janeiro} pedido(s) fora de janeiro (registrado na memória)` : "";
+      toast.success(`${r.adiantamentos_gerados} adiantamento(s) gerado(s) no gozo das férias${extra}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar os adiantamentos das férias");
+    }
+  };
   const [showConfig, setShowConfig] = useState(false);
   const [config, setConfig] = useState<Config13>(CONFIG13_PADRAO);
 
@@ -163,6 +183,11 @@ export function DecimoTerceiroTab() {
           <Button variant="outline" onClick={() => handleLote(2)} disabled={processando}>
             <Users className="w-4 h-4 mr-2" />
             {processando ? "Processando..." : "Lote 2ª parcela"}
+          </Button>
+          <Button variant="outline" onClick={handleAdiantamentoFerias} disabled={ocupadoContabil}
+                  title="Gera a 1ª parcela de quem pediu o adiantamento junto às férias">
+            <Sun className="w-4 h-4 mr-2" />
+            {ocupadoContabil ? "Gerando..." : "Adiantamento nas férias"}
           </Button>
           <Button onClick={() => setShowModal(true)}>
             <Plus className="w-4 h-4 mr-2" /> Calcular 13º
