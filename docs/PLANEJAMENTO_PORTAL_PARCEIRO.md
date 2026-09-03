@@ -435,6 +435,12 @@ preencher `meta_*` em `app_config`). Telas: cards por trilha com exemplos e
 por trilha, parâmetros e bônus, cartão de marcos em Empresas › Assinatura,
 origem Meta Ads no Kanban, captura do `?ref=` no site e na landing. Scripts:
 `docs/script_parceiros_politica_v2.sql`, `docs/script_parceiros_onda4.sql`.
+**Dados fiscais da YourEyes (03/09/2026):** `20260904190000_youreyes_dados_fiscais.sql`
+cria o registro único `youreyes_empresa` (razão social, CNPJ, inscrições,
+endereço, contato, representante legal, foro, regime), editável em
+SuperAdmin › **Dados da YourEyes**; leitura pública sem CPF; o Contrato de
+Parceria passa a identificar a contratante por esses dados (`{{YE_*}}`).
+Script: `docs/script_youreyes_dados_fiscais.sql`.
 Pendências anotadas: (a) PGP-020/021 (aba Parceiros do SuperAdmin) seguem sem
 teste de tela porque a conta-robô não é superadmin e não deve virar; precisa de
 um robô-superadmin próprio. (b) A data de go-live usa `profiles.updated_at` do

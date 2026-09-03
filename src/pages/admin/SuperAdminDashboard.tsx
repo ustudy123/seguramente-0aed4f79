@@ -34,6 +34,7 @@ import { EmpresasPromociveisPanel } from '@/components/admin/superadmin/Empresas
 import { PsicossocialSuperAdminPanel } from '@/components/admin/superadmin/PsicossocialSuperAdminPanel';
 import { PrecosAddonsPanel } from '@/components/admin/superadmin/PrecosAddonsPanel';
 import { ParceirosPanel } from '@/components/admin/superadmin/ParceirosPanel';
+import { YourEyesEmpresaPanel } from '@/components/admin/superadmin/YourEyesEmpresaPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -144,7 +145,7 @@ export default function SuperAdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-3 md:grid-cols-9 w-full">
+          <TabsList className="grid grid-cols-3 md:grid-cols-10 w-full">
             <TabsTrigger value="overview"><LayoutDashboard className="w-4 h-4 mr-2" />Visão Geral</TabsTrigger>
             <TabsTrigger value="tenants"><Building2 className="w-4 h-4 mr-2" />Empresas</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
@@ -154,6 +155,7 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="situacao"><Activity className="w-4 h-4 mr-2" />Situação</TabsTrigger>
             <TabsTrigger value="precos"><CreditCard className="w-4 h-4 mr-2" />Preços</TabsTrigger>
             <TabsTrigger value="parceiros" data-testid="tab-parceiros"><Handshake className="w-4 h-4 mr-2" />Parceiros</TabsTrigger>
+            <TabsTrigger value="empresa" data-testid="tab-empresa-ye"><Building2 className="w-4 h-4 mr-2" />Dados da YourEyes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><SuperAdminOverview /></TabsContent>
@@ -267,6 +269,8 @@ export default function SuperAdminDashboard() {
           <TabsContent value="precos"><PrecosAddonsPanel /></TabsContent>
 
           <TabsContent value="parceiros"><ParceirosPanel /></TabsContent>
+
+          <TabsContent value="empresa"><YourEyesEmpresaPanel /></TabsContent>
         </Tabs>
       </div>
 
