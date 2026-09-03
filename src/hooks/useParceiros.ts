@@ -1,0 +1,283 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+// Programa de Parceiros — dados para a gestão no SuperAdmin (Onda 1).
+// As tabelas ainda não estão em types.ts (regeneradas após aplicar no
+// staging), por isso as chamadas passam por `as any`, como em useSuperAdmin.
+
+export type ParceiroTipo = "indicador" | "representante" | "implantador" | "clinica" | "contabilidade";
+export type ParceiroStatus = "pendente" | "ativo" | "suspenso" | "encerrado";
+
+export const PARCEIRO_TIPO_LABEL: Record<ParceiroTipo, string> = {
+  indicador: "Indicador",
+  representante: "Representante",
+  implantador: "Implantador",
+  clinica: "Clínica",
+  contabilidade: "Contabilidade",
+};
+
+export const PARCEIRO_STATUS_LABEL: Record<ParceiroStatus, string> = {
+  pendente: "Pendente",
+  ativo: "Ativo",
+  suspenso: "Suspenso",
+  encerrado: "Encerrado",
+};
+
+export interface Parceiro {
+  id: string;
+  codigo: string;
+  nome: string;
+  tipo_pessoa: "pf" | "pj";
+  documento: string | null;
+  tipo_parceiro: ParceiroTipo;
+  email: string | null;
+  telefone: string | null;
+  cidade: string | null;
+  uf: string | null;
+  cep: string | null;
+  raio_atuacao_km: number;
+  trilha: string;
+  nivel_id: string | null;
+  nivel_nome: string | null;
+  percentual_comissao: number | null;
+  status: ParceiroStatus;
+  aprovacao: "automatica" | "manual";
+  aprovado_em: string | null;
+  motivo_recusa: string | null;
+  parceiro_desde: string;
+  pix_chave: string | null;
+  marketplace_profissional_id: string | null;
+  observacoes: string | null;
+  created_at: string;
+  total_clientes: number;
+  total_implantacoes: number;
+  total_leads: number;
+  total_links: number;
+  usuarios: string | null;
+}
+
+export interface ParceiroDetalhe {
+  links: { id: string; codigo: string; campanha: string; ativo: boolean; cliques: number; leads: number }[];
+  clientes: { id: string; nome: string; slug: string; ativo: boolean; originado_em: string | null; papel: string; plano: string | null; status_assinatura: string | null }[];
+  leads: { id: string; nome: string; empresa: string | null; status: string; atribuicao: string | null; created_at: string }[];
+  usuarios: { user_id: string; email: string; papel: string }[];
+}
+
+export interface ParceiroTenantResumo {
+  id: string;
+  nome: string;
+  slug: string;
+  ativo: boolean;
+  parceiro_id: string | null;
+  parceiro_nome: string | null;
+  implantador_parceiro_id: string | null;
+  implantador_nome: string | null;
+  originado_em: string | null;
+}
+
+export interface ParceiroNivel {
+  id?: string;
+  trilha: string;
+  nome: string;
+  ordem: number;
+  mrr_minimo_cents: number;
+  percentual_link: number;
+  percentual_casa: number;
+  bonus_renovacao_multiplicador: number;
+  ativo: boolean;
+}
+
+export interface ParceiroEventoRemuneracao {
+  id?: string;
+  trilha: string;
+  tipo_parceiro: ParceiroTipo;
+  evento: "setup_concluido" | "go_live" | "renovacao";
+  valor_fixo_cents: number;
+  percentual_primeira_mensalidade: number;
+  ativo: boolean;
+}
+
+const KEY = ["superadmin", "parceiros"];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
+export function useParceiros() {
+  const qc = useQueryClient();
+  const { isSuperAdmin } = useAuthContext();
+  const invalidar = () => qc.invalidateQueries({ queryKey: KEY });
+
+  const lista = useQuery({
+    queryKey: KEY,
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<Parceiro[]> => {
+      const { data, error } = await sb.rpc("superadmin_parceiros_list");
+      if (error) throw error;
+      return (data as Parceiro[]) ?? [];
+    },
+  });
+
+  const tenants = useQuery({
+    queryKey: [...KEY, "tenants"],
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<ParceiroTenantResumo[]> => {
+      const { data, error } = await sb.rpc("superadmin_parceiros_tenants_list");
+      if (error) throw error;
+      return (data as ParceiroTenantResumo[]) ?? [];
+    },
+  });
+
+  const niveis = useQuery({
+    queryKey: [...KEY, "niveis"],
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<ParceiroNivel[]> => {
+      const { data, error } = await sb.from("parceiro_niveis").select("*").order("trilha").order("ordem");
+      if (error) throw error;
+      return (data as ParceiroNivel[]) ?? [];
+    },
+  });
+
+  const eventos = useQuery({
+    queryKey: [...KEY, "eventos"],
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<ParceiroEventoRemuneracao[]> => {
+      const { data, error } = await sb.from("parceiro_eventos_remuneracao").select("*").order("tipo_parceiro").order("evento");
+      if (error) throw error;
+      return (data as ParceiroEventoRemuneracao[]) ?? [];
+    },
+  });
+
+  const erro = (e: unknown) => toast.error(e instanceof Error ? e.message : "Não foi possível concluir");
+
+  const salvar = useMutation({
+    mutationFn: async (dados: Partial<Parceiro>) => {
+      const { data, error } = await sb.rpc("superadmin_parceiro_salvar", { _dados: dados });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => { invalidar(); toast.success("Parceiro salvo"); },
+    onError: erro,
+  });
+
+  const mudarStatus = useMutation({
+    mutationFn: async ({ id, status, motivo }: { id: string; status: ParceiroStatus; motivo?: string }) => {
+      const { error } = await sb.rpc("superadmin_parceiro_status", { _parceiro_id: id, _status: status, _motivo: motivo ?? null });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidar(); toast.success("Status atualizado"); },
+    onError: erro,
+  });
+
+  const vincularUsuario = useMutation({
+    mutationFn: async ({ id, email }: { id: string; email: string }) => {
+      const { data, error } = await sb.rpc("superadmin_parceiro_vincular_usuario", { _parceiro_id: id, _email: email });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (r) => { invalidar(); if (r === "ok") toast.success("Usuário vinculado"); else toast.warning(r); },
+    onError: erro,
+  });
+
+  const desvincularUsuario = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await sb.rpc("superadmin_parceiro_desvincular_usuario", { _user_id: userId });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidar(); toast.success("Vínculo removido"); },
+    onError: erro,
+  });
+
+  const vincularTenant = useMutation({
+    mutationFn: async ({ tenantId, parceiroId, implantadorId }: { tenantId: string; parceiroId: string | null; implantadorId: string | null }) => {
+      const { error } = await sb.rpc("superadmin_parceiro_vincular_tenant", {
+        _tenant_id: tenantId, _parceiro_id: parceiroId, _implantador_id: implantadorId, _manter_ausente: false,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidar(); qc.invalidateQueries({ queryKey: ['superadmin', 'tenants'] }); toast.success("Empresa vinculada"); },
+    onError: erro,
+  });
+
+  const criarLink = useMutation({
+    mutationFn: async ({ id, campanha }: { id: string; campanha: string }) => {
+      const { data, error } = await sb.rpc("superadmin_parceiro_link_criar", { _parceiro_id: id, _campanha: campanha });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (cod) => { invalidar(); toast.success(`Link ${cod} criado`); },
+    onError: erro,
+  });
+
+  const alternarLink = useMutation({
+    mutationFn: async ({ linkId, ativo }: { linkId: string; ativo: boolean }) => {
+      const { error } = await sb.rpc("superadmin_parceiro_link_ativo", { _link_id: linkId, _ativo: ativo });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidar(),
+    onError: erro,
+  });
+
+  const salvarNiveis = useMutation({
+    mutationFn: async (itens: ParceiroNivel[]) => {
+      const { error } = await sb.rpc("superadmin_parceiro_niveis_salvar", { _itens: itens });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidar(); toast.success("Níveis salvos"); },
+    onError: erro,
+  });
+
+  const salvarEventos = useMutation({
+    mutationFn: async (itens: ParceiroEventoRemuneracao[]) => {
+      const { error } = await sb.rpc("superadmin_parceiro_eventos_salvar", { _itens: itens });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidar(); toast.success("Remuneração por evento salva"); },
+    onError: erro,
+  });
+
+  return {
+    parceiros: lista.data ?? [],
+    isLoading: lista.isLoading,
+    isError: lista.isError,
+    tenants: tenants.data ?? [],
+    niveis: niveis.data ?? [],
+    eventos: eventos.data ?? [],
+    salvar, mudarStatus, vincularUsuario, desvincularUsuario, vincularTenant,
+    criarLink, alternarLink, salvarNiveis, salvarEventos,
+  };
+}
+
+export function useParceiroDetalhe(parceiroId: string | null) {
+  return useQuery({
+    queryKey: [...KEY, "detalhe", parceiroId],
+    enabled: !!parceiroId,
+    queryFn: async (): Promise<ParceiroDetalhe> => {
+      const { data, error } = await sb.rpc("superadmin_parceiro_detalhe", { _parceiro_id: parceiroId });
+      if (error) throw error;
+      return data as ParceiroDetalhe;
+    },
+  });
+}
+
+// Lista enxuta para selects fora da aba (detalhe da empresa, Kanban de leads).
+export function useParceirosOpcoes() {
+  const { isSuperAdmin } = useAuthContext();
+  return useQuery({
+    queryKey: [...KEY, "opcoes"],
+    enabled: isSuperAdmin,
+    queryFn: async (): Promise<{ id: string; nome: string; codigo: string; tipo_parceiro: ParceiroTipo; status: ParceiroStatus }[]> => {
+      const { data, error } = await sb
+        .from("parceiros")
+        .select("id, nome, codigo, tipo_parceiro, status")
+        .order("nome");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function linkDoParceiro(codigo: string): string {
+  const base = (import.meta.env.VITE_APP_URL as string | undefined) || window.location.origin;
+  return `${base.replace(/\/$/, "")}/?ref=${codigo}`;
+}

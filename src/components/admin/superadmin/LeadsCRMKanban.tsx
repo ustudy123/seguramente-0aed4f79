@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLeads, Lead, LeadStatus, enviarWhatsAppSuperAdmin } from "@/hooks/useSuperAdminPainel";
+import { useParceirosOpcoes, PARCEIRO_TIPO_LABEL } from "@/hooks/useParceiros";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,6 +161,8 @@ function LeadFormDialog({ open, lead, onClose, onSubmit }: {
 }) {
   const [form, setForm] = useState<Partial<Lead>>({});
   const isEdit = !!lead;
+  const { data: parceiros = [] } = useParceirosOpcoes();
+  const SEM_PARCEIRO = "__nenhum__";
 
   // reset on open / quando o lead muda
   useEffect(() => {
@@ -205,6 +208,19 @@ function LeadFormDialog({ open, lead, onClose, onSubmit }: {
                 {COLUNAS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s].label}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="col-span-2"><Label>Parceiro (quem indicou ou vai atender)</Label>
+            <Select value={form.parceiro_id || SEM_PARCEIRO}
+              onValueChange={(v) => setForm({ ...form, parceiro_id: v === SEM_PARCEIRO ? null : v, atribuicao: v === SEM_PARCEIRO ? null : (form.atribuicao || "casa"), ...(v !== SEM_PARCEIRO && form.origem === "prospect_manual" ? { origem: "indicacao" as const } : {}) })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM_PARCEIRO}>— sem parceiro —</SelectItem>
+                {parceiros.filter(p => p.status === "ativo" || p.id === form.parceiro_id).map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.nome} · {PARCEIRO_TIPO_LABEL[p.tipo_parceiro]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.parceiro_id && <p className="text-xs text-muted-foreground mt-1">Atribuição: {form.atribuicao === "link" ? "chegou pelo link do parceiro" : "encaminhado pela casa"}</p>}
           </div>
           <div><Label>Valor Estimado (R$)</Label>
             <Input type="number" step="0.01" value={form.valor_estimado ?? ""}

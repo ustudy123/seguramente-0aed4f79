@@ -78,6 +78,10 @@ export interface Lead {
   notas?: string | null;
   tags?: string[];
   ultimo_contato_at?: string | null;
+  parceiro_id?: string | null;
+  parceiro_link_id?: string | null;
+  atribuicao?: 'link' | 'casa' | null;
+  implantador_parceiro_id?: string | null;
   created_at: string;
   updated_at: string;
 }
