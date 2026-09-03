@@ -278,11 +278,20 @@ export function useFolhaCalculo() {
         dependentesIRRF: dados.dependentes_irrf || 0,
       });
 
+      // Campos que servem ao cálculo mas não são colunas da tabela ficam de
+      // fora do insert; as memórias de avos e média entram dentro de
+      // memoria_calculo, para o valor se reproduzir depois (RNF-001/007).
+      const { dependentes_irrf, apuracao_memoria, ...colunas } = dados;
+
       const { data, error } = await fromTable("folha_13_calculo")
         .insert({
-          ...dados,
+          ...colunas,
           ...resultado,
-          memoria_calculo: resultado,
+          memoria_calculo: {
+            ...resultado,
+            dependentes_irrf: dependentes_irrf || 0,
+            apuracao: apuracao_memoria || null,
+          },
           tenant_id: tenantId,
         } as any)
         .select()
