@@ -334,6 +334,23 @@ duas vezes na réplica sem erro), aba **Parceiros** no SuperAdmin
 implantação" em `TenantDetalhe`, campo Parceiro no Kanban de leads. Prefixo dos
 casos: **PGP** (PARC já pertence ao Marketplace).
 
+**Onda 2 (03/09/2026):** implementada. `20260904130000_parceiros_portal.sql`
+(estágio derivado como função pura + wrapper, `parceiro_meu_portal`,
+`parceiro_cadastrar`, migração dos afiliados do Marketplace, rotina PGP-011,
+pontes e2e), Edge Function `parceiro-cadastro` (autocadastro sem conta),
+robô-parceiro semeado por `seed-e2e-user`, seção pública `/parceiros`,
+`/parceiros/cadastro`, `/parceiros/entrar`, portal `/parceiro` e
+`/parceiro/perfil`, guarda `ParceiroRoute`, redirecionamento pós-login,
+atalho no menu do usuário, link "Parceiros" no site, aba Afiliados removida do
+Marketplace (entra o convite). Cypress `portal-parceiro.cy.ts` cobre PGP-030 a
+032. Script: `docs/script_parceiros_onda2.sql`.
+Pendências anotadas: (a) PGP-020/021 (aba Parceiros do SuperAdmin) seguem sem
+teste de tela porque a conta-robô não é superadmin e não deve virar; precisa de
+um robô-superadmin próprio. (b) A data de go-live usa `profiles.updated_at` do
+onboarding concluído como aproximação; a Onda 3 passa a gravar a data no
+snapshot mensal. (c) Cliques no link e gráfico de 12 meses só nascem nas Ondas
+3 e 4 (o portal já reserva o lugar).
+
 ### Onda 0 — Documentação de testes (antes de qualquer código)
 - `qa_modulos`: novo módulo `parceiros` (SuperAdmin) e `portal-parceiro`.
 - `qa_casos_teste` `PARC-001…`: casos `api` (RLS: parceiro A não vê carteira do

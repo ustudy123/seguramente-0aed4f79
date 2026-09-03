@@ -26,13 +26,15 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
+// `destino`/`variante`: a Área do Parceiro reaproveita este formulário em
+// /parceiros/entrar, só trocando texto e para onde ir depois de entrar.
+export default function Login({ destino, variante }: { destino?: string; variante?: "parceiro" } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, loading } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
 
-  const from = location.state?.from?.pathname || "/";
+  const from = destino || location.state?.from?.pathname || "/";
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -64,9 +66,9 @@ export default function Login() {
       </div>
 
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Login</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{variante === "parceiro" ? "Área do Parceiro" : "Login"}</h1>
         <p className="text-sm text-muted-foreground">
-          Entre com suas credenciais para acessar
+          {variante === "parceiro" ? "Entre com a conta do seu cadastro de parceiro" : "Entre com suas credenciais para acessar"}
         </p>
       </div>
 

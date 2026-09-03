@@ -293,6 +293,7 @@ export default function Site() {
             <a href="#planos" className="hover:text-[#60ABEF]">Planos</a>
             <a href="#seguranca" className="hover:text-[#60ABEF]">Segurança</a>
             <a href="#contato" className="hover:text-[#60ABEF]">Contato</a>
+            <Link to="/parceiros" className="hover:text-[#60ABEF]">Parceiros</Link>
           </nav>
           {/* Desde que o site virou a porta do domínio principal, quem chega
               aqui para TRABALHAR (cliente indo bater ponto, RH indo lançar
@@ -339,6 +340,7 @@ export default function Site() {
                 {s === "niveis" ? "Níveis" : s === "seguranca" ? "Segurança" : s === "diagnostico" ? "Diagnóstico" : s}
               </a>
             ))}
+            <Link to="/parceiros" className="block" onClick={() => setMenuOpen(false)}>Parceiros</Link>
             <Link to="/login" className="block text-[#60ABEF] font-semibold" onClick={() => setMenuOpen(false)}>
               Entrar ou cadastrar sua empresa →
             </Link>
@@ -916,6 +918,7 @@ export default function Site() {
               <li><a href="#plataforma" className="hover:text-white">Plataforma</a></li>
               <li><a href="#planos" className="hover:text-white">Planos</a></li>
               <li><a href="#seguranca" className="hover:text-white">Segurança</a></li>
+              <li><Link to="/parceiros" className="hover:text-white">Programa de Parceiros</Link></li>
             </ul>
           </div>
           <div>
