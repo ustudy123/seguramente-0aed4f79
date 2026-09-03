@@ -197,9 +197,10 @@ será o domínio real. Nunca hardcode.
 ```
 parceiros                 id, codigo (único, ex.: CLINICAVIDA), nome, tipo_pessoa, documento,
                           tipo_parceiro (indicador|representante|implantador|clinica|contabilidade),
-                          cidade, uf, raio_atuacao_km, trilha, nivel_id,
+                          cidade, uf, cep, lat, lng, raio_atuacao_km, trilha, nivel_id,
                           percentual_comissao (override opcional), status
-                          (pendente|ativo|suspenso|encerrado), parceiro_desde, contato_*,
+                          (pendente|ativo|suspenso|encerrado), aprovacao (automatica|manual),
+                          parceiro_desde, contato_*,
                           pix_chave (dado de pagamento, só superadmin lê),
                           marketplace_profissional_id (opcional, FK), aceite_termos_em, created_at
 parceiro_niveis           id, trilha, nome (Visão, Diamante...), ordem, mrr_minimo_cents,
@@ -209,14 +210,19 @@ parceiro_links            id, parceiro_id, codigo (único, ex.: CLINICAVIDA-PGR)
                           campanha, ativo, created_at
 parceiro_link_cliques     link_id, clicado_em, ua_hash          -- sem IP, sem pessoa
 tenants                   + parceiro_id, parceiro_link_id, originado_em   (SET NULL)
-leads                     + parceiro_id, parceiro_link_id
+leads                     + parceiro_id, parceiro_link_id, atribuicao (link|casa),
+                          + implantador_parceiro_id (quem faz o setup, pode diferir do indicador)
+tenants                   + implantador_parceiro_id
 landing_leads             + ref_codigo
 assinaturas               + ref_codigo
 subscriptions             + ciclo_meses, ciclo_inicio, ciclo_fim
 parceiro_mrr_snapshots    parceiro_id, competencia (date, dia 1), tenant_id,
                           mrr_tabela_cents, mrr_pago_cents, addons_cents   -- gráfico 12m
+parceiro_eventos_remuneracao  id, trilha, tipo_parceiro, evento
+                          (setup_concluido|go_live|renovacao), valor_fixo_cents,
+                          percentual_primeira_mensalidade, ativo   -- editável pelo SuperAdmin
 parceiro_comissoes        id, parceiro_id, tenant_id, competencia, tipo
-                          (recorrente|bonus_renovacao|ajuste), base_cents, percentual,
+                          (recorrente|bonus_renovacao|evento|ajuste), evento, base_cents, percentual,
                           valor_cents, status (previsto|fechado|pago|retido),
                           fechado_em, pago_em, observacao
 ```
@@ -250,6 +256,28 @@ Estágio derivado (precedência):
 Comissão só sobre planos `is_public = true`: tenant em `tester` ou plano interno
 rende zero e aparece na carteira com aviso.
 
+### 3.1 Sugestão de parceiro por proximidade (leads da casa)
+
+Objetivo: fomentar o parceiro na região dele. Quando um lead entra **sem**
+`ref` (landing, prospecção direta), o CRM sugere quem pode atender.
+
+- Cadastro do parceiro guarda `cidade`, `uf`, `cep` e `raio_atuacao_km`; a
+  migration geocodifica por **CEP → latitude/longitude** usando a tabela de
+  municípios/CEPs já disponível (ou preenche `lat/lng` via Edge Function na
+  aprovação; sem chave externa no código, config em `app_config`).
+- Lead e `empresa_cadastro` também guardam CEP/cidade; distância calculada em
+  SQL com a fórmula de Haversine (sem PostGIS, para não adicionar extensão).
+- Função `parceiros_sugerir_para_lead(lead_id)` devolve até 5 parceiros ativos
+  ordenados por: mesma cidade → dentro do raio → mesma UF; desempate por nível
+  e nota no Marketplace. O SuperAdmin escolhe um no Kanban ("Encaminhar ao
+  parceiro"), o que grava `leads.parceiro_id` com `atribuicao = 'casa'`
+  (diferente de `'link'`) e notifica o parceiro (e-mail via `send-email-resend`).
+- Aba Parceiros ganha um **mapa/lista por região** (parceiros por UF/cidade,
+  leads sem parceiro na região) para orientar recrutamento onde falta cobertura.
+- A comissão de um lead atribuído pela casa pode ter percentual distinto do
+  lead originado por link (campo em `parceiro_niveis`: `percentual_link`,
+  `percentual_casa`). Decisão de valores fica com o dono do produto.
+
 ---
 
 ## 4. Decisões que precisam do dono do produto antes da Onda 1
@@ -269,15 +297,24 @@ rende zero e aparece na carteira com aviso.
 6. **Rebaixamento de nível** quando o MRR cai; spin-off herda parceiro?
 7. **Parceiro-cliente**: a clínica que é cliente e parceira ganha comissão sobre
    a própria assinatura? (proposta: não).
-8. **Marketplace**: migrar os poucos registros de `marketplace_afiliados_comissoes`
-   para o novo modelo e apagar a aba Afiliados na Onda 2 (proposta: sim).
-9. **Aprovação do parceiro**: automática para indicador e manual para
-   representante/implantador? Quais documentos exigir (CNPJ, conselho)?
-10. **Tipos de parceiro e o que cada um pode fazer**: indicador só gera link;
-    representante fecha proposta em nome da casa?; implantador executa a
-    implantação e ganha por isso (comissão por evento, não só recorrente)?
-11. **Região**: cidade/UF basta, ou raio em km? Um lead da região sem parceiro
-    é oferecido ao parceiro local (distribuição)?
+8. ~~Marketplace~~ **Decidido (03/09/2026): sim.** Migrar os registros de
+   `marketplace_afiliados_comissoes` para `parceiro_comissoes` (tipo `ajuste`,
+   status conforme o original) e apagar a aba Afiliados na Onda 2.
+9. ~~Aprovação~~ **Decidido: automática para indicador; manual (SuperAdmin) para
+   representante, implantador, clínica e contabilidade.** Documentos exigidos
+   ficam em aberto (proposta: CNPJ para pessoa jurídica; conselho só para quem
+   também entra no Marketplace, onde já é obrigatório).
+10. ~~Tipos~~ **Decidido: o implantador ganha também pelo setup, com valor
+    configurável.** Modelo: tabela `parceiro_eventos_remuneracao` (por trilha e
+    tipo de parceiro: evento `setup_concluido`, `go_live`, `renovacao`; valor
+    fixo em centavos OU percentual da primeira mensalidade; ativo). O SuperAdmin
+    edita na aba Parceiros. O fechamento gera `parceiro_comissoes.tipo =
+    'evento'` quando o critério do evento ocorre (setup = onboarding concluído
+    pelo cliente atendido por aquele implantador). O que representante pode
+    fazer além de indicar segue em aberto.
+11. ~~Região~~ **Decidido: leads que chegam pela casa (landing, prospecção)
+    recebem sugestão de representante/parceiro por localidade e proximidade.**
+    Ver seção 3.1.
 
 Sem essas respostas, a Onda 1 entra com valores parametrizados em
 `parceiro_niveis` (editáveis pelo SuperAdmin) e os do mockup como semente.
@@ -302,6 +339,8 @@ Sem essas respostas, a Onda 1 entra com valores parametrizados em
 - Aba **Parceiros** no SuperAdmin: cadastro, links, vínculo manual de tenants e
   leads a um parceiro, campo "Parceiro de origem" em `TenantDetalhe`, ciclo
   contratual em `TenantAssinatura`, campo "Parceiro" no Kanban de leads.
+- Aprovação automática para indicador, manual para os demais tipos.
+- Tabela de remuneração por evento (setup, go-live, renovação) editável na aba.
 - Seed de staging: 2 parceiros fictícios (Clínica Staging SST, Contábil
   Staging) ligados a tenants da Empresa Staging LTDA.
 - Conferência: `SELECT` de parceiros, links e tenants vinculados.
@@ -322,7 +361,11 @@ Sem essas respostas, a Onda 1 entra com valores parametrizados em
 ### Onda 3 — Motor de comissões
 - `parceiro_fechar_competencia`, snapshots mensais, extrato, "Próximas
   renovações" com bônus, gráfico 12 meses, promoção de nível.
+- Comissão por evento: setup do implantador quando o onboarding do cliente é
+  concluído; usa a tabela configurável da Onda 1.
 - SuperAdmin: fechar competência manualmente, marcar Pago/Retido, ajuste.
+- Sugestão de parceiro por proximidade no Kanban de leads e mapa por região
+  (seção 3.1).
 - pg_cron no dia 25 (só roda com `app_config` preenchido).
 - Script de entrega **não altera dado existente** (só cria), então não exige
   tabela `backup_`; se a Onda 3 precisar reclassificar tenants já existentes,
