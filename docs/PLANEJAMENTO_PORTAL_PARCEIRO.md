@@ -67,40 +67,85 @@ com precedência clara (Churn > Ativo > Go-live > Implantação > Contrato >
 Proposta > Lead) e critérios documentados nos casos de QA. Isso evita criar uma
 segunda máquina de estados que brigue com o Kanban de leads.
 
-### 2.3 Já existe um protótipo de afiliado — e um papel com nome parecido
+### 2.3 Marketplace e Parceiros são a MESMA pessoa em dois papéis
 
-- `marketplace_profissionais` tem `codigo_afiliado`/`link_afiliado`, e
-  `marketplace_afiliados_comissoes` (profissional, tenant indicado, tipo, valor,
-  status) alimenta `AfiliadosDashboard.tsx`. **Não há** regra de cálculo, captura
-  de `ref`, fechamento mensal, níveis nem RLS pensada para isso. Está atrelado ao
-  profissional de saúde do Marketplace, não ao parceiro comercial (clínica,
-  contabilidade).
-  **Decisão proposta:** criar o modelo próprio de parceiros e, numa onda final,
-  permitir que um profissional do marketplace **seja também** um parceiro
-  (vínculo por `user_id`), migrando os registros de comissão existentes. Não
-  estender a tabela do marketplace.
-- `usuario_tipo` tem o valor `'clinica_parceira'`: é um **usuário dentro de um
-  tenant cliente** (a clínica que atende o cliente), não o parceiro comercial.
-  Não reaproveitar; o nome vai confundir a documentação, então o plano chama a
-  nova entidade de **"parceiro comercial"**.
+O Marketplace (`/marketplace`) é a vitrine onde profissionais (médicos do
+trabalho, técnicos de SST, psicólogos, contadores...) ofertam serviços para
+todos os clientes YourEyes — modelo iFood/Mercado Livre de serviços. Hoje:
 
-### 2.4 Autenticação e acesso — a maior interferência estrutural
+- `marketplace_profissionais` guarda o profissional (registro no conselho, UF,
+  especialidades, cidade/estado, status pendente → ativo, `plano` base |
+  profissional | **parceiro** — o valor já existe no enum) e já traz
+  `codigo_afiliado`/`link_afiliado`, sem regra por trás.
+- O cadastro (`ProfissionalFormModal`) aceita `user_id` nulo: o profissional
+  pode se cadastrar **sem ser usuário de nenhum tenant**. Isso é exatamente a
+  brecha de identidade que o parceiro precisa.
+- A aba "Afiliados" e `marketplace_afiliados_comissoes` são um esboço: sem
+  captura de `ref`, sem fechamento, sem níveis. A aba também mistura funções
+  internas (Validação, Denúncias) com a vitrine.
+- `usuario_tipo = 'clinica_parceira'` é outra coisa: usuário dentro de um
+  tenant cliente. Não reaproveitar.
 
-- `profiles.tenant_id` é `NOT NULL`: todo usuário logado "pertence" a um tenant.
-- `ProtectedRoute` manda para `/login` quem não tem profile e não é superadmin;
-  superadmin sem profile vai para `/admin`.
-- O parceiro **não é um tenant** e muitas vezes não é usuário de nenhum cliente.
-  Ao mesmo tempo, uma clínica parceira pode ser cliente YourEyes (usuária de um
-  tenant) e parceira ao mesmo tempo.
+**Decisão de produto (03/09/2026):** o link de afiliado sai do Marketplace. No
+lugar, um botão/convite "Quero ser parceiro YourEyes" leva o profissional para
+a **Área do Parceiro**, fora do sistema. Todo profissional do Marketplace pode
+virar parceiro (indicador, representante, implantador); e todo parceiro pode,
+se quiser, ter vitrine no Marketplace. Uma identidade, dois papéis:
 
-**Proposta:** rota própria `/parceiro` fora de `ProtectedRoute`, com uma guarda
-`ParceiroRoute` que verifica vínculo em `parceiro_usuarios (user_id)`. Quem tem
-profile de tenant continua entrando no app normal e ganha um atalho "Portal do
-Parceiro" no menu do usuário; quem só é parceiro loga no mesmo `/login` e é
-redirecionado para `/parceiro`. Nenhuma alteração em `profiles` nem no
-`ProtectedRoute` além do redirecionamento pós-login. Alternativa descartada:
-criar um tenant "casca" por parceiro (poluiria a lista de empresas do
-SuperAdmin, o motor de entitlements e as estatísticas).
+```
+              pessoa (auth.users)  ── e-mail/senha ou link mágico, sem tenant
+                     │
+        ┌────────────┴─────────────┐
+ marketplace_profissionais      parceiros  (via parceiro_usuarios.user_id)
+ (vitrine: oferta de serviços)  (indicação: link, carteira, comissão)
+        └────────────┬─────────────┘
+              região de atuação compartilhada (cidade/UF)
+```
+
+Efeitos práticos: o parceiro que indica um cliente na própria região é também o
+profissional que a casa pode sugerir para atender aquele cliente
+(Marketplace); o profissional bem avaliado na vitrine ganha selo na Área do
+Parceiro. Isso é o "fomentar o trabalho deles na região" pedido pelo dono.
+
+### 2.4 Acesso — a Área do Parceiro fica FORA do sistema, entrando pelo site
+
+Confirmado o caminho sugerido pelo dono do produto: o parceiro **não** entra no
+YourEyes (menu, tenant, módulos). Ele entra por uma seção própria do site.
+
+Por que isso encaixa bem no que existe:
+
+- `profiles.tenant_id` é `NOT NULL` e `ProtectedRoute` expulsa quem não tem
+  perfil de tenant. Parceiro sem tenant nunca passaria por ali — e não precisa.
+- Já existe precedente de páginas do mesmo app fora do layout do sistema
+  (`/site`, `/lp`, `/marketplace`, `/onboarding-cliente/:token`, assinaturas por
+  token). A Área do Parceiro segue esse padrão: mesmo código, mesmo Supabase
+  Auth, layout leve próprio, sem sidebar.
+- Um único login (Supabase Auth) evita segunda base de senhas. Quem é parceiro
+  E usuário de um tenant usa o mesmo e-mail: após o login, o app decide o
+  destino — tem vínculo em `parceiro_usuarios` e não tem profile → `/parceiro`;
+  tem os dois → entra no sistema com atalho "Área do Parceiro" no menu do
+  usuário.
+
+Estrutura proposta no site (`youreyes.com.br`):
+
+| Rota | O que é | Quem acessa |
+|---|---|---|
+| `/parceiros` | Seção pública "Parceiros": proposta (trilhas, níveis, comissão), depoimentos, botão **Quero ser parceiro** | qualquer visitante; link no cabeçalho do site ao lado de Planos/Contato e no rodapé |
+| `/parceiros/cadastro` | Formulário: pessoa/empresa, CPF/CNPJ, região de atuação (cidade/UF), tipo (indicador, representante, implantador, clínica, contabilidade), aceite dos termos do programa; cria a conta Auth e o `parceiros` em status `pendente` | visitante |
+| `/parceiros/entrar` | Login do parceiro (e-mail/senha ou link mágico), reaproveitando `Login.tsx` com tema do site | parceiro |
+| `/parceiro` | Portal (o mockup): cabeçalho, KPIs, link, funil, carteira, extrato, renovações | parceiro aprovado (`ParceiroRoute`) |
+| `/parceiro/perfil` | Dados, região, dados bancários/PIX para pagamento, **"Também quero ofertar serviços no Marketplace"** (cria/liga `marketplace_profissionais`) | parceiro |
+| `/marketplace` (existente) | Vitrine. A aba Afiliados sai; entra um cartão "Já é profissional? Vire parceiro YourEyes" → `/parceiros` | clientes e profissionais |
+
+Aprovação: o SuperAdmin aprova o cadastro (status `pendente` → `ativo`) na aba
+Parceiros; a Onda 1 pode nascer com aprovação automática para indicador e
+manual para representante/implantador (decisão em aberto).
+
+Alternativa descartada: criar um tenant "casca" por parceiro (poluiria a lista
+de empresas, o motor de entitlements e as estatísticas). Também descartado
+subdomínio separado (`parceiros.youreyes.com.br`) nesta fase: mesmo app e mesmo
+build simplificam a esteira de staging; pode virar subdomínio depois só com
+configuração de DNS.
 
 ### 2.5 SuperAdmin
 
@@ -150,10 +195,13 @@ será o domínio real. Nunca hardcode.
 ## 3. Modelo de dados proposto
 
 ```
-parceiros                 id, codigo (único, ex.: CLINICAVIDA), nome, regiao, trilha,
-                          nivel_id, percentual_comissao (override opcional), status
-                          (ativo|suspenso|encerrado), parceiro_desde, contato_*,
-                          user_marketplace_profissional_id (opcional), created_at
+parceiros                 id, codigo (único, ex.: CLINICAVIDA), nome, tipo_pessoa, documento,
+                          tipo_parceiro (indicador|representante|implantador|clinica|contabilidade),
+                          cidade, uf, raio_atuacao_km, trilha, nivel_id,
+                          percentual_comissao (override opcional), status
+                          (pendente|ativo|suspenso|encerrado), parceiro_desde, contato_*,
+                          pix_chave (dado de pagamento, só superadmin lê),
+                          marketplace_profissional_id (opcional, FK), aceite_termos_em, created_at
 parceiro_niveis           id, trilha, nome (Visão, Diamante...), ordem, mrr_minimo_cents,
                           percentual_comissao, bonus_renovacao_multiplicador
 parceiro_usuarios         parceiro_id, user_id, papel (dono|leitura), UNIQUE(user_id)
@@ -221,8 +269,15 @@ rende zero e aparece na carteira com aviso.
 6. **Rebaixamento de nível** quando o MRR cai; spin-off herda parceiro?
 7. **Parceiro-cliente**: a clínica que é cliente e parceira ganha comissão sobre
    a própria assinatura? (proposta: não).
-8. **Marketplace**: migrar os afiliados do marketplace para o novo modelo agora
-   ou manter os dois até segunda ordem?
+8. **Marketplace**: migrar os poucos registros de `marketplace_afiliados_comissoes`
+   para o novo modelo e apagar a aba Afiliados na Onda 2 (proposta: sim).
+9. **Aprovação do parceiro**: automática para indicador e manual para
+   representante/implantador? Quais documentos exigir (CNPJ, conselho)?
+10. **Tipos de parceiro e o que cada um pode fazer**: indicador só gera link;
+    representante fecha proposta em nome da casa?; implantador executa a
+    implantação e ganha por isso (comissão por evento, não só recorrente)?
+11. **Região**: cidade/UF basta, ou raio em km? Um lead da região sem parceiro
+    é oferecido ao parceiro local (distribuição)?
 
 Sem essas respostas, a Onda 1 entra com valores parametrizados em
 `parceiro_niveis` (editáveis pelo SuperAdmin) e os do mockup como semente.
@@ -251,9 +306,14 @@ Sem essas respostas, a Onda 1 entra com valores parametrizados em
   Staging) ligados a tenants da Empresa Staging LTDA.
 - Conferência: `SELECT` de parceiros, links e tenants vinculados.
 
-### Onda 2 — Portal do Parceiro (leitura)
+### Onda 2 — Seção Parceiros no site + Portal do Parceiro (leitura)
+- `/parceiros` (página pública), `/parceiros/cadastro`, `/parceiros/entrar`,
+  link "Parceiros" no cabeçalho e rodapé de `Site.tsx`.
 - Rota `/parceiro`, `ParceiroRoute`, redirecionamento pós-login, atalho no menu
   do usuário para quem também é usuário de tenant.
+- Marketplace: remove a aba Afiliados; entra o cartão "Vire parceiro YourEyes";
+  `/parceiro/perfil` ganha o botão "Também quero ofertar serviços" que cria ou
+  liga o `marketplace_profissionais`.
 - Cabeçalho, KPIs, carteira (com estágio derivado e Exportar CSV), link e
   campanhas (ainda sem clique automático), funil.
 - Componentes shadcn/ui seguindo a paleta do sistema (o mockup tem paleta
@@ -305,7 +365,8 @@ Sem essas respostas, a Onda 1 entra com valores parametrizados em
 | Banco | `supabase/migrations/<carimbo>_parceiros_*.sql` (uma por onda), `docs/script_parceiros_onda*.sql` |
 | Edge Functions | `mercadopago-checkout`, `mercadopago-webhook`, `onboarding-signup`, `seed-e2e-user` |
 | SuperAdmin | `src/pages/admin/SuperAdminDashboard.tsx`, `src/components/admin/superadmin/ParceirosPanel.tsx` (novo), `TenantDetalhe.tsx`, `TenantAssinatura.tsx`, `LeadsCRMKanban.tsx`, `src/hooks/useParceiros.ts` (novo) |
-| Portal | `src/pages/parceiro/*` (novo), `src/components/parceiro/*` (novo), `src/components/auth/ParceiroRoute.tsx` (novo), `src/App.tsx`, `src/hooks/useAuth.ts` (redirecionamento) |
+| Portal e site | `src/pages/parceiros/*` (Seção pública, Cadastro, Entrar — novos), `src/pages/parceiro/*` (portal — novo), `src/components/parceiro/*` (novo), `src/components/auth/ParceiroRoute.tsx` (novo), `src/App.tsx`, `src/hooks/useAuth.ts` (destino pós-login) |
+| Marketplace | `src/pages/Marketplace.tsx` (sai a aba Afiliados, entra o convite), `AfiliadosDashboard.tsx` (removido na Onda 2) |
 | Público | `src/pages/Site.tsx`, `src/pages/LandingPage.tsx` |
 | QA | migration de casos `PARC-*`, `cypress/e2e/portal-parceiro.cy.ts`, pontes em `qa_cobertura_e2e` |
 | Tipos | `src/integrations/supabase/types.ts` (regenerar após migration no staging) |
