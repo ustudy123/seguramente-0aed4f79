@@ -22,6 +22,8 @@ type Payload = {
   inviteMode?: boolean;
   // Plan for new tenant
   plano?: string;
+  // Programa de Parceiros: código do link de indicação (?ref=)
+  refCodigo?: string;
   // Company pre-registration
   tipoPessoa?: string;
   documento?: string;
@@ -320,6 +322,11 @@ serve(async (req) => {
     .insert({ nome: tenantNome, slug: finalSlug, plano })
     .select("id")
     .single();
+
+  if (!tenantError && tenant?.id && payload.refCodigo) {
+    try { await admin.rpc("parceiro_atribuir_tenant_por_ref", { p_tenant_id: tenant.id, p_codigo: payload.refCodigo }); }
+    catch (e) { console.error("origem do parceiro (nao-fatal):", (e as Error).message); }
+  }
 
   if (tenantError || !tenant?.id) {
     return json({ error: tenantError?.message ?? "Tenant create failed" }, 500);

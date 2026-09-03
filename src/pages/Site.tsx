@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { DiagnosticoPsicossocial } from "@/components/site/DiagnosticoPsicossocial";
 import logoLocal from "@/assets/logo-youreyes.svg";
+import { capturarRefDaUrl, lerRef } from "@/lib/parceiroRef";
 import mascot from "@/assets/mascot-ye.png.asset.json";
 import {
   ShieldCheck,
@@ -194,6 +195,7 @@ const FAQ = [
 // ---------------- Component ----------------
 export default function Site() {
   const [ciclo, setCiclo] = useState<Ciclo>("semestral");
+  useEffect(() => { capturarRefDaUrl(); }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
 
@@ -256,6 +258,7 @@ export default function Site() {
           preco_mensal,
           ciclo,
           origin: window.location.origin,
+          ref_codigo: lerRef(),
         },
       });
       if (error) throw error;

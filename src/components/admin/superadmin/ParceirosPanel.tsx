@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   useParceiros, useParceiroDetalhe, useParceiroComissoes, linkDoParceiro,
-  PARCEIRO_TIPO_LABEL, PARCEIRO_STATUS_LABEL,
+  PARCEIRO_TIPO_LABEL, PARCEIRO_STATUS_LABEL, PARCEIRO_TRILHA_LABEL, TRILHA_PADRAO,
   type Parceiro, type ParceiroTipo, type ParceiroStatus, type ParceiroNivel, type ParceiroEventoRemuneracao,
 } from "@/hooks/useParceiros";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -133,7 +133,7 @@ export function ParceirosPanel() {
                             <div className="font-medium">{p.nome}</div>
                             <div className="text-xs text-muted-foreground font-mono">{p.codigo}{p.usuarios ? ` · ${p.usuarios}` : ""}</div>
                           </TableCell>
-                          <TableCell>{PARCEIRO_TIPO_LABEL[p.tipo_parceiro]}</TableCell>
+                          <TableCell>{PARCEIRO_TIPO_LABEL[p.tipo_parceiro]}<div className="text-[11px] text-muted-foreground">trilha {PARCEIRO_TRILHA_LABEL[p.trilha] ?? p.trilha}</div></TableCell>
                           <TableCell className="text-sm">{[p.cidade, p.uf].filter(Boolean).join(" / ") || "—"}</TableCell>
                           <TableCell className="text-sm">{p.nivel_nome || "—"}</TableCell>
                           <TableCell className="text-right">{p.total_clientes}{p.total_implantacoes ? <span className="text-xs text-muted-foreground"> +{p.total_implantacoes} impl.</span> : null}</TableCell>
@@ -174,11 +174,10 @@ function ParceiroFormDialog({ open, parceiro, onClose }: { open: boolean; parcei
   const { salvar, niveis } = useParceiros();
   const [form, setForm] = useState<Partial<Parceiro>>({});
   useEffect(() => {
-    if (open) setForm(parceiro ? { ...parceiro } : { tipo_parceiro: "indicador", tipo_pessoa: "pj", trilha: "operador", raio_atuacao_km: 50 });
+    if (open) setForm(parceiro ? { ...parceiro } : { tipo_parceiro: "indicador", tipo_pessoa: "pj", trilha: "indicador", raio_atuacao_km: 50 });
   }, [open, parceiro]);
   const set = <K extends keyof Parceiro>(k: K, v: Parceiro[K]) => setForm((f) => ({ ...f, [k]: v }));
-  const trilhas = Array.from(new Set(niveis.map((n) => n.trilha)));
-  const novoIndicador = !parceiro && form.tipo_parceiro === "indicador";
+  const novoIndicador = !parceiro && form.tipo_parceiro === "indicador" && (form.trilha ?? "indicador") === "indicador";
 
   const submit = async () => {
     if (!form.nome?.trim()) return toast.error("Informe o nome");
@@ -194,7 +193,7 @@ function ParceiroFormDialog({ open, parceiro, onClose }: { open: boolean; parcei
           <DialogDescription>
             {novoIndicador
               ? "Indicador entra ativo automaticamente. Os demais tipos nascem pendentes e esperam a sua aprovação."
-              : "Representante, implantador, clínica e contabilidade nascem pendentes e esperam aprovação."}
+              : "Representante e Operador nascem pendentes e esperam aprovação e certificação."}
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
@@ -227,10 +226,10 @@ function ParceiroFormDialog({ open, parceiro, onClose }: { open: boolean; parcei
             <div><Label>CEP</Label><Input value={form.cep || ""} onChange={(e) => set("cep", e.target.value)} /></div>
           </div>
           <div><Label>Raio de atuação (km)</Label><Input type="number" min={0} value={form.raio_atuacao_km ?? 50} onChange={(e) => set("raio_atuacao_km", Number(e.target.value))} /></div>
-          <div><Label>Trilha</Label>
-            <Select value={form.trilha || "operador"} onValueChange={(v) => set("trilha", v)}>
+          <div><Label>Trilha (define a matriz de comissão)</Label>
+            <Select value={form.trilha || TRILHA_PADRAO[form.tipo_parceiro ?? "indicador"]} onValueChange={(v) => set("trilha", v as Parceiro["trilha"])}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(trilhas.length ? trilhas : ["operador"]).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              <SelectContent>{(Object.keys(PARCEIRO_TRILHA_LABEL) as Parceiro["trilha"][]).map((t) => <SelectItem key={t} value={t}>{PARCEIRO_TRILHA_LABEL[t]}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           {parceiro && (
@@ -277,7 +276,7 @@ function ParceiroDetalheSheet({ parceiro, onClose }: { parceiro: Parceiro | null
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">{parceiro.nome} <Badge variant={STATUS_VARIANT[parceiro.status]}>{PARCEIRO_STATUS_LABEL[parceiro.status]}</Badge></SheetTitle>
               <SheetDescription>
-                {PARCEIRO_TIPO_LABEL[parceiro.tipo_parceiro]} · trilha {parceiro.trilha} · nível {parceiro.nivel_nome || "—"} · parceiro desde {dataBr(parceiro.parceiro_desde)}
+                {PARCEIRO_TIPO_LABEL[parceiro.tipo_parceiro]} · trilha {PARCEIRO_TRILHA_LABEL[parceiro.trilha] ?? parceiro.trilha} · nível {parceiro.nivel_nome || "—"} · parceiro desde {dataBr(parceiro.parceiro_desde)}
                 {parceiro.cidade && <span className="inline-flex items-center gap-1 ml-2"><MapPin className="w-3 h-3" />{parceiro.cidade}/{parceiro.uf} · {parceiro.raio_atuacao_km} km</span>}
                 <span className="block mt-1">Contrato de Parceria: {parceiro.contrato?.pendente ? <Badge variant="outline" className="text-amber-600 border-amber-400">aceite pendente (v{parceiro.contrato?.versao_vigente ?? "?"})</Badge> : <Badge variant="secondary">v{parceiro.contrato?.versao_aceita ?? "?"} aceito em {dataBr(parceiro.contrato?.aceito_em)}</Badge>}</span>
               </SheetDescription>
@@ -425,78 +424,118 @@ function OrigemEmpresas() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 function ConfiguracaoPrograma() {
-  const { niveis, eventos, salvarNiveis, salvarEventos } = useParceiros();
+  const { niveis, eventos, config, salvarNiveis, salvarEventos, salvarConfig } = useParceiros();
   const [nv, setNv] = useState<ParceiroNivel[]>([]);
   const [ev, setEv] = useState<ParceiroEventoRemuneracao[]>([]);
+  const [cfg, setCfg] = useState<Record<string, string>>({});
   useEffect(() => setNv(niveis.map((n) => ({ ...n }))), [niveis]);
   useEffect(() => setEv(eventos.map((e) => ({ ...e }))), [eventos]);
+  useEffect(() => { const m: Record<string, string> = {}; for (const c of config) m[c.chave] = c.valor; setCfg(m); }, [config]);
 
-  const setNivel = <K extends keyof ParceiroNivel>(i: number, k: K, v: ParceiroNivel[K]) => setNv((a) => a.map((n, j) => (j === i ? { ...n, [k]: v } : n)));
+  const setNivel = <K extends keyof ParceiroNivel>(id: string | undefined, k: K, v: ParceiroNivel[K]) => setNv((a) => a.map((n) => (n.id === id ? { ...n, [k]: v } : n)));
   const setEvento = <K extends keyof ParceiroEventoRemuneracao>(i: number, k: K, v: ParceiroEventoRemuneracao[K]) => setEv((a) => a.map((e, j) => (j === i ? { ...e, [k]: v } : e)));
-  const EVENTO_LABEL = { setup_concluido: "Setup concluído (onboarding do cliente)", go_live: "Go-live", renovacao: "Renovação de ciclo" };
+  const TRILHAS: { key: string; label: string; quem: string }[] = [
+    { key: "indicador", label: "Indicador", quem: "apresenta o contato; a YourEyes vende e implanta" },
+    { key: "representante", label: "Representante", quem: "prospecta e fecha; a YourEyes implanta" },
+    { key: "operador", label: "Operador", quem: "vende, implanta, treina e atende; fatura o setup direto" },
+  ];
+  const EVENTO_LABEL: Record<string, string> = { setup_concluido: "Setup concluído (legado)", go_live: "Go-live (legado)", renovacao: "Renovação", bonus_retencao_90d: "Bônus de retenção 90 dias", fast_start: "Fast Start", bonus_volume: "Bônus de volume", bonus_velocidade: "Bônus de velocidade", decimo_terceiro: "13º da carteira" };
+  const GRUPO_LABEL: Record<string, string> = { ciclo: "Ciclo e renovação", niveis: "Níveis", base: "Base de cálculo", pagamento: "Fechamento e pagamento", setup: "Setup em parcelas", bonus: "Bônus", qualidade: "Qualidade e homologação", clawback: "Clawback", atribuicao: "Atribuição e atividade", governanca: "Governança e contrato", master: "Master Regional" };
+  const grupos = Array.from(new Set(config.map((c) => c.grupo)));
+  const fmtValor = (c: { tipo: string; chave: string }) => (cfg[c.chave] ?? "");
+  const setValor = (chave: string, v: string) => setCfg((m) => ({ ...m, [chave]: v }));
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Níveis por trilha</CardTitle>
-          <CardDescription>Faixa de MRR sob atendimento para alcançar o nível e o percentual de comissão recorrente. O parceiro sobe de nível quando fecha a competência acima da faixa.</CardDescription>
+          <CardTitle>Matriz por trilha e nível</CardTitle>
+          <CardDescription>Valores pré-preenchidos conforme a Política de Parceiros (jul/2026). Percentual sobre a mensalidade recebida e participação no setup pago pelo cliente. Edite e salve; vale para contas novas, nunca reduz ciclo em curso.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {nv.map((n, i) => (
-            <div key={`${n.trilha}-${n.nome}`} className="border rounded-md p-3 grid grid-cols-2 gap-2 text-sm">
-              <div className="col-span-2 flex items-center justify-between">
-                <span className="font-medium">{n.trilha} · {n.nome} <span className="text-xs text-muted-foreground">(ordem {n.ordem})</span></span>
-                <Switch checked={n.ativo} onCheckedChange={(v) => setNivel(i, "ativo", v)} />
+        <CardContent className="space-y-6">
+          {TRILHAS.map((t) => (
+            <div key={t.key}>
+              <div className="flex items-baseline gap-2 mb-2"><h3 className="font-semibold">{t.label}</h3><span className="text-xs text-muted-foreground">{t.quem}</span></div>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Nível</TableHead><TableHead>MRR de (R$)</TableHead><TableHead>até (R$)</TableHead><TableHead>% mensalidade (link)</TableHead><TableHead>% mensalidade (lead da casa)</TableHead><TableHead>% do setup</TableHead><TableHead>Bônus renovação (×)</TableHead><TableHead>Ativo</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {nv.filter((n) => n.trilha === t.key).sort((a, b) => a.ordem - b.ordem).map((n) => (
+                      <TableRow key={n.id ?? n.nome}>
+                        <TableCell className="font-medium">{n.nome}<div className="text-[11px] text-muted-foreground max-w-[220px]">{n.beneficios}</div></TableCell>
+                        <TableCell><Input className="w-28" value={centsToReais(n.mrr_minimo_cents)} onChange={(e) => setNivel(n.id, "mrr_minimo_cents", reaisToCents(e.target.value))} /></TableCell>
+                        <TableCell><Input className="w-28" value={n.mrr_maximo_cents != null ? centsToReais(n.mrr_maximo_cents) : ""} placeholder="sem teto" onChange={(e) => setNivel(n.id, "mrr_maximo_cents", e.target.value.trim() ? reaisToCents(e.target.value) : null)} /></TableCell>
+                        <TableCell><Input className="w-20" type="number" step="0.5" value={n.percentual_link} onChange={(e) => setNivel(n.id, "percentual_link", Number(e.target.value))} /></TableCell>
+                        <TableCell><Input className="w-20" type="number" step="0.5" value={n.percentual_casa} onChange={(e) => setNivel(n.id, "percentual_casa", Number(e.target.value))} /></TableCell>
+                        <TableCell><Input className="w-20" type="number" step="5" value={n.setup_participacao_pct ?? 0} onChange={(e) => setNivel(n.id, "setup_participacao_pct", Number(e.target.value))} /></TableCell>
+                        <TableCell><Input className="w-16" type="number" step="0.5" value={n.bonus_renovacao_multiplicador} onChange={(e) => setNivel(n.id, "bonus_renovacao_multiplicador", Number(e.target.value))} /></TableCell>
+                        <TableCell><Switch checked={n.ativo} onCheckedChange={(v) => setNivel(n.id, "ativo", v)} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-              <div><Label className="text-xs">MRR mínimo (R$)</Label><Input value={centsToReais(n.mrr_minimo_cents)} onChange={(e) => setNivel(i, "mrr_minimo_cents", reaisToCents(e.target.value))} /></div>
-              <div><Label className="text-xs">Bônus renovação (×)</Label><Input type="number" step="0.5" value={n.bonus_renovacao_multiplicador} onChange={(e) => setNivel(i, "bonus_renovacao_multiplicador", Number(e.target.value))} /></div>
-              <div><Label className="text-xs">% cliente por link</Label><Input type="number" step="0.5" value={n.percentual_link} onChange={(e) => setNivel(i, "percentual_link", Number(e.target.value))} /></div>
-              <div><Label className="text-xs">% cliente encaminhado pela casa</Label><Input type="number" step="0.5" value={n.percentual_casa} onChange={(e) => setNivel(i, "percentual_casa", Number(e.target.value))} /></div>
             </div>
           ))}
-          <Button variant="outline" onClick={() => setNv((a) => [...a, { trilha: a[0]?.trilha || "operador", nome: `Nível ${a.length + 1}`, ordem: a.length + 1, mrr_minimo_cents: 0, percentual_link: 25, percentual_casa: 25, bonus_renovacao_multiplicador: 2, ativo: true }])}><Plus className="w-4 h-4 mr-1" />Adicionar nível</Button>
-          <div className="flex justify-end"><Button onClick={() => salvarNiveis.mutate(nv)} disabled={salvarNiveis.isPending}><Save className="w-4 h-4 mr-2" />Salvar níveis</Button></div>
+          <div className="flex justify-end"><Button onClick={() => salvarNiveis.mutate(nv)} disabled={salvarNiveis.isPending} data-testid="salvar-matriz"><Save className="w-4 h-4 mr-2" />Salvar matriz</Button></div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Remuneração por evento</CardTitle>
-          <CardDescription>Ganho único por acontecimento, além da comissão recorrente. O setup do implantador vive aqui: valor fixo, percentual da primeira mensalidade, ou os dois.</CardDescription>
+          <CardTitle>Parâmetros do programa</CardTitle>
+          <CardDescription>Ciclo de 24 meses, setup em 30/40/30, retenção 90 dias, clawback, inadimplência, não aliciamento… Pré-preenchidos pela política; o motor de fechamento e o contrato leem daqui. Valores em R$ para os itens de dinheiro.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {ev.map((e, i) => (
-            <div key={`${e.trilha}-${e.tipo_parceiro}-${e.evento}`} className="border rounded-md p-3 grid grid-cols-2 gap-2 text-sm">
-              <div className="col-span-2 flex items-center justify-between">
-                <span className="font-medium">{PARCEIRO_TIPO_LABEL[e.tipo_parceiro]} · {EVENTO_LABEL[e.evento]}</span>
-                <Switch checked={e.ativo} onCheckedChange={(v) => setEvento(i, "ativo", v)} />
+        <CardContent className="space-y-5">
+          {grupos.map((g) => (
+            <div key={g}>
+              <h3 className="font-semibold text-sm mb-2">{GRUPO_LABEL[g] ?? g}</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {config.filter((c) => c.grupo === g).map((c) => (
+                  <div key={c.chave} className="rounded-lg border p-3">
+                    <Label className="text-xs">{c.rotulo}</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {c.tipo === "centavos" ? (
+                        <><span className="text-sm text-muted-foreground">R$</span><Input className="w-32" value={centsToReais(Number(fmtValor(c) || 0))} onChange={(e) => setValor(c.chave, String(reaisToCents(e.target.value)))} /></>
+                      ) : c.tipo === "booleano" ? (
+                        <Switch checked={fmtValor(c) === "true"} onCheckedChange={(v) => setValor(c.chave, v ? "true" : "false")} />
+                      ) : (
+                        <><Input className="w-28" value={fmtValor(c)} onChange={(e) => setValor(c.chave, e.target.value)} /><span className="text-xs text-muted-foreground">{c.tipo === "percentual" ? "%" : c.tipo === "dias" ? "dias" : c.tipo === "meses" ? "meses" : ""}</span></>
+                      )}
+                    </div>
+                    {c.descricao && <p className="text-[11px] text-muted-foreground mt-1">{c.descricao}</p>}
+                  </div>
+                ))}
               </div>
-              <div><Label className="text-xs">Valor fixo (R$)</Label><Input value={centsToReais(e.valor_fixo_cents)} onChange={(ev2) => setEvento(i, "valor_fixo_cents", reaisToCents(ev2.target.value))} /></div>
-              <div><Label className="text-xs">% da 1ª mensalidade</Label><Input type="number" step="1" value={e.percentual_primeira_mensalidade} onChange={(ev2) => setEvento(i, "percentual_primeira_mensalidade", Number(ev2.target.value))} /></div>
             </div>
           ))}
-          <NovoEvento existentes={ev} onAdd={(x) => setEv((a) => [...a, x])} />
-          <div className="flex justify-end"><Button onClick={() => salvarEventos.mutate(ev)} disabled={salvarEventos.isPending}><Save className="w-4 h-4 mr-2" />Salvar remuneração</Button></div>
+          <div className="flex justify-end"><Button onClick={() => salvarConfig.mutate(Object.entries(cfg).map(([chave, valor]) => ({ chave, valor })))} disabled={salvarConfig.isPending} data-testid="salvar-parametros"><Save className="w-4 h-4 mr-2" />Salvar parâmetros</Button></div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-function NovoEvento({ existentes, onAdd }: { existentes: ParceiroEventoRemuneracao[]; onAdd: (e: ParceiroEventoRemuneracao) => void }) {
-  const [tipo, setTipo] = useState<ParceiroTipo>("implantador");
-  const [evento, setEvento] = useState<ParceiroEventoRemuneracao["evento"]>("setup_concluido");
-  const existe = existentes.some((e) => e.tipo_parceiro === tipo && e.evento === evento && e.trilha === (existentes[0]?.trilha || "operador"));
-  return (
-    <div className="flex flex-wrap gap-2 items-end">
-      <div><Label className="text-xs">Tipo</Label>
-        <Select value={tipo} onValueChange={(v) => setTipo(v as ParceiroTipo)}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{PARCEIRO_TIPO_LABEL[t]}</SelectItem>)}</SelectContent></Select></div>
-      <div><Label className="text-xs">Evento</Label>
-        <Select value={evento} onValueChange={(v) => setEvento(v as ParceiroEventoRemuneracao["evento"])}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="setup_concluido">Setup concluído</SelectItem><SelectItem value="go_live">Go-live</SelectItem><SelectItem value="renovacao">Renovação</SelectItem></SelectContent></Select></div>
-      <Button variant="outline" disabled={existe} onClick={() => onAdd({ trilha: existentes[0]?.trilha || "operador", tipo_parceiro: tipo, evento, valor_fixo_cents: 0, percentual_primeira_mensalidade: 0, ativo: true })}><Plus className="w-4 h-4 mr-1" />Adicionar</Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Bônus por trilha</CardTitle>
+          <CardDescription>Retenção 90 dias, Fast Start, volume e velocidade. Percentuais incidem sobre o setup; o valor fixo vale para o Fast Start.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {TRILHAS.map((t) => (
+            <div key={t.key}>
+              <h3 className="font-semibold text-sm mb-1">{t.label}</h3>
+              <div className="grid md:grid-cols-2 gap-2">
+                {ev.map((e, i) => e.trilha === t.key && !["setup_concluido", "go_live", "renovacao"].includes(e.evento) ? (
+                  <div key={`${e.trilha}-${e.evento}`} className="border rounded-md p-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="col-span-2 flex items-center justify-between"><span className="font-medium">{EVENTO_LABEL[e.evento] ?? e.evento}</span><Switch checked={e.ativo} onCheckedChange={(v) => setEvento(i, "ativo", v)} /></div>
+                    <div><Label className="text-xs">Valor fixo (R$)</Label><Input value={centsToReais(e.valor_fixo_cents)} onChange={(ev2) => setEvento(i, "valor_fixo_cents", reaisToCents(ev2.target.value))} /></div>
+                    <div><Label className="text-xs">% do setup</Label><Input type="number" step="1" value={(e as ParceiroEventoRemuneracao & { percentual_setup?: number }).percentual_setup ?? 0} onChange={(ev2) => setEvento(i, "percentual_setup" as keyof ParceiroEventoRemuneracao, Number(ev2.target.value) as never)} /></div>
+                  </div>
+                ) : null)}
+              </div>
+            </div>
+          ))}
+          <div className="flex justify-end"><Button onClick={() => salvarEventos.mutate(ev)} disabled={salvarEventos.isPending}><Save className="w-4 h-4 mr-2" />Salvar bônus</Button></div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

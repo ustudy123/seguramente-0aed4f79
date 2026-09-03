@@ -185,6 +185,8 @@ export function useAuth() {
           'onboarding-signup',
           {
             body: {
+          // Programa de Parceiros: link de indicação capturado no site (?ref=)
+          refCodigo: (() => { try { const r = localStorage.getItem('ye_parceiro_ref'); return r ? (JSON.parse(r).ref as string) : undefined; } catch { return undefined; } })(),
               tenantNome: userData.tenantNome,
               tenantSlug: userData.tenantSlug,
               nomeCompleto: userData.nomeCompleto,

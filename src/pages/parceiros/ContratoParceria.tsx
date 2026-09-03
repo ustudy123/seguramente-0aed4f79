@@ -20,7 +20,7 @@ export default function ContratoParceria() {
   useEffect(() => {
     (async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any).from("parceiro_contratos_versoes").select("versao, titulo, html, publicado_em").eq("vigente", true).maybeSingle();
+      const { data } = await (supabase as any).rpc("parceiro_contrato_publico");
       setVersao(data ?? null); setCarregando(false);
     })();
   }, []);
@@ -47,7 +47,7 @@ export default function ContratoParceria() {
             <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-widest text-[#60ABEF] mb-2 flex items-center gap-2"><FileSignature className="w-4 h-4" />Versão {versao.versao} · publicada em {new Date(versao.publicado_em).toLocaleDateString("pt-BR")}</div>
-                <p className="text-sm text-slate-400">O aceite acontece no cadastro de parceiro. Uma versão nova pede aceite de novo na Área do Parceiro.</p>
+                <p className="text-sm text-slate-400">O aceite acontece no cadastro de parceiro e gera uma cópia assinada com os seus dados, guardada pela YourEyes. Uma versão nova pede aceite de novo na Área do Parceiro.</p>
               </div>
               {pendente && <Button className="bg-[#FF8A00] hover:bg-[#e67a00] text-white" disabled={aceitando} onClick={aceitar} data-testid="contrato-aceitar">{aceitando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Aceito esta versão</Button>}
               {user && parceiroId && dados?.contrato && !dados.contrato.pendente && <span className="inline-flex items-center gap-1.5 text-sm text-emerald-300"><CheckCircle2 className="w-4 h-4" />Aceito em {dados.contrato.aceito_em ? new Date(dados.contrato.aceito_em).toLocaleDateString("pt-BR") : "—"}</span>}
