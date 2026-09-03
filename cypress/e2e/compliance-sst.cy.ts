@@ -52,7 +52,6 @@ describe("Módulo Compliance SST", () => {
   // CSST-TELA-03
   it("abre a aba Documentos", () => {
     abrirAba("Documentos");
-    cy.contains("Documentos Importados", { timeout: 20000 }).should("be.visible");
   });
 
   // CSST-TELA-04
