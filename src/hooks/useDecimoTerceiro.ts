@@ -152,3 +152,242 @@ export function descreverMedia13(a: Apuracao13): string {
         : `${m.meses_divisor} avo(s) apurado(s)`;
   return `Soma de R$ ${total} nas competências ${m.janela_inicio} a ${m.janela_fim}, dividida por ${divisor}.`;
 }
+
+
+/* ── Processamento em lote (Entrega 2) ────────────────────────────────
+ * A folha de dezembro de uma empresa inteira não cabe num modal aberto
+ * colaborador a colaborador (RNF-008). O lote roda no banco: apura,
+ * calcula os encargos e grava, pulando quem já tem cálculo vivo.
+ */
+export interface ResultadoLote {
+  lote_id: string;
+  ano: number;
+  parcela: number;
+  prazo_legal: string;
+  criados: number;
+  ja_existiam: number;
+  sem_avo: number;
+  total_liquido: number;
+  erros: { colaborador: string; erro: string }[];
+}
+
+export function useDecimoTerceiroLote() {
+  const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const [processando, setProcessando] = useState(false);
+
+  const processar = useCallback(
+    async (ano: number, parcela: 1 | 2): Promise<ResultadoLote | null> => {
+      if (!tenantId) return null;
+      setProcessando(true);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rpc = (supabase as any).rpc.bind(supabase);
+        const { data, error } = await rpc("decimo_terceiro_lote", {
+          p_tenant: tenantId,
+          p_ano: ano,
+          p_parcela: parcela,
+          p_empresa: empresaAtivaId || null,
+        });
+        if (error) throw error;
+        const b = (data || {}) as Record<string, unknown>;
+        if (b.erro) throw new Error(String(b.erro));
+        return {
+          lote_id: String(b.lote_id ?? ""),
+          ano: Number(b.ano ?? ano),
+          parcela: Number(b.parcela ?? parcela),
+          prazo_legal: String(b.prazo_legal ?? ""),
+          criados: Number(b.criados ?? 0),
+          ja_existiam: Number(b.ja_existiam ?? 0),
+          sem_avo: Number(b.sem_avo ?? 0),
+          total_liquido: Number(b.total_liquido ?? 0),
+          erros: (b.erros as { colaborador: string; erro: string }[]) ?? [],
+        };
+      } finally {
+        setProcessando(false);
+      }
+    },
+    [tenantId, empresaAtivaId],
+  );
+
+  return { processar, processando };
+}
+
+/** Frase de resultado do lote, para o toast e para a tela. */
+export function descreverLote(r: ResultadoLote): string {
+  const partes = [`${r.criados} cálculo(s) gerado(s)`];
+  if (r.ja_existiam > 0) partes.push(`${r.ja_existiam} já existia(m)`);
+  if (r.sem_avo > 0) partes.push(`${r.sem_avo} sem avo no ano`);
+  if (r.erros.length > 0) partes.push(`${r.erros.length} com erro`);
+  return partes.join(" · ");
+}
+
+/* ── Configuração do 13º por empresa ──────────────────────────────────
+ * Onde as duas leituras legítimas do adiantamento (Lei 4.749/1965) e o
+ * método da média das horas extras (Súmula 347 do TST) ficam à escolha
+ * da empresa, em vez de decididos por quem escreveu o código.
+ */
+export interface Config13 {
+  media_divisor: string;
+  media_inclui_protegidas: boolean;
+  media_horas_extras: string;
+  divisor_horas_mes: number;
+  afastamento_regra: string;
+  afastamento_dias_empregador: number;
+  adiantamento_base: string;
+  parametros_vigencia_inicio: string;
+}
+
+export const CONFIG13_PADRAO: Config13 = {
+  media_divisor: "avos_apurados",
+  media_inclui_protegidas: false,
+  media_horas_extras: "fisica",
+  divisor_horas_mes: 220,
+  afastamento_regra: "previdenciario_suspende",
+  afastamento_dias_empregador: 15,
+  adiantamento_base: "proporcional_apurado",
+  parametros_vigencia_inicio: "2026-01-01",
+};
+
+export function useDecimoTerceiroConfig() {
+  const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const [salvando, setSalvando] = useState(false);
+
+  const carregar = useCallback(async (): Promise<Config13> => {
+    if (!tenantId) return CONFIG13_PADRAO;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const from = (supabase as any).from.bind(supabase);
+    const { data } = await from("decimo_terceiro_config")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("empresa_id", { nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) return CONFIG13_PADRAO;
+    return { ...CONFIG13_PADRAO, ...(data as Partial<Config13>) };
+  }, [tenantId]);
+
+  const salvar = useCallback(
+    async (c: Config13) => {
+      if (!tenantId) throw new Error("Empresa não identificada");
+      setSalvando(true);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const from = (supabase as any).from.bind(supabase);
+        const { data: existente } = await from("decimo_terceiro_config")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .limit(1)
+          .maybeSingle();
+        const linha = { ...c, tenant_id: tenantId, empresa_id: empresaAtivaId || null };
+        const { error } = existente
+          ? await from("decimo_terceiro_config").update(linha).eq("id", existente.id)
+          : await from("decimo_terceiro_config").insert(linha);
+        if (error) throw error;
+      } finally {
+        setSalvando(false);
+      }
+    },
+    [tenantId, empresaAtivaId],
+  );
+
+  return { carregar, salvar, salvando };
+}
+
+
+/* ── Provisão, conciliação e adiantamento nas férias (Entrega 4) ──────
+ * Provisão por regime de competência: o custo do 13º nasce 1/12 por mês,
+ * não em dezembro. E o botão "adiantar 13º" da programação de férias,
+ * que era órfão, passa a gerar a 1ª parcela (Lei 4.749/1965, art. 2º §2º).
+ */
+export interface ResultadoProvisao {
+  competencia: string;
+  provisionados: number;
+  revertidos: number;
+  total_provisionado: number;
+}
+
+export interface Conciliacao13 {
+  ano: number;
+  provisionado: number;
+  pago: number;
+  diferenca: number;
+  situacao: string;
+  por_competencia: { competencia: string; provisionado: number; colaboradores: number }[];
+}
+
+export interface ResultadoAdiantamentoFerias {
+  ano: number;
+  adiantamentos_gerados: number;
+  ja_existiam: number;
+  pedidos_fora_de_janeiro: number;
+  avisos: { colaborador: string; aviso?: string; erro?: string }[];
+}
+
+export function useDecimoTerceiroContabil() {
+  const { tenantId } = useTenant();
+  const [ocupado, setOcupado] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rpc = () => (supabase as any).rpc.bind(supabase);
+
+  const provisionar = useCallback(async (competencia: string): Promise<ResultadoProvisao | null> => {
+    if (!tenantId) return null;
+    setOcupado(true);
+    try {
+      const { data, error } = await rpc()("decimo_terceiro_provisionar", {
+        p_competencia: competencia, p_tenant: tenantId,
+      });
+      if (error) throw error;
+      const b = (data || {}) as Record<string, unknown>;
+      if (b.erro) throw new Error(String(b.erro));
+      return {
+        competencia: String(b.competencia ?? competencia),
+        provisionados: Number(b.provisionados ?? 0),
+        revertidos: Number(b.revertidos ?? 0),
+        total_provisionado: Number(b.total_provisionado ?? 0),
+      };
+    } finally { setOcupado(false); }
+  }, [tenantId]);
+
+  const conciliar = useCallback(async (ano: number): Promise<Conciliacao13 | null> => {
+    if (!tenantId) return null;
+    const { data, error } = await rpc()("decimo_terceiro_conciliar_provisao", {
+      p_tenant: tenantId, p_ano: ano,
+    });
+    if (error) throw error;
+    const b = (data || {}) as Record<string, unknown>;
+    return {
+      ano: Number(b.ano ?? ano),
+      provisionado: Number(b.provisionado ?? 0),
+      pago: Number(b.pago ?? 0),
+      diferenca: Number(b.diferenca ?? 0),
+      situacao: String(b.situacao ?? ""),
+      por_competencia: (b.por_competencia as Conciliacao13["por_competencia"]) ?? [],
+    };
+  }, [tenantId]);
+
+  const adiantarNasFerias = useCallback(
+    async (ano: number): Promise<ResultadoAdiantamentoFerias | null> => {
+      if (!tenantId) return null;
+      setOcupado(true);
+      try {
+        const { data, error } = await rpc()("decimo_terceiro_adiantamento_nas_ferias", {
+          p_tenant: tenantId, p_ano: ano,
+        });
+        if (error) throw error;
+        const b = (data || {}) as Record<string, unknown>;
+        if (b.erro) throw new Error(String(b.erro));
+        return {
+          ano: Number(b.ano ?? ano),
+          adiantamentos_gerados: Number(b.adiantamentos_gerados ?? 0),
+          ja_existiam: Number(b.ja_existiam ?? 0),
+          pedidos_fora_de_janeiro: Number(b.pedidos_fora_de_janeiro ?? 0),
+          avisos: (b.avisos as ResultadoAdiantamentoFerias["avisos"]) ?? [],
+        };
+      } finally { setOcupado(false); }
+    }, [tenantId]);
+
+  return { provisionar, conciliar, adiantarNasFerias, ocupado };
+}

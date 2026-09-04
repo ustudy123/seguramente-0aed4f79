@@ -63,6 +63,12 @@ FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 COMMENT ON TABLE public.decimo_terceiro_config IS
     'Parametros do calculo do 13o por empresa (divisor da media, efeito do afastamento nos avos, base do adiantamento), com vigencia.';
+ALTER TABLE public.decimo_terceiro_config
+    ADD COLUMN IF NOT EXISTS media_inclui_protegidas BOOLEAN NOT NULL DEFAULT FALSE;
+
+COMMENT ON COLUMN public.decimo_terceiro_config.media_inclui_protegidas IS
+    'FALSE (padrao): rubrica protegida (Salario Base, INSS, IRRF) NAO entra na media das variaveis — o salario fixo ja entra como remuneracao base. TRUE: entra, e a memoria avisa.';
+
 COMMENT ON COLUMN public.decimo_terceiro_config.media_divisor IS
     'avos_apurados: divide pelos meses que geraram avo. meses_com_valor: so pelos meses com variavel. doze_avos: sempre por 12.';
 COMMENT ON COLUMN public.decimo_terceiro_config.afastamento_regra IS
@@ -290,6 +296,7 @@ AS $fn$
 DECLARE
     v_cpf          TEXT := regexp_replace(coalesce(p_cpf, ''), '\D', '', 'g');
     v_divisor_regra TEXT := 'avos_apurados';
+    v_inclui_prot  BOOLEAN := false;
     v_vigencia     DATE := '2026-01-01';
     v_ini          TEXT;
     v_fim          TEXT;
@@ -320,22 +327,23 @@ BEGIN
         );
     END IF;
 
-    SELECT c.media_divisor, c.parametros_vigencia_inicio
-      INTO v_divisor_regra, v_vigencia
+    SELECT c.media_divisor, c.parametros_vigencia_inicio, c.media_inclui_protegidas
+      INTO v_divisor_regra, v_vigencia, v_inclui_prot
       FROM public.decimo_terceiro_config c
      WHERE c.tenant_id = p_tenant
        AND (c.empresa_id = p_empresa OR (p_empresa IS NULL AND c.empresa_id IS NULL))
      LIMIT 1;
 
     IF NOT FOUND THEN
-        SELECT c.media_divisor, c.parametros_vigencia_inicio
-          INTO v_divisor_regra, v_vigencia
+        SELECT c.media_divisor, c.parametros_vigencia_inicio, c.media_inclui_protegidas
+          INTO v_divisor_regra, v_vigencia, v_inclui_prot
           FROM public.decimo_terceiro_config c
          WHERE c.tenant_id = p_tenant AND c.empresa_id IS NULL
          LIMIT 1;
     END IF;
 
     v_divisor_regra := coalesce(v_divisor_regra, 'avos_apurados');
+    v_inclui_prot   := coalesce(v_inclui_prot, false);
     v_vigencia      := coalesce(v_vigencia, DATE '2026-01-01');
 
     v_ini := to_char(make_date(p_ano, 1, 1),  'YYYY-MM');
@@ -344,7 +352,8 @@ BEGIN
     -- A empresa marcou alguma rubrica como integrante do 13º?
     SELECT count(*)::INT INTO v_rubricas_mkd
       FROM public.folha_rubricas r
-     WHERE r.tenant_id = p_tenant AND r.incide_13 AND r.ativa;
+     WHERE r.tenant_id = p_tenant AND r.incide_13 AND r.ativa
+       AND (v_inclui_prot OR NOT r.protegida);
 
     IF v_rubricas_mkd = 0 THEN
         v_avisos := array_append(v_avisos,
@@ -364,6 +373,11 @@ BEGIN
            AND r.incide_13
            AND r.ativa
            AND r.tipo = 'PROVENTO'
+           -- Decisao do dono do produto (03/09/2026): rubrica PROTEGIDA
+           -- (Salario Base, INSS, IRRF) NAO entra na media. A media e das
+           -- variaveis; o salario fixo ja entra como remuneracao base, e
+           -- soma-lo aqui pagaria o 13o dobrado. Parametrizavel por empresa.
+           AND (v_inclui_prot OR NOT r.protegida)
     ),
     por_competencia AS MATERIALIZED (
         SELECT competencia, sum(valor)::NUMERIC(14,2) AS valor
@@ -422,8 +436,13 @@ BEGIN
        AND r.protegida;
 
     IF v_protegidas IS NOT NULL THEN
-        v_avisos := array_append(v_avisos,
-            format('Atenção: %s entrou na média por estar marcada como integrante do 13º. A média é das variáveis (hora extra, comissão, adicionais) e o salário fixo já entra como remuneração base — confira se o valor não está sendo contado duas vezes.', v_protegidas));
+        IF v_inclui_prot THEN
+            v_avisos := array_append(v_avisos,
+                format('Atenção: %s ENTROU na média porque esta empresa está configurada para incluir rubricas protegidas. O salário fixo já entra como remuneração base — confira se o valor não está sendo contado duas vezes.', v_protegidas));
+        ELSE
+            v_avisos := array_append(v_avisos,
+                format('%s está lançada na folha e marcada como integrante do 13º, mas FOI DEIXADA DE FORA da média: a média é das variáveis e o salário fixo já entra como remuneração base.', v_protegidas));
+        END IF;
     END IF;
 
     RETURN jsonb_build_object(
@@ -597,6 +616,10 @@ WITH objetos AS MATERIALIZED (
            EXISTS (SELECT 1 FROM information_schema.columns
                     WHERE table_schema = 'public' AND table_name = 'folha_13_calculo'
                       AND column_name = 'media_origem')
+    UNION ALL SELECT 'parametro media_inclui_protegidas',
+           EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'decimo_terceiro_config'
+                      AND column_name = 'media_inclui_protegidas')
     UNION ALL SELECT 'trava de avos impossiveis (0 a 12)',
            EXISTS (SELECT 1 FROM pg_constraint
                     WHERE conname = 'folha_13_calculo_meses_ck')
