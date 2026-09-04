@@ -130,14 +130,28 @@ export default function AssinarContrato() {
     return () => { stream?.getTracks().forEach(t => t.stop()); };
   }, [stream]);
 
-  const capturarGeo = () => {
-    if (!navigator.geolocation) { toast.error("Geolocalização indisponível"); return; }
+  // Localização: pedida sozinha ao abrir (quando exigida) e de novo na hora de
+  // assinar, para o signatário não precisar achar um botão à parte.
+  const [geoErro, setGeoErro] = useState<string | null>(null);
+  const [geoBuscando, setGeoBuscando] = useState(false);
+  const obterGeo = useCallback((): Promise<{ lat: number; lng: number } | null> => new Promise(resolve => {
+    if (!navigator.geolocation) { setGeoErro("Este navegador não oferece localização."); resolve(null); return; }
+    setGeoBuscando(true); setGeoErro(null);
     navigator.geolocation.getCurrentPosition(
-      p => { setGeo({ lat: p.coords.latitude, lng: p.coords.longitude }); toast.success("Localização capturada"); },
-      () => toast.error("Não foi possível capturar localização"),
-      { enableHighAccuracy: true, timeout: 10000 }
+      p => { const g = { lat: p.coords.latitude, lng: p.coords.longitude }; setGeo(g); setGeoBuscando(false); resolve(g); },
+      e => {
+        setGeoBuscando(false);
+        setGeoErro(e.code === 1
+          ? "Permissão de localização negada. Clique no ícone de cadeado/localização na barra de endereço, permita a localização e tente de novo."
+          : e.code === 2 ? "Localização indisponível no dispositivo. Verifique se o GPS/serviço de localização está ligado."
+          : "Tempo esgotado ao obter a localização. Tente de novo.");
+        resolve(null);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
-  };
+  }), []);
+  const capturarGeo = async () => { const g = await obterGeo(); if (g) toast.success("Localização capturada"); };
+  useEffect(() => { if (contrato?.requer_geolocalizacao && !geo) void obterGeo(); }, [contrato?.requer_geolocalizacao]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const iniciarCamera = useCallback(async () => {
     setCamError(null);
@@ -223,7 +237,11 @@ export default function AssinarContrato() {
     if (contrato.requer_rg && !rg.trim()) { toast.error("RG obrigatório"); return; }
     if (contrato.requer_endereco && !endereco.trim()) { toast.error("Endereço obrigatório"); return; }
     if (contrato.requer_selfie && !selfie) { toast.error("Selfie obrigatória"); return; }
-    if (contrato.requer_geolocalizacao && !geo) { toast.error("Capture sua localização"); return; }
+    let geoFinal = geo;
+    if (contrato.requer_geolocalizacao && !geoFinal) {
+      geoFinal = await obterGeo();   // tenta de novo antes de barrar
+      if (!geoFinal) { toast.error("Precisamos da sua localização para registrar a assinatura", { description: "Permita a localização no navegador e clique em Assinar novamente." }); return; }
+    }
     if (!sigRef.current || sigRef.current.isEmpty()) { toast.error("Assine no campo abaixo"); return; }
 
     const assinatura = sigRef.current.toDataURL("image/png");
@@ -252,8 +270,8 @@ export default function AssinarContrato() {
         _selfie_imagem: selfie,
         _ip: ip,
         _user_agent: navigator.userAgent,
-        _geo_lat: geo?.lat ?? null,
-        _geo_lng: geo?.lng ?? null,
+        _geo_lat: geoFinal?.lat ?? null,
+        _geo_lng: geoFinal?.lng ?? null,
         _hash: hash,
         _cnpj: cnpj || null,
         _razao_social: razaoSocial || null,
@@ -426,10 +444,25 @@ export default function AssinarContrato() {
             )}
 
             {contrato.requer_geolocalizacao && (
-              <Button type="button" variant="outline" size="sm" onClick={capturarGeo}>
-                <MapPin className="w-4 h-4 mr-2" />
-                {geo ? `Localização: ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}` : "Capturar localização *"}
-              </Button>
+              <div className={`border rounded-lg p-3 space-y-2 ${geo ? "bg-emerald-50 border-emerald-200" : "bg-muted/30"}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" /> Localização *
+                    {geo && <span className="text-emerald-700 text-xs font-normal">capturada ({geo.lat.toFixed(4)}, {geo.lng.toFixed(4)})</span>}
+                    {!geo && geoBuscando && <span className="text-xs font-normal text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> obtendo…</span>}
+                  </Label>
+                  <Button type="button" variant={geo ? "ghost" : "outline"} size="sm" onClick={capturarGeo} disabled={geoBuscando}>
+                    <MapPin className="w-4 h-4 mr-2" />{geo ? "Atualizar" : "Permitir localização"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">A localização é registrada junto com a assinatura como prova de autoria. O navegador pede a sua permissão.</p>
+                {geoErro && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">{geoErro}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
             )}
 
             {contrato.requer_selfie && (
