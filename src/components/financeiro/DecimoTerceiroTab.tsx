@@ -210,7 +210,10 @@ export function DecimoTerceiroTab() {
             <Sun className="w-4 h-4 mr-2" />
             {ocupadoContabil ? "Gerando..." : "Adiantamento nas férias"}
           </Button>
-          <Button onClick={() => setShowModal(true)}>
+          {/* Abre no MESMO ano que está sendo visto na lista: cálculo
+              lançado num ano diferente do filtro some da tela e parece
+              que não gravou. */}
+          <Button onClick={() => { setForm(p => ({ ...p, ano })); setShowModal(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Calcular 13º
           </Button>
         </div>

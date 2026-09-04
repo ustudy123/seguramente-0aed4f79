@@ -5,6 +5,7 @@ import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import {
+import { traduzirErro13 } from "@/lib/decimoTerceiroErros";
   calcularFolhaMensal,
   calcularFerias,
   calcular13,
@@ -303,7 +304,10 @@ export function useFolhaCalculo() {
       queryClient.invalidateQueries({ queryKey: ["folha-13-calculo"] });
       toast.success("13º calculado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    // O banco tem travas que impedem gravar coisa errada (parcela repetida,
+    // encargos na 1ª parcela, cálculo já fechado). Elas voltavam em inglês,
+    // com nome de índice; aqui viram instrução do que fazer na tela.
+    onError: (e: unknown) => toast.error(traduzirErro13(e)),
   });
 
   // ======== RESCISÕES ========
