@@ -5,7 +5,6 @@ import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import {
-import { traduzirErro13 } from "@/lib/decimoTerceiroErros";
   calcularFolhaMensal,
   calcularFerias,
   calcular13,
@@ -18,6 +17,7 @@ import { traduzirErro13 } from "@/lib/decimoTerceiroErros";
   MATRIZ_VINCULOS_PADRAO,
   type VinculoConfig,
 } from "@/lib/folha/calculos";
+import { traduzirErro13 } from "@/lib/decimoTerceiroErros";
 
 export function useFolhaCalculo() {
   const { tenantId, user, profile } = useAuth();
