@@ -11,7 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock, Settings2, Sun } from "lucide-react";
+import { Plus, Gift, Eye, Calculator, AlertTriangle, Users, CalendarClock, Settings2, Sun, FileText, Archive } from "lucide-react";
 import { useFolhaCalculo } from "@/hooks/useFolhaCalculo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import {
@@ -21,6 +21,7 @@ import {
   CONFIG13_PADRAO,
   type Apuracao13, type Config13,
 } from "@/hooks/useDecimoTerceiro";
+import { useDecimoTerceiroDocumentos } from "@/hooks/useDecimoTerceiroDocumentos";
 import { toast } from "sonner";
 
 const fmtMoeda = (v: number) => (v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
@@ -36,6 +37,26 @@ export function DecimoTerceiroTab() {
   const { processar, processando } = useDecimoTerceiroLote();
   const { carregar: carregarConfig, salvar: salvarConfig, salvando: salvandoConfig } = useDecimoTerceiroConfig();
   const { adiantarNasFerias, ocupado: ocupadoContabil } = useDecimoTerceiroContabil();
+  const { arquivar, visualizar, gerando: gerandoDoc } = useDecimoTerceiroDocumentos();
+
+  // Recibo e memória: ver antes, arquivar depois (CA-008 — todo documento
+  // produzido vai para Documentos com metadados).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDocumento = async (c: any, tipo: "recibo" | "memoria", arquivarTambem: boolean) => {
+    try {
+      if (!arquivarTambem) {
+        if (!visualizar(c, tipo)) {
+          toast.error("O navegador bloqueou a janela. Libere os pop-ups para ver o documento.");
+        }
+        return;
+      }
+      await arquivar(c, tipo);
+      toast.success(
+        `${tipo === "recibo" ? "Recibo" : "Memória de cálculo"} arquivado em Documentos, na pasta do colaborador.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar o documento");
+    }
+  };
 
   // O "adiantar 13º" da programação de férias era um botão órfão: ninguém
   // consumia a marcação (Lei 4.749/1965, art. 2º, § 2º).
@@ -242,9 +263,20 @@ export function DecimoTerceiroTab() {
                   <TableCell className="text-right text-destructive">R$ {fmtMoeda(c.valor_irrf)}</TableCell>
                   <TableCell className="text-right font-bold">R$ {fmtMoeda(c.total_liquido)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => setShowDetalhe(c)}>
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <Button variant="ghost" size="icon" onClick={() => setShowDetalhe(c)} title="Detalhe">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Ver recibo"
+                              onClick={() => handleDocumento(c, "recibo", false)}>
+                        <FileText className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Arquivar recibo em Documentos"
+                              disabled={gerandoDoc}
+                              onClick={() => handleDocumento(c, "recibo", true)}>
+                        <Archive className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -519,6 +551,22 @@ export function DecimoTerceiroTab() {
           </DialogHeader>
           {showDetalhe && (
             <div className="space-y-3 text-sm">
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleDocumento(showDetalhe, "recibo", false)}>
+                  <FileText className="w-4 h-4 mr-1.5" /> Ver recibo
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleDocumento(showDetalhe, "memoria", false)}>
+                  <Calculator className="w-4 h-4 mr-1.5" /> Ver memória
+                </Button>
+                <Button size="sm" variant="outline" disabled={gerandoDoc}
+                        onClick={() => handleDocumento(showDetalhe, "recibo", true)}>
+                  <Archive className="w-4 h-4 mr-1.5" /> Arquivar recibo
+                </Button>
+                <Button size="sm" variant="outline" disabled={gerandoDoc}
+                        onClick={() => handleDocumento(showDetalhe, "memoria", true)}>
+                  <Archive className="w-4 h-4 mr-1.5" /> Arquivar memória
+                </Button>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><span className="text-muted-foreground">Parcela:</span> {showDetalhe.parcela}ª</div>
                 <div><span className="text-muted-foreground">Avos:</span> {showDetalhe.meses_trabalhados}/12</div>
