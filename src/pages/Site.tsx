@@ -251,7 +251,8 @@ export default function Site() {
     try {
       setLoadingPlano(p.id);
       const preco_mensal = Math.round(p.base * (1 - cicloAtual.discount) * 100) / 100;
-      const { data, error } = await supabase.functions.invoke("mercadopago-checkout", {
+      // Assinatura recorrente: cobra o total do ciclo e renova sozinha.
+      const { data, error } = await supabase.functions.invoke("mercadopago-subscription", {
         body: {
           plano_id: p.id,
           plano_nome: p.nome,

@@ -19,6 +19,11 @@ const STATUS_MAP: Record<string, string> = {
 const APP_URL = Deno.env.get("APP_URL") || "https://youreyes.com.br";
 const FROM_EMAIL = Deno.env.get("EMAIL_FROM") || "YourEyes <no-reply@youreyes.com.br>";
 
+function firstOfMonthISO(): string {
+  const n = new Date();
+  return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), 1)).toISOString().slice(0, 10);
+}
+
 function slugify(input: string) {
   return (input || "cliente")
     .toLowerCase()
@@ -291,6 +296,60 @@ Deno.serve(async (req) => {
       payment.order?.id ||
       null) as string | null;
     const meta = payment.metadata || {};
+
+    // ---------------- Roteia pagamentos de ADD-ON ----------------
+    // add-on prorata: `addon-prop-<id>` (cobrança proporcional, libera o módulo)
+    // add-on mensal : `addon-sub-<id>`  (recorrência mensal do add-on)
+    const isAddonRef = typeof externalReference === "string" &&
+      (externalReference.startsWith("addon-prop-") || externalReference.startsWith("addon-sub-"));
+    if (isAddonRef || meta.kind === "addon_prorata") {
+      const isProrata = (typeof externalReference === "string" && externalReference.startsWith("addon-prop-")) ||
+        meta.kind === "addon_prorata";
+      const addonId: string | null = meta.addon_id ||
+        (typeof externalReference === "string" ? externalReference.replace(/^addon-(prop|sub)-/, "") : null);
+
+      let addon: any = null;
+      if (addonId) {
+        const { data } = await supabase
+          .from("subscription_addons")
+          .select("id, tenant_id, mp_preapproval_id, proporcional_cents")
+          .eq("id", addonId)
+          .maybeSingle();
+        addon = data;
+      }
+
+      // histórico da cobrança (idempotente pelo payment_id único)
+      await supabase.from("pagamentos_recorrentes").upsert({
+        tenant_id: addon?.tenant_id ?? null,
+        origem: "addon",
+        mp_preapproval_id: addon?.mp_preapproval_id ?? null,
+        subscription_addon_id: addonId,
+        payment_id: String(payment.id),
+        status,
+        valor: Number(payment.transaction_amount ?? 0),
+        competencia: firstOfMonthISO(),
+        raw_payload: payment,
+      }, { onConflict: "payment_id" });
+
+      // aprovado -> libera o efeito no motor (idempotente).
+      // Para add-on com proporcional > 0, quem libera é a prorata; para
+      // add-on sem proporcional, a primeira cobrança mensal (addon-sub) libera.
+      const liberaAgora = status === "approved" && addonId &&
+        (isProrata || (addon && (addon.proporcional_cents ?? 0) <= 0));
+      if (liberaAgora) {
+        const { error: confErr } = await supabase.rpc("addon_confirmar_pagamento", {
+          _addon_id: addonId,
+          _mp_preapproval_id: addon?.mp_preapproval_id ?? null,
+          _proporcional_payment_id: isProrata ? String(payment.id) : null,
+        });
+        if (confErr) console.error("[mp-webhook] addon_confirmar_pagamento:", confErr);
+      }
+
+      return new Response(JSON.stringify({ ok: true, addon: addonId, status, liberou: liberaAgora }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const patch: Record<string, unknown> = {
       status,

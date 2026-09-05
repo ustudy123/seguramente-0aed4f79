@@ -119,5 +119,11 @@ project_id = "diayjpsrcerycycyaxst"
     verify_jwt = false
   [functions.mercadopago-webhook]
     verify_jwt = false
+  [functions.mercadopago-subscription]
+    verify_jwt = false
+  [functions.mercadopago-addon-checkout]
+    verify_jwt = true
+  [functions.mercadopago-addon-cancel]
+    verify_jwt = true
   [functions.youreyes-run-agent]
     verify_jwt = false

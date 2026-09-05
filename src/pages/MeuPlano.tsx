@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMeuPlano } from "@/hooks/useMeuPlano";
 import { FEATURE_PLAN_NAME } from "@/lib/planFeatures";
@@ -47,17 +47,37 @@ export default function MeuPlano() {
   const bloqueados = plano?.modulos.filter((m) => !m.disponivel) ?? [];
   const precos = plano?.precos ?? {};
   const addons = plano?.addons ?? [];
+  const pendentes = plano?.addons_pendentes ?? [];
   const valores = plano?.valores;
+
+  // Retorno do checkout do Mercado Pago (add-on)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const st = params.get("addon");
+    if (!st) return;
+    if (st === "sucesso" || st === "assinado") {
+      toast.success("Pagamento recebido! Assim que o Mercado Pago confirmar, o item é liberado.");
+    } else if (st === "pendente") {
+      toast.info("Pagamento pendente de confirmação pelo Mercado Pago.");
+    } else if (st === "falha") {
+      toast.error("O pagamento não foi concluído. Você pode tentar novamente.");
+    }
+    // limpa o parâmetro da URL
+    params.delete("addon");
+    const q = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (q ? `?${q}` : ""));
+  }, []);
 
   const precoVida = precos[VIDA_KEY] ?? 0;
   const vidasAddon = addons.find((a) => a.feature_key === VIDA_KEY);
 
   const doContratar = async (featureKey: string, quantity?: number) => {
     try {
+      toast.info("Levando você ao pagamento seguro do Mercado Pago…");
       await contratar({ featureKey, quantity });
-      toast.success("Contratação registrada. O valor mensal foi atualizado.");
+      // em caso de sucesso o navegador é redirecionado ao Mercado Pago
     } catch (e: any) {
-      toast.error(e.message || "Não foi possível contratar agora.");
+      toast.error(e.message || "Não foi possível iniciar a contratação agora.");
     }
   };
 
@@ -159,7 +179,8 @@ export default function MeuPlano() {
                 </>
               )}
               <p className="text-[11px] text-muted-foreground pt-1">
-                Os add-ons contratados aqui ajustam o valor mensal; a cobrança é conciliada pelo financeiro.
+                Cada add-on é cobrado no Mercado Pago: proporcional no ato da contratação e mensal a
+                partir do mês seguinte. O item é liberado assim que o pagamento é confirmado.
               </p>
             </CardContent>
           </Card>
@@ -200,6 +221,36 @@ export default function MeuPlano() {
                       >
                         <X className="w-4 h-4 mr-1" /> Cancelar
                       </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Contratações aguardando pagamento */}
+          {pendentes.length > 0 && (
+            <Card className="border-amber-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2 text-amber-700">
+                  <Loader2 className="w-4 h-4" /> Aguardando pagamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {pendentes.map((a, i) => (
+                  <div key={a.id}>
+                    {i > 0 && <Separator className="my-2" />}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {a.kind === "life" ? `${a.quantity} vida(s) extra(s)` : a.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Proporcional do mês: R$ {centsToReais(a.proporcional_cents)} · depois R${" "}
+                        {centsToReais(
+                          a.kind === "life" ? a.quantity * a.unit_price_cents : a.unit_price_cents
+                        )}{" "}
+                        / mês. Liberação após a confirmação do Mercado Pago.
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -266,8 +317,8 @@ export default function MeuPlano() {
                       </p>
                       {vidasAddon && (
                         <p className="text-xs text-emerald-700">
-                          Você já tem {vidasAddon.quantity} vida(s) extra(s) contratada(s). Uma nova
-                          contratação substitui a atual.
+                          Você já tem {vidasAddon.quantity} vida(s) extra(s) contratada(s). Para mudar a
+                          quantidade, cancele a contratação atual antes de contratar outra.
                         </p>
                       )}
                       <div className="flex items-center gap-2">
